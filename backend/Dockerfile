@@ -7,8 +7,11 @@ WORKDIR /app
 # Copy the dependencies file to the working directory
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv, a fast Python package installer
+RUN pip install uv
+
+# Install any needed packages specified in requirements.txt using uv
+RUN uv pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application's code to the working directory
 COPY ./src /app/src

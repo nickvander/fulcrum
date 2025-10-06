@@ -18,6 +18,7 @@ The backend is responsible for:
 - **ORM:** SQLAlchemy
 - **Migrations:** Alembic
 - **Async Tasks:** Celery with Redis
+- **Dependency Management:** UV
 - **Containerization:** Docker & Docker Compose
 
 ## Getting Started
