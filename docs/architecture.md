@@ -40,6 +40,13 @@ The API layer (`src/api/`) is responsible for handling HTTP requests and respons
     3.  Return the result.
 -   This separation of concerns makes the API easy to read, test, and maintain.
 
+### Service Layer & Dependency Injection
+
+To handle business logic that is separate from the database (e.g., calling an external AI API), we use a **Service Layer**.
+
+-   **Abstract Base Classes (`src/services/base.py`):** We define abstract base classes for our services (e.g., `AIService`). This defines a clear contract for what the service must do, without tying it to a specific implementation.
+-   **Dependency Injection (`src/api/dependencies.py`):** We use FastAPI's built-in dependency injection system (`Depends`) to provide service implementations to the API endpoints. This makes the system highly modular and easy to test, as we can easily inject a mock service during testing.
+
 ### Asynchronous Tasks
 
 For long-running operations (like calling an AI service to generate an embedding), we use Celery.
