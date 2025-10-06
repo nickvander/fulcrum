@@ -8,6 +8,7 @@ from typing import List
 from src.schemas import product as product_schema
 from src.database import get_db
 from src.crud import crud_product
+from src.services.dummy_ai_service import ai_service
 
 router = APIRouter()
 
@@ -41,8 +42,6 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
     return db_product
-
-from src.services.dummy_ai_service import ai_service
 
 @router.get("/search/", response_model=List[product_schema.Product])
 def search_products(q: str, db: Session = Depends(get_db)):

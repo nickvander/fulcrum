@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 from src.models.product import Product
+import pytest
+from sqlalchemy.orm import Session
 
 def test_create_product(client: TestClient):
     """
@@ -20,9 +22,6 @@ def test_create_product(client: TestClient):
     assert data["name"] == "Test Product"
     assert data["sku"] == "TESTSKU123"
     assert "id" in data
-
-import pytest
-from sqlalchemy.orm import Session
 
 def test_search_products(client: TestClient, db: Session, test_product: Product):
     """
