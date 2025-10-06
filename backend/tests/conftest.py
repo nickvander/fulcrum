@@ -18,30 +18,40 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create all tables for each test session
-Base.metadata.create_all(bind=engine)
-
-def override_get_db():
+@pytest.fixture(scope="session")
+def db_engine():
     """
-    Dependency override to use the test database session.
+    Creates the test database and tables once per session.
     """
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-# Apply the override for the get_db dependency
-app.dependency_overrides[get_db] = override_get_db
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
-def client():
+def db(db_engine):
     """
-    Provides a TestClient instance for making API requests in tests.
+    Provides a transactional database session for each test function.
+    Rolls back all changes after the test completes.
     """
-    # Reset the database before each test
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    
+    connection = db_engine.connect()
+    transaction = connection.begin()
+    db = TestingSessionLocal(bind=connection)
+
+    yield db
+
+    db.close()
+    transaction.rollback()
+    connection.close()
+
+@pytest.fixture(scope="function")
+def client(db):
+    """
+    Provides a TestClient that uses the transactional db session.
+    """
+    def override_get_db():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
+

@@ -1,7 +1,4 @@
-"""
-Pydantic schemas for the Supplier model.
-"""
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 class SupplierBase(BaseModel):
     """Base schema for a supplier."""
@@ -18,5 +15,4 @@ class Supplier(SupplierBase):
     """Schema for reading a supplier, including the database ID."""
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

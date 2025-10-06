@@ -1,20 +1,34 @@
-# Use an official Python runtime as a parent image
-FROM python:3.11-slim
+# --- Builder Stage ---
+# This stage installs dependencies into a virtual environment.
+FROM python:3.11-slim as builder
 
-# Set the working directory in the container
 WORKDIR /app
-
-# Copy the dependencies file to the working directory
-COPY requirements.txt .
 
 # Install uv, a fast Python package installer
 RUN pip install uv
 
-# Install any needed packages specified in requirements.txt using uv
-RUN uv pip install --system --no-cache-dir -r requirements.txt
+# Copy only the requirements file to leverage Docker cache
+COPY requirements.txt .
 
-# Copy the rest of the application's code to the working directory
+# Create a virtual environment and install dependencies into it
+RUN uv venv /app/venv && \
+    . /app/venv/bin/activate && \
+    uv pip install --no-cache-dir -r requirements.txt
+
+# --- Final Stage ---
+# This stage creates the final, smaller production image.
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy the virtual environment from the builder stage
+COPY --from=builder /app/venv /app/venv
+
+# Copy the application source code
 COPY ./src /app/src
+
+# Activate the virtual environment for subsequent commands
+ENV PATH="/app/venv/bin:$PATH"
 
 # Command to run the application
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
