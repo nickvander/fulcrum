@@ -24,6 +24,24 @@ The project will be organized into two main directories:
 *   **Run Frontend (Local):** `cd frontend && ng serve`
 *   **Database Migrations:** `docker-compose exec backend alembic upgrade head`
 
+## Project Workflow & Organization
+
+All project planning, progress tracking, and task-specific plans are located in
+the `/work` directory.
+
+-   `work/00-project-plan.md`: The high-level project blueprint.
+-   `work/PROGRESS.md`: A log of completed work for each phase.
+-   `work/[number]-[task-name].md`: Detailed, actionable plans for specific
+    tasks or refactors.
+
+**Workflow for New Sessions:** To begin a new work cycle, first consult
+`work/PROGRESS.md` to understand the current state. Then, identify the next open
+task file in the `/work` directory (e.g., `work/01-refactor-phase-one.md`), read
+the plan, and begin execution.
+
+**Formatting:** This project uses Prettier to enforce an 80-character line width
+for Markdown files. Please adhere to this when editing documentation.
+
 ## Phased Development Plan
 
 The project is divided into eight distinct phases:
