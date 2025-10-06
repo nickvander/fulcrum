@@ -6,7 +6,8 @@ to SQLAlchemy's declarative base when it discovers table metadata, which is
 crucial for correctly establishing table relationships.
 """
 from .base import Base
-from .product import Product, ProductImage, Supplier
+from .product import Product, ProductImage
+from .supplier import Supplier
 from .inventory import InventoryItem
 from .user import User
 from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
