@@ -9,3 +9,6 @@ redis
 psycopg2-binary
 pgvector
 python-dotenv
+pytest
+httpx
+ruff
