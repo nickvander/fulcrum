@@ -7,10 +7,10 @@ services:
       - ./backend/src:/app/src
       - ./backend/migrate.sh:/app/migrate.sh
       - ./backend/tests:/app/tests
-      - ./backend/alembic:/app/alembic
-      - ./backend/alembic.ini:/app/alembic.ini
-    env_file:
-      - ./.env
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - SECRET_KEY=${SECRET_KEY:-your_super_secret_key_change_me}
     depends_on:
       - db
       - redis
@@ -20,9 +20,10 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER:-fulcrum}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-fulcrum}
+      - POSTGRES_DB=${POSTGRES_DB:-fulcrum}
+    command: -c listen_addresses='*'
     volumes:
       - pg_data:/var/lib/postgresql/data
 
@@ -36,8 +37,10 @@ services:
     command: celery -A src.celery_worker.celery_app worker --loglevel=info
     volumes:
       - ./backend/src:/app/src
-    env_file:
-      - ./.env
+      - ./backend/migrate.sh:/app/migrate.sh
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       - redis
 
@@ -46,9 +49,6 @@ services:
     ports:
       - "5555:5555"
     environment:
-      - CELERY_BROKER_URL=${REDIS_URL}
+      - CELERY_BROKER_URL=${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       - redis
-
-volumes:
-  pg_data:
