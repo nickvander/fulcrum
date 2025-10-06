@@ -1,22 +1,21 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
 
 class ProductBase(BaseModel):
-    """Base schema for a product, containing common attributes."""
     name: str
-    description: str | None = None
+    description: Optional[str] = None
     sku: str
-    default_resale_price: float
-    cost_price: float
+    default_resale_price: Optional[float] = None
+    cost_price: Optional[float] = None
 
 class ProductCreate(ProductBase):
-    """Schema used for creating a new product. Inherits from ProductBase."""
+    pass
+
+class ProductUpdate(ProductBase):
     pass
 
 class Product(ProductBase):
-    """
-    Schema for reading a product, including the database ID.
-    """
     id: int
-    supplier_id: int | None = None
+    supplier_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)

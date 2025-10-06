@@ -21,13 +21,23 @@ def test_create_product(client: TestClient):
     assert data["sku"] == "TESTSKU123"
     assert "id" in data
 
-def test_read_products(client: TestClient, test_product: Product):
+import pytest
+from sqlalchemy.orm import Session
+
+def test_search_products(client: TestClient, db: Session, test_product: Product):
     """
-    Test reading a list of products.
+    Test semantic search for products.
     """
-    response = client.get("/api/v1/products/")
+    if db.bind.dialect.name != "postgresql":
+        pytest.skip("Vector search test requires PostgreSQL")
+
+    # The dummy AI service will return a random embedding, but for a single product
+    # the search should still return that product.
+    response = client.get(f"/api/v1/products/search/?q={test_product.name}")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert len(data) > 0
-    assert data[0]["name"] == test_product.name
+    # The exact order isn't guaranteed with random embeddings,
+    # so we just check if the product is in the results.
+    assert test_product.name in [p["name"] for p in data]
