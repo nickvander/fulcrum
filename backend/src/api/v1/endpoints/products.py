@@ -20,7 +20,7 @@ def create_product(
     Create a new product and trigger a background task to generate its embedding.
     """
     db_product = crud_product.product.create(db=db, obj_in=product)
-    generate_product_embedding.delay(db_product.id)
+    # generate_product_embedding.delay(db_product.id)
     return db_product
 
 @router.get("/", response_model=List[product_schema.Product])
