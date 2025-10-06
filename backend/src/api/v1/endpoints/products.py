@@ -8,7 +8,10 @@ from typing import List
 from src.schemas import product as product_schema
 from src.database import get_db
 from src.crud import crud_product
+from src.tasks import generate_product_embedding
 from src.services.dummy_ai_service import ai_service
+from src.api.dependencies import get_ai_service
+from src.services.base import AIService
 
 router = APIRouter()
 
@@ -20,7 +23,7 @@ def create_product(
     Create a new product and trigger a background task to generate its embedding.
     """
     db_product = crud_product.product.create(db=db, obj_in=product)
-    # generate_product_embedding.delay(db_product.id)
+    generate_product_embedding.delay(db_product.id)
     return db_product
 
 @router.get("/", response_model=List[product_schema.Product])
@@ -43,11 +46,19 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     return db_product
 
+from src.api.dependencies import get_ai_service
+from src.services.base import AIService
+
 @router.get("/search/", response_model=List[product_schema.Product])
-def search_products(q: str, db: Session = Depends(get_db)):
+def search_products(
+    q: str,
+    db: Session = Depends(get_db),
+    ai_service: AIService = Depends(get_ai_service),
+):
     """
     Perform a semantic search for products.
     """
     embedding = ai_service.generate_embedding(q)
     products = crud_product.product.search(db, embedding=embedding, limit=10)
     return products
+

@@ -3,25 +3,44 @@ from src.models.product import Product
 import pytest
 from sqlalchemy.orm import Session
 
+from unittest.mock import patch
+
 def test_create_product(client: TestClient):
     """
-    Test creating a product successfully.
+    Test creating a product successfully and that the embedding task is called.
+    """
+    with patch("src.tasks.generate_product_embedding.delay") as mock_delay:
+        response = client.post(
+            "/api/v1/products/",
+            json={
+                "name": "Test Product",
+                "description": "A product for testing",
+                "sku": "TESTSKU123",
+                "default_resale_price": 19.99,
+                "cost_price": 10.0,
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Test Product"
+        assert data["sku"] == "TESTSKU123"
+        assert "id" in data
+        mock_delay.assert_called_once_with(data["id"])
+
+def test_create_product_duplicate_sku(client: TestClient, test_product: Product):
+    """
+    Test creating a product with a duplicate SKU fails.
     """
     response = client.post(
         "/api/v1/products/",
         json={
-            "name": "Test Product",
-            "description": "A product for testing",
-            "sku": "TESTSKU123",
-            "default_resale_price": 19.99,
-            "cost_price": 10.0,
+            "name": "Another Product",
+            "description": "A product with a duplicate SKU",
+            "sku": test_product.sku, # Use the same SKU as the fixture
         },
     )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["name"] == "Test Product"
-    assert data["sku"] == "TESTSKU123"
-    assert "id" in data
+    assert response.status_code == 409
+    assert "Product with this SKU already exists" in response.text
 
 def test_search_products(client: TestClient, db: Session, test_product: Product):
     """
