@@ -9,7 +9,7 @@ from src.schemas import supplier as supplier_schema
 from src.database import get_db
 from src.crud import crud_supplier
 
-router = APIRouter(prefix="/suppliers", tags=["suppliers"])
+router = APIRouter()
 
 @router.post("/", response_model=supplier_schema.Supplier)
 def create_supplier(

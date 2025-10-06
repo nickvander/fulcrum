@@ -55,3 +55,20 @@ def client(db):
     with TestClient(app) as c:
         yield c
 
+@pytest.fixture(scope="function")
+def test_product(db):
+    """
+    Creates a sample product in the database for testing.
+    """
+    from src.crud import crud_product
+    from src.schemas.product import ProductCreate
+
+    product_in = ProductCreate(
+        name="Test Product",
+        description="A product for testing",
+        sku="TESTSKU123",
+        default_resale_price=19.99,
+        cost_price=10.0,
+    )
+    return crud_product.product.create(db=db, obj_in=product_in)
+

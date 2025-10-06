@@ -10,7 +10,7 @@ from src.database import get_db
 from src.tasks import generate_product_embedding
 from src.crud import crud_product
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter()
 
 @router.post("/", response_model=product_schema.Product)
 def create_product(

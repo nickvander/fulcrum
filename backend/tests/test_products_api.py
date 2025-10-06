@@ -1,11 +1,12 @@
 from fastapi.testclient import TestClient
+from src.models.product import Product
 
 def test_create_product(client: TestClient):
     """
     Test creating a product successfully.
     """
     response = client.post(
-        "/products/",
+        "/api/v1/products/",
         json={
             "name": "Test Product",
             "description": "A product for testing",
@@ -20,25 +21,13 @@ def test_create_product(client: TestClient):
     assert data["sku"] == "TESTSKU123"
     assert "id" in data
 
-def test_read_products(client: TestClient):
+def test_read_products(client: TestClient, test_product: Product):
     """
     Test reading a list of products.
     """
-    # Create a product first
-    client.post(
-        "/products/",
-        json={
-            "name": "Test Product 2",
-            "description": "Another test product",
-            "sku": "TESTSKU456",
-            "default_resale_price": 29.99,
-            "cost_price": 15.0,
-        },
-    )
-
-    response = client.get("/products/")
+    response = client.get("/api/v1/products/")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert len(data) > 0
-    assert data[0]["name"] == "Test Product 2"
+    assert data[0]["name"] == test_product.name
