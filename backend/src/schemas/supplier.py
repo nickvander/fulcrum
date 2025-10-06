@@ -1,18 +1,19 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Optional
 
 class SupplierBase(BaseModel):
-    """Base schema for a supplier."""
     name: str
-    contact_person: str | None = None
-    email: EmailStr
-    phone: str | None = None
+    contact_person: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
 
 class SupplierCreate(SupplierBase):
-    """Schema for creating a new supplier."""
+    pass
+
+class SupplierUpdate(SupplierBase):
     pass
 
 class Supplier(SupplierBase):
-    """Schema for reading a supplier, including the database ID."""
     id: int
 
     model_config = ConfigDict(from_attributes=True)

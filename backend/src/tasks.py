@@ -5,25 +5,30 @@ This module contains the definitions for background tasks that are executed
 asynchronously by the Celery worker.
 """
 from .celery_worker import celery_app
-import time
+from src.database import SessionLocal
+from src.crud import crud_product
+from src.services.dummy_ai_service import ai_service
 
 @celery_app.task
 def generate_product_embedding(product_id: int):
     """
-    Placeholder task to generate a vector embedding for a product.
-
-    In a real implementation, this task would:
-    1. Fetch the product details from the database.
-    2. Call an AI service (e.g., Sentence Transformers, OpenAI) to generate
-       a vector embedding from the product's name and description.
-    3. Save the generated embedding back to the product in the database.
-
-    Args:
-        product_id: The ID of the product to process.
+    Generates and saves a vector embedding for a product using the AI service.
     """
-    print(f"Generating embedding for product ID: {product_id}")
-    # Simulate a network call to an AI service
-    time.sleep(5)
-    # In a real app, you would save the result to the DB
-    print(f"Finished generating embedding for product ID: {product_id}")
+    db = SessionLocal()
+    try:
+        product = crud_product.product.get(db, id=product_id)
+        if not product:
+            print(f"Product with ID {product_id} not found.")
+            return
+
+        # In a real app, you might combine more fields
+        text_to_embed = f"{product.name} {product.description}"
+        embedding = ai_service.generate_embedding(text_to_embed)
+
+        # Update the product with the new embedding
+        crud_product.product.update(db, db_obj=product, obj_in={"embedding": embedding})
+        print(f"Successfully generated and saved embedding for product ID: {product_id}")
+    finally:
+        db.close()
+
     return {"product_id": product_id, "status": "success"}
