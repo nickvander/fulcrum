@@ -7,7 +7,6 @@ from typing import List
 
 from src.schemas import product as product_schema
 from src.database import get_db
-from src.tasks import generate_product_embedding
 from src.crud import crud_product
 
 router = APIRouter()
