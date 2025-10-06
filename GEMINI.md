@@ -51,3 +51,9 @@ The backend is tested using `pytest`. Code quality is enforced with `ruff`.
     ```
 
 These checks are also automated and run on every push and pull request to the `main` branch using GitHub Actions.
+
+## Documentation Strategy
+
+This project uses the `/docs` directory to store detailed technical documentation. The goal is to provide a comprehensive resource for developers to understand the architecture, setup, and development workflows.
+
+When adding a new, significant feature, please consider adding or updating a corresponding document in the `/docs` directory. This ensures that the documentation evolves alongside the codebase.
