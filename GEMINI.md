@@ -42,6 +42,27 @@ the plan, and begin execution.
 **Formatting:** This project uses Prettier to enforce an 80-character line width
 for Markdown files. Please adhere to this when editing documentation.
 
+## Development Principles
+
+To ensure a maintainable and scalable codebase, this project adheres to the following principles:
+
+1.  **Repository Pattern:** All database interactions are abstracted away from the API layer using repositories.
+    -   A generic `CRUDBase` class provides common CRUD operations.
+    -   Model-specific repositories (e.g., `crud_product.py`) inherit from `CRUDBase` and implement any additional, model-specific logic.
+    -   API endpoints should be thin and delegate all database logic to the repository layer.
+
+2.  **Centralized API Routing:** The API routing for each version is centralized in a single file (e.g., `src/api/v1/api.py`).
+    -   This file is responsible for including all endpoint routers and defining their prefixes and tags.
+    -   The main `main.py` application file should only include the top-level API router for each version.
+
+3.  **Security Best Practices:**
+    -   Passwords are never stored in plaintext. They are hashed using `bcrypt` via the `passlib` library.
+    -   Authentication and authorization mechanisms will be implemented to protect sensitive endpoints.
+
+4.  **Efficient Testing:**
+    -   Database fixtures are session-scoped to improve test performance.
+    -   Reusable data fixtures are used to keep tests clean and DRY.
+
 ## Phased Development Plan
 
 The project is divided into eight distinct phases:

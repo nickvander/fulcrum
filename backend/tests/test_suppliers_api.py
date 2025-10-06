@@ -5,7 +5,7 @@ def test_create_supplier(client: TestClient):
     Test creating a supplier successfully.
     """
     response = client.post(
-        "/suppliers/",
+        "/api/v1/suppliers/",
         json={
             "name": "Test Supplier",
             "contact_person": "John Doe",
@@ -25,14 +25,14 @@ def test_read_suppliers(client: TestClient):
     """
     # Create a supplier first
     client.post(
-        "/suppliers/",
+        "/api/v1/suppliers/",
         json={
             "name": "Another Supplier",
             "email": "contact@anothersupplier.com",
         },
     )
 
-    response = client.get("/suppliers/")
+    response = client.get("/api/v1/suppliers/")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)

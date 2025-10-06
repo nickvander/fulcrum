@@ -3,20 +3,15 @@ import os
 import sys
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-
-# Load environment variables from .env file
-load_dotenv()
+from alembic import context
 
 # Add the project root to the Python path to find the 'src' module
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-from alembic import context
 from src.models.base import Base
-from src.models.product import *
-from src.models.inventory import *
-from src.models.user import *
-from src.models.marketplace import *
-from src.models.order import *
+
+# Load environment variables from .env file
+load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

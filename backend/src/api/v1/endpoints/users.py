@@ -5,7 +5,7 @@ from src.schemas import user as user_schema
 from src.database import get_db
 from src.crud import crud_user
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter()
 
 @router.post("/", response_model=user_schema.User, tags=["users"])
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
