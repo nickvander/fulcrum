@@ -12,3 +12,17 @@ from .inventory import InventoryItem
 from .user import User
 from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
 from .order import SalesOrder, SalesOrderItem
+
+__all__ = [
+    "Base",
+    "Product",
+    "ProductImage",
+    "Supplier",
+    "InventoryItem",
+    "User",
+    "Marketplace",
+    "MarketplaceCredentials",
+    "MarketplaceListing",
+    "SalesOrder",
+    "SalesOrderItem",
+]

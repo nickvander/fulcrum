@@ -4,6 +4,10 @@ AI-centric inventory management and marketplace management.
 
 This repository contains the source code for the Fulcrum platform, an AI-first commerce hub designed to streamline the entire product lifecycle.
 
+## Documentation
+
+For detailed technical documentation on the project architecture, setup, and development workflows, please see the **[Technical Documentation Hub](./docs/README.md)**.
+
 ## Getting Started
 
 This project is containerized using Docker. All services for the backend (API, database, background workers) are managed via Docker Compose.
