@@ -36,3 +36,18 @@ The project is divided into eight distinct phases:
 6.  **Phase 6: Deep Marketplace Integration Engine:** Synchronize products, stock, and orders with third-party marketplaces.
 7.  **Phase 7: The Hybrid E-commerce Storefront:** Build a public-facing shop with direct and marketplace purchase options.
 8.  **Phase 8: Advanced Multi-Channel Analytics:** Develop a dashboard for analyzing sales data across all channels.
+
+## Testing
+
+The backend is tested using `pytest`. Code quality is enforced with `ruff`.
+
+*   **Run all tests:**
+    ```bash
+    docker compose exec backend python -m pytest
+    ```
+*   **Run the linter:**
+    ```bash
+    docker compose exec backend ruff check .
+    ```
+
+These checks are also automated and run on every push and pull request to the `main` branch using GitHub Actions.
