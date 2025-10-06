@@ -52,3 +52,6 @@ services:
       - CELERY_BROKER_URL=${REDIS_URL:-redis://redis:6379/0}
     depends_on:
       - redis
+
+volumes:
+  pg_data:
