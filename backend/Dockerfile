@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install uv
 
 # Install any needed packages specified in requirements.txt using uv
-RUN uv pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --system --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application's code to the working directory
 COPY ./src /app/src

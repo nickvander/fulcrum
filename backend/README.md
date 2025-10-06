@@ -47,16 +47,14 @@ The backend is responsible for:
 
 ## Database Migrations
 
-This project uses Alembic to manage database schema changes.
-
-**Important Note:** There is a known issue with running `alembic` commands via `docker compose exec` due to Docker networking context. The recommended way to run migrations is to use `docker compose run`, which ensures the command runs within the correct network.
+This project uses Alembic to manage database schema changes. A wrapper script, `migrate.sh`, is provided to simplify the process of running migrations within the Docker container.
 
 ### Generating a New Migration
 
-After making changes to the SQLAlchemy models in `src/models/`, you need to generate a new migration script:
+After making changes to the SQLAlchemy models in `src/models/`, you need to generate a new migration script. Run the following command from the project root:
 
 ```bash
-docker compose run --rm backend alembic revision --autogenerate -m "Your descriptive migration message"
+docker compose exec backend ./migrate.sh revision --autogenerate -m "Your descriptive migration message"
 ```
 
 ### Applying Migrations
@@ -64,7 +62,7 @@ docker compose run --rm backend alembic revision --autogenerate -m "Your descrip
 To apply all pending migrations to the database, run:
 
 ```bash
-docker compose run --rm backend alembic upgrade head
+docker compose exec backend ./migrate.sh upgrade head
 ```
 
 ## Project Structure
