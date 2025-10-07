@@ -39,6 +39,17 @@ docker compose exec backend python -m pytest
 - Running the linter helps enforce a consistent code style and catches potential
   bugs before they are committed.
 
+## Frontend (Angular)
+
+Unit test files (`.spec.ts`) have been generated for all components and services
+in the `frontend/` directory.
+
+However, the test runner (Karma/Jasmine) is currently **non-functional** due to
+complex dependency and environment-specific configuration issues that were
+encountered during setup. Resolving the test runner is a high-priority task for
+a future work session. Once fixed, the CI pipeline will be updated to include a
+frontend testing stage.
+
 ### Running the Linter Locally
 
 To check the entire backend codebase for issues, run:

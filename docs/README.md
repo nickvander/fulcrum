@@ -22,5 +22,5 @@ workflows for the platform.
     Actions CI pipeline works.
 
 - **[5. Frontend Setup & Architecture](./frontend-setup.md)**
-  - A comprehensive guide to the setup, architecture, and development
-    workflows for the Angular PWA.
+  - A comprehensive guide to the setup, architecture, and development workflows
+    for the Angular PWA.

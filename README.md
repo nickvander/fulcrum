@@ -50,6 +50,7 @@ database, background workers) are managed via Docker Compose.
 
 4.  **Build and start the services:**
     - From the root directory of the project, run:
+
     ```bash
     docker compose up --build
     ```
@@ -113,8 +114,8 @@ The project uses Alembic to manage database schema migrations.
   - Use the Conventional Commits format (e.g., `feat:`, `fix:`, `docs:`,
     `chore:`).
 - **Markdown Formatting:**
-  - All Markdown files (`.md`) in this project are automatically formatted
-    using Prettier to ensure a consistent line length and style.
+  - All Markdown files (`.md`) in this project are automatically formatted using
+    Prettier to ensure a consistent line length and style.
   - Before committing any changes to Markdown files, please run the formatter.
   - **To check for formatting issues:**
     ```bash
