@@ -11,6 +11,7 @@ export default {
     playwrightLauncher({ product: 'chromium' }),
   ],
   testsStartTimeout: 60000,
+  files: ['./dist/frontend/**/*.spec.js'],
   testFramework: {
     // we are using jasmine, so we don't need to configure anything here
   },
