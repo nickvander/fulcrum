@@ -13,7 +13,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.html',
-  styleUrl: './scss',
+  styleUrl: './product-list.scss',
   standalone: true,
   imports: [
     CommonModule,

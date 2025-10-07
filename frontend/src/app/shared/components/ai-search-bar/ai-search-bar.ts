@@ -11,7 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-ai-search-bar',
   templateUrl: './ai-search-bar.html',
-  styleUrl: './scss',
+  styleUrl: './ai-search-bar.scss',
   standalone: true,
   imports: [
     CommonModule,
