@@ -1,0 +1,20 @@
+.container {
+  padding: 2rem;
+}
+
+mat-card {
+  max-width: 800px;
+  margin: auto;
+}
+
+mat-form-field {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}

@@ -1,0 +1,10 @@
+<mat-form-field class="search-bar" appearance="outline">
+  <mat-label>Semantic Search</mat-label>
+  <input matInput [formControl]="searchControl" placeholder="e.g., 'red t-shirts for summer'">
+  <button mat-icon-button matSuffix (click)="startVoiceSearch()" aria-label="Search by voice">
+    <mat-icon>mic</mat-icon>
+  </button>
+  <button *ngIf="searchControl.value" mat-icon-button matSuffix (click)="clearSearch()" aria-label="Clear search">
+    <mat-icon>close</mat-icon>
+  </button>
+</mat-form-field>
