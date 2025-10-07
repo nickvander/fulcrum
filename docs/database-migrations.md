@@ -31,10 +31,12 @@ new column), you need to ask Alembic to automatically generate a migration
 script that reflects this change.
 
 - **Command:**
+
   ```bash
   # From the project root
   docker compose exec backend ./migrate.sh revision --autogenerate -m "Your descriptive migration message"
   ```
+
 - **What it does:**
   - Alembic connects to the database and inspects the current state of the
     tables.
@@ -51,10 +53,12 @@ Once the migration script has been generated and reviewed, you can apply it to
 the database.
 
 - **Command:**
+
   ```bash
   # From the project root
   docker compose exec backend ./migrate.sh upgrade head
   ```
+
 - **What it does:**
   - Alembic checks which migrations have not yet been applied to the database.
   - It executes the `upgrade()` function in all pending migration scripts in

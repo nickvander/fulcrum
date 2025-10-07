@@ -42,16 +42,14 @@ All commands should be run from the `frontend/` directory.
   npm test
   ```
 
-  **Note:** The frontend test runner is currently non-functional due to complex
-  dependency and environment issues. While all generated components and services
-  have corresponding `.spec.ts` files, the test suite will not execute
-  successfully. Resolving this is a high-priority task documented in
-  `work/05-frontend-testing-hardening.md`.
+  This command uses the Web Test Runner to execute all unit tests (`.spec.ts` files) in a headless Chromium browser.
 
 - **Build for production:**
+
   ```bash
   ng build
   ```
+
   The production-ready static files will be generated in the
   `frontend/dist/frontend/browser/` directory.
 

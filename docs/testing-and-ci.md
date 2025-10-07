@@ -41,14 +41,17 @@ docker compose exec backend python -m pytest
 
 ## Frontend (Angular)
 
-Unit test files (`.spec.ts`) have been generated for all components and services
-in the `frontend/` directory.
+The frontend application uses the [Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) to execute its unit tests. All components and services generated via the Angular CLI include a corresponding `.spec.ts` file.
 
-However, the test runner (Karma/Jasmine) is currently **non-functional** due to
-complex dependency and environment-specific configuration issues that were
-encountered during setup. Resolving the test runner is a high-priority task for
-a future work session. Once fixed, the CI pipeline will be updated to include a
-frontend testing stage.
+The test environment is configured to use a headless Chromium browser, making it suitable for both local development and automated execution in a CI/CD pipeline.
+
+### Running Tests Locally
+
+To run the entire frontend test suite, navigate to the `frontend/` directory and run:
+
+```bash
+npm test
+```
 
 ### Running the Linter Locally
 

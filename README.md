@@ -67,14 +67,22 @@ smooth development process.
 
 1.  **Fork the repository** and clone it to your local machine.
 2.  **Create a new branch** for your feature or bug fix:
-    `git checkout -b feature/your-feature-name`.
+
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+
 3.  **Make your changes.** Please adhere to the coding style and conventions
     used throughout the project.
 4.  **Commit your changes** with a clear and descriptive commit message. We
     follow the [Conventional Commits](https://www.conventionalcommits.org/)
     specification.
 5.  **Push your branch** to your fork:
-    `git push origin feature/your-feature-name`.
+
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+
 6.  **Open a pull request** to the `main` branch of the original repository.
 
 ### Key Commands
@@ -92,13 +100,17 @@ The project uses Alembic to manage database schema migrations.
 
 - **Generate a new migration script** after changing a model in
   `backend/src/models/`:
+
   ```bash
   docker compose exec backend alembic revision --autogenerate -m "Your migration message"
   ```
+
 - **Apply all pending migrations:**
+
   ```bash
   docker compose exec backend alembic upgrade head
   ```
+
   _(Note: There is a known issue with the `exec` command in some WSL2
   environments. If you encounter DNS or connection errors, please see the
   `backend/README.md` for potential workarounds.)_
@@ -118,10 +130,15 @@ The project uses Alembic to manage database schema migrations.
     Prettier to ensure a consistent line length and style.
   - Before committing any changes to Markdown files, please run the formatter.
   - **To check for formatting issues:**
+
     ```bash
     npm run lint:md
     ```
+
   - **To automatically fix formatting issues:**
+
     ```bash
     npm run format:md
     ```
+
+

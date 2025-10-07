@@ -24,3 +24,5 @@ workflows for the platform.
 - **[5. Frontend Setup & Architecture](./frontend-setup.md)**
   - A comprehensive guide to the setup, architecture, and development workflows
     for the Angular PWA.
+
+
