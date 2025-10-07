@@ -88,7 +88,11 @@
         "test": {
           "builder": "@angular-devkit/build-angular:web-test-runner",
           "options": {
-            "polyfills": ["src/test.ts"],
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing",
+              "src/test.ts"
+            ],
             "tsConfig": "tsconfig.spec.json"
           }
         }
