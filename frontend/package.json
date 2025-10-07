@@ -6,7 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng build && wtr --tests-start-timeout 60000"
+    "test": "ng build && wtr \"./dist/frontend/**/*.spec.js\" --tests-start-timeout 60000"
   },
   "prettier": {
     "printWidth": 100,
