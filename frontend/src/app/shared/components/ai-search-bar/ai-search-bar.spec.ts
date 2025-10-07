@@ -1,23 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { TestBed } from '@angular/core/testing';
 import { AiSearchBar } from './ai-search-bar';
 
 describe('AiSearchBar', () => {
-  let component: AiSearchBar;
-  let fixture: ComponentFixture<AiSearchBar>;
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AiSearchBar]
-    })
-    .compileComponents();
-
-    fixture = TestBed.createComponent(AiSearchBar);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+      declarations: [AiSearchBar],
+    }).compileComponents();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('should create the component', () => {
+    const fixture = TestBed.createComponent(AiSearchBar);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
   });
 });

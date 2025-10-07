@@ -8,13 +8,7 @@ const replace = fromRollup(rollupReplace);
 
 export default {
   browsers: [
-    playwrightLauncher({
-      product: 'chromium',
-      launchOptions: {
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      },
-    }),
+    playwrightLauncher({ product: 'chromium' }),
   ],
   testFramework: {
     // we are using jasmine, so we don't need to configure anything here
@@ -30,6 +24,4 @@ export default {
       },
     }),
   ],
-  files: ['./dist/test-out/**/*.spec.js'],
-  nodeResolve: true,
 };
