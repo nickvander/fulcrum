@@ -16,10 +16,8 @@ const MATERIAL_MODULES = [
 ];
 
 @NgModule({
-  declarations: [
-    Login
-  ],
   imports: [
+    Login,
     CommonModule,
     ReactiveFormsModule,
     HttpClientModule,

@@ -19,10 +19,10 @@ const MATERIAL_MODULES = [
 
 @NgModule({
   declarations: [
-    Header,
     Sidenav
   ],
   imports: [
+    Header,
     CommonModule,
     RouterModule,
     ...MATERIAL_MODULES
