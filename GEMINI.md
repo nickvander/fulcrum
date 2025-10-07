@@ -14,8 +14,12 @@ codebase.
   PWA module (`@angular/pwa`).
 - **Backend:** Python, FastAPI, SQLAlchemy, Alembic, Pydantic, Celery & Redis.
 - **Database:** PostgreSQL with the `pgvector` extension.
-- **Deployment:** Docker & Docker Compose for the backend, static hosting for
-  the e-commerce frontend.
+- **Deployment:** Docker & Docker Compose for the backend, static hosting for the e-commerce frontend.
+
+## Development Principles
+
+-   **Frontend Testing:** The frontend application uses the Web Test Runner for unit testing. All new components and services must be accompanied by a corresponding `.spec.ts` file with adequate test coverage.
+-   **Markdown Formatting:** All Markdown files (`.md`) in this project are formatted using Prettier. Before committing any changes to documentation, run `npm run format:md` to ensure consistency.
 
 ## Project Structure
 
