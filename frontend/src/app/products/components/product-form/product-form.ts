@@ -12,7 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 @Component({
   selector: 'app-product-form',
   templateUrl: './product-form.html',
-  styleUrl: './scss',
+  styleUrl: './product-form.scss',
   standalone: true,
   imports: [
     CommonModule,

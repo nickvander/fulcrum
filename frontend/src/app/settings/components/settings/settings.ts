@@ -10,7 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.html',
-  styleUrl: './scss',
+  styleUrl: './settings.scss',
   standalone: true,
   imports: [
     CommonModule,
