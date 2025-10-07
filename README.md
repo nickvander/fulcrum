@@ -58,6 +58,30 @@ database, background workers) are managed via Docker Compose.
     - This will build the necessary Docker images and start all services. The
       API will be available at `http://localhost:8000`.
 
+## Testing
+
+The project includes a comprehensive test suite for both the backend and
+frontend.
+
+### Backend Testing
+
+The backend is tested using `pytest`. To run the test suite, execute the
+following command from the root directory:
+
+```bash
+docker compose exec backend python -m pytest
+```
+
+### Frontend Testing
+
+The frontend is tested using the Web Test Runner and Playwright. To run the test
+suite, navigate to the `frontend` directory and run the `test` script:
+
+```bash
+cd frontend
+npm test
+```
+
 ## How to Contribute
 
 We welcome contributions to Fulcrum! Please follow these guidelines to ensure a
@@ -128,7 +152,8 @@ The project uses Alembic to manage database schema migrations.
 - **Markdown Formatting:**
   - All Markdown files (`.md`) in this project are automatically formatted using
     Prettier to ensure a consistent line length and style.
-  - Before committing any changes to Markdown files, please run the formatter.
+  - Before committing any changes to Markdown files, please run the formatter from
+    the root of the project.
   - **To check for formatting issues:**
 
     ```bash
@@ -140,5 +165,3 @@ The project uses Alembic to manage database schema migrations.
     ```bash
     npm run format:md
     ```
-
-

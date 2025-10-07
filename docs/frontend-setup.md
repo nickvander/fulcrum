@@ -42,7 +42,8 @@ All commands should be run from the `frontend/` directory.
   npm test
   ```
 
-  This command uses the Web Test Runner to execute all unit tests (`.spec.ts` files) in a headless Chromium browser.
+  This command uses the Web Test Runner to execute all unit tests (`.spec.ts`
+  files) in a headless Chromium browser.
 
 - **Build for production:**
 

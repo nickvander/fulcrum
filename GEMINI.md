@@ -14,12 +14,46 @@ codebase.
   PWA module (`@angular/pwa`).
 - **Backend:** Python, FastAPI, SQLAlchemy, Alembic, Pydantic, Celery & Redis.
 - **Database:** PostgreSQL with the `pgvector` extension.
-- **Deployment:** Docker & Docker Compose for the backend, static hosting for the e-commerce frontend.
+- **Deployment:** Docker & Docker Compose for the backend, static hosting for
+  the e-commerce frontend.
 
 ## Development Principles
 
--   **Frontend Testing:** The frontend application uses the Web Test Runner for unit testing. All new components and services must be accompanied by a corresponding `.spec.ts` file with adequate test coverage.
--   **Markdown Formatting:** All Markdown files (`.md`) in this project are formatted using Prettier. Before committing any changes to documentation, run `npm run format:md` to ensure consistency.
+To ensure a maintainable and scalable codebase, this project adheres to the
+following principles:
+
+1.  **Repository Pattern (Backend):** All database interactions are abstracted
+    away from the API layer using repositories.
+    - A generic `CRUDBase` class provides common CRUD operations.
+    - Model-specific repositories (e.g., `crud_product.py`) inherit from
+      `CRUDBase` and implement any additional, model-specific logic.
+    - API endpoints should be thin and delegate all database logic to the
+      repository layer.
+
+2.  **Centralized API Routing (Backend):** The API routing for each version is
+    centralized in a single file (e.g., `src/api/v1/api.py`).
+    - This file is responsible for including all endpoint routers and defining
+      their prefixes and tags.
+    - The main `main.py` application file should only include the top-level API
+      router for each version.
+
+3.  **Security Best Practices (Backend):**
+    - Passwords are never stored in plaintext. They are hashed using `bcrypt`
+      via the `passlib` library.
+    - Authentication and authorization mechanisms will be implemented to protect
+      sensitive endpoints.
+
+4.  **Efficient Testing (Backend):**
+    - Database fixtures are session-scoped to improve test performance.
+    - Reusable data fixtures are used to keep tests clean and DRY.
+
+5.  **Frontend Testing:** The frontend application uses the Web Test Runner with
+    Playwright for unit testing. All new components and services must be
+    accompanied by a corresponding `.spec.ts` file with adequate test coverage.
+
+6.  **Markdown Formatting:** All Markdown files (`.md`) in this project are
+    formatted using Prettier. Before committing any changes to documentation,
+    run `npm run format:md` to ensure consistency.
 
 ## Project Structure
 

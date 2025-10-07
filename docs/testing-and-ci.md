@@ -41,33 +41,32 @@ docker compose exec backend python -m pytest
 
 ## Frontend (Angular)
 
-The frontend application uses the [Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) to execute its unit tests. All components and services generated via the Angular CLI include a corresponding `.spec.ts` file.
+The frontend application uses the
+[Web Test Runner](https://modern-web.dev/docs/test-runner/overview/) with
+Playwright to execute its unit tests. All components and services generated via
+the Angular CLI include a corresponding `.spec.ts` file.
 
-The test environment is configured to use a headless Chromium browser, making it suitable for both local development and automated execution in a CI/CD pipeline.
+The test environment is configured to use a headless Chromium browser, making it
+suitable for both local development and automated execution in a CI/CD pipeline.
 
 ### Running Tests Locally
 
-To run the entire frontend test suite, navigate to the `frontend/` directory and run:
+To run the entire frontend test suite, navigate to the `frontend/` directory and
+run:
 
 ```bash
 npm test
 ```
 
-### Running the Linter Locally
-
-To check the entire backend codebase for issues, run:
-
-```bash
-docker compose exec backend ruff check .
-```
-
-## Continuous Integration (CI) with GitHub Actions
+### Continuous Integration (CI) with GitHub Actions
 
 The file `.github/workflows/ci.yml` defines a GitHub Actions workflow that
-automates our quality checks.
+automates our quality checks for both the backend and frontend.
 
 This workflow is triggered on every `push` and `pull_request` to the `main`
-branch. It performs the following steps:
+branch. It performs the following steps in parallel:
+
+**Backend:**
 
 1.  **Checkout Code:** Checks out the latest version of your repository.
 2.  **Build Services:** Builds all the Docker containers using
@@ -78,6 +77,16 @@ branch. It performs the following steps:
     errors, the workflow fails.
 5.  **Run Tests:** Executes the `python -m pytest` command. If any test fails,
     the workflow fails.
+
+**Frontend:**
+
+1.  **Checkout Code:** Checks out the latest version of your repository.
+2.  **Set up Node.js:** Installs the correct version of Node.js.
+3.  **Install Dependencies:** Installs all the necessary npm packages.
+4.  **Install Playwright Browsers:** Installs the browsers required by
+    Playwright.
+5.  **Run Tests:** Executes the `npm test` command. If any test fails, the
+    workflow fails.
 
 This ensures that code merged into the `main` branch always meets our quality
 and correctness standards.
