@@ -52,8 +52,11 @@ following principles:
     accompanied by a corresponding `.spec.ts` file with adequate test coverage.
 
 6.  **Markdown Formatting:** All Markdown files (`.md`) in this project are
-    formatted using Prettier. Before committing any changes to documentation,
-    run `npm run format:md` to ensure consistency.
+    formatted using Prettier.
+    - **Recommended:** Use a Prettier extension in your code editor (e.g., for
+      VS Code) to format files automatically on save.
+    - **Alternative:** To format all Markdown files from the command line, run
+      `npm run format:md` from the root of the project.
 
 ## Project Structure
 

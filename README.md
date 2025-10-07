@@ -150,18 +150,12 @@ The project uses Alembic to manage database schema migrations.
   - Use the Conventional Commits format (e.g., `feat:`, `fix:`, `docs:`,
     `chore:`).
 - **Markdown Formatting:**
-  - All Markdown files (`.md`) in this project are automatically formatted using
-    Prettier to ensure a consistent line length and style.
-  - Before committing any changes to Markdown files, please run the formatter from
-    the root of the project.
-  - **To check for formatting issues:**
-
-    ```bash
-    npm run lint:md
-    ```
-
-  - **To automatically fix formatting issues:**
-
-    ```bash
-    npm run format:md
-    ```
+  - All Markdown files (`.md`) in this project are formatted using Prettier.
+  - **VS Code (Recommended):**
+    - Install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+      extension (it will be recommended automatically).
+    - The project is pre-configured to format Markdown files automatically on
+      save.
+  - **Command Line:**
+    - To check for formatting issues: `npm run lint:md`
+    - To automatically fix formatting issues: `npm run format:md`
