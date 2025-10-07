@@ -25,4 +25,5 @@ export default {
       },
     }),
   ],
+  files: ['./dist/frontend/**/*.spec.js'],
 };
