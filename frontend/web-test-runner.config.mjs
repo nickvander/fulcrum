@@ -10,6 +10,7 @@ export default {
   browsers: [
     playwrightLauncher({ product: 'chromium' }),
   ],
+  testsStartTimeout: 60000,
   testFramework: {
     // we are using jasmine, so we don't need to configure anything here
   },
