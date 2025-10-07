@@ -20,10 +20,8 @@ const MATERIAL_MODULES = [
 ];
 
 @NgModule({
-  declarations: [
-    Settings
-  ],
   imports: [
+    Settings,
     CommonModule,
     SettingsRoutingModule,
     ReactiveFormsModule,

@@ -28,11 +28,9 @@ const MATERIAL_MODULES = [
 ];
 
 @NgModule({
-  declarations: [
-    ProductList,
-    ProductForm
-  ],
   imports: [
+    ProductList,
+    ProductForm,
     CommonModule,
     ProductsRoutingModule,
     ReactiveFormsModule,

@@ -12,10 +12,8 @@ import { AuthInterceptor } from './auth/interceptors/auth-interceptor';
 import { ServiceWorkerModule } from '@angular/service-worker';
 
 @NgModule({
-  declarations: [
-    App
-  ],
   imports: [
+    App,
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,

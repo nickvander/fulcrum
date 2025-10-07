@@ -1,14 +1,30 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { ProductService } from '../../services/product';
 import { Product } from '../../models/product.model';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { SharedModule } from '../../../shared/shared-module';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.html',
-  styleUrl: './product-list.scss'
+  styleUrl: './scss',
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    SharedModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatButtonModule,
+    MatIconModule,
+  ],
 })
 export class ProductList implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['name', 'sku', 'default_resale_price', 'actions'];

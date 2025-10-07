@@ -15,10 +15,8 @@ const MATERIAL_MODULES = [
 ];
 
 @NgModule({
-  declarations: [
-    AiSearchBar
-  ],
   imports: [
+    AiSearchBar,
     CommonModule,
     ReactiveFormsModule,
     ...MATERIAL_MODULES
