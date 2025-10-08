@@ -90,7 +90,28 @@ centralized state management.
     - On success, navigate to the "Add Product" form, pre-filling the fields
       with the data returned from the AI service.
 
-### 5. **Configuration and Final `TODO`s**
+### 5. **Implement Product Image Uploads**
+
+- **Task:** Allow users to upload and manage images for each product.
+- **Backend Actions:**
+  - Create a new SQLAlchemy model, `ProductImage`, with fields for `id`,
+    `product_id`, `image_path`, and `is_primary`.
+  - Generate a new Alembic migration to create the `product_images` table in
+    the database.
+  - Create a new endpoint, `POST /api/v1/products/{product_id}/images`, that
+    handles the file upload, saves the image, and creates a corresponding
+    `ProductImage` record.
+  - Update the main `GET /api/v1/products/{product_id}` endpoint to include a
+    list of associated images in its response.
+- **Frontend Actions:**
+  - In `ProductFormComponent`, add a new section for image management.
+  - Include a file input (`<input type="file">`) to allow users to select
+    images.
+  - On image selection, call a new `productService.uploadProductImage` method.
+  - Display the uploaded images in a simple gallery or list within the form,
+    with an option to set one as the primary image.
+
+### 6. **Configuration and Final `TODO`s**
 
 - **Task:** Clean up remaining technical debt.
 - **Actions:**
@@ -98,3 +119,13 @@ centralized state management.
     `environment.ts` file.
   - **Settings Page:** Briefly implement the save/load logic for the settings
     page to remove the `TODO`s.
+
+## Validation
+
+- All backend and frontend tests must pass in the CI pipeline.
+- The application must feel responsive, with loading indicators for all API
+  calls and clear success/error notifications for all user actions.
+- The product list must update automatically after any CRUD operation.
+- A user can successfully upload one or more images to a product.
+- The full photo ingestion flow must be functional end-to-end.
+- A user can successfully create, update, and delete a product.
