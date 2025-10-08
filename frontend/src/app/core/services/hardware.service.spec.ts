@@ -5,22 +5,28 @@ import { firstValueFrom } from 'rxjs';
 describe('HardwareService', () => {
   let service: HardwareService;
   let getUserMediaSpy: jasmine.Spy;
+  let originalGetUserMedia: any;
 
   beforeEach(() => {
-    // In headless CI environments, navigator.mediaDevices or getUserMedia might not exist.
-    // We create a dummy object/function to ensure the spy can always be attached.
+    // Ensure the global object exists before we try to modify it
     if (!navigator.mediaDevices) {
       (navigator as any).mediaDevices = {};
     }
-    if (!navigator.mediaDevices.getUserMedia) {
-      (navigator.mediaDevices as any).getUserMedia = async () => new MediaStream();
-    }
 
-    // Spy on the method BEFORE TestBed is configured to guarantee it's mocked.
-    getUserMediaSpy = spyOn(navigator.mediaDevices, 'getUserMedia');
+    // Store the original function so we can restore it later
+    originalGetUserMedia = navigator.mediaDevices.getUserMedia;
+
+    // Create a spy and overwrite the original function completely
+    getUserMediaSpy = jasmine.createSpy('getUserMediaSpy');
+    (navigator.mediaDevices as any).getUserMedia = getUserMediaSpy;
 
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
+  });
+
+  afterEach(() => {
+    // Restore the original function after each test to avoid side-effects
+    (navigator.mediaDevices as any).getUserMedia = originalGetUserMedia;
   });
 
   it('should be created', () => {
