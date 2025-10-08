@@ -6,6 +6,12 @@ describe('HardwareService', () => {
   let getUserMediaSpy: jasmine.Spy;
 
   beforeEach(() => {
+    // In some test environments (especially headless ones), navigator.mediaDevices might not exist.
+    // We create a dummy object to ensure the spy can be attached.
+    if (!navigator.mediaDevices) {
+      (navigator as any).mediaDevices = {};
+    }
+
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
     // Spy on the method for all tests in this block
