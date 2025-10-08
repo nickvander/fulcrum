@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { HardwareService } from './hardware.service';
+import { firstValueFrom } from 'rxjs';
 
 describe('HardwareService', () => {
   let service: HardwareService;
@@ -15,10 +16,11 @@ describe('HardwareService', () => {
       (navigator.mediaDevices as any).getUserMedia = async () => new MediaStream();
     }
 
+    // Spy on the method BEFORE TestBed is configured to guarantee it's mocked.
+    getUserMediaSpy = spyOn(navigator.mediaDevices, 'getUserMedia');
+
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
-    // Spy on the method for all tests in this block
-    getUserMediaSpy = spyOn(navigator.mediaDevices, 'getUserMedia');
   });
 
   it('should be created', () => {
@@ -29,8 +31,8 @@ describe('HardwareService', () => {
     const mockStream = {} as MediaStream;
     getUserMediaSpy.and.returnValue(Promise.resolve(mockStream));
 
-    const stream = await service.getCameraStream().toPromise();
-    
+    const stream = await firstValueFrom(service.getCameraStream());
+
     expect(stream).toBe(mockStream);
     expect(getUserMediaSpy).toHaveBeenCalledWith({
       video: { facingMode: 'environment' },
@@ -41,6 +43,6 @@ describe('HardwareService', () => {
     const mockError = new Error('Permission denied');
     getUserMediaSpy.and.returnValue(Promise.reject(mockError));
 
-    await expectAsync(service.getCameraStream().toPromise()).toBeRejectedWith(mockError);
+    await expectAsync(firstValueFrom(service.getCameraStream())).toBeRejectedWith(mockError);
   });
 });
