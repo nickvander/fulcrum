@@ -5,25 +5,40 @@ import { firstValueFrom } from 'rxjs';
 describe('HardwareService', () => {
   let service: HardwareService;
   let getUserMediaSpy: jasmine.Spy;
-  let originalMediaDevices: any;
+  let mediaDevicesPropertyDescriptor: PropertyDescriptor | undefined;
 
   beforeEach(() => {
-    // Store the original object so we can restore it
-    originalMediaDevices = navigator.mediaDevices;
+    // Store the original property descriptor
+    mediaDevicesPropertyDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      'mediaDevices'
+    );
 
-    // Create a spy and build a completely new mock object
+    // Create a spy and a mock object
     getUserMediaSpy = jasmine.createSpy('getUserMediaSpy');
-    (navigator as any).mediaDevices = {
-      getUserMedia: getUserMediaSpy
+    const mockMediaDevices = {
+      getUserMedia: getUserMediaSpy,
     };
+
+    // Make the property writable and set the mock
+    Object.defineProperty(navigator, 'mediaDevices', {
+      writable: true,
+      value: mockMediaDevices,
+    });
 
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
   });
 
   afterEach(() => {
-    // Restore the original object after each test
-    (navigator as any).mediaDevices = originalMediaDevices;
+    // Restore the original property descriptor
+    if (mediaDevicesPropertyDescriptor) {
+      Object.defineProperty(
+        navigator,
+        'mediaDevices',
+        mediaDevicesPropertyDescriptor
+      );
+    }
   });
 
   it('should be created', () => {
@@ -46,6 +61,8 @@ describe('HardwareService', () => {
     const mockError = new Error('Permission denied');
     getUserMediaSpy.and.returnValue(Promise.reject(mockError));
 
-    await expectAsync(firstValueFrom(service.getCameraStream())).toBeRejectedWith(mockError);
+    await expectAsync(
+      firstValueFrom(service.getCameraStream())
+    ).toBeRejectedWith(mockError);
   });
 });

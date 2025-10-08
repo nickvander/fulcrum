@@ -98,11 +98,3 @@ centralized state management.
     `environment.ts` file.
   - **Settings Page:** Briefly implement the save/load logic for the settings
     page to remove the `TODO`s.
-
-## Validation
-
-- All existing and new unit tests must pass.
-- The application must feel responsive, with loading indicators for all API
-  calls and clear success/error notifications for all user actions.
-- The product list must update automatically after any CRUD operation.
-- The full photo ingestion flow must be functional end-to-end.
