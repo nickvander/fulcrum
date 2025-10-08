@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AiSearchBar } from './components/ai-search-bar/ai-search-bar';
+import { SafeUrlPipe } from './pipes/safe-url-pipe';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
@@ -16,13 +17,17 @@ const MATERIAL_MODULES = [
 
 @NgModule({
   imports: [
-    AiSearchBar,
     CommonModule,
     ReactiveFormsModule,
     ...MATERIAL_MODULES
   ],
+  declarations: [AiSearchBar, SafeUrlPipe],
   exports: [
-    AiSearchBar
+    AiSearchBar,
+    SafeUrlPipe,
+    CommonModule,
+    ReactiveFormsModule,
+    ...MATERIAL_MODULES
   ]
 })
 export class SharedModule { }

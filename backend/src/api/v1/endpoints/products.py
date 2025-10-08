@@ -58,3 +58,22 @@ def search_products(
     products = crud_product.product.search(db, embedding=embedding, limit=10)
     return products
 
+@router.put("/{product_id}", response_model=product_schema.Product)
+def update_product(
+    product_id: int,
+    product_in: product_schema.ProductUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    Update a product and trigger a background task to re-generate its embedding.
+    """
+    db_product = crud_product.product.get(db=db, id=product_id)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    updated_product = crud_product.product.update(
+        db=db, db_obj=db_product, obj_in=product_in
+    )
+    generate_product_embedding.delay(updated_product.id)
+    return updated_product
+

@@ -5,6 +5,10 @@
       <mat-icon>add</mat-icon>
       <span>Add Product</span>
     </button>
+    <button mat-raised-button color="accent" routerLink="/ingest" class="scan-button">
+      <mat-icon>qr_code_scanner</mat-icon>
+      <span>Scan Product</span>
+    </button>
   </div>
 
   <app-ai-search-bar (searchQuery)="onSearchQuery($event)"></app-ai-search-bar>

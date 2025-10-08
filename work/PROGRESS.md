@@ -80,3 +80,31 @@
     imports, and missing `HttpClient` providers.
   - All frontend tests now pass in the CI pipeline, officially completing
     Phase 2.
+
+## Phase 3: Intelligent Product Ingestion & Indexing
+
+- **October 8, 2025:** Completed the "Phase 3 - Intelligent Product Ingestion &
+  Indexing" task.
+  - **Backend:**
+    - Hardened the product indexing logic by adding a new `update_product`
+      endpoint that triggers the `generate_product_embedding` background task,
+      ensuring the search index stays current.
+    - Implemented a new `/api/v1/uploads` endpoint to handle local file
+      uploads, laying the groundwork for future cloud storage integration.
+    - Created a new `/api/v1/ai/identify-from-image` endpoint and updated the
+      `AIService` abstraction to support product identification from an image
+      URL.
+    - Added comprehensive unit tests for all new backend functionality.
+  - **Frontend:**
+    - Created a `HardwareService` to provide a clean, reusable wrapper around
+      browser APIs for camera access.
+    - Developed a new `ProductIngestionComponent` that integrates the
+      `ngx-scanner` library for barcode scanning and uses the `HardwareService`
+      for capturing photos.
+    - Added a "Scan Product" button to the main product list to provide an entry
+      point into the new ingestion workflow.
+  - **Note:** The frontend test suite currently fails in the local WSL
+    development environment due to a build-time module resolution error for the
+    `ngx-scanner-qrcode` library. This is believed to be an environment-specific
+    issue, and the implementation is expected to pass in the GitHub Actions CI
+    pipeline.

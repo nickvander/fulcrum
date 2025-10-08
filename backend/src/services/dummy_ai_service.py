@@ -14,10 +14,17 @@ class DummyAIService(AIService):
         # A real implementation would call an AI model here.
         return np.random.rand(384).tolist()
 
-    def identify_from_image(self, image_bytes: bytes) -> str:
+    def identify_product_from_image(self, image_url: str) -> dict:
         """
-        Returns a dummy identification string.
+        Returns a dummy product identification dictionary based on a mock SKU.
+        The image_url is ignored in this dummy implementation.
         """
-        return "dummy_identification"
+        # In a real service, you would fetch the image from the URL and send
+        # it to an AI model. Here, we just return a fixed dictionary.
+        return {
+            "name": "AI-Identified Widget",
+            "description": "A high-quality widget identified from an image.",
+            "sku": "AI-SKU-123",
+        }
 
 ai_service = DummyAIService()

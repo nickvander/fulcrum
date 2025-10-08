@@ -1,0 +1,37 @@
+/* Add some margin to the scan button */
+.scan-button {
+  margin-left: 16px;
+}
+
+/* Styling for the ingestion page */
+.ingestion-container {
+  padding: 24px;
+
+  .scanner-container {
+    max-width: 500px;
+    margin: 24px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .results {
+    margin-top: 24px;
+    padding: 16px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+  }
+}
