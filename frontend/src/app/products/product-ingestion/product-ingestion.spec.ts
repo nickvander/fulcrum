@@ -8,7 +8,7 @@ describe('ProductIngestion', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ProductIngestion]
+      imports: [ProductIngestion]
     })
     .compileComponents();
 
