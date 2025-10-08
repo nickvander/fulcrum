@@ -155,6 +155,11 @@ The backend is tested using `pytest`. Code quality is enforced with `ruff`.
   docker compose exec backend ruff check .
   ```
 
+**NOTE:** Due to persistent environment-specific issues with browser launching
+in WSL, the frontend tests (`npm test`) currently fail when run locally. Please
+rely on the GitHub Actions CI pipeline to verify frontend changes, as the tests
+run successfully in that clean environment.
+
 These checks are also automated and run on every push and pull request to the
 `main` branch using GitHub Actions.
 
