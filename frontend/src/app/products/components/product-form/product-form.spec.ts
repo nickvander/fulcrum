@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { ProductForm } from './product-form';
 import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('ProductForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductForm, RouterTestingModule],
+      imports: [ProductForm, RouterTestingModule, HttpClientTestingModule],
     }).compileComponents();
   });
 
