@@ -76,17 +76,19 @@ The project will be organized into two main directories:
 ## Project Workflow & Organization
 
 All project planning, progress tracking, and task-specific plans are located in
-the `/work` directory.
+the `/work` directory, which is organized as follows:
 
-- `work/00-project-plan.md`: The high-level project blueprint.
-- `work/PROGRESS.md`: A log of completed work for each phase.
-- `work/[number]-[task-name].md`: Detailed, actionable plans for specific tasks
-  or refactors.
+- `work/00-project-plan.md`: The high-level project blueprint. This should be
+  consulted for the overall vision and architecture.
+- `work/current/`: Contains the plan for the **active** development phase and
+  the main `PROGRESS.md` log.
+- `work/archive/`: Contains all plans and logs from **completed** phases for
+  historical reference.
 
-**Workflow for New Sessions:** To begin a new work cycle, first consult
-`work/PROGRESS.md` to understand the current state. Then, identify the next open
-task file in the `/work` directory (e.g., `work/01-refactor-phase-one.md`), read
-the plan, and begin execution.
+**Workflow for New Sessions:** To begin a new work cycle, first consult the
+`work/current/PROGRESS.md` file to understand the most recent state. Then,
+review the active phase plan within the `/work/current` directory to understand
+the immediate goals and tasks.
 
 **Formatting:** This project uses Prettier to enforce an 80-character line width
 for Markdown files. Please adhere to this when editing documentation.
