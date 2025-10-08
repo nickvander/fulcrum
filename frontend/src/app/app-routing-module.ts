@@ -16,7 +16,13 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   { path: '', redirectTo: '/products', pathMatch: 'full' },
-  { path: 'ingest', loadChildren: () => import('./products/product-ingestion/product-ingestion-module').then(m => m.ProductIngestionModule) },
+  {
+    path: 'ingest',
+    loadComponent: () =>
+      import('./products/product-ingestion/product-ingestion').then(
+        (m) => m.ProductIngestion
+      ),
+  },
   { path: '**', redirectTo: '/products' } // Wildcard route
 ];
 

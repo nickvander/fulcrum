@@ -2,14 +2,12 @@
   <h1>Product Ingestion</h1>
 
   <div class="scanner-container">
-    <ngx-scanner-qrcode #scanner
-      [stream]="cameraStream"
-      (event)="onScanSuccess($event)">
+    <ngx-scanner-qrcode #scanner (event)="onScanSuccess($event)">
     </ngx-scanner-qrcode>
   </div>
 
   <div class="controls">
-    <button mat-raised-button color="primary" (click)="capturePhoto()" [disabled]="!cameraStream">
+    <button mat-raised-button color="primary" (click)="capturePhoto()">
       Take Photo
     </button>
   </div>

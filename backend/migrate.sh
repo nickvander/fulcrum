@@ -6,6 +6,9 @@
 
 set -e
 
+# Change to the directory where the script is located to ensure alembic.ini is found
+cd "$(dirname "$0")"
+
 # The `dotenv` command is not available, so we will manually
 # export the DATABASE_URL. The python script `env.py` will
 # still load the full .env file.
@@ -14,4 +17,4 @@ if [ -f ".env" ]; then
 fi
 
 # Execute the alembic command with all arguments passed to this script
-alembic "$@"
+alembic -c /app/alembic.ini "$@"

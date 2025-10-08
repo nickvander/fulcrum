@@ -1,58 +1,67 @@
-# Frontend Setup & Architecture
+# Frontend Application Setup & Architecture
 
-This document provides a comprehensive guide to setting up, running, and
-understanding the architecture of the Fulcrum frontend application.
+This document provides a comprehensive guide to the setup, architecture, and
+development workflows for the Fulcrum frontend application.
 
-## 1. Prerequisites
+## 1. Getting Started
 
-Before you begin, ensure you have the following installed:
+To run the application for the first time, you need to start the backend
+services and create an initial administrative user.
 
-- [Node.js](https://nodejs.org/) (LTS version recommended)
-- [Angular CLI](https://angular.dev/tools/cli) (install globally with
-  `npm install -g @angular/cli`)
+### **Step 1: Launch the Backend**
 
-## 2. Project Setup
+The entire backend stack (API, database, background worker) is managed by Docker
+Compose. To start all services, run the following command from the root of the
+project:
 
-1.  **Navigate to the frontend directory:**
+```bash
+docker-compose up --build
+```
 
-    ```bash
-    cd frontend
-    ```
+On Linux, you may need to use `sudo`:
 
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
+```bash
+sudo docker-compose up -d --build
+```
 
-## 3. Key Scripts
+### **Step 2: Create an Initial User**
 
-All commands should be run from the `frontend/` directory.
+The system does not have a public user registration page. You must create the
+first user via the API. Open a new terminal and run the following command:
 
-- **Run the development server:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/users/" \
+     -H "Content-Type: application/json" \
+     -d '{"email": "admin@example.com", "password": "changeme"}'
+```
 
-  ```bash
-  ng serve
-  ```
+This will create a user with the email `admin@example.com` and the password
+`changeme`. You can now use these credentials to log into the frontend
+application.
 
-  The application will be available at `http://localhost:4200/`.
+## 2. Core Technologies
 
-- **Run unit tests:**
+- **Framework:** Angular 18
+- **UI Components:** Angular Material
+- **State Management:** RxJS with component-level services (no central store)
+- **Testing:** Web Test Runner with Playwright
 
-  ```bash
-  npm test
-  ```
+## 3. Project Structure
 
-  This command uses the Web Test Runner to execute all unit tests (`.spec.ts`
-  files) in a headless Chromium browser.
+The `frontend/` directory is a standard Angular CLI workspace. Key directories
+include:
 
-- **Build for production:**
+- `src/app/core`: Singleton services, guards, and interceptors.
+- `src/app/shared`: Reusable components, directives, and pipes.
+- `src/app/auth`: Components and services related to authentication.
+- `src/app/[feature]`: Feature modules (e.g., `products`, `settings`).
 
-  ```bash
-  ng build
-  ```
+## 4. Key Scripts
 
-  The production-ready static files will be generated in the
-  `frontend/dist/frontend/browser/` directory.
+- `ng serve`: Runs the development server.
+- `ng build`: Builds the application for production.
+- `npm test`: Runs the unit test suite using the Web Test Runner.
+
 
 ## 4. Application Architecture
 
