@@ -57,22 +57,21 @@ def test_search_products(client: TestClient, db: Session, test_product: Product)
     assert isinstance(data, list)
     assert len(data) > 0
     # The exact order isn't guaranteed with random embeddings,
-        # so we just check if the product is in the results.
-        assert test_product.name in [p["name"] for p in data]
-    
-    def test_update_product(client: TestClient, test_product: Product):
-        """
-        Test updating a product successfully and that the embedding task is called.
-        """
-        with patch("src.tasks.generate_product_embedding.delay") as mock_delay:
-            updated_name = "Updated Test Product"
-            response = client.put(
-                f"/api/v1/products/{test_product.id}",
-                json={"name": updated_name},
-            )
-            assert response.status_code == 200
-            data = response.json()
-            assert data["name"] == updated_name
-            assert data["id"] == test_product.id
-            mock_delay.assert_called_once_with(test_product.id)
-    
+    # so we just check if the product is in the results.
+    assert test_product.name in [p["name"] for p in data]
+
+def test_update_product(client: TestClient, test_product: Product):
+    """
+    Test updating a product successfully and that the embedding task is called.
+    """
+    with patch("src.tasks.generate_product_embedding.delay") as mock_delay:
+        updated_name = "Updated Test Product"
+        response = client.put(
+            f"/api/v1/products/{test_product.id}",
+            json={"name": updated_name},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == updated_name
+        assert data["id"] == test_product.id
+        mock_delay.assert_called_once_with(test_product.id)
