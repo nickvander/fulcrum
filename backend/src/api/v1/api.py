@@ -5,7 +5,6 @@ from src.api.v1.endpoints import (
     suppliers,
     users,
     marketplace,
-    uploads,
     ai,
 )
 
