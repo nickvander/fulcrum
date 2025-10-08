@@ -3,44 +3,35 @@ import { HardwareService } from './hardware.service';
 
 describe('HardwareService', () => {
   let service: HardwareService;
+  let getUserMediaSpy: jasmine.Spy;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
+    // Spy on the method for all tests in this block
+    getUserMediaSpy = spyOn(navigator.mediaDevices, 'getUserMedia');
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should request camera stream', (done) => {
-    // Mock the browser API
+  it('should request camera stream', async () => {
     const mockStream = {} as MediaStream;
-    const getUserMediaSpy = spyOn(navigator.mediaDevices, 'getUserMedia').and.returnValue(
-      Promise.resolve(mockStream)
-    );
+    getUserMediaSpy.and.returnValue(Promise.resolve(mockStream));
 
-    service.getCameraStream().subscribe((stream) => {
-      expect(stream).toBe(mockStream);
-      expect(getUserMediaSpy).toHaveBeenCalledWith({
-        video: { facingMode: 'environment' },
-      });
-      done();
+    const stream = await service.getCameraStream().toPromise();
+    
+    expect(stream).toBe(mockStream);
+    expect(getUserMediaSpy).toHaveBeenCalledWith({
+      video: { facingMode: 'environment' },
     });
   });
 
-  it('should handle camera access denial', (done) => {
+  it('should handle camera access denial', async () => {
     const mockError = new Error('Permission denied');
-    spyOn(navigator.mediaDevices, 'getUserMedia').and.returnValue(
-      Promise.reject(mockError)
-    );
+    getUserMediaSpy.and.returnValue(Promise.reject(mockError));
 
-    service.getCameraStream().subscribe({
-      next: () => fail('should have failed'),
-      error: (err) => {
-        expect(err).toBe(mockError);
-        done();
-      },
-    });
+    await expectAsync(service.getCameraStream().toPromise()).toBeRejectedWith(mockError);
   });
 });
