@@ -1,10 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { Sidenav } from './sidenav';
+import { MatListModule } from '@angular/material/list';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('Sidenav', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [Sidenav],
+      imports: [MatListModule, NoopAnimationsModule],
     }).compileComponents();
   });
 

@@ -4,7 +4,7 @@ import { Settings } from './settings';
 describe('Settings', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [Settings],
+      imports: [Settings],
     }).compileComponents();
   });
 

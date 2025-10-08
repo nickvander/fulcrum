@@ -7,9 +7,14 @@ const commonjs = fromRollup(rollupCommonjs);
 const replace = fromRollup(rollupReplace);
 
 export default {
-  testsStartTimeout: 60000,
   browsers: [
-    playwrightLauncher({ product: 'chromium' }),
+    playwrightLauncher({
+      product: 'chromium',
+      executablePath: '/home/nickvander/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
+      launchOptions: {
+        args: ['--no-sandbox'],
+      },
+    }),
   ],
   testsStartTimeout: 60000,
   files: ['./dist/frontend/**/*.spec.js'],
@@ -27,5 +32,4 @@ export default {
       },
     }),
   ],
-  files: ['./dist/frontend/**/*.spec.js'],
 };

@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { Login } from './login';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('Login', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [Login],
+      imports: [Login, RouterTestingModule],
     }).compileComponents();
   });
 

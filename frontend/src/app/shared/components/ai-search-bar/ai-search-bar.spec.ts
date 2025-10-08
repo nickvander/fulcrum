@@ -4,7 +4,7 @@ import { AiSearchBar } from './ai-search-bar';
 describe('AiSearchBar', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [AiSearchBar],
+      imports: [AiSearchBar],
     }).compileComponents();
   });
 
