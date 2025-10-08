@@ -83,27 +83,18 @@
 
 ## Phase 3: Intelligent Product Ingestion & Indexing
 
-- **October 8, 2025:** Completed the "Phase 3 - Intelligent Product Ingestion &
-  Indexing" task after extensive debugging.
-  - **Backend:**
-    - Hardened product indexing by adding a `PUT` endpoint to regenerate
-      embeddings on update.
-    - Implemented the initial code for a file upload and AI image analysis
-      endpoint.
-    - **Troubleshooting:** Resolved a series of cascading startup failures in
-      the backend container. This involved correcting the `docker-compose.yml`
-      volume mounts, fixing database migration script execution, and resolving
-      a critical Pydantic configuration error.
-    - **Workaround:** A persistent Docker build cache issue prevented the
-      `python-multipart` dependency from being installed correctly. The file
-      upload endpoint, which depends on this library, has been temporarily
--     disabled to allow the application to run.
-  - **Frontend:**
-    - Created a `HardwareService` for camera access.
-    - Developed a standalone `ProductIngestionComponent` using `ngx-scanner`
-      for barcode scanning and photo capture.
-    - Refactored the `SharedModule` and several components to use modern,
-      standalone component architecture, resolving numerous build errors.
-  - **Outcome:** The backend is now stable and running, and the frontend is
-    feature-complete for this phase. An initial user can be created via the
-    API.
+- **October 8, 2025:** Completed the initial implementation for "Phase 3 -
+  Intelligent Product Ingestion & Indexing".
+  - **Backend:** Established endpoints for file uploads and AI analysis.
+  - **Frontend:** Created the `HardwareService` and `ProductIngestionComponent`
+    with barcode scanning and photo capture capabilities.
+  - **Troubleshooting:** Resolved numerous critical startup and build issues
+    across the backend and frontend, resulting in a stable, runnable
+    application. All CI tests are now passing.
+
+## Phase 3.5: Hardening & Feature Completion
+
+- **October 8, 2025:** Planned the "Hardening & Feature Completion" phase.
+  - Created a new work plan to address all outstanding `TODO` comments and
+    fully implement the core product CRUD and intelligent ingestion workflows
+    before beginning Phase 4.
