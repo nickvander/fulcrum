@@ -1,0 +1,26 @@
+<div class="ingestion-container">
+  <h1>Product Ingestion</h1>
+
+  <div class="scanner-container">
+    <ngx-scanner-qrcode #scanner
+      [stream]="cameraStream"
+      (event)="onScanSuccess($event)">
+    </ngx-scanner-qrcode>
+  </div>
+
+  <div class="controls">
+    <button mat-raised-button color="primary" (click)="capturePhoto()" [disabled]="!cameraStream">
+      Take Photo
+    </button>
+  </div>
+
+  <div class="results" *ngIf="scannedData">
+    <h2>Scanned Barcode Data:</h2>
+    <pre>{{ scannedData | json }}</pre>
+  </div>
+
+  <div class="results" *ngIf="capturedImage">
+    <h2>Captured Image:</h2>
+    <img [src]="capturedImage | safeUrl" alt="Captured product image" />
+  </div>
+</div>

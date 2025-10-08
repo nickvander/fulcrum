@@ -6,7 +6,8 @@ class AIService(ABC):
         pass
 
     @abstractmethod
-    def identify_from_image(self, image_bytes: bytes) -> str:
+    def identify_product_from_image(self, image_url: str) -> dict:
+        """Analyzes an image from a URL and returns structured product data."""
         pass
 
 class FileStorageService(ABC):
