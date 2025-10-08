@@ -17,6 +17,61 @@ completed phases, see the files in the `work/archive/` directory.
 ## Phase 3.5: Hardening & Feature Completion
 
 - **October 8, 2025:** Planned the "Hardening & Feature Completion" phase.
+
   - Created a new work plan to address all outstanding `TODO` comments and
+
     fully implement the core product CRUD and intelligent ingestion workflows
+
     before beginning Phase 4.
+
+  - **Troubleshooting & Key Learnings:**
+
+    - **Backend Startup:** A persistent "Connection reset by peer" error was
+
+      traced to a series of cascading startup failures. The key lessons were:
+
+      1.  **Docker Volumes:** Granular volume mounts (`./backend/src:/app/src`)
+
+          prevented root-level config files (`alembic.ini`) from being included
+
+          in the container. This was fixed by mounting the entire directory
+
+          (`./backend:/app`) and using an anonymous volume (`/app/venv`) to
+
+          protect the installed dependencies.
+
+      2.  **Pydantic Configuration:** Environment variables set in
+
+          `docker-compose.yml` for one service (e.g., `db`) can leak into
+
+          others and take precedence over `.env` files. The `Settings` model
+
+          was made more robust to handle this and construct the `DATABASE_URL`
+
+          dynamically.
+
+      3.  **Docker Caching:** A missing dependency (`python-multipart`) was not
+
+          being installed even after being added to `requirements.txt` due to
+
+          aggressive Docker layer caching. This required a temporary workaround
+
+          (disabling the endpoint) and highlights the need for `--no-cache`
+
+          builds when debugging dependency issues.
+
+    - **Frontend CI Tests:** The `HardwareService` test repeatedly failed in the
+
+      CI environment with a "Permission denied" error.
+
+      1.  **Read-Only Globals:** The headless browser in the CI pipeline enforces
+
+          a read-only `navigator.mediaDevices` object as a security feature.
+
+      2.  **Robust Mocking:** Standard `spyOn` and object replacement failed. The
+
+          definitive solution was to use `Object.defineProperty` to temporarily
+
+          make the property writable for the duration of the test, which is the
+
+          correct pattern for mocking locked-down global objects.
