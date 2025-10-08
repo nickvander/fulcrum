@@ -19,15 +19,16 @@ const MATERIAL_MODULES = [
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ...MATERIAL_MODULES
+    ...MATERIAL_MODULES,
+    AiSearchBar, // Import standalone components
+    SafeUrlPipe, // Import standalone pipes
   ],
-  declarations: [AiSearchBar, SafeUrlPipe],
   exports: [
-    AiSearchBar,
-    SafeUrlPipe,
+    AiSearchBar, // Re-export standalone components
+    SafeUrlPipe, // Re-export standalone pipes
     CommonModule,
     ReactiveFormsModule,
-    ...MATERIAL_MODULES
-  ]
+    ...MATERIAL_MODULES,
+  ],
 })
-export class SharedModule { }
+export class SharedModule {}

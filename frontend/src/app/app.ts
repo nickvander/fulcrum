@@ -1,26 +1,41 @@
 import { Component } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
-import { CommonModule } from '@angular/common';
+import { map, shareReplay, filter } from 'rxjs/operators';
+import { Router, NavigationEnd } from '@angular/router';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core-module';
-import { AppRoutingModule } from './app-routing-module';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
+  imports: [
+    AsyncPipe,
+    NgIf,
+    MatSidenavModule,
+    RouterModule,
+    CoreModule
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  standalone: true,
-  imports: [CommonModule, CoreModule, AppRoutingModule],
 })
 export class App {
   isHandset$: Observable<boolean>;
+  isLoginPage = false;
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(private breakpointObserver: BreakpointObserver, private router: Router) {
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(
         map(result => result.matches),
         shareReplay()
       );
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(event => {
+      this.isLoginPage = (event as NavigationEnd).url === '/login';
+    });
   }
 }

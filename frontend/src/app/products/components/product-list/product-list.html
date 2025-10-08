@@ -11,7 +11,7 @@
     </button>
   </div>
 
-  <app-ai-search-bar (searchQuery)="onSearchQuery($event)"></app-ai-search-bar>
+  <app-ai-search-bar (searchQuery)="onSearchQuery($any($event))"></app-ai-search-bar>
 
   <mat-table [dataSource]="dataSource" matSort>
     <!-- Name Column -->

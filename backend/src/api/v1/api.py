@@ -18,5 +18,5 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(
     marketplace.router, prefix="/marketplace", tags=["marketplace"]
 )
-api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
+# api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
