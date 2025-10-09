@@ -7,6 +7,8 @@ import { AsyncPipe, NgIf } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core-module';
+import { LoadingService } from './core/services/loading.service';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +18,8 @@ import { CoreModule } from './core/core-module';
     NgIf,
     MatSidenavModule,
     RouterModule,
-    CoreModule
+    CoreModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
@@ -24,8 +27,13 @@ import { CoreModule } from './core/core-module';
 export class App {
   isHandset$: Observable<boolean>;
   isLoginPage = false;
+  loading$: Observable<boolean>;
 
-  constructor(private breakpointObserver: BreakpointObserver, private router: Router) {
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    private router: Router,
+    private loadingService: LoadingService
+  ) {
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(
         map(result => result.matches),
@@ -37,5 +45,7 @@ export class App {
     ).subscribe(event => {
       this.isLoginPage = (event as NavigationEnd).url === '/login';
     });
+
+    this.loading$ = this.loadingService.loading$;
   }
 }

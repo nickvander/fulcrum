@@ -1,6 +1,26 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 
+# Schema for Product Images
+class ProductImageBase(BaseModel):
+    image_path: str
+    is_primary: Optional[int] = 0
+    source: Optional[str] = None
+
+class ProductImageCreate(ProductImageBase):
+    product_id: int
+
+class ProductImageUpdate(BaseModel):
+    is_primary: Optional[int] = None
+
+class ProductImage(ProductImageBase):
+    id: int
+    product_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Schema for Products
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -22,5 +42,6 @@ class ProductUpdate(BaseModel):
 class Product(ProductBase):
     id: int
     supplier_id: Optional[int] = None
+    images: List[ProductImage] = []
 
     model_config = ConfigDict(from_attributes=True)

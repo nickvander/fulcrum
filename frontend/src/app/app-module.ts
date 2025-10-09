@@ -10,6 +10,10 @@ import { CoreModule } from './core/core-module';
 import { AuthModule } from './auth/auth-module';
 import { AuthInterceptor } from './auth/interceptors/auth-interceptor';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
+import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 
 @NgModule({
   imports: [
@@ -24,12 +28,14 @@ import { ServiceWorkerModule } from '@angular/service-worker';
       // Register the ServiceWorker as soon as the application is stable
       // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000'
-    })
+    }),
+    MatSnackBarModule,
+    MatProgressSpinnerModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([AuthInterceptor]))
+    provideHttpClient(withInterceptors([AuthInterceptor, LoadingInterceptor, HttpErrorInterceptor]))
   ],
   bootstrap: [App]
 })

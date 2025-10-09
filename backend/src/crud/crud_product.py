@@ -1,10 +1,25 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from src.crud.base import CRUDBase
 from src.models.product import Product
 from src.schemas.product import ProductCreate, ProductUpdate
+from typing import List
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
+    def get(self, db: Session, id: int) -> Product | None:
+        return db.query(self.model).options(joinedload(self.model.images)).filter(self.model.id == id).first()
+
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> List[Product]:
+        return (
+            db.query(self.model)
+            .options(joinedload(self.model.images))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def get_by_sku(self, db: Session, *, sku: str) -> Product | None:
         return db.query(Product).filter(Product.sku == sku).first()
 

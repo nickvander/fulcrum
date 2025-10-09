@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -9,6 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { SharedModule } from '../../../shared/shared-module';
 import { RouterModule } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-product-list',
@@ -26,19 +29,26 @@ import { RouterModule } from '@angular/router';
     MatIconModule,
   ],
 })
-export class ProductList implements OnInit, AfterViewInit {
+export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = ['name', 'sku', 'default_resale_price', 'actions'];
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
+  private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
-    this.productService.getProducts().subscribe((products) => {
-      this.dataSource.data = products;
-    });
+    this.productService.products$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((products) => {
+        this.dataSource.data = products;
+      });
+    this.productService.getProducts();
   }
 
   ngAfterViewInit(): void {
@@ -46,9 +56,24 @@ export class ProductList implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   deleteProduct(id: number): void {
-    console.log(`TODO: Implement delete for product with id: ${id}`);
-    // TODO: Call productService.deleteProduct(id) and refresh the table
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Product',
+        message: 'Are you sure you want to delete this product? This action cannot be undone.',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.productService.deleteProduct(id).subscribe();
+      }
+    });
   }
 
   onSearchQuery(query: string): void {

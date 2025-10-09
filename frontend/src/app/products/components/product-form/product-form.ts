@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { first } from 'rxjs';
 
 @Component({
   selector: 'app-product-form',
@@ -26,6 +27,7 @@ import { MatButtonModule } from '@angular/material/button';
 export class ProductForm implements OnInit {
   productForm: FormGroup;
   isEditMode = false;
+  product: Product | null = null;
   private productId: number | null = null;
 
   constructor(
@@ -43,34 +45,53 @@ export class ProductForm implements OnInit {
   }
 
   ngOnInit(): void {
-    this.productId = this.route.snapshot.params['id'];
-    if (this.productId) {
+    const idParam = this.route.snapshot.params['id'];
+    const navigationState = this.router.getCurrentNavigation()?.extras.state;
+
+    if (navigationState && navigationState['productData']) {
+      this.productForm.patchValue(navigationState['productData']);
+    }
+
+    if (idParam) {
       this.isEditMode = true;
-      // TODO: Implement getProductById in service
-      // this.productService.getProductById(this.productId).subscribe(product => {
-      //   this.productForm.patchValue(product);
-      // });
+      this.productId = +idParam;
+      this.productService.products$.pipe(first()).subscribe(products => {
+        const product = products.find(p => p.id === this.productId);
+        if (product) {
+          this.product = product;
+          this.productForm.patchValue(product);
+        }
+      });
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length && this.productId) {
+      const file = input.files[0];
+      this.productService.uploadProductImage(this.productId, file).subscribe(() => {
+        // Refresh the product data to show the new image
+        this.productService.getProducts();
+      });
     }
   }
 
   onSubmit(): void {
-    if (this.productForm.valid) {
-      const productData: Product = this.productForm.value;
-      if (this.isEditMode && this.productId) {
-        // TODO: Implement updateProduct in service
-        // this.productService.updateProduct(this.productId, productData).subscribe(() => {
-        //   this.router.navigate(['/products']);
-        // });
-        console.log('Update product:', this.productId, productData);
+    if (this.productForm.invalid) {
+      return;
+    }
+
+    const productData = this.productForm.value;
+
+    if (this.isEditMode && this.productId) {
+      const productToUpdate: Product = { id: this.productId, ...productData };
+      this.productService.updateProduct(productToUpdate).subscribe(() => {
         this.router.navigate(['/products']);
-      } else {
-        // TODO: Implement createProduct in service
-        // this.productService.createProduct(productData).subscribe(() => {
-        //   this.router.navigate(['/products']);
-        // });
-        console.log('Create product:', productData);
+      });
+    } else {
+      this.productService.createProduct(productData).subscribe(() => {
         this.router.navigate(['/products']);
-      }
+      });
     }
   }
 

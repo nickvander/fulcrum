@@ -5,14 +5,17 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
 import { AiSearchBar } from './components/ai-search-bar/ai-search-bar';
 import { SafeUrlPipe } from './pipes/safe-url-pipe';
+import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 
 const MATERIAL_MODULES = [
   MatFormFieldModule,
   MatInputModule,
   MatButtonModule,
-  MatIconModule
+  MatIconModule,
+  MatDialogModule
 ];
 
 @NgModule({
@@ -22,10 +25,12 @@ const MATERIAL_MODULES = [
     ...MATERIAL_MODULES,
     AiSearchBar, // Import standalone components
     SafeUrlPipe, // Import standalone pipes
+    ConfirmationDialog,
   ],
   exports: [
     AiSearchBar, // Re-export standalone components
     SafeUrlPipe, // Re-export standalone pipes
+    ConfirmationDialog,
     CommonModule,
     ReactiveFormsModule,
     ...MATERIAL_MODULES,

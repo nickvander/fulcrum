@@ -1,1 +1,28 @@
 /* You can add global styles to this file, and also import other style files */
+@import '@angular/material/theming';
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; // Ensure it's on top of everything
+}
+
+.snackbar-success {
+  background-color: #4CAF50; // Green
+  color: white;
+}
+
+.snackbar-error {
+  background-color: #F44336; // Red
+  color: white;
+}
