@@ -1,7 +1,10 @@
 import { Component, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgxScannerQrcodeComponent } from 'ngx-scanner-qrcode';
 import { HardwareService } from '../../core/services/hardware.service';
 import { SharedModule } from '../../shared/shared-module';
+import { ProductService } from '../services/product';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-product-ingestion',
@@ -16,8 +19,11 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
   public scannedData: any = null;
   public capturedImage: Blob | null = null;
 
-  // Keep HardwareService for photo capture
-  constructor(private hardwareService: HardwareService) {}
+  constructor(
+    private hardwareService: HardwareService,
+    private productService: ProductService,
+    private router: Router
+  ) {}
 
   ngAfterViewInit(): void {
     // The scanner component will automatically start
@@ -25,7 +31,9 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     // Stop the scanner when the component is destroyed
-    this.scanner.stop();
+    if (this.scanner) {
+      this.scanner.stop();
+    }
   }
 
   onScanSuccess(result: any): void {
@@ -36,21 +44,25 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
   }
 
   capturePhoto(): void {
-    // Use a separate stream for photo capture
     const streamSub = this.hardwareService.getCameraStream().subscribe({
       next: (stream) => {
         this.hardwareService
           .captureImage(stream)
           .then((blob) => {
             this.capturedImage = blob;
-            // Here you would typically call a service to upload the image
-            console.log('Image captured:', blob);
+            const file = new File([blob], 'ingestion.jpg', { type: 'image/jpeg' });
+            this.productService.uploadImage(file).pipe(
+              switchMap(uploadResult => 
+                this.productService.identifyProductFromImage(uploadResult.file_path)
+              )
+            ).subscribe(productData => {
+              this.router.navigate(['/products/new'], { state: { productData } });
+            });
           })
           .catch((err) => {
             console.error('Error capturing image:', err);
           })
           .finally(() => {
-            // Stop the tracks and unsubscribe
             stream.getTracks().forEach((track) => track.stop());
             streamSub.unsubscribe();
           });

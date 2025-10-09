@@ -6,6 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { SettingsService } from '../../../core/services/settings.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-settings',
@@ -25,7 +27,11 @@ import { MatSelectModule } from '@angular/material/select';
 export class Settings implements OnInit {
   settingsForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private settingsService: SettingsService,
+    private notificationService: NotificationService
+  ) {
     this.settingsForm = this.fb.group({
       ai_provider: ['', Validators.required],
       ai_api_key: ['', Validators.required],
@@ -34,13 +40,16 @@ export class Settings implements OnInit {
   }
 
   ngOnInit(): void {
-    // TODO: Load initial settings from a service
+    const currentSettings = this.settingsService.loadSettings();
+    if (currentSettings) {
+      this.settingsForm.patchValue(currentSettings);
+    }
   }
 
   onSubmit(): void {
     if (this.settingsForm.valid) {
-      console.log('Settings saved:', this.settingsForm.value);
-      // TODO: Call a service to save the settings
+      this.settingsService.saveSettings(this.settingsForm.value);
+      this.notificationService.showSuccess('Settings saved successfully!');
     }
   }
 }
