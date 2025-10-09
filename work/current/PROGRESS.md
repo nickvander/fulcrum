@@ -75,3 +75,22 @@ completed phases, see the files in the `work/archive/` directory.
           make the property writable for the duration of the test, which is the
 
           correct pattern for mocking locked-down global objects.
+
+- **October 9, 2025:** Completed the "Hardening & Feature Completion" phase.
+  - **Features:** Implemented all planned features, including the full product
+    CRUD lifecycle, reactive state management, global user feedback (loading
+    and notifications), photo ingestion, and product image uploads.
+  - **Testing:** Wrote a comprehensive suite of unit tests for all new and
+    modified frontend components and services.
+  - **Troubleshooting:** Resolved a series of persistent and complex CI test
+    failures related to Angular Material's `MatDialog` service in a
+    standalone component testing environment. The key learning was that for
+    standalone components with their own complex module imports (like
+    `SharedModule`), the most robust testing strategy is to use
+    `TestBed.overrideComponent` to remove the problematic module and stub out
+    child components. This completely isolates the component under test and
+    avoids dependency conflicts. All backend and frontend tests are now
+    passing in the CI pipeline.
+- **October 9, 2025:** Planned the "Polishing & Refinements" phase.
+  - Created a new work plan (`14-polishing-and-refinements.md`) to address
+    outstanding UI/UX improvements before beginning Phase 4.
