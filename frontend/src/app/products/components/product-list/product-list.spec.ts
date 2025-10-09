@@ -27,23 +27,23 @@ describe('ProductList', () => {
       get: () => productsSubject.asObservable()
     });
 
+    dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [
         ProductList,
         NoopAnimationsModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        MatDialogModule, // Import the real module
       ],
       providers: [
         { provide: ProductService, useValue: productServiceMock },
-        // No longer providing a mock MatDialog here
+        { provide: MatDialog, useValue: dialogMock },
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;
-    dialog = TestBed.inject(MatDialog); // Inject the real service
   });
 
   afterEach(() => {
@@ -67,14 +67,13 @@ describe('ProductList', () => {
 
   describe('deleteProduct', () => {
     it('should open confirmation dialog', () => {
-      // Spy on the 'open' method of the real, injected service
-      const dialogSpy = spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
       component.deleteProduct(1);
-      expect(dialogSpy).toHaveBeenCalled();
+      expect(dialogMock.open).toHaveBeenCalled();
     });
 
     it('should call productService.deleteProduct if dialog is confirmed', () => {
-      spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+      dialogMock.open.and.returnValue({ afterClosed: () => of(true) } as any);
       productServiceMock.deleteProduct.and.returnValue(of({}));
 
       component.deleteProduct(1);
@@ -83,7 +82,7 @@ describe('ProductList', () => {
     });
 
     it('should NOT call productService.deleteProduct if dialog is dismissed', () => {
-      spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
 
       component.deleteProduct(1);
 
