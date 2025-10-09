@@ -34,7 +34,7 @@ describe('ProductList', () => {
         NoopAnimationsModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        MatDialogTestingModule,
+        MatDialogModule,
       ],
       providers: [
         { provide: ProductService, useValue: productServiceMock },
