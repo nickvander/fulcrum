@@ -5,6 +5,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ProductService } from '../../services/product';
 import { MatDialog } from '@angular/material/dialog';
+import { MatDialogTestingModule } from '@angular/material/dialog/testing';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
 
@@ -12,7 +13,7 @@ describe('ProductList', () => {
   let component: ProductList;
   let fixture: ComponentFixture<ProductList>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
-  let dialogMock: jasmine.SpyObj<MatDialog>;
+  let dialog: MatDialog;
   let productsSubject: BehaviorSubject<Product[]>;
 
   const mockProducts: Product[] = [
@@ -28,23 +29,22 @@ describe('ProductList', () => {
       get: () => productsSubject.asObservable()
     });
 
-    dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-
     await TestBed.configureTestingModule({
       imports: [
         ProductList,
         NoopAnimationsModule,
         HttpClientTestingModule,
         RouterTestingModule,
+        MatDialogTestingModule,
       ],
       providers: [
         { provide: ProductService, useValue: productServiceMock },
-        { provide: MatDialog, useValue: dialogMock },
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;
+    dialog = TestBed.inject(MatDialog);
   });
 
   it('should create the component', () => {
@@ -65,29 +65,24 @@ describe('ProductList', () => {
 
   describe('deleteProduct', () => {
     it('should open confirmation dialog', () => {
-      const productId = 1;
-      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
-
-      component.deleteProduct(productId);
-
-      expect(dialogMock.open).toHaveBeenCalled();
+      const dialogSpy = spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+      component.deleteProduct(1);
+      expect(dialogSpy).toHaveBeenCalled();
     });
 
     it('should call productService.deleteProduct if dialog is confirmed', () => {
-      const productId = 1;
-      dialogMock.open.and.returnValue({ afterClosed: () => of(true) } as any);
+      spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
       productServiceMock.deleteProduct.and.returnValue(of({}));
 
-      component.deleteProduct(productId);
+      component.deleteProduct(1);
 
-      expect(productServiceMock.deleteProduct).toHaveBeenCalledWith(productId);
+      expect(productServiceMock.deleteProduct).toHaveBeenCalledWith(1);
     });
 
     it('should NOT call productService.deleteProduct if dialog is dismissed', () => {
-      const productId = 1;
-      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
+      spyOn(dialog, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
 
-      component.deleteProduct(productId);
+      component.deleteProduct(1);
 
       expect(productServiceMock.deleteProduct).not.toHaveBeenCalled();
     });

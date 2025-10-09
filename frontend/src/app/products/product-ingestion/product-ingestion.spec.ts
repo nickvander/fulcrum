@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ProductIngestion } from './product-ingestion';
 
 describe('ProductIngestion', () => {
@@ -8,7 +8,7 @@ describe('ProductIngestion', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductIngestion]
+      imports: [ProductIngestion, HttpClientTestingModule]
     })
     .compileComponents();
 

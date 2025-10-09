@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
+import { MatIconModule } from '@angular/material/icon';
 
 describe('ProductForm', () => {
   let component: ProductForm;
@@ -39,7 +40,8 @@ describe('ProductForm', () => {
         RouterTestingModule,
         HttpClientTestingModule,
         ReactiveFormsModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatIconModule
       ],
       providers: [
         { provide: ProductService, useValue: productServiceMock },
