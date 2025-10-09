@@ -7,6 +7,16 @@ import { ProductService } from '../../services/product';
 import { MatDialog } from '@angular/material/dialog';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
+import { Component } from '@angular/core';
+import { SharedModule } from '../../../shared/shared-module';
+
+// Create a stub for the AiSearchBar component
+@Component({
+  selector: 'app-ai-search-bar',
+  template: '',
+  standalone: true,
+})
+class AiSearchBarStubComponent {}
 
 describe('ProductList', () => {
   let component: ProductList;
@@ -40,7 +50,12 @@ describe('ProductList', () => {
         { provide: ProductService, useValue: productServiceMock },
         { provide: MatDialog, useValue: dialogMock },
       ]
-    }).compileComponents();
+    })
+    .overrideComponent(ProductList, {
+      remove: { imports: [SharedModule] },
+      add: { imports: [AiSearchBarStubComponent] }
+    })
+    .compileComponents();
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;
