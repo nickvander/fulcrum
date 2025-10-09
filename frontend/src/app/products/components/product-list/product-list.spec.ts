@@ -4,8 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ProductService } from '../../services/product';
-import { MatDialog } from '@angular/material/dialog';
-import { MatDialogTestingModule } from '@angular/material/dialog/testing';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
 
