@@ -180,3 +180,37 @@ understand the architecture, setup, and development workflows.
 When adding a new, significant feature, please consider adding or updating a
 corresponding document in the `/docs` directory. This ensures that the
 documentation evolves alongside the codebase.
+
+## Troubleshooting
+
+### Backend: `ModuleNotFoundError` in Docker
+
+- **Symptom:** `pytest` or the application fails on startup with
+  `ModuleNotFoundError: No module named 'some_module'`, even though the module is
+  listed in `requirements.txt` and appears to be installed during the Docker
+  build. The CI build may also hang indefinitely while "Waiting for services to
+  be healthy."
+- **Cause:** This issue arises from a conflict between the Docker container's
+  internal Python virtual environment (`venv`) and the local `backend` directory
+  being mounted as a volume. The broad `volumes: - ./backend:/app` mapping in
+  `docker-compose.yml` overwrites the container's `venv`, causing the Python
+  interpreter to lose track of the installed packages.
+- **Solution:** The most robust solution is to use more granular volume mounts in
+  the `docker-compose.yml` file. Instead of mounting the entire `./backend`
+  directory, mount only the necessary subdirectories for development. This
+  isolates the container's `venv` from the host filesystem.
+
+  **Example `docker-compose.yml` service definition:**
+  ```yaml
+  services:
+    backend:
+      build: ./backend
+      ports:
+        - "8000:8000"
+      volumes:
+        - ./backend/src:/app/src
+        - ./backend/tests:/app/tests
+        - ./backend/alembic:/app/alembic
+        - ./backend/alembic.ini:/app/alembic.ini
+        - ./backend/pytest.ini:/app/pytest.ini
+  ```

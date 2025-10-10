@@ -4,16 +4,13 @@ FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Install uv, a fast Python package installer
-RUN pip install uv
-
 # Copy only the requirements file to leverage Docker cache
 COPY requirements.txt .
 
 # Create a virtual environment and install dependencies into it
-RUN uv venv /app/venv && \
+RUN python -m venv /app/venv && \
     . /app/venv/bin/activate && \
-    uv pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # --- Final Stage ---
 # This stage creates the final, smaller production image.

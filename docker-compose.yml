@@ -4,8 +4,11 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - /app/venv
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - ./backend/alembic:/app/alembic
+      - ./backend/alembic.ini:/app/alembic.ini
+      - ./backend/pytest.ini:/app/pytest.ini
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
@@ -42,8 +45,11 @@ services:
     build: ./backend
     command: celery -A src.celery_worker.celery_app worker --loglevel=info
     volumes:
-      - ./backend:/app
-      - /app/venv
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - ./backend/alembic:/app/alembic
+      - ./backend/alembic.ini:/app/alembic.ini
+      - ./backend/pytest.ini:/app/pytest.ini
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
