@@ -14,7 +14,7 @@ import { UsersRoutingModule } from './users-routing-module';
 import { Users } from './users';
 import { UserList } from './components/user-list/user-list';
 import { UserForm } from './components/user-form/user-form';
-import { UserService } from './services/user';
+import { UserService } from './services/user.service';
 
 
 @NgModule({
