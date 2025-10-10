@@ -32,6 +32,13 @@ root:
 docker compose exec backend python -m pytest
 ```
 
+### Skipped Tests
+
+Some tests, particularly those for vector search functionality (e.g.,
+`test_product_search`), are skipped by default. This is because they require a
+PostgreSQL database with the `pgvector` extension, while the standard test
+suite runs on an in-memory SQLite database for speed and simplicity.
+
 ## Code Quality (Linting)
 
 - **`ruff`:** An extremely fast Python linter that checks for a wide range of
