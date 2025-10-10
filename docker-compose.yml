@@ -65,5 +65,23 @@ services:
     depends_on:
       - redis
 
+  test-db:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-fulcrum}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-fulcrum}
+      - POSTGRES_DB=${POSTGRES_DB:-fulcrum_test}
+    command: -c listen_addresses='*'
+    volumes:
+      - pg_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fulcrum} -d ${POSTGRES_DB:-fulcrum_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pg_data:
+  pg_test_data:
