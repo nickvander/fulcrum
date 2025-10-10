@@ -10,9 +10,12 @@ psycopg2-binary
 pgvector
 python-dotenv
 pytest
+pytest-env
 httpx
-ruff
-passlib
+Faker
 bcrypt==3.2.2
+python-jose[cryptography]
+passlib[bcrypt]==1.7.4
 python-multipart
-python-jose
+sentence-transformers
+flower
