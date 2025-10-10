@@ -8,7 +8,8 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Create a virtual environment and install dependencies into it
-RUN python -m venv /app/venv && \
+RUN python -m pip install --upgrade pip && \
+    python -m venv /app/venv && \
     . /app/venv/bin/activate && \
     pip install --no-cache-dir -r requirements.txt
 
