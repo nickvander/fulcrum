@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding='utf-8')
 
     APP_NAME: str = "Fulcrum API"
+    API_V1_STR: str = "/api/v1"
     DATABASE_URL: Optional[str] = None
     REDIS_URL: str
     SECRET_KEY: str
