@@ -24,8 +24,8 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             )
             db.add(db_obj)
             logger.info("User object added to session.")
-            db.commit()
-            logger.info("Session committed.")
+            db.flush()
+            logger.info("Session flushed.")
             db.refresh(db_obj)
             logger.info("DB object refreshed.")
             return db_obj
