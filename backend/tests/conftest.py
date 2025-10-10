@@ -15,26 +15,15 @@ from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
 
-# Default to in-memory SQLite database for testing
-DEFAULT_SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Use an in-memory SQLite database for testing
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
-# Check for a test database URL override from environment variables
-SQLALCHEMY_DATABASE_URL = os.getenv("TEST_DATABASE_URL", DEFAULT_SQLALCHEMY_DATABASE_URL)
-
-# Create the SQLAlchemy engine based on the determined database URL
-if SQLALCHEMY_DATABASE_URL == DEFAULT_SQLALCHEMY_DATABASE_URL:
-    # Use StaticPool for SQLite to ensure a single, consistent in-memory database
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-else:
-    # Use the default pool for other databases like PostgreSQL
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
-
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 
 @pytest.fixture(scope="session")
 def db_engine():
@@ -44,7 +33,6 @@ def db_engine():
     Base.metadata.create_all(bind=engine)
     yield engine
     Base.metadata.drop_all(bind=engine)
-
 
 @pytest.fixture(scope="function")
 def db(db_engine):
@@ -62,13 +50,11 @@ def db(db_engine):
     transaction.rollback()
     connection.close()
 
-
 @pytest.fixture(scope="function")
 def client(db):
     """
     Provides a TestClient that uses the transactional db session.
     """
-
     def override_get_db():
         yield db
 
@@ -76,7 +62,6 @@ def client(db):
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.pop(get_db, None)
-
 
 @pytest.fixture(scope="function")
 def test_product(db: Session) -> Product:
@@ -92,7 +77,6 @@ def test_product(db: Session) -> Product:
     )
     return crud_product.product.create(db=db, obj_in=product_in)
 
-
 @pytest.fixture(scope="function")
 def test_product_with_image(db: Session, test_product: Product) -> ProductImage:
     """
@@ -107,7 +91,10 @@ def test_product_with_image(db: Session, test_product: Product) -> ProductImage:
         f.write(b"dummy image data")
 
     # Create the database record
-    image_in = ProductImageCreate(product_id=test_product.id, image_path=str(file_path))
+    image_in = ProductImageCreate(
+        product_id=test_product.id,
+        image_path=str(file_path)
+    )
     db_image = crud_product_image.product_image.create(db=db, obj_in=image_in)
 
     yield db_image
