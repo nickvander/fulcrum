@@ -114,3 +114,22 @@ completed phases, see the files in the `work/archive/` directory.
     manage users. Enhanced the `ProductListComponent` with instant client-side
     filtering and a user-friendly "empty state" to improve usability. Added a
     "Users" link to the main navigation, visible only to superusers.
+
+## Testing Infrastructure
+
+- **October 10, 2025:** Investigated and resolved critical test failures.
+  - **Frontend:** All frontend tests are now passing. The test failures were
+    caused by a combination of incorrect file naming conventions and issues
+    with how Angular's `TestBed` handles standalone components. The solution
+    involved renaming service files, converting several components to
+    `standalone: true`, and updating the `TestBed` configuration in all
+    relevant spec files to correctly import components and provide necessary
+    dependencies.
+  - **Backend:** The backend test runner is consistently failing with a
+    `ModuleNotFoundError: No module named 'jose'`. This issue persists even
+    after adding the dependency, rebuilding the Docker container with
+    `--no-cache`, and trying multiple execution strategies. This is a critical
+    blocker.
+  - **Next Step:** The immediate priority for the next session is to create a
+    dedicated plan to diagnose and fix the backend testing environment before
+    proceeding with the "Admin Module Hardening & Feature Completion" phase.
