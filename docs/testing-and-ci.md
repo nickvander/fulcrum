@@ -80,9 +80,12 @@ branch. It performs the following steps in parallel:
     `docker compose up`.
 3.  **Wait for Services:** Pauses to ensure the database and backend API are
     fully up and running before proceeding.
-4.  **Run Linter:** Executes the `ruff check .` command. If the linter finds any
+4.  **Run Database Migrations:** Executes `alembic upgrade head` to apply all
+    database migrations. This ensures the test database has the correct schema
+    before the tests run.
+5.  **Run Linter:** Executes the `ruff check .` command. If the linter finds any
     errors, the workflow fails.
-5.  **Run Tests:** Executes the `python -m pytest` command. If any test fails,
+6.  **Run Tests:** Executes the `python -m pytest` command. If any test fails,
     the workflow fails.
 
 **Frontend:**
