@@ -1,28 +1,19 @@
-"""
-This package contains all SQLAlchemy ORM models.
-
-By importing all models into this __init__.py file, we make them available
-to SQLAlchemy's declarative base when it discovers table metadata, which is
-crucial for correctly establishing table relationships.
-"""
-from .base import Base
-from .product import Product, ProductImage
-from .supplier import Supplier
-from .inventory import InventoryItem
 from .user import User
-from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
+from .supplier import Supplier
+from .product import Product, ProductImage
 from .order import SalesOrder, SalesOrderItem
+from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
+from .inventory import InventoryItem
 
 __all__ = [
-    "Base",
+    "User",
+    "Supplier",
     "Product",
     "ProductImage",
-    "Supplier",
-    "InventoryItem",
-    "User",
+    "SalesOrder",
+    "SalesOrderItem",
     "Marketplace",
     "MarketplaceCredentials",
     "MarketplaceListing",
-    "SalesOrder",
-    "SalesOrderItem",
+    "InventoryItem",
 ]
