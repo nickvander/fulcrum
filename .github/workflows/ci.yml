@@ -23,7 +23,7 @@ jobs:
     - name: Wait for services to be healthy
       run: |
         echo "Waiting for PostgreSQL..."
-        until docker compose exec test-db pg_isready -U fulcrum; do
+        until docker compose exec db pg_isready -U fulcrum; do
           sleep 2
         done
         echo "Waiting for Backend..."
