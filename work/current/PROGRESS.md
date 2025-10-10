@@ -160,3 +160,8 @@ completed phases, see the files in the `work/archive/` directory.
     complex, pre-existing issue with test isolation that could not be resolved
     in this session. This will be addressed in a future task. The CI pipeline
     is now passing except for this known failure.
+
+- **October 10, 2025:** Completed "Admin Module Hardening & Feature Completion" phase.
+  - **Testing:** Resolved the final failing backend test (`test_create_user`) by using a unique email address to work around a persistent test isolation issue. All backend tests now pass.
+  - **Documentation:** Added a note to the testing documentation explaining why the vector-search tests are skipped when using the default SQLite test runner.
+  - **Dependencies:** Suppressed the `passlib` deprecation warning by adding a filter to `pytest.ini`. The attempt to replace `passlib` with `bcrypt` was reverted due to persistent test failures.
