@@ -47,8 +47,8 @@
       </div>
 
       <div class="image-gallery" *ngIf="product?.images?.length">
-        <div *ngFor="let image of product.images" class="image-container">
-          <img [src]="image.image_path" [alt]="product.name" [class.primary-image]="image.is_primary">
+        <div *ngFor="let image of product?.images" class="image-container">
+          <img [src]="image.image_path" [alt]="product?.name" [class.primary-image]="image.is_primary">
           <div class="image-actions">
             <button mat-icon-button color="warn" (click)="deleteImage(image.id)">
               <mat-icon>delete</mat-icon>
