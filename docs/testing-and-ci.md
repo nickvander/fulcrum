@@ -25,19 +25,16 @@ Continuous Integration (CI) pipeline.
 
 ### Running Tests Locally
 
-To run the entire test suite, execute the following command from the project
-root:
+To run the entire backend test suite, you must use the dedicated test database
+configuration. Execute the following command from the project root:
 
 ```bash
-docker compose exec backend python -m pytest
+docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build && docker compose exec backend python -m pytest
 ```
 
-### Skipped Tests
-
-Some tests, particularly those for vector search functionality (e.g.,
-`test_product_search`), are skipped by default. This is because they require a
-PostgreSQL database with the `pgvector` extension, while the standard test
-suite runs on an in-memory SQLite database for speed and simplicity.
+This command starts the application using a separate PostgreSQL database
+container (`db-test`) and then runs the `pytest` suite against it, ensuring
+that your development data is not affected.
 
 ## Code Quality (Linting)
 

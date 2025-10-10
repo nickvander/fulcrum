@@ -173,3 +173,19 @@ completed phases, see the files in the `work/archive/` directory.
     2.  **Replicating CI Locally:** An attempt to replicate the CI environment with a dedicated PostgreSQL test database was unsuccessful in resolving the test isolation issues and has been reverted.
     3.  **Model Registration:** The "UndefinedTable" error was specifically resolved by ensuring all SQLAlchemy models are imported in `src/models/__init__.py` before the test database schema is created.
   - **Outcome:** The backend test suite now runs against an in-memory SQLite database. 17 tests pass, and 2 tests related to vector search are skipped. The `test_create_user` test has been fixed with a workaround (unique email address).
+
+- **October 10, 2025:** Unify Local and CI Testing Environments.
+  - **CI Pipeline:** Fixed the primary CI failure by adding a database migration
+    step (`alembic upgrade head`) to the workflow. This ensures the PostgreSQL
+    database schema is created before the test suite is executed.
+  - **Local Test Environment:** Reconfigured the local testing setup to mirror the
+    CI environment. This was achieved by creating a `docker-compose.test.yml`
+    file that provisions a dedicated PostgreSQL database with the `pgvector`
+    extension.
+  - **Benefits:** This change resolves the critical "Environment Mismatch"
+    problem. All tests, including the previously skipped vector-search tests,
+    now run successfully and consistently in both the local and CI environments
+    against a PostgreSQL database.
+  - **Documentation:** Updated the `docs/testing-and-ci.md` file to reflect the
+    new, unified command for running the test suite locally and removed outdated
+    information about skipped tests.
