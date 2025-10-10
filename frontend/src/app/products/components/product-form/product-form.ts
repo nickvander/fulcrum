@@ -78,6 +78,22 @@ export class ProductForm implements OnInit {
     }
   }
 
+  deleteImage(imageId: number): void {
+    if (this.productId) {
+      this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
+        this.productService.getProducts();
+      });
+    }
+  }
+
+  setPrimaryImage(imageId: number): void {
+    if (this.productId) {
+      this.productService.setPrimaryProductImage(this.productId, imageId).subscribe(() => {
+        this.productService.getProducts();
+      });
+    }
+  }
+
   onSubmit(): void {
     if (this.productForm.invalid) {
       return;

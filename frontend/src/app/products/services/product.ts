@@ -25,6 +25,12 @@ export class ProductService {
     });
   }
 
+  searchProducts(query: string): void {
+    this.http.get<Product[]>(`${this.apiUrl}/search/?q=${query}`).subscribe(products => {
+      this._products.next(products);
+    });
+  }
+
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
     return this.http.post<Product>(this.apiUrl, product).pipe(
       tap(newProduct => {
@@ -72,5 +78,13 @@ export class ProductService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${this.apiUrl}/${productId}/images`, formData);
+  }
+
+  deleteProductImage(productId: number, imageId: number): Observable<unknown> {
+    return this.http.delete(`${this.apiUrl}/${productId}/images/${imageId}`);
+  }
+
+  setPrimaryProductImage(productId: number, imageId: number): Observable<unknown> {
+    return this.http.post(`${this.apiUrl}/${productId}/images/${imageId}/set-primary`, {});
   }
 }
