@@ -24,7 +24,7 @@ following principles:
 
 1.  **Repository Pattern (Backend):** All database interactions are abstracted
     away from the API layer using repositories.
-    - A generic `CRUDBase` class provides common CRUD operations.
+    - A generic `CRDBase` class provides common CRUD operations.
     - Model-specific repositories (e.g., `crud_product.py`) inherit from
       `CRUDBase` and implement any additional, model-specific logic.
     - API endpoints should be thin and delegate all database logic to the
@@ -73,9 +73,9 @@ The project will be organized into two main directories:
 
 ## Key Workflows & Commands
 
-- **Run Backend (Local):** `docker-compose up --build`
+- **Run Backend (Local):** `docker compose up --build`
 - **Run Frontend (Local):** `cd frontend && ng serve`
-- **Database Migrations:** `docker-compose exec backend alembic upgrade head`
+- **Database Migrations:** `docker compose exec backend alembic upgrade head`
 
 ## Project Workflow & Organization
 

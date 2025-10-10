@@ -102,3 +102,15 @@ completed phases, see the files in the `work/archive/` directory.
     reactive search and enhanced image management (delete and set primary).
   - **Testing:** All backend and frontend tests are passing, ensuring the
     stability of the new features.
+
+## Phase 3.7: Admin Features & UX Enhancements
+
+- **October 10, 2025:** Completed the "Admin Features & UX Enhancements" phase.
+  - **Backend:** Implemented a secure foundation for administration by adding an
+    `is_superuser` flag to the `User` model, creating a database migration,
+    and building a full suite of protected API endpoints for user management
+    (CRUD operations).
+  - **Frontend:** Developed a complete, lazy-loaded `UsersModule` for admins to
+    manage users. Enhanced the `ProductListComponent` with instant client-side
+    filtering and a user-friendly "empty state" to improve usability. Added a
+    "Users" link to the main navigation, visible only to superusers.

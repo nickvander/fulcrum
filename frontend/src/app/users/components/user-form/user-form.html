@@ -1,0 +1,19 @@
+<div class="container">
+  <h1>Edit User</h1>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="fill">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email">
+    </mat-form-field>
+
+    <mat-slide-toggle formControlName="is_superuser">
+      Is Admin
+    </mat-slide-toggle>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+      <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+</div>

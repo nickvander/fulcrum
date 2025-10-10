@@ -16,7 +16,16 @@
     <button mat-button (click)="clearSearch()">Clear Search</button>
   </div>
 
-  <mat-table [dataSource]="dataSource" matSort>
+  <div *ngIf="dataSource.data.length === 0" class="empty-state">
+    <h2>No products found.</h2>
+    <p>Get started by adding your first product to the inventory.</p>
+    <button mat-raised-button color="primary" routerLink="new">
+      <mat-icon>add</mat-icon>
+      <span>Create Your First Product</span>
+    </button>
+  </div>
+
+  <mat-table [dataSource]="dataSource" matSort *ngIf="dataSource.data.length > 0">
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
@@ -52,5 +61,5 @@
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
   </mat-table>
 
-  <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" *ngIf="dataSource.data.length > 0"></mat-paginator>
 </div>

@@ -1,11 +1,18 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Observable } from 'rxjs';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-sidenav',
-  standalone: false,
   templateUrl: './sidenav.html',
-  styleUrl: './sidenav.scss'
+  styleUrls: ['./sidenav.scss'],
 })
-export class Sidenav {
+export class Sidenav implements OnInit {
+  isSuperuser$!: Observable<boolean>;
 
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.isSuperuser$ = this.authService.isSuperuser();
+  }
 }

@@ -77,10 +77,12 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearchQuery(query: string): void {
+    this.dataSource.filter = query.trim().toLowerCase();
     this.productService.searchProducts(query);
   }
 
   clearSearch(): void {
+    this.dataSource.filter = '';
     this.productService.getProducts();
   }
 }

@@ -23,6 +23,7 @@ const routes: Routes = [
         (m) => m.ProductIngestion
       ),
   },
+  { path: 'users', loadChildren: () => import('./users/users-module').then(m => m.UsersModule) },
   { path: '**', redirectTo: '/products' } // Wildcard route
 ];
 
