@@ -10,7 +10,7 @@ import shutil
 from src.main import app
 from src.database import get_db
 from src.models.base import Base
-import src.models  # Import all models to ensure they are registered with Base
+import src.models  # noqa: F401
 from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
