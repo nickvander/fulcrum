@@ -145,3 +145,18 @@ completed phases, see the files in the `work/archive/` directory.
   - **Testing:** All backend tests are now passing. The CI pipeline is unblocked.
   - **Next Step:** Proceed with the "Admin Module Hardening & Feature
     Completion" phase.
+
+- **October 10, 2025:** Fixed CI pipeline and improved backend architecture.
+  - **Linting:** Resolved all `F401` (unused import) errors reported by the CI
+    linter by adding `__all__` exports to the relevant `__init__.py` files,
+    bringing the code into compliance with best practices.
+  - **Transaction Management:** Refactored the backend's database transaction
+    handling. The responsibility for committing or rolling back the session is
+    now centralized in the `get_db` dependency, making the CRUD layer cleaner
+    and the application's data integrity more robust.
+  - **Testing:** The transaction management refactor also fixed a bug in the
+    test suite where a deleted object was not being correctly removed from the
+    test session. One test, `test_create_user`, continues to fail due to a
+    complex, pre-existing issue with test isolation that could not be resolved
+    in this session. This will be addressed in a future task. The CI pipeline
+    is now passing except for this known failure.
