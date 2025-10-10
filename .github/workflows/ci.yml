@@ -35,7 +35,7 @@ jobs:
       run: docker compose exec backend ruff check .
 
     - name: Run Tests
-      run: docker compose exec -e TEST_DATABASE_URL=postgresql://fulcrum:fulcrum@test-db:5432/fulcrum_test backend python -m pytest
+      run: docker compose exec backend python -m pytest
 
   frontend-test:
     runs-on: ubuntu-latest
