@@ -58,6 +58,10 @@ following principles:
     - **Alternative:** To format all Markdown files from the command line, run
       `npm run format:md` from the root of the project.
 
+7.  **Documentation Review:** At the end of each development phase, a thorough
+    review of all documentation (`README.md`, `/docs`, etc.) must be conducted
+    to ensure it is up-to-date with the latest changes.
+
 ## Project Structure
 
 The project will be organized into two main directories:
@@ -148,19 +152,21 @@ The project is divided into eight distinct phases:
 
 The backend is tested using `pytest`. Code quality is enforced with `ruff`.
 
-- **Run all tests:**
+- **Run all backend tests:**
   ```bash
   docker compose exec backend python -m pytest
   ```
-- **Run the linter:**
+- **Run the backend linter:**
   ```bash
   docker compose exec backend ruff check .
   ```
 
-**NOTE:** Due to persistent environment-specific issues with browser launching
-in WSL, the frontend tests (`npm test`) currently fail when run locally. Please
-rely on the GitHub Actions CI pipeline to verify frontend changes, as the tests
-run successfully in that clean environment.
+The frontend is tested using the Web Test Runner with Playwright.
+
+- **Run all frontend tests:**
+  ```bash
+  npm test --prefix frontend
+  ```
 
 These checks are also automated and run on every push and pull request to the
 `main` branch using GitHub Actions.

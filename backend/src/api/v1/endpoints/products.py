@@ -1,11 +1,12 @@
 """
 API endpoints for managing products.
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
 from sqlalchemy.orm import Session
 from typing import List
 from pathlib import Path
 import shutil
+import os
 
 from src.schemas import product as product_schema
 from src.database import get_db
@@ -63,6 +64,51 @@ def upload_product_image(
     )
     db_image = crud_product_image.product_image.create(db=db, obj_in=image_in)
     return db_image
+
+@router.delete("/{product_id}/images/{image_id}", status_code=204)
+def delete_product_image(
+    product_id: int,
+    image_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete an image for a specific product.
+    """
+    db_image = crud_product_image.product_image.get(db=db, id=image_id)
+    if not db_image or db_image.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Product image not found")
+
+    # Delete the physical file
+    try:
+        os.remove(db_image.image_path)
+    except OSError:
+        # Log this error, but don't fail the request if the file is already gone
+        pass
+
+    # Delete the database record
+    crud_product_image.product_image.remove(db=db, id=image_id)
+    return Response(status_code=204)
+
+@router.post(
+    "/{product_id}/images/{image_id}/set-primary",
+    response_model=product_schema.ProductImage
+)
+def set_primary_product_image(
+    product_id: int,
+    image_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Set a specific image as the primary image for a product.
+    """
+    db_image = crud_product_image.product_image.get(db=db, id=image_id)
+    if not db_image or db_image.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Product image not found")
+
+    updated_image = crud_product_image.product_image.set_primary_image(
+        db=db, product_id=product_id, image_id=image_id
+    )
+    return updated_image
 
 @router.get("/", response_model=List[product_schema.Product])
 def read_products(

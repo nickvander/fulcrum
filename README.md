@@ -72,14 +72,18 @@ following command from the root directory:
 docker compose exec backend python -m pytest
 ```
 
+To run the linter (`ruff`), execute:
+```bash
+docker compose exec backend ruff check .
+```
+
 ### Frontend Testing
 
 The frontend is tested using the Web Test Runner and Playwright. To run the test
-suite, navigate to the `frontend` directory and run the `test` script:
+suite from the root directory, execute:
 
 ```bash
-cd frontend
-npm test
+npm test --prefix frontend
 ```
 
 ## How to Contribute

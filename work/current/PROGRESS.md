@@ -94,3 +94,11 @@ completed phases, see the files in the `work/archive/` directory.
 - **October 9, 2025:** Planned the "Polishing & Refinements" phase.
   - Created a new work plan (`14-polishing-and-refinements.md`) to address
     outstanding UI/UX improvements before beginning Phase 4.
+
+## Phase 3.6: Polishing & Refinements
+
+- **October 10, 2025:** Completed the "Polishing & Refinements" phase.
+  - **Features:** Implemented all planned UI/UX improvements, including
+    reactive search and enhanced image management (delete and set primary).
+  - **Testing:** All backend and frontend tests are passing, ensuring the
+    stability of the new features.

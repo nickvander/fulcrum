@@ -77,7 +77,10 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearchQuery(query: string): void {
-    console.log('Search query:', query);
-    // TODO: Call a new method in productService to search products and update the dataSource
+    this.productService.searchProducts(query);
+  }
+
+  clearSearch(): void {
+    this.productService.getProducts();
   }
 }
