@@ -1,8 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
 import os
 from pathlib import Path
 import shutil
@@ -10,47 +9,46 @@ import shutil
 from src.main import app
 from src.database import get_db
 from src.models.base import Base
+from src.config import settings
 from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
 
-# Use an in-memory SQLite database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+# Use the database URL from the environment settings
+engine = create_engine(settings.DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="session")
-def db_engine():
+@pytest.fixture(scope="session", autouse=True)
+def create_test_database():
     """
-    Creates the test database and tables once per session.
+    Create the test database and tables once per session.
     """
+    with engine.connect() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        connection.commit()
     Base.metadata.create_all(bind=engine)
-    yield engine
+    yield
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
-def db(db_engine):
+def db():
     """
     Provides a transactional database session for each test function.
     Rolls back all changes after the test completes.
     """
-    connection = db_engine.connect()
+    connection = engine.connect()
     transaction = connection.begin()
     db = TestingSessionLocal(bind=connection)
 
-    yield db
-
-    db.close()
-    transaction.rollback()
-    connection.close()
+    try:
+        yield db
+    finally:
+        db.close()
+        transaction.rollback()
+        connection.close()
 
 @pytest.fixture(scope="function")
-def client(db):
+def client(db: Session):
     """
     Provides a TestClient that uses the transactional db session.
     """
