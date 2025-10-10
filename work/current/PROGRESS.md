@@ -170,6 +170,6 @@ completed phases, see the files in the `work/archive/` directory.
   - **Troubleshooting:** Investigated and resolved a persistent test isolation failure in the backend test suite that was causing intermittent failures in the CI environment.
   - **Key Learnings & Resolution:**
     1.  **Environment Mismatch:** The root cause of the failures was a mismatch between the local testing environment (SQLite) and the CI environment (PostgreSQL). This caused the "UndefinedTable" error for the `users` table and also caused vector-search tests to be skipped locally.
-    2.  **Replicating CI Locally:** The issue was resolved by creating a dedicated PostgreSQL test database service (`test-db`) in `docker-compose.yml` and updating `tests/conftest.py` to use it. This ensures that the local test environment is a perfect replica of the CI environment.
+    2.  **Replicating CI Locally:** An attempt to replicate the CI environment with a dedicated PostgreSQL test database was unsuccessful in resolving the test isolation issues and has been reverted.
     3.  **Model Registration:** The "UndefinedTable" error was specifically resolved by ensuring all SQLAlchemy models are imported in `src/models/__init__.py` before the test database schema is created.
-  - **Outcome:** All 19 backend tests now pass consistently in both the local and CI environments. There are no longer any skipped tests.
+  - **Outcome:** The backend test suite now runs against an in-memory SQLite database. 17 tests pass, and 2 tests related to vector search are skipped. The `test_create_user` test has been fixed with a workaround (unique email address).
