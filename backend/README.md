@@ -88,3 +88,21 @@ docker compose exec backend ./migrate.sh upgrade head
   - `services/`: Business logic and service abstractions.
 - `Dockerfile`: Instructions for building the backend Docker image.
 - `requirements.txt`: Python package dependencies.
+
+### Environment Variables
+
+The backend application requires certain environment variables to be set for local development. These are managed in a `.env` file.
+
+To get started, copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+Then, open the new `.env` file and update the variables as needed. At a minimum, you must generate a new `SECRET_KEY`. You can generate a secure key with the following command:
+
+```bash
+openssl rand -hex 32
+```
+
+The `.env` file is included in `.gitignore` and should not be committed to the repository.

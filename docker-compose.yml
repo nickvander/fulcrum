@@ -31,7 +31,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTG-RES_USER:-fulcrum} -d ${POSTGRES_DB:-fulcrum}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fulcrum} -d ${POSTGRES_DB:-fulcrum}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -53,6 +53,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - SECRET_KEY=${SECRET_KEY:-your_super_secret_key_change_me}
     depends_on:
       - redis
 
