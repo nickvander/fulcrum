@@ -31,6 +31,9 @@ jobs:
           sleep 2
         done
 
+    - name: Run Database Migrations
+      run: docker compose exec backend alembic upgrade head
+
     - name: Run Linter
       run: docker compose exec backend ruff check .
 
