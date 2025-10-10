@@ -6,6 +6,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
+import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-user-list',
@@ -13,6 +15,8 @@ import { User } from '../../models/user.model';
   styleUrls: ['./user-list.scss'],
   standalone: true,
   imports: [
+    CommonModule,
+    RouterModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,

@@ -19,9 +19,7 @@ import { UserService } from './services/user.service';
 
 @NgModule({
   declarations: [
-    Users,
-    UserList,
-    UserForm
+    Users
   ],
   imports: [
     CommonModule,
@@ -34,7 +32,9 @@ import { UserService } from './services/user.service';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    UserList,
+    UserForm
   ],
   providers: [
     UserService
