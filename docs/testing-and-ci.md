@@ -10,9 +10,10 @@ Continuous Integration (CI) pipeline.
   and run our tests.
 - **`httpx`:** Used via FastAPI's `TestClient` to make simulated HTTP requests
   to our API endpoints during tests.
-- **In-Memory Database:** To ensure tests are fast and isolated, the test suite
-  runs against an in-memory SQLite database, not the PostgreSQL database used
-  for development. This is configured in `backend/tests/conftest.py`.
+- **PostgreSQL Test Database:** To fully replicate the CI environment and ensure
+  all tests run, the test suite now runs against a dedicated PostgreSQL
+  database service. This is configured in `docker-compose.yml` and
+  `backend/tests/conftest.py`.
 
 ### Writing Tests
 
@@ -25,19 +26,12 @@ Continuous Integration (CI) pipeline.
 
 ### Running Tests Locally
 
-To run the entire test suite, execute the following command from the project
-root:
+To run the entire test suite against the dedicated test database, execute the
+following command from the project root:
 
 ```bash
-docker compose exec backend python -m pytest
+docker compose exec -e TEST_DATABASE_URL=postgresql://fulcrum:fulcrum@test-db:5432/fulcrum_test backend python -m pytest
 ```
-
-### Skipped Tests
-
-Some tests, particularly those for vector search functionality (e.g.,
-`test_product_search`), are skipped by default. This is because they require a
-PostgreSQL database with the `pgvector` extension, while the standard test
-suite runs on an in-memory SQLite database for speed and simplicity.
 
 ## Code Quality (Linting)
 
