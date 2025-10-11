@@ -32,10 +32,14 @@ jobs:
       - name: Create venv
         run: uv venv
 
-      - name: Install dependencies and build documentation
+      - name: Install dependencies
         run: |
           source .venv/bin/activate
           uv pip install -r docs/requirements.txt
+
+      - name: Build documentation
+        run: |
+          source .venv/bin/activate
           sphinx-build docs/source docs/_build/html
 
       # - name: Deploy to GitHub Pages
