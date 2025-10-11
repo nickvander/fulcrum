@@ -9,7 +9,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
 import { first, switchMap, map } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { CustomField } from '../../../settings/models/custom-field.model';
 
@@ -26,6 +28,7 @@ import { CustomField } from '../../../settings/models/custom-field.model';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
+    MatListModule,
   ],
 })
 export class ProductForm implements OnInit {
@@ -34,6 +37,8 @@ export class ProductForm implements OnInit {
   product: Product | null = null;
   private productId: number | null = null;
   customFields: CustomField[] = [];
+  stagedImages: File[] = [];
+  stagedImagePreviews: string[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -67,8 +72,8 @@ export class ProductForm implements OnInit {
     const idParam = this.route.snapshot.params['id'];
     const navigationState = this.router.getCurrentNavigation()?.extras.state;
 
-    if (navigationState && navigationState['productData']) {
-      const productData = navigationState['productData'];
+    if (navigationState) {
+      const productData = navigationState;
       const patchData: { [key: string]: any } = {};
 
       // Extract only the top-level properties that match form controls
@@ -112,14 +117,43 @@ export class ProductForm implements OnInit {
     }
   }
 
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length && this.productId) {
-      const file = input.files[0];
-      this.productService.uploadProductImage(this.productId, file).subscribe(() => {
-        // Refresh the product data to show the new image
+  getImageUrl(imagePath: string): string {
+    // Assuming the backend serves images from an 'uploads' directory at the root
+    return `/uploads/${imagePath}`;
+  }
+
+  removeStagedImage(index: number): void {
+    this.stagedImages.splice(index, 1);
+    this.stagedImagePreviews.splice(index, 1);
+  }
+
+  updateImageDetails(imageId: number, field: 'title' | 'description', event: Event): void {
+    if (this.productId) {
+      const input = event.target as HTMLInputElement;
+      const value = input.value;
+      this.productService.updateProductImage(this.productId, imageId, { [field]: value }).subscribe(() => {
         this.productService.getProducts().subscribe();
       });
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      const file = input.files[0];
+      if (this.isEditMode && this.productId) {
+        this.productService.uploadProductImage(this.productId, file).subscribe(() => {
+          // Refresh the product data to show the new image
+          this.productService.getProducts().subscribe();
+        });
+      } else {
+        this.stagedImages.push(file);
+        const reader = new FileReader();
+        reader.onload = () => {
+          this.stagedImagePreviews.push(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   }
 
@@ -165,9 +199,15 @@ export class ProductForm implements OnInit {
       });
     } else {
       this.productService.createProduct(productData).pipe(
-        switchMap(newProduct => this.productService.saveCustomFieldValues(newProduct.id, customFieldValues).pipe(
-          map(() => newProduct)
-        ))
+        switchMap(newProduct => {
+          const customFields$ = this.productService.saveCustomFieldValues(newProduct.id, customFieldValues);
+          const imageUploads$ = this.stagedImages.map(file => this.productService.uploadProductImage(newProduct.id, file));
+          
+          // Combine custom field saving and image uploads
+          return forkJoin([customFields$, ...imageUploads$]).pipe(
+            map(() => newProduct) // Pass the newProduct through
+          );
+        })
       ).subscribe((newProduct) => {
         this.router.navigate(['/products', newProduct.id, 'edit']);
       });

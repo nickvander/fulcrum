@@ -1,38 +1,21 @@
 # Progress Log
 
-## Phase: Bug Squashing Session
+## Phase: Final Bug Fixes and UX Enhancements (Session 2)
 
 **Date:** 2025-10-11
 
-### Summary
+### Summary of Work Completed
 
-This session successfully resolved all outstanding issues, including the
-persistent backend test failures and several frontend bugs. The development
-environment is now stable, and all tests are passing.
+This session focused on addressing the bugs and feature requests from the previous session.
 
-### Key Changes & Fixes
+*   **API Routing:** Corrected the malformed URLs in the `ProductService` that were causing `404 Not Found` errors.
+*   **Image UX:**
+    *   Implemented the backend models, schemas, and API endpoints for adding `title` and `description` to product images.
+    *   Partially implemented the frontend logic for displaying staged image previews.
+*   **Permissions:** Corrected the file ownership of the project directory to avoid `sudo` and permission errors.
 
-1.  **Backend Test Suite Fixed:**
-    - The primary blocker, a `relation "products" does not exist` error, was
-      resolved by consolidating all Alembic migrations into a single, squashed
-      migration file. This fixed the inconsistent schema state that was causing
-      the test database setup to fail.
-    - The test environment was further stabilized by ensuring a clean database
-      volume is created for each test run.
+### Outstanding Issues & New Plan
 
-2.  **Backend Stability:**
-    - The backend services now start reliably with `docker compose up`. The
-      `ECONNRESET` error on the frontend, which was caused by the backend
-      crashing, has been resolved.
+The primary blocker remains the backend test suite, which is still failing with persistent and cryptic Alembic errors. All attempts to fix this based on past experience and standard procedures have failed.
 
-3.  **Frontend Bug Fixes:**
-    - The `[Object Object]` error in the photo ingestion workflow was fixed by
-      correctly parsing the incoming data in the `ProductForm` component.
-    - The confusing UX with the disabled "Upload Images" button was confirmed to
-      be a non-issue, as the application correctly redirects to the edit page
-      after product creation, enabling the button.
-
-4.  **Alembic Migration Cleanup:**
-    - All existing migration files were consolidated into a single, squashed
-      migration to simplify the database schema history and resolve dependency
-      issues.
+A new, more methodical plan (`31-test-suite-deep-dive.md`) has been created to diagnose the root cause of the test failures by inspecting the database and Alembic state directly. Once the tests are passing, the plan will proceed to complete the final bug fixes and feature enhancements.

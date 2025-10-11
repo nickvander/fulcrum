@@ -8,13 +8,10 @@ from typing import List
 from ..schemas import product as product_schema, inventory as inventory_schema, custom_field as custom_field_schema
 from ..database import get_db
 from ..tasks import generate_product_embedding
-from ..crud import crud_product, crud_custom_field
+from ..crud import crud_product, crud_custom_field, crud_product_image
 from ..models.inventory import InventoryItem
 
-router = APIRouter(
-    prefix="/products",
-    tags=["products"],
-)
+router = APIRouter()
 
 @router.post("/{product_id}/custom-fields", response_model=custom_field_schema.ProductCustomField)
 def create_product_custom_field(
@@ -24,6 +21,16 @@ def create_product_custom_field(
 ):
     custom_field.product_id = product_id
     return crud_custom_field.product_custom_field.create(db=db, obj_in=custom_field)
+
+@router.get("/{product_id}/custom-fields", response_model=List[custom_field_schema.ProductCustomField])
+def read_product_custom_fields(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    db_product = crud_product.product.get(db=db, id=product_id)
+    if not db_product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return db_product.custom_fields
 
 @router.put("/custom-fields/{custom_field_id}", response_model=custom_field_schema.ProductCustomField)
 def update_product_custom_field(
@@ -102,6 +109,16 @@ def read_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     return db_product
 
+@router.delete("/{product_id}", response_model=product_schema.Product)
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    """
+    Delete a product by its ID.
+    """
+    db_product = crud_product.product.get(db=db, id=product_id)
+    if db_product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return crud_product.product.remove(db=db, id=product_id)
+
 @router.get("/search/", response_model=List[product_schema.Product])
 def search_products(q: str, db: Session = Depends(get_db)):
     """
@@ -111,3 +128,34 @@ def search_products(q: str, db: Session = Depends(get_db)):
     print(f"Search query: {q}")
     products = crud_product.product.get_multi(db, limit=10)
     return products
+
+
+@router.post("/products/{product_id}/images", response_model=product_schema.ProductImage)
+def create_product_image(
+    product_id: int,
+    image: product_schema.ProductImageCreate,
+    db: Session = Depends(get_db),
+):
+    return crud_product_image.product_image.create(db=db, obj_in=image)
+
+@router.put("/products/{product_id}/images/{image_id}", response_model=product_schema.ProductImage)
+def update_product_image(
+    product_id: int,
+    image_id: int,
+    image_in: product_schema.ProductImageUpdate,
+    db: Session = Depends(get_db),
+):
+    db_image = crud_product_image.product_image.get(db=db, id=image_id)
+    if not db_image or db_image.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return crud_product_image.product_image.update(db=db, db_obj=db_image, obj_in=image_in)
+
+
+@router.delete("/products/{product_id}/images/{image_id}", response_model=product_schema.ProductImage)
+def delete_product_image(
+    product_id: int, image_id: int, db: Session = Depends(get_db)
+):
+    db_image = crud_product_image.product_image.get(db=db, id=image_id)
+    if not db_image or db_image.product_id != product_id:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return crud_product_image.product_image.remove(db=db, id=image_id)

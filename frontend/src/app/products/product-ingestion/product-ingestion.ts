@@ -67,7 +67,7 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
         )
       )
     ).subscribe(productData => {
-      this.router.navigate(['/products/new'], { state: { productData } });
+      this.router.navigate(['/products/new'], { state: productData });
     });
   }
 }

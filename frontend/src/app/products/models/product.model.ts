@@ -4,6 +4,8 @@ export interface ProductImage {
   image_path: string;
   is_primary: number;
   source?: string;
+  title?: string;
+  description?: string;
 }
 
 export interface InventoryItem {

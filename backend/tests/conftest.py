@@ -48,6 +48,7 @@ def create_test_database():
         connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
         connection.commit()
 
+
 @pytest.fixture(scope="function")
 def db(create_test_database):
     """

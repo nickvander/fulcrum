@@ -91,4 +91,9 @@ export class ProductList implements OnInit, OnDestroy {
   clearSearch(): void {
     this.productService.getProducts().subscribe();
   }
+
+  getImageUrl(imagePath: string): string {
+    // Assuming the backend serves images from an 'uploads' directory at the root
+    return `/uploads/${imagePath}`;
+  }
 }
