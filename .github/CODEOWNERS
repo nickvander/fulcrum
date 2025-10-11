@@ -1,0 +1,12 @@
+# This is a default CODEOWNERS file.
+# You can add usernames or team names here.
+# e.g., docs/ @user-a @user-b
+
+# Default owner for all files
+* @nickvander
+
+# Backend-specific code
+/backend/ @nickvander
+
+# Frontend-specific code
+/frontend/ @nickvander
