@@ -11,6 +11,8 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
       - ./backend/pytest.ini:/app/pytest.ini
+      - ./backend/migrate.sh:/app/migrate.sh
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}

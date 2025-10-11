@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from ..schemas import product as product_schema, inventory as inventory_schema
+from ..schemas import product as product_schema, inventory as inventory_schema, custom_field as custom_field_schema
 from ..database import get_db
 from ..tasks import generate_product_embedding
 from ..crud import crud_product, crud_custom_field

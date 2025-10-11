@@ -4,27 +4,21 @@ The project uses [Alembic](https://alembic.sqlalchemy.org/) to manage database
 schema migrations. This allows us to make changes to our SQLAlchemy models and
 apply those changes to the database in a structured, version-controlled way.
 
-## Configuration
+## Automatic Migrations on Startup
 
-Alembic is configured in the `backend/alembic.ini` file. It is set up to read
-the database connection string from the `DATABASE_URL` environment variable,
-which is passed to the container by Docker Compose. The migration scripts
-themselves are located in `backend/alembic/versions/`.
+For local development, the backend service is configured to automatically run
+database migrations every time it starts up. This is handled by the
+`backend/migrate.sh` script, which is set as the `command` for the `backend`
+service in `docker-compose.yml`.
 
-## The `migrate.sh` Wrapper Script
+This means that you do not need to run migrations manually. Simply start the
+backend services, and the database will be brought up-to-date automatically.
 
-Due to complexities with environment variables and Docker's execution context, a
-wrapper script `backend/migrate.sh` was created to provide a simple and reliable
-interface for running Alembic commands.
+## The Migration Workflow
 
-**You should always use this script to perform migration tasks.** It ensures
-that the `alembic` command is executed with the correct environment and context
-inside the `backend` container.
-
-## Migration Workflow
-
-The typical workflow for making a schema change is a two-step process:
-**generate** and **apply**.
+While you don't need to run migrations manually, you still need to generate them
+when you make changes to the database models. The workflow is a two-step
+process: **generate** and **review**.
 
 ### Step 1: Generate a New Migration
 
@@ -36,7 +30,7 @@ script that reflects this change.
 
   ```bash
   # From the project root
-  docker compose exec backend /app/migrate.sh revision --autogenerate -m "Your descriptive migration message"
+  docker compose exec backend alembic revision --autogenerate -m "Your descriptive migration message"
   ```
 
 - **What it does:**
@@ -46,22 +40,10 @@ script that reflects this change.
   - It generates a new Python file in `backend/alembic/versions/` containing the
     `upgrade()` and `downgrade()` functions needed to apply and revert your
     changes.
-- **Important:** Always review the auto-generated migration script to ensure
-  it's correct before proceeding.
 
-### Step 2: Apply the Migration
+### Step 2: Review the Migration
 
-Once the migration script has been generated and reviewed, you can apply it to
-the database.
-
-- **Command:**
-
-  ```bash
-  # From the project root
-  docker compose exec backend /app/migrate.sh upgrade head
-  ```
-
-- **What it does:**
-  - Alembic checks which migrations have not yet been applied to the database.
-  - It executes the `upgrade()` function in all pending migration scripts in
-    order, bringing the database schema up to date with your models.
+**Important:** Always review the auto-generated migration script to ensure it's
+correct before committing it to version control. Once you're satisfied, commit
+the new migration file. The next time you or anyone else starts the application,
+this new migration will be applied automatically.

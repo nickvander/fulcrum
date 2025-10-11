@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # This script provides a reliable way to run Alembic migrations
-# or the test suite within the Docker container, ensuring that
-# environment variables and the virtual environment are correctly loaded.
+# and then start the main application, ensuring the database is
+# ready and up-to-date before the API becomes available.
 
 set -e
 
@@ -13,22 +13,24 @@ else
     echo "Virtual environment not found. Skipping activation."
 fi
 
-# Change to the directory where the script is located to ensure alembic.ini is found
-cd "$(dirname "$0")"
+# Wait for the database to be healthy
+# The DATABASE_URL is expected to be in the format: postgresql://user:password@host:port/dbname
+# We extract the host and port for pg_isready.
+DB_HOST=$(echo $DATABASE_URL | cut -d '@' -f 2 | cut -d ':' -f 1)
+DB_PORT=$(echo $DATABASE_URL | cut -d ':' -f 4 | cut -d '/' -f 1)
+DB_USER=$(echo $DATABASE_URL | cut -d ':' -f 2 | cut -d '/' -f 3)
 
-# The `dotenv` command is not available, so we will manually
-# export the DATABASE_URL. The python script `env.py` will
-# still load the full .env file.
-if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
-fi
+echo "Waiting for database at $DB_HOST:$DB_PORT..."
+until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"; do
+  >&2 echo "Postgres is unavailable - sleeping"
+  sleep 1
+done
+>&2 echo "Postgres is up - executing command"
 
-# Check the first argument to decide what to run
-if [ "$1" = "test" ]; then
-    # Shift the arguments to remove "test" and pass the rest to pytest
-    shift
-    pytest "$@"
-else
-    # Execute the alembic command with all arguments passed to this script
-    alembic -c /app/alembic.ini "$@"
-fi
+# Run database migrations
+echo "Running database migrations..."
+alembic -c /app/alembic.ini upgrade head
+
+# Start the Uvicorn server
+echo "Starting Uvicorn server..."
+exec uvicorn src.main:app --host 0.0.0.0 --port 8000

@@ -9,7 +9,7 @@
   "scripts": {
     "test": "npm run test:all",
     "test:frontend": "npm test --prefix frontend",
-    "test:backend": "docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build && docker compose -f docker-compose.yml -f docker-compose.test.yml exec backend alembic upgrade head && docker compose -f docker-compose.yml -f docker-compose.test.yml exec backend python -m pytest && docker compose -f docker-compose.yml -f docker-compose.test.yml down",
+    "test:backend": "docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest && docker compose -f docker-compose.test.yml down",
     "test:backend:fast": "cd backend && pytest -m 'not db'",
     "test:all": "npm run test:frontend && npm run test:backend",
     "lint:md": "prettier --check '**/*.md'",

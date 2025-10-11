@@ -1,6 +1,9 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 
+from ..schemas.custom_field import ProductCustomField
+
+
 # Schema for Product Images
 class ProductImageBase(BaseModel):
     image_path: str
@@ -53,7 +56,7 @@ class ProductUpdate(BaseModel):
     depth: Optional[float] = None
     weight: Optional[float] = None
 
-from ..schemas.custom_field import ProductCustomField
+
 
 class Product(ProductBase):
     id: int

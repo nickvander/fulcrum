@@ -6,9 +6,11 @@ import os
 from pathlib import Path
 import shutil
 
+from alembic import command
+from alembic.config import Config
+
 from src.main import app
 from src.database import get_db
-from src.models.base import Base
 from src.config import settings
 from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
@@ -21,18 +23,27 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(scope="session")
 def create_test_database():
     """
-    Create the test database and tables once per session.
-
-    IMPORTANT: Do not set autouse=True on this fixture. Doing so would force
-    every test run, including the fast unit tests, to establish a database
-    connection, which would break the test separation.
+    Create the test database and tables once per session using Alembic.
     """
     with engine.connect() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         connection.commit()
-    Base.metadata.create_all(bind=engine)
+
+    # Path to alembic.ini
+    alembic_ini_path = Path(__file__).parent.parent / "alembic.ini"
+    
+    # Create an Alembic configuration object
+    alembic_cfg = Config(str(alembic_ini_path))
+    alembic_cfg.set_main_option("script_location", str(Path(__file__).parent.parent / "alembic"))
+    alembic_cfg.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
+    # Upgrade the database to the latest revision
+    command.upgrade(alembic_cfg, "head")
+    
     yield
-    Base.metadata.drop_all(bind=engine)
+    
+    # Downgrade the database to the base revision
+    command.downgrade(alembic_cfg, "base")
     with engine.connect() as connection:
         connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
         connection.commit()
