@@ -1,7 +1,9 @@
+import pytest
 from fastapi.testclient import TestClient
 from pathlib import Path
 import io
 
+@pytest.mark.db
 def test_upload_file(client: TestClient):
     """
     Test uploading a file successfully.
@@ -26,6 +28,7 @@ def test_upload_file(client: TestClient):
     # Clean up the created file
     file_path.unlink()
 
+@pytest.mark.db
 def test_upload_file_invalid_filename(client: TestClient):
     """
     Test that uploading a file with a directory traversal attempt is blocked.
