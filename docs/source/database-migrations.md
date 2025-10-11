@@ -1,4 +1,4 @@
-# 3. Database Migrations with Alembic
+# Database Migrations with Alembic
 
 The project uses [Alembic](https://alembic.sqlalchemy.org/) to manage database
 schema migrations. This allows us to make changes to our SQLAlchemy models and
