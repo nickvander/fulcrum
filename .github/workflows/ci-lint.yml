@@ -36,8 +36,8 @@ jobs:
     - name: Create venv
       run: uv venv
 
-    - name: Install dependencies
-      run: uv pip install ruff
-
-    - name: Run linter
-      run: ruff check .
+    - name: Install dependencies and run linter
+      run: |
+        source .venv/bin/activate
+        uv pip install ruff
+        ruff check .
