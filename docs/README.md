@@ -27,7 +27,7 @@ manage the look and feel of the documentation site.
 ### Local Development & Preview
 
 To work on the documentation locally, you must first set up a local Python
-development environment. Please follow the **[Contributor Guide](../../CONTRIBUTING.md)**
+development environment. Please follow the **[Contributor Guide](../CONTRIBUTING.md)**
 to install `uv` and create a virtual environment.
 
 Once your environment is set up, you can run a live-reloading web server from
