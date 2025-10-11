@@ -8,21 +8,15 @@ built and maintained.
 
 The documentation is organized into several sections:
 
-- **Getting Started:** Contains the essential guides for setting up your local
-  development environment for the first time.
-- **Guides:** Practical, step-by-step instructions for common development tasks
-  like running tests and creating database migrations.
-- **Explanation:** High-level discussions of the project's architecture, key
-  design patterns, and core concepts.
-- **Reference:** (Coming Soon) Detailed technical information, such as API
-  endpoint specifications and configuration variable references.
+- **[Getting Started](getting-started/backend-setup.md):** Contains the
+  essential guides for setting up your local development environment for the
+  first time.
+- **[Guides](guides/contributing.md):** Practical, step-by-step instructions for
+  common development tasks like running tests, creating database migrations, and
+  contributing to the project.
+- **[Concepts](concepts/architecture.md):** High-level discussions of the
+  project's architecture, key design patterns, and core concepts.
+- **[Reference](reference/configuration.md):** Detailed technical information,
+  such as configuration variables.
 
 Use the sidebar to navigate through the different sections of the documentation.
-
-## Key Documentation
-
-- [Architecture Overview](concepts/architecture.md)
-- [Backend Setup Guide](getting-started/backend-setup.md)
-- [Frontend Setup Guide](getting-started/frontend-setup.md)
-- [Contributor Guide](guides/contributing.md)
-- [Testing & CI Guide](guides/testing-and-ci.md)
