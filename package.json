@@ -7,7 +7,11 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run test:all",
+    "test:frontend": "npm test --prefix frontend",
+    "test:backend:unit": "cd backend && python3 -m pytest -m 'not db'",
+    "test:backend:db": "docker compose -f docker-compose.yml -f docker-compose.test.yml up -d --build && docker compose -f docker-compose.yml -f docker-compose.test.yml exec backend alembic upgrade head && docker compose -f docker-compose.yml -f docker-compose.test.yml exec backend python -m pytest -m 'db' && docker compose -f docker-compose.yml -f docker-compose.test.yml down",
+    "test:all": "npm run test:frontend && npm run test:backend:unit && npm run test:backend:db",
     "lint:md": "prettier --check '**/*.md'",
     "format:md": "prettier --write '**/*.md'"
   },

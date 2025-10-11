@@ -86,8 +86,8 @@ the `/work` directory, which is organized as follows:
   consulted for the overall vision and architecture.
 - `work/current/`: Contains the plan for the **active** development phase and
   the main `PROGRESS.md` log.
-- `work/future/`: Contains plans for tasks that are not yet scheduled. The
-  order of work in this directory is not guaranteed.
+- `work/future/`: Contains plans for tasks that are not yet scheduled. The order
+  of work in this directory is not guaranteed.
 - `work/archive/`: Contains all plans and logs from **completed** phases for
   historical reference.
 
@@ -188,8 +188,8 @@ documentation evolves alongside the codebase.
 ### Backend: `ModuleNotFoundError` in Docker
 
 - **Symptom:** `pytest` or the application fails on startup with
-  `ModuleNotFoundError: No module named 'some_module'`, even though the module is
-  listed in `requirements.txt` and appears to be installed during the Docker
+  `ModuleNotFoundError: No module named 'some_module'`, even though the module
+  is listed in `requirements.txt` and appears to be installed during the Docker
   build. The CI build may also hang indefinitely while "Waiting for services to
   be healthy."
 - **Cause:** This issue arises from a conflict between the Docker container's
@@ -197,12 +197,13 @@ documentation evolves alongside the codebase.
   being mounted as a volume. The broad `volumes: - ./backend:/app` mapping in
   `docker-compose.yml` overwrites the container's `venv`, causing the Python
   interpreter to lose track of the installed packages.
-- **Solution:** The most robust solution is to use more granular volume mounts in
-  the `docker-compose.yml` file. Instead of mounting the entire `./backend`
+- **Solution:** The most robust solution is to use more granular volume mounts
+  in the `docker-compose.yml` file. Instead of mounting the entire `./backend`
   directory, mount only the necessary subdirectories for development. This
   isolates the container's `venv` from the host filesystem.
 
   **Example `docker-compose.yml` service definition:**
+
   ```yaml
   services:
     backend:

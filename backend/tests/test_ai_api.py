@@ -1,5 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
 
+@pytest.mark.db
 def test_identify_from_image(client: TestClient):
     """
     Test the AI image identification endpoint.
@@ -21,6 +23,7 @@ def test_identify_from_image(client: TestClient):
     assert data["description"] == "A high-quality widget identified from an image."
     assert data["sku"] == "AI-SKU-123"
 
+@pytest.mark.db
 def test_identify_from_image_invalid_url(client: TestClient):
     """
     Test that the endpoint returns a validation error for a malformed URL.

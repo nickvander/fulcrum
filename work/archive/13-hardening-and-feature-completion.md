@@ -11,15 +11,15 @@ centralized state management.
 ## Critique of Current Implementation
 
 1.  **Poor User Feedback:** The application provides no visual feedback for
-    asynchronous operations. When a user creates, updates, or deletes a
-    product, the UI doesn't show a loading indicator or a success/error
-    notification. This makes the application feel unresponsive and confusing.
+    asynchronous operations. When a user creates, updates, or deletes a product,
+    the UI doesn't show a loading indicator or a success/error notification.
+    This makes the application feel unresponsive and confusing.
 2.  **Lack of Centralized State Management:** The `ProductListComponent` fetches
     the list of products once. After a creation, update, or deletion, it will
     not automatically reflect the changes. The component would need to manually
     refetch the data, which is inefficient and not reactive.
-3.  **Incomplete Error Handling:** While the backend has some error handling, the
-    frontend does not. If an API call fails, the error is only logged to the
+3.  **Incomplete Error Handling:** While the backend has some error handling,
+    the frontend does not. If an API call fails, the error is only logged to the
     console, leaving the user without any indication of what went wrong.
 4.  **Missing Confirmation Dialogs:** Destructive actions, like deleting a
     product, are not protected by a confirmation dialog. This is a significant
@@ -41,8 +41,8 @@ centralized state management.
   - Create an `HttpInterceptor` that automatically shows the spinner at the
     start of any API request and hides it upon completion.
   - Integrate the Angular Material `MatSnackBar` module to create a
-    `NotificationService` that can be used to display success and error
-    messages to the user.
+    `NotificationService` that can be used to display success and error messages
+    to the user.
 
 ### 2. **State Management & Reactivity**
 
@@ -96,8 +96,8 @@ centralized state management.
 - **Backend Actions:**
   - Create a new SQLAlchemy model, `ProductImage`, with fields for `id`,
     `product_id`, `image_path`, and `is_primary`.
-  - Generate a new Alembic migration to create the `product_images` table in
-    the database.
+  - Generate a new Alembic migration to create the `product_images` table in the
+    database.
   - Create a new endpoint, `POST /api/v1/products/{product_id}/images`, that
     handles the file upload, saves the image, and creates a corresponding
     `ProductImage` record.

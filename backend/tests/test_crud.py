@@ -6,6 +6,7 @@ from src.models.product import Product
 import numpy as np
 
 @pytest.mark.postgres
+@pytest.mark.db
 def test_product_search(db: Session):
     """
     Tests the vector search functionality for products.

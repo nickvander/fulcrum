@@ -77,12 +77,14 @@ All backend services are managed via Docker Compose.
 
 ## Default Superuser
 
-On startup, the application will automatically create a default superuser if one does not already exist. The credentials for this user are configured in the `.env` file in the `backend` directory.
+On startup, the application will automatically create a default superuser if one
+does not already exist. The credentials for this user are configured in the
+`.env` file in the `backend` directory.
 
--   **`FIRST_SUPERUSER_EMAIL`**: The email address for the default superuser.
--   **`FIRST_SUPERUSER_PASSWORD`**: The password for the default superuser.
+- **`FIRST_SUPERUSER_EMAIL`**: The email address for the default superuser.
+- **`FIRST_SUPERUSER_PASSWORD`**: The password for the default superuser.
 
 The default credentials in `.env.example` are:
 
--   **Email:** `admin@example.com`
--   **Password:** `changeme`
+- **Email:** `admin@example.com`
+- **Password:** `changeme`
