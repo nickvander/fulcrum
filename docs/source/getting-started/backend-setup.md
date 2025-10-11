@@ -7,6 +7,12 @@ This document provides a guide to setting up and running the backend services fo
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
+For Debian/Ubuntu-based systems, you can install them with the following command:
+
+```bash
+sudo apt-get update && sudo apt-get install -y docker.io docker-compose
+```
+
 ## First-Time Setup
 
 1.  **Clone the Repository:**

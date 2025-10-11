@@ -7,6 +7,12 @@ This document provides a guide to setting up and running the Angular frontend ap
 - [Node.js and npm](https://nodejs.org/)
 - The backend services must be running. See the [Backend Setup Guide](./backend-setup.md) for instructions.
 
+For Debian/Ubuntu-based systems, you can install Node.js and npm with the following command:
+
+```bash
+sudo apt-get update && sudo apt-get install -y nodejs npm
+```
+
 ## First-Time Setup
 
 1.  **Install Dependencies:**
