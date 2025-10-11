@@ -69,9 +69,12 @@ describe('ProductService', () => {
       expect(req.request.method).toBe('POST');
       req.flush(createdProduct);
 
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products`);
+      getReq.flush([...mockProducts, createdProduct]);
+
       service.products$.subscribe(products => {
-        expect(products.length).toBe(1);
-        expect(products[0]).toEqual(createdProduct);
+        expect(products.length).toBe(3);
+        expect(products[2]).toEqual(createdProduct);
       });
 
       expect(notificationServiceMock.showSuccess).toHaveBeenCalledWith('Product created successfully!');
@@ -80,10 +83,6 @@ describe('ProductService', () => {
 
   describe('updateProduct', () => {
     it('should update a product, update the stream, and show notification', () => {
-      service.getProducts();
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products`);
-      getReq.flush(mockProducts);
-
       const updatedProduct: Product = { ...mockProducts[0], name: 'Updated Name' };
 
       service.updateProduct(updatedProduct).subscribe(product => {
@@ -93,6 +92,9 @@ describe('ProductService', () => {
       const putReq = httpMock.expectOne(`${environment.apiUrl}/products/${updatedProduct.id}`);
       expect(putReq.request.method).toBe('PUT');
       putReq.flush(updatedProduct);
+
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products`);
+      getReq.flush(mockProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
 
       service.products$.subscribe(products => {
         expect(products.length).toBe(2);
@@ -105,16 +107,15 @@ describe('ProductService', () => {
 
   describe('deleteProduct', () => {
     it('should delete a product, update the stream, and show notification', () => {
-      service.getProducts();
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products`);
-      getReq.flush(mockProducts);
-
       const productIdToDelete = 1;
       service.deleteProduct(productIdToDelete).subscribe();
 
       const deleteReq = httpMock.expectOne(`${environment.apiUrl}/products/${productIdToDelete}`);
       expect(deleteReq.request.method).toBe('DELETE');
       deleteReq.flush({});
+
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products`);
+      getReq.flush(mockProducts.filter(p => p.id !== productIdToDelete));
 
       service.products$.subscribe(products => {
         expect(products.length).toBe(1);
