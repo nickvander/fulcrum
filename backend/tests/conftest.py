@@ -22,6 +22,10 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 def create_test_database():
     """
     Create the test database and tables once per session.
+
+    IMPORTANT: Do not set autouse=True on this fixture. Doing so would force
+    every test run, including the fast unit tests, to establish a database
+    connection, which would break the test separation.
     """
     with engine.connect() as connection:
         connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))

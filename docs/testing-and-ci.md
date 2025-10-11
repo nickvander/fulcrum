@@ -26,33 +26,34 @@ Continuous Integration (CI) pipeline.
 
 A suite of `npm` scripts are available to standardize the testing process.
 
-- **Run all tests (frontend and backend):**
+-   **Run all tests (frontend and backend):**
+    This is the most comprehensive test run.
+    ```bash
+    npm run test:all
+    ```
 
-  ```bash
-  npm run test:all
-  ```
+-   **Run only the frontend tests:**
+    ```bash
+    npm run test:frontend
+    ```
 
-- **Run only the frontend tests:**
+-   **Run the full backend test suite:**
+    This command will automatically start the test database, run migrations,
+    execute all backend tests (unit and database), and then shut down the
+    containers.
+    ```bash
+    npm run test:backend
+    ```
 
-  ```bash
-  npm run test:frontend
-  ```
+-   **Run only the fast backend unit tests:**
+    This is ideal for quick checks when working on logic that does not directly
+    touch the database.
 
-- **Run only the fast backend unit tests (no database required):**
-
-  **Prerequisite:** This script requires a local Python 3 environment with all
-  dependencies from `backend/requirements.txt` installed.
-
-  ```bash
-  npm run test:backend:unit
-  ```
-
-- **Run only the backend database-dependent tests:** This command will
-  automatically start the test database, run migrations, execute the tests, and
-  then shut down the containers.
-  ```bash
-  npm run test:backend:db
-  ```
+    **Prerequisite:** This script requires a local Python 3 environment with all
+    dependencies from `backend/requirements.txt` installed.
+    ```bash
+    npm run test:backend:fast
+    ```
 
 ## Code Quality (Linting)
 
