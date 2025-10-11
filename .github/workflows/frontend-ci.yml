@@ -12,21 +12,21 @@ on:
       - 'frontend/**'
 
 jobs:
+  setup:
+    uses: ./.github/workflows/reusable-setup.yml
+
   frontend-test:
+    needs: setup
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: ./frontend
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Install Dependencies
         run: npm install
 
