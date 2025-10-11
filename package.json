@@ -14,8 +14,8 @@
     "test:all": "npm run test:frontend && npm run test:backend",
     "lint:md": "prettier --check '**/*.md'",
     "format:md": "prettier --write '**/*.md'",
-    "docs:build": "uv pip install -r docs/requirements.txt && sphinx-build -E docs/source docs/_build/html",
-    "docs:serve": "# Make sure you have uv installed (see docs/source/backend-setup.md)\n    uv pip install -r docs/requirements.txt && sphinx-autobuild -E docs/source/ docs/_build/html --open-browser"
+    "docs:build": "uv venv ./.venv --seed && uv pip install -r docs/requirements.txt --python ./.venv/bin/python && ./.venv/bin/sphinx-build -E docs/source docs/_build/html",
+    "docs:serve": "# Make sure you have uv installed (see docs/source/backend-setup.md)\n    uv venv ./.venv --seed && uv pip install -r docs/requirements.txt --python ./.venv/bin/python && ./.venv/bin/sphinx-autobuild -E docs/source/ docs/_build/html --open-browser"
   },
   "keywords": [],
   "author": "",
