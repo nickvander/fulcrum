@@ -18,7 +18,7 @@ from src.schemas.product import ProductCreate, ProductImageCreate
 engine = create_engine(settings.DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def create_test_database():
     """
     Create the test database and tables once per session.
@@ -34,7 +34,7 @@ def create_test_database():
         connection.commit()
 
 @pytest.fixture(scope="function")
-def db():
+def db(create_test_database):
     """
     Provides a transactional database session for each test function.
     Rolls back all changes after the test completes.
