@@ -73,7 +73,7 @@ export class ProductForm implements OnInit {
       const file = input.files[0];
       this.productService.uploadProductImage(this.productId, file).subscribe(() => {
         // Refresh the product data to show the new image
-        this.productService.getProducts();
+        this.productService.getProducts().subscribe();
       });
     }
   }
@@ -81,7 +81,7 @@ export class ProductForm implements OnInit {
   deleteImage(imageId: number): void {
     if (this.productId) {
       this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
-        this.productService.getProducts();
+        this.productService.getProducts().subscribe();
       });
     }
   }
@@ -89,7 +89,7 @@ export class ProductForm implements OnInit {
   setPrimaryImage(imageId: number): void {
     if (this.productId) {
       this.productService.setPrimaryProductImage(this.productId, imageId).subscribe(() => {
-        this.productService.getProducts();
+        this.productService.getProducts().subscribe();
       });
     }
   }

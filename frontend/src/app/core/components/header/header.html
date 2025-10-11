@@ -8,7 +8,13 @@
   </button>
   <span>Fulcrum</span>
   <span class="spacer"></span>
-  <button mat-icon-button class="user-button" aria-label="User icon">
+  <button mat-icon-button [matMenuTriggerFor]="menu" class="user-button" aria-label="User icon">
     <mat-icon>account_circle</mat-icon>
   </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
 </mat-toolbar>

@@ -61,30 +61,8 @@ database, background workers) are managed via Docker Compose.
 ## Testing
 
 The project includes a comprehensive test suite for both the backend and
-frontend.
-
-### Backend Testing
-
-The backend is tested using `pytest`. To run the test suite, execute the
-following command from the root directory:
-
-```bash
-docker compose exec backend python -m pytest
-```
-
-To run the linter (`ruff`), execute:
-```bash
-docker compose exec backend ruff check .
-```
-
-### Frontend Testing
-
-The frontend is tested using the Web Test Runner and Playwright. To run the test
-suite from the root directory, execute:
-
-```bash
-npm test --prefix frontend
-```
+frontend. For detailed instructions on the testing strategy and how to run the
+tests, please see the **[Testing Strategy & CI/CD Guide](./docs/testing-and-ci.md)**.
 
 ## How to Contribute
 

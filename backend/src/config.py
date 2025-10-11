@@ -10,6 +10,12 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None
     REDIS_URL: str
     SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
+
+    # First superuser
+    FIRST_SUPERUSER_EMAIL: str
+    FIRST_SUPERUSER_PASSWORD: str
 
     # Allow individual DB components to be passed from Docker Compose
     POSTGRES_USER: str = "fulcrum"

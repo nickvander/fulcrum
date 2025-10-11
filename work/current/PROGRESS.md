@@ -189,3 +189,24 @@ completed phases, see the files in the `work/archive/` directory.
   - **Documentation:** Updated the `docs/testing-and-ci.md` file to reflect the
     new, unified command for running the test suite locally and removed outdated
     information about skipped tests.
+
+- **October 10, 2025:** Resolve Critical Product Creation Bug.
+  - **Troubleshooting:** Investigated a critical bug where creating a product
+    would succeed from the API's perspective (returning a 200 OK status) but
+    the product would not appear in the UI or the database.
+  - **Key Learnings & Resolution:**
+    1.  **Frontend Investigation:** Initial debugging focused on frontend state
+        management and RxJS logic, as the backend logs appeared correct. This
+        led to several refactors of the `ProductService` that improved the
+        code but did not solve the root problem.
+    2.  **Database Verification:** The breakthrough came from directly querying
+        the PostgreSQL container, which revealed that the `products` table was
+        empty, confirming the issue was in the backend's persistence layer.
+    3.  **Root Cause:** The `CRUDBase` class was missing the essential
+        `db.commit()` call in its `create`, `update`, and `remove` methods.
+        While `db.flush()` sent the changes to the database within the
+        transaction, the transaction itself was never committed and was rolled
+        back when the session closed.
+  - **Outcome:** Added `db.commit()` to the base CRUD methods, resolving the
+    bug. The product creation workflow is now fully functional and data
+    persists correctly.
