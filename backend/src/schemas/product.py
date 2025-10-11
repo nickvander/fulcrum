@@ -27,6 +27,13 @@ class ProductBase(BaseModel):
     sku: str
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
+    manufacturer: Optional[str] = None
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    depth: Optional[float] = None
+    weight: Optional[float] = None
 
 class ProductCreate(ProductBase):
     pass
@@ -38,10 +45,27 @@ class ProductUpdate(BaseModel):
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
     properties: Optional[dict] = None
+    manufacturer: Optional[str] = None
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    depth: Optional[float] = None
+    weight: Optional[float] = None
+
+from ..schemas.custom_field import ProductCustomField
 
 class Product(ProductBase):
     id: int
     supplier_id: Optional[int] = None
     images: List[ProductImage] = []
+    manufacturer: Optional[str] = None
+    brand: Optional[str] = None
+    category: Optional[str] = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    depth: Optional[float] = None
+    weight: Optional[float] = None
+    custom_fields: List[ProductCustomField] = []
 
     model_config = ConfigDict(from_attributes=True)

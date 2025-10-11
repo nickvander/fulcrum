@@ -29,6 +29,8 @@ This is the central source of truth for developers.
 
 ### Running the Application
 
+#### Backend
+
 1.  **Clone the repository:**
 
     ```bash
@@ -43,10 +45,40 @@ This is the central source of truth for developers.
     ```
 
 3.  **Build and start all services:**
+
     ```bash
     docker compose up --build
     ```
 
-The backend API will be available at `http://localhost:8000`. For detailed setup
-instructions, please see the
+4.  **Run database migrations:**
+    Open a new terminal and run:
+    ```bash
+    docker compose exec backend alembic upgrade head
+    ```
+
+The backend API will be available at `http://localhost:8000`.
+
+#### Frontend
+
+1.  **Navigate to the frontend directory:**
+
+    ```bash
+    cd frontend
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+  **Start the development server:**
+
+    ```bash
+    npm start
+    ```
+
+The frontend application will be available at `http://localhost:4200`.
+
+For detailed setup instructions, please see the
 **[Getting Started](docs/source/getting-started/backend-setup.md)** guide.

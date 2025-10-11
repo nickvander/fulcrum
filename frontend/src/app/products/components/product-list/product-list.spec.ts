@@ -78,7 +78,7 @@ describe('ProductList', () => {
     
     // The subscription to products$ will update the data
     productsSubject.next(mockProducts);
-    expect(component.dataSource.data).toEqual(mockProducts);
+    expect(component.products).toEqual(mockProducts);
   });
 
   describe('deleteProduct', () => {

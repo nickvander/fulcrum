@@ -4,7 +4,7 @@ import { NgxScannerQrcodeComponent } from 'ngx-scanner-qrcode';
 import { HardwareService } from '../../core/services/hardware.service';
 import { SharedModule } from '../../shared/shared-module';
 import { ProductService } from '../services/product';
-import { switchMap } from 'rxjs';
+import { switchMap, from, tap } from 'rxjs';
 
 @Component({
   selector: 'app-product-ingestion',
@@ -38,38 +38,36 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
 
   onScanSuccess(result: any): void {
     this.scannedData = result;
-    // Here you would typically call a service to fetch product data using the barcode
-    console.log('Barcode scanned:', result);
     this.scanner.stop(); // Stop scanning after a successful scan
+
+    this.productService.searchProductsBySku(result).subscribe(products => {
+      if (products.length > 0) {
+        // Product found, navigate to the edit page
+        this.router.navigate(['/products', products[0].id, 'edit']);
+      } else {
+        // No product found, navigate to the create page with the SKU pre-filled
+        this.router.navigate(['/products/new'], { state: { productData: { sku: result } } });
+      }
+    });
   }
 
   capturePhoto(): void {
-    const streamSub = this.hardwareService.getCameraStream().subscribe({
-      next: (stream) => {
-        this.hardwareService
-          .captureImage(stream)
-          .then((blob) => {
-            this.capturedImage = blob;
+    this.hardwareService.getCameraStream().pipe(
+      switchMap(stream => 
+        from(this.hardwareService.captureImage(stream)).pipe(
+          tap(blob => this.capturedImage = blob),
+          switchMap(blob => {
             const file = new File([blob], 'ingestion.jpg', { type: 'image/jpeg' });
-            this.productService.uploadImage(file).pipe(
-              switchMap(uploadResult => 
-                this.productService.identifyProductFromImage(uploadResult.file_path)
-              )
-            ).subscribe(productData => {
-              this.router.navigate(['/products/new'], { state: { productData } });
-            });
-          })
-          .catch((err) => {
-            console.error('Error capturing image:', err);
-          })
-          .finally(() => {
-            stream.getTracks().forEach((track) => track.stop());
-            streamSub.unsubscribe();
-          });
-      },
-      error: (err) => {
-        console.error('Error accessing camera for photo:', err);
-      },
+            return this.productService.uploadImage(file);
+          }),
+          switchMap(uploadResult => 
+            this.productService.identifyProductFromImage(uploadResult.file_path)
+          ),
+          tap(() => stream.getTracks().forEach(track => track.stop()))
+        )
+      )
+    ).subscribe(productData => {
+      this.router.navigate(['/products/new'], { state: { productData } });
     });
   }
 }

@@ -43,6 +43,7 @@ to ensure a separation of concerns.
 The API layer (`src/api/`) is responsible for handling HTTP requests and
 responses.
 
+- **Security:** The application container runs as a non-root user (`appuser`) for improved security, reducing the potential impact of a container breakout.
 - **Centralized Routing:** All API v1 routes are aggregated in
   `src/api/v1/api.py`. This file includes the routers from the `endpoints`
   directory, providing a single source of truth for the API's structure. The

@@ -1,7 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ProductService } from '../../services/product';
 import { Product } from '../../models/product.model';
 import { CommonModule } from '@angular/common';
@@ -12,30 +9,27 @@ import { RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { Subject, takeUntil } from 'rxjs';
+import { MatCardModule } from '@angular/material/card';
+
+import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.html',
-  styleUrl: './product-list.scss',
+  styleUrls: ['./product-list.scss'],
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
     SharedModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
     MatButtonModule,
     MatIconModule,
+    MatCardModule,
   ],
 })
-export class ProductList implements OnInit, AfterViewInit, OnDestroy {
-  displayedColumns: string[] = ['name', 'sku', 'default_resale_price', 'actions'];
-  dataSource: MatTableDataSource<Product> = new MatTableDataSource();
+export class ProductList implements OnInit, OnDestroy {
+  products: Product[] = [];
   private destroy$ = new Subject<void>();
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
     private productService: ProductService,
@@ -46,14 +40,9 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
     this.productService.products$
       .pipe(takeUntil(this.destroy$))
       .subscribe((products) => {
-        this.dataSource.data = products;
+        this.products = products;
       });
     this.productService.getProducts().subscribe();
-  }
-
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
   }
 
   ngOnDestroy(): void {
@@ -76,18 +65,30 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  openStockAdjustmentDialog(product: Product): void {
+    const dialogRef = this.dialog.open(StockAdjustmentDialog, {
+      data: {
+        productName: product.name,
+        currentQuantity: product.inventory_items?.reduce((acc, item) => acc + item.quantity, 0) ?? 0,
+      },
+    });
+
+    dialogRef.afterClosed().subscribe(adjustment => {
+      if (adjustment) {
+        this.productService.adjustStock(product.id, adjustment).subscribe();
+      }
+    });
+  }
+
   onSearchQuery(query: string): void {
-    const normalizedQuery = query.trim().toLowerCase();
-    this.dataSource.filter = normalizedQuery;
-    if (normalizedQuery) {
-      this.productService.searchProducts(normalizedQuery).subscribe();
+    if (query) {
+      this.productService.searchProducts(query).subscribe();
     } else {
       this.productService.getProducts().subscribe();
     }
   }
 
   clearSearch(): void {
-    this.dataSource.filter = '';
     this.productService.getProducts().subscribe();
   }
 }

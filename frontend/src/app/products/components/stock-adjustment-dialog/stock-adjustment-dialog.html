@@ -1,0 +1,12 @@
+<h2 mat-dialog-title>Adjust Stock for {{ data.productName }}</h2>
+<mat-dialog-content>
+  <p>Current Stock: {{ data.currentQuantity }}</p>
+  <mat-form-field>
+    <mat-label>Adjustment</mat-label>
+    <input matInput type="number" [(ngModel)]="adjustment" placeholder="e.g., 10 or -5">
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button [mat-dialog-close]="adjustment" cdkFocusInitial>Adjust</button>
+</mat-dialog-actions>

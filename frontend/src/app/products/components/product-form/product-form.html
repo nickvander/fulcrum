@@ -25,6 +25,55 @@
           <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
         </mat-form-field>
 
+        <mat-form-field appearance="fill">
+          <mat-label>Cost Price</mat-label>
+          <input matInput formControlName="cost_price" type="number" placeholder="0.00">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Manufacturer</mat-label>
+          <input matInput formControlName="manufacturer" placeholder="Manufacturer">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Brand</mat-label>
+          <input matInput formControlName="brand" placeholder="Brand">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Category</mat-label>
+          <input matInput formControlName="category" placeholder="Category">
+        </mat-form-field>
+
+        <div class="dimensions">
+          <mat-form-field appearance="fill">
+            <mat-label>Width</mat-label>
+            <input matInput formControlName="width" type="number" placeholder="0.00">
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Height</mat-label>
+            <input matInput formControlName="height" type="number" placeholder="0.00">
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Depth</mat-label>
+            <input matInput formControlName="depth" type="number" placeholder="0.00">
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Weight</mat-label>
+          <input matInput formControlName="weight" type="number" placeholder="0.00">
+        </mat-form-field>
+
+        <div *ngFor="let field of customFields">
+          <mat-form-field appearance="fill">
+            <mat-label>{{ field.name }}</mat-label>
+            <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
+          </mat-form-field>
+        </div>
+
         <div class="actions">
           <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
           <button type="submit" mat-raised-button color="primary" [disabled]="!productForm.valid">Save</button>
@@ -33,13 +82,13 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card *ngIf="isEditMode" class="image-card">
+  <mat-card class="image-card">
     <mat-card-header>
       <mat-card-title>Product Images</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <div class="image-upload">
-        <button type="button" mat-stroked-button (click)="fileInput.click()">
+        <button type="button" mat-stroked-button (click)="fileInput.click()" [disabled]="!isEditMode">
           <mat-icon>add_a_photo</mat-icon>
           <span>Upload Image</span>
         </button>
