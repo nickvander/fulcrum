@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
 import { Product } from '../models/product.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
@@ -19,46 +19,46 @@ export class ProductService {
     private notificationService: NotificationService
   ) {}
 
-  getProducts(): void {
-    this.http.get<Product[]>(this.apiUrl).subscribe(products => {
-      this._products.next(products);
-    });
+  getProducts(): Observable<Product[]> {
+    return this.http.get<Product[]>(this.apiUrl).pipe(
+      tap(products => {
+        this._products.next(products);
+      })
+    );
   }
 
-  searchProducts(query: string): void {
-    this.http.get<Product[]>(`${this.apiUrl}/search/?q=${query}`).subscribe(products => {
-      this._products.next(products);
-    });
+  searchProducts(query: string): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.apiUrl}/search/?q=${query}`).pipe(
+      tap(products => {
+        this._products.next(products);
+      })
+    );
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
     return this.http.post<Product>(this.apiUrl, product).pipe(
-      tap(newProduct => {
-        this._products.next([...this._products.value, newProduct]);
-        this.notificationService.showSuccess('Product created successfully!');
-      })
+      tap(() => this.notificationService.showSuccess('Product created successfully!')),
+      switchMap(newProduct =>
+        this.getProducts().pipe(map(() => newProduct))
+      )
     );
   }
 
   updateProduct(product: Product): Observable<Product> {
     return this.http.put<Product>(`${this.apiUrl}/${product.id}`, product).pipe(
-      tap(updatedProduct => {
-        const products = this._products.value.map(p =>
-          p.id === updatedProduct.id ? updatedProduct : p
-        );
-        this._products.next(products);
-        this.notificationService.showSuccess('Product updated successfully!');
-      })
+      tap(() => this.notificationService.showSuccess('Product updated successfully!')),
+      switchMap(updatedProduct =>
+        this.getProducts().pipe(map(() => updatedProduct))
+      )
     );
   }
 
   deleteProduct(id: number): Observable<unknown> {
     return this.http.delete(`${this.apiUrl}/${id}`).pipe(
-      tap(() => {
-        const products = this._products.value.filter(p => p.id !== id);
-        this._products.next(products);
-        this.notificationService.showSuccess('Product deleted successfully!');
-      })
+      tap(() => this.notificationService.showSuccess('Product deleted successfully!')),
+      switchMap(response =>
+        this.getProducts().pipe(map(() => response))
+      )
     );
   }
 

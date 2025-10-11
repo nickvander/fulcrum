@@ -25,6 +25,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         db_obj = self.model(**obj_in.model_dump())
         db.add(db_obj)
+        db.commit()
         db.flush()
         db.refresh(db_obj)
         return db_obj
@@ -43,6 +44,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         for field in update_data:
             setattr(db_obj, field, update_data[field])
         db.add(db_obj)
+        db.commit()
         db.flush()
         db.refresh(db_obj)
         return db_obj
@@ -51,5 +53,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj = db.get(self.model, id)
         if obj:
             db.delete(obj)
+            db.commit()
             db.flush()
         return obj

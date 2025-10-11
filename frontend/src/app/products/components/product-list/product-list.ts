@@ -48,7 +48,7 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
       .subscribe((products) => {
         this.dataSource.data = products;
       });
-    this.productService.getProducts();
+    this.productService.getProducts().subscribe();
   }
 
   ngAfterViewInit(): void {
@@ -77,12 +77,17 @@ export class ProductList implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearchQuery(query: string): void {
-    this.dataSource.filter = query.trim().toLowerCase();
-    this.productService.searchProducts(query);
+    const normalizedQuery = query.trim().toLowerCase();
+    this.dataSource.filter = normalizedQuery;
+    if (normalizedQuery) {
+      this.productService.searchProducts(normalizedQuery).subscribe();
+    } else {
+      this.productService.getProducts().subscribe();
+    }
   }
 
   clearSearch(): void {
     this.dataSource.filter = '';
-    this.productService.getProducts();
+    this.productService.getProducts().subscribe();
   }
 }
