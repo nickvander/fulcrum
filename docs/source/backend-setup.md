@@ -1,7 +1,7 @@
-# 2. Backend Setup & Local Development
+# Backend Setup & Local Development
 
 This document provides a guide to setting up and running the backend services
-for local development.
+for local development using Docker.
 
 ## Prerequisites
 
@@ -26,42 +26,6 @@ for local development.
     ```
     The default values in the `.env` file are configured for the local Docker
     Compose setup and do not need to be changed for development.
-
-## Local Development Environment with `uv`
-
-For running Python scripts locally—such as the fast backend tests
-(`npm run test:backend:fast`) or the documentation server
-(`npm run docs:serve`)—we use `uv`, a fast, modern Python package manager. It
-replaces the need for `venv` and `pip` with a single tool.
-
-1.  **Install `uv`:**
-    `uv` is a single binary that's easy to install.
-    -   **On macOS, Linux, and Windows (WSL):**
-        ```bash
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        ```
-    -   For other installation methods, see the
-        [official `uv` documentation](https://astral.sh/uv#installation).
-
-2.  **Create and Activate the Virtual Environment:**
-    From the project root, run:
-    ```bash
-    # Create the virtual environment in ./backend/venv
-    uv venv backend/venv
-    # Activate it
-    source backend/venv/bin/activate
-    ```
-    Your shell prompt should now be prefixed with `(venv)`.
-
-3.  **Install Dependencies:**
-    Once the environment is active, install all required packages using `uv`.
-    This is much faster than using `pip`.
-    ```bash
-    uv pip install -r backend/requirements.txt
-    ```
-
-Now, any `npm` scripts that run Python commands will use the tools installed
-inside your isolated `uv` environment.
 
 ## Running the Application
 

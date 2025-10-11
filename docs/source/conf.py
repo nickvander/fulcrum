@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Fulcrum'
-copyright = '2025, Nick Vander'
-author = 'Nick Vander'
+copyright = '2025, Nick Van der Auwermeulen'
+author = 'Nick Van der Auwermeulen'
 release = '1.0'
 
 # -- General configuration ---------------------------------------------------
