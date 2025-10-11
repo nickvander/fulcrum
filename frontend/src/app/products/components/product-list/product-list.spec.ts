@@ -70,13 +70,14 @@ describe('ProductList', () => {
   });
 
   it('should call getProducts on init and subscribe to products$', () => {
-    productServiceMock.getProducts.and.callFake(() => {
-      productsSubject.next(mockProducts);
-    });
+    productServiceMock.getProducts.and.returnValue(of(mockProducts));
 
     fixture.detectChanges(); // ngOnInit
 
     expect(productServiceMock.getProducts).toHaveBeenCalled();
+    
+    // The subscription to products$ will update the data
+    productsSubject.next(mockProducts);
     expect(component.dataSource.data).toEqual(mockProducts);
   });
 
@@ -89,7 +90,7 @@ describe('ProductList', () => {
 
     it('should call productService.deleteProduct if dialog is confirmed', () => {
       dialogMock.open.and.returnValue({ afterClosed: () => of(true) } as any);
-      productServiceMock.deleteProduct.and.returnValue(of({}));
+      productServiceMock.deleteProduct.and.returnValue(of(null));
 
       component.deleteProduct(1);
 
