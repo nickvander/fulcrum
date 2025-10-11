@@ -27,6 +27,43 @@ for local development.
     The default values in the `.env` file are configured for the local Docker
     Compose setup and do not need to be changed for development.
 
+## Setting Up a Virtual Environment
+
+For running local scripts, such as the fast backend tests
+(`npm run test:backend:fast`) or the documentation server
+(`npm run docs:serve`), you need a local Python environment. Using a virtual
+environment is a critical best practice to avoid conflicts with system-wide
+packages.
+
+1.  **Create the Virtual Environment:**
+    From the project root, run:
+    ```bash
+    python3 -m venv backend/venv
+    ```
+    This will create a `venv` directory inside the `backend` folder, which is
+    already included in `.gitignore`.
+
+2.  **Activate the Virtual Environment:**
+    -   **On macOS and Linux:**
+        ```bash
+        source backend/venv/bin/activate
+        ```
+    -   **On Windows:**
+        ```bash
+        .\\backend\\venv\\Scripts\\activate
+        ```
+    Your shell prompt should now be prefixed with `(venv)`, indicating that the
+    virtual environment is active.
+
+3.  **Install Dependencies:**
+    Once the environment is active, install all the required packages:
+    ```bash
+    python3 -m pip install -r backend/requirements.txt
+    ```
+
+Now, any `npm` scripts that use `python3` or `pip` will use the versions
+installed inside your isolated virtual environment, ensuring a consistent setup.
+
 ## Running the Application
 
 All backend services are managed via Docker Compose.
