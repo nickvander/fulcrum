@@ -1,26 +1,49 @@
-# Fulcrum Technical Documentation
+# Fulcrum Documentation
 
-Welcome to the technical documentation for the Fulcrum project. This collection
-of documents provides a deep dive into the architecture, setup, and development
-workflows for the platform.
+This directory contains the source files for the Fulcrum project's official
+documentation.
 
-## Table of Contents
+## Tech Stack
 
-- **[1. Solution Architecture](./architecture.md)**
-  - An overview of the containerized setup, the multi-stage Dockerfile, the
-    repository pattern, and the use of asynchronous tasks.
+The documentation is built using [Sphinx](https://www.sphinx-doc.org/), a
+powerful documentation generator, and written in Markdown using the
+[MyST parser](https://myst-parser.readthedocs.io/). This allows us to write
+easy-to-read documentation in a familiar syntax while leveraging the power and
+extensibility of Sphinx.
 
-- **[2. Backend Setup & Local Development](./backend-setup.md)**
-  - A step-by-step guide to getting the backend running on your local machine.
+The site is automatically built and deployed to GitHub Pages whenever a change
+is merged into the `main` branch.
 
-- **[3. Database Migrations with Alembic](./database-migrations.md)**
-  - An explanation of the database migration workflow using the `migrate.sh`
-    script.
+## Local Development
 
-- **[4. Testing Strategy & CI/CD](./testing-and-ci.md)**
-  - Details on how to write and run tests, use the linter, and how the GitHub
-    Actions CI pipeline works.
+To work on the documentation locally, you can run a live-reloading web server.
+This allows you to see your changes in real-time as you edit the files.
 
-- **[5. Frontend Setup & Architecture](./frontend-setup.md)**
-  - A comprehensive guide to the setup, architecture, and development workflows
-    for the Angular PWA.
+### Prerequisites
+
+-   Python 3
+-   Node.js and npm
+
+### Running the Server
+
+1.  **Navigate to the project root.**
+2.  **Run the `docs:serve` command:**
+
+    ```bash
+    npm run docs:serve
+    ```
+
+This command will first install all the necessary Python dependencies and then
+start the server. It should automatically open the documentation site in your
+default web browser.
+
+## Directory Structure
+
+-   `docs/source/`: This directory contains all the raw documentation content,
+    written as Markdown (`.md`) files. The main entrypoint and navigation tree
+    is defined in `docs/source/index.rst`.
+-   `docs/conf.py`: The main Sphinx configuration file.
+-   `docs/requirements.txt`: Contains the Python dependencies required to build
+    the documentation.
+-   `docs/_build/`: This directory is created when you build the documentation
+    and contains the final HTML output. It is ignored by Git.

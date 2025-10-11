@@ -13,7 +13,8 @@
     "test:backend:fast": "cd backend && python3 -m pytest -m 'not db'",
     "test:all": "npm run test:frontend && npm run test:backend",
     "lint:md": "prettier --check '**/*.md'",
-    "format:md": "prettier --write '**/*.md'"
+    "format:md": "prettier --write '**/*.md'",
+    "docs:serve": "pip install -r docs/requirements.txt && sphinx-autobuild docs/source/ docs/_build/html --open-browser"
   },
   "keywords": [],
   "author": "",
