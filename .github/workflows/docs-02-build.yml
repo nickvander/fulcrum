@@ -32,11 +32,11 @@ jobs:
       - name: Create venv
         run: uv venv
 
-      - name: Install dependencies
-        run: uv pip install -r docs/requirements.txt
-
-      - name: Build documentation
-        run: sphinx-build docs/source docs/_build/html
+      - name: Install dependencies and build documentation
+        run: |
+          source .venv/bin/activate
+          uv pip install -r docs/requirements.txt
+          sphinx-build docs/source docs/_build/html
 
       # - name: Deploy to GitHub Pages
       #   uses: peaceiris/actions-gh-pages@v3
