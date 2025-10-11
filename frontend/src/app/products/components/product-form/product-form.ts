@@ -70,10 +70,11 @@ export class ProductForm implements OnInit {
     });
 
     const idParam = this.route.snapshot.params['id'];
-    const navigationState = this.router.getCurrentNavigation()?.extras.state;
+    const navigation = this.router.getCurrentNavigation();
+    const navigationState = navigation?.extras?.state;
 
-    if (navigationState) {
-      const productData = navigationState;
+    if (navigationState && navigationState['productData']) {
+      const productData = navigationState['productData'];
       const patchData: { [key: string]: any } = {};
 
       // Extract only the top-level properties that match form controls
