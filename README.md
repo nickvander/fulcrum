@@ -50,8 +50,7 @@ This is the central source of truth for developers.
     docker compose up --build
     ```
 
-4.  **Run database migrations:**
-    Open a new terminal and run:
+4.  **Run database migrations:** Open a new terminal and run:
     ```bash
     docker compose exec backend alembic upgrade head
     ```
@@ -72,7 +71,7 @@ The backend API will be available at `http://localhost:8000`.
     npm install
     ```
 
-  **Start the development server:**
+**Start the development server:**
 
     ```bash
     npm start

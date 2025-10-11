@@ -196,35 +196,23 @@ appropriate thematic directory (`getting-started`, `guides`, `explanation`, or
 
 ## Troubleshooting
 
-### Backend: `ModuleNotFoundError` in Docker
+### Backend: `relation "products" does not exist`
 
-- **Symptom:** `pytest` or the application fails on startup with
-  `ModuleNotFoundError: No module named 'some_module'`, even though the module
-  is listed in `requirements.txt` and appears to be installed during the Docker
-  build. The CI build may also hang indefinitely while "Waiting for services to
-  be healthy."
-- **Cause:** This issue arises from a conflict between the Docker container's
-  internal Python virtual environment (`venv`) and the local `backend` directory
-  being mounted as a volume. The broad `volumes: - ./backend:/app` mapping in
-  `docker-compose.yml` overwrites the container's `venv`, causing the Python
-  interpreter to lose track of the installed packages.
-- **Solution:** The most robust solution is to use more granular volume mounts
-  in the `docker-compose.yml` file. Instead of mounting the entire `./backend`
-  directory, mount only the necessary subdirectories for development. This
-  isolates the container's `venv` from the host filesystem.
-
-  **Example `docker-compose.yml` service definition:**
-
-  ```yaml
-  services:
-    backend:
-      build: ./backend
-      ports:
-        - "8000:8000"
-      volumes:
-        - ./backend/src:/app/src
-        - ./backend/tests:/app/tests
-        - ./backend/alembic:/app/alembic
-        - ./backend/alembic.ini:/app/alembic.ini
-        - ./backend/pytest.ini:/app/pytest.ini
-  ```
+- **Symptom:** The backend test suite (`npm run test:backend`) fails with a
+  `sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) relation "products" does not exist`
+  error, even though the migrations appear to be correct.
+- **Cause:** This issue can arise from a corrupted or inconsistent Alembic
+  migration history. This can happen if you have manually edited migration
+  files, or if you have a mix of auto-generated and manually-written migrations.
+- **Solution:** The most robust solution is to squash all existing migrations
+  into a single file. This will create a clean, consistent history for Alembic
+  to follow.
+  1.  Read the content of all existing migration files.
+  2.  Create a new migration file (e.g., `0001_squashed_migrations.py`) and
+      combine the `upgrade()` and `downgrade()` functions from all the old files
+      into the new one.
+  3.  Delete the old migration files.
+  4.  Ensure your `test:backend` script is configured to destroy the old
+      database volume before running the tests (e.g., `docker compose down -v`).
+      This will ensure that the new, squashed migration is run against a clean
+      database.

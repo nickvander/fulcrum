@@ -68,7 +68,17 @@ export class ProductForm implements OnInit {
     const navigationState = this.router.getCurrentNavigation()?.extras.state;
 
     if (navigationState && navigationState['productData']) {
-      this.productForm.patchValue(navigationState['productData']);
+      const productData = navigationState['productData'];
+      const patchData: { [key: string]: any } = {};
+
+      // Extract only the top-level properties that match form controls
+      Object.keys(this.productForm.controls).forEach(key => {
+        if (productData.hasOwnProperty(key)) {
+          patchData[key] = productData[key];
+        }
+      });
+
+      this.productForm.patchValue(patchData);
     }
 
     if (idParam) {

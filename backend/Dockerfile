@@ -17,6 +17,9 @@ RUN python -m pip install --upgrade pip && \
 # This stage creates the final, smaller production image.
 FROM python:3.11-slim
 
+# Install PostgreSQL client for pg_isready
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Create a non-root user and group first
@@ -30,6 +33,12 @@ COPY --chown=appuser:appgroup ./src /app/src
 
 # Create and set permissions for the uploads directory
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app/uploads
+
+# Create and set permissions for the ruff cache directory
+RUN mkdir -p /app/.ruff_cache && chown -R appuser:appgroup /app/.ruff_cache
+
+# Create and set permissions for the pytest cache directory
+RUN mkdir -p /app/.pytest_cache && chown -R appuser:appgroup /app/.pytest_cache
 
 # Switch to the non-root user
 USER appuser
