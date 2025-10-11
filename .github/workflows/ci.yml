@@ -26,10 +26,6 @@ jobs:
         until docker compose -f docker-compose.yml -f docker-compose.test.yml exec db-test pg_isready -U fulcrum_test; do
           sleep 2
         done
-        echo "Waiting for Backend..."
-        until curl -f http://localhost:8000/; do
-          sleep 2
-        done
 
     - name: Run Database Migrations
       run: docker compose -f docker-compose.yml -f docker-compose.test.yml exec backend alembic upgrade head

@@ -86,6 +86,8 @@ the `/work` directory, which is organized as follows:
   consulted for the overall vision and architecture.
 - `work/current/`: Contains the plan for the **active** development phase and
   the main `PROGRESS.md` log.
+- `work/future/`: Contains plans for tasks that are not yet scheduled. The
+  order of work in this directory is not guaranteed.
 - `work/archive/`: Contains all plans and logs from **completed** phases for
   historical reference.
 
