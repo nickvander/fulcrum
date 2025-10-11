@@ -12,11 +12,7 @@ on:
       - 'backend/**'
 
 jobs:
-  setup:
-    uses: ./.github/workflows/reusable-setup.yml
-
   backend-db-test:
-    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -24,5 +20,13 @@ jobs:
       cancel-in-progress: true
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
     - name: Run DB Tests
       run: npm run test:backend:db
