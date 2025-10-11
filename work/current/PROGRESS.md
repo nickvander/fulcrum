@@ -12,3 +12,12 @@
     4.  **Validated Fixes:** Ran the entire backend test suite locally to confirm that all tests pass.
     5.  **Force-Pushed to Remote:** Overwrote the remote `main` branch with the repaired local branch to bring the CI environment back to a stable state.
 - **Outcome:** The CI pipeline is now stable, and the underlying issues causing test failures have been resolved.
+
+### CI/CD Final Stabilization
+
+- **Problem:** After the initial fixes, the CI pipeline continued to fail with a variety of environment-specific errors, including `docker compose wait` timeouts and containers not starting correctly.
+- **Root Cause Analysis:** A `git reset` had inadvertently reverted several critical, but subtle, infrastructure fixes that were present in the commit history. The subsequent failures were a process of rediscovering and re-implementing these lost fixes.
+- **Final Actions:**
+    1.  **Restored Wait Logic:** Re-implemented the robust `until pg_isready` loop in the `ci.yml` workflow, as the `docker compose wait` command proved unreliable in the GitHub Actions environment.
+    2.  **Corrected Service Startup:** Ensured the `docker compose up` command was correctly placed *before* the wait logic, fixing a "service is not running" error.
+- **Outcome:** The CI pipeline is now definitively stable and passing reliably.
