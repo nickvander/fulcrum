@@ -1,116 +1,151 @@
-<div class="container">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="fill">
-          <mat-label>Name</mat-label>
-          <input matInput formControlName="name" placeholder="Product Name">
-        </mat-form-field>
+<div class="form-container">
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+    <div class="form-header">
+      <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
+      <div class="header-actions">
+        <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
+        <button type="submit" mat-raised-button color="primary" [disabled]="!productForm.valid">Save</button>
+      </div>
+    </div>
 
-        <mat-form-field appearance="fill">
-          <mat-label>SKU</mat-label>
-          <input matInput formControlName="sku" placeholder="Product SKU">
-        </mat-form-field>
+    <div class="form-columns">
+      <!-- Left Column -->
+      <div class="form-column">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Core Details</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-form-field>
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" placeholder="Product Name">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Description</mat-label>
-          <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
-        </mat-form-field>
+            <mat-form-field>
+              <mat-label>SKU</mat-label>
+              <input matInput formControlName="sku" placeholder="Product SKU">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Resale Price</mat-label>
-          <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
-        </mat-form-field>
+            <mat-form-field>
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Cost Price</mat-label>
-          <input matInput formControlName="cost_price" type="number" placeholder="0.00">
-        </mat-form-field>
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Pricing & Supplier</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-form-field>
+              <mat-label>Resale Price</mat-label>
+              <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Manufacturer</mat-label>
-          <input matInput formControlName="manufacturer" placeholder="Manufacturer">
-        </mat-form-field>
+            <mat-form-field>
+              <mat-label>Cost Price</mat-label>
+              <input matInput formControlName="cost_price" type="number" placeholder="0.00">
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Brand</mat-label>
-          <input matInput formControlName="brand" placeholder="Brand">
-        </mat-form-field>
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Dimensions & Weight</mat-card-title>
+          </mat-card-header>
+          <mat-card-content class="dimensions-grid">
+            <mat-form-field>
+              <mat-label>Width</mat-label>
+              <input matInput formControlName="width" type="number" placeholder="0.00">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Category</mat-label>
-          <input matInput formControlName="category" placeholder="Category">
-        </mat-form-field>
+            <mat-form-field>
+              <mat-label>Height</mat-label>
+              <input matInput formControlName="height" type="number" placeholder="0.00">
+            </mat-form-field>
 
-        <div class="dimensions">
-          <mat-form-field appearance="fill">
-            <mat-label>Width</mat-label>
-            <input matInput formControlName="width" type="number" placeholder="0.00">
-          </mat-form-field>
+            <mat-form-field>
+              <mat-label>Depth</mat-label>
+              <input matInput formControlName="depth" type="number" placeholder="0.00">
+            </mat-form-field>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Height</mat-label>
-            <input matInput formControlName="height" type="number" placeholder="0.00">
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>Depth</mat-label>
-            <input matInput formControlName="depth" type="number" placeholder="0.00">
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="fill">
-          <mat-label>Weight</mat-label>
-          <input matInput formControlName="weight" type="number" placeholder="0.00">
-        </mat-form-field>
-
-        <div *ngFor="let field of customFields">
-          <mat-form-field appearance="fill">
-            <mat-label>{{ field.name }}</mat-label>
-            <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
-          </mat-form-field>
-        </div>
-
-        <div class="actions">
-          <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
-          <button type="submit" mat-raised-button color="primary" [disabled]="!productForm.valid">Save</button>
-        </div>
-      </form>
-    </mat-card-content>
-  </mat-card>
-
-  <mat-card class="image-card">
-    <mat-card-header>
-      <mat-card-title>Product Images</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="image-upload">
-        <button type="button" mat-stroked-button (click)="fileInput.click()" [disabled]="!isEditMode">
-          <mat-icon>add_a_photo</mat-icon>
-          <span>Upload Image</span>
-        </button>
-        <input hidden #fileInput type="file" (change)="onFileSelected($event)" accept="image/*">
+            <mat-form-field>
+              <mat-label>Weight</mat-label>
+              <input matInput formControlName="weight" type="number" placeholder="0.00">
+            </mat-form-field>
+          </mat-card-content>
+        </mat-card>
       </div>
 
-      <div class="image-gallery" *ngIf="product?.images?.length">
-        <div *ngFor="let image of product?.images" class="image-container">
-          <img [src]="image.image_path" [alt]="product?.name" [class.primary-image]="image.is_primary">
-          <div class="image-actions">
-            <button mat-icon-button color="warn" (click)="deleteImage(image.id)">
-              <mat-icon>delete</mat-icon>
-            </button>
-            <button mat-icon-button *ngIf="!image.is_primary" (click)="setPrimaryImage(image.id)">
-              <mat-icon>star</mat-icon>
-            </button>
-          </div>
-        </div>
+      <!-- Right Column -->
+      <div class="form-column">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Images</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="image-upload">
+              <button type="button" mat-stroked-button (click)="fileInput.click()">
+                <mat-icon>add_a_photo</mat-icon>
+                <span>Upload Image</span>
+              </button>
+              <input hidden #fileInput type="file" (change)="onFileSelected($event)" accept="image/*" multiple>
+            </div>
+
+            <div class="staged-images" *ngIf="!isEditMode && stagedImages.length > 0">
+              <div *ngFor="let preview of stagedImagePreviews; let i = index" class="image-container">
+                <img [src]="preview" alt="Staged image preview">
+                <div class="image-actions">
+                  <button mat-icon-button color="warn" (click)="removeStagedImage(i)">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+                          <div class="image-gallery" *ngIf="product?.images?.length">
+                            <div *ngFor="let image of product?.images" class="image-container">
+                              <img [src]="getImageUrl(image.image_path)" [alt]="product?.name" [class.primary-image]="image.is_primary">
+                              <div class="image-actions">
+                                <button mat-icon-button color="warn" (click)="deleteImage(image.id)">
+                                  <mat-icon>delete</mat-icon>
+                                </button>
+                                <button mat-icon-button *ngIf="!image.is_primary" (click)="setPrimaryImage(image.id)">
+                                  <mat-icon>star</mat-icon>
+                                </button>
+                              </div>
+                              <div class="image-details" *ngIf="isEditMode">
+                                <mat-form-field>
+                                  <mat-label>Title</mat-label>
+                                  <input matInput [value]="image.title || ''" (change)="updateImageDetails(image.id, 'title', $event)">
+                                </mat-form-field>
+                                <mat-form-field>
+                                  <mat-label>Description</mat-label>
+                                  <textarea matInput [value]="image.description || ''" (change)="updateImageDetails(image.id, 'description', $event)"></textarea>
+                                </mat-form-field>
+                              </div>
+                            </div>
+                          </div>            <div *ngIf="!product?.images?.length && isEditMode" class="no-images">
+              <p>No images uploaded for this product yet.</p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card *ngIf="customFields.length > 0">
+          <mat-card-header>
+            <mat-card-title>Custom Fields</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div *ngFor="let field of customFields">
+              <mat-form-field>
+                <mat-label>{{ field.name }}</mat-label>
+                <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
       </div>
-      <div *ngIf="!product?.images?.length" class="no-images">
-        <p>No images uploaded for this product yet.</p>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </form>
 </div>

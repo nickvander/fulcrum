@@ -20,7 +20,7 @@ export class ProductService {
   ) {}
 
   getProducts(): Observable<Product[]> {
-    return this.http.get<Product[]>(this.apiUrl).pipe(
+    return this.http.get<Product[]>(`${this.apiUrl}/`).pipe(
       map(products =>
         products.map(p => ({
           ...p,
@@ -46,7 +46,7 @@ export class ProductService {
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
-    return this.http.post<Product>(this.apiUrl, product).pipe(
+    return this.http.post<Product>(`${this.apiUrl}/`, product).pipe(
       tap(() => this.notificationService.showSuccess('Product created successfully!')),
       switchMap(newProduct =>
         this.getProducts().pipe(map(() => newProduct))
@@ -75,7 +75,7 @@ export class ProductService {
   uploadImage(file: File): Observable<{ file_path: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ file_path: string }>(`${environment.apiUrl}/uploads`, formData);
+    return this.http.post<{ file_path: string }>(`${environment.apiUrl}/uploads/`, formData);
   }
 
   identifyProductFromImage(filePath: string): Observable<Partial<Product>> {
@@ -88,6 +88,10 @@ export class ProductService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post(`${this.apiUrl}/${productId}/images`, formData);
+  }
+
+  updateProductImage(productId: number, imageId: number, payload: { title?: string; description?: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${productId}/images/${imageId}`, payload);
   }
 
   deleteProductImage(productId: number, imageId: number): Observable<unknown> {

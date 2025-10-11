@@ -115,6 +115,8 @@ def upgrade() -> None:
     sa.Column('image_path', sa.String(), nullable=True),
     sa.Column('is_primary', sa.Integer(), nullable=True),
     sa.Column('source', sa.String(), nullable=True),
+    sa.Column('title', sa.String(), nullable=True),
+    sa.Column('description', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['product_id'], ['products.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

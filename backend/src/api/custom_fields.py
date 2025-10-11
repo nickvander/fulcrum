@@ -1,3 +1,4 @@
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -6,10 +7,7 @@ from ..schemas import custom_field as custom_field_schema
 from ..database import get_db
 from ..crud import crud_custom_field
 
-router = APIRouter(
-    prefix="/custom-fields",
-    tags=["custom-fields"],
-)
+router = APIRouter()
 
 @router.post("/", response_model=custom_field_schema.CustomField)
 def create_custom_field(
@@ -42,3 +40,4 @@ def delete_custom_field(
     if not db_custom_field:
         raise HTTPException(status_code=404, detail="Custom field not found")
     return crud_custom_field.custom_field.remove(db=db, id=custom_field_id)
+

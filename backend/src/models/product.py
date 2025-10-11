@@ -37,5 +37,7 @@ class ProductImage(Base):
     image_path = Column(String)
     is_primary = Column(Integer, default=0) # 0 for false, 1 for true
     source = Column(String)
+    title = Column(String, nullable=True)
+    description = Column(String, nullable=True)
 
     product = relationship("Product", back_populates="images")

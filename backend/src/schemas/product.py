@@ -9,12 +9,16 @@ class ProductImageBase(BaseModel):
     image_path: str
     is_primary: Optional[int] = 0
     source: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
 
 class ProductImageCreate(ProductImageBase):
     product_id: int
 
 class ProductImageUpdate(BaseModel):
     is_primary: Optional[int] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
 
 class ProductImage(ProductImageBase):
     id: int

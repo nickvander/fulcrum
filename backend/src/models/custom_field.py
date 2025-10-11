@@ -25,5 +25,5 @@ class ProductCustomField(Base):
     custom_field_id = Column(Integer, ForeignKey("custom_fields.id"))
     value = Column(String)
 
-    product = relationship("Product")
+    product = relationship("Product", back_populates="custom_fields")
     custom_field = relationship("CustomField")
