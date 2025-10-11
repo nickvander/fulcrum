@@ -54,11 +54,12 @@ following principles:
 6.  **Centralized & Thematic Documentation:** All technical documentation is
     maintained within the `/docs` directory and built with Sphinx. It follows a
     thematic structure to ensure information is easy to find:
-    -   `/docs/source/getting-started`: For essential setup guides.
-    -   `/docs/source/guides`: For practical, step-by-step "how-to" documents.
-    -   `/docs/source/explanation`: For deep dives into architecture and concepts.
-    -   `/docs/source/reference`: For technical references like API specs or config.
-    This centralized hub is the single source of truth for the project.
+    - `/docs/source/getting-started`: For essential setup guides.
+    - `/docs/source/guides`: For practical, step-by-step "how-to" documents.
+    - `/docs/source/explanation`: For deep dives into architecture and concepts.
+    - `/docs/source/reference`: For technical references like API specs or
+      config. This centralized hub is the single source of truth for the
+      project.
 
 7.  **Markdown Formatting:** All Markdown files (`.md`) in this project are
     formatted using Prettier.
@@ -67,7 +68,7 @@ following principles:
     - **Alternative:** To format all Markdown files from the command line, run
       `npm run format:md` from the root of the project.
 
-7.  **Documentation Review:** At the end of each development phase, a thorough
+8.  **Documentation Review:** At the end of each development phase, a thorough
     review of all documentation (`README.md`, `/docs`, etc.) must be conducted
     to ensure it is up-to-date with the latest changes.
 
@@ -184,9 +185,9 @@ These checks are also automated and run on every push and pull request to the
 
 ## Documentation Strategy
 
-This project maintains a comprehensive technical documentation hub in the `/docs`
-directory. The goal is to provide a single source of truth for developers to
-understand the architecture, setup, and development workflows.
+This project maintains a comprehensive technical documentation hub in the
+`/docs` directory. The goal is to provide a single source of truth for
+developers to understand the architecture, setup, and development workflows.
 
 When adding a new feature or making a significant change, the corresponding
 documentation must be added or updated. Please place new content in the
