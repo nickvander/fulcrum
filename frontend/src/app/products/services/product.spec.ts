@@ -44,7 +44,7 @@ describe('ProductService', () => {
 
   describe('getProducts', () => {
     it('should fetch products and update the products$ stream', () => {
-      service.getProducts();
+      service.getProducts().subscribe();
 
       const req = httpMock.expectOne(`${environment.apiUrl}/products`);
       expect(req.request.method).toBe('GET');
