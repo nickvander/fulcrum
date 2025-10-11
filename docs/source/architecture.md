@@ -1,4 +1,4 @@
-# 1. Solution Architecture
+# Solution Architecture
 
 This document outlines the high-level architecture of the Fulcrum backend and
 the key design patterns used.

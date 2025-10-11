@@ -3,7 +3,7 @@
 This document provides a comprehensive guide to the setup, architecture, and
 development workflows for the Fulcrum frontend application.
 
-## 1. Getting Started
+## Getting Started
 
 To run the application for the first time, you need to start the backend
 services and create an initial administrative user.
@@ -39,14 +39,14 @@ This will create a user with the email `admin@example.com` and the password
 `changeme`. You can now use these credentials to log into the frontend
 application.
 
-## 2. Core Technologies
+## Core Technologies
 
 - **Framework:** Angular 18
 - **UI Components:** Angular Material
 - **State Management:** RxJS with component-level services (no central store)
 - **Testing:** Web Test Runner with Playwright
 
-## 3. Project Structure
+## Project Structure
 
 The `frontend/` directory is a standard Angular CLI workspace. Key directories
 include:
@@ -56,13 +56,13 @@ include:
 - `src/app/auth`: Components and services related to authentication.
 - `src/app/[feature]`: Feature modules (e.g., `products`, `settings`).
 
-## 4. Key Scripts
+## Key Scripts
 
 - `ng serve`: Runs the development server.
 - `ng build`: Builds the application for production.
 - `npm test`: Runs the unit test suite using the Web Test Runner.
 
-## 4. Application Architecture
+## Application Architecture
 
 The frontend application is built with Angular and follows a modular,
 feature-based architecture to ensure a clean separation of concerns and

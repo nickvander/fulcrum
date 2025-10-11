@@ -10,6 +10,7 @@ Welcome to Fulcrum's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   README.md
    introduction.md
    architecture.md
    backend-setup.md

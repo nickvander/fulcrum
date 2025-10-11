@@ -74,3 +74,30 @@
   feedback by running only relevant jobs, and the local testing experience is
   significantly improved. The separation between fast unit tests and database
   tests is now correctly implemented and stable.
+
+## 2025-10-11 (Afternoon)
+
+### Documentation Overhaul and Modernization
+
+- **Goal:** To significantly improve the visual presentation, stability, and
+  maintainability of the project's technical documentation.
+- **Actions:**
+  1.  **Modernized Theme:** Replaced the default `sphinx-rtd-theme` with the
+      clean, modern `furo` theme.
+  2.  **Fixed CSS Bugs:** Resolved a persistent "half-and-half" background
+      color bug by removing custom CSS overrides and adopting Furo's official
+      `html_theme_options` in `conf.py` for robust color management.
+  3.  **Resolved Caching Issues:** Fixed lingering numbered titles in the table
+      of contents by adding the `-E` flag to all `sphinx-build` and
+      `sphinx-autobuild` commands, ensuring clean builds every time.
+  4.  **Standardized Content:** Removed numerical prefixes from all documentation
+      titles and updated all internal links for a cleaner, more consistent
+      structure.
+  5.  **Fixed Build Warnings:** Resolved the `document isn't included in any toctree`
+      warning by adding the `docs/source/README.md` to the main `index.rst`.
+  6.  **Improved CI Stability:** Corrected `uv` installation issues in the CI
+      workflows by adding a `uv venv` step, making the linting and docs-build
+      jobs more reliable.
+- **Outcome:** The documentation is now visually appealing, stable, and easier
+  to maintain. The build process is more robust, and all known bugs and
+  warnings have been resolved.

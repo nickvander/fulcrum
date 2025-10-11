@@ -1,4 +1,4 @@
-# 4. Testing Strategy & CI/CD
+# Testing Strategy & CI/CD
 
 A robust testing strategy is crucial for maintaining code quality and stability.
 This project uses a combination of automated unit tests, a linter, and a
