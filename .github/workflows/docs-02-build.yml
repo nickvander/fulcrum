@@ -19,8 +19,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cache: 'uv'
-          cache-dependency-path: 'docs/requirements.txt'
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/docs/requirements.txt') }}
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh

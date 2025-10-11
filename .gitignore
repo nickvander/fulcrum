@@ -14,4 +14,12 @@ dist/
 package-lock.json
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*backend/.env
+yarn-error.log*
+
+# Local environment
+backend/.env
+backend/venv/
+venv/
+
+# Documentation build artifacts
+docs/_build/

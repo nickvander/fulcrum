@@ -67,81 +67,8 @@ frontend. For detailed instructions on the testing strategy and how to run the
 tests, please see the
 **[Testing Strategy & CI/CD Guide](./docs/source/testing-and-ci.md)**.
 
-## How to Contribute
+## Contributing
 
-We welcome contributions to Fulcrum! Please follow these guidelines to ensure a
-smooth development process.
-
-### Development Workflow
-
-1.  **Fork the repository** and clone it to your local machine.
-2.  **Create a new branch** for your feature or bug fix:
-
-    ```bash
-    git checkout -b feature/your-feature-name
-    ```
-
-3.  **Make your changes.** Please adhere to the coding style and conventions
-    used throughout the project.
-4.  **Commit your changes** with a clear and descriptive commit message. We
-    follow the [Conventional Commits](https://www.conventionalcommits.org/)
-    specification.
-5.  **Push your branch** to your fork:
-
-    ```bash
-    git push origin feature/your-feature-name
-    ```
-
-6.  **Open a pull request** to the `main` branch of the original repository.
-
-### Key Commands
-
-- **Start all services:** `docker compose up --build`
-- **Stop all services:** `docker compose down`
-- **Run a command in the backend container:**
-  `docker compose exec backend <your-command>`
-- **View logs for all services:** `docker compose logs -f`
-- **View logs for a specific service:** `docker compose logs -f backend`
-
-### Database Migrations
-
-The project uses Alembic to manage database schema migrations.
-
-- **Generate a new migration script** after changing a model in
-  `backend/src/models/`:
-
-  ```bash
-  docker compose exec backend alembic revision --autogenerate -m "Your migration message"
-  ```
-
-- **Apply all pending migrations:**
-
-  ```bash
-  docker compose exec backend alembic upgrade head
-  ```
-
-  _(Note: There is a known issue with the `exec` command in some WSL2
-  environments. If you encounter DNS or connection errors, please see the
-  `backend/README.md` for potential workarounds.)_
-
-### Coding Standards
-
-- **Python Backend:**
-  - Follow the PEP 8 style guide.
-  - Use type hints for all function signatures.
-  - Add docstrings to all modules, classes, and functions to explain their
-    purpose.
-- **Commit Messages:**
-  - Use the Conventional Commits format (e.g., `feat:`, `fix:`, `docs:`,
-    `chore:`).
-- **Markdown Formatting:**
-  - All Markdown files (`.md`) in this project are formatted using Prettier.
-  - **VS Code (Recommended):**
-    - Install the
-      [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-      extension (it will be recommended automatically).
-    - The project is pre-configured to format Markdown files automatically on
-      save.
-  - **Command Line:**
-    - To check for formatting issues: `npm run lint:md`
-    - To automatically fix formatting issues: `npm run format:md`
+We welcome contributions to Fulcrum! For information on how to set up a local
+development environment, our coding standards, and the submission process, please
+see our **[Contributor Guide](./CONTRIBUTING.md)**.
