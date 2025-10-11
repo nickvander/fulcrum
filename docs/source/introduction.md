@@ -1,22 +1,12 @@
-# Documentation Overview
+# Welcome to Fulcrum
 
-Welcome to the technical documentation for the Fulcrum project. This collection
-of documents provides a deep dive into the architecture, setup, and development
-workflows for the platform.
+Welcome to the technical documentation for the Fulcrum project. This site provides a deep dive into the architecture, setup, and development workflows for the platform. Whether you are a new contributor or an experienced team member, these documents serve as the primary reference for understanding how Fulcrum is built and maintained.
 
-## Table of Contents
+The documentation is organized into several sections:
 
-- **[Solution Architecture](./architecture.md)**
-  - An overview of the containerized setup, the multi-stage Dockerfile, the
-    repository pattern, and the use of asynchronous tasks.
+*   **Getting Started:** Contains the essential guides for setting up your local development environment for the first time.
+*   **Guides:** Practical, step-by-step instructions for common development tasks like running tests and creating database migrations.
+*   **Explanation:** High-level discussions of the project's architecture, key design patterns, and core concepts.
+*   **Reference:** (Coming Soon) Detailed technical information, such as API endpoint specifications and configuration variable references.
 
-- **[Backend Setup & Local Development](./backend-setup.md)**
-  - A step-by-step guide to getting the backend running on your local machine.
-
-- **[Database Migrations with Alembic](./database-migrations.md)**
-  - An explanation of the database migration workflow using the `migrate.sh`
-    script.
-
-- **[Testing Strategy & CI/CD](./testing-and-ci.md)**
-  - Details on how to write and run tests, use the linter, and how the GitHub
-    Actions CI pipeline works.
+Use the sidebar to navigate through the different sections of the documentation.

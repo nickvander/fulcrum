@@ -1,22 +1,14 @@
 # Fulcrum
 
-AI-centric inventory management and marketplace management.
-
-This repository contains the source code for the Fulcrum platform, an AI-first
-commerce hub designed to streamline the entire product lifecycle.
+Fulcrum is an AI-first commerce hub designed to streamline the entire product lifecycle, from inventory and supplier management to multi-channel sales and business analytics.
 
 ## Documentation
 
-For detailed technical documentation, including the project architecture, setup
-guides, and development workflows, please see our **[Documentation Hub](./docs/README.md)**.
+All technical documentation for the project, including architecture, setup guides, and contribution workflows, is located in our **[Sphinx Documentation Hub](docs/source/introduction.md)**.
 
-This guide also contains instructions on how to build and serve the documentation
-locally.
+This is the central source of truth for developers.
 
-## Getting Started
-
-This project is containerized using Docker. All services for the backend (API,
-database, background workers) are managed via Docker Compose.
+## Quick Start
 
 ### Prerequisites
 
@@ -26,49 +18,19 @@ database, background workers) are managed via Docker Compose.
 ### Running the Application
 
 1.  **Clone the repository:**
-
     ```bash
     git clone https://github.com/nickvander/fulcrum.git
     cd fulcrum
     ```
 
-2.  **Backend Setup:**
-    - Navigate to the `backend` directory.
-    - Copy the `.env.example` file to a new file named `.env`. The default
-      values are configured for local development.
-
+2.  **Set up environment variables:**
     ```bash
-    cd backend
-    cp .env.example .env
-    cd ..
+    cp backend/.env.example backend/.env
     ```
 
-3.  **Frontend Setup:**
-    - The frontend is an Angular application located in the `frontend/`
-      directory.
-    - For detailed instructions on installing dependencies and running the
-      development server, please see the
-      **[Frontend Setup Guide](./docs/source/frontend-setup.md)**.
-
-4.  **Build and start the services:**
-    - From the root directory of the project, run:
-
+3.  **Build and start all services:**
     ```bash
     docker compose up --build
     ```
 
-    - This will build the necessary Docker images and start all services. The
-      API will be available at `http://localhost:8000`.
-
-## Testing
-
-The project includes a comprehensive test suite for both the backend and
-frontend. For detailed instructions on the testing strategy and how to run the
-tests, please see the
-**[Testing Strategy & CI/CD Guide](./docs/source/testing-and-ci.md)**.
-
-## Contributing
-
-We welcome contributions to Fulcrum! For information on how to set up a local
-development environment, our coding standards, and the submission process, please
-see our **[Contributor Guide](./CONTRIBUTING.md)**.
+The backend API will be available at `http://localhost:8000`. For detailed setup instructions, please see the **[Getting Started](docs/source/getting-started/backend-setup.md)** guide.

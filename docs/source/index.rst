@@ -8,15 +8,37 @@ Welcome to Fulcrum's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Fulcrum
 
-   README.md
    introduction.md
-   architecture.md
-   backend-setup.md
-   database-migrations.md
-   frontend-setup.md
-   testing-and-ci.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
+
+   getting-started/backend-setup.md
+   getting-started/frontend-setup.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides
+
+   guides/contributing.md
+   guides/database-migrations.md
+   guides/testing-and-ci.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Concepts
+
+   concepts/architecture.md
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   reference/configuration.md
+
 
 Indices and tables
 ==================
