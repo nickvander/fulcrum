@@ -8,6 +8,15 @@ All technical documentation for the project, including architecture, setup guide
 
 This is the central source of truth for developers.
 
+### Key Documentation
+
+- **[Architecture Overview](docs/source/concepts/architecture.md)**
+- **[Backend Setup Guide](docs/source/getting-started/backend-setup.md)**
+- **[Frontend Setup Guide](docs/source/getting-started/frontend-setup.md)**
+- **[Contributor Guide](docs/source/guides/contributing.md)**
+- **[Testing & CI Guide](docs/source/guides/testing-and-ci.md)**
+
+
 ## Quick Start
 
 ### Prerequisites
