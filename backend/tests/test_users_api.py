@@ -1,5 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
 
+@pytest.mark.db
 def test_create_user(client: TestClient):
     response = client.post(
         "/api/v1/users/",

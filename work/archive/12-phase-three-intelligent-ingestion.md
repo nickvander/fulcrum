@@ -74,8 +74,8 @@ capture and upload photos for analysis.
 4.  **Update Routing:**
     - Add a new route for the `ProductIngestionComponent` in the main
       application routing.
-    - Add a "New Product" button in the `ProductListComponent` that navigates
-      to this new ingestion page.
+    - Add a "New Product" button in the `ProductListComponent` that navigates to
+      this new ingestion page.
 
 ## Validation
 

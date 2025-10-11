@@ -1,5 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
 
+@pytest.mark.db
 def test_create_supplier(client: TestClient):
     """
     Test creating a supplier successfully.
@@ -19,6 +21,7 @@ def test_create_supplier(client: TestClient):
     assert data["email"] == "john.doe@testsupplier.com"
     assert "id" in data
 
+@pytest.mark.db
 def test_read_suppliers(client: TestClient):
     """
     Test reading a list of suppliers.

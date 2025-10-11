@@ -1,5 +1,7 @@
+import pytest
 from fastapi.testclient import TestClient
 
+@pytest.mark.db
 def test_create_marketplace(client: TestClient):
     """
     Test creating a marketplace successfully.
@@ -13,6 +15,7 @@ def test_create_marketplace(client: TestClient):
     assert data["name"] == "Test Marketplace"
     assert "id" in data
 
+@pytest.mark.db
 def test_read_marketplaces(client: TestClient):
     """
     Test reading a list of marketplaces.

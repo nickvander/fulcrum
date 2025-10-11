@@ -11,14 +11,12 @@ A significant effort was made to stabilize the frontend testing environment.
 This involved:
 
 1.  **Re-applying `standalone: false`:** The `standalone: false` property was
-    re-applied to all components to resolve a build error in the CI
-    environment.
+    re-applied to all components to resolve a build error in the CI environment.
 
 2.  **`TestBed.initTestEnvironment()`:** The tests failed with a
     `Need to call TestBed.initTestEnvironment() first` error. Several attempts
     were made to resolve this, including:
-    - Adding `src/test.ts` to the `files` array in
-      `web-test-runner.config.mjs`.
+    - Adding `src/test.ts` to the `files` array in `web-test-runner.config.mjs`.
     - Importing `src/test.ts` at the top of every `.spec.ts` file.
     - Adding `src/test.ts` to the `files` array in `tsconfig.spec.json`.
 

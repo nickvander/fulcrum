@@ -1,9 +1,11 @@
+import pytest
 from sqlalchemy.orm import Session
 
 from src.crud import crud_user
 from src.schemas.user import UserCreate
 
 
+@pytest.mark.db
 def test_create_superuser(db: Session) -> None:
     """
     Tests that a superuser can be created correctly.

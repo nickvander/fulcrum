@@ -7,6 +7,7 @@ import os
 
 from unittest.mock import patch
 
+@pytest.mark.db
 def test_create_product(client: TestClient):
     """
     Test creating a product successfully and that the embedding task is called.
@@ -29,6 +30,7 @@ def test_create_product(client: TestClient):
         assert "id" in data
         mock_delay.assert_called_once_with(data["id"])
 
+@pytest.mark.db
 def test_create_product_duplicate_sku(client: TestClient, test_product: Product):
     """
     Test creating a product with a duplicate SKU fails.
@@ -44,6 +46,7 @@ def test_create_product_duplicate_sku(client: TestClient, test_product: Product)
     assert response.status_code == 409
     assert "Product with this SKU already exists" in response.text
 
+@pytest.mark.db
 def test_search_products(client: TestClient, db: Session, test_product: Product):
     """
     Test semantic search for products.
@@ -62,6 +65,7 @@ def test_search_products(client: TestClient, db: Session, test_product: Product)
     # so we just check if the product is in the results.
     assert test_product.name in [p["name"] for p in data]
 
+@pytest.mark.db
 def test_update_product(client: TestClient, test_product: Product):
     """
     Test updating a product successfully and that the embedding task is called.
@@ -78,6 +82,7 @@ def test_update_product(client: TestClient, test_product: Product):
         assert data["id"] == test_product.id
         mock_delay.assert_called_once_with(test_product.id)
 
+@pytest.mark.db
 def test_upload_product_image(client: TestClient, test_product: Product):
     """
     Test uploading an image for a product.
@@ -95,6 +100,7 @@ def test_upload_product_image(client: TestClient, test_product: Product):
     with open(data["image_path"], "rb") as f:
         assert f.read() == image_content
 
+@pytest.mark.db
 def test_delete_product_image(client: TestClient, db: Session, test_product_with_image: ProductImage):
     """
     Test deleting a product image.
@@ -113,6 +119,7 @@ def test_delete_product_image(client: TestClient, db: Session, test_product_with
     db_image = db.query(ProductImage).filter(ProductImage.id == image_id).first()
     assert db_image is None
 
+@pytest.mark.db
 def test_set_primary_product_image(client: TestClient, db: Session, test_product: Product):
     """
     Test setting a primary image for a product.
@@ -143,6 +150,7 @@ def test_set_primary_product_image(client: TestClient, db: Session, test_product
     assert image1_db.is_primary == 0
     assert image2_db.is_primary == 1
 
+@pytest.mark.db
 def test_delete_nonexistent_product_image(client: TestClient, test_product: Product):
     """
     Test that deleting a product image that does not exist returns a 404.
@@ -150,6 +158,7 @@ def test_delete_nonexistent_product_image(client: TestClient, test_product: Prod
     response = client.delete(f"/api/v1/products/{test_product.id}/images/9999")
     assert response.status_code == 404
 
+@pytest.mark.db
 def test_set_primary_nonexistent_product_image(client: TestClient, test_product: Product):
     """
     Test that setting a primary image that does not exist returns a 404.

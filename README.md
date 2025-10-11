@@ -62,7 +62,8 @@ database, background workers) are managed via Docker Compose.
 
 The project includes a comprehensive test suite for both the backend and
 frontend. For detailed instructions on the testing strategy and how to run the
-tests, please see the **[Testing Strategy & CI/CD Guide](./docs/testing-and-ci.md)**.
+tests, please see the
+**[Testing Strategy & CI/CD Guide](./docs/testing-and-ci.md)**.
 
 ## How to Contribute
 
@@ -134,7 +135,8 @@ The project uses Alembic to manage database schema migrations.
 - **Markdown Formatting:**
   - All Markdown files (`.md`) in this project are formatted using Prettier.
   - **VS Code (Recommended):**
-    - Install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+    - Install the
+      [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
       extension (it will be recommended automatically).
     - The project is pre-configured to format Markdown files automatically on
       save.

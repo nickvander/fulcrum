@@ -62,7 +62,6 @@ include:
 - `ng build`: Builds the application for production.
 - `npm test`: Runs the unit test suite using the Web Test Runner.
 
-
 ## 4. Application Architecture
 
 The frontend application is built with Angular and follows a modular,

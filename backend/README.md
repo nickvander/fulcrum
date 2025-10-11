@@ -91,7 +91,8 @@ docker compose exec backend ./migrate.sh upgrade head
 
 ### Environment Variables
 
-The backend application requires certain environment variables to be set for local development. These are managed in a `.env` file.
+The backend application requires certain environment variables to be set for
+local development. These are managed in a `.env` file.
 
 To get started, copy the example file:
 
@@ -99,10 +100,13 @@ To get started, copy the example file:
 cp .env.example .env
 ```
 
-Then, open the new `.env` file and update the variables as needed. At a minimum, you must generate a new `SECRET_KEY`. You can generate a secure key with the following command:
+Then, open the new `.env` file and update the variables as needed. At a minimum,
+you must generate a new `SECRET_KEY`. You can generate a secure key with the
+following command:
 
 ```bash
 openssl rand -hex 32
 ```
 
-The `.env` file is included in `.gitignore` and should not be committed to the repository.
+The `.env` file is included in `.gitignore` and should not be committed to the
+repository.
