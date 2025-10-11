@@ -14,7 +14,7 @@
     "test:all": "npm run test:frontend && npm run test:backend",
     "lint:md": "prettier --check '**/*.md'",
     "format:md": "prettier --write '**/*.md'",
-    "docs:serve": "pip install -r docs/requirements.txt && sphinx-autobuild docs/source/ docs/_build/html --open-browser"
+    "docs:serve": "python3 -m pip install -r docs/requirements.txt && sphinx-autobuild docs/source/ docs/_build/html --open-browser"
   },
   "keywords": [],
   "author": "",
