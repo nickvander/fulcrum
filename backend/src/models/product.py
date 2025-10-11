@@ -16,10 +16,18 @@ class Product(Base):
     cost_price = Column(Float)
     properties = Column(String)  # Simple JSON as string for now
     embedding = Column(Vector(384)) # Example dimension
+    manufacturer = Column(String, nullable=True)
+    brand = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    width = Column(Float, nullable=True)
+    height = Column(Float, nullable=True)
+    depth = Column(Float, nullable=True)
+    weight = Column(Float, nullable=True)
 
     supplier = relationship("Supplier")
     images = relationship("ProductImage", back_populates="product")
     inventory_items = relationship("InventoryItem", back_populates="product")
+    custom_fields = relationship("ProductCustomField", back_populates="product")
 
 class ProductImage(Base):
     __tablename__ = "product_images"

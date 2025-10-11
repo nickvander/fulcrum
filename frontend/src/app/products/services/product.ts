@@ -21,6 +21,12 @@ export class ProductService {
 
   getProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(this.apiUrl).pipe(
+      map(products =>
+        products.map(p => ({
+          ...p,
+          primary_image: p.images?.find(img => img.is_primary) ?? p.images?.[0],
+        }))
+      ),
       tap(products => {
         this._products.next(products);
       })
@@ -33,6 +39,10 @@ export class ProductService {
         this._products.next(products);
       })
     );
+  }
+
+  searchProductsBySku(sku: string): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.apiUrl}/?sku=${sku}`);
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
@@ -86,5 +96,16 @@ export class ProductService {
 
   setPrimaryProductImage(productId: number, imageId: number): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/${productId}/images/${imageId}/set-primary`, {});
+  }
+
+  adjustStock(productId: number, adjustment: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${productId}/adjust-stock`, { adjustment }).pipe(
+      tap(() => this.notificationService.showSuccess('Stock adjusted successfully!')),
+      switchMap(() => this.getProducts())
+    );
+  }
+
+  saveCustomFieldValues(productId: number, customFieldValues: { [key: string]: any }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${productId}/custom-fields`, customFieldValues);
   }
 }

@@ -1,37 +1,92 @@
-/* Add some margin to the scan button */
-.scan-button {
-  margin-left: 16px;
+:host {
+  display: block;
+  padding: 24px;
 }
 
-/* Styling for the ingestion page */
-.ingestion-container {
-  padding: 24px;
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
 
-  .scanner-container {
-    max-width: 500px;
-    margin: 24px auto;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    overflow: hidden;
+.product-card {
+  transition: box-shadow 0.3s ease-in-out;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   }
+}
 
-  .controls {
-    display: flex;
-    justify-content: center;
+.product-image {
+  height: 200px;
+  object-fit: cover;
+}
+
+.no-image-placeholder {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+
+  mat-icon {
+    font-size: 48px;
+    color: #bdbdbd;
+  }
+}
+
+mat-card-header {
+  padding: 16px;
+}
+
+mat-card-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+mat-card-subtitle {
+  color: #616161;
+}
+
+mat-card-content {
+  padding: 0 16px;
+}
+
+.price {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+mat-card-actions {
+  padding: 8px 16px !important;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+  color: #757575;
+
+  .empty-state-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
     margin-bottom: 24px;
   }
 
-  .results {
-    margin-top: 24px;
-    padding: 16px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #f9f9f9;
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
 
-    img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 4px;
-    }
+  p {
+    margin-bottom: 24px;
   }
 }

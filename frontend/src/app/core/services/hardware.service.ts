@@ -37,19 +37,45 @@ export class HardwareService {
         return reject('No video track found in the stream.');
       }
 
-      const imageCapture = new (window as any).ImageCapture(track);
-      if (!imageCapture) {
-        return reject('ImageCapture API not available.');
-      }
+      if ('ImageCapture' in window) {
+        const imageCapture = new (window as any).ImageCapture(track);
+        if (!imageCapture) {
+          return reject('ImageCapture API not available.');
+        }
 
-      imageCapture
-        .takePhoto()
-        .then((blob: Blob) => {
-          resolve(blob);
-        })
-        .catch((error: any) => {
-          reject(error);
+        imageCapture
+          .takePhoto()
+          .then((blob: Blob) => {
+            resolve(blob);
+          })
+          .catch((error: any) => {
+            reject(error);
+          });
+      } else {
+        // Fallback for browsers that don't support ImageCapture
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+
+        video.addEventListener('loadeddata', () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext('2d');
+          if (context) {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject('Canvas to Blob conversion failed.');
+              }
+            }, 'image/jpeg');
+          } else {
+            reject('Could not get canvas context.');
+          }
         });
+      }
     });
   }
 }

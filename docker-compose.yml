@@ -46,6 +46,8 @@ services:
   worker:
     build: ./backend
     command: celery -A src.celery_worker.celery_app worker --loglevel=info
+    env_file:
+      - ./backend/.env.example
     volumes:
       - ./backend/src:/app/src
       - ./backend/tests:/app/tests

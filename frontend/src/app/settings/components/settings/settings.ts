@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { SettingsService } from '../../../core/services/settings.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { CustomFieldList } from '../custom-field-list/custom-field-list';
 
 @Component({
   selector: 'app-settings',
@@ -22,6 +23,7 @@ import { NotificationService } from '../../../core/services/notification.service
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
+    CustomFieldList,
   ],
 })
 export class Settings implements OnInit {

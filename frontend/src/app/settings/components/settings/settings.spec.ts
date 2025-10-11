@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Settings } from './settings';
 
 describe('Settings', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Settings],
+      imports: [Settings, HttpClientTestingModule, NoopAnimationsModule],
     }).compileComponents();
   });
 

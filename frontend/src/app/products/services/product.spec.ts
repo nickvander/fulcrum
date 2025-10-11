@@ -14,8 +14,8 @@ describe('ProductService', () => {
   let notificationServiceMock: jasmine.SpyObj<NotificationService>;
 
   const mockProducts: Product[] = [
-    { id: 1, name: 'Product 1', sku: 'P001', description: '', default_resale_price: 10 },
-    { id: 2, name: 'Product 2', sku: 'P002', description: '', default_resale_price: 20 },
+    { id: 1, name: 'Product 1', sku: 'P001', description: '', default_resale_price: 10, images: [{ id: 1, product_id: 1, image_path: 'path/to/image1.jpg', is_primary: 1 }] },
+    { id: 2, name: 'Product 2', sku: 'P002', description: '', default_resale_price: 20, images: [] },
   ];
 
   beforeEach(() => {
@@ -51,7 +51,8 @@ describe('ProductService', () => {
       req.flush(mockProducts);
 
       service.products$.subscribe(products => {
-        expect(products).toEqual(mockProducts);
+        expect(products[0].primary_image).toEqual(mockProducts[0].images![0]);
+        expect(products[1].primary_image).toBeUndefined();
       });
     });
   });
@@ -59,7 +60,7 @@ describe('ProductService', () => {
   describe('createProduct', () => {
     it('should create a product, update the stream, and show notification', () => {
       const newProduct: Omit<Product, 'id'> = { name: 'New Product', sku: 'P003', description: '', default_resale_price: 30 };
-      const createdProduct: Product = { id: 3, ...newProduct };
+      const createdProduct: Product = { id: 3, ...newProduct, images: [] };
 
       service.createProduct(newProduct).subscribe(product => {
         expect(product).toEqual(createdProduct);
@@ -74,7 +75,7 @@ describe('ProductService', () => {
 
       service.products$.subscribe(products => {
         expect(products.length).toBe(3);
-        expect(products[2]).toEqual(createdProduct);
+        expect(products[2].primary_image).toBeUndefined();
       });
 
       expect(notificationServiceMock.showSuccess).toHaveBeenCalledWith('Product created successfully!');

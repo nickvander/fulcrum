@@ -24,8 +24,9 @@ Welcome to Fulcrum's documentation!
    :caption: Guides
 
    guides/contributing.md
-   guides/database-migrations.md
-   guides/testing-and-ci.md
+   guides/database-migrations
+   guides/testing-and-ci
+   guides/production-setup
 
 .. toctree::
    :maxdepth: 2
