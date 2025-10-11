@@ -43,3 +43,34 @@
       correctly placed _before_ the wait logic, fixing a "service is not
       running" error.
 - **Outcome:** The CI pipeline is now definitively stable and passing reliably.
+
+## 2025-10-11
+
+### Phase 5: CI/CD Efficiency and Testing Strategy Overhaul
+
+- **Goal:** To significantly improve the speed, intelligence, and developer
+  experience of the CI/CD pipeline and the local testing workflow.
+- **Actions:**
+  1.  **Isolated Linting:** Created a separate, fast-running `lint.yml` workflow
+      that does not require Docker, providing immediate feedback on code style.
+  2.  **Split Backend Tests:** Separated the backend CI into two distinct
+      workflows: `backend-unit-tests.yml` for fast, database-free tests, and
+      `backend-db-tests.yml` for slower, database-dependent tests.
+  3.  **Path-Based Triggers:** Implemented `on.pull_request.paths` to ensure
+      workflows are only triggered by changes in their relevant directories
+      (e.g., frontend changes don't trigger backend tests).
+  4.  **Standardized Local Testing:** Created a suite of `npm` scripts
+      (`test:backend`, `test:backend:fast`, `test:frontend`) to simplify and
+      standardize the local testing experience.
+  5.  **Fixed Test Separation:** Created a true unit test for the security
+      module to resolve the "no tests collected" error, validating the test
+      separation strategy.
+  6.  **Hardened CI Fixtures:** Refactored the `conftest.py` file to prevent
+      unit tests from attempting to connect to the database, which was a primary
+      source of CI failures.
+  7.  **Added Manual Triggers:** Implemented `workflow_dispatch` on all
+      workflows to allow for manual runs from the GitHub UI.
+- **Outcome:** The CI/CD pipeline is now highly efficient. It provides faster
+  feedback by running only relevant jobs, and the local testing experience is
+  significantly improved. The separation between fast unit tests and database
+  tests is now correctly implemented and stable.

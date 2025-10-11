@@ -7,9 +7,11 @@ commerce hub designed to streamline the entire product lifecycle.
 
 ## Documentation
 
-For detailed technical documentation on the project architecture, setup, and
-development workflows, please see the
-**[Technical Documentation Hub](./docs/README.md)**.
+For detailed technical documentation, including the project architecture, setup
+guides, and development workflows, please see our **[Documentation Hub](./docs/README.md)**.
+
+This guide also contains instructions on how to build and serve the documentation
+locally.
 
 ## Getting Started
 
