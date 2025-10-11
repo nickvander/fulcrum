@@ -11,12 +11,30 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data_test:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fulcrum_test -d fulcrum_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
+    depends_on:
+      db-test:
+        condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://fulcrum_test:fulcrum_test@db-test:5432/fulcrum_test
       - FIRST_SUPERUSER_EMAIL=test@example.com
       - FIRST_SUPERUSER_PASSWORD=testpassword
+
+  worker:
+    environment:
+      - FIRST_SUPERUSER_EMAIL=test@example.com
+      - FIRST_SUPERUSER_PASSWORD=testpassword
+    healthcheck:
+      test: ["CMD", "celery", "-A", "src.celery_worker.celery_app", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data_test:

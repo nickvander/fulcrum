@@ -29,6 +29,9 @@ def create_test_database():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+    with engine.connect() as connection:
+        connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
+        connection.commit()
 
 @pytest.fixture(scope="function")
 def db():
