@@ -48,7 +48,7 @@ database, background workers) are managed via Docker Compose.
       directory.
     - For detailed instructions on installing dependencies and running the
       development server, please see the
-      **[Frontend Setup Guide](./docs/frontend-setup.md)**.
+      **[Frontend Setup Guide](./docs/source/frontend-setup.md)**.
 
 4.  **Build and start the services:**
     - From the root directory of the project, run:
@@ -65,7 +65,7 @@ database, background workers) are managed via Docker Compose.
 The project includes a comprehensive test suite for both the backend and
 frontend. For detailed instructions on the testing strategy and how to run the
 tests, please see the
-**[Testing Strategy & CI/CD Guide](./docs/testing-and-ci.md)**.
+**[Testing Strategy & CI/CD Guide](./docs/source/testing-and-ci.md)**.
 
 ## How to Contribute
 
