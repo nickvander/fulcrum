@@ -28,8 +28,14 @@ jobs:
       - name: Build documentation
         run: sphinx-build docs/source docs/_build/html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/html
+      # - name: Deploy to GitHub Pages
+      #   uses: peaceiris/actions-gh-pages@v3
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     publish_dir: docs/_build/html
+      #
+      # Note: Deployment is disabled for private repositories.
+      # To enable, you must:
+      # 1. Make the repository public.
+      # 2. Go to Repository Settings > Pages > Source and select "GitHub Actions".
+      # 3. Uncomment the "Deploy to GitHub Pages" step above.
