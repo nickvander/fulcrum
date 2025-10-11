@@ -9,13 +9,14 @@
 project = 'Fulcrum'
 copyright = '2025, Nick Van der Auwermeulen'
 author = 'Nick Van der Auwermeulen'
-release = '1.0'
+release = ''
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     'myst_parser',
+    'sphinx_copybutton',
 ]
 
 templates_path = ['_templates']
