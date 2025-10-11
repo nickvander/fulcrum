@@ -10,3 +10,11 @@ The documentation is organized into several sections:
 *   **Reference:** (Coming Soon) Detailed technical information, such as API endpoint specifications and configuration variable references.
 
 Use the sidebar to navigate through the different sections of the documentation.
+
+### Key Documentation
+
+- **[Architecture Overview](../concepts/architecture.md)**
+- **[Backend Setup Guide](../getting-started/backend-setup.md)**
+- **[Frontend Setup Guide](../getting-started/frontend-setup.md)**
+- **[Contributor Guide](../guides/contributing.md)**
+- **[Testing & CI Guide](../guides/testing-and-ci.md)**
