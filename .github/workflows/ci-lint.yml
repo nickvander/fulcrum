@@ -33,11 +33,9 @@ jobs:
     - name: Install uv
       run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    - name: Create venv
-      run: uv venv
-
     - name: Install dependencies and run linter
       run: |
+        uv venv
         source .venv/bin/activate
         uv pip install ruff
         ruff check .
