@@ -94,42 +94,53 @@ generating a product embedding), we use Celery.
 
 ```mermaid
 graph TD
+    classDef client fill:#BDE0FE,stroke:#A2D2FF,color:#000
+    classDef entrypoint fill:#FFC8DD,stroke:#FFAFCC,color:#000
+    classDef router fill:#FFD6A5,stroke:#FDDFB2,color:#000
+    classDef endpoint fill:#FDFFB6,stroke:#F9FFA4,color:#000
+    classDef service fill:#CAFFBF,stroke:#B3F8AD,color:#000
+    classDef repository fill:#9BF6FF,stroke:#86F2FC,color:#000
+    classDef model fill:#A0C4FF,stroke:#8EB5F2,color:#000
+    classDef database fill:#BDB2FF,stroke:#AD9FFC,color:#000
+    classDef task_queue fill:#FFADAD,stroke:#FF9A9A,color:#000
+    classDef worker fill:#FFD6A5,stroke:#FDDFB2,color:#000
+
     subgraph "Client"
-        A[Browser/Frontend]
+        A["Browser/Frontend"]:::client
     end
 
     subgraph "Backend Infrastructure"
         subgraph "FastAPI Application (Container)"
-            B[main.py]
-            C[API Router]
-            D[API Endpoints]
-            E[Services]
-            F[Repositories (CRUD)]
-            G[SQLAlchemy Models]
+            B["main.py"]:::entrypoint
+            C["API Router"]:::router
+            D["API Endpoints"]:::endpoint
+            E["Services"]:::service
+            F["Repositories (CRUD)"]:::repository
+            G["SQLAlchemy Models"]:::model
         end
 
         subgraph "Database"
-            H[(PostgreSQL)]
+            H[("PostgreSQL")]:::database
         end
 
         subgraph "Task Queue"
-            I[(Redis)]
-            J[Celery Worker (Container)]
+            I[("Redis")]:::task_queue
+            J["Celery Worker (Container)"]:::worker
         end
     end
 
     A -- HTTP Request --> B
     B --> C
     C --> D
-    D -- Calls --> E
-    E -- Uses --> F
-    F -- Interacts with --> G
-    G -- Mapped to --> H
-    F -- Queries --> H
+    D -- "Calls" --> E
+    E -- "Uses" --> F
+    F -- "Interacts with" --> G
+    G -- "Mapped to" --> H
+    F -- "Queries" --> H
 
-    D -- Dispatches Task --> I
-    J -- Listens to --> I
-    J -- Executes Task --> E
+    D -- "Dispatches Task" --> I
+    J -- "Listens to" --> I
+    J -- "Executes Task" --> E
 ```
 
 ## Frontend Architecture
@@ -180,29 +191,38 @@ The application is a fully-featured PWA, enabled by the `@angular/pwa` package.
 
 ```mermaid
 graph TD
+    classDef app_module fill:#BDE0FE,stroke:#A2D2FF,color:#000
+    classDef routing_module fill:#FFC8DD,stroke:#FFAFCC,color:#000
+    classDef core_module fill:#FFD6A5,stroke:#FDDFB2,color:#000
+    classDef shared_module fill:#FDFFB6,stroke:#F9FFA4,color:#000
+    classDef feature_module fill:#CAFFBF,stroke:#B3F8AD,color:#000
+    classDef auth_module fill:#9BF6FF,stroke:#86F2FC,color:#000
+    classDef auth_guard fill:#A0C4FF,stroke:#8EB5F2,color:#000
+
     subgraph "Angular Application"
-        A[AppModule]
-        B[AppRoutingModule]
-        C[CoreModule]
-        D[SharedModule]
-        E[AuthModule]
-        F[ProductsModule]
-        G[SettingsModule]
-        H[UsersModule]
+        A["AppModule"]:::app_module
+        B["AppRoutingModule"]:::routing_module
+        C["CoreModule"]:::core_module
+        D["SharedModule"]:::shared_module
+        E["AuthModule"]:::auth_module
+        F["ProductsModule"]:::feature_module
+        G["SettingsModule"]:::feature_module
+        H["UsersModule"]:::feature_module
+        I["AuthGuard"]:::auth_guard
     end
 
-    A -- Imports --> B
-    A -- Imports --> C
-    A -- Imports --> E
+    A -- "Imports" --> B
+    A -- "Imports" --> C
+    A -- "Imports" --> E
 
-    B -- Lazy Loads --> F
-    B -- Lazy Loads --> G
-    B -- Lazy Loads --> H
+    B -- "Lazy Loads" --> F
+    B -- "Lazy Loads" --> G
+    B -- "Lazy Loads" --> H
 
-    F -- Imports --> D
-    G -- Imports --> D
-    H -- Imports --> D
+    F -- "Imports" --> D
+    G -- "Imports" --> D
+    H -- "Imports" --> D
 
-    E -- Provides --> AuthGuard
-    B -- Uses Guard --> AuthGuard
+    E -- "Provides" --> I
+    B -- "Uses Guard" --> I
 ```
