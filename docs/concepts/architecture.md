@@ -115,7 +115,7 @@ graph TD
             C["API Router"]:::router
             D["API Endpoints"]:::endpoint
             E["Services"]:::service
-            F["Repositories (CRUD)"]:::repository
+            F["Repositories CRUD"]:::repository
             G["SQLAlchemy Models"]:::model
         end
 
