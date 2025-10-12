@@ -3,3 +3,4 @@ myst-parser
 furo
 sphinx-copybutton
 sphinx-autobuild
+sphinxcontrib-mermaid
