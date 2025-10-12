@@ -206,7 +206,13 @@ export class ProductForm implements OnInit {
     event.stopPropagation(); // Prevent opening the dialog when deleting
     if (this.productId) {
       this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
-        this.productService.getProducts().subscribe();
+        if (this.product && this.product.images) {
+          const index = this.product.images.findIndex(img => img.id === imageId);
+          if (index > -1) {
+            this.product.images.splice(index, 1);
+          }
+        }
+        this.notificationService.showSuccess('Image deleted.');
       });
     }
   }
@@ -215,7 +221,12 @@ export class ProductForm implements OnInit {
     event.stopPropagation(); // Prevent opening the dialog when setting primary
     if (this.productId) {
       this.productService.setPrimaryProductImage(this.productId, imageId).subscribe(() => {
-        this.productService.getProducts().subscribe();
+        if (this.product && this.product.images) {
+          this.product.images.forEach(img => {
+            img.is_primary = img.id === imageId ? 1 : 0;
+          });
+        }
+        this.notificationService.showSuccess('Primary image set.');
       });
     }
   }
