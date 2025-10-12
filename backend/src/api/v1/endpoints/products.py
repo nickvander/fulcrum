@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from src.api.dependencies import get_db, get_ai_service
 from src.crud import crud_product, crud_product_image, crud_custom_field
 from src.schemas import product as product_schema, inventory as inventory_schema
-from src.schemas import custom_field as custom_field_schema
 from src.services.ai_service import AIService
 from src.tasks import generate_product_embedding
 
