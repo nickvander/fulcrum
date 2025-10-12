@@ -17,6 +17,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { environment } from '../../../../environments/environment';
@@ -91,7 +92,7 @@ describe('ProductForm: Image Handling', () => {
       ]
     })
     .overrideComponent(ProductForm, {
-      remove: { imports: [ImageDialogComponent] }
+      remove: { imports: [ImageDialogComponent, ConfirmationDialog] }
     })
     .compileComponents();
 
@@ -129,15 +130,24 @@ describe('ProductForm: Image Handling', () => {
       expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
     });
 
-    it('should prevent default behavior and call productService.deleteProduct when deleteImage is called', () => {
+    it('should prevent default behavior and open confirmation dialog when deleteImage is called', () => {
       const event = new Event('click');
       spyOn(event, 'stopPropagation');
+      const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
+      mockDialogRef.afterClosed.and.returnValue(of(true)); // Simulate user confirming deletion
+      dialogMock.open.and.returnValue(mockDialogRef as any);
       productServiceMock.deleteProductImage.and.returnValue(of(null));
 
       component.deleteImage(event, 1);
 
       expect(event.stopPropagation).toHaveBeenCalled();
-      expect(productServiceMock.deleteProductImage).toHaveBeenCalledWith(1, 1);
+      expect(dialogMock.open).toHaveBeenCalledWith(jasmine.any(Function), jasmine.objectContaining({
+        data: {
+          title: 'Delete Image?',
+          message: 'Are you sure you want to delete this image? This action cannot be undone.'
+        }
+      }));
+      expect(mockDialogRef.afterClosed).toHaveBeenCalled();
     });
 
     it('should prevent default behavior and call productService.setPrimaryProductImage when setPrimaryImage is called', () => {

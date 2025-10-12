@@ -11,7 +11,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { first, switchMap, map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
@@ -32,7 +34,7 @@ import { NotificationService } from '../../../core/services/notification.service
     MatButtonModule,
     MatIconModule,
     MatListModule,
-    ImageDialogComponent, // Required for dynamic dialog usage with MatDialog
+    MatTooltipModule,
   ],
 })
 export class ProductForm implements OnInit {
@@ -204,17 +206,27 @@ export class ProductForm implements OnInit {
 
   deleteImage(event: Event, imageId: number): void {
     event.stopPropagation(); // Prevent opening the dialog when deleting
-    if (this.productId) {
-      this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
-        if (this.product && this.product.images) {
-          const index = this.product.images.findIndex(img => img.id === imageId);
-          if (index > -1) {
-            this.product.images.splice(index, 1);
+    
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Image?',
+        message: 'Are you sure you want to delete this image? This action cannot be undone.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && this.productId) {
+        this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
+          if (this.product && this.product.images) {
+            const index = this.product.images.findIndex(img => img.id === imageId);
+            if (index > -1) {
+              this.product.images.splice(index, 1);
+            }
           }
-        }
-        this.notificationService.showSuccess('Image deleted.');
-      });
-    }
+          this.notificationService.showSuccess('Image deleted.');
+        });
+      }
+    });
   }
 
   setPrimaryImage(event: Event, imageId: number): void {
