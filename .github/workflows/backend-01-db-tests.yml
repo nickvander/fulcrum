@@ -6,6 +6,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-01-db-tests.yml'
   pull_request:
     branches: [ "main" ]
     paths:
@@ -29,7 +30,7 @@ jobs:
         node-version: '20'
 
     - name: Run DB Tests
-      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest backend/tests/test_ai_api.py backend/tests/test_crud.py && docker compose -f docker-compose.test.yml down
+      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest tests/test_ai_api.py tests/test_crud.py && docker compose -f docker-compose.test.yml down
 
   backend-db-test-2:
     runs-on: ubuntu-latest
@@ -48,7 +49,7 @@ jobs:
         node-version: '20'
 
     - name: Run DB Tests
-      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest backend/tests/test_marketplace_api.py backend/tests/test_products_api.py && docker compose -f docker-compose.test.yml down
+      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest tests/test_marketplace_api.py tests/test_products_api.py && docker compose -f docker-compose.test.yml down
 
   backend-db-test-3:
     runs-on: ubuntu-latest
@@ -67,4 +68,4 @@ jobs:
         node-version: '20'
 
     - name: Run DB Tests
-      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest backend/tests/test_suppliers_api.py backend/tests/test_uploads_api.py backend/tests/test_users_api.py backend/tests/test_superuser.py && docker compose -f docker-compose.test.yml down
+      run: docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec backend python -m pytest tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py && docker compose -f docker-compose.test.yml down
