@@ -6,6 +6,7 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-01-db-tests.yml'
   pull_request:
     branches: [ "main" ]
     paths:
