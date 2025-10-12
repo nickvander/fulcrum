@@ -23,7 +23,9 @@ RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/ap
 WORKDIR /app
 
 # Create a non-root user and group first
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+ARG UID=1000
+ARG GID=1000
+RUN groupadd -g $GID -r appgroup && useradd -u $UID -g appgroup -r appuser
 
 # Copy the virtual environment from the builder stage with correct ownership
 COPY --from=builder --chown=appuser:appgroup /app/venv /app/venv
