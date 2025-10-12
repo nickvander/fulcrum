@@ -101,25 +101,30 @@ mat-form-field {
     bottom: 0;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 8px;
     opacity: 0;
     transition: opacity 0.2s;
     cursor: pointer;
 
     .image-overlay-content {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
+      flex-direction: row;
+      gap: 4px;
       color: white;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 16px;
+      padding: 4px;
 
       .overlay-button {
-        margin-top: 8px;
-        background: rgba(255, 255, 255, 0.2) !important;
+        margin: 0;
+        background: transparent !important;
+        color: white !important;
 
         &.selected {
-          background: rgba(255, 215, 0, 0.8) !important; // Gold for primary image
+          background: rgba(255, 215, 0, 0.3) !important; // Gold for primary image
+          color: #ffd700 !important;
         }
       }
     }
@@ -131,6 +136,27 @@ mat-form-field {
 
   .primary-image {
     border: 2px solid #ffd700; /* Gold color for primary */
+  }
+
+  // Primary image indicator badge
+  &.primary-image-container {
+    &::before {
+      content: '★';
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      color: gold;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      z-index: 1;
+      font-weight: bold;
+    }
   }
 }
 
