@@ -7,6 +7,7 @@ from src.api.v1.endpoints import (
     marketplace,
     uploads,
     ai,
+    custom_fields,
 )
 
 api_router = APIRouter()
@@ -20,3 +21,6 @@ api_router.include_router(
 )
 api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
+api_router.include_router(
+    custom_fields.router, prefix="/custom-fields", tags=["custom-fields"]
+)

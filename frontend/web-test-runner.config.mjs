@@ -10,7 +10,6 @@ export default {
   browsers: [
     playwrightLauncher({
       product: 'chromium',
-      executablePath: '/home/nickvander/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
       launchOptions: {
         args: ['--no-sandbox'],
       },

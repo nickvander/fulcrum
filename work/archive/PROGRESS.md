@@ -102,3 +102,23 @@
 - **Outcome:** The documentation is now visually appealing, stable, and easier
   to maintain. The build process is more robust, and all known bugs and warnings
   have been resolved.
+
+## 2025-10-11 (Evening)
+
+### Backend Test Suite Resolution
+
+- **Problem:** The backend test suite was failing with persistent Alembic errors
+  (`Can't locate revision`, `relation does not exist`, etc.) that resisted all
+  standard troubleshooting approaches.
+- **Root Cause Analysis:** Investigation revealed that the migration file was
+  attempting to manually create enum types that were already being handled by
+  SQLAlchemy, causing conflicts during test execution.
+- **Solution:**
+  1.  **Removed Manual Enum Creation:** Eliminated the manual `CREATE TYPE` statements
+      from the migration file, allowing SQLAlchemy to handle enum type creation
+      automatically.
+  2.  **Verified Migration Execution:** Confirmed that the alembic upgrade process
+      was correctly creating all database tables including the `product_custom_fields`
+      table that was causing the "relation does not exist" errors.
+- **Outcome:** All backend tests are now passing (21/21), resolving the primary
+  blocker for continuing feature development.
