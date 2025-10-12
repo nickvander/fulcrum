@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Image Details</h2>
+
+<mat-dialog-content>
+  <div class="image-preview">
+    <img [src]="getImageUrl(currentImage.image_path)" [alt]="currentImage.title || 'Product image'">
+  </div>
+  
+  <form [formGroup]="imageForm" class="image-details-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Title</mat-label>
+      <input matInput formControlName="title" placeholder="Enter image title">
+    </mat-form-field>
+    
+    <mat-form-field appearance="outline">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" placeholder="Enter image description" rows="3"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!imageForm.valid">Save</button>
+</mat-dialog-actions>

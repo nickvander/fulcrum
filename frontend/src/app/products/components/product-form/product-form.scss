@@ -67,35 +67,66 @@ mat-form-field {
 
 .image-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
+  margin-top: 16px;
 }
 
 .image-container {
   position: relative;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
+  aspect-ratio: 1/1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 
   img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
+    cursor: pointer;
   }
 
-  .image-actions {
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  .image-overlay {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    display: none;
-    gap: 4px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 4px;
-    padding: 2px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: pointer;
+
+    .image-overlay-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: white;
+
+      .overlay-button {
+        margin-top: 8px;
+        background: rgba(255, 255, 255, 0.2) !important;
+
+        &.selected {
+          background: rgba(255, 215, 0, 0.8) !important; // Gold for primary image
+        }
+      }
+    }
   }
 
-  &:hover .image-actions {
-    display: flex;
+  &:hover .image-overlay {
+    opacity: 1;
   }
 
   .primary-image {

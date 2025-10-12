@@ -93,7 +93,25 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   getImageUrl(imagePath: string): string {
-    // Assuming the backend serves images from an 'uploads' directory at the root
-    return `/uploads/${imagePath}`;
+    // Backend serves images from the 'uploads/product_images' directory.
+    return `/uploads/product_images/${imagePath}`;
+  }
+
+  getPrimaryImage(product: Product): string {
+    // Return primary image if available
+    if (product.primary_image) {
+      return product.primary_image.image_path;
+    }
+    // Otherwise return the first image if available
+    if (product.images && product.images.length > 0) {
+      return product.images[0].image_path;
+    }
+    // Return placeholder if no images exist
+    return 'placeholder.jpg';
+  }
+
+  onImageError(event: any): void {
+    // Set a placeholder image if the image fails to load
+    event.target.src = '/uploads/product_images/placeholder.jpg';
   }
 }

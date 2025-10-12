@@ -26,8 +26,38 @@ describe('ProductList', () => {
   let productsSubject: BehaviorSubject<Product[]>;
 
   const mockProducts: Product[] = [
-    { id: 1, name: 'Product 1', sku: 'P001', description: '', default_resale_price: 10 },
-    { id: 2, name: 'Product 2', sku: 'P002', description: '', default_resale_price: 20 },
+    { 
+      id: 1, 
+      name: 'Product 1', 
+      sku: 'P001', 
+      description: '', 
+      default_resale_price: 10,
+      images: [
+        { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 },
+        { id: 2, product_id: 1, image_path: 'product1-alt.jpg', is_primary: 0 }
+      ],
+      primary_image: { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 }
+    },
+    { 
+      id: 2, 
+      name: 'Product 2', 
+      sku: 'P002', 
+      description: '', 
+      default_resale_price: 20,
+      images: [
+        { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
+      ],
+      primary_image: { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
+    },
+    { 
+      id: 3, 
+      name: 'Product 3', 
+      sku: 'P003', 
+      description: '', 
+      default_resale_price: 30,
+      images: [],
+      primary_image: undefined
+    },
   ];
 
   beforeEach(async () => {
@@ -103,6 +133,46 @@ describe('ProductList', () => {
       component.deleteProduct(1);
 
       expect(productServiceMock.deleteProduct).not.toHaveBeenCalled();
+    });
+  });
+  
+  describe('image handling', () => {
+    beforeEach(() => {
+      productServiceMock.getProducts.and.returnValue(of(mockProducts));
+      fixture.detectChanges(); // Initialize with mock products
+    });
+    
+    it('should get primary image when primary image exists', () => {
+      const productWithPrimary = mockProducts[0];
+      const primaryImagePath = component.getPrimaryImage(productWithPrimary);
+      expect(primaryImagePath).toBe('product1.jpg');
+    });
+    
+    it('should get first image when no primary image exists', () => {
+      const productWithoutPrimary = { ...mockProducts[0] };
+      productWithoutPrimary.primary_image = undefined; // No primary image
+      const imagePath = component.getPrimaryImage(productWithoutPrimary);
+      expect(imagePath).toBe('product1.jpg'); // First image in the array
+    });
+    
+    it('should return placeholder when no images exist', () => {
+      const productWithoutImages = mockProducts[2]; // Product with no images
+      const imagePath = component.getPrimaryImage(productWithoutImages);
+      expect(imagePath).toBe('placeholder.jpg');
+    });
+    
+    it('should format image URL correctly', () => {
+      const imagePath = 'test.jpg';
+      const formattedUrl = component.getImageUrl(imagePath);
+      expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
+    });
+    
+    it('should handle image errors by setting placeholder', () => {
+      const mockEvent = {
+        target: { src: 'original.jpg' }
+      };
+      component.onImageError(mockEvent);
+      expect(mockEvent.target.src).toBe('/uploads/product_images/placeholder.jpg');
     });
   });
 });
