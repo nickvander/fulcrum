@@ -92,6 +92,46 @@ generating a product embedding), we use Celery.
 
 ---
 
+```mermaid
+graph TD
+    subgraph "Client"
+        A[Browser/Frontend]
+    end
+
+    subgraph "Backend Infrastructure"
+        subgraph "FastAPI Application (Container)"
+            B[main.py]
+            C[API Router]
+            D[API Endpoints]
+            E[Services]
+            F[Repositories (CRUD)]
+            G[SQLAlchemy Models]
+        end
+
+        subgraph "Database"
+            H[(PostgreSQL)]
+        end
+
+        subgraph "Task Queue"
+            I[(Redis)]
+            J[Celery Worker (Container)]
+        end
+    end
+
+    A -- HTTP Request --> B
+    B --> C
+    C --> D
+    D -- Calls --> E
+    E -- Uses --> F
+    F -- Interacts with --> G
+    G -- Mapped to --> H
+    F -- Queries --> H
+
+    D -- Dispatches Task --> I
+    J -- Listens to --> I
+    J -- Executes Task --> E
+```
+
 ## Frontend Architecture
 
 The frontend application is built with Angular and follows a modular,
@@ -137,3 +177,32 @@ The application is a fully-featured PWA, enabled by the `@angular/pwa` package.
 - **Web App Manifest (`manifest.webmanifest`):** Provides metadata that allows
   users to "install" the application to their home screen on mobile and desktop
   devices for a native-like experience.
+
+```mermaid
+graph TD
+    subgraph "Angular Application"
+        A[AppModule]
+        B[AppRoutingModule]
+        C[CoreModule]
+        D[SharedModule]
+        E[AuthModule]
+        F[ProductsModule]
+        G[SettingsModule]
+        H[UsersModule]
+    end
+
+    A -- Imports --> B
+    A -- Imports --> C
+    A -- Imports --> E
+
+    B -- Lazy Loads --> F
+    B -- Lazy Loads --> G
+    B -- Lazy Loads --> H
+
+    F -- Imports --> D
+    G -- Imports --> D
+    H -- Imports --> D
+
+    E -- Provides --> AuthGuard
+    B -- Uses Guard --> AuthGuard
+```
