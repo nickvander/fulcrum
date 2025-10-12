@@ -106,24 +106,17 @@
 
                           <div class="image-gallery" *ngIf="product?.images?.length">
                             <div *ngFor="let image of product?.images" class="image-container">
-                              <img [src]="getImageUrl(image.image_path)" [alt]="product?.name" [class.primary-image]="image.is_primary">
-                              <div class="image-actions">
-                                <button mat-icon-button color="warn" (click)="deleteImage(image.id)">
-                                  <mat-icon>delete</mat-icon>
-                                </button>
-                                <button mat-icon-button *ngIf="!image.is_primary" (click)="setPrimaryImage(image.id)">
-                                  <mat-icon>star</mat-icon>
-                                </button>
-                              </div>
-                              <div class="image-details" *ngIf="isEditMode">
-                                <mat-form-field>
-                                  <mat-label>Title</mat-label>
-                                  <input matInput [value]="image.title || ''" (change)="updateImageDetails(image.id, 'title', $event)">
-                                </mat-form-field>
-                                <mat-form-field>
-                                  <mat-label>Description</mat-label>
-                                  <textarea matInput [value]="image.description || ''" (change)="updateImageDetails(image.id, 'description', $event)"></textarea>
-                                </mat-form-field>
+                              <img [src]="getImageUrl(image.image_path)" [alt]="image.title || product?.name" [class.primary-image]="image.is_primary" (click)="openImageDialog(image)">
+                              <div class="image-overlay" (click)="openImageDialog(image)">
+                                <div class="image-overlay-content">
+                                  <mat-icon>zoom_in</mat-icon>
+                                  <button mat-icon-button class="overlay-button" [class.selected]="image.is_primary" (click)="setPrimaryImage($event, image.id)">
+                                    <mat-icon>star</mat-icon>
+                                  </button>
+                                  <button mat-icon-button class="overlay-button" color="warn" (click)="deleteImage($event, image.id)">
+                                    <mat-icon>delete</mat-icon>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>            <div *ngIf="!product?.images?.length && isEditMode" class="no-images">

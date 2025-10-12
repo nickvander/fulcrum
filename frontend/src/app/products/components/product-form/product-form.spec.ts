@@ -15,13 +15,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog } from '@angular/material/dialog';
 
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { environment } from '../../../../environments/environment';
 
 import { NotificationService } from '../../../core/services/notification.service';
 
-xit('ProductForm', () => {
+describe('ProductForm', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
@@ -29,6 +30,7 @@ xit('ProductForm', () => {
   let httpMock: HttpTestingController;
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
+  let dialogMock: jasmine.SpyObj<MatDialog>;
 
   const mockProduct: Product = {
     id: 1,
@@ -47,8 +49,9 @@ xit('ProductForm', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
+    dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
     // Mock products$ as a BehaviorSubject for testing ngOnInit
     Object.defineProperty(productServiceMock, 'products$', {
       get: () => new BehaviorSubject([mockProduct]).asObservable()
@@ -80,6 +83,7 @@ xit('ProductForm', () => {
       providers: [
         { provide: ProductService, useValue: productServiceMock },
         { provide: NotificationService, useValue: notificationServiceMock },
+        { provide: MatDialog, useValue: dialogMock },
         CustomFieldService,
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock }
@@ -194,5 +198,63 @@ xit('ProductForm', () => {
   it('should navigate to /products on cancel', () => {
     component.onCancel();
     expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
+  });
+  
+  describe('image handling', () => {
+    beforeEach(() => {
+      routerMock.getCurrentNavigation.and.returnValue(null);
+      fixture.detectChanges();
+      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
+      req.flush([]);
+    });
+
+    it('should format image URL correctly', () => {
+      const imagePath = 'test.jpg';
+      const formattedUrl = component.getImageUrl(imagePath);
+      expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
+    });
+
+    it('should prevent default behavior and call productService.deleteProduct when deleteImage is called', () => {
+      const event = new Event('click');
+      spyOn(event, 'stopPropagation');
+      spyOn(productServiceMock, 'deleteProductImage').and.returnValue(of(null));
+
+      component.deleteImage(event, 1);
+
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(productServiceMock.deleteProductImage).toHaveBeenCalledWith(1, 1);
+    });
+
+    it('should prevent default behavior and call productService.setPrimaryProductImage when setPrimaryImage is called', () => {
+      const event = new Event('click');
+      spyOn(event, 'stopPropagation');
+      spyOn(productServiceMock, 'setPrimaryProductImage').and.returnValue(of(null));
+
+      component.setPrimaryImage(event, 1);
+
+      expect(event.stopPropagation).toHaveBeenCalled();
+      expect(productServiceMock.setPrimaryProductImage).toHaveBeenCalledWith(1, 1);
+    });
+    
+    it('should open image dialog when openImageDialog is called', () => {
+      const mockImage = { id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 1 };
+      const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
+      mockDialogRef.afterClosed.and.returnValue(of(null));
+      dialogMock.open.and.returnValue(mockDialogRef as any);
+      
+      // Set productId for the component to test
+      component.isEditMode = true;
+      component.productId = 1;
+
+      component.openImageDialog(mockImage);
+
+      expect(dialogMock.open).toHaveBeenCalledWith(
+        jasmine.anything(), // ImageDialogComponent
+        jasmine.objectContaining({
+          width: '500px',
+          data: { image: mockImage, productId: 1 }
+        })
+      );
+    });
   });
 });

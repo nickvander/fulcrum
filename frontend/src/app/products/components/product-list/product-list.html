@@ -28,7 +28,7 @@
 
   <div class="product-grid" *ngIf="products.length > 0">
     <mat-card *ngFor="let product of products" class="product-card">
-      <img mat-card-image [src]="getImageUrl(product.primary_image.image_path)" [alt]="product.name" *ngIf="product.primary_image; else noImage" class="product-image">
+      <img mat-card-image [src]="getImageUrl(getPrimaryImage(product))" [alt]="product.name" class="product-image" (error)="onImageError($event)" *ngIf="getPrimaryImage(product) !== 'placeholder.jpg'; else noImage">
       <ng-template #noImage>
         <div class="no-image-placeholder">
           <mat-icon>image</mat-icon>

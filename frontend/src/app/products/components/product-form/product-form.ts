@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
-import { Product } from '../../models/product.model';
+import { Product, ProductImage } from '../../models/product.model';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -10,6 +10,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatDialog } from '@angular/material/dialog';
+import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { first, switchMap, map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
@@ -30,13 +32,14 @@ import { NotificationService } from '../../../core/services/notification.service
     MatButtonModule,
     MatIconModule,
     MatListModule,
+    ImageDialogComponent, // Required for dynamic dialog usage with MatDialog
   ],
 })
 export class ProductForm implements OnInit {
   productForm: FormGroup;
   isEditMode = false;
   product: Product | null = null;
-  private productId: number | null = null;
+  productId: number | null = null;
   customFields: CustomField[] = [];
   stagedImages: File[] = [];
   stagedImagePreviews: string[] = [];
@@ -47,7 +50,8 @@ export class ProductForm implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private customFieldService: CustomFieldService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private dialog: MatDialog
   ) {
     this.productForm = this.fb.group({
       name: ['', Validators.required],
@@ -177,7 +181,29 @@ export class ProductForm implements OnInit {
     }
   }
 
-  deleteImage(imageId: number): void {
+  openImageDialog(image: ProductImage): void {
+    if (!this.productId) return;
+    
+    const dialogRef = this.dialog.open(ImageDialogComponent, {
+      width: '500px',
+      data: { image: image, productId: this.productId }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Update the local product images with the updated image
+        if (this.product && this.product.images) {
+          const index = this.product.images.findIndex(img => img.id === result.id);
+          if (index !== -1) {
+            this.product.images[index] = result;
+          }
+        }
+      }
+    });
+  }
+
+  deleteImage(event: Event, imageId: number): void {
+    event.stopPropagation(); // Prevent opening the dialog when deleting
     if (this.productId) {
       this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
         this.productService.getProducts().subscribe();
@@ -185,7 +211,8 @@ export class ProductForm implements OnInit {
     }
   }
 
-  setPrimaryImage(imageId: number): void {
+  setPrimaryImage(event: Event, imageId: number): void {
+    event.stopPropagation(); // Prevent opening the dialog when setting primary
     if (this.productId) {
       this.productService.setPrimaryProductImage(this.productId, imageId).subscribe(() => {
         this.productService.getProducts().subscribe();
