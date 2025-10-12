@@ -14,6 +14,7 @@ import { first, switchMap, map } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { CustomField } from '../../../settings/models/custom-field.model';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-product-form',
@@ -45,7 +46,8 @@ export class ProductForm implements OnInit {
     private productService: ProductService,
     private router: Router,
     private route: ActivatedRoute,
-    private customFieldService: CustomFieldService
+    private customFieldService: CustomFieldService,
+    private notificationService: NotificationService
   ) {
     this.productForm = this.fb.group({
       name: ['', Validators.required],
@@ -119,8 +121,8 @@ export class ProductForm implements OnInit {
   }
 
   getImageUrl(imagePath: string): string {
-    // Assuming the backend serves images from an 'uploads' directory at the root
-    return `/uploads/${imagePath}`;
+    // Backend serves images from the 'uploads/product_images' directory.
+    return `/uploads/product_images/${imagePath}`;
   }
 
   removeStagedImage(index: number): void {
@@ -129,11 +131,16 @@ export class ProductForm implements OnInit {
   }
 
   updateImageDetails(imageId: number, field: 'title' | 'description', event: Event): void {
-    if (this.productId) {
+    if (this.productId && this.product && this.product.images) {
       const input = event.target as HTMLInputElement;
       const value = input.value;
       this.productService.updateProductImage(this.productId, imageId, { [field]: value }).subscribe(() => {
-        this.productService.getProducts().subscribe();
+        // Update the local product object for a more responsive UI
+        const image = this.product?.images?.find(img => img.id === imageId);
+        if (image) {
+          image[field] = value;
+        }
+        this.notificationService.showSuccess('Image details updated.');
       });
     }
   }
@@ -141,19 +148,31 @@ export class ProductForm implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
-      const file = input.files[0];
       if (this.isEditMode && this.productId) {
-        this.productService.uploadProductImage(this.productId, file).subscribe(() => {
-          // Refresh the product data to show the new image
-          this.productService.getProducts().subscribe();
+        // Handle multiple file uploads in edit mode
+        Array.from(input.files).forEach(file => {
+          this.productService.uploadProductImage(this.productId!, file).subscribe((newImage) => {
+            if (this.product && this.product.images) {
+              this.product.images.push(newImage);
+            }
+          });
         });
       } else {
-        this.stagedImages.push(file);
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.stagedImagePreviews.push(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+        // Handle staging multiple files in create mode
+        Array.from(input.files).forEach(file => {
+          this.stagedImages.push(file);
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            // Ensure the event target is not null and has a result
+            if (e.target?.result) {
+              this.stagedImagePreviews.push(e.target.result as string);
+            }
+          };
+          reader.onerror = (e) => {
+            console.error('Error reading file:', e);
+          };
+          reader.readAsDataURL(file);
+        });
       }
     }
   }
@@ -202,7 +221,16 @@ export class ProductForm implements OnInit {
       this.productService.createProduct(productData).pipe(
         switchMap(newProduct => {
           const customFields$ = this.productService.saveCustomFieldValues(newProduct.id, customFieldValues);
-          const imageUploads$ = this.stagedImages.map(file => this.productService.uploadProductImage(newProduct.id, file));
+          
+          // Handle image uploads - create an observable for each staged image
+          const imageUploads$ = this.stagedImages.map(file => 
+            this.productService.uploadProductImage(newProduct.id, file)
+          );
+          
+          // If there are no image uploads, just save custom fields
+          if (imageUploads$.length === 0) {
+            return customFields$;
+          }
           
           // Combine custom field saving and image uploads
           return forkJoin([customFields$, ...imageUploads$]).pipe(

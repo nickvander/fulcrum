@@ -16,8 +16,8 @@ fi
 # Wait for the database to be healthy
 # The DATABASE_URL is expected to be in the format: postgresql://user:password@host:port/dbname
 # We extract the host and port for pg_isready.
-DB_HOST=$(echo $DATABASE_URL | cut -d '@' -f 2 | cut -d ':' -f 1)
-DB_PORT=$(echo $DATABASE_URL | cut -d ':' -f 4 | cut -d '/' -f 1)
+DB_HOST=$(echo $DATABASE_URL | grep -oP '(?<=@)[^:]+')
+DB_PORT=$(echo $DATABASE_URL | grep -oP '(?<=:)\d+' | tail -n 1)
 DB_USER=$(echo $DATABASE_URL | cut -d ':' -f 2 | cut -d '/' -f 3)
 
 echo "Waiting for database at $DB_HOST:$DB_PORT..."

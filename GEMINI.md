@@ -216,3 +216,27 @@ appropriate thematic directory (`getting-started`, `guides`, `explanation`, or
       database volume before running the tests (e.g., `docker compose down -v`).
       This will ensure that the new, squashed migration is run against a clean
       database.
+
+### Backend: `Can't locate revision identified by '<hash>'` in tests
+
+- **Symptom:** The backend test suite fails with an error like
+  `alembic.util.exc.CommandError: Can't locate revision identified by '241bdbf575f5'`
+  when running `npm run test:backend`.
+- **Cause:** The test database's `alembic_version` table contains a reference to
+  a migration revision that no longer exists in the codebase. This can happen 
+  after deleting or squashing migration files without properly updating the 
+  database state.
+- **Solution:** Manually clear the alembic version table and create a fresh 
+  migration file that represents the current state of the models:
+  1. Connect to the test database and delete records from the `alembic_version` table:
+     ```bash
+     docker compose exec db-test psql -U fulcrum_test -d fulcrum_test -c "DELETE FROM alembic_version;"
+     ```
+  2. Create a new migration file that captures the current model state with both 
+     `upgrade()` and `downgrade()` functions.
+  3. Insert the new revision ID into the `alembic_version` table to establish
+     the current state:
+     ```bash
+     docker compose exec db-test psql -U fulcrum_test -d fulcrum_test -c "INSERT INTO alembic_version (version_num) VALUES ('<new_revision_id>');"
+     ```
+  4. Run tests again to ensure the alembic upgrade/downgrade cycle works properly.

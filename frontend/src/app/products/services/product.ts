@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
-import { Product } from '../models/product.model';
+import { Product, ProductImage } from '../models/product.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
 
@@ -84,10 +84,10 @@ export class ProductService {
     });
   }
 
-  uploadProductImage(productId: number, file: File): Observable<any> {
+  uploadProductImage(productId: number, file: File): Observable<ProductImage> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/${productId}/images`, formData);
+    return this.http.post<ProductImage>(`${this.apiUrl}/${productId}/images`, formData);
   }
 
   updateProductImage(productId: number, imageId: number, payload: { title?: string; description?: string }): Observable<any> {
