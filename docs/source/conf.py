@@ -17,6 +17,7 @@ release = ''
 extensions = [
     'myst_parser',
     'sphinx_copybutton',
+    'sphinxcontrib.mermaid',
 ]
 
 templates_path = ['_templates']

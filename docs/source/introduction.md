@@ -8,6 +8,14 @@ built and maintained.
 
 The documentation is organized into several sections:
 
+```{mermaid}
+graph TD
+    A[User] --> B(Frontend);
+    B --> C{API Gateway};
+    C --> D[Backend];
+    D --> E(Database);
+```
+
 - **[Getting Started](getting-started/backend-setup.md):** Contains the
   essential guides for setting up your local development environment for the
   first time.
