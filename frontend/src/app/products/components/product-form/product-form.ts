@@ -45,6 +45,8 @@ export class ProductForm implements OnInit {
   customFields: CustomField[] = [];
   stagedImages: File[] = [];
   stagedImagePreviews: string[] = [];
+  imagesToDelete: number[] = [];
+  initialPrimaryImageId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -104,6 +106,10 @@ export class ProductForm implements OnInit {
           this.product = product;
           this.productForm.patchValue(product);
           this.patchCustomFieldValues();
+          const primaryImage = this.product.images?.find(img => img.is_primary);
+          if (primaryImage) {
+            this.initialPrimaryImageId = primaryImage.id;
+          }
         }
       });
     }
@@ -124,6 +130,18 @@ export class ProductForm implements OnInit {
         }
       });
     }
+  }
+
+  get isDirty(): boolean {
+    const primaryImage = this.product?.images?.find(img => img.is_primary);
+    const currentPrimaryId = primaryImage ? primaryImage.id : null;
+
+    return (
+      this.productForm.dirty ||
+      this.stagedImages.length > 0 ||
+      this.imagesToDelete.length > 0 ||
+      (this.isEditMode && this.initialPrimaryImageId !== currentPrimaryId)
+    );
   }
 
   getImageUrl(imagePath: string): string {
@@ -154,32 +172,18 @@ export class ProductForm implements OnInit {
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
-      if (this.isEditMode && this.productId) {
-        // Handle multiple file uploads in edit mode
-        Array.from(input.files).forEach(file => {
-          this.productService.uploadProductImage(this.productId!, file).subscribe((newImage) => {
-            if (this.product && this.product.images) {
-              this.product.images.push(newImage);
-            }
-          });
-        });
-      } else {
-        // Handle staging multiple files in create mode
-        Array.from(input.files).forEach(file => {
-          this.stagedImages.push(file);
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            // Ensure the event target is not null and has a result
-            if (e.target?.result) {
-              this.stagedImagePreviews.push(e.target.result as string);
-            }
-          };
-          reader.onerror = (e) => {
-            console.error('Error reading file:', e);
-          };
-          reader.readAsDataURL(file);
-        });
-      }
+      Array.from(input.files).forEach(file => {
+        this.stagedImages.push(file);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            this.stagedImagePreviews.push(e.target.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      // Clear the input value to allow selecting the same file again
+      input.value = '';
     }
   }
 
@@ -206,45 +210,36 @@ export class ProductForm implements OnInit {
 
   deleteImage(event: Event, imageId: number): void {
     event.stopPropagation(); // Prevent opening the dialog when deleting
-    
+
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
         title: 'Delete Image?',
-        message: 'Are you sure you want to delete this image? This action cannot be undone.'
+        message: 'Are you sure you want to delete this image? This will be permanent once you save.'
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && this.productId) {
-        this.productService.deleteProductImage(this.productId, imageId).subscribe(() => {
-          if (this.product && this.product.images) {
-            const index = this.product.images.findIndex(img => img.id === imageId);
-            if (index > -1) {
-              this.product.images.splice(index, 1);
-            }
-          }
-          this.notificationService.showSuccess('Image deleted.');
-        });
+      if (result && this.product && this.product.images) {
+        this.imagesToDelete.push(imageId);
+        const index = this.product.images.findIndex(img => img.id === imageId);
+        if (index > -1) {
+          this.product.images.splice(index, 1);
+        }
       }
     });
   }
 
   setPrimaryImage(event: Event, imageId: number): void {
     event.stopPropagation(); // Prevent opening the dialog when setting primary
-    if (this.productId) {
-      this.productService.setPrimaryProductImage(this.productId, imageId).subscribe(() => {
-        if (this.product && this.product.images) {
-          this.product.images.forEach(img => {
-            img.is_primary = img.id === imageId ? 1 : 0;
-          });
-        }
-        this.notificationService.showSuccess('Primary image set.');
+    if (this.product && this.product.images) {
+      this.product.images.forEach(img => {
+        img.is_primary = img.id === imageId ? 1 : 0;
       });
     }
   }
 
   onSubmit(): void {
-    if (this.productForm.invalid) {
+    if (this.productForm.invalid || !this.isDirty) {
       return;
     }
 
@@ -261,39 +256,88 @@ export class ProductForm implements OnInit {
     });
 
     if (this.isEditMode && this.productId) {
-      const productToUpdate: Product = { id: this.productId, ...productData };
-      this.productService.updateProduct(productToUpdate).pipe(
-        switchMap(() => this.productService.saveCustomFieldValues(this.productId!, customFieldValues))
-      ).subscribe(() => {
-        this.router.navigate(['/products']);
+      const updateObservables = [];
+      const productId = this.productId;
+
+      // 1. Update core product details if form is dirty
+      if (this.productForm.dirty) {
+        const productToUpdate: Product = { id: productId, ...productData };
+        updateObservables.push(this.productService.updateProduct(productToUpdate));
+        updateObservables.push(this.productService.saveCustomFieldValues(productId, customFieldValues));
+      }
+
+      // 2. Delete images marked for deletion
+      if (this.imagesToDelete.length > 0) {
+        this.imagesToDelete.forEach(imageId => {
+          updateObservables.push(this.productService.deleteProductImage(productId, imageId));
+        });
+      }
+
+      // 3. Set new primary image if it has changed
+      const primaryImage = this.product?.images?.find(img => img.is_primary);
+      const currentPrimaryId = primaryImage ? primaryImage.id : null;
+      if (this.initialPrimaryImageId !== currentPrimaryId && currentPrimaryId) {
+        updateObservables.push(this.productService.setPrimaryProductImage(productId, currentPrimaryId));
+      }
+      
+      // 4. Upload new images (staged in edit mode, though current UI doesn't support it, this makes it robust)
+      // This part of onFileSelected needs to be adjusted to stage images in edit mode too.
+      // For now, this will handle any images that might get staged.
+      if (this.stagedImages.length > 0) {
+        this.stagedImages.forEach(file => {
+          updateObservables.push(this.productService.uploadProductImage(productId, file));
+        });
+      }
+
+      forkJoin(updateObservables.length > 0 ? updateObservables : [Promise.resolve()]).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Product updated successfully.');
+          this.router.navigate(['/products']);
+        },
+        error: (err) => this.notificationService.showError('Failed to update product.')
       });
-    } else {
+
+    } else { // Create Mode
       this.productService.createProduct(productData).pipe(
         switchMap(newProduct => {
-          const customFields$ = this.productService.saveCustomFieldValues(newProduct.id, customFieldValues);
+          const operations = [];
+          // Save custom fields
+          operations.push(this.productService.saveCustomFieldValues(newProduct.id, customFieldValues));
           
-          // Handle image uploads - create an observable for each staged image
-          const imageUploads$ = this.stagedImages.map(file => 
-            this.productService.uploadProductImage(newProduct.id, file)
-          );
-          
-          // If there are no image uploads, just save custom fields
-          if (imageUploads$.length === 0) {
-            return customFields$;
+          // Upload staged images
+          if (this.stagedImages.length > 0) {
+            this.stagedImages.forEach(file => 
+              operations.push(this.productService.uploadProductImage(newProduct.id, file))
+            );
           }
           
-          // Combine custom field saving and image uploads
-          return forkJoin([customFields$, ...imageUploads$]).pipe(
-            map(() => newProduct) // Pass the newProduct through
-          );
+          return forkJoin(operations.length > 0 ? operations : [Promise.resolve()]).pipe(map(() => newProduct));
         })
-      ).subscribe((newProduct) => {
-        this.router.navigate(['/products', newProduct.id, 'edit']);
+      ).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Product created successfully.');
+          this.router.navigate(['/products']);
+        },
+        error: (err) => this.notificationService.showError('Failed to create product.')
       });
     }
   }
 
   onCancel(): void {
-    this.router.navigate(['/products']);
+    if (this.isDirty) {
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Discard changes?',
+          message: 'You have unsaved changes. Are you sure you want to discard them?'
+        }
+      });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.router.navigate(['/products']);
+        }
+      });
+    } else {
+      this.router.navigate(['/products']);
+    }
   }
 }
