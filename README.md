@@ -8,17 +8,17 @@ business analytics.
 
 All technical documentation for the project, including architecture, setup
 guides, and contribution workflows, is located in our
-**[Sphinx Documentation Hub](docs/source/introduction.md)**.
+**[Sphinx Documentation Hub](docs/introduction.md)**.
 
 This is the central source of truth for developers.
 
 ### Key Documentation
 
-- **[Architecture Overview](docs/source/concepts/architecture.md)**
-- **[Backend Setup Guide](docs/source/getting-started/backend-setup.md)**
-- **[Frontend Setup Guide](docs/source/getting-started/frontend-setup.md)**
-- **[Contributor Guide](docs/source/guides/contributing.md)**
-- **[Testing & CI Guide](docs/source/guides/testing-and-ci.md)**
+- **[Architecture Overview](docs/concepts/architecture.md)**
+- **[Backend Setup Guide](docs/getting-started/backend-setup.md)**
+- **[Frontend Setup Guide](docs/getting-started/frontend-setup.md)**
+- **[Contributor Guide](docs/guides/contributing.md)**
+- **[Testing & CI Guide](docs/guides/testing-and-ci.md)**
 
 ## Quick Start
 
@@ -80,4 +80,4 @@ The backend API will be available at `http://localhost:8000`.
 The frontend application will be available at `http://localhost:4200`.
 
 For detailed setup instructions, please see the
-**[Getting Started](docs/source/getting-started/backend-setup.md)** guide.
+**[Getting Started](docs/getting-started/backend-setup.md)** guide.
