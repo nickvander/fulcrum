@@ -15,6 +15,11 @@ const routes: Routes = [
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'purchasing',
+    loadChildren: () => import('./purchasing/purchasing-routing.module').then(m => m.PurchasingRoutingModule),
+    canActivate: [AuthGuard]
+  },
   { path: '', redirectTo: '/products', pathMatch: 'full' },
   {
     path: 'ingest',

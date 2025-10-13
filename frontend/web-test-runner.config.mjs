@@ -13,6 +13,7 @@ export default {
       launchOptions: {
         args: ['--no-sandbox'],
       },
+      installationPath: '/home/jules/.cache/ms-playwright/chromium-1194/chrome-linux/chrome',
     }),
   ],
   testsStartTimeout: 60000,
