@@ -5,16 +5,45 @@ application for local development.
 
 ## Prerequisites
 
-- [Node.js and npm](https://nodejs.org/)
+- **Node.js and npm**
 - The backend services must be running. See the
   [Backend Setup Guide](./backend-setup.md) for instructions.
 
-For Debian/Ubuntu-based systems, you can install Node.js and npm with the
-following command:
+<details>
+<summary>Linux Installation Instructions for Node.js and npm</summary>
+
+The recommended way to install and manage Node.js versions is by using a
+version manager like `nvm`. However, you can also install it using your
+system's package manager.
+
+### Using Node Version Manager (nvm) - Recommended
+
+`nvm` allows you to install multiple versions of Node.js and switch between them.
+
+1.  **Install nvm:**
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    ```
+    You may need to restart your terminal or source your shell profile (e.g., `source ~/.bashrc`) for the `nvm` command to become available.
+
+2.  **Install the latest LTS version of Node.js:**
+    ```bash
+    nvm install --lts
+    ```
+
+3.  **Verify the installation:**
+    ```bash
+    node --version
+    npm --version
+    ```
+
+### Using the `apt` Package Manager (for Debian/Ubuntu-based Linux)
 
 ```bash
 sudo apt-get update && sudo apt-get install -y nodejs npm
 ```
+
+</details>
 
 ## First-Time Setup
 
