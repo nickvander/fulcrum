@@ -38,7 +38,7 @@ import { environment } from '../../../../environments/environment';
 
 import { NotificationService } from '../../../core/services/notification.service';
 
-xdescribe('ProductForm: Create Mode', () => {
+describe('ProductForm: Create Mode', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;

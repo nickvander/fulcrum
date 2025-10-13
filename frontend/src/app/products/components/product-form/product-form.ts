@@ -15,7 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { first, switchMap, map } from 'rxjs/operators';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -74,33 +74,38 @@ export class ProductForm implements OnInit {
   }
 
   ngOnInit(): void {
-    this.customFieldService.getCustomFields().subscribe(fields => {
-      this.customFields = fields;
-      this.addCustomFieldControls();
-    });
-
     const idParam = this.route.snapshot.params['id'];
     const navigation = this.router.getCurrentNavigation();
     const navigationState = navigation?.extras?.state;
 
-    if (navigationState && navigationState['productData']) {
-      const productData = navigationState['productData'];
-      const patchData: { [key: string]: any } = {};
+    this.customFieldService.getCustomFields().pipe(
+      switchMap(fields => {
+        this.customFields = fields;
+        this.addCustomFieldControls();
 
-      // Extract only the top-level properties that match form controls
-      Object.keys(this.productForm.controls).forEach(key => {
-        if (productData.hasOwnProperty(key)) {
-          patchData[key] = productData[key];
+        if (navigationState && navigationState['productData']) {
+          const productData = navigationState['productData'];
+          const patchData: { [key: string]: any } = {};
+
+          Object.keys(this.productForm.controls).forEach(key => {
+            if (productData.hasOwnProperty(key)) {
+              patchData[key] = productData[key];
+            }
+          });
+
+          this.productForm.patchValue(patchData);
         }
-      });
 
-      this.productForm.patchValue(patchData);
-    }
-
-    if (idParam) {
-      this.isEditMode = true;
-      this.productId = +idParam;
-      this.productService.products$.pipe(first()).subscribe((products: Product[]) => {
+        if (idParam) {
+          this.isEditMode = true;
+          this.productId = +idParam;
+          return this.productService.products$.pipe(first());
+        } else {
+          return of([]);
+        }
+      })
+    ).subscribe((products: Product[]) => {
+      if (this.isEditMode && this.productId) {
         const product = products.find(p => p.id === this.productId);
         if (product) {
           this.product = product;
@@ -111,8 +116,8 @@ export class ProductForm implements OnInit {
             this.initialPrimaryImageId = primaryImage.id;
           }
         }
-      });
-    }
+      }
+    });
   }
 
   addCustomFieldControls(): void {
