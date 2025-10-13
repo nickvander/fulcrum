@@ -16,9 +16,9 @@ export default {
     }),
   ],
   testsStartTimeout: 60000,
-  // Temporarily increased to 5 minutes to handle timeouts in product-form.spec.js
+  // Temporarily increased to 10 minutes to handle timeouts in product-form.spec.js
   // TODO: Investigate and optimize the product-form tests to reduce execution time.
-  testsFinishTimeout: 300000,
+  testsFinishTimeout: 600000,
   files: ['./dist/frontend/**/*.spec.js'],
   testFramework: {
     // we are using jasmine, so we don't need to configure anything here

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
@@ -14,8 +14,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
-import { first, switchMap, map } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
+import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
+import { first, switchMap, map, takeUntil } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -35,6 +36,7 @@ import { NotificationService } from '../../../core/services/notification.service
     MatIconModule,
     MatListModule,
     MatTooltipModule,
+    ProductFormImageGalleryComponent,
   ],
 })
 export class ProductForm implements OnInit {
@@ -47,6 +49,7 @@ export class ProductForm implements OnInit {
   stagedImagePreviews: string[] = [];
   imagesToDelete: number[] = [];
   initialPrimaryImageId: number | null = null;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -78,8 +81,11 @@ export class ProductForm implements OnInit {
     const navigation = this.router.getCurrentNavigation();
     const navigationState = navigation?.extras?.state;
 
+    // Get custom fields first, ensuring subscription is cleaned up
     this.customFieldService.getCustomFields().pipe(
-      switchMap(fields => {
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (fields) => {
         this.customFields = fields;
         this.addCustomFieldControls();
 
@@ -97,24 +103,60 @@ export class ProductForm implements OnInit {
         }
 
         if (idParam) {
+          // Edit mode: we need to find the product from the BehaviorSubject
           this.isEditMode = true;
           this.productId = +idParam;
-          return this.productService.products$.pipe(first());
+          
+          // Subscribe to products$ and use first() to get only the first emission, with proper cleanup
+          this.productService.products$.pipe(
+            first(),
+            takeUntil(this.destroy$)
+          ).subscribe({
+            next: (products) => {
+              const product = products.find(p => p.id === this.productId);
+              if (product) {
+                this.product = product;
+                this.productForm.patchValue(product);
+                this.patchCustomFieldValues();
+                const primaryImage = this.product?.images?.find(img => img.is_primary);
+                if (primaryImage) {
+                  this.initialPrimaryImageId = primaryImage.id;
+                }
+              }
+            },
+            error: (error) => {
+              console.error('Error getting products:', error);
+              // In case of error, still proceed without product data
+            }
+          });
         } else {
-          return of([]);
+          // Create mode: just set the flag and we're done
+          this.isEditMode = false;
         }
-      })
-    ).subscribe((products: Product[]) => {
-      if (this.isEditMode && this.productId) {
-        const product = products.find(p => p.id === this.productId);
-        if (product) {
-          this.product = product;
-          this.productForm.patchValue(product);
-          this.patchCustomFieldValues();
-          const primaryImage = this.product.images?.find(img => img.is_primary);
-          if (primaryImage) {
-            this.initialPrimaryImageId = primaryImage.id;
-          }
+      },
+      error: (error) => {
+        console.error('Error getting custom fields:', error);
+        // In case of error, still proceed but with empty custom fields
+        this.addCustomFieldControls(); // Add empty controls
+        
+        if (navigationState && navigationState['productData']) {
+          const productData = navigationState['productData'];
+          const patchData: { [key: string]: any } = {};
+
+          Object.keys(this.productForm.controls).forEach(key => {
+            if (productData.hasOwnProperty(key)) {
+              patchData[key] = productData[key];
+            }
+          });
+
+          this.productForm.patchValue(patchData);
+        }
+
+        if (idParam) {
+          this.isEditMode = true;
+          this.productId = +idParam;
+        } else {
+          this.isEditMode = false;
         }
       }
     });
@@ -152,95 +194,6 @@ export class ProductForm implements OnInit {
   getImageUrl(imagePath: string): string {
     // Backend serves images from the 'uploads/product_images' directory.
     return `/uploads/product_images/${imagePath}`;
-  }
-
-  removeStagedImage(index: number): void {
-    this.stagedImages.splice(index, 1);
-    this.stagedImagePreviews.splice(index, 1);
-  }
-
-  updateImageDetails(imageId: number, field: 'title' | 'description', event: Event): void {
-    if (this.productId && this.product && this.product.images) {
-      const input = event.target as HTMLInputElement;
-      const value = input.value;
-      this.productService.updateProductImage(this.productId, imageId, { [field]: value }).subscribe(() => {
-        // Update the local product object for a more responsive UI
-        const image = this.product?.images?.find(img => img.id === imageId);
-        if (image) {
-          image[field] = value;
-        }
-        this.notificationService.showSuccess('Image details updated.');
-      });
-    }
-  }
-
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files?.length) {
-      Array.from(input.files).forEach(file => {
-        this.stagedImages.push(file);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            this.stagedImagePreviews.push(e.target.result as string);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      // Clear the input value to allow selecting the same file again
-      input.value = '';
-    }
-  }
-
-  openImageDialog(image: ProductImage): void {
-    if (!this.productId) return;
-    
-    const dialogRef = this.dialog.open(ImageDialogComponent, {
-      width: '500px',
-      data: { image: image, productId: this.productId }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        // Update the local product images with the updated image
-        if (this.product && this.product.images) {
-          const index = this.product.images.findIndex(img => img.id === result.id);
-          if (index !== -1) {
-            this.product.images[index] = result;
-          }
-        }
-      }
-    });
-  }
-
-  deleteImage(event: Event, imageId: number): void {
-    event.stopPropagation(); // Prevent opening the dialog when deleting
-
-    const dialogRef = this.dialog.open(ConfirmationDialog, {
-      data: {
-        title: 'Delete Image?',
-        message: 'Are you sure you want to delete this image? This will be permanent once you save.'
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && this.product && this.product.images) {
-        this.imagesToDelete.push(imageId);
-        const index = this.product.images.findIndex(img => img.id === imageId);
-        if (index > -1) {
-          this.product.images.splice(index, 1);
-        }
-      }
-    });
-  }
-
-  setPrimaryImage(event: Event, imageId: number): void {
-    event.stopPropagation(); // Prevent opening the dialog when setting primary
-    if (this.product && this.product.images) {
-      this.product.images.forEach(img => {
-        img.is_primary = img.id === imageId ? 1 : 0;
-      });
-    }
   }
 
   onSubmit(): void {
@@ -344,5 +297,52 @@ export class ProductForm implements OnInit {
     } else {
       this.router.navigate(['/products']);
     }
+  }
+  
+  // Methods to handle events from the child component
+  onStagedImagesChange(images: File[]): void {
+    this.stagedImages = images;
+  }
+
+  onStagedImagePreviewsChange(previews: string[]): void {
+    this.stagedImagePreviews = previews;
+  }
+
+  onImagesToDelete(imageIds: number[]): void {
+    this.imagesToDelete = [...this.imagesToDelete, ...imageIds];
+    // Also remove from the product images if we have it
+    if (this.product && this.product.images) {
+      imageIds.forEach(id => {
+        const index = this.product!.images!.findIndex(img => img.id === id);
+        if (index > -1) {
+          this.product!.images!.splice(index, 1);
+        }
+      });
+    }
+  }
+
+  onPrimaryImageChange(imageId: number | null): void {
+    if (imageId === null) {
+      return; // Handle null case gracefully
+    }
+    if (this.product && this.product.images) {
+      this.product.images.forEach(img => {
+        img.is_primary = img.id === imageId ? 1 : 0;
+      });
+    }
+  }
+
+  onImageUpdated(event: {imageId: number, field: 'title' | 'description', value: string}): void {
+    if (this.product && this.product.images) {
+      const image = this.product.images.find(img => img.id === event.imageId);
+      if (image) {
+        image[event.field] = event.value;
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

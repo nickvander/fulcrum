@@ -51,12 +51,14 @@ describe('ProductForm: Image Management', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    // Mock products$ as a BehaviorSubject for testing ngOnInit
+    
+    // Create a mock ProductService with a BehaviorSubject that immediately emits
+    const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
     Object.defineProperty(productServiceMock, 'products$', {
-      get: () => new BehaviorSubject([mockProduct]).asObservable()
+      get: () => mockProductsSubject.asObservable()
     });
 
     routerMock = jasmine.createSpyObj('Router', ['navigate', 'getCurrentNavigation']);
@@ -86,13 +88,9 @@ describe('ProductForm: Image Management', () => {
         { provide: ProductService, useValue: productServiceMock },
         { provide: NotificationService, useValue: notificationServiceMock },
         { provide: MatDialog, useValue: dialogMock },
-        CustomFieldService,
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock }
       ]
-    })
-    .overrideComponent(ProductForm, {
-      remove: { imports: [ImageDialogComponent, ConfirmationDialog] }
     })
     .compileComponents();
 
@@ -130,56 +128,6 @@ describe('ProductForm: Image Management', () => {
       expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
     });
 
-    it('should prevent default behavior and open confirmation dialog when deleteImage is called', () => {
-      const event = new Event('click');
-      spyOn(event, 'stopPropagation');
-      const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-      mockDialogRef.afterClosed.and.returnValue(of(true)); // Simulate user confirming deletion
-      dialogMock.open.and.returnValue(mockDialogRef as any);
-      productServiceMock.deleteProductImage.and.returnValue(of(null));
-
-      component.deleteImage(event, 1);
-
-      expect(event.stopPropagation).toHaveBeenCalled();
-      expect(dialogMock.open).toHaveBeenCalledWith(jasmine.any(Function), jasmine.objectContaining({
-        data: {
-          title: 'Delete Image?',
-          message: 'Are you sure you want to delete this image? This action cannot be undone.'
-        }
-      }));
-      expect(mockDialogRef.afterClosed).toHaveBeenCalled();
-    });
-
-    it('should prevent default behavior and call productService.setPrimaryProductImage when setPrimaryImage is called', () => {
-      const event = new Event('click');
-      spyOn(event, 'stopPropagation');
-      productServiceMock.setPrimaryProductImage.and.returnValue(of(null));
-
-      component.setPrimaryImage(event, 1);
-
-      expect(event.stopPropagation).toHaveBeenCalled();
-      expect(productServiceMock.setPrimaryProductImage).toHaveBeenCalledWith(1, 1);
-    });
-    
-    it('should open image dialog when openImageDialog is called', () => {
-      const mockImage = { id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 1 };
-      const mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-      mockDialogRef.afterClosed.and.returnValue(of(null));
-      dialogMock.open.and.returnValue(mockDialogRef as any);
-      
-      // Set productId for the component to test
-      component.isEditMode = true;
-      component.productId = 1;
-
-      component.openImageDialog(mockImage);
-
-      expect(dialogMock.open).toHaveBeenCalledWith(
-        ImageDialogComponent,
-        jasmine.objectContaining({
-          width: '500px',
-          data: { image: mockImage, productId: 1 }
-        })
-      );
-    });
+    // Removed specific image handling tests since they are now in the child component
   });
 });
