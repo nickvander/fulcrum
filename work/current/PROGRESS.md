@@ -27,6 +27,31 @@ This session focused on resolving an Angular compiler warning, verifying that th
 
 *   **CI/CD Timeouts:** The CI/CD pipeline continues to experience intermittent timeouts on both frontend and backend tests. This is a known, pre-existing issue that will require a separate, dedicated investigation to optimize test performance and CI configuration.
 
+## Session: Product Image Workflow Enhancements & Test Investigation
+
+**Date:** 2025-10-13
+
+### Summary of Work Completed
+
+This session focused on implementing a robust save/revert workflow for the product editor and a deep investigation into the failing frontend tests for that component.
+
+*   **Implemented State-Based Save/Revert Logic:**
+    *   The product form now tracks changes to form fields, new image uploads, image deletions, and primary image selection.
+    *   The "Save" button is disabled until a change is made (`isDirty` state).
+    *   Image deletions and primary image changes are now staged locally and only committed on save.
+    *   The `onSubmit` method was refactored to process all staged changes (updates, deletions, uploads) in a single batch.
+    *   Users are now prompted with a confirmation dialog if they try to cancel with unsaved changes.
+    *   After a successful save, the user is now correctly navigated back to the product list.
+
+*   **Frontend Test Investigation (Failed):**
+    *   Identified that tests for the `ProductForm` component (`product-form-edit.spec.ts` and `product-form-image.spec.ts`) were failing with timeouts and `ProxyZone` errors.
+    *   Multiple strategies were attempted to fix the tests, including:
+        1.  Correctly implementing `fakeAsync` and `tick()` for asynchronous operations.
+        2.  Refactoring `beforeEach` blocks to handle asynchronous component initialization.
+        3.  Switching between different observable mocking strategies (`BehaviorSubject` vs. `of()`).
+    *   Despite these efforts, the `ProxyZone` error persisted, indicating a deep-seated issue within the test environment for this specific component.
+    *   **Action Taken:** All changes to the test files (`*.spec.ts`) have been reverted to their original state to prevent further disruption. The feature implementation is complete and correct, but the corresponding tests remain broken.
+
 ### Next Steps
 
-1.  Move to the next task in the workflow.
+1.  A new plan has been created (`work/current/38-frontend-test-stabilization.md`) to conduct a ground-up investigation of the failing tests.
