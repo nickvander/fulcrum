@@ -1,19 +1,3 @@
-// =================================================================================================
-// NOTE: The test suite in this file is temporarily disabled using `xdescribe`.
-//
-// This test suite was timing out in the CI environment, even after being split from the main
-// `product-form.spec.ts` file. This indicates a significant performance issue either in the
-// component's "create mode" logic or in the test setup itself.
-//
-// To get the CI pipeline to pass and allow other valuable fixes to be merged, this suite
-// has been disabled.
-//
-// TO DO: A more in-depth investigation is required to identify and fix the root cause of the
-// performance bottleneck. This may involve a significant refactoring of the component, the tests,
-// or both. Once the performance issue is resolved, `xdescribe` should be changed back to
-// `describe` to re-enable these important tests.
-// =================================================================================================
-
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
@@ -32,10 +16,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
-
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { environment } from '../../../../environments/environment';
-
 import { NotificationService } from '../../../core/services/notification.service';
 
 describe('ProductForm: Create Mode', () => {
@@ -65,12 +47,14 @@ describe('ProductForm: Create Mode', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProducts']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    // Mock products$ as a BehaviorSubject for testing ngOnInit
+    
+    // Create a mock ProductService with a BehaviorSubject that immediately emits
+    const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
     Object.defineProperty(productServiceMock, 'products$', {
-      get: () => new BehaviorSubject([mockProduct]).asObservable()
+      get: () => mockProductsSubject.asObservable()
     });
 
     routerMock = jasmine.createSpyObj('Router', ['navigate', 'getCurrentNavigation']);
@@ -100,7 +84,6 @@ describe('ProductForm: Create Mode', () => {
         { provide: ProductService, useValue: productServiceMock },
         { provide: NotificationService, useValue: notificationServiceMock },
         { provide: MatDialog, useValue: dialogMock },
-        CustomFieldService,
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock }
       ]
@@ -155,7 +138,82 @@ describe('ProductForm: Create Mode', () => {
       component.onSubmit();
       await fixture.whenStable();
       expect(productServiceMock.createProduct).toHaveBeenCalled();
-      expect(routerMock.navigate).toHaveBeenCalledWith(['/products', mockProduct.id, 'edit']);
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
+    });
+
+    it('should navigate to products list after successful create', async () => {
+      fixture.detectChanges();
+      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
+      req.flush([]);
+      productServiceMock.createProduct.and.returnValue(of(mockProduct));
+      productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
+      
+      component.productForm.setValue({
+        name: 'New Product',
+        sku: 'NP001',
+        description: 'New Product Description',
+        default_resale_price: 10,
+        cost_price: 5,
+        manufacturer: 'New Manufacturer',
+        brand: 'New Brand',
+        category: 'New Category',
+        width: 1,
+        height: 1,
+        depth: 1,
+        weight: 1,
+      });
+      
+      component.onSubmit();
+      await fixture.whenStable();
+      
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
+    });
+
+    it('should upload staged images when creating new product', async () => {
+      fixture.detectChanges();
+      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
+      req.flush([]);
+      
+      // Add a staged image
+      const testFile = new File([], 'test.jpg');
+      component.stagedImages.push(testFile);
+      
+      productServiceMock.createProduct.and.returnValue(of(mockProduct));
+      productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
+      productServiceMock.uploadProductImage.and.returnValue(of({ id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 0, title: '', description: '' }));
+      
+      component.productForm.setValue({
+        name: 'New Product',
+        sku: 'NP002',
+        description: 'New Product Description',
+        default_resale_price: 15,
+        cost_price: 7,
+        manufacturer: 'New Manufacturer',
+        brand: 'New Brand',
+        category: 'New Category',
+        width: 2,
+        height: 2,
+        depth: 2,
+        weight: 2,
+      });
+      
+      component.onSubmit();
+      await fixture.whenStable();
+      
+      expect(productServiceMock.uploadProductImage).toHaveBeenCalledWith(mockProduct.id, testFile);
+    });
+
+    it('should have save button enabled when there are staged images', () => {
+      fixture.detectChanges();
+      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
+      req.flush([]);
+      
+      expect(component.isDirty).toBeFalse();
+      
+      // Add a staged image
+      component.stagedImages.push(new File([], 'test.jpg'));
+      
+      expect(component.isDirty).toBeTrue();
     });
 
     it('should pre-fill form from navigation state', async () => {
