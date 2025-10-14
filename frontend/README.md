@@ -56,8 +56,6 @@ To ensure the test runner can launch the browser, you must install the Playwrigh
 npx playwright install --with-deps
 ```
 
-**Note:** As of the last update, there is an unresolved issue where the test runner fails to launch the browser in some WSL environments. This is due to the test runner incorrectly detecting and attempting to use the Windows Chrome executable. Attempts to resolve this by explicitly setting the executable path to the Playwright-provided browser have been unsuccessful, suggesting a deeper issue with how the browser process is launched in the WSL environment.
-
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
