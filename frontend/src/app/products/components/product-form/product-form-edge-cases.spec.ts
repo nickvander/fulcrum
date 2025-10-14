@@ -2,7 +2,7 @@ import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -20,12 +20,11 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
-describe('ProductForm: Edit Mode', () => {
+describe('ProductForm: Edge Cases', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
   let notificationServiceMock: jasmine.SpyObj<NotificationService>;
-  let httpMock: HttpTestingController;
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
@@ -47,10 +46,10 @@ describe('ProductForm: Edit Mode', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'getProductById']);
-    notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'getProductById', 'uploadProductImage']);
+    notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess', 'showError']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    
+
     // Mock products$ as a BehaviorSubject for testing ngOnInit
     Object.defineProperty(productServiceMock, 'products$', {
       get: () => new BehaviorSubject([mockProduct]).asObservable()
@@ -91,56 +90,41 @@ describe('ProductForm: Edit Mode', () => {
 
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-  });
-
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
-  xdescribe('Edit Mode', () => {
-    beforeEach(() => {
-      activatedRouteMock.snapshot.params['id'] = mockProduct.id;
-      routerMock.getCurrentNavigation.and.returnValue(null);
+  describe('form validation edge cases', () => {
+    it('should not submit invalid form', () => {
+      fixture.detectChanges();
+      
+      // Set up an invalid form state
+      const nameControl = component.productForm.get('name');
+      nameControl?.setValue(''); // required field empty
+      component.productForm.markAsDirty();
+      
+      component.onSubmit(); // Should not call service methods
+      
+      expect(productServiceMock.createProduct).not.toHaveBeenCalled();
+      expect(productServiceMock.updateProduct).not.toHaveBeenCalled();
     });
 
-    it('should initialize the form with product data', () => {
+    it('should handle cancellation without unsaved changes', () => {
       fixture.detectChanges();
-      expect(component.isEditMode).toBeTrue();
-      expect(component.productForm.value.name).toBe(mockProduct.name);
-    });
-
-    it('should call updateProduct on submit', async () => {
-      fixture.detectChanges();
-      productServiceMock.updateProduct.and.returnValue(of(mockProduct));
-      productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
-      component.productForm.setValue({
-        name: 'Updated',
-        sku: 'T001',
-        description: '',
-        default_resale_price: 120,
-        cost_price: 60,
-        manufacturer: 'Updated Manufacturer',
-        brand: 'Updated Brand',
-        category: 'Updated Category',
-        width: 12,
-        height: 12,
-        depth: 12,
-        weight: 12,
-      });
-      component.onSubmit();
-      await fixture.whenStable();
-      expect(productServiceMock.updateProduct).toHaveBeenCalled();
+      
+      component.onCancel();
+      
       expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
     });
-  });
 
-  it('should navigate to /products on cancel', () => {
-    component.onCancel();
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
+    it('should maintain proper isDirty state', () => {
+      fixture.detectChanges();
+      
+      // Initially not dirty
+      expect(component.isDirty).toBe(false);
+      
+      // After form change, should be dirty
+      component.productForm.get('name')?.setValue('New Name');
+      component.productForm.markAsDirty();
+      expect(component.isDirty).toBe(true);
+    });
   });
 });
