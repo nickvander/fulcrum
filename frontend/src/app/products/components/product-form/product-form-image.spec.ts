@@ -51,7 +51,7 @@ describe('ProductForm: Image Management', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProductById']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
     
@@ -88,6 +88,7 @@ describe('ProductForm: Image Management', () => {
         { provide: ProductService, useValue: productServiceMock },
         { provide: NotificationService, useValue: notificationServiceMock },
         { provide: MatDialog, useValue: dialogMock },
+        CustomFieldService,
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock }
       ]
@@ -117,6 +118,8 @@ describe('ProductForm: Image Management', () => {
       // These tests require the component to be in "edit mode"
       activatedRouteMock.snapshot.params['id'] = mockProduct.id;
       routerMock.getCurrentNavigation.and.returnValue(null);
+      // Mock the getProductById method to return an observable with the mock product
+      productServiceMock.getProductById.and.returnValue(of(mockProduct));
       fixture.detectChanges();
       const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
       req.flush([]);
