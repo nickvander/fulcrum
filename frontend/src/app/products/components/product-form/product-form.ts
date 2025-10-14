@@ -103,17 +103,15 @@ export class ProductForm implements OnInit {
         }
 
         if (idParam) {
-          // Edit mode: we need to find the product from the BehaviorSubject
+          // Edit mode: get the specific product by ID
           this.isEditMode = true;
           this.productId = +idParam;
           
-          // Subscribe to products$ and use first() to get only the first emission, with proper cleanup
-          this.productService.products$.pipe(
-            first(),
+          // Get the specific product by ID instead of relying on products$ BehaviorSubject
+          this.productService.getProductById(this.productId).pipe(
             takeUntil(this.destroy$)
           ).subscribe({
-            next: (products) => {
-              const product = products.find(p => p.id === this.productId);
+            next: (product) => {
               if (product) {
                 this.product = product;
                 this.productForm.patchValue(product);
@@ -125,7 +123,7 @@ export class ProductForm implements OnInit {
               }
             },
             error: (error) => {
-              console.error('Error getting products:', error);
+              console.error('Error getting product:', error);
               // In case of error, still proceed without product data
             }
           });
