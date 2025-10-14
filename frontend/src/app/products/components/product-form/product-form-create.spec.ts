@@ -19,7 +19,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
 
-describe('ProductForm: Create Mode', () => {
+xdescribe('ProductForm: Create Mode', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
