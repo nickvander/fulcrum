@@ -1,18 +1,3 @@
-// =================================================================================================
-// NOTE: The test suite in this file is temporarily disabled using `xdescribe`.
-//
-// This test suite was timing out in the CI environment. This indicates a significant performance
-// issue either in the component's "edit mode" logic or in the test setup itself.
-//
-// To get the CI pipeline to pass and allow other valuable fixes to be merged, this suite
-// has been disabled.
-//
-// TO DO: A more in-depth investigation is required to identify and fix the root cause of the
-// performance bottleneck. This may involve a significant refactoring of the component, the tests,
-// or both. Once the performance issue is resolved, `xdescribe` should be changed back to
-// `describe` to re-enable these important tests.
-// =================================================================================================
-
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
@@ -36,8 +21,10 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
 import { environment } from '../../../../environments/environment';
 
 import { NotificationService } from '../../../core/services/notification.service';
+import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
+import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
-xdescribe('ProductForm: Edit Mode', () => {
+describe('ProductForm: Edit Mode', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
@@ -46,6 +33,7 @@ xdescribe('ProductForm: Edit Mode', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let productFormInitializerMock: jasmine.SpyObj<ProductFormInitializerService>;
 
   const mockProduct: Product = {
     id: 1,
@@ -67,6 +55,7 @@ xdescribe('ProductForm: Edit Mode', () => {
     productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'getProductById']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+    productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
     // Mock products$ as a BehaviorSubject for testing ngOnInit
     Object.defineProperty(productServiceMock, 'products$', {
       get: () => new BehaviorSubject([mockProduct]).asObservable()
@@ -79,6 +68,14 @@ xdescribe('ProductForm: Edit Mode', () => {
         params: {}
       }
     };
+
+    // Set up the initializer mock to return synchronous data for edit mode
+    productFormInitializerMock.initializeForm.and.returnValue(of({
+      customFields: [],
+      product: mockProduct,
+      isEditMode: true,
+      initialPrimaryImageId: null
+    }));
 
     await TestBed.configureTestingModule({
       imports: [
@@ -101,7 +98,8 @@ xdescribe('ProductForm: Edit Mode', () => {
         { provide: MatDialog, useValue: dialogMock },
         CustomFieldService,
         { provide: Router, useValue: routerMock },
-        { provide: ActivatedRoute, useValue: activatedRouteMock }
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
       ]
     }).compileComponents();
 
@@ -126,16 +124,12 @@ xdescribe('ProductForm: Edit Mode', () => {
 
     it('should initialize the form with product data', () => {
       fixture.detectChanges();
-      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-      req.flush([]);
       expect(component.isEditMode).toBeTrue();
       expect(component.productForm.value.name).toBe(mockProduct.name);
     });
 
     it('should call updateProduct on submit', async () => {
       fixture.detectChanges();
-      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-      req.flush([]);
       productServiceMock.updateProduct.and.returnValue(of(mockProduct));
       productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
       component.productForm.setValue({

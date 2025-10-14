@@ -19,8 +19,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
+import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
-xdescribe('ProductForm: Create Mode', () => {
+describe('ProductForm: Create Mode', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
@@ -29,6 +31,7 @@ xdescribe('ProductForm: Create Mode', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let productFormInitializerMock: jasmine.SpyObj<ProductFormInitializerService>;
 
   const mockProduct: Product = {
     id: 1,
@@ -50,6 +53,7 @@ xdescribe('ProductForm: Create Mode', () => {
     productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProducts']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+    productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
     
     // Create a mock ProductService with a BehaviorSubject that immediately emits
     const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
@@ -64,6 +68,13 @@ xdescribe('ProductForm: Create Mode', () => {
         params: {}
       }
     };
+
+    // Set up the initializer mock to return synchronous data for create mode
+    productFormInitializerMock.initializeForm.and.returnValue(of({
+      customFields: [],
+      isEditMode: false,
+      initialPrimaryImageId: null
+    }));
 
     await TestBed.configureTestingModule({
       imports: [
@@ -85,7 +96,8 @@ xdescribe('ProductForm: Create Mode', () => {
         { provide: NotificationService, useValue: notificationServiceMock },
         { provide: MatDialog, useValue: dialogMock },
         { provide: Router, useValue: routerMock },
-        { provide: ActivatedRoute, useValue: activatedRouteMock }
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
       ]
     }).compileComponents();
 

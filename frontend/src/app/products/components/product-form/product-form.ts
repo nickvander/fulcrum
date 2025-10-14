@@ -15,11 +15,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
-import { first, switchMap, map, takeUntil } from 'rxjs/operators';
+import { switchMap, map, takeUntil } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
-import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
 
 @Component({
   selector: 'app-product-form',
@@ -56,7 +56,7 @@ export class ProductForm implements OnInit {
     private productService: ProductService,
     private router: Router,
     private route: ActivatedRoute,
-    private customFieldService: CustomFieldService,
+    private productFormInitializer: ProductFormInitializerService,
     private notificationService: NotificationService,
     private dialog: MatDialog
   ) {
@@ -77,87 +77,60 @@ export class ProductForm implements OnInit {
   }
 
   ngOnInit(): void {
+    // Determine edit mode from route params
     const idParam = this.route.snapshot.params['id'];
-    const navigation = this.router.getCurrentNavigation();
-    const navigationState = navigation?.extras?.state;
-
-    // Get custom fields first, ensuring subscription is cleaned up
-    this.customFieldService.getCustomFields().pipe(
+    const isEditMode = !!idParam;
+    const productId = idParam ? +idParam : null;
+    
+    // Use the initialization service instead of complex observables in component
+    this.productFormInitializer.initializeForm(isEditMode, productId).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: (fields) => {
-        this.customFields = fields;
-        this.addCustomFieldControls();
-
-        if (navigationState && navigationState['productData']) {
-          const productData = navigationState['productData'];
-          const patchData: { [key: string]: any } = {};
-
-          Object.keys(this.productForm.controls).forEach(key => {
-            if (productData.hasOwnProperty(key)) {
-              patchData[key] = productData[key];
-            }
-          });
-
-          this.productForm.patchValue(patchData);
-        }
-
-        if (idParam) {
-          // Edit mode: get the specific product by ID
-          this.isEditMode = true;
-          this.productId = +idParam;
-          
-          // Get the specific product by ID instead of relying on products$ BehaviorSubject
-          this.productService.getProductById(this.productId).pipe(
-            takeUntil(this.destroy$)
-          ).subscribe({
-            next: (product) => {
-              if (product) {
-                this.product = product;
-                this.productForm.patchValue(product);
-                this.patchCustomFieldValues();
-                const primaryImage = this.product?.images?.find(img => img.is_primary);
-                if (primaryImage) {
-                  this.initialPrimaryImageId = primaryImage.id;
-                }
-              }
-            },
-            error: (error) => {
-              console.error('Error getting product:', error);
-              // In case of error, still proceed without product data
-            }
-          });
-        } else {
-          // Create mode: just set the flag and we're done
-          this.isEditMode = false;
-        }
+      next: (initializationData: ProductFormInitializationData) => {
+        this.handleInitializationData(initializationData);
       },
       error: (error) => {
-        console.error('Error getting custom fields:', error);
-        // In case of error, still proceed but with empty custom fields
-        this.addCustomFieldControls(); // Add empty controls
-        
-        if (navigationState && navigationState['productData']) {
-          const productData = navigationState['productData'];
-          const patchData: { [key: string]: any } = {};
-
-          Object.keys(this.productForm.controls).forEach(key => {
-            if (productData.hasOwnProperty(key)) {
-              patchData[key] = productData[key];
-            }
-          });
-
-          this.productForm.patchValue(patchData);
-        }
-
-        if (idParam) {
-          this.isEditMode = true;
-          this.productId = +idParam;
-        } else {
-          this.isEditMode = false;
-        }
+        console.error('Error initializing form:', error);
+        // Fallback to safe defaults
+        this.handleInitializationData({
+          customFields: [],
+          isEditMode,
+          initialPrimaryImageId: null
+        });
       }
     });
+  }
+
+  private handleInitializationData(data: ProductFormInitializationData): void {
+    this.customFields = data.customFields;
+    this.isEditMode = data.isEditMode;
+    this.initialPrimaryImageId = data.initialPrimaryImageId;
+    
+    if (data.product) {
+      this.product = data.product;
+      this.productId = data.product.id || null;
+      this.productForm.patchValue(data.product);
+      this.patchCustomFieldValues();
+    }
+
+    // Handle navigation state for pre-filled data
+    const navigation = this.router.getCurrentNavigation();
+    const navigationState = navigation?.extras?.state;
+    if (navigationState && navigationState['productData']) {
+      const productData = navigationState['productData'];
+      const patchData: { [key: string]: any } = {};
+
+      Object.keys(this.productForm.controls).forEach(key => {
+        if (productData.hasOwnProperty(key)) {
+          patchData[key] = productData[key];
+        }
+      });
+
+      this.productForm.patchValue(patchData);
+    }
+
+    // Add custom field controls after getting the data
+    this.addCustomFieldControls();
   }
 
   addCustomFieldControls(): void {

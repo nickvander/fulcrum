@@ -23,6 +23,8 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
 import { environment } from '../../../../environments/environment';
 
 import { NotificationService } from '../../../core/services/notification.service';
+import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
+import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
 describe('ProductForm: Image Management', () => {
   let component: ProductForm;
@@ -33,6 +35,7 @@ describe('ProductForm: Image Management', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let productFormInitializerMock: jasmine.SpyObj<ProductFormInitializerService>;
 
   const mockProduct: Product = {
     id: 1,
@@ -54,6 +57,7 @@ describe('ProductForm: Image Management', () => {
     productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProductById']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+    productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
     
     // Create a mock ProductService with a BehaviorSubject that immediately emits
     const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
@@ -68,6 +72,14 @@ describe('ProductForm: Image Management', () => {
         params: {}
       }
     };
+
+    // Set up the initializer mock to return synchronous data for edit mode
+    productFormInitializerMock.initializeForm.and.returnValue(of({
+      customFields: [],
+      product: mockProduct,
+      isEditMode: true,
+      initialPrimaryImageId: null
+    }));
 
     await TestBed.configureTestingModule({
       imports: [
@@ -90,7 +102,8 @@ describe('ProductForm: Image Management', () => {
         { provide: MatDialog, useValue: dialogMock },
         CustomFieldService,
         { provide: Router, useValue: routerMock },
-        { provide: ActivatedRoute, useValue: activatedRouteMock }
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
+        { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
       ]
     })
     .compileComponents();
@@ -121,8 +134,6 @@ describe('ProductForm: Image Management', () => {
       // Mock the getProductById method to return an observable with the mock product
       productServiceMock.getProductById.and.returnValue(of(mockProduct));
       fixture.detectChanges();
-      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-      req.flush([]);
     });
 
     it('should format image URL correctly', () => {
