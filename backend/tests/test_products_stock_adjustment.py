@@ -2,7 +2,6 @@ import pytest
 from sqlalchemy.orm import Session
 from unittest.mock import Mock
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from src.config import settings
 from src.models import Product, InventoryItem, User
