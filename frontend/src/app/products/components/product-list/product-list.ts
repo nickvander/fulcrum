@@ -235,6 +235,7 @@ export class ProductList implements OnInit, OnDestroy {
       width: '600px',
       data: {
         productName: product.name,
+        currentStock: this.getCurrentStock(product),
         inventoryAdjustments: product.inventory_adjustments || []
       }
     });

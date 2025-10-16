@@ -4,11 +4,15 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
+import { environment } from '../../../environments/environment';
+import { User } from '../../users/models/user.model';
+
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
   private readonly JWT_TOKEN = 'FULCRUM_JWT_TOKEN';
+  private apiUrl = `${environment.apiUrl}/users`;
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasToken());
 
   public isAuthenticated$: Observable<boolean> = this.isAuthenticatedSubject.asObservable();
@@ -16,13 +20,14 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   login(credentials: {email: string, password: string}): Observable<any> {
-    // TODO: Replace with actual API call
-    // For now, simulate a successful login and create a dummy token
-    return of({ token: 'dummy-jwt-token' }).pipe(
+    const formData = new FormData();
+    formData.append('username', credentials.email);
+    formData.append('password', credentials.password);
+
+    return this.http.post<any>(`${this.apiUrl}/login/access-token`, formData).pipe(
       tap(response => {
-        this.setToken(response.token);
+        this.setToken(response.access_token);
         this.isAuthenticatedSubject.next(true);
-        this.router.navigate(['/dashboard']);
       })
     );
   }

@@ -6,7 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import logging
 
-from src import crud, models, schemas
+from src import crud, models
+from src.schemas import token as token_schema, user as user_schema
 from src.api import dependencies
 from src.config import settings
 from src.core import security
@@ -16,11 +17,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=schemas.User, tags=["users"])
+@router.post("/", response_model=user_schema.User, tags=["users"])
 def create_user(
     *,
     db: Session = Depends(dependencies.get_db),
-    user_in: schemas.UserCreate,
+    user_in: user_schema.UserCreate,
 ) -> models.User:
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
@@ -32,7 +33,7 @@ def create_user(
     return user
 
 
-@router.post("/login/access-token", response_model=schemas.Token, tags=["users"])
+@router.post("/login/access-token", response_model=token_schema.Token, tags=["users"])
 def login_access_token(
     db: Session = Depends(dependencies.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -54,7 +55,7 @@ def login_access_token(
     }
 
 
-@router.get("/", response_model=List[schemas.User], tags=["users"])
+@router.get("/", response_model=List[user_schema.User], tags=["users"])
 def read_users(
     db: Session = Depends(dependencies.get_db),
     skip: int = 0,
@@ -68,7 +69,7 @@ def read_users(
     return users
 
 
-@router.get("/{user_id}", response_model=schemas.User, tags=["users"])
+@router.get("/{user_id}", response_model=user_schema.User, tags=["users"])
 def read_user_by_id(
     user_id: int,
     current_user: models.User = Depends(dependencies.get_current_user),
@@ -87,12 +88,12 @@ def read_user_by_id(
     return user
 
 
-@router.put("/{user_id}", response_model=schemas.User, tags=["users"])
+@router.put("/{user_id}", response_model=user_schema.User, tags=["users"])
 def update_user(
     *,
     db: Session = Depends(dependencies.get_db),
     user_id: int,
-    user_in: schemas.UserUpdate,
+    user_in: user_schema.UserUpdate,
     current_user: models.User = Depends(dependencies.get_current_superuser),
 ) -> models.User:
     """

@@ -1,5 +1,35 @@
 # Progress Log
 
+## Session: Fix Stock Adjustment Authentication
+
+**Date:** 2025-10-15
+
+### Summary of Work Completed
+
+This session addressed a critical authentication failure affecting the stock adjustment feature. The root cause was a combination of a placeholder implementation in the frontend's authentication service and several missing components in the backend's token generation and validation logic.
+
+### Issues Identified and Resolved
+
+*   **Frontend Authentication:**
+    *   **Problem:** The Angular `AuthService` was using a hardcoded "dummy-jwt-token" instead of making a real login request.
+    *   **Fix:** Implemented a proper login method that sends a `POST` request to the backend's `/api/v1/users/login/access-token` endpoint and stores the received JWT.
+
+*   **Backend Token Generation:**
+    *   **Problem:** The login endpoint was failing with a `500 Internal Server Error` because the `create_access_token` function was missing from the `src.core.security` module.
+    *   **Fix:** Added the `create_access_token` function to `security.py`, including the necessary logic to generate a signed JWT with the correct user ID and expiration time.
+
+*   **Backend Schema Validation:**
+    *   **Problem:** After fixing the token generation, the `get_current_user` dependency failed with an `AttributeError` because the `TokenPayload` schema was not defined.
+    *   **Fix:**
+        1.  Created a new `backend/src/schemas/token.py` file to define the `Token` and `TokenPayload` Pydantic schemas.
+        2.  Updated `dependencies.py` and `endpoints/users.py` to import and use the new, correctly structured schemas, resolving the validation errors.
+
+### Validation
+
+*   The entire authentication flow was verified using `curl`.
+*   A request to the login endpoint now successfully returns a valid JWT.
+*   A subsequent request to the protected `adjust-stock` endpoint using the JWT now passes the authentication layer, returning a `404 Not Found` (as expected for a non-existent product) instead of a `403 Forbidden` or `500 Internal Server Error`.
+
 ## Session: Angular Warning & Image Display Fix / Product Image UX Enhancements
 
 **Date:** 2025-10-12
