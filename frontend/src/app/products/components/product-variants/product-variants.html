@@ -1,0 +1,94 @@
+<div class="variants-container">
+  <div class="variants-header">
+    <h3>Product Variants</h3>
+    <button mat-raised-button color="primary" (click)="onAddVariant()" class="add-variant-btn">
+      <mat-icon>add</mat-icon>
+      Add Variant
+    </button>
+  </div>
+
+  <div class="variants-list" *ngIf="editableVariants.length > 0; else noVariants">
+    <mat-card 
+      class="variant-card" 
+      *ngFor="let variant of editableVariants; let i = index">
+      
+      <div class="variant-header">
+        <h4>{{ variant.name || 'New Variant' }}</h4>
+        <div class="variant-actions">
+          <button mat-icon-button (click)="onRemoveVariant(i)" matTooltip="Remove variant">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <div class="variant-details">
+        <mat-form-field class="variant-field">
+          <mat-label>Name</mat-label>
+          <input 
+            matInput 
+            [value]="variant.name" 
+            (input)="updateVariant(i, 'name', $any($event.target).value)"
+            placeholder="e.g., Red - Large">
+        </mat-form-field>
+        
+        <mat-form-field class="variant-field">
+          <mat-label>SKU</mat-label>
+          <input 
+            matInput 
+            [value]="variant.sku" 
+            (input)="updateVariant(i, 'sku', $any($event.target).value)"
+            placeholder="Unique SKU for this variant">
+        </mat-form-field>
+        
+        <mat-form-field class="variant-field">
+          <mat-label>Price</mat-label>
+          <input 
+            matInput 
+            type="number" 
+            [value]="variant.price || ''" 
+            (input)="updateVariant(i, 'price', $any($event.target).value ? +$any($event.target).value : null)"
+            placeholder="Override default price">
+        </mat-form-field>
+        
+        <mat-form-field class="variant-field">
+          <mat-label>Cost Price</mat-label>
+          <input 
+            matInput 
+            type="number" 
+            [value]="variant.cost_price || ''" 
+            (input)="updateVariant(i, 'cost_price', $any($event.target).value ? +$any($event.target).value : null)"
+            placeholder="Override default cost price">
+        </mat-form-field>
+        
+        <mat-form-field class="variant-field full-width">
+          <mat-label>Description</mat-label>
+          <textarea 
+            matInput 
+            [value]="variant.description || ''"
+            (input)="updateVariant(i, 'description', $any($event.target).value)"
+            placeholder="Variant description"
+            rows="2">
+          </textarea>
+        </mat-form-field>
+        
+        <mat-form-field class="variant-field full-width">
+          <mat-label>Attributes</mat-label>
+          <textarea 
+            matInput 
+            [value]="variant.attributes || ''"
+            (input)="updateVariant(i, 'attributes', $any($event.target).value)"
+            placeholder="JSON string of attributes (e.g., '{&quot;color&quot;: &quot;red&quot;, &quot;size&quot;: &quot;large&quot;}')"
+            rows="2">
+          </textarea>
+        </mat-form-field>
+      </div>
+    </mat-card>
+  </div>
+
+  <ng-template #noVariants>
+    <div class="no-variants">
+      <mat-icon class="no-variants-icon">category</mat-icon>
+      <p>No variants defined yet. Add your first variant to get started.</p>
+    </div>
+  </ng-template>
+</div>

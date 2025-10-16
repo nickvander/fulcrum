@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, switchMap, map, catchError, throwError } from 'rxjs';
 import { Product, ProductImage } from '../models/product.model';
+import { PaginatedProducts } from '../models/paginated-products.model';
+import { ProductVariant } from '../models/product-variant.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
 
@@ -19,12 +21,77 @@ export class ProductService {
     private notificationService: NotificationService
   ) {}
 
-  getProducts(): Observable<Product[]> {
+  getProducts(page: number = 1, pageSize: number = 10, filters?: any): Observable<PaginatedProducts> {
+    let params = new HttpParams()
+      .set('skip', (page - 1) * pageSize)
+      .set('limit', pageSize);
+    
+    // Add any additional filters if provided
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+          params = params.set(key, filters[key]);
+        }
+      });
+    }
+    
+    return this.http.get<PaginatedProducts>(`${this.apiUrl}/`, { params }).pipe(
+      map(response => {
+        // If the response is an array (existing behavior), convert it to paginated format
+        if (Array.isArray(response)) {
+          const products = response.map((p: any) => ({
+            ...p,
+            primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+          }));
+          // For compatibility with existing single-page behavior
+          return {
+            data: products,
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: products.length,
+            pageSize: products.length,
+            hasNextPage: false,
+            hasPrevPage: false
+          };
+        }
+        // If it's already a paginated response, process it
+        const paginatedProducts = response as any;
+        if (paginatedProducts.data) {
+          return {
+            ...paginatedProducts,
+            data: paginatedProducts.data.map((p: any) => ({
+              ...p,
+              primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+            }))
+          };
+        }
+        // Fallback to the original response structure
+        return {
+          data: paginatedProducts.map((p: any) => ({
+            ...p,
+            primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+          })),
+          currentPage: page,
+          totalPages: Math.ceil(paginatedProducts.length / pageSize),
+          totalItems: paginatedProducts.length,
+          pageSize: pageSize,
+          hasNextPage: page < Math.ceil(paginatedProducts.length / pageSize),
+          hasPrevPage: page > 1
+        };
+      }),
+      tap(response => {
+        this._products.next(response.data);
+      })
+    );
+  }
+  
+  // Legacy method for backward compatibility
+  getProductsLegacy(): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.apiUrl}/`).pipe(
       map(products =>
-        products.map(p => ({
+        products.map((p: any) => ({
           ...p,
-          primary_image: p.images?.find(img => img.is_primary) ?? p.images?.[0],
+          primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
         }))
       ),
       tap(products => {
@@ -37,16 +104,162 @@ export class ProductService {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }
 
-  searchProducts(query: string): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.apiUrl}/search/?q=${query}`).pipe(
-      tap(products => {
-        this._products.next(products);
+  searchProducts(query: string, page: number = 1, pageSize: number = 10): Observable<PaginatedProducts> {
+    let params = new HttpParams()
+      .set('q', query)
+      .set('skip', (page - 1) * pageSize)
+      .set('limit', pageSize);
+    
+    return this.http.get<any>(`${this.apiUrl}/search/`, { params }).pipe(
+      map(response => {
+        // If the response is an array (existing behavior), convert it to paginated format
+        if (Array.isArray(response)) {
+          const products = response.map((p: any) => ({
+            ...p,
+            primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+          }));
+          // For compatibility with existing single-page behavior
+          return {
+            data: products,
+            currentPage: 1,
+            totalPages: 1,
+            totalItems: products.length,
+            pageSize: products.length,
+            hasNextPage: false,
+            hasPrevPage: false
+          };
+        }
+        // If it's already a paginated response, process it
+        const paginatedProducts = response as any;
+        if (paginatedProducts.data) {
+          return {
+            ...paginatedProducts,
+            data: paginatedProducts.data.map((p: any) => ({
+              ...p,
+              primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+            }))
+          };
+        }
+        // Fallback to the original response structure
+        return {
+          data: paginatedProducts.map((p: any) => ({
+            ...p,
+            primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+          })),
+          currentPage: page,
+          totalPages: Math.ceil(paginatedProducts.length / pageSize),
+          totalItems: paginatedProducts.length,
+          pageSize: pageSize,
+          hasNextPage: page < Math.ceil(paginatedProducts.length / pageSize),
+          hasPrevPage: page > 1
+        };
+      }),
+      tap(response => {
+        this._products.next(response.data);
       })
     );
   }
 
-  searchProductsBySku(sku: string): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.apiUrl}/?sku=${sku}`);
+  searchProductsBySku(sku: string, page: number = 1, pageSize: number = 10): Observable<PaginatedProducts> {
+    let params = new HttpParams()
+      .set('sku', sku)
+      .set('skip', (page - 1) * pageSize)
+      .set('limit', pageSize);
+    
+    return this.http.get<any>(`${this.apiUrl}/`, { params }).pipe(
+      map(response => this.transformToPaginated(response, page, pageSize))
+    );
+  }
+  
+  searchProductsAdvanced(filters: any, page: number = 1, pageSize: number = 10): Observable<PaginatedProducts> {
+    let params = new HttpParams()
+      .set('skip', (page - 1) * pageSize)
+      .set('limit', pageSize);
+    
+    // Add all filter parameters
+    Object.keys(filters).forEach(key => {
+      if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+        params = params.set(key, filters[key]);
+      }
+    });
+    
+    return this.http.get<any>(`${this.apiUrl}/search/advanced`, { params }).pipe(
+      map(response => this.transformToPaginatedAdvanced(response, page, pageSize))
+    );
+  }
+  
+  private transformToPaginatedAdvanced(response: any, page: number, pageSize: number): PaginatedProducts {
+    // The response should already be in PaginatedProducts format
+    if (response && response.data) {
+      return {
+        ...response,
+        data: response.data.map((p: any) => ({
+          ...p,
+          primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+        }))
+      };
+    }
+    
+    // Fallback if response is not in expected format
+    const data = Array.isArray(response) ? response : (response.data || []);
+    return {
+      data: data.map((p: any) => ({
+        ...p,
+        primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+      })),
+      currentPage: page,
+      totalPages: 1,
+      totalItems: data.length,
+      pageSize: pageSize,
+      hasNextPage: false,
+      hasPrevPage: false
+    };
+  }
+  
+  private transformToPaginated(response: any, page: number, pageSize: number): PaginatedProducts {
+    // If the response is an array, convert it to paginated format
+    if (Array.isArray(response)) {
+      const products = response.map((p: any) => ({
+        ...p,
+        primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+      }));
+      
+      return {
+        data: products,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: products.length,
+        pageSize: products.length,
+        hasNextPage: false,
+        hasPrevPage: false
+      };
+    }
+    
+    // If it's already a paginated response, process it
+    if (response.data) {
+      return {
+        ...response,
+        data: response.data.map((p: any) => ({
+          ...p,
+          primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+        }))
+      };
+    }
+    
+    // Fallback: treat response as array of products
+    const products = Array.isArray(response) ? response : [];
+    return {
+      data: products.map((p: any) => ({
+        ...p,
+        primary_image: p.images?.find((img: any) => img.is_primary) ?? p.images?.[0],
+      })),
+      currentPage: page,
+      totalPages: Math.ceil(products.length / pageSize),
+      totalItems: products.length,
+      pageSize: pageSize,
+      hasNextPage: page < Math.ceil(products.length / pageSize),
+      hasPrevPage: page > 1
+    };
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
@@ -110,6 +323,13 @@ export class ProductService {
     return this.http.post(`${this.apiUrl}/${productId}/images/${imageId}/set-primary`, {});
   }
 
+  updateImageOrder(productId: number, imageIdsInOrder: number[]): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${productId}/images/order`, { image_ids: imageIdsInOrder }).pipe(
+      tap(() => this.notificationService.showSuccess('Image order updated successfully!')),
+      switchMap(() => this.getProducts())
+    );
+  }
+
   adjustStock(productId: number, adjustment: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${productId}/adjust-stock`, { adjustment }).pipe(
       tap(() => this.notificationService.showSuccess('Stock adjusted successfully!')),
@@ -137,6 +357,38 @@ export class ProductService {
       body: { ids }
     }).pipe(
       tap(() => this.notificationService.showSuccess('Selected products deleted successfully!'))
+    );
+  }
+  
+  // Product Variants API methods
+  getProductVariants(productId: number): Observable<ProductVariant[]> {
+    return this.http.get<ProductVariant[]>(`${this.apiUrl}/${productId}/variants`);
+  }
+  
+  createProductVariant(productId: number, variant: Omit<ProductVariant, 'id'>): Observable<ProductVariant> {
+    return this.http.post<ProductVariant>(`${this.apiUrl}/${productId}/variants`, variant).pipe(
+      tap(() => this.notificationService.showSuccess('Product variant created successfully!')),
+      switchMap(newVariant => 
+        this.getProducts().pipe(map(() => newVariant)) // Refresh product list after creation
+      )
+    );
+  }
+  
+  updateProductVariant(productId: number, variantId: number, variant: Partial<ProductVariant>): Observable<ProductVariant> {
+    return this.http.put<ProductVariant>(`${this.apiUrl}/${productId}/variants/${variantId}`, variant).pipe(
+      tap(() => this.notificationService.showSuccess('Product variant updated successfully!')),
+      switchMap(updatedVariant => 
+        this.getProducts().pipe(map(() => updatedVariant)) // Refresh product list after update
+      )
+    );
+  }
+  
+  deleteProductVariant(productId: number, variantId: number): Observable<ProductVariant> {
+    return this.http.delete<ProductVariant>(`${this.apiUrl}/${productId}/variants/${variantId}`).pipe(
+      tap(() => this.notificationService.showSuccess('Product variant deleted successfully!')),
+      switchMap(deletedVariant => 
+        this.getProducts().pipe(map(() => deletedVariant)) // Refresh product list after deletion
+      )
     );
   }
 }

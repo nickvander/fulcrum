@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { ProductImage } from '../../models/product.model';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
@@ -20,6 +21,9 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
     MatIconModule,
     MatListModule,
     MatTooltipModule,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
   ],
   template: `
     <div class="image-section">
@@ -50,8 +54,19 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
       <mat-divider *ngIf="stagedImages.length > 0 && existingImages?.length"></mat-divider>
       
       <p class="mat-body-strong" *ngIf="existingImages?.length">Current Images:</p>
-      <div class="image-gallery" *ngIf="existingImages?.length">
-        <div *ngFor="let image of existingImages" class="image-container" [class.primary-image-container]="image.is_primary">
+      <div 
+        cdkDropList 
+        class="image-gallery"
+        (cdkDropListDropped)="onImageReorder($event)"
+        *ngIf="existingImages?.length">
+        <div *ngFor="let image of existingImages; trackBy: trackByFn" 
+             cdkDrag 
+             [cdkDragData]="image" 
+             class="image-container" 
+             [class.primary-image-container]="image.is_primary">
+          <div class="image-drag-handle" cdkDragHandle>
+            <mat-icon>drag_indicator</mat-icon>
+          </div>
           <img [src]="getImageUrl(image.image_path)" [alt]="image.title || 'Product Image'" [class.primary-image]="image.is_primary" (click)="openImageDialog(image)">
           <div class="image-overlay" (click)="openImageDialog(image)">
             <div class="image-overlay-content">
@@ -83,6 +98,7 @@ export class ProductFormImageGalleryComponent implements OnInit {
   @Output() imagesToDelete = new EventEmitter<number[]>();
   @Output() primaryImageChange = new EventEmitter<number | null>();
   @Output() imageUpdated = new EventEmitter<{imageId: number, field: 'title' | 'description', value: string}>();
+  @Output() existingImagesChange = new EventEmitter<ProductImage[]>();
 
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
@@ -175,5 +191,22 @@ export class ProductFormImageGalleryComponent implements OnInit {
   setPrimaryImage(event: Event, imageId: number): void {
     event.stopPropagation(); // Prevent opening the dialog when setting primary
     this.primaryImageChange.emit(imageId);
+  }
+  
+  onImageReorder(event: any): void {
+    const prevIndex = this.existingImages.findIndex(img => img.id === event.item.data.id);
+    const imageToMove = this.existingImages[prevIndex];
+    
+    // Remove from old position and insert at new position
+    const newImagesList = [...this.existingImages];
+    newImagesList.splice(prevIndex, 1);
+    newImagesList.splice(event.currentIndex, 0, imageToMove);
+    
+    // Emit the reordered list
+    this.existingImagesChange.emit(newImagesList);
+  }
+  
+  trackByFn(index: number, item: ProductImage): any {
+    return item.id;
   }
 }

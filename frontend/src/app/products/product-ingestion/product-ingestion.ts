@@ -40,7 +40,10 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
     this.scannedData = result;
     this.scanner.stop(); // Stop scanning after a successful scan
 
-    this.productService.searchProductsBySku(result).subscribe(products => {
+    this.productService.searchProductsBySku(result).subscribe((paginatedResult: any) => {
+      // Check if result is PaginatedProducts or just an array
+      const products = Array.isArray(paginatedResult) ? paginatedResult : paginatedResult.data || [];
+      
       if (products.length > 0) {
         // Product found, navigate to the edit page
         this.router.navigate(['/products', products[0].id, 'edit']);

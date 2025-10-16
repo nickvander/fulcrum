@@ -29,6 +29,7 @@ class Product(Base):
     inventory_items = relationship("InventoryItem", back_populates="product", cascade="all, delete-orphan")
     inventory_adjustments = relationship("InventoryAdjustment", back_populates="product", cascade="all, delete-orphan")
     custom_fields = relationship("ProductCustomField", back_populates="product", cascade="all, delete-orphan")
+    variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
 
 class ProductImage(Base):
     __tablename__ = "product_images"

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
 import { Product, ProductImage } from '../../models/product.model';
+import { ProductVariant } from '../../models/product-variant.model';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -15,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
+import { ProductVariantsComponent } from '../product-variants/product-variants';
 import { switchMap, map, takeUntil } from 'rxjs/operators';
 import { forkJoin, of, Subject } from 'rxjs';
 import { CustomField } from '../../../settings/models/custom-field.model';
@@ -38,6 +40,7 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
     MatListModule,
     MatTooltipModule,
     ProductFormImageGalleryComponent,
+    ProductVariantsComponent,
   ],
 })
 export class ProductForm implements OnInit {
@@ -55,6 +58,7 @@ export class ProductForm implements OnInit {
   initialPrimaryImageId: number | null = null;
   originalValues: any = {};
   originalCustomFieldValues: any = {};
+  productVariants: ProductVariant[] = [];
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -132,6 +136,21 @@ export class ProductForm implements OnInit {
               this.addCustomFieldControls();
             }
           });
+          
+          // Load product variants
+          if (this.productId) {
+            this.productService.getProductVariants(this.productId).pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: (variants: ProductVariant[]) => {
+                this.productVariants = variants;
+              },
+              error: (error: any) => {
+                console.error('Error loading product variants:', error);
+                this.productVariants = [];
+              }
+            });
+          }
         },
         error: (error) => {
           console.error('Error loading full product details:', error);
@@ -378,6 +397,11 @@ export class ProductForm implements OnInit {
           updateObservables.push(this.productService.uploadProductImage(productId, file));
         });
       }
+      
+      // 5. Handle product variants (create, update, delete)
+      // For now, we'll just log these operations - in a real implementation, you'd implement the actual API calls
+      console.log('Product variants to save:', this.productVariants);
+      // TODO: Implement actual variant operations
 
       forkJoin(updateObservables.length > 0 ? updateObservables : [Promise.resolve()]).subscribe({
         next: () => {
@@ -405,6 +429,13 @@ export class ProductForm implements OnInit {
             this.stagedImages.forEach(file => 
               operations.push(this.productService.uploadProductImage(newProduct.id, file))
             );
+          }
+          
+          // Handle product variants
+          // For now, we'll just log these operations - in a real implementation, you'd implement the actual API calls
+          if (this.productVariants && this.productVariants.length > 0) {
+            console.log('Creating variants for new product:', this.productVariants);
+            // TODO: Implement actual variant creation operations after product is created
           }
           
           return forkJoin(operations.length > 0 ? operations : [Promise.resolve()]).pipe(map(() => newProduct));
@@ -491,6 +522,43 @@ export class ProductForm implements OnInit {
       const image = this.product.images.find(img => img.id === event.imageId);
       if (image) {
         image[event.field] = event.value;
+      }
+    }
+  }
+
+  onAddVariant(): void {
+    // Create a new variant object with default values
+    const newVariant = {
+      product_id: this.productId || 0,
+      name: 'New Variant',
+      sku: '',
+      description: '',
+      price: 0,
+      cost_price: 0,
+      attributes: '{}'
+    };
+
+    // Add the new variant to the list
+    this.productVariants = [...this.productVariants, newVariant];
+  }
+
+  onExistingImagesOrderChange(orderedImages: ProductImage[]): void {
+    if (this.product) {
+      this.product.images = orderedImages;
+      // Save the new order to the backend if the product already exists
+      if (this.product.id) {
+        const orderedImageIds = orderedImages.map(img => img.id!);
+        this.productService.updateImageOrder(this.product.id, orderedImageIds).subscribe({
+          next: () => {
+            console.log('Image order updated successfully');
+          },
+          error: (error) => {
+            console.error('Error updating image order:', error);
+            this.notificationService.showError('Error updating image order');
+            // Revert to the previous order
+            // (In a real implementation, you might want to handle this differently)
+          }
+        });
       }
     }
   }
