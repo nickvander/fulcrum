@@ -17,6 +17,32 @@
         <mat-icon>delete</mat-icon>
         Delete Selected
       </button>
+      
+      <!-- Advanced Batch Operations Menu -->
+      <button 
+        mat-stroked-button 
+        [matMenuTriggerFor]="advancedBatchMenu" 
+        *ngIf="selectedCount >= 1"
+        class="advanced-menu-btn">
+        <mat-icon>more_vert</mat-icon>
+        Advanced
+      </button>
+      
+      <mat-menu #advancedBatchMenu="matMenu">
+        <button mat-menu-item (click)="onBatchPriceUpdate()">
+          <mat-icon>payments</mat-icon>
+          <span>Update Prices</span>
+        </button>
+        <button mat-menu-item (click)="onBatchCategoryUpdate()">
+          <mat-icon>category</mat-icon>
+          <span>Assign Category</span>
+        </button>
+        <button mat-menu-item (click)="onBatchCustomFieldUpdate()">
+          <mat-icon>edit_attributes</mat-icon>
+          <span>Update Custom Fields</span>
+        </button>
+      </mat-menu>
+      
       <button mat-icon-button (click)="onClose()" class="close-button">
         <mat-icon>close</mat-icon>
       </button>

@@ -2,7 +2,7 @@
 
 ## Goal
 
-To further enhance the products page with advanced features, performance optimizations, and additional UX improvements that build on the foundation established in the previous overhaul. Focus on making the product management experience even more efficient and intuitive.m
+To further enhance the products page with advanced features, performance optimizations, and additional UX improvements that build on the foundation established in the previous overhaul. Focus on making the product management experience even more efficient and intuitive.
 
 ## Implementation Plan
 

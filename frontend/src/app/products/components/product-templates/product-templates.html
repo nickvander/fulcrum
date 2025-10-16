@@ -1,0 +1,75 @@
+<div class="templates-container">
+  <div class="templates-header">
+    <h1>Product Templates</h1>
+    <button mat-raised-button color="primary" routerLink="/templates/new" class="create-template-btn">
+      <mat-icon>add</mat-icon>
+      <span>Create Template</span>
+    </button>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  </div>
+
+  <div class="templates-list" *ngIf="!isLoading && templates.length > 0; else noTemplates">
+    <mat-card class="template-card" *ngFor="let template of templates">
+      <mat-card-header>
+        <mat-card-title>{{ template.name }}</mat-card-title>
+        <mat-card-subtitle>{{ template.category || 'No category' }}</mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <p class="template-description">{{ template.description || 'No description provided' }}</p>
+        
+        <div class="template-info">
+          <div class="info-item">
+            <strong>Brand:</strong> {{ template.brand || 'N/A' }}
+          </div>
+          <div class="info-item">
+            <strong>Manufacturer:</strong> {{ template.manufacturer || 'N/A' }}
+          </div>
+          <div class="info-item" *ngIf="template.default_resale_price">
+            <strong>Default Price:</strong> {{ template.default_resale_price | currency }}
+          </div>
+        </div>
+        
+        <div class="custom-fields" *ngIf="template.custom_fields && template.custom_fields.length > 0">
+          <h4>Custom Fields</h4>
+          <ul>
+            <li *ngFor="let field of template.custom_fields">
+              {{ field.name }} ({{ field.type || 'text' }})
+              <span *ngIf="field.required" class="required">* required</span>
+            </li>
+          </ul>
+        </div>
+      </mat-card-content>
+      
+      <mat-card-actions>
+        <button mat-button routerLink="/templates/{{ template.id }}/edit" color="primary">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button (click)="deleteTemplate(template.id)" color="warn">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+        <button mat-raised-button color="accent" routerLink="/products/new?template={{ template.id }}">
+          <mat-icon>inventory</mat-icon>
+          Create Product
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <ng-template #noTemplates>
+    <div class="no-templates">
+      <mat-icon class="no-templates-icon">note_add</mat-icon>
+      <h3>No Product Templates Yet</h3>
+      <p>Create your first product template to standardize product creation across your catalog.</p>
+      <button mat-raised-button color="primary" routerLink="/templates/new">
+        <mat-icon>add</mat-icon>
+        Create Your First Template
+      </button>
+    </div>
+  </ng-template>
+</div>

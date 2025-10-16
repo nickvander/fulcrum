@@ -8,6 +8,15 @@
   height: 100%;
 }
 
+.filter-sidenav {
+  width: 300px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  
+  @media (max-width: 768px) {
+    width: 280px;
+  }
+}
+
 .edit-sidenav {
   width: 500px;
   min-width: 300px;
@@ -69,6 +78,10 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.scan-button {
+  flex-shrink: 0;
 }
 
 .search-container {
@@ -180,6 +193,57 @@ app-batch-action-toolbar + .search-container {
 .empty-state p {
   color: #757575;
   margin-bottom: 24px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 200px;
+  
+  .mat-mdc-progress-spinner {
+    margin-bottom: 16px;
+  }
+  
+  p {
+    margin: 0;
+    color: #666;
+  }
+}
+
+.infinite-scroll-trigger {
+  height: 20px; /* Small invisible element to detect scroll position */
+}
+
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  
+  .quick-filter-btn {
+    text-transform: none;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    
+    .mat-icon {
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .quick-filters {
+    justify-content: center;
+  }
 }
 
 @media (max-width: 768px) {

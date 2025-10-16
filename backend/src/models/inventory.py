@@ -9,20 +9,28 @@ class InventoryItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
-    quantity = Column(Integer)
-    location = Column(String)
-
+    variant_id = Column(Integer, ForeignKey("product_variants.id", ondelete="CASCADE"), nullable=True)  # Allow null for non-variant inventory
+    quantity = Column(Integer, default=0)
+    location = Column(String, default="default")  # Warehouse location, etc.
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
     product = relationship("Product", back_populates="inventory_items")
+    variant = relationship("ProductVariant", back_populates="inventory_items")
 
 
 class InventoryAdjustment(Base):
     __tablename__ = "inventory_adjustments"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
-    adjustment = Column(Integer)  # Positive for increases, negative for decreases
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=True)  # Nullable to support variants
+    variant_id = Column(Integer, ForeignKey("product_variants.id", ondelete="CASCADE"), nullable=True)  # Nullable to support base products
+    adjustment = Column(Integer, nullable=False)  # Positive for additions, negative for subtractions
     reason = Column(String)  # Reason for the adjustment
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    created_by = Column(String)  # User who made the adjustment
-
+    created_by = Column(String, nullable=False)  # User who made the adjustment
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
     product = relationship("Product", back_populates="inventory_adjustments")
+    variant = relationship("ProductVariant", back_populates="inventory_adjustments")

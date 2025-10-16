@@ -3,6 +3,7 @@ from typing import Optional, List
 
 from ..schemas.custom_field import ProductCustomField
 from ..schemas.inventory import InventoryItem as InventoryItemSchema, InventoryAdjustment as InventoryAdjustmentSchema
+from ..schemas.product_variant import ProductVariant
 
 
 # Schema for Product Images
@@ -77,5 +78,6 @@ class Product(ProductBase):
     depth: Optional[float] = None
     weight: Optional[float] = None
     custom_fields: List[ProductCustomField] = []
+    variants: List[ProductVariant] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,59 @@
+<div class="pagination-container" *ngIf="totalPages > 1">
+  <div class="pagination-info">
+    <span class="pagination-text">
+      Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ calculateEndItem() }} of {{ totalItems }} items
+    </span>
+    <div class="page-size-selector">
+      <label for="page-size">Items per page: </label>
+      <select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-dropdown">
+        <option [value]="5">5</option>
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="pagination-controls">
+    <button 
+      mat-icon-button 
+      [disabled]="!hasPrevPage"
+      (click)="onPrev()"
+      class="pagination-button">
+      <mat-icon>navigate_before</mat-icon>
+    </button>
+
+    <button 
+      mat-button 
+      *ngFor="let page of pages; let i = index"
+      [class.active]="page === currentPage"
+      [disabled]="page === -1"
+      (click)="page !== -1 && onPageChange(page)"
+      class="pagination-number">
+      {{ page === -1 ? '...' : page }}
+    </button>
+
+    <button 
+      mat-icon-button 
+      [disabled]="!hasNextPage"
+      (click)="onNext()"
+      class="pagination-button">
+      <mat-icon>navigate_next</mat-icon>
+    </button>
+    
+    <div class="page-input">
+      <label for="current-page">Page:</label>
+      <input 
+        type="number" 
+        id="current-page" 
+        [(ngModel)]="displayedPage" 
+        (keyup.enter)="onDirectPageChange()" 
+        (blur)="onDirectPageChange()"
+        min="1" 
+        [max]="totalPages"
+        class="page-number-input">
+      <span class="page-divider">/ {{ totalPages }}</span>
+    </div>
+  </div>
+</div>

@@ -1,10 +1,51 @@
-<mat-sidenav-container class="sidenav-container">
+<mat-sidenav-container class="sidenav-container" autosize="true">
+  <!-- Filter sidenav -->
+  <mat-sidenav 
+    #filterSidenav 
+    mode="side" 
+    position="start" 
+    [opened]="showFilters" 
+    class="filter-sidenav"
+    *ngIf="showFilters">
+    <app-product-filters 
+      (filtersChanged)="onFiltersChanged($event)"
+      (filtersCleared)="onFiltersCleared()">
+    </app-product-filters>
+  </mat-sidenav>
+  
   <!-- Main content area -->
   <mat-sidenav-content>
     <div class="container">
       <div class="header">
         <h1>Products</h1>
         <div class="header-actions">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="toggleFilters()" 
+            *ngIf="!showFilters"
+            matTooltip="Show filters">
+            <mat-icon>filter_list</mat-icon>
+            <span>Filters</span>
+          </button>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="toggleFilters()" 
+            *ngIf="showFilters"
+            matTooltip="Hide filters">
+            <mat-icon>close</mat-icon>
+            <span>Hide Filters</span>
+          </button>
+          <button 
+            mat-raised-button 
+            [color]="useInfiniteScroll ? 'accent' : 'primary'" 
+            (click)="toggleInfiniteScroll()"
+            matTooltip="Toggle between pagination and infinite scroll">
+            <mat-icon *ngIf="!useInfiniteScroll">autorenew</mat-icon>
+            <mat-icon *ngIf="useInfiniteScroll">sync_disabled</mat-icon>
+            <span>{{ useInfiniteScroll ? 'Infinite' : 'Paginated' }}</span>
+          </button>
           <button mat-raised-button color="primary" routerLink="new">
             <mat-icon>add</mat-icon>
             <span>Add Product</span>
@@ -23,15 +64,42 @@
         (deleteSelected)="deleteSelected()"
         (selectAll)="selectAll()"
         (deselectAll)="deselectAll()"
-        (closeToolbar)="deselectAll()">
+        (closeToolbar)="deselectAll()"
+        (batchPriceUpdate)="onBatchPriceUpdate($event)"
+        (batchCategoryUpdate)="onBatchCategoryUpdate($event)"
+        (batchCustomFieldUpdate)="onBatchCustomFieldUpdate($event)">
       </app-batch-action-toolbar>
 
       <div class="search-container">
         <app-ai-search-bar (searchQuery)="onSearchQuery($any($event))"></app-ai-search-bar>
         <button mat-button (click)="clearSearch()">Clear Search</button>
       </div>
+      
+      <!-- Quick filter buttons -->
+      <div class="quick-filters">
+        <button mat-stroked-button (click)="applyQuickFilter('in_stock', null)" class="quick-filter-btn">
+          <mat-icon>inventory</mat-icon>
+          In Stock
+        </button>
+        <button mat-stroked-button (click)="applyQuickFilter('out_of_stock', null)" class="quick-filter-btn">
+          <mat-icon>inventory_2</mat-icon>
+          Out of Stock
+        </button>
+        <button mat-stroked-button (click)="applyQuickFilter('low_stock', null)" class="quick-filter-btn">
+          <mat-icon>warning</mat-icon>
+          Low Stock
+        </button>
+        <button mat-stroked-button (click)="applyQuickFilter('expensive', null)" class="quick-filter-btn">
+          <mat-icon>payments</mat-icon>
+          Expensive
+        </button>
+        <button mat-stroked-button (click)="applyQuickFilter('cheap', null)" class="quick-filter-btn">
+          <mat-icon>sell</mat-icon>
+          Cheap
+        </button>
+      </div>
 
-      <div *ngIf="products.length === 0" class="empty-state">
+      <div *ngIf="products.length === 0 && !isLoading" class="empty-state">
         <mat-icon class="empty-state-icon">inventory_2</mat-icon>
         <h2>No products found.</h2>
         <p>Get started by adding your first product to the inventory.</p>
@@ -39,6 +107,11 @@
           <mat-icon>add</mat-icon>
           <span>Create Your First Product</span>
         </button>
+      </div>
+
+      <div class="loading-state" *ngIf="isLoading">
+        <mat-spinner></mat-spinner>
+        <p>Loading products...</p>
       </div>
 
       <div class="product-grid" *ngIf="products.length > 0">
@@ -68,8 +141,43 @@
             <button mat-button (click)="showStockHistory(product)" *ngIf="product.inventory_adjustments && product.inventory_adjustments.length > 0">HISTORY</button>
             <button mat-button (click)="openEditPanel(product)">EDIT</button>
             <button mat-button color="warn" (click)="deleteProduct(product.id)">DELETE</button>
+            <button 
+              mat-button 
+              [color]="isProductInComparison(product) ? 'accent' : 'primary'"
+              (click)="toggleProductComparison(product)"
+              matTooltip="{{ isProductInComparison(product) ? 'Remove from comparison' : 'Add to comparison' }}">
+              <mat-icon>{{ isProductInComparison(product) ? 'remove_circle' : 'add_circle' }}</mat-icon>
+              Compare
+            </button>
           </mat-card-actions>
         </mat-card>
+      </div>
+
+      <!-- Show pagination controls only if not using infinite scroll -->
+      <app-pagination 
+        *ngIf="!useInfiniteScroll && paginatedProducts && paginatedProducts.totalPages > 1"
+        [currentPage]="paginatedProducts.currentPage"
+        [totalPages]="paginatedProducts.totalPages"
+        [totalItems]="paginatedProducts.totalItems"
+        [pageSize]="paginatedProducts.pageSize"
+        [hasNextPage]="paginatedProducts.currentPage < paginatedProducts.totalPages"
+        [hasPrevPage]="paginatedProducts.currentPage > 1"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
+      
+      <!-- Infinite scroll loading indicator -->
+      <div class="loading-state" *ngIf="useInfiniteScroll && isLoading && products.length > 0">
+        <mat-spinner diameter="30"></mat-spinner>
+        <p>Loading more products...</p>
+      </div>
+      
+      <!-- Infinite scroll trigger -->
+      <div 
+        *ngIf="useInfiniteScroll" 
+        appInfiniteScroll 
+        (scrolled)="onWindowScroll()" 
+        class="infinite-scroll-trigger">
       </div>
     </div>
   </mat-sidenav-content>

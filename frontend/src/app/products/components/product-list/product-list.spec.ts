@@ -7,6 +7,7 @@ import { ProductService } from '../../services/product';
 import { MatDialog } from '@angular/material/dialog';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
+import { PaginatedProducts } from '../../models/paginated-products.model';
 import { Component } from '@angular/core';
 import { SharedModule } from '../../../shared/shared-module';
 
@@ -59,6 +60,16 @@ describe('ProductList', () => {
       primary_image: undefined
     },
   ];
+  
+  const mockPaginatedProducts: PaginatedProducts = {
+    data: mockProducts,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 3,
+    pageSize: 10,
+    hasNextPage: false,
+    hasPrevPage: false
+  };
 
   beforeEach(async () => {
     productsSubject = new BehaviorSubject<Product[]>([]);
@@ -100,7 +111,7 @@ describe('ProductList', () => {
   });
 
   it('should call getProducts on init and subscribe to products$', () => {
-    productServiceMock.getProducts.and.returnValue(of(mockProducts));
+    productServiceMock.getProducts.and.returnValue(of(mockPaginatedProducts));
 
     fixture.detectChanges(); // ngOnInit
 
@@ -138,7 +149,7 @@ describe('ProductList', () => {
   
   describe('image handling', () => {
     beforeEach(() => {
-      productServiceMock.getProducts.and.returnValue(of(mockProducts));
+      productServiceMock.getProducts.and.returnValue(of(mockPaginatedProducts));
       fixture.detectChanges(); // Initialize with mock products
     });
     
@@ -173,6 +184,26 @@ describe('ProductList', () => {
       };
       component.onImageError(mockEvent);
       expect(mockEvent.target.src).toBe('/uploads/product_images/placeholder.jpg');
+    });
+  });
+  
+  describe('loadProducts functionality', () => {
+    it('should load products with pagination', () => {
+      const mockPaginatedResponse: PaginatedProducts = {
+        data: mockProducts,
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 3,
+        pageSize: 10,
+        hasNextPage: false,
+        hasPrevPage: false
+      };
+      
+      productServiceMock.getProducts.and.returnValue(of(mockPaginatedResponse));
+      component.loadProducts(1, 10);
+      
+      expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, undefined);
+      expect(component.products).toEqual(mockProducts);
     });
   });
 });

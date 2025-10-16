@@ -95,6 +95,7 @@
               (imagesToDelete)="onImagesToDelete($event)"
               (primaryImageChange)="onPrimaryImageChange($event)"
               (imageUpdated)="onImageUpdated($event)"
+              (existingImagesChange)="onExistingImagesOrderChange($event)"
             ></app-product-form-image-gallery>
           </mat-card-content>
         </mat-card>
@@ -111,6 +112,14 @@
               </mat-form-field>
             </div>
           </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <app-product-variants
+            [productVariants]="productVariants"
+            (variantsChanged)="productVariants = $event"
+            (addVariant)="onAddVariant()">
+          </app-product-variants>
         </mat-card>
       </div>
     </div>
