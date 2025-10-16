@@ -3,8 +3,10 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
 from sqlalchemy.orm import Session
 
+from src.api import dependencies
 from src.api.dependencies import get_db, get_ai_service
 from src.crud import crud_product, crud_product_image, crud_custom_field
+from src.models.user import User
 from src.schemas import product as product_schema, inventory as inventory_schema
 from src.services.ai_service import AIService
 from src.tasks import generate_product_embedding
@@ -203,34 +205,71 @@ def search_products(
     return products
 
 
-@router.post("/{product_id}/adjust-stock")
+@router.post("/{product_id}/adjust-stock", response_model=product_schema.Product)
 def adjust_stock(
     product_id: int,
     stock_adjustment: inventory_schema.StockAdjustment,
+    current_user: User = Depends(dependencies.get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Adjust the stock level for a product.
     """
+    from src.models.inventory import InventoryItem, InventoryAdjustment
+    
     product = crud_product.product.get(db, id=product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # For simplicity, we'll assume one inventory item per product for now
-    inventory_item = product.inventory_items[0] if product.inventory_items else None
-    if not inventory_item:
-        # Create one if it doesn't exist
-        inventory_item = crud_product.inventory_item.create(
-            db,
-            obj_in={"product_id": product_id, "quantity": stock_adjustment.adjustment},
-        )
+    # Create an inventory adjustment record for audit trail
+    inventory_adjustment = InventoryAdjustment(
+        product_id=product_id,
+        adjustment=stock_adjustment.adjustment,
+        reason=stock_adjustment.reason,
+        created_by=current_user.email if current_user.email else f"user_{current_user.id}"
+    )
+    db.add(inventory_adjustment)
+    
+    # Create the adjustment record first
+    db.add(inventory_adjustment)
+    
+    # Calculate the current total stock by summing all existing inventory items
+    # (not counting adjustment-only records)
+    existing_main_inventory = db.query(InventoryItem).filter(
+        InventoryItem.product_id == product_id,
+        InventoryItem.location == 'default'  # Only get main stock location items
+    ).first()
+    
+    current_stock = existing_main_inventory.quantity if existing_main_inventory else 0
+    new_stock = current_stock + stock_adjustment.adjustment
+    
+    # Update or create the main inventory item with the new total stock
+    if existing_main_inventory:
+        existing_main_inventory.quantity = new_stock
     else:
-        inventory_item.quantity += stock_adjustment.adjustment
-        db.add(inventory_item)
-        db.commit()
-        db.refresh(inventory_item)
-
-    return {"message": "Stock adjusted successfully", "new_quantity": inventory_item.quantity}
+        main_inventory_item = InventoryItem(
+            product_id=product_id,
+            quantity=new_stock,
+            location='default'  # Main stock location
+        )
+        db.add(main_inventory_item)
+    
+    db.commit()
+    
+    # Explicitly query the product with its inventory items and adjustments to ensure fresh data is returned
+    from sqlalchemy.orm import joinedload
+    from src.models.product import Product
+    
+    # Re-query the product with its inventory items and adjustments to ensure fresh data is returned
+    refreshed_product = db.query(Product)\
+        .options(joinedload(Product.inventory_items))\
+        .options(joinedload(Product.inventory_adjustments))\
+        .filter(Product.id == product_id).first()
+    
+    if not refreshed_product:
+        raise HTTPException(status_code=404, detail="Product not found after adjustment")
+    
+    return refreshed_product
 
 
 @router.post("/{product_id}/custom-fields")

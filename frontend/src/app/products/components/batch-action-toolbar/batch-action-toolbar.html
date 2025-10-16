@@ -1,0 +1,25 @@
+<div class="batch-action-toolbar">
+  <div class="toolbar-content">
+    <div class="selection-info">
+      <mat-icon>select_all</mat-icon>
+      <span>{{ selectedCount }} selected</span>
+    </div>
+    <div class="toolbar-actions">
+      <button mat-stroked-button (click)="onSelectAll()" *ngIf="selectedCount < 1">
+        <mat-icon>select_all</mat-icon>
+        Select All
+      </button>
+      <button mat-stroked-button (click)="onDeselectAll()" *ngIf="selectedCount >= 1">
+        <mat-icon>clear</mat-icon>
+        Deselect All
+      </button>
+      <button mat-raised-button (click)="onDeleteSelected()" color="warn" *ngIf="selectedCount >= 1">
+        <mat-icon>delete</mat-icon>
+        Delete Selected
+      </button>
+      <button mat-icon-button (click)="onClose()" class="close-button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

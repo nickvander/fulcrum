@@ -1,51 +1,96 @@
-<div class="container">
-  <div class="header">
-    <h1>Products</h1>
-    <button mat-raised-button color="primary" routerLink="new">
-      <mat-icon>add</mat-icon>
-      <span>Add Product</span>
-    </button>
-    <button mat-raised-button color="accent" routerLink="/ingest" class="scan-button">
-      <mat-icon>qr_code_scanner</mat-icon>
-      <span>Scan Product</span>
-    </button>
-  </div>
-
-  <div class="search-container">
-    <app-ai-search-bar (searchQuery)="onSearchQuery($any($event))"></app-ai-search-bar>
-    <button mat-button (click)="clearSearch()">Clear Search</button>
-  </div>
-
-  <div *ngIf="products.length === 0" class="empty-state">
-    <mat-icon class="empty-state-icon">inventory_2</mat-icon>
-    <h2>No products found.</h2>
-    <p>Get started by adding your first product to the inventory.</p>
-    <button mat-raised-button color="primary" routerLink="new">
-      <mat-icon>add</mat-icon>
-      <span>Create Your First Product</span>
-    </button>
-  </div>
-
-  <div class="product-grid" *ngIf="products.length > 0">
-    <mat-card *ngFor="let product of products" class="product-card">
-      <img mat-card-image [src]="getImageUrl(getPrimaryImage(product))" [alt]="product.name" class="product-image" (error)="onImageError($event)" *ngIf="getPrimaryImage(product) !== 'placeholder.jpg'; else noImage">
-      <ng-template #noImage>
-        <div class="no-image-placeholder">
-          <mat-icon>image</mat-icon>
+<mat-sidenav-container class="sidenav-container">
+  <!-- Main content area -->
+  <mat-sidenav-content>
+    <div class="container">
+      <div class="header">
+        <h1>Products</h1>
+        <div class="header-actions">
+          <button mat-raised-button color="primary" routerLink="new">
+            <mat-icon>add</mat-icon>
+            <span>Add Product</span>
+          </button>
+          <button mat-raised-button color="accent" routerLink="/ingest" class="scan-button">
+            <mat-icon>qr_code_scanner</mat-icon>
+            <span>Scan Product</span>
+          </button>
         </div>
-      </ng-template>
-      <mat-card-header>
-        <mat-card-title>{{ product.name }}</mat-card-title>
-        <mat-card-subtitle>{{ product.sku }}</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p class="price">{{ product.default_resale_price | currency }}</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button (click)="openStockAdjustmentDialog(product)">ADJUST STOCK</button>
-        <button mat-button [routerLink]="['edit', product.id]">EDIT</button>
-        <button mat-button color="warn" (click)="deleteProduct(product.id)">DELETE</button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
-</div>
+      </div>
+
+      <!-- Batch action toolbar - shown when at least one product is selected -->
+      <app-batch-action-toolbar
+        *ngIf="getSelectedCount() > 0"
+        [selectedCount]="getSelectedCount()"
+        (deleteSelected)="deleteSelected()"
+        (selectAll)="selectAll()"
+        (deselectAll)="deselectAll()"
+        (closeToolbar)="deselectAll()">
+      </app-batch-action-toolbar>
+
+      <div class="search-container">
+        <app-ai-search-bar (searchQuery)="onSearchQuery($any($event))"></app-ai-search-bar>
+        <button mat-button (click)="clearSearch()">Clear Search</button>
+      </div>
+
+      <div *ngIf="products.length === 0" class="empty-state">
+        <mat-icon class="empty-state-icon">inventory_2</mat-icon>
+        <h2>No products found.</h2>
+        <p>Get started by adding your first product to the inventory.</p>
+        <button mat-raised-button color="primary" routerLink="new">
+          <mat-icon>add</mat-icon>
+          <span>Create Your First Product</span>
+        </button>
+      </div>
+
+      <div class="product-grid" *ngIf="products.length > 0">
+        <mat-card *ngFor="let product of products" class="product-card">
+          <mat-checkbox 
+            class="product-checkbox" 
+            (change)="toggleProductSelection(product)"
+            [checked]="isSelected(product)">
+          </mat-checkbox>
+          
+          <img mat-card-image [src]="getImageUrl(getPrimaryImage(product))" [alt]="product.name" class="product-image" (error)="onImageError($event)" *ngIf="getPrimaryImage(product) !== 'placeholder.jpg'; else noImage">
+          <ng-template #noImage>
+            <div class="no-image-placeholder">
+              <mat-icon>image</mat-icon>
+            </div>
+          </ng-template>
+          <mat-card-header>
+            <mat-card-title>{{ product.name }}</mat-card-title>
+            <mat-card-subtitle>{{ product.sku }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="price">{{ product.default_resale_price | currency }}</p>
+            <p class="stock">Stock: {{ getCurrentStock(product) }}</p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button (click)="openStockAdjustmentDialog(product)">ADJUST STOCK</button>
+            <button mat-button (click)="showStockHistory(product)" *ngIf="product.inventory_adjustments && product.inventory_adjustments.length > 0">HISTORY</button>
+            <button mat-button (click)="openEditPanel(product)">EDIT</button>
+            <button mat-button color="warn" (click)="deleteProduct(product.id)">DELETE</button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+  </mat-sidenav-content>
+
+  <!-- Side navigation panel for editing only -->
+  <mat-sidenav #sidenav mode="over" position="end" class="edit-sidenav">
+    <div class="sidenav-content">
+      <div class="sidenav-header">
+        <h2>Edit Product</h2>
+        <button mat-icon-button (click)="closeEditPanel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <div class="sidenav-body" *ngIf="selectedProductForEdit">
+        <app-product-form 
+          [product]="selectedProductForEdit" 
+          (productSaved)="onProductSaved()" 
+          (formClosed)="closeEditPanel()">
+        </app-product-form>
+      </div>
+    </div>
+  </mat-sidenav>
+</mat-sidenav-container>

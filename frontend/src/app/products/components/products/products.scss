@@ -1,0 +1,40 @@
+.sidenav-container {
+  height: 100%;
+}
+
+.edit-sidenav {
+  width: 500px;
+  min-width: 300px;
+  max-width: 80vw;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidenav-content {
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidenav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sidenav-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  margin-left: auto;
+}
+
+.sidenav-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}

@@ -15,6 +15,15 @@ export interface InventoryItem {
   location?: string;
 }
 
+export interface InventoryAdjustment {
+  id: number;
+  product_id: number;
+  adjustment: number;
+  reason: string | null;
+  timestamp: string;
+  created_by: string | null;
+}
+
 export interface ProductCustomField {
   id: number;
   product_id: number;
@@ -32,6 +41,8 @@ export interface Product {
   cost_price?: number;
   properties?: any;
   images?: ProductImage[];
+  inventory_items?: InventoryItem[];
+  inventory_adjustments?: InventoryAdjustment[];
   manufacturer?: string;
   brand?: string;
   category?: string;
@@ -40,6 +51,5 @@ export interface Product {
   depth?: number;
   weight?: number;
   primary_image?: ProductImage;
-  inventory_items?: InventoryItem[];
   custom_fields?: ProductCustomField[];
 }

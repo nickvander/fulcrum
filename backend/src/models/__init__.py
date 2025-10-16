@@ -3,7 +3,7 @@ from .supplier import Supplier
 from .product import Product, ProductImage
 from .order import SalesOrder, SalesOrderItem
 from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
-from .inventory import InventoryItem
+from .inventory import InventoryItem, InventoryAdjustment
 
 __all__ = [
     "User",
@@ -16,4 +16,5 @@ __all__ = [
     "MarketplaceCredentials",
     "MarketplaceListing",
     "InventoryItem",
+    "InventoryAdjustment",
 ]

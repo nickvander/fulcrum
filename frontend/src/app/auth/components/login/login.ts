@@ -38,9 +38,17 @@ export class Login {
 
   onSubmit(): void {
     if (this.loginForm.valid) {
+      // Disable form to prevent multiple submissions
+      this.loginForm.disable();
+      
       this.authService.login(this.loginForm.value).subscribe({
-        next: () => console.log('Login successful'),
-        error: (err) => console.error('Login failed:', err)
+        next: (response) => {
+          // Navigation is handled in AuthService
+        },
+        error: (err) => {
+          // Re-enable form for another attempt
+          this.loginForm.enable();
+        }
       });
     }
   }

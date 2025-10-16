@@ -25,15 +25,16 @@ class Product(Base):
     weight = Column(Float, nullable=True)
 
     supplier = relationship("Supplier")
-    images = relationship("ProductImage", back_populates="product")
-    inventory_items = relationship("InventoryItem", back_populates="product")
-    custom_fields = relationship("ProductCustomField", back_populates="product")
+    images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")
+    inventory_items = relationship("InventoryItem", back_populates="product", cascade="all, delete-orphan")
+    inventory_adjustments = relationship("InventoryAdjustment", back_populates="product", cascade="all, delete-orphan")
+    custom_fields = relationship("ProductCustomField", back_populates="product", cascade="all, delete-orphan")
 
 class ProductImage(Base):
     __tablename__ = "product_images"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id"))
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
     image_path = Column(String)
     is_primary = Column(Integer, default=0) # 0 for false, 1 for true
     source = Column(String)

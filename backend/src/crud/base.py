@@ -54,5 +54,4 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if obj:
             db.delete(obj)
             db.commit()
-            db.flush()
         return obj

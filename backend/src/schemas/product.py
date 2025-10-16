@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 
 from ..schemas.custom_field import ProductCustomField
+from ..schemas.inventory import InventoryItem as InventoryItemSchema, InventoryAdjustment as InventoryAdjustmentSchema
 
 
 # Schema for Product Images
@@ -66,6 +67,8 @@ class Product(ProductBase):
     id: int
     supplier_id: Optional[int] = None
     images: List[ProductImage] = []
+    inventory_items: List[InventoryItemSchema] = []
+    inventory_adjustments: List[InventoryAdjustmentSchema] = []
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
     category: Optional[str] = None
