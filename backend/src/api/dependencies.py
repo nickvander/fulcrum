@@ -7,7 +7,8 @@ from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from src import crud, models, schemas
+from src import crud, models
+from src.schemas import token as token_schema
 from src.config import settings
 from src.database import SessionLocal
 from src.services.base import AIService
@@ -37,7 +38,7 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        token_data = schemas.TokenPayload(**payload)
+        token_data = token_schema.TokenPayload(**payload)
     except (jwt.JWTError, ValidationError):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
