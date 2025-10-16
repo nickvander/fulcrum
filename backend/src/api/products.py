@@ -1,7 +1,7 @@
 """
 API endpoints for managing products.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,7 +9,7 @@ from ..schemas import product as product_schema, inventory as inventory_schema, 
 from ..database import get_db
 from ..tasks import generate_product_embedding
 from ..crud import crud_product, crud_custom_field, crud_product_image
-from ..models.inventory import InventoryItem
+from ..models.inventory import InventoryItem, InventoryAdjustment
 
 router = APIRouter()
 
@@ -77,14 +77,29 @@ def adjust_stock(
     if not db_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # For now, just create a new inventory item.
-    # A more robust implementation would update existing items.
+    # Create an inventory adjustment record for audit trail
+    inventory_adjustment = InventoryAdjustment(
+        product_id=product_id,
+        adjustment=stock_adjustment.adjustment,
+        reason=stock_adjustment.reason,
+        # In a real implementation, you would get the current user from the request
+        # For now, we'll set a placeholder value
+        created_by="system"  
+    )
+    db.add(inventory_adjustment)
+    db.commit()
+    
+    # Create or update inventory item to reflect the new quantity
+    # For this implementation, we'll create a new inventory item with the adjustment
     inventory_item = InventoryItem(
         product_id=product_id,
-        quantity=stock_adjustment.adjustment,
+        quantity=stock_adjustment.adjustment,  # Only the adjustment amount
+        location=getattr(stock_adjustment, 'location', None)  # If location is provided
     )
     db.add(inventory_item)
     db.commit()
+    
+    # Refresh the product to get the updated data
     db.refresh(db_product)
     return db_product
 
@@ -114,10 +129,32 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     """
     Delete a product by its ID.
     """
+    # Get product before deletion to return its data
     db_product = crud_product.product.get(db=db, id=product_id)
     if db_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
-    return crud_product.product.remove(db=db, id=product_id)
+    
+    # Delete the product
+    deleted_product = crud_product.product.remove(db=db, id=product_id)
+    
+    # Return original product data since the deleted object may be detached
+    return db_product
+
+
+@router.delete("/", response_model=None)
+def delete_multiple_products(ids: List[int] = Body(..., embed=True), db: Session = Depends(get_db)):
+    """
+    Delete multiple products by their IDs.
+    """
+    deleted_products = []
+    for product_id in ids:
+        db_product = crud_product.product.get(db=db, id=product_id)
+        if db_product is None:
+            raise HTTPException(status_code=404, detail=f"Product with id {product_id} not found")
+        deleted_product = crud_product.product.remove(db=db, id=product_id)
+        deleted_products.append(deleted_product)
+    
+    return {"message": f"Successfully deleted {len(deleted_products)} products", "deleted_count": len(deleted_products)}
 
 @router.get("/search/", response_model=List[product_schema.Product])
 def search_products(q: str, db: Session = Depends(get_db)):

@@ -12,6 +12,11 @@ export interface StockAdjustmentData {
   currentQuantity: number;
 }
 
+export interface StockAdjustmentResult {
+  adjustment: number;
+  reason?: string;
+}
+
 @Component({
   selector: 'app-stock-adjustment-dialog',
   templateUrl: './stock-adjustment-dialog.html',
@@ -28,6 +33,8 @@ export interface StockAdjustmentData {
 })
 export class StockAdjustmentDialog {
   adjustment = 0;
+  reason?: string;
+  showConfirmation = false;
 
   constructor(
     public dialogRef: MatDialogRef<StockAdjustmentDialog>,
@@ -36,5 +43,28 @@ export class StockAdjustmentDialog {
 
   onCancel(): void {
     this.dialogRef.close();
+  }
+
+  onAdjustmentChange(): void {
+    // Reset confirmation view when user changes adjustment
+    this.showConfirmation = false;
+  }
+
+  confirmAdjustment(): void {
+    if (this.adjustment !== 0 && this.adjustment !== null && this.adjustment !== undefined) {
+      this.showConfirmation = true;
+    }
+  }
+
+  confirmAndClose(): void {
+    const result: StockAdjustmentResult = {
+      adjustment: this.adjustment,
+      reason: this.reason
+    };
+    this.dialogRef.close(result);
+  }
+
+  goBack(): void {
+    this.showConfirmation = false;
   }
 }

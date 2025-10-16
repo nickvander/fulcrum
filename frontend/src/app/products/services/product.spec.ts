@@ -172,4 +172,19 @@ describe('ProductService', () => {
       req.flush({});
     });
   });
+
+  describe('deleteMultipleProducts', () => {
+    it('should delete multiple products and show notification', () => {
+      const productIds = [1, 2, 3];
+      
+      service.deleteMultipleProducts(productIds).subscribe();
+
+      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      expect(req.request.method).toBe('DELETE');
+      expect(req.request.body).toEqual({ ids: productIds });
+      req.flush({ message: 'Successfully deleted 3 products', deleted_count: 3 });
+
+      expect(notificationServiceMock.showSuccess).toHaveBeenCalledWith('Selected products deleted successfully!');
+    });
+  });
 });

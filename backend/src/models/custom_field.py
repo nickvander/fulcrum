@@ -21,7 +21,7 @@ class ProductCustomField(Base):
     __tablename__ = "product_custom_fields"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id"))
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"))
     custom_field_id = Column(Integer, ForeignKey("custom_fields.id"))
     value = Column(String)
 

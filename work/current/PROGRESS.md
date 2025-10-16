@@ -272,3 +272,79 @@ Continued work on ProductForm test enhancements with focus on implementing the r
 ### Remaining Issue (Noted)
 
 During testing, it was observed that some tests (particularly edit mode and error handling tests) still experience timeout issues. This requires further investigation to fully resolve the underlying observable completion issues in the test environment.
+
+## Session: Product Page Enhancements - Stock Management & UX Improvements
+
+**Date:** 2025-10-14-15
+
+### Summary of Work Completed
+
+Successfully implemented comprehensive stock management features and UX improvements for the products page, completing the original requirements and adding additional enhancements.
+
+### Key Changes Implemented
+
+*   **Stock Adjustment Confirmation Workflow:**
+    - Implemented two-step confirmation process for stock adjustments
+    - Added preview screen showing current stock, adjustment amount, and calculated new stock
+    - Included optional reason field for adjustments
+    - Added validation to ensure adjustments are not zero before proceeding
+
+*   **Stock Adjustment History:**
+    - Enhanced backend to include inventory adjustments in product data
+    - Added proper database relationships between products and adjustments
+    - Created dedicated `StockHistoryDialog` component to display adjustment history
+    - History shows timestamps, amounts (with color coding), reasons, and user attribution
+    - Added "HISTORY" button to product cards (only appears when history exists)
+
+*   **Backend Improvements:**
+    - Updated Product schema to include both `inventory_items` and `inventory_adjustments`
+    - Added proper relationships between Product and InventoryAdjustment models
+    - Enhanced the adjust-stock endpoint to return complete inventory data
+    - Added proper loading of inventory adjustments when returning products
+    - Implemented user attribution in stock adjustments (now shows actual user vs "system")
+    - Added proper timezone handling for timestamps (stored in UTC, displayed in local timezone)
+
+*   **Frontend Improvements:**
+    - Added `InventoryAdjustment` interface to product model
+    - Updated `Product` interface to include `inventory_adjustments` property
+    - Fixed decorator placement in stock adjustment dialog
+    - Added stock count display on product cards
+    - Enhanced stock adjustment workflow with proper confirmation flow
+
+*   **Database Schema Updates:**
+    - Added proper database migration for `inventory_adjustments` table
+    - Created proper relationships between Product and InventoryAdjustment
+    - Enhanced the inventory management system with proper main stock tracking
+
+*   **Testing:**
+    - Created comprehensive tests for stock adjustment functionality
+    - Added tests for positive and negative adjustments
+    - Created tests for adjustment history functionality
+    - Implemented test infrastructure to verify user attribution
+
+### Technical Files Added/Modified
+
+*   `backend/src/api/v1/endpoints/products.py` - Updated adjust-stock endpoint with user attribution
+*   `backend/src/models/inventory.py` - Enhanced InventoryAdjustment model with proper relationships
+*   `backend/src/schemas/inventory.py` - Added InventoryItem schema
+*   `backend/src/schemas/product.py` - Updated Product schema to include inventory adjustments
+*   `backend/src/models/product.py` - Added inventory_adjustments relationship
+*   `backend/tests/test_products_stock_adjustment.py` - Created comprehensive tests for new functionality
+*   `frontend/src/app/products/components/stock-adjustment-dialog/` - Enhanced with confirmation workflow
+*   `frontend/src/app/products/components/stock-history-dialog/` - Created new history component
+*   `frontend/src/app/products/models/product.model.ts` - Updated with InventoryAdjustment interface
+*   `frontend/src/app/products/pipes/order-by.pipe.ts` - Created pipe for sorting history
+*   `frontend/src/app/products/components/product-list/product-list.html` - Added history button
+*   `frontend/src/app/products/components/product-list/product-list.ts` - Added showStockHistory method
+
+### Validation
+
+- All stock management features are fully operational
+- Stock adjustments include proper confirmation workflow
+- Adjustment history is properly tracked and displayed
+- User attribution works correctly (shows actual user vs "system")
+- Timestamps are properly handled with correct timezone display
+- Backend includes proper database migrations and model relationships
+- Stock count is displayed on product cards
+- Comprehensive tests have been created for the new functionality
+- All existing functionality remains intact

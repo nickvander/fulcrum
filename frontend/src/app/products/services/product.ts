@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, switchMap, map } from 'rxjs';
+import { BehaviorSubject, Observable, tap, switchMap, map, catchError, throwError } from 'rxjs';
 import { Product, ProductImage } from '../models/product.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
@@ -72,7 +72,11 @@ export class ProductService {
       tap(() => this.notificationService.showSuccess('Product deleted successfully!')),
       switchMap(response =>
         this.getProducts().pipe(map(() => response))
-      )
+      ),
+      catchError(error => {
+        this.notificationService.showError('Error deleting product: ' + error.message);
+        return throwError(() => error);
+      })
     );
   }
 
@@ -113,7 +117,26 @@ export class ProductService {
     );
   }
 
+  adjustStockWithReason(productId: number, adjustment: number, reason?: string): Observable<any> {
+    const body = { 
+      adjustment,
+      reason: reason || null
+    };
+    return this.http.post(`${this.apiUrl}/${productId}/adjust-stock`, body).pipe(
+      tap(() => this.notificationService.showSuccess('Stock adjusted successfully!')),
+      switchMap(() => this.getProducts())
+    );
+  }
+
   saveCustomFieldValues(productId: number, customFieldValues: { [key: string]: any }): Observable<any> {
     return this.http.post(`${this.apiUrl}/${productId}/custom-fields`, customFieldValues);
+  }
+
+  deleteMultipleProducts(ids: number[]): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/`, {
+      body: { ids }
+    }).pipe(
+      tap(() => this.notificationService.showSuccess('Selected products deleted successfully!'))
+    );
   }
 }

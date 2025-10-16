@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
@@ -20,6 +20,7 @@ import { forkJoin, of, Subject } from 'rxjs';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
+import { CustomFieldService } from '../../../settings/services/custom-field.service';
 
 @Component({
   selector: 'app-product-form',
@@ -40,15 +41,20 @@ import { ProductFormInitializerService, ProductFormInitializationData } from '..
   ],
 })
 export class ProductForm implements OnInit {
+  @Input() product?: Product | null;
+  @Output() productSaved = new EventEmitter<void>();
+  @Output() formClosed = new EventEmitter<void>();
+
   productForm: FormGroup;
   isEditMode = false;
-  product: Product | null = null;
   productId: number | null = null;
   customFields: CustomField[] = [];
   stagedImages: File[] = [];
   stagedImagePreviews: string[] = [];
   imagesToDelete: number[] = [];
   initialPrimaryImageId: number | null = null;
+  originalValues: any = {};
+  originalCustomFieldValues: any = {};
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -57,6 +63,7 @@ export class ProductForm implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private productFormInitializer: ProductFormInitializerService,
+    private customFieldService: CustomFieldService,
     private notificationService: NotificationService,
     private dialog: MatDialog
   ) {
@@ -77,28 +84,116 @@ export class ProductForm implements OnInit {
   }
 
   ngOnInit(): void {
-    // Determine edit mode from route params
-    const idParam = this.route.snapshot.params['id'];
-    const isEditMode = !!idParam;
-    const productId = idParam ? +idParam : null;
-    
-    // Use the initialization service instead of complex observables in component
-    this.productFormInitializer.initializeForm(isEditMode, productId).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (initializationData: ProductFormInitializationData) => {
-        this.handleInitializationData(initializationData);
-      },
-      error: (error) => {
-        console.error('Error initializing form:', error);
-        // Fallback to safe defaults
-        this.handleInitializationData({
-          customFields: [],
-          isEditMode,
-          initialPrimaryImageId: null
-        });
-      }
-    });
+    // Check if product is passed via @Input (side panel mode)
+    if (this.product) {
+      // Side panel mode - use the passed product
+      this.isEditMode = true;
+      this.productId = this.product.id || null;
+      
+      // Load the full product details to ensure all data (images, custom fields, etc.) is available
+      this.productService.getProductById(this.product.id!).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (fullProduct: Product) => {
+          // Set the full product data
+          this.product = fullProduct;
+          this.productId = fullProduct.id || null;
+          
+          // Patch form values with the full product data
+          if (fullProduct) {
+            this.productForm.patchValue(fullProduct);
+            
+            // Store original values for dirty checking (only for edit mode)
+            if (this.isEditMode) {
+              this.originalValues = { ...fullProduct };
+              
+              // Store original custom field values
+              this.originalCustomFieldValues = {};
+              if (fullProduct.custom_fields) {
+                fullProduct.custom_fields.forEach(fieldValue => {
+                  this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
+                });
+              }
+            }
+          }
+          
+          // Load custom fields and handle initialization
+          this.customFieldService.getCustomFields().pipe(
+            takeUntil(this.destroy$)
+          ).subscribe({
+            next: (customFields: CustomField[]) => {
+              this.customFields = customFields;
+              this.addCustomFieldControls();
+              this.patchCustomFieldValues();
+            },
+            error: (error: any) => {
+              console.error('Error getting custom fields:', error);
+              this.customFields = [];
+              this.addCustomFieldControls();
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error loading full product details:', error);
+          // Fallback to using the partial product data if full loading fails
+          if (this.product) {
+            this.productForm.patchValue(this.product);
+            
+            // Store original values for dirty checking (only for edit mode)
+            if (this.isEditMode) {
+              this.originalValues = { ...this.product };
+              
+              // Store original custom field values
+              this.originalCustomFieldValues = {};
+              if (this.product.custom_fields) {
+                this.product.custom_fields.forEach(fieldValue => {
+                  this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
+                });
+              }
+            }
+          }
+          
+          // Load custom fields anyway
+          this.customFieldService.getCustomFields().pipe(
+            takeUntil(this.destroy$)
+          ).subscribe({
+            next: (customFields: CustomField[]) => {
+              this.customFields = customFields;
+              this.addCustomFieldControls();
+              this.patchCustomFieldValues();
+            },
+            error: (error: any) => {
+              console.error('Error getting custom fields:', error);
+              this.customFields = [];
+              this.addCustomFieldControls();
+            }
+          });
+        }
+      });
+    } else {
+      // Route-based mode - use existing routing logic
+      const idParam = this.route.snapshot.params['id'];
+      const isEditMode = !!idParam;
+      const productId = idParam ? +idParam : null;
+      
+      // Use the initialization service instead of complex observables in component
+      this.productFormInitializer.initializeForm(isEditMode, productId).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (initializationData: ProductFormInitializationData) => {
+          this.handleInitializationData(initializationData);
+        },
+        error: (error) => {
+          console.error('Error initializing form:', error);
+          // Fallback to safe defaults
+          this.handleInitializationData({
+            customFields: [],
+            isEditMode,
+            initialPrimaryImageId: null
+          });
+        }
+      });
+    }
   }
 
   private handleInitializationData(data: ProductFormInitializationData): void {
@@ -110,7 +205,20 @@ export class ProductForm implements OnInit {
       this.product = data.product;
       this.productId = data.product.id || null;
       this.productForm.patchValue(data.product);
-      this.patchCustomFieldValues();
+      
+      // Store original values for dirty checking (only for edit mode)
+      if (this.isEditMode) {
+        this.originalValues = { ...data.product };
+        this.patchCustomFieldValues();
+        
+        // Store original custom field values
+        this.originalCustomFieldValues = {};
+        if (data.product.custom_fields) {
+          data.product.custom_fields.forEach(fieldValue => {
+            this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
+          });
+        }
+      }
     }
 
     // Handle navigation state for pre-filled data
@@ -154,12 +262,65 @@ export class ProductForm implements OnInit {
     const primaryImage = this.product?.images?.find(img => img.is_primary);
     const currentPrimaryId = primaryImage ? primaryImage.id : null;
 
-    return (
-      this.productForm.dirty ||
+    // Check if there are actual changes to form controls by comparing to original values
+    let formControlsChanged = false;
+    
+    if (this.isEditMode) {
+      // Compare current form values with original values for standard fields
+      const standardFields = [
+        'name', 'sku', 'description', 'default_resale_price', 'cost_price',
+        'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight'
+      ];
+      
+      for (const key of standardFields) {
+        const control = this.productForm.get(key);
+        if (control) {
+          // Convert values to the same type for comparison to avoid type mismatches
+          const controlValue = control.value;
+          const originalValue = this.originalValues[key];
+          
+          // Handle potential type differences (e.g., number vs string)
+          if (String(controlValue) !== String(originalValue)) {
+            formControlsChanged = true;
+            break;
+          }
+        }
+      }
+      
+      // Also check custom field values
+      if (!formControlsChanged) {
+        for (const key of Object.keys(this.productForm.controls)) {
+          if (key.startsWith('custom_field_')) {
+            const control = this.productForm.get(key);
+            if (control) {
+              const originalValue = this.originalCustomFieldValues[key];
+              if (String(control.value) !== String(originalValue)) {
+                formControlsChanged = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // For create mode, check if any field has any value (indicating user input)
+      for (const key of Object.keys(this.productForm.controls)) {
+        const control = this.productForm.get(key);
+        if (control && control.value && control.value !== '' && control.value !== null && control.value !== undefined) {
+          formControlsChanged = true;
+          break;
+        }
+      }
+    }
+
+    // Check if there are actual image changes (not just loading the form)
+    const imageChanges = (
       this.stagedImages.length > 0 ||
       this.imagesToDelete.length > 0 ||
-      (this.isEditMode && this.initialPrimaryImageId !== currentPrimaryId)
+      (this.isEditMode && this.initialPrimaryImageId !== null && this.initialPrimaryImageId !== currentPrimaryId)
     );
+
+    return formControlsChanged || imageChanges;
   }
 
   getImageUrl(imagePath: string): string {
@@ -221,7 +382,13 @@ export class ProductForm implements OnInit {
       forkJoin(updateObservables.length > 0 ? updateObservables : [Promise.resolve()]).subscribe({
         next: () => {
           this.notificationService.showSuccess('Product updated successfully.');
-          this.router.navigate(['/products']);
+          
+          // Emit event instead of navigating if in side panel mode
+          if (this.product) {
+            this.productSaved.emit();
+          } else {
+            this.router.navigate(['/products']);
+          }
         },
         error: (err) => this.notificationService.showError('Failed to update product.')
       });
@@ -245,7 +412,13 @@ export class ProductForm implements OnInit {
       ).subscribe({
         next: () => {
           this.notificationService.showSuccess('Product created successfully.');
-          this.router.navigate(['/products']);
+          
+          // Emit event instead of navigating if in side panel mode
+          if (this.product) {
+            this.productSaved.emit();
+          } else {
+            this.router.navigate(['/products']);
+          }
         },
         error: (err) => this.notificationService.showError('Failed to create product.')
       });
@@ -262,11 +435,21 @@ export class ProductForm implements OnInit {
       });
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
-          this.router.navigate(['/products']);
+          // Emit event instead of navigating if in side panel mode
+          if (this.product) {
+            this.formClosed.emit();
+          } else {
+            this.router.navigate(['/products']);
+          }
         }
       });
     } else {
-      this.router.navigate(['/products']);
+      // Emit event instead of navigating if in side panel mode
+      if (this.product) {
+        this.formClosed.emit();
+      } else {
+        this.router.navigate(['/products']);
+      }
     }
   }
   

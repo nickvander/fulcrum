@@ -20,6 +20,7 @@ async def lifespan(app: FastAPI):
                 is_superuser=True,
             )
             crud_user.user.create(db, obj_in=user_in)
+            db.commit()
     finally:
         db.close()
     yield
