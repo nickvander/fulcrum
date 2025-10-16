@@ -135,7 +135,7 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Product not found")
     
     # Delete the product
-    deleted_product = crud_product.product.remove(db=db, id=product_id)
+    crud_product.product.remove(db=db, id=product_id)
     
     # Return original product data since the deleted object may be detached
     return db_product

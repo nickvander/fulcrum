@@ -1,10 +1,11 @@
 import pytest
 from sqlalchemy.orm import Session
-from datetime import datetime
 from unittest.mock import Mock
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from src.database import SessionLocal, engine
-from src.models import Product, InventoryItem, InventoryAdjustment, User
+from src.config import settings
+from src.models import Product, InventoryItem, User
 from src.schemas.inventory import StockAdjustment
 from src.api.v1.endpoints.products import adjust_stock
 
@@ -12,7 +13,9 @@ from src.api.v1.endpoints.products import adjust_stock
 @pytest.fixture
 def db_session():
     """Create a new database session for testing."""
-    connection = engine.connect()
+    # Create a test engine using the same settings as the main application
+    test_engine = create_engine(settings.DATABASE_URL)
+    connection = test_engine.connect()
     transaction = connection.begin()
     session = Session(bind=connection)
 
@@ -41,10 +44,15 @@ def db_session():
     
     yield session
     
+    # Rollback the transaction to clean up test data
     session.close()
+    transaction.rollback()
     connection.close()
+    # Dispose of the test engine
+    test_engine.dispose()
 
 
+@pytest.mark.db
 def test_adjust_stock_functionality(db_session: Session):
     """Test the direct functionality of the adjust_stock function."""
     # Get test data
@@ -85,6 +93,7 @@ def test_adjust_stock_functionality(db_session: Session):
     assert latest_adjustment.created_by == "test@example.com"
 
 
+@pytest.mark.db
 def test_adjust_stock_negative_value(db_session: Session):
     """Test that negative adjustments (decreases) work properly."""
     # Add more inventory for testing
@@ -119,6 +128,7 @@ def test_adjust_stock_negative_value(db_session: Session):
     assert main_inventory.quantity == 17  # 20 - 3 = 17
 
 
+@pytest.mark.db
 def test_adjust_stock_without_reason(db_session: Session):
     """Test that adjustments work without providing a reason."""
     test_product = db_session.query(Product).first()
