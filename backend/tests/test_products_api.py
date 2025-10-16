@@ -6,6 +6,7 @@ import io
 import os
 
 from unittest.mock import patch
+from src.config import settings
 
 @pytest.mark.db
 def test_create_product(client: TestClient):
@@ -277,7 +278,7 @@ def test_delete_multiple_products(client: TestClient, test_product: Product, db:
     product2_data = response.json()
 
     delete_ids = [test_product.id, product2_data["id"]]
-    response = client.delete(f"{environment.API_V1_STR}/products/", json=delete_ids)
+    response = client.delete(f"{settings.API_V1_STR}/products/", json=delete_ids)
     
     assert response.status_code == 200
     data = response.json()
@@ -285,10 +286,10 @@ def test_delete_multiple_products(client: TestClient, test_product: Product, db:
     assert "Successfully deleted 2 products" in data["message"]
 
     # Verify the products are gone
-    response = client.get(f"{environment.API_V1_STR}/products/{test_product.id}")
+    response = client.get(f"{settings.API_V1_STR}/products/{test_product.id}")
     assert response.status_code == 404
     
-    response = client.get(f"{environment.API_V1_STR}/products/{product2_data['id']}")
+    response = client.get(f"{settings.API_V1_STR}/products/{product2_data['id']}")
     assert response.status_code == 404
 
 
@@ -298,7 +299,7 @@ def test_delete_multiple_products_with_nonexistent(client: TestClient, test_prod
     Test deleting multiple products where one does not exist returns 404.
     """
     delete_ids = [test_product.id, 99999]  # Second ID doesn't exist
-    response = client.delete(f"{environment.API_V1_STR}/products/", json=delete_ids)
+    response = client.delete(f"{settings.API_V1_STR}/products/", json=delete_ids)
     
     assert response.status_code == 404
     assert "Product with id 99999 not found" in response.text
