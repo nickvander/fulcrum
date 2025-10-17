@@ -43,7 +43,8 @@ export class Login {
       
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
-          // Navigation is handled in AuthService
+          // Navigate to main page after successful login
+          this.router.navigate(['/products']);
         },
         error: (err) => {
           // Re-enable form for another attempt

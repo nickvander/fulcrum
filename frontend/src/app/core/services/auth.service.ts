@@ -34,7 +34,7 @@ export class AuthService {
     formData.set('username', credentials.username);
     formData.set('password', credentials.password);
 
-    return this.http.post('/api/v1/login/access-token', formData.toString(), {
+    return this.http.post('/api/v1/users/login/access-token', formData.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }).pipe(
       tap((res: any) => this.saveToken(res.access_token))
