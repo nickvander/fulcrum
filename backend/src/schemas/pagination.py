@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 from ..schemas.product import Product
 
 class PaginatedProductsResponse(BaseModel):

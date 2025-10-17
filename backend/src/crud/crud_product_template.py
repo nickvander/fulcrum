@@ -1,7 +1,7 @@
 from src.crud.base import CRUDBase
 from src.models.product_template import ProductTemplate
 from src.schemas.product_template import ProductTemplateCreate, ProductTemplateUpdate
-from typing import List
+
 
 
 class CRUDProductTemplate(CRUDBase[ProductTemplate, ProductTemplateCreate, ProductTemplateUpdate]):

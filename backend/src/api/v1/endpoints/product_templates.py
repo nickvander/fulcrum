@@ -8,7 +8,7 @@ from typing import List
 from src.schemas.product_template import ProductTemplate as ProductTemplateSchema, ProductTemplateCreate, ProductTemplateUpdate, CustomFieldTemplate, CustomFieldTemplateCreate, CustomFieldTemplateUpdate
 from src.database import get_db
 from src.crud import crud_product_template, crud_custom_field_template
-from src.models.product_template import ProductTemplate as ProductTemplateModel
+
 
 router = APIRouter()
 
