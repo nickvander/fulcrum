@@ -132,9 +132,14 @@
             <p class="price">{{ product.default_resale_price | currency }}</p>
             <p class="stock">Stock: {{ getCurrentStock(product) }}</p>
           </mat-card-content>
-          <mat-card-actions class="card-actions">
+          <mat-card-content class="card-content-wrapper">
+            <div class="price-stock-info">
+              <p class="price">{{ product.default_resale_price | currency }}</p>
+              <p class="stock">Stock: {{ getCurrentStock(product) }}</p>
+            </div>
+            
             <!-- Three-dot menu for actions -->
-            <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu">
+            <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu" matTooltip="More options">
               <mat-icon>more_vert</mat-icon>
             </button>
             
@@ -162,7 +167,7 @@
                 <span>Delete</span>
               </button>
             </mat-menu>
-          </mat-card-actions>
+          </mat-card-content>
         </mat-card>
       </div>
 
