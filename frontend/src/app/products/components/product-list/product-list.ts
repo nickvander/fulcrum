@@ -17,6 +17,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
@@ -47,6 +49,8 @@ import { ProductComparisonComponent } from '../product-comparison/product-compar
     MatSidenavModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatMenuModule,
+    MatDividerModule,
     InfiniteScrollDirective,
     BatchActionToolbarComponent,
     ProductForm,
@@ -392,7 +396,7 @@ export class ProductList implements OnInit, OnDestroy {
   }
   
   onProductSaved(): void {
-    // Refresh the product list after saving
+    // Refresh the current page to ensure all changes are reflected
     this.loadProducts(this.currentPage, this.pageSize);
     this.closeEditPanel();
   }
