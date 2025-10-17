@@ -33,6 +33,7 @@ Welcome to Fulcrum's documentation!
    :caption: Concepts
 
    concepts/architecture.md
+   concepts/database-architecture.md
 
 .. toctree::
    :maxdepth: 2
