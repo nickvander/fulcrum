@@ -115,11 +115,16 @@
         </mat-card>
 
         <mat-card>
-          <app-product-variants
-            [productVariants]="productVariants"
-            (variantsChanged)="productVariants = $event"
-            (addVariant)="onAddVariant()">
-          </app-product-variants>
+          <mat-card-header>
+            <mat-card-title>Product Variants</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <app-product-variants
+              [productVariants]="productVariants"
+              (variantsChanged)="productVariants = $event"
+              (addVariant)="onAddVariant()">
+            </app-product-variants>
+          </mat-card-content>
         </mat-card>
       </div>
     </div>
