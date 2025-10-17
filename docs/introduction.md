@@ -16,6 +16,8 @@ The documentation is organized into several sections:
   contributing to the project.
 - **[Concepts](concepts/architecture.md):** High-level discussions of the
   project's architecture, key design patterns, and core concepts.
+- **[Database Architecture](concepts/database-architecture.md):** Detailed
+  overview of the database schema with diagrams showing table relationships and structure.
 - **[Reference](reference/configuration.md):** Detailed technical information,
   such as configuration variables.
 
