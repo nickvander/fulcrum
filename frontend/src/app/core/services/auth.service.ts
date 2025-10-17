@@ -8,12 +8,13 @@ import { tap, map } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
+  private readonly JWT_TOKEN = 'FULCRUM_JWT_TOKEN';
   private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
 
   constructor(private http: HttpClient, private router: Router) {}
 
   private hasToken(): boolean {
-    return !!localStorage.getItem('access_token');
+    return !!localStorage.getItem(this.JWT_TOKEN);
   }
 
   isLoggedIn(): Observable<boolean> {
@@ -21,11 +22,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    return localStorage.getItem(this.JWT_TOKEN);
   }
 
   saveToken(token: string): void {
-    localStorage.setItem('access_token', token);
+    localStorage.setItem(this.JWT_TOKEN, token);
     this.loggedIn.next(true);
   }
 
@@ -42,7 +43,7 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('access_token');
+    localStorage.removeItem(this.JWT_TOKEN);
     this.loggedIn.next(false);
     this.router.navigate(['/login']);
   }
