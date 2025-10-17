@@ -2,11 +2,17 @@
   <!-- Filter sidenav -->
   <mat-sidenav 
     #filterSidenav 
-    mode="side" 
+    mode="over" 
     position="start" 
     [opened]="showFilters" 
     class="filter-sidenav"
     *ngIf="showFilters">
+    <div class="filter-sidenav-header">
+      <h3>Filters</h3>
+      <button mat-icon-button (click)="toggleFilters()" class="close-button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
     <app-product-filters 
       (filtersChanged)="onFiltersChanged($event)"
       (filtersCleared)="onFiltersCleared()">
@@ -23,19 +29,9 @@
             mat-raised-button 
             color="primary" 
             (click)="toggleFilters()" 
-            *ngIf="!showFilters"
-            matTooltip="Show filters">
-            <mat-icon>filter_list</mat-icon>
-            <span>Filters</span>
-          </button>
-          <button 
-            mat-raised-button 
-            color="primary" 
-            (click)="toggleFilters()" 
-            *ngIf="showFilters"
-            matTooltip="Hide filters">
-            <mat-icon>close</mat-icon>
-            <span>Hide Filters</span>
+            [matTooltip]="showFilters ? 'Hide filters' : 'Show filters'">
+            <mat-icon>{{ showFilters ? 'close' : 'filter_list' }}</mat-icon>
+            <span>{{ showFilters ? 'Hide' : 'Filters' }}</span>
           </button>
           <button 
             mat-raised-button 
@@ -136,19 +132,36 @@
             <p class="price">{{ product.default_resale_price | currency }}</p>
             <p class="stock">Stock: {{ getCurrentStock(product) }}</p>
           </mat-card-content>
-          <mat-card-actions>
-            <button mat-button (click)="openStockAdjustmentDialog(product)">ADJUST STOCK</button>
-            <button mat-button (click)="showStockHistory(product)" *ngIf="product.inventory_adjustments && product.inventory_adjustments.length > 0">HISTORY</button>
-            <button mat-button (click)="openEditPanel(product)">EDIT</button>
-            <button mat-button color="warn" (click)="deleteProduct(product.id)">DELETE</button>
-            <button 
-              mat-button 
-              [color]="isProductInComparison(product) ? 'accent' : 'primary'"
-              (click)="toggleProductComparison(product)"
-              matTooltip="{{ isProductInComparison(product) ? 'Remove from comparison' : 'Add to comparison' }}">
-              <mat-icon>{{ isProductInComparison(product) ? 'remove_circle' : 'add_circle' }}</mat-icon>
-              Compare
+          <mat-card-actions class="card-actions">
+            <!-- Three-dot menu for actions -->
+            <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu">
+              <mat-icon>more_vert</mat-icon>
             </button>
+            
+            <!-- Menu for product actions -->
+            <mat-menu #productMenu="matMenu">
+              <button mat-menu-item (click)="openEditPanel(product)">
+                <mat-icon>edit</mat-icon>
+                <span>Edit</span>
+              </button>
+              <button mat-menu-item (click)="openStockAdjustmentDialog(product)">
+                <mat-icon>trending_up</mat-icon>
+                <span>Adjust Stock</span>
+              </button>
+              <button mat-menu-item (click)="showStockHistory(product)" *ngIf="product.inventory_adjustments && product.inventory_adjustments.length > 0">
+                <mat-icon>history</mat-icon>
+                <span>Stock History</span>
+              </button>
+              <button mat-menu-item (click)="toggleProductComparison(product)">
+                <mat-icon>{{ isProductInComparison(product) ? 'remove_circle' : 'add_circle' }}</mat-icon>
+                <span>{{ isProductInComparison(product) ? 'Remove from comparison' : 'Add to comparison' }}</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item color="warn" (click)="deleteProduct(product.id)">
+                <mat-icon>delete</mat-icon>
+                <span>Delete</span>
+              </button>
+            </mat-menu>
           </mat-card-actions>
         </mat-card>
       </div>
