@@ -12,7 +12,6 @@ from ..database import get_db
 from ..tasks import generate_product_embedding
 from ..crud import crud_product, crud_custom_field, crud_product_image, crud_product_variant
 from ..models.inventory import InventoryItem, InventoryAdjustment
-from ..models.product_variant import ProductVariant
 
 router = APIRouter()
 
