@@ -5,7 +5,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
-import { User } from '../../users/models/user.model';
+import { User } from '../../shared/models/user.model';
 
 @Injectable({
   providedIn: 'root'

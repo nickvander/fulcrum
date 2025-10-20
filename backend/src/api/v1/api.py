@@ -9,6 +9,7 @@ from src.api.v1.endpoints import (
     ai,
     custom_fields,
     product_templates,
+    addresses,
 )
 
 api_router = APIRouter()
@@ -17,6 +18,7 @@ api_router.include_router(
     suppliers.router, prefix="/suppliers", tags=["suppliers"]
 )
 api_router.include_router(users.router, prefix="/users", tags=["users"])
+api_router.include_router(addresses.router, prefix="/addresses", tags=["addresses"])
 api_router.include_router(
     marketplace.router, prefix="/marketplace", tags=["marketplace"]
 )

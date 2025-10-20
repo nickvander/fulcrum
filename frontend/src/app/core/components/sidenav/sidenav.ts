@@ -14,11 +14,15 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [CommonModule, RouterModule, MatListModule, MatIconModule],
 })
 export class Sidenav implements OnInit {
-  isSuperuser$!: Observable<boolean>;
+  isAdmin$!: Observable<boolean>;
 
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
-    this.isSuperuser$ = this.authService.isSuperuser();
+    console.log('Sidenav: Initializing component');
+    this.isAdmin$ = this.authService.isAdmin();
+    this.isAdmin$.subscribe(result => {
+      console.log('Sidenav: isAdmin$ result:', result);
+    });
   }
 }

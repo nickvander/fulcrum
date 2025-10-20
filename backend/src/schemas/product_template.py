@@ -65,8 +65,20 @@ class ProductTemplateUpdate(BaseModel):
 
 class ProductTemplate(ProductTemplateBase):
     id: int
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     custom_fields: List[CustomFieldTemplate] = []
-
+    
+    @classmethod
+    def from_orm(cls, obj):
+        # Convert datetime objects to strings for JSON serialization
+        data = {}
+        for field_name in cls.model_fields:
+            value = getattr(obj, field_name, None)
+            if value is not None and isinstance(value, datetime):
+                data[field_name] = value.isoformat()
+            else:
+                data[field_name] = value
+        return cls(**data)
+    
     model_config = ConfigDict(from_attributes=True)

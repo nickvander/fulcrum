@@ -50,34 +50,23 @@
         </mat-form-field>
         
         <mat-form-field class="variant-field">
-          <mat-label>Cost Price</mat-label>
+          <mat-label>Stock Quantity</mat-label>
           <input 
             matInput 
             type="number" 
-            [value]="variant.cost_price || ''" 
-            (input)="updateVariant(i, 'cost_price', $any($event.target).value ? +$any($event.target).value : null)"
-            placeholder="Override default cost price">
-        </mat-form-field>
-        
-        <mat-form-field class="variant-field full-width">
-          <mat-label>Description</mat-label>
-          <textarea 
-            matInput 
-            [value]="variant.description || ''"
-            (input)="updateVariant(i, 'description', $any($event.target).value)"
-            placeholder="Variant description"
-            rows="2">
-          </textarea>
+            [value]="variant.stock_quantity || ''" 
+            (input)="updateVariant(i, 'stock_quantity', $any($event.target).value ? +$any($event.target).value : null)"
+            placeholder="Stock quantity">
         </mat-form-field>
         
         <mat-form-field class="variant-field full-width">
           <mat-label>Attributes</mat-label>
           <textarea 
             matInput 
-            [value]="variant.attributes || ''"
-            (input)="updateVariant(i, 'attributes', $any($event.target).value)"
-            placeholder="JSON string of attributes (e.g., '{&quot;color&quot;: &quot;red&quot;, &quot;size&quot;: &quot;large&quot;}')"
-            rows="2">
+            [value]="variant.attributes ? (variant.attributes | json) : ''"
+            (input)="updateVariant(i, 'attributes', parseJsonSafely($any($event.target).value))"
+            placeholder="JSON object of attributes (e.g., {'color': 'red', 'size': 'large'})"
+            rows="4">
           </textarea>
         </mat-form-field>
       </div>

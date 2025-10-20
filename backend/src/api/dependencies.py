@@ -50,12 +50,50 @@ def get_current_user(
     return user
 
 
+def get_current_active_user(
+    current_user: models.User = Depends(get_current_user),
+) -> models.User:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    return current_user
+
+
 def get_current_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     if not crud.user.is_superuser(current_user):
         raise HTTPException(
             status_code=400, detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+
+def get_current_admin(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if current_user.user_type != "admin":
+        raise HTTPException(
+            status_code=403, detail="The user doesn't have admin privileges"
+        )
+    return current_user
+
+
+def get_current_employee(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if current_user.user_type not in ["admin", "employee"]:
+        raise HTTPException(
+            status_code=403, detail="The user is not an employee"
+        )
+    return current_user
+
+
+def get_current_customer(
+    current_user: models.User = Depends(get_current_active_user),
+) -> models.User:
+    if current_user.user_type != "customer":
+        raise HTTPException(
+            status_code=403, detail="The user is not a customer"
         )
     return current_user
 
