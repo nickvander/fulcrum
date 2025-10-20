@@ -773,3 +773,34 @@ Resolved critical database relationship and foreign key constraint issues that w
 - No more 500 server errors during user deletion operations
 - All existing user management functionality remains intact
 - Frontend properly displays success message when user is deleted
+
+## Session: User Management System Enhancement - Fixing Error Message Display Issues
+
+**Date:** 2025-10-20
+
+### Summary of Work Completed
+
+Fixed the issue where users were seeing "[Object object]" error messages when creating users through the frontend. The problem was in the HTTP error interceptor that was not properly parsing FastAPI validation error responses.
+
+### Key Changes Implemented
+
+**Error Message Handling:**
+- Enhanced the HTTP error interceptor to properly parse FastAPI's structured validation error responses
+- Added logic to extract individual error messages from FastAPI's detail array structure
+- Updated error handling in UserForm, PasswordResetDialog, and AccountManagement components to rely on centralized interceptor
+- Fixed the issue where error.error?.detail was an array being converted to "[object Object]"
+
+**Technical Files Modified:**
+- `frontend/src/app/core/interceptors/http-error.interceptor.ts` - Main fix for error message parsing
+- `frontend/src/app/users/components/user-form/user-form.ts` - Removed redundant error handling 
+- `frontend/src/app/users/components/password-reset-dialog/password-reset-dialog.ts` - Removed redundant error handling
+- `frontend/src/app/users/components/account-management/account-management.ts` - Removed redundant error handling
+
+### Validation
+
+- Frontend no longer displays "[Object object]" error messages
+- Validation error messages are now properly displayed to users (e.g., "Field required", "Password must be at least 8 characters long")
+- All existing functionality remains intact
+- HTTP interceptor properly handles various error response formats
+- Frontend builds successfully without errors
+- Error handling follows the principle of centralized error processing in the interceptor

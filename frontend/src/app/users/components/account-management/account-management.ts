@@ -53,7 +53,9 @@ export class AccountManagement implements OnInit {
         });
       },
       error: (error: any) => {
-        this.snackBar.open('Error loading profile', 'Close', { duration: 3000 });
+        // Error handling is now in the HTTP interceptor, so the error message
+        // should already be displayed via the interceptor
+        console.error('Error loading profile:', error);
       }
     });
   }
@@ -68,7 +70,9 @@ export class AccountManagement implements OnInit {
           this.snackBar.open('Profile updated successfully', 'Close', { duration: 3000 });
         },
         error: (error: any) => {
-          this.snackBar.open(`Error updating profile: ${error.message || 'Unknown error'}`, 'Close', { duration: 3000 });
+          // Error handling is now in the HTTP interceptor, so the error message
+          // should already be displayed via the interceptor
+          console.error('Error updating profile:', error);
         }
       });
     }
