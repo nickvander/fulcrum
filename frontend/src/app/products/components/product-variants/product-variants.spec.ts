@@ -9,7 +9,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductVariantsComponent } from './product-variants';
-import { ProductVariant } from '../../models/product-variant.model';
+import { ProductVariant } from '../../models/product.model';
 
 describe('ProductVariantsComponent', () => {
   let component: ProductVariantsComponent;
@@ -22,7 +22,8 @@ describe('ProductVariantsComponent', () => {
       name: 'Red - Large',
       sku: 'RED-L-001',
       price: 29.99,
-      description: 'Red product in large size'
+      stock_quantity: 10,
+      attributes: { color: 'red', size: 'large' }
     },
     {
       id: 2,
@@ -30,7 +31,8 @@ describe('ProductVariantsComponent', () => {
       name: 'Blue - Medium',
       sku: 'BLUE-M-001',
       price: 24.99,
-      description: 'Blue product in medium size'
+      stock_quantity: 5,
+      attributes: { color: 'blue', size: 'medium' }
     }
   ];
 

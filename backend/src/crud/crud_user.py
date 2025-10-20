@@ -5,22 +5,57 @@ from src.schemas.user import UserCreate, UserUpdate
 from src.core.security import get_password_hash, verify_password
 from sqlalchemy.orm import Session
 import logging
+import random
+import string
 
 logger = logging.getLogger(__name__)
 
-class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
-    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
-        return db.query(User).filter(User.email == email).first()
+def generate_employee_id(user_type: str) -> str:
+    """
+    Generate a unique employee ID based on user type
+    Format: [type_prefix][random_numbers], e.g., EMP123456
+    """
+    if user_type == "admin":
+        prefix = "ADM"
+    elif user_type == "employee":
+        prefix = "EMP"
+    elif user_type == "customer":
+        prefix = "CST"
+    else:
+        prefix = "USR"
+    
+    # Generate 6 random digits
+    digits = ''.join(random.choices(string.digits, k=6))
+    return f"{prefix}{digits}"
 
+class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         logger.info(f"Creating user with email: {obj_in.email}")
         try:
             hashed_password = get_password_hash(obj_in.password)
             logger.info("Password hashed successfully.")
+            
+            # Generate employee ID if not provided
+            employee_id = obj_in.employee_id
+            if not employee_id:
+                # Use provided user_type or default to 'employee'
+                user_type = obj_in.user_type.value if obj_in.user_type else "employee"
+                employee_id = generate_employee_id(user_type)
+                
+                # Ensure uniqueness by checking if ID already exists
+                while self.get_by_employee_id(db, employee_id=employee_id):
+                    employee_id = generate_employee_id(user_type)
+            
             db_obj = User(
                 email=obj_in.email,
                 hashed_password=hashed_password,
+                employee_id=employee_id,
+                first_name=obj_in.first_name,
+                last_name=obj_in.last_name,
+                user_type=obj_in.user_type.value if obj_in.user_type else "employee",
+                is_active=obj_in.is_active,
                 is_superuser=obj_in.is_superuser,
+                role=obj_in.user_type.value if obj_in.user_type else "employee" if obj_in.user_type else "employee",  # Maintain compatibility with existing role field
             )
             db.add(db_obj)
             logger.info("User object added to session.")
@@ -34,6 +69,12 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             db.rollback()
             raise
 
+    def get_by_employee_id(self, db: Session, *, employee_id: str) -> Optional[User]:
+        return db.query(User).filter(User.employee_id == employee_id).first()
+
+    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
+        return db.query(User).filter(User.email == email).first()
+
     def authenticate(
         self, db: Session, *, email: str, password: str
     ) -> Optional[User]:
@@ -46,5 +87,83 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def is_superuser(self, user: User) -> bool:
         return user.is_superuser
+
+    def update(self, db: Session, *, db_obj: User, obj_in: UserUpdate) -> User:
+        """Override update method to handle password hashing and new fields"""
+        update_data = obj_in.model_dump(exclude_unset=True)
+        
+        # Handle password update separately
+        if "password" in update_data and update_data["password"]:
+            update_data["hashed_password"] = get_password_hash(update_data["password"])
+            # Remove the plain text password from update data
+            del update_data["password"]
+        
+        for field in update_data:
+            setattr(db_obj, field, update_data[field])
+        
+        db.add(db_obj)
+        db.commit()
+        db.flush()
+        db.refresh(db_obj)
+        return db_obj
+
+    def get_multi(
+        self,
+        db: Session,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        user_type: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        search: Optional[str] = None
+    ) -> list[User]:
+        """Override get_multi to support filtering and searching"""
+        query = db.query(self.model)
+        
+        if user_type:
+            query = query.filter(self.model.user_type == user_type)
+        
+        if is_active is not None:
+            query = query.filter(self.model.is_active == is_active)
+        
+        if search:
+            search_filter = f"%{search}%"
+            query = query.filter(
+                (self.model.first_name.ilike(search_filter)) |
+                (self.model.last_name.ilike(search_filter)) |
+                (self.model.email.ilike(search_filter)) |
+                (self.model.employee_id.ilike(search_filter))
+            )
+        
+        return query.offset(skip).limit(limit).all()
+
+    def hard_delete(self, db: Session, *, id: int, actor_id: int, details: str = "", ip_address: str = "", user_agent: str = "") -> bool:
+        """
+        Permanently delete a user with audit logging.
+        """
+        from src import crud
+        from src.models.user_audit_log import UserAuditLog
+        
+        # Create audit log entry before deletion
+        audit_log = UserAuditLog(
+            user_id=id,
+            action_performed_by=actor_id,
+            action='permanent_delete',
+            details=details or f"User permanently deleted by user ID {actor_id}",
+            ip_address=ip_address,
+            user_agent=user_agent
+        )
+        db.add(audit_log)
+        
+        # Perform the permanent deletion
+        success = super().hard_delete(db, id=id)
+        
+        if success:
+            logger.info(f"User {id} permanently deleted by user {actor_id}")
+        else:
+            logger.warning(f"Attempt to permanently delete non-existent user {id} by user {actor_id}")
+        
+        return success
+
 
 user = CRUDUser(User)

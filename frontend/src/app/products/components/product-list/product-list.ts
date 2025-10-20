@@ -376,8 +376,14 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   onImageError(event: any): void {
-    // Set a placeholder image if the image fails to load
-    event.target.src = '/uploads/product_images/placeholder.jpg';
+    // Prevent infinite loop by checking if we've already tried to load the placeholder
+    if (event.target.src.includes('data:image')) {
+      // Already showing a data URI, don't try again
+      return;
+    }
+    
+    // Set a data URI placeholder image if the image fails to load
+    event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
   }
   
   openEditPanel(product: Product): void {

@@ -12,6 +12,7 @@ from alembic.config import Config
 from src.main import app
 from src.database import get_db
 from src.config import settings
+from src import models
 from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
@@ -124,3 +125,58 @@ def test_product_with_image(db: Session, test_product: Product) -> ProductImage:
         except OSError:
             # Directory might not be empty if other tests created files
             pass
+
+
+@pytest.fixture(scope="function")
+def test_admin_user(db: Session) -> models.User:
+    """
+    Creates a test admin user.
+    """
+    from src.schemas.user import UserCreate
+    from src.crud import user
+    
+    user_in = UserCreate(
+        email="admin@test.com",
+        password="TestPassword123!",
+        is_superuser=True,
+        user_type="admin",
+        first_name="Admin",
+        last_name="User"
+    )
+    return user.create(db=db, obj_in=user_in)
+
+
+@pytest.fixture(scope="function")
+def test_employee_user(db: Session) -> models.User:
+    """
+    Creates a test employee user.
+    """
+    from src.schemas.user import UserCreate
+    from src.crud import user
+    
+    user_in = UserCreate(
+        email="employee@test.com",
+        password="TestPassword123!",
+        user_type="employee",
+        first_name="Employee",
+        last_name="User"
+    )
+    return user.create(db=db, obj_in=user_in)
+
+
+@pytest.fixture(scope="function")
+def test_customer_user(db: Session) -> models.User:
+    """
+    Creates a test customer user.
+    """
+    from src.schemas.user import UserCreate
+    from src.crud import user
+    
+    user_in = UserCreate(
+        email="customer@test.com",
+        password="TestPassword123!",
+        user_type="customer",
+        first_name="Customer",
+        last_name="User"
+    )
+    return user.create(db=db, obj_in=user_in)

@@ -9,18 +9,21 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { UsersRoutingModule } from './users-routing-module';
-import { Users } from './users';
 import { UserList } from './components/user-list/user-list';
 import { UserForm } from './components/user-form/user-form';
+import { AccountManagement } from './components/account-management/account-management';
+import { PasswordResetDialog } from './components/password-reset-dialog/password-reset-dialog';
+import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 import { UserService } from './services/user.service';
 
 
 @NgModule({
-  declarations: [
-    Users
-  ],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -33,8 +36,15 @@ import { UserService } from './services/user.service';
     MatFormFieldModule,
     MatInputModule,
     MatSlideToggleModule,
+    MatSelectModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+    MatDialogModule,
     UserList,
-    UserForm
+    UserForm,
+    AccountManagement,
+    PasswordResetDialog,
+    ConfirmationDialog
   ],
   providers: [
     UserService

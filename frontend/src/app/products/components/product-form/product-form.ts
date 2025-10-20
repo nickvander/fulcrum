@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
 import { Product, ProductImage } from '../../models/product.model';
-import { ProductVariant } from '../../models/product-variant.model';
+import { ProductVariant } from '../../models/product.model';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -527,15 +527,15 @@ export class ProductForm implements OnInit {
   }
 
   onAddVariant(): void {
-    // Create a new variant object with default values
-    const newVariant = {
+    // Create a new variant object with default values using the correct structure
+    const newVariant: ProductVariant = {
+      id: 0, // Temporary ID, will be set by backend when saved
       product_id: this.productId || 0,
       name: 'New Variant',
       sku: '',
-      description: '',
       price: 0,
-      cost_price: 0,
-      attributes: '{}'
+      stock_quantity: 0,
+      attributes: {}
     };
 
     // Add the new variant to the list

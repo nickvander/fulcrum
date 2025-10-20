@@ -183,7 +183,7 @@ describe('ProductList', () => {
         target: { src: 'original.jpg' }
       };
       component.onImageError(mockEvent);
-      expect(mockEvent.target.src).toBe('/uploads/product_images/placeholder.jpg');
+      expect(mockEvent.target.src).toContain('data:image');
     });
   });
   

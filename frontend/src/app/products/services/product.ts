@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, switchMap, map, catchError, throwError } from 'rxjs';
-import { Product, ProductImage } from '../models/product.model';
+import { Product, ProductImage, ProductVariant } from '../models/product.model';
 import { PaginatedProducts } from '../models/paginated-products.model';
-import { ProductVariant } from '../models/product-variant.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
 
@@ -265,18 +264,29 @@ export class ProductService {
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
     return this.http.post<Product>(`${this.apiUrl}/`, product).pipe(
       tap(() => this.notificationService.showSuccess('Product created successfully!')),
-      switchMap(newProduct =>
-        this.getProducts().pipe(map(() => newProduct))
-      )
+      tap(newProduct => {
+        // Add the new product to the local cache
+        const currentProducts = this._products.getValue();
+        const productWithPrimaryImage = {
+          ...newProduct,
+          primary_image: newProduct.images?.find(img => img.is_primary) ?? newProduct.images?.[0]
+        };
+        this._products.next([...currentProducts, productWithPrimaryImage]);
+      })
     );
   }
 
   updateProduct(product: Product): Observable<Product> {
     return this.http.put<Product>(`${this.apiUrl}/${product.id}`, product).pipe(
       tap(() => this.notificationService.showSuccess('Product updated successfully!')),
-      switchMap(updatedProduct =>
-        this.getProducts().pipe(map(() => updatedProduct))
-      )
+      tap(updatedProduct => {
+        // Update the local cache with the updated product
+        const currentProducts = this._products.getValue();
+        const updatedProducts = currentProducts.map(p => 
+          p.id === updatedProduct.id ? {...updatedProduct, primary_image: updatedProduct.images?.find(img => img.is_primary) ?? updatedProduct.images?.[0]} : p
+        );
+        this._products.next(updatedProducts);
+      })
     );
   }
 
@@ -368,27 +378,69 @@ export class ProductService {
   createProductVariant(productId: number, variant: Omit<ProductVariant, 'id'>): Observable<ProductVariant> {
     return this.http.post<ProductVariant>(`${this.apiUrl}/${productId}/variants`, variant).pipe(
       tap(() => this.notificationService.showSuccess('Product variant created successfully!')),
-      switchMap(newVariant => 
-        this.getProducts().pipe(map(() => newVariant)) // Refresh product list after creation
-      )
+      tap((newVariant: ProductVariant) => {
+        // Update the local cache to reflect the new variant
+        const currentProducts = this._products.getValue();
+        const updatedProducts = currentProducts.map(product => {
+          if (product.id === productId) {
+            // Add the new variant to this product
+            const updatedProduct = {...product} as Product & { variants?: ProductVariant[] };
+            if (!updatedProduct.variants) {
+              updatedProduct.variants = [];
+            }
+            updatedProduct.variants.push(newVariant);
+            return updatedProduct;
+          }
+          return product;
+        });
+        this._products.next(updatedProducts);
+      })
     );
   }
   
   updateProductVariant(productId: number, variantId: number, variant: Partial<ProductVariant>): Observable<ProductVariant> {
     return this.http.put<ProductVariant>(`${this.apiUrl}/${productId}/variants/${variantId}`, variant).pipe(
       tap(() => this.notificationService.showSuccess('Product variant updated successfully!')),
-      switchMap(updatedVariant => 
-        this.getProducts().pipe(map(() => updatedVariant)) // Refresh product list after update
-      )
+      tap((updatedVariant: ProductVariant) => {
+        // Update the local cache to reflect the updated variant
+        const currentProducts = this._products.getValue();
+        const updatedProducts = currentProducts.map(product => {
+          if (product.id === productId && (product as Product & { variants?: ProductVariant[] }).variants) {
+            // Update the variant in this product
+            const updatedProduct = {...product} as Product & { variants?: ProductVariant[] };
+            if (updatedProduct.variants) {
+              updatedProduct.variants = updatedProduct.variants.map(v => 
+                v.id === updatedVariant.id ? updatedVariant : v
+              );
+            }
+            return updatedProduct;
+          }
+          return product;
+        });
+        this._products.next(updatedProducts);
+      })
     );
   }
   
   deleteProductVariant(productId: number, variantId: number): Observable<ProductVariant> {
     return this.http.delete<ProductVariant>(`${this.apiUrl}/${productId}/variants/${variantId}`).pipe(
       tap(() => this.notificationService.showSuccess('Product variant deleted successfully!')),
-      switchMap(deletedVariant => 
-        this.getProducts().pipe(map(() => deletedVariant)) // Refresh product list after deletion
-      )
+      tap((deletedVariant: ProductVariant) => {
+        // Update the local cache to reflect the deleted variant
+        const currentProducts = this._products.getValue();
+        const updatedProducts = currentProducts.map(product => {
+          if (product.id === productId && (product as Product & { variants?: ProductVariant[] }).variants) {
+            // Remove the deleted variant from this product
+            const updatedProduct = {...product} as Product & { variants?: ProductVariant[] };
+            if (updatedProduct.variants) {
+              updatedProduct.variants = updatedProduct.variants.filter(v => v.id !== deletedVariant.id);
+            }
+            return updatedProduct;
+          }
+          return product;
+        });
+        this._products.next(updatedProducts);
+      })
     );
   }
 }

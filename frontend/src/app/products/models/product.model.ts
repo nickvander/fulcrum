@@ -31,6 +31,18 @@ export interface ProductCustomField {
   value: string;
 }
 
+export interface ProductVariant {
+  id: number;
+  product_id: number;
+  name: string;
+  sku: string;
+  price: number;
+  stock_quantity: number;
+  attributes: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -52,4 +64,5 @@ export interface Product {
   weight?: number;
   primary_image?: ProductImage;
   custom_fields?: ProductCustomField[];
+  variants?: ProductVariant[];
 }
