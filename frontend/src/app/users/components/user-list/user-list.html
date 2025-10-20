@@ -73,17 +73,16 @@
     <ng-container matColumnDef="is_active">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Active</mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <mat-icon>{{row.is_active ? 'check_circle' : 'cancel'}}</mat-icon>
+        <mat-icon [ngClass]="{'inactive-user': !row.is_active}">
+          {{row.is_active ? 'check_circle' : 'cancel'}}
+        </mat-icon>
+        <span class="status-label" [ngClass]="{'inactive-user': !row.is_active}">
+          {{row.is_active ? 'Active' : 'Inactive'}}
+        </span>
       </mat-cell>
     </ng-container>
 
-    <!-- Superuser Column -->
-    <ng-container matColumnDef="is_superuser">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Admin</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <mat-icon>{{row.is_superuser ? 'check_circle' : 'cancel'}}</mat-icon>
-      </mat-cell>
-    </ng-container>
+
 
     <!-- Actions Column -->
     <ng-container matColumnDef="actions">
@@ -92,8 +91,14 @@
         <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user">
           <mat-icon>edit</mat-icon>
         </button>
-        <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Delete user" color="warn">
-          <mat-icon>delete</mat-icon>
+        <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password">
+          <mat-icon>lock_reset</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user">
+          <mat-icon>block</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn">
+          <mat-icon>delete_forever</mat-icon>
         </button>
       </mat-cell>
     </ng-container>

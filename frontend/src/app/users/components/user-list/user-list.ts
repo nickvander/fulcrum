@@ -7,11 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDialog } from '@angular/material/dialog';
 import { UserService, UserListParams } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ConfirmationDialog } from '../confirmation-dialog/confirmation-dialog';
+import { PasswordResetDialog } from '../password-reset-dialog/password-reset-dialog';
 
 @Component({
   selector: 'app-user-list',
@@ -33,7 +36,7 @@ import { FormsModule } from '@angular/forms';
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'is_superuser', 'actions'];
+  displayedColumns: string[] = ['employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'actions'];
   dataSource: MatTableDataSource<User> = new MatTableDataSource();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -44,7 +47,10 @@ export class UserList implements OnInit, AfterViewInit {
   is_active_filter: string = '';
   search_filter: string = '';
 
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService, 
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -78,11 +84,72 @@ export class UserList implements OnInit, AfterViewInit {
     this.loadUsers();
   }
 
+  deactivateUser(id: number): void {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '400px',
+      data: {
+        title: 'Deactivate User',
+        message: 'Are you sure you want to deactivate this user? The user will no longer be able to log in.',
+        confirmText: 'Deactivate',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.userService.deleteUser(id).subscribe({
+          next: () => {
+            this.loadUsers(); // Refresh the list
+          },
+          error: (error) => {
+            console.error('Error deactivating user:', error);
+          }
+        });
+      }
+    });
+  }
+
   deleteUser(id: number): void {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.userService.deleteUser(id).subscribe(() => {
-        this.loadUsers(); // Refresh the list
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      width: '400px',
+      data: {
+        title: 'Permanently Delete User',
+        message: 'Are you sure you want to permanently delete this user? This action cannot be undone.',
+        confirmText: 'Delete Permanently',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Call the permanent delete endpoint
+        this.userService.deleteUserPermanent(id).subscribe({
+          next: () => {
+            this.loadUsers(); // Refresh the list
+          },
+          error: (error) => {
+            console.error('Error permanently deleting user:', error);
+          }
+        });
+      }
+    });
+  }
+
+  resetUserPassword(id: number, email: string): void {
+    const dialogRef = this.dialog.open(PasswordResetDialog, {
+      width: '400px',
+      data: {
+        userId: id,
+        email: email,
+        isForAdmin: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Password reset was successful, no need to refresh the user list
+        // The password reset doesn't change any user properties visible in the list
+      }
+    });
   }
 }

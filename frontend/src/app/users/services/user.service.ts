@@ -58,6 +58,10 @@ export class UserService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
+  deleteUserPermanent(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}/permanent`);
+  }
+
   getProfile(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/profile`);
   }
@@ -73,5 +77,9 @@ export class UserService {
 
   resetPassword(token: string, newPassword: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/password-reset`, { token, new_password: newPassword });
+  }
+
+  adminResetPassword(userId: number): Observable<{message: string, new_password?: string}> {
+    return this.http.post<{message: string, new_password?: string}>(`${this.apiUrl}/${userId}/admin-reset-password`, {});
   }
 }

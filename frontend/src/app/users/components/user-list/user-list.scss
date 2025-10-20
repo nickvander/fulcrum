@@ -44,3 +44,35 @@
   background-color: #4caf50;
   color: white;
 }
+
+.status-label {
+  margin-left: 8px;
+  font-size: 0.8em;
+}
+
+.inactive-user {
+  color: #999 !important; /* Make inactive status visually distinct */
+}
+
+.mat-mdc-row.inactive-user {
+  opacity: 0.6;
+}
+
+.mat-mdc-cell.inactive-user {
+  color: #999;
+}
+
+/* Ensure action icons stay within bounds */
+.mat-column-actions {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.mat-column-actions .mat-mdc-cell {
+  justify-content: flex-end;
+  padding-right: 0;
+}
+
+.mat-column-actions button {
+  margin-left: 4px;
+}
