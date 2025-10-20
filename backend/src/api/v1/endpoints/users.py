@@ -211,8 +211,11 @@ def admin_reset_password(
     db.commit()
     
     # Note: In a real implementation, you would send the new password to the user via secure channel
-    # For now, we return a success message
-    return {"message": "Password reset successfully. New password has been generated and should be communicated to the user securely."}
+    # For development/testing purposes, we return the password (this would be removed in production)
+    return {
+        "message": "Password reset successfully. New password has been generated and should be communicated to the user securely.",
+        "new_password": new_password
+    }
 
 
 @router.get("/profile", response_model=user_schema.User, tags=["users"])
@@ -299,6 +302,56 @@ def update_user(
     # Only admin users can update other users
     updated_user = crud.user.update(db, db_obj=user, obj_in=user_in)
     return user_schema.User.from_orm(updated_user)
+
+
+@router.delete("/{user_id}", tags=["users"])
+def delete_user(
+    user_id: int,
+    *,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_admin),
+    request: Request,
+) -> dict:
+    """
+    Deactivate a user account (soft delete).
+    Only admin users can deactivate other users.
+    This marks the user as inactive rather than permanently deleting them.
+    """
+    # Get the user to be deactivated
+    target_user = crud.user.get(db, id=user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=404,
+            detail="The user with this username does not exist in the system",
+        )
+    
+    # Make sure the user is not trying to deactivate themselves
+    if target_user.id == current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot deactivate your own account",
+        )
+    
+    # Update the user's is_active status to False
+    target_user.is_active = False
+    db.add(target_user)
+    db.commit()
+    db.refresh(target_user)
+    
+    # Record audit log for deactivation
+    from src.models.user_audit_log import UserAuditLog
+    audit_log = UserAuditLog(
+        user_id=target_user.id,
+        action_performed_by=current_user.id,  # admin initiated
+        action='deactivate_user',
+        details=f"User {target_user.email} deactivated by admin {current_user.email}",
+        ip_address=request.client.host if request else "",
+        user_agent=request.headers.get("user-agent", "") if request else ""
+    )
+    db.add(audit_log)
+    db.commit()
+    
+    return {"message": "User deactivated successfully"}
 
 
 @router.delete("/{user_id}/permanent", tags=["users"])

@@ -11,6 +11,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-form',
@@ -33,13 +34,15 @@ export class UserForm implements OnInit {
   user!: User;
   isEdit: boolean = false;
   passwordRequired: boolean = true; // For new users, password is required
+  isCurrentUserAdmin: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
     private route: ActivatedRoute,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private authService: AuthService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -54,6 +57,11 @@ export class UserForm implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check if current user is admin to determine visibility of superuser toggle
+    this.authService.isAdmin().subscribe(isAdmin => {
+      this.isCurrentUserAdmin = isAdmin;
+    });
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEdit = true;

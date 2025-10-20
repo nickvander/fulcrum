@@ -4,9 +4,10 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
 
 @Component({
   selector: 'app-password-reset-dialog',
@@ -27,15 +28,21 @@ export class PasswordResetDialog {
 
   constructor(
     public dialogRef: MatDialogRef<PasswordResetDialog>,
-    @Inject(MAT_DIALOG_DATA) public data: { userId: number, email: string },
+    @Inject(MAT_DIALOG_DATA) public data: { userId: number, email: string, isForAdmin?: boolean },
     private fb: FormBuilder,
     private userService: UserService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
-    this.form = this.fb.group({
-      newPassword: ['', [Validators.required, this.strongPasswordValidator]],
-      confirmNewPassword: ['', Validators.required],
-    }, { validators: this.passwordMatchValidator });
+    // For admin resets, we don't need password input fields as the system generates a random password
+    if (data.isForAdmin) {
+      this.form = this.fb.group({});
+    } else {
+      this.form = this.fb.group({
+        newPassword: ['', [Validators.required, this.strongPasswordValidator]],
+        confirmNewPassword: ['', Validators.required],
+      }, { validators: this.passwordMatchValidator });
+    }
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -65,11 +72,42 @@ export class PasswordResetDialog {
   }
 
   onSubmit(): void {
-    if (this.form.valid) {
-      // Here you would implement the password reset logic
-      // This would typically involve an API call to reset the user's password
-      console.log('Resetting password for user:', this.data.userId);
-      this.dialogRef.close({ success: true });
+    if (this.data.isForAdmin) {
+      // For admin reset, call the admin reset endpoint
+      this.userService.adminResetPassword(this.data.userId).subscribe({
+        next: (response) => {
+          if (response.new_password) {
+            // Show the generated password in a dedicated dialog with user email
+            const passwordDialogRef = this.dialog.open(GeneratedPasswordDialog, {
+              width: '500px',
+              data: { 
+                password: response.new_password,
+                userEmail: this.data.email 
+              }
+            });
+            
+            // Close the password reset dialog after showing the generated password dialog
+            this.dialogRef.close({ success: true, newPassword: response.new_password });
+          } else {
+            this.snackBar.open('Password reset successfully. New password has been generated and should be communicated to the user securely.', 'Close', {
+              duration: 5000,
+            });
+            this.dialogRef.close({ success: true });
+          }
+        },
+        error: (error) => {
+          this.snackBar.open('Error resetting password: ' + (error.error?.detail || 'Unknown error'), 'Close', {
+            duration: 5000,
+          });
+        }
+      });
+    } else if (this.form.valid) {
+      // For user reset, we would need the token - this is for self-initiated reset
+      // However, since admin shouldn't be doing user's token-based reset, we'll just show an appropriate message
+      this.snackBar.open('User-initiated password reset not available from admin panel.', 'Close', {
+        duration: 5000,
+      });
+      this.dialogRef.close();
     }
   }
 

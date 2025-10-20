@@ -53,7 +53,7 @@
 
     <div class="form-row">
       <mat-slide-toggle formControlName="is_active">Active</mat-slide-toggle>
-      <mat-slide-toggle formControlName="is_superuser">Superuser</mat-slide-toggle>
+      <mat-slide-toggle formControlName="is_superuser" *ngIf="isCurrentUserAdmin">Superuser</mat-slide-toggle>
     </div>
 
     <div class="actions">

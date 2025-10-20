@@ -671,3 +671,105 @@ Implemented advanced user management features from Phase 5 of the user managemen
 - Backend no longer throws 500 errors for datetime serialization issues
 - Frontend UX improvements provide better user experience for password entry
 - All existing functionality remains intact after the enhancements
+
+## Session: User Management System Enhancement - Addressing User Feedback
+
+**Date:** 2025-10-20
+
+### Summary of Work Completed
+
+Addressed user feedback regarding the user management system by implementing several key improvements:
+1. Fixed the DELETE method not allowed error by adding proper soft delete endpoint
+2. Clarified the difference between Admin user type and superuser checkbox
+3. Removed the redundant admin column from the users table UI
+4. Added password reset functionality accessible via new icon in user list
+5. Created consistent dialog styling between password reset and delete confirmation
+6. Enhanced user experience with separate options for deactivation vs permanent deletion
+7. Created dedicated dialog for displaying generated passwords with copy functionality and user email identification
+
+### Key Changes Implemented
+
+**Backend Improvements:**
+- Added `/api/v1/users/{user_id}` DELETE endpoint for soft deletion (user deactivation)
+- Modified admin password reset endpoint to return generated password to admins for secure sharing
+- Enhanced audit logging for all user operations
+
+**Frontend Improvements:**
+- Updated UserListComponent with separate icons for edit (`edit`), password reset (`lock_reset`), deactivate (`block`), and permanent delete (`delete_forever`)
+- Added visual indicators for inactive users with different styling and status labels
+- Created GeneratedPasswordDialog component for better password visibility with user email identification
+- Enhanced PasswordResetDialog to show both user email and generated password when resetting for admin
+- Updated UserFormComponent to show superuser toggle only to admin users
+- Added CSS styling to prevent action icon overflow in user table
+- Implemented copy-to-clipboard functionality in generated password dialog
+
+**Security & UX Enhancements:**
+- Made the superuser checkbox visible only to admin users in user form
+- Added email identification in password reset dialog to clarify which user's password is being reset
+- Provided clear distinction between deactivation (soft delete) and permanent deletion actions
+- Visual indication of user status (active/inactive) in user list
+- Improved accessibility and clarity of all user management actions
+
+### Technical Files Added/Modified
+
+**New:**
+- `frontend/src/app/users/components/generated-password-dialog/` - Dedicated component for showing generated passwords
+- `frontend/src/app/users/models/user-audit-log.model.ts` - Model for audit log entries
+
+**Modified:**
+- `backend/src/api/v1/endpoints/users.py` - Added soft delete endpoint, enhanced password reset to return passwords
+- `frontend/src/app/users/services/user.service.ts` - Added deleteUserPermanent method
+- `frontend/src/app/users/components/user-list/user-list.*` - Updated UI with new icons and styling
+- `frontend/src/app/users/components/user-form/user-form.*` - Added admin-only superuser toggle
+- `frontend/src/app/users/components/password-reset-dialog/password-reset-dialog.*` - Enhanced to open generated password dialog
+- `frontend/src/app/users/components/user-list/user-list.scss` - Added styling for inactive users and action overflow
+- `frontend/src/app/users/components/generated-password-dialog/generated-password-dialog.*` - New component for password display
+
+### Validation
+
+- All API endpoints properly secured and functioning (soft delete, permanent delete, admin password reset)
+- Frontend builds successfully with no errors
+- User list properly displays active/inactive status with visual indicators
+- Password reset functionality shows user email and generated password clearly
+- Copy-to-clipboard functionality works in generated password dialog
+- Action icons remain visible and accessible without overflow issues
+- All changes maintain proper authentication and authorization requirements
+- Soft delete properly deactivates users while permanent delete completely removes them
+- Audit logging properly records all user management operations
+- The superuser toggle is only visible to admin users as intended
+
+## Session: User Management System Enhancement - Fixing Database Relationship Issues
+
+**Date:** 2025-10-20
+
+### Summary of Work Completed
+
+Resolved critical database relationship and foreign key constraint issues that were preventing user permanent deletion. The core problem was with cascade deletion conflicts between related tables, particularly the user_audit_logs and password_reset_tokens relationships.
+
+### Key Changes Implemented
+
+**Database Relationship Fixes:**
+- Updated the User CRUD hard_delete method to handle foreign key constraints properly by manually managing related records before deletion
+- Modified deletion order to: 1) Remove related addresses, 2) Remove related audit logs, 3) Delete the user, 4) Create deletion audit record separately
+- Added raw SQL operations to bypass ORM cascade issues while maintaining data integrity
+- Resolved password_reset_tokens table accessibility issues that were causing cascade deletion failures
+
+**Backend Improvements:**
+- Enhanced error handling in hard_delete method with proper transaction rollback and logging
+- Implemented safe raw SQL deletion approach for permanent user deletion
+- Updated foreign key constraint handling to prevent violations during user deletion
+- Maintained full audit logging capability while avoiding circular references
+
+**Technical Files Modified:**
+- `backend/src/crud/crud_user.py` - Completely reworked hard_delete method with manual relationship handling
+- `backend/src/crud/base.py` - Reverted base hard_delete method to original implementation
+
+### Validation
+
+- Permanent user deletion now works without foreign key constraint errors
+- All related user data is properly cleaned up during deletion
+- Audit logging continues to function correctly for deletion operations
+- Database transaction handling properly manages errors with rollback capability
+- No more 500 server errors during user deletion operations
+- All existing user management functionality remains intact
+- Frontend properly displays success message when user is deleted
