@@ -96,9 +96,9 @@ export class PasswordResetDialog {
           }
         },
         error: (error) => {
-          this.snackBar.open('Error resetting password: ' + (error.error?.detail || 'Unknown error'), 'Close', {
-            duration: 5000,
-          });
+          // Error handling is now in the HTTP interceptor, so the error message
+          // should already be displayed via the interceptor
+          console.error('Error resetting password:', error);
         }
       });
     } else if (this.form.valid) {

@@ -141,7 +141,9 @@ export class UserForm implements OnInit {
             this.router.navigate(['/users']);
           },
           error: (error) => {
-            this.snackBar.open(`Error updating user: ${error.message || 'Unknown error'}`, 'Close', { duration: 3000 });
+            // Error handling is now in the HTTP interceptor, so the error message
+            // should already be displayed via the interceptor
+            console.error('Error updating user:', error);
           }
         });
       } else {
@@ -152,7 +154,9 @@ export class UserForm implements OnInit {
             this.router.navigate(['/users']);
           },
           error: (error) => {
-            this.snackBar.open(`Error creating user: ${error.message || 'Unknown error'}`, 'Close', { duration: 3000 });
+            // Error handling is now in the HTTP interceptor, so the error message
+            // should already be displayed via the interceptor
+            console.error('Error creating user:', error);
           }
         });
       }
