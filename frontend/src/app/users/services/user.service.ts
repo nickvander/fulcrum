@@ -19,6 +19,7 @@ export interface CreateUserRequest {
   user_type?: 'admin' | 'employee' | 'customer';
   is_active?: boolean;
   is_superuser?: boolean;
+  avatar?: string;
   password: string;
 }
 

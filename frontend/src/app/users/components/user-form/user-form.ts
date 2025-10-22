@@ -8,6 +8,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -27,6 +28,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatSelectModule,
     MatButtonModule,
     MatSnackBarModule,
+    MatTooltipModule,
   ],
 })
 export class UserForm implements OnInit {
@@ -49,6 +51,7 @@ export class UserForm implements OnInit {
       first_name: ['', Validators.required],
       last_name: ['', Validators.required],
       user_type: ['employee', Validators.required],
+      avatar: [''],
       is_active: [true],
       is_superuser: [false],
       password: ['', []], // Optional for edits, required for new users
@@ -162,6 +165,76 @@ export class UserForm implements OnInit {
       }
     } else {
       this.snackBar.open('Please fill in all required fields correctly', 'Close', { duration: 3000 });
+    }
+  }
+
+  getPasswordStrength(password: string): number {
+    if (!password) return 0;
+    
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength += 1;
+    if (password.length >= 12) strength += 1;
+    
+    // Character variety checks
+    if (/[a-z]/.test(password)) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    return Math.min(strength, 4); // Max strength is 4
+  }
+
+  getPasswordStrengthClass(): string {
+    const password = this.form.get('password')?.value;
+    const strength = this.getPasswordStrength(password);
+    
+    if (strength <= 1) return 'password-strength-weak';
+    if (strength <= 2) return 'password-strength-medium';
+    return 'password-strength-strong';
+  }
+
+  getPasswordStrengthLabel(): string {
+    const password = this.form.get('password')?.value;
+    const strength = this.getPasswordStrength(password);
+    
+    if (strength <= 1) return 'Weak';
+    if (strength <= 2) return 'Medium';
+    if (strength >= 3) return 'Strong';
+    return '';
+  }
+
+  onSaveAndAddAnother(): void {
+    if (this.form.valid && !this.isEdit) { // Only for new users
+      const formValue = { ...this.form.value };
+      
+      // Remove confirm_password from the submission
+      delete formValue.confirm_password;
+      
+      this.userService.createUser(formValue).subscribe({
+        next: (user) => {
+          this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
+          
+          // Reset form for new user creation
+          this.form.reset();
+          this.form.patchValue({
+            user_type: 'employee',
+            is_active: true,
+            is_superuser: false
+          });
+          
+          // Keep focus on first field for better UX
+          setTimeout(() => {
+            const firstInput = document.querySelector('input') as HTMLInputElement;
+            if (firstInput) firstInput.focus();
+          }, 100);
+        },
+        error: (error) => {
+          // Error handling is now in the HTTP interceptor
+          console.error('Error creating user:', error);
+        }
+      });
     }
   }
 

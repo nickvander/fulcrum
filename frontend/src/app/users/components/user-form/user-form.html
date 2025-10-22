@@ -35,6 +35,11 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Avatar URL</mat-label>
+        <input matInput formControlName="avatar" placeholder="https://example.com/avatar.jpg">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
         <mat-label>Password</mat-label>
         <input matInput formControlName="password" [type]="'password'" autocomplete="new-password">
         <mat-error *ngIf="form.get('password')?.hasError('required')">Password is required</mat-error>
@@ -49,6 +54,17 @@
         <mat-error *ngIf="form.get('confirm_password')?.hasError('required')">Please confirm password</mat-error>
         <mat-error *ngIf="form.hasError('passwordMismatch')">Passwords do not match</mat-error>
       </mat-form-field>
+    </div>
+
+    <!-- Password Strength Indicator -->
+    <div class="form-row" *ngIf="form.get('password')?.value">
+      <div class="password-strength-container">
+        <label>Password Strength</label>
+        <div class="password-strength-bar">
+          <div class="password-strength-fill" [ngClass]="getPasswordStrengthClass()"></div>
+        </div>
+        <div class="password-strength-label">{{ getPasswordStrengthLabel() }}</div>
+      </div>
     </div>
 
     <div class="form-row">

@@ -25,6 +25,8 @@ services:
       - ./backend/tests:/app/tests
       - ./backend/alembic:/app/alembic
       - ./backend/alembic.ini:/app/alembic.ini
+    ports:
+      - "8000:8000"
     depends_on:
       db-test:
         condition: service_healthy

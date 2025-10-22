@@ -18,6 +18,7 @@ async def lifespan(app: FastAPI):
                 email=settings.FIRST_SUPERUSER_EMAIL,
                 password=settings.FIRST_SUPERUSER_PASSWORD,
                 is_superuser=True,
+                user_type="admin",  # Set user_type to admin for superusers
             )
             crud_user.user.create(db, obj_in=user_in)
             db.commit()

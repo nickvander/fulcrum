@@ -22,6 +22,36 @@
   flex: 1;
 }
 
+/* Responsive design for mobile devices */
+@media screen and (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters mat-form-field {
+    min-width: auto;
+    width: 100%;
+  }
+
+  /* Hide less important columns on small screens */
+  .mat-column-avatar,
+  .mat-column-employee_id {
+    display: none;
+  }
+
+  /* Adjust table for mobile */
+  .mat-mdc-table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
 .badge {
   padding: 4px 8px;
   border-radius: 4px;
@@ -45,9 +75,60 @@
   color: white;
 }
 
-.status-label {
-  margin-left: 8px;
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+.avatar-placeholder {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.avatar-placeholder mat-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: #757575;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 0.8em;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-inactive {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+.status-label {
+  vertical-align: middle;
 }
 
 .inactive-user {

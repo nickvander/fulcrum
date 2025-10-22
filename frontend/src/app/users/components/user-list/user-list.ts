@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { UserService, UserListParams } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { RouterModule } from '@angular/router';
@@ -33,10 +34,11 @@ import { PasswordResetDialog } from '../password-reset-dialog/password-reset-dia
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatTooltipModule,
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'actions'];
+  displayedColumns: string[] = ['avatar', 'employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'actions'];
   dataSource: MatTableDataSource<User> = new MatTableDataSource();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -54,6 +56,10 @@ export class UserList implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadUsers();
+  }
+
+  avatarError(event: any): void {
+    event.target.src = 'assets/images/default-avatar.png';
   }
 
   ngAfterViewInit(): void {

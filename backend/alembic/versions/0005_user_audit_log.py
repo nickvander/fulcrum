@@ -1,6 +1,6 @@
 """Add user audit log table
 
-Revision ID: 0005_add_user_audit_log_table
+Revision ID: 0005_user_audit_log
 Revises: 0004_add_user_management_fields_and_address_model
 Create Date: 2025-10-20 06:45:00.000000
 

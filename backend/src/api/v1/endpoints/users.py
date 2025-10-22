@@ -150,7 +150,7 @@ def reset_password(
         user_id=user.id,
         action_performed_by=user.id,  # self-initiated reset
         action='password_reset',
-        details=f"Password reset using token",
+        details="Password reset using token",
         ip_address=request.client.host if request else "",
         user_agent=request.headers.get("user-agent", "") if request else ""
     )

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from src.crud.base import CRUDBase
 from src.models.address import Address
 from src.schemas.address import AddressCreate, AddressUpdate
-from src.schemas.address import Address as AddressInDB
+
 
 class CRUDAddress(CRUDBase[Address, AddressCreate, AddressUpdate]):
     def get_by_user(
@@ -32,7 +32,7 @@ class CRUDAddress(CRUDBase[Address, AddressCreate, AddressUpdate]):
         # First unset all primary addresses for this user
         db.query(self.model).filter(
             self.model.user_id == user_id,
-            self.model.is_primary == True
+            self.model.is_primary
         ).update({"is_primary": False})
         
         # Then set the specified address as primary

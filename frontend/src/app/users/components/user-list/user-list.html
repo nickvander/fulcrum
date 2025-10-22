@@ -37,6 +37,20 @@
   </div>
 
   <mat-table [dataSource]="dataSource" matSort>
+    <!-- Avatar Column -->
+    <ng-container matColumnDef="avatar">
+      <mat-header-cell *matHeaderCellDef>Avatar</mat-header-cell>
+      <mat-cell *matCellDef="let row">
+        <img *ngIf="row.avatar" [src]="row.avatar" 
+             [alt]="row.first_name + ' ' + row.last_name" 
+             class="avatar" 
+             (error)="avatarError($event)">
+        <div *ngIf="!row.avatar" class="avatar-placeholder">
+          <mat-icon>person</mat-icon>
+        </div>
+      </mat-cell>
+    </ng-container>
+
     <!-- Employee ID Column -->
     <ng-container matColumnDef="employee_id">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Employee ID</mat-header-cell>
@@ -58,7 +72,9 @@
     <!-- Email Column -->
     <ng-container matColumnDef="email">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Email</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.email}}</mat-cell>
+      <mat-cell *matCellDef="let row">
+        <span matTooltip="{{row.email}}">{{row.email}}</span>
+      </mat-cell>
     </ng-container>
 
     <!-- User Type Column -->
@@ -73,11 +89,11 @@
     <ng-container matColumnDef="is_active">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Active</mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <mat-icon [ngClass]="{'inactive-user': !row.is_active}">
-          {{row.is_active ? 'check_circle' : 'cancel'}}
-        </mat-icon>
-        <span class="status-label" [ngClass]="{'inactive-user': !row.is_active}">
-          {{row.is_active ? 'Active' : 'Inactive'}}
+        <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}">
+          <mat-icon class="status-icon">
+            {{row.is_active ? 'check_circle' : 'cancel'}}
+          </mat-icon>
+          <span class="status-label">{{row.is_active ? 'Active' : 'Inactive'}}</span>
         </span>
       </mat-cell>
     </ng-container>

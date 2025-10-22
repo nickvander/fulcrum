@@ -15,6 +15,7 @@ class UserBase(BaseModel):
     last_name: Optional[str] = None
     user_type: Optional[UserType] = None
     is_active: bool = True
+    avatar: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
