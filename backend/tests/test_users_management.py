@@ -1,8 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-import pytest
 from src import crud, models, schemas
-from src.schemas.user import UserType
 
 
 def test_create_user(client: TestClient, db: Session) -> None:
@@ -49,7 +47,7 @@ def test_get_users_list(client: TestClient, db: Session, test_admin_user: models
         first_name="List",
         last_name="Test"
     )
-    user = crud.user.create(db=db, obj_in=user_in)
+    crud.user.create(db=db, obj_in=user_in)
     
     # Login as admin to get user list
     login_data = {
@@ -245,7 +243,7 @@ def test_create_address_for_user(client: TestClient, db: Session, test_customer_
         "is_shipping": True
     }
     
-    response = client.post(f"/api/v1/addresses/", 
+    client.post("/api/v1/addresses/", 
                           json=address_data,
                           headers={"Authorization": f"Bearer {access_token}"})
     # Note: Address endpoint may not exist yet, so this might fail - that's expected at this phase

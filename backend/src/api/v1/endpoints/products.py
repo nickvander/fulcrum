@@ -2,6 +2,7 @@ import os
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 from src.api import dependencies
 from src.api.dependencies import get_db, get_ai_service
@@ -226,6 +227,7 @@ def adjust_stock(
         product_id=product_id,
         adjustment=stock_adjustment.adjustment,
         reason=stock_adjustment.reason,
+        timestamp=datetime.utcnow(),
         created_by=current_user.email if current_user.email else f"user_{current_user.id}"
     )
     db.add(inventory_adjustment)

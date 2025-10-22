@@ -1,27 +1,22 @@
 import pytest
 from sqlalchemy.orm import Session
 from unittest.mock import Mock
-from sqlalchemy import create_engine
+from datetime import datetime
 
-from src.config import settings
 from src.models import Product, InventoryItem, User
 from src.schemas.inventory import StockAdjustment
 from src.api.v1.endpoints.products import adjust_stock
 
 
 @pytest.fixture
-def db_session():
-    """Create a new database session for testing."""
-    # Create a test engine using the same settings as the main application
-    test_engine = create_engine(settings.DATABASE_URL)
-    connection = test_engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
-
+def db_session(db: Session):
+    """
+    Create test data using the properly initialized database session.
+    """
     # Create a test user and product for testing
-    test_user = User(email="test@example.com", hashed_password="hashed_testpassword", role="user")
-    session.add(test_user)
-    session.flush()  # Get the user ID
+    test_user = User(email="test@example.com", hashed_password="HashedTestPassword123!", role="user")
+    db.add(test_user)
+    db.flush()  # Get the user ID
     
     test_product = Product(
         name="Test Product",
@@ -29,8 +24,8 @@ def db_session():
         sku="TEST001",
         default_resale_price=10.0
     )
-    session.add(test_product)
-    session.flush()  # Get the product ID
+    db.add(test_product)
+    db.flush()  # Get the product ID
     
     # Create initial inventory
     initial_inventory = InventoryItem(
@@ -38,17 +33,12 @@ def db_session():
         quantity=10,
         location="default"
     )
-    session.add(initial_inventory)
-    session.commit()
+    db.add(initial_inventory)
+    db.commit()
     
-    yield session
+    yield db
     
-    # Rollback the transaction to clean up test data
-    session.close()
-    transaction.rollback()
-    connection.close()
-    # Dispose of the test engine
-    test_engine.dispose()
+    # Test data will be cleaned up automatically by the transaction rollback in the db fixture
 
 
 @pytest.mark.db
@@ -95,14 +85,15 @@ def test_adjust_stock_functionality(db_session: Session):
 @pytest.mark.db
 def test_adjust_stock_negative_value(db_session: Session):
     """Test that negative adjustments (decreases) work properly."""
-    # Add more inventory for testing
+    # Get the existing inventory item and update its quantity for testing
     test_product = db_session.query(Product).first()
-    inventory_item = InventoryItem(
-        product_id=test_product.id,
-        quantity=20,
-        location="default"
-    )
-    db_session.add(inventory_item)
+    existing_inventory = db_session.query(InventoryItem).filter(
+        InventoryItem.product_id == test_product.id,
+        InventoryItem.location == "default"
+    ).first()
+    
+    # Update the quantity to 20 for the test
+    existing_inventory.quantity = 20
     db_session.commit()
     
     # Create a mock current_user
@@ -151,7 +142,7 @@ def test_adjust_stock_without_reason(db_session: Session):
     # Verify the result
     main_inventory = next((item for item in result.inventory_items if item.location == "default"), None)
     assert main_inventory is not None
-    assert main_inventory.quantity == 17  # 10 (original) + 7 (adjustment)
+    assert main_inventory.quantity == 17  # 10 + 7 = 17
     
     # Check that an adjustment record was created without a reason
     adjustments = result.inventory_adjustments

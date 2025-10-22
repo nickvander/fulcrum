@@ -15,7 +15,7 @@ class CustomField(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True, unique=True)
-    type = Column(Enum(FieldType))
+    type = Column(Enum(FieldType, create_type=False))
 
 class ProductCustomField(Base):
     __tablename__ = "product_custom_fields"

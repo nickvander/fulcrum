@@ -12,7 +12,7 @@ def test_create_superuser(db: Session) -> None:
     """
     user_in = UserCreate(
         email="superuser@example.com",
-        password="password123",
+        password="SecurePass123!",
         is_superuser=True,
     )
     user = crud_user.user.create(db, obj_in=user_in)
