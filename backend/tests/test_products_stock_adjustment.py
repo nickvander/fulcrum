@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy.orm import Session
 from unittest.mock import Mock
-from datetime import datetime
 
 from src.models import Product, InventoryItem, User
 from src.schemas.inventory import StockAdjustment
