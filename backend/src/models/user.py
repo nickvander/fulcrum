@@ -25,7 +25,19 @@ class User(Base):
     # Relationship to password reset tokens
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
     
+    # Relationship to addresses
+    addresses = relationship("Address", back_populates="user", cascade="all, delete-orphan")
+    
+    # Relationship to password reset tokens
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+    
     # Relationship to audit logs (what happened to this user)
     audit_logs = relationship("UserAuditLog", foreign_keys="UserAuditLog.user_id", back_populates="user", cascade="all, delete-orphan")
     # Relationship to audit logs (what this user did to others)
     performed_audit_logs = relationship("UserAuditLog", foreign_keys="UserAuditLog.action_performed_by", back_populates="actor", cascade="all, delete-orphan")
+    
+    # Avatar field for profile picture
+    avatar = Column(String, nullable=True)  # URL or path to user's avatar image
+    
+    # Avatar field for profile picture
+    avatar = Column(String, nullable=True)  # URL or path to user's avatar image

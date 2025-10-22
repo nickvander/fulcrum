@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from src import crud, models, schemas
+from src import crud, models
 from src.schemas import address as address_schema
 from src.api import dependencies
 

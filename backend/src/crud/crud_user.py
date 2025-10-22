@@ -141,8 +141,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         """
         Permanently delete a user with audit logging.
         """
-        from src.models.user_audit_log import UserAuditLog
-        from src.models.user import User
+
         
         # Get user for audit logging before deletion
         user = self.get(db, id=id)

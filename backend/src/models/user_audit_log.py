@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -23,7 +23,3 @@ class UserAuditLog(Base):
     actor = relationship("User", foreign_keys=[action_performed_by], back_populates="performed_audit_logs")
 
 
-# Add relationships to the User model
-from .user import User  # Import here to avoid circular import in models/__init__.py
-User.audit_logs = relationship("UserAuditLog", foreign_keys=[UserAuditLog.user_id], back_populates="user")
-User.performed_audit_logs = relationship("UserAuditLog", foreign_keys=[UserAuditLog.action_performed_by], back_populates="actor")

@@ -7,6 +7,7 @@ export interface User {
   user_type: 'admin' | 'employee' | 'customer' | null;
   is_active: boolean;
   is_superuser: boolean;
+  avatar?: string | null;
   created_at?: string;
   updated_at?: string;
 }
