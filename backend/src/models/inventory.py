@@ -28,6 +28,7 @@ class InventoryAdjustment(Base):
     variant_id = Column(Integer, ForeignKey("product_variants.id", ondelete="CASCADE"), nullable=True)  # Nullable to support base products
     adjustment = Column(Integer, nullable=False)  # Positive for additions, negative for subtractions
     reason = Column(String)  # Reason for the adjustment
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=True)  # Timestamp of the adjustment
     created_by = Column(String, nullable=False)  # User who made the adjustment
     created_at = Column(DateTime, default=datetime.utcnow)
     

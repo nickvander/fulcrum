@@ -35,7 +35,8 @@ class InventoryAdjustment(BaseModel):
     variant_id: Optional[int] = None  # Added for variant support
     adjustment: int  # Positive for additions, negative for subtractions
     reason: Optional[str] = None
-    created_at: Optional[str] = None  # Changed from timestamp to match model, made optional for existing records
+    timestamp: Optional[str] = None  # Timestamp of the adjustment
+    created_at: Optional[str] = None  # Added for consistency
     created_by: Optional[str] = None  # Made optional to handle existing records
     
     @classmethod
@@ -48,6 +49,9 @@ class InventoryAdjustment(BaseModel):
                 data[field_name] = value.isoformat()
             else:
                 data[field_name] = value
+        # Handle timestamp field which might be accessed from the ORM object
+        if hasattr(obj, 'timestamp') and obj.timestamp is not None:
+            data['timestamp'] = obj.timestamp.isoformat()
         return cls(**data)
     
     model_config = ConfigDict(from_attributes=True)

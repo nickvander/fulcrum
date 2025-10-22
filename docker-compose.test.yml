@@ -14,8 +14,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U fulcrum_test -d fulcrum_test"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   backend:
     build: ./backend
@@ -33,7 +34,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://fulcrum_test:fulcrum_test@db-test:5432/fulcrum_test
       - FIRST_SUPERUSER_EMAIL=test@example.com
-      - FIRST_SUPERUSER_PASSWORD=testpassword
+      - FIRST_SUPERUSER_PASSWORD=SecurePass123!
       - REDIS_URL=redis://localhost:6379/0
       - SECRET_KEY=testsecretkey
 
@@ -41,7 +42,7 @@ services:
     build: ./backend
     environment:
       - FIRST_SUPERUSER_EMAIL=test@example.com
-      - FIRST_SUPERUSER_PASSWORD=testpassword
+      - FIRST_SUPERUSER_PASSWORD=SecurePass123!
     healthcheck:
       test: ["CMD", "celery", "-A", "src.celery_worker.celery_app", "status"]
       interval: 10s

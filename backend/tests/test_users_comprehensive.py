@@ -1,10 +1,7 @@
 """Comprehensive tests for user management endpoints with validation and QA"""
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-import pytest
 from src import crud, models, schemas
-from src.schemas.user import UserType
-import json
 
 
 def test_create_user_comprehensive(client: TestClient, db: Session) -> None:

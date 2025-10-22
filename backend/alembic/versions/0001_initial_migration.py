@@ -152,10 +152,11 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_sales_order_items_id'), 'sales_order_items', ['id'], unique=False)
 
+    # Create ENUM type for custom fields if it doesn't exist
     op.create_table('custom_fields',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(), nullable=True),
-        sa.Column('type', sa.Enum('TEXT', 'NUMBER', 'BOOLEAN', 'DATE', name='fieldtype', create_type=False), nullable=True),
+        sa.Column('type', sa.Enum('TEXT', 'NUMBER', 'BOOLEAN', 'DATE', name='fieldtype'), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_custom_fields_id'), 'custom_fields', ['id'], unique=False)
@@ -192,3 +193,4 @@ def downgrade() -> None:
     
     # Drop lookup tables last
     op.execute('DROP TABLE IF EXISTS custom_fields')
+    op.execute('DROP TYPE IF EXISTS fieldtype')
