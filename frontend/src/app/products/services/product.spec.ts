@@ -46,7 +46,7 @@ describe('ProductService', () => {
     it('should fetch products and update the products$ stream', () => {
       service.getProducts().subscribe();
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       expect(req.request.method).toBe('GET');
       req.flush(mockProducts);
 
@@ -66,11 +66,11 @@ describe('ProductService', () => {
         expect(product).toEqual(createdProduct);
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       expect(req.request.method).toBe('POST');
       req.flush(createdProduct);
 
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       getReq.flush([...mockProducts, createdProduct]);
 
       service.products$.subscribe(products => {
@@ -94,7 +94,7 @@ describe('ProductService', () => {
       expect(putReq.request.method).toBe('PUT');
       putReq.flush(updatedProduct);
 
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       getReq.flush(mockProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
 
       service.products$.subscribe(products => {
@@ -115,7 +115,7 @@ describe('ProductService', () => {
       expect(deleteReq.request.method).toBe('DELETE');
       deleteReq.flush({});
 
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       getReq.flush(mockProducts.filter(p => p.id !== productIdToDelete));
 
       service.products$.subscribe(products => {

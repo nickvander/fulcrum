@@ -7,14 +7,16 @@ The Product Form component has been refactored to improve maintainability and te
 ## Components
 
 ### ProductForm Component
+
 - **Purpose**: Main form component for creating/editing products
-- **Responsibilities**: 
+- **Responsibilities**:
   - Managing core product data (name, SKU, pricing, dimensions)
   - Handling form submission and navigation
   - Managing custom fields
   - Coordinating with child components
 
 ### ProductFormImageGallery Component
+
 - **Purpose**: Handle all image-related functionality
 - **Responsibilities**:
   - Managing staged images (newly selected files)
@@ -46,6 +48,7 @@ The parent component handles these events to update its internal state according
 ## Testing Strategy
 
 With the refactored architecture:
+
 - The main ProductForm component tests focus on form logic and non-image functionality
 - The ProductFormImageGallery component has its own dedicated test suite
 - This separation reduces the complexity of individual test suites
@@ -55,6 +58,7 @@ With the refactored architecture:
 ## UI/UX Notes
 
 The refactored component maintains the same visual design and user experience as the original:
+
 - Image controls (set primary, delete) appear as overlays on hover
 - Images maintain the same sizing and styling
 - Staged/new images have the same visual treatment with overlay controls
