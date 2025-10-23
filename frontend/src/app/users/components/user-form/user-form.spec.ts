@@ -28,6 +28,7 @@ describe('UserForm', () => {
   beforeEach(async () => {
     const userServiceSpy = jasmine.createSpyObj('UserService', ['createUser', 'updateUser', 'getUser']);
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin']);
+    authServiceSpy.isAdmin.and.returnValue(of(false)); // Mock the return value
 
     await TestBed.configureTestingModule({
       imports: [

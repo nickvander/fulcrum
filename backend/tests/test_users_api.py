@@ -5,7 +5,12 @@ from fastapi.testclient import TestClient
 def test_create_user(client: TestClient):
     response = client.post(
         "/api/v1/users/",
-        json={"email": "test-create-user-7@example.com", "password": "password123"},
+        json={
+            "email": "test-create-user-7@example.com", 
+            "password": "Password123!",
+            "first_name": "Test",
+            "last_name": "User"
+        },
     )
     assert response.status_code == 200
     data = response.json()

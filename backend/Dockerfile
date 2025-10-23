@@ -32,6 +32,7 @@ COPY --from=builder --chown=appuser:appgroup /app/venv /app/venv
 
 # Copy the application source code with correct ownership
 COPY --chown=appuser:appgroup ./src /app/src
+COPY --chown=appuser:appgroup ./pytest.ini /app/pytest.ini
 
 # Create and set permissions for the uploads directory
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app/uploads

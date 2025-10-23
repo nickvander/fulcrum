@@ -1,44 +1,62 @@
 # Database Architecture
 
-This document provides an overview of the database schema and relationships in the Fulcrum platform. The database is designed to support inventory management, user accounts, marketplace integrations, and order processing with a clean, normalized structure.
+This document provides an overview of the database schema and relationships in
+the Fulcrum platform. The database is designed to support inventory management,
+user accounts, marketplace integrations, and order processing with a clean,
+normalized structure.
 
 ## Core Tables Overview
 
 ### User Management
-The user system supports different types of users with appropriate access controls and authentication.
 
-- **users**: Stores user account information including credentials and permissions.
+The user system supports different types of users with appropriate access
+controls and authentication.
+
+- **users**: Stores user account information including credentials and
+  permissions.
 
 ### Product Catalog
-The product catalog supports complex product structures with variants, custom fields, and rich media.
 
-- **products**: Main product table with standard attributes like name, SKU, pricing, and dimensions.
+The product catalog supports complex product structures with variants, custom
+fields, and rich media.
+
+- **products**: Main product table with standard attributes like name, SKU,
+  pricing, and dimensions.
 - **product_images**: Stores all images associated with each product.
-- **product_variants**: Handles product variations (size, color, etc.) for the same base product.
+- **product_variants**: Handles product variations (size, color, etc.) for the
+  same base product.
 - **custom_fields**: Defines custom attributes that can be applied to products.
 - **product_custom_fields**: Links products to their custom field values.
-- **product_templates**: Template system for creating new products with predefined attributes.
+- **product_templates**: Template system for creating new products with
+  predefined attributes.
 
 ### Inventory Management
-The inventory system tracks stock levels and provides full audit trails for changes.
+
+The inventory system tracks stock levels and provides full audit trails for
+changes.
 
 - **inventory_items**: Current stock levels for products and variants.
-- **inventory_adjustments**: Historical record of all inventory changes for audit purposes.
+- **inventory_adjustments**: Historical record of all inventory changes for
+  audit purposes.
 
 ### Marketplace Integration
+
 System for connecting with external marketplaces and managing listings.
 
 - **marketplaces**: Configuration for supported marketplaces.
 - **marketplace_credentials**: User-specific credentials for marketplace APIs.
-- **marketplace_listings**: Links products to their external marketplace listings.
+- **marketplace_listings**: Links products to their external marketplace
+  listings.
 
 ### Order Processing
+
 Support for sales order management with full itemization.
 
 - **sales_orders**: Main order records with status and pricing information.
 - **sales_order_items**: Individual line items for each order.
 
 ### Suppliers
+
 Supplier management for tracking product sources.
 
 - **suppliers**: Supplier contact and identification information.
@@ -56,7 +74,7 @@ erDiagram
         string role
         bool is_superuser
     }
-    
+
     marketplace_credentials {
         int id PK
         int user_id FK
@@ -65,13 +83,13 @@ erDiagram
         string refresh_token
         timestamp expires_at
     }
-    
+
     marketplaces {
         int id PK
         string name UK
         string api_base_url
     }
-    
+
     users ||--o{ marketplace_credentials : has
     marketplaces ||--o{ marketplace_credentials : uses
 ```
@@ -98,7 +116,7 @@ erDiagram
         float depth
         float weight
     }
-    
+
     suppliers {
         int id PK
         string name
@@ -106,7 +124,7 @@ erDiagram
         string email UK
         string phone
     }
-    
+
     product_images {
         int id PK
         int product_id FK
@@ -116,7 +134,7 @@ erDiagram
         string title
         string description
     }
-    
+
     product_variants {
         int id PK
         int product_id FK
@@ -129,20 +147,20 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     custom_fields {
         int id PK
         string name
         enum type
     }
-    
+
     product_custom_fields {
         int id PK
         int product_id FK
         int custom_field_id FK
         string value
     }
-    
+
     product_templates {
         int id PK
         string name
@@ -160,7 +178,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     products ||--o{ product_images : has
     products ||--o{ product_variants : has
     products ||--o{ product_custom_fields : has
@@ -185,7 +203,7 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
-    
+
     inventory_adjustments {
         int id PK
         int product_id FK
@@ -195,7 +213,7 @@ erDiagram
         string created_by
         datetime created_at
     }
-    
+
     products ||--o{ inventory_items : tracks
     products ||--o{ inventory_adjustments : adjusts
     product_variants ||--o{ inventory_items : tracks
@@ -214,7 +232,7 @@ erDiagram
         enum source
         string external_order_id
     }
-    
+
     sales_order_items {
         int id PK
         int order_id FK
@@ -222,7 +240,7 @@ erDiagram
         int quantity
         float price_per_unit
     }
-    
+
     products ||--o{ sales_order_items : sold_in
     sales_orders ||--o{ sales_order_items : contains
 ```
@@ -239,7 +257,7 @@ erDiagram
         string listing_url
         string status
     }
-    
+
     marketplaces ||--o{ marketplace_listings : lists
     products ||--o{ marketplace_listings : listed_on
     users ||--o{ marketplace_credentials : connects_to
@@ -249,18 +267,26 @@ erDiagram
 ## Key Relationships
 
 ### One-to-Many Relationships
-- **users** → **marketplace_credentials** (one user can have credentials for multiple marketplaces)
-- **suppliers** → **products** (one supplier can supply many products)  
+
+- **users** → **marketplace_credentials** (one user can have credentials for
+  multiple marketplaces)
+- **suppliers** → **products** (one supplier can supply many products)
 - **products** → **product_images** (one product can have many images)
 - **products** → **product_variants** (one product can have many variants)
-- **products** → **product_custom_fields** (one product can have many custom field values)
-- **products** → **inventory_items** (one product can have inventory in multiple locations)
-- **products** → **inventory_adjustments** (one product can have many inventory adjustments)
-- **products** → **sales_order_items** (one product can appear in many order items)
+- **products** → **product_custom_fields** (one product can have many custom
+  field values)
+- **products** → **inventory_items** (one product can have inventory in multiple
+  locations)
+- **products** → **inventory_adjustments** (one product can have many inventory
+  adjustments)
+- **products** → **sales_order_items** (one product can appear in many order
+  items)
 - **sales_orders** → **sales_order_items** (one order can contain many items)
 
 ### Many-to-Many Relationships
+
 The system uses junction tables to handle many-to-many relationships:
+
 - **marketplace_credentials** connects **users** and **marketplaces**
 - **product_custom_fields** connects **products** and **custom_fields**
 - **marketplace_listings** connects **products** and **marketplaces**
@@ -269,8 +295,13 @@ The system uses junction tables to handle many-to-many relationships:
 
 The database schema follows these key principles:
 
-1. **Normalization**: Tables are normalized to reduce redundancy and maintain data integrity.
-2. **Referential Integrity**: Foreign key constraints ensure relationships between tables are maintained.
-3. **Cascading Deletes**: Where appropriate, cascading deletes ensure related data is cleaned up properly when parent records are removed.
-4. **Indexing**: Critical columns (primary keys, foreign keys, unique constraints) are indexed for performance.
-5. **Audit Trail**: The inventory adjustment table maintains a complete history of all stock changes.
+1. **Normalization**: Tables are normalized to reduce redundancy and maintain
+   data integrity.
+2. **Referential Integrity**: Foreign key constraints ensure relationships
+   between tables are maintained.
+3. **Cascading Deletes**: Where appropriate, cascading deletes ensure related
+   data is cleaned up properly when parent records are removed.
+4. **Indexing**: Critical columns (primary keys, foreign keys, unique
+   constraints) are indexed for performance.
+5. **Audit Trail**: The inventory adjustment table maintains a complete history
+   of all stock changes.
