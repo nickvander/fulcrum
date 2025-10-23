@@ -1,8 +1,11 @@
 """Comprehensive tests for user management endpoints with validation and QA"""
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from src import crud, models, schemas
 
+# Mark all tests in this module as database-dependent
+pytestmark = pytest.mark.db
 
 def test_create_user_comprehensive(client: TestClient, db: Session) -> None:
     """Test comprehensive user creation with all fields"""
