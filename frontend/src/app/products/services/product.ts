@@ -264,15 +264,30 @@ export class ProductService {
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
     return this.http.post<Product>(`${this.apiUrl}/`, product).pipe(
       tap(() => this.notificationService.showSuccess('Product created successfully!')),
-      tap(newProduct => {
-        // Add the new product to the local cache
-        const currentProducts = this._products.getValue();
-        const productWithPrimaryImage = {
-          ...newProduct,
-          primary_image: newProduct.images?.find(img => img.is_primary) ?? newProduct.images?.[0]
-        };
-        this._products.next([...currentProducts, productWithPrimaryImage]);
-      })
+      switchMap(newProduct => 
+        this.getProducts().pipe(
+          tap(() => {
+            // Update the local cache after refreshing
+            const currentProducts = this._products.getValue();
+            const productWithPrimaryImage = {
+              ...newProduct,
+              primary_image: newProduct.images?.find(img => img.is_primary) ?? newProduct.images?.[0]
+            };
+            // Find if the product already exists in the list
+            const existingIndex = currentProducts.findIndex(p => p.id === newProduct.id);
+            if (existingIndex >= 0) {
+              // Update existing product
+              const updatedProducts = [...currentProducts];
+              updatedProducts[existingIndex] = productWithPrimaryImage;
+              this._products.next(updatedProducts);
+            } else {
+              // Add new product
+              this._products.next([...currentProducts, productWithPrimaryImage]);
+            }
+          }),
+          map(() => newProduct)
+        )
+      )
     );
   }
 
