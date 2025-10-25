@@ -74,9 +74,8 @@ describe('PaginationComponent', () => {
     component.totalPages = 10;
     fixture.detectChanges();
     
-    // This would need to test the private generatePageNumbers method indirectly
-    // by checking if pages are generated properly
-    expect(component['generatePageNumbers']).toBeDefined();
+    // Test page numbers are generated properly by checking the component's pages array
+    expect(component.pages.length).toBeGreaterThan(0);
   });
 
   it('should calculate end item correctly', () => {
