@@ -62,12 +62,30 @@ export class UserForm implements OnInit {
   ngOnInit(): void {
     // Check if current user is admin to determine visibility of superuser toggle
     // Add defensive check to prevent errors in test environments
-    if (this.authService && typeof this.authService.isAdmin === 'function') {
-      this.authService.isAdmin().subscribe(isAdmin => {
-        this.isCurrentUserAdmin = isAdmin;
-      });
-    } else {
-      // Fallback for test environments or when authService is not properly initialized
+    try {
+      if (this.authService && typeof this.authService.isAdmin === 'function') {
+        const isAdminObservable = this.authService.isAdmin();
+        if (isAdminObservable && typeof isAdminObservable.subscribe === 'function') {
+          isAdminObservable.subscribe({
+            next: (isAdmin) => {
+              this.isCurrentUserAdmin = isAdmin;
+            },
+            error: (error) => {
+              console.warn('Error checking admin status:', error);
+              this.isCurrentUserAdmin = false;
+            }
+          });
+        } else {
+          // Fallback for test environments or when authService returns undefined
+          this.isCurrentUserAdmin = false;
+        }
+      } else {
+        // Fallback for test environments or when authService is not properly initialized
+        this.isCurrentUserAdmin = false;
+      }
+    } catch (error) {
+      // Catch any unexpected errors and set a default value
+      console.warn('Error checking admin status:', error);
       this.isCurrentUserAdmin = false;
     }
 
