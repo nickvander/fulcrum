@@ -66,7 +66,7 @@ describe('ProductService', () => {
         expect(product).toEqual(createdProduct);
       });
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
       expect(req.request.method).toBe('POST');
       req.flush(createdProduct);
 
