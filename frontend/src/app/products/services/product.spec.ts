@@ -44,11 +44,11 @@ describe('ProductService', () => {
 
   describe('getProducts', () => {
     it('should fetch products and update the products$ stream', () => {
-      service.getProducts().subscribe();
+      service.getProducts(1, 10).subscribe(); // Explicitly call with page and limit params
 
       const req = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       expect(req.request.method).toBe('GET');
-      req.flush(mockProducts);
+      req.flush({ data: mockProducts, currentPage: 1, totalPages: 1, totalItems: 2, pageSize: 10, hasNextPage: false, hasPrevPage: false });
 
       service.products$.subscribe(products => {
         expect(products[0].primary_image).toEqual(mockProducts[0].images![0]);
@@ -62,28 +62,38 @@ describe('ProductService', () => {
       const newProduct: Omit<Product, 'id'> = { name: 'New Product', sku: 'P003', description: '', default_resale_price: 30 };
       const createdProduct: Product = { id: 3, ...newProduct, images: [] };
 
+      // Subscribe to the createProduct observable but don't expect anything immediately
       service.createProduct(newProduct).subscribe(product => {
         expect(product).toEqual(createdProduct);
       });
 
+      // Expect and flush the POST request
       const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
       expect(req.request.method).toBe('POST');
       req.flush(createdProduct);
 
+      // Expect and flush the GET request that should be made after the POST
       const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
       getReq.flush([...mockProducts, createdProduct]);
 
+      // Verify that the products stream was updated
       service.products$.subscribe(products => {
         expect(products.length).toBe(3);
         expect(products[2].primary_image).toBeUndefined();
       });
 
+      // Verify that the notification was shown
       expect(notificationServiceMock.showSuccess).toHaveBeenCalledWith('Product created successfully!');
     });
   });
 
   describe('updateProduct', () => {
     it('should update a product, update the stream, and show notification', () => {
+      // First populate the internal cache by calling getProducts
+      service['getProductsLegacy']().subscribe();
+      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      req.flush(mockProducts);
+
       const updatedProduct: Product = { ...mockProducts[0], name: 'Updated Name' };
 
       service.updateProduct(updatedProduct).subscribe(product => {
@@ -92,15 +102,15 @@ describe('ProductService', () => {
 
       const putReq = httpMock.expectOne(`${environment.apiUrl}/products/${updatedProduct.id}`);
       expect(putReq.request.method).toBe('PUT');
+      expect(putReq.request.body).toEqual(updatedProduct);
       putReq.flush(updatedProduct);
 
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
-      getReq.flush(mockProducts.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-
-      service.products$.subscribe(products => {
-        expect(products.length).toBe(2);
-        expect(products[0].name).toBe('Updated Name');
-      });
+      // Check if the BehaviorSubject has been updated correctly
+      const currentProducts = service['_products'].getValue();
+      expect(currentProducts.length).toBe(2);
+      const updatedProductInCache = currentProducts.find(p => p.id === updatedProduct.id);
+      expect(updatedProductInCache).toBeDefined();
+      expect(updatedProductInCache?.name).toBe('Updated Name');
 
       expect(notificationServiceMock.showSuccess).toHaveBeenCalledWith('Product updated successfully!');
     });

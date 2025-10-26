@@ -63,10 +63,12 @@ export class UserForm implements OnInit {
     // Check if current user is admin to determine visibility of superuser toggle
     // Add defensive check to prevent errors in test environments
     try {
+      // Extra defensive check to ensure authService exists
       if (this.authService && typeof this.authService.isAdmin === 'function') {
-        const isAdminObservable = this.authService.isAdmin();
-        if (isAdminObservable && typeof isAdminObservable.subscribe === 'function') {
-          isAdminObservable.subscribe({
+        const isAdminResult = this.authService.isAdmin();
+        // Extra defensive check to ensure isAdmin() returns a valid observable
+        if (isAdminResult && typeof isAdminResult.subscribe === 'function') {
+          isAdminResult.subscribe({
             next: (isAdmin) => {
               this.isCurrentUserAdmin = isAdmin;
             },
