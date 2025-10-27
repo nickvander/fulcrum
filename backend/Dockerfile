@@ -4,8 +4,11 @@ FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Copy only the requirements file to leverage Docker cache
-COPY requirements.txt .
+# Build argument to choose requirements file
+ARG REQUIREMENTS_FILE=requirements.txt
+
+# Copy the requirements file
+COPY $REQUIREMENTS_FILE ./requirements.txt
 
 # Create a virtual environment and install dependencies into it
 RUN python -m pip install --upgrade pip && \
