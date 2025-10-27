@@ -32,9 +32,13 @@ jobs:
     - name: Run DB Tests
       run: |
         docker compose -f docker-compose.test.yml up -d --build db-test backend
+        echo "Waiting for backend service to be ready..."
         docker compose -f docker-compose.test.yml wait backend
+        echo "Backend service is ready, checking container status..."
+        docker compose -f docker-compose.test.yml ps
         echo "Running tests..."
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c pytest.ini tests/test_ai_api.py tests/test_crud.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down
 
@@ -57,9 +61,13 @@ jobs:
     - name: Run DB Tests
       run: |
         docker compose -f docker-compose.test.yml up -d --build db-test backend
+        echo "Waiting for backend service to be ready..."
         docker compose -f docker-compose.test.yml wait backend
+        echo "Backend service is ready, checking container status..."
+        docker compose -f docker-compose.test.yml ps
         echo "Running tests..."
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c pytest.ini tests/test_marketplace_api.py tests/test_products_api.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down
 
@@ -82,8 +90,12 @@ jobs:
     - name: Run DB Tests
       run: |
         docker compose -f docker-compose.test.yml up -d --build db-test backend
+        echo "Waiting for backend service to be ready..."
         docker compose -f docker-compose.test.yml wait backend
+        echo "Backend service is ready, checking container status..."
+        docker compose -f docker-compose.test.yml ps
         echo "Running tests..."
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down
