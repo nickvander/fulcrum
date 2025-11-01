@@ -19,16 +19,20 @@ itself.
     [frontend](../getting-started/frontend-setup.md).
 4.  **Make your changes.** Please adhere to the coding style and conventions
     used throughout the project.
-5.  **Commit your changes** with a clear and descriptive commit message. We
+5.  **Run local quality checks** using the git hooks that will also run in CI:
+    - The **pre-commit** hook runs fast backend tests and linter on your changes.
+    - The **pre-push** hook runs the full CI test suite (backend, frontend, and linting)
+      to ensure comprehensive coverage before pushing code.
+6.  **Commit your changes** with a clear and descriptive commit message. We
     follow the [Conventional Commits](https://www.conventionalcommits.org/)
     specification.
-6.  **Push your branch** to your fork:
+7.  **Push your branch** to your fork:
 
     ```bash
     git push origin feature/your-feature-name
     ```
 
-7.  **Open a pull request** to the `main` branch of the original repository.
+8.  **Open a pull request** to the `main` branch of the original repository.
 
 ## Coding Standards
 

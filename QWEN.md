@@ -68,7 +68,15 @@ following principles:
     - **Alternative:** To format all Markdown files from the command line, run
       `npm run format:md` from the root of the project.
 
-8.  **Documentation Review:** At the end of each development phase, a thorough
+8.  **Git Hooks for Quality Assurance:** The project uses git hooks to ensure code quality
+    before commits and pushes:
+    - **pre-commit hook:** Runs fast backend tests and linter to catch issues early.
+    - **pre-push hook:** Runs the full CI test suite (backend, frontend, and linting) to
+      ensure all code passes comprehensive tests before being pushed to the repository.
+    - Both hooks are automatically installed in the `.git/hooks/` directory and execute
+      the scripts in the `scripts/` directory.
+
+9.  **Documentation Review:** At the end of each development phase, a thorough
     review of all documentation (`README.md`, `/docs`, etc.) must be conducted
     to ensure it is up-to-date with the latest changes.
 
