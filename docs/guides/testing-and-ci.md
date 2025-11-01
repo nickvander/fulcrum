@@ -65,6 +65,16 @@ efficiency by running jobs in parallel and triggering them only when relevant
 code changes. Workflows are triggered on every `push` and `pull_request` to the
 `main` branch.
 
+### Local Quality Assurance with Git Hooks
+
+In addition to the CI pipeline, this project uses git hooks to enforce code quality
+before commits and pushes:
+
+- **pre-commit hook:** Runs fast backend tests and linter to catch issues early
+  in the development process.
+- **pre-push hook:** Runs the full CI test suite (backend, frontend, and linting)
+  to ensure all code passes comprehensive tests before being pushed to the repository.
+
 ### 1. Linting (`ci-lint.yml`)
 
 - **Trigger:** Runs on changes to any file _except_ those in documentation-only
