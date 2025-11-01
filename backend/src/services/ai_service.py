@@ -1,5 +1,4 @@
 from typing import Protocol
-from sentence_transformers import SentenceTransformer
 
 class AIService(Protocol):
     def generate_embedding(self, text: str) -> list[float]:
@@ -7,7 +6,12 @@ class AIService(Protocol):
 
 class SentenceTransformerService:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+        # Defer the import until the class is actually used
+        try:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(model_name)
+        except ImportError:
+            raise ImportError("sentence-transformers is required for this service but is not installed.")
 
     def generate_embedding(self, text: str) -> list[float]:
         embedding = self.model.encode(text)
@@ -25,6 +29,6 @@ def get_ai_service() -> AIService:
     # otherwise fall back to the dummy.
     try:
         return SentenceTransformerService()
-    except Exception as e:
+    except (ImportError, Exception) as e:
         print(f"Could not load SentenceTransformer model, falling back to dummy AI service. Error: {e}")
         return DummyAIService()
