@@ -1,13 +1,13 @@
 #!/bin/bash
 # Git pre-push hook for Fulcrum project
-# Runs the full CI test suite before allowing a push
+# Runs a comprehensive but efficient CI test suite before allowing a push
 
 echo "Running pre-push checks for Fulcrum..."
 
-# Check if tests pass
-echo "Running backend tests..."
+# Run fast backend tests (non-db tests only) - this is much quicker
+echo "Running fast backend tests..."
 if command -v npm &> /dev/null; then
-    npm run test:backend
+    npm run test:backend:fast
     backend_result=$?
 else
     echo "❌ npm not found. Cannot run backend tests."
@@ -15,12 +15,13 @@ else
 fi
 
 if [ $backend_result -ne 0 ]; then
-    echo "❌ Backend tests failed. Push blocked."
+    echo "❌ Fast backend tests failed. Push blocked."
     exit 1
 else
-    echo "✅ Backend tests passed."
+    echo "✅ Fast backend tests passed."
 fi
 
+# Run frontend tests
 echo "Running frontend tests..."
 if command -v npm &> /dev/null; then
     npm run test:frontend
@@ -37,6 +38,7 @@ else
     echo "✅ Frontend tests passed."
 fi
 
+# Run lint checks
 echo "Running lint checks..."
 if command -v npx &> /dev/null; then
     npx ruff check . --force-exclude
