@@ -6,9 +6,15 @@ echo "Running pre-push checks for Fulcrum..."
 
 # Check if tests pass
 echo "Running backend tests..."
-npm run test:backend
+if command -v npm &> /dev/null; then
+    npm run test:backend
+    backend_result=$?
+else
+    echo "❌ npm not found. Cannot run backend tests."
+    exit 1
+fi
 
-if [ $? -ne 0 ]; then
+if [ $backend_result -ne 0 ]; then
     echo "❌ Backend tests failed. Push blocked."
     exit 1
 else
@@ -16,9 +22,15 @@ else
 fi
 
 echo "Running frontend tests..."
-npm run test:frontend
+if command -v npm &> /dev/null; then
+    npm run test:frontend
+    frontend_result=$?
+else
+    echo "❌ npm not found. Cannot run frontend tests."
+    exit 1
+fi
 
-if [ $? -ne 0 ]; then
+if [ $frontend_result -ne 0 ]; then
     echo "❌ Frontend tests failed. Push blocked."
     exit 1
 else
@@ -26,9 +38,18 @@ else
 fi
 
 echo "Running lint checks..."
-npx ruff check .
+if command -v npx &> /dev/null; then
+    npx ruff check . --force-exclude
+    lint_result=$?
+elif command -v ruff &> /dev/null; then
+    ruff check . --force-exclude
+    lint_result=$?
+else
+    echo "❌ Ruff linter not found. Please install ruff or npx."
+    exit 1
+fi
 
-if [ $? -ne 0 ]; then
+if [ $lint_result -ne 0 ]; then
     echo "❌ Lint checks failed. Push blocked."
     exit 1
 else
