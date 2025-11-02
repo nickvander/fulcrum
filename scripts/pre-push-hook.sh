@@ -63,26 +63,33 @@ fi
 
 # Run lint checks
 echo "Running lint checks..."
-if command -v npx &> /dev/null; then
-    npx ruff check . --force-exclude
-    lint_result=$?
-elif [ -f ".venv/bin/ruff" ]; then
-    # Use virtual environment ruff if available
-    .venv/bin/ruff check . --force-exclude
-    lint_result=$?
-elif command -v ruff &> /dev/null; then
-    ruff check . --force-exclude
-    lint_result=$?
-else
-    echo "❌ Ruff linter not found. Please install ruff or npx."
-    exit 1
-fi
-
-if [ $lint_result -ne 0 ]; then
-    echo "❌ Lint checks failed. Push blocked."
-    exit 1
-else
+# Try multiple approaches to run ruff
+if command -v npx &> /dev/null && npx ruff check . --force-exclude 2>/dev/null; then
     echo "✅ Lint checks passed."
+    lint_result=0
+elif [ -f ".venv/bin/ruff" ] && .venv/bin/ruff check . --force-exclude 2>/dev/null; then
+    echo "✅ Lint checks passed."
+    lint_result=0
+elif command -v ruff &> /dev/null && ruff check . --force-exclude 2>/dev/null; then
+    echo "✅ Lint checks passed."
+    lint_result=0
+elif command -v python && python -c "import ruff" 2>/dev/null && python -m ruff check . --force-exclude 2>/dev/null; then
+    echo "✅ Lint checks passed."
+    lint_result=0
+else
+    # If all else fails, try running the ruff command and see if it succeeds
+    ruff check . --force-exclude 2>/dev/null
+    lint_result=$?
+    if [ $lint_result -eq 0 ]; then
+        echo "✅ Lint checks passed."
+    else
+        echo "❌ Lint checks failed. Push blocked."
+        echo "Please install ruff to run lint checks:"
+        echo "  pip install ruff"
+        echo "  # or"
+        echo "  npm install -g ruff"
+        exit 1
+    fi
 fi
 
 echo "✅ All checks passed. Proceeding with push..."
