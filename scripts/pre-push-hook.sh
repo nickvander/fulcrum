@@ -6,12 +6,26 @@ echo "Running pre-push checks for Fulcrum..."
 
 # Run fast backend tests (non-db tests only) - this is much quicker
 echo "Running fast backend tests..."
-if command -v npm &> /dev/null; then
-    npm run test:backend:fast
+if [ -f ".venv/bin/activate" ]; then
+    # Use virtual environment if available
+    source .venv/bin/activate
+    cd backend && python -m pytest -c pytest.ini -m 'not db'
     backend_result=$?
+    cd ..
+elif command -v pytest &> /dev/null; then
+    # Fallback to system pytest if available
+    cd backend && pytest -c pytest.ini -m 'not db'
+    backend_result=$?
+    cd ..
 else
-    echo "❌ npm not found. Cannot run backend tests."
-    exit 1
+    # Fallback to npm script
+    if command -v npm &> /dev/null; then
+        npm run test:backend:fast
+        backend_result=$?
+    else
+        echo "❌ No way to run fast backend tests. Please install pytest or npm."
+        exit 1
+    fi
 fi
 
 if [ $backend_result -ne 0 ]; then
@@ -42,6 +56,10 @@ fi
 echo "Running lint checks..."
 if command -v npx &> /dev/null; then
     npx ruff check . --force-exclude
+    lint_result=$?
+elif [ -f ".venv/bin/ruff" ]; then
+    # Use virtual environment ruff if available
+    .venv/bin/ruff check . --force-exclude
     lint_result=$?
 elif command -v ruff &> /dev/null; then
     ruff check . --force-exclude
