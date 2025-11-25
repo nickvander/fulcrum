@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -178,7 +178,7 @@ describe('UserForm - Create Mode', () => {
     expect(console.error).toHaveBeenCalledWith('Error creating user:', jasmine.any(Object));
   });
 
-  it('should reset form for "Save and Add Another"', () => {
+  it('should reset form for "Save and Add Another"', fakeAsync(() => {
     spyOn(component['snackBar'], 'open');
 
     const mockUser: User = {
@@ -210,7 +210,10 @@ describe('UserForm - Create Mode', () => {
     // Check that form is reset to default values
     expect(component.form.get('user_type')?.value).toBe('employee');
     expect(component.form.get('is_active')?.value).toBe(true);
-  });
+
+    // Handle setTimeout in onSaveAndAddAnother
+    tick(100);
+  }));
 });
 
 describe('UserForm - Edit Mode', () => {

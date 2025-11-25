@@ -3,7 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -12,7 +12,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 
 import { UserList } from './user-list';
 import { UserService } from '../../services/user.service';
@@ -25,9 +25,11 @@ describe('UserList', () => {
   let fixture: ComponentFixture<UserList>;
   let userService: UserService;
   let authService: jasmine.SpyObj<AuthService>;
+  let dialogSpy: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin']);
+    const matDialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -48,13 +50,15 @@ describe('UserList', () => {
       ],
       providers: [
         { provide: UserService, useClass: UserServiceMock },
-        { provide: AuthService, useValue: authServiceSpy }
+        { provide: AuthService, useValue: authServiceSpy },
+        { provide: MatDialog, useValue: matDialogSpy }
       ]
     })
       .compileComponents();
 
     userService = TestBed.inject(UserService);
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    dialogSpy = TestBed.inject(MatDialog) as jasmine.SpyObj<MatDialog>;
   });
 
   beforeEach(() => {
@@ -130,8 +134,13 @@ describe('UserList', () => {
     spyOn(component, 'loadUsers');
     spyOn(userService, 'deleteUser').and.returnValue(of({ message: 'User deactivated' }));
 
+    // Mock dialog ref to return true (confirmed)
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null });
+    dialogSpy.open.and.returnValue(dialogRefSpyObj);
+
     component.deactivateUser(1);
 
+    expect(dialogSpy.open).toHaveBeenCalled();
     expect(userService.deleteUser).toHaveBeenCalledWith(1);
     expect(component.loadUsers).toHaveBeenCalled();
   });
@@ -140,8 +149,13 @@ describe('UserList', () => {
     spyOn(component, 'loadUsers');
     spyOn(userService, 'deleteUserPermanent').and.returnValue(of({ message: 'User deleted' }));
 
+    // Mock dialog ref to return true (confirmed)
+    const dialogRefSpyObj = jasmine.createSpyObj({ afterClosed: of(true), close: null });
+    dialogSpy.open.and.returnValue(dialogRefSpyObj);
+
     component.deleteUser(1);
 
+    expect(dialogSpy.open).toHaveBeenCalled();
     expect(userService.deleteUserPermanent).toHaveBeenCalledWith(1);
     expect(component.loadUsers).toHaveBeenCalled();
   });
