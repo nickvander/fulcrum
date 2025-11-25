@@ -11,7 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
 import { UserList } from './user-list';
@@ -46,7 +46,7 @@ describe('UserList', () => {
         MatSlideToggleModule,
         MatIconModule,
         MatTooltipModule,
-        BrowserAnimationsModule
+        NoopAnimationsModule
       ],
       providers: [
         { provide: UserService, useClass: UserServiceMock },
