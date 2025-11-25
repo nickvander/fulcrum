@@ -1,0 +1,47 @@
+.audit-log-container {
+  padding: 20px;
+  max-width: 100%;
+  overflow-x: auto;
+
+  h2 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    mat-form-field {
+      min-width: 200px;
+    }
+
+    button {
+      height: 56px; // Match the height of mat-form-field
+    }
+  }
+
+  .table-container {
+    overflow-x: auto;
+
+    table {
+      width: 100%;
+      min-width: 800px; // Ensure table doesn't get too narrow
+
+      .mat-mdc-cell {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+
+  .mat-mdc-paginator {
+    margin-top: 20px;
+  }
+}

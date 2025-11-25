@@ -1,10 +1,16 @@
 <div class="container">
   <div class="header">
     <h1>Users</h1>
-    <button mat-raised-button color="primary" [routerLink]="['create']">
-      <mat-icon>add</mat-icon>
-      New User
-    </button>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="addNewUser()">
+        <mat-icon>add</mat-icon>
+        New User
+      </button>
+      <button mat-raised-button (click)="viewAuditLogs()">
+        <mat-icon>receipt</mat-icon>
+        View Audit Logs
+      </button>
+    </div>
   </div>
 
   <!-- Filters -->
@@ -36,11 +42,12 @@
     <button mat-button (click)="clearFilters()">Clear Filters</button>
   </div>
 
-  <mat-table [dataSource]="dataSource" matSort>
+  <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+  <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
     <!-- Avatar Column -->
     <ng-container matColumnDef="avatar">
-      <mat-header-cell *matHeaderCellDef>Avatar</mat-header-cell>
-      <mat-cell *matCellDef="let row">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
+      <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
         <img *ngIf="row.avatar" [src]="row.avatar" 
              [alt]="row.first_name + ' ' + row.last_name" 
              class="avatar" 
@@ -80,15 +87,15 @@
     <!-- User Type Column -->
     <ng-container matColumnDef="user_type">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
-      <mat-cell *matCellDef="let row">
+      <mat-cell *matCellDef="let row" [matTooltip]="'User Type: ' + row.user_type">
         <span class="badge" [ngClass]="row.user_type">{{row.user_type}}</span>
       </mat-cell>
     </ng-container>
 
     <!-- Active Status Column -->
     <ng-container matColumnDef="is_active">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Active</mat-header-cell>
-      <mat-cell *matCellDef="let row">
+      <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+      <mat-cell *matCellDef="let row" [matTooltip]="row.is_active ? 'Active User' : 'Inactive User'">
         <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}">
           <mat-icon class="status-icon">
             {{row.is_active ? 'check_circle' : 'cancel'}}

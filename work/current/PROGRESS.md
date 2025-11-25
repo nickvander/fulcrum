@@ -798,6 +798,44 @@ addressed circular dependencies, missing imports, and configuration issues.
 - All circular dependency warnings resolved
 - Unused import warnings eliminated
 - All components render correctly with proper dependencies
+
+## Session: Backend Test Stabilization & Security Upgrade
+
+**Date:** 2025-11-24
+
+### Summary of Work Completed
+
+Successfully stabilized the backend test suite, resolving persistent hanging issues and test failures. Upgraded password hashing to Argon2id for better security and Docker compatibility, and fixed critical test isolation issues.
+
+### Key Changes Implemented
+
+- **Security Upgrade (Argon2):**
+  - Replaced `bcrypt` with `argon2-cffi` for password hashing.
+  - Configured Argon2id with tuned parameters (8 MiB memory, 1 thread, 1 iteration) to ensure stability in the Docker test environment while maintaining strong security.
+  - Updated `requirements.txt` and `requirements-test.txt`.
+
+- **Test Isolation Fix:**
+  - Identified and fixed a critical issue where API requests in tests were not using the test fixture's database session due to a dependency override mismatch.
+  - Updated `conftest.py` to correctly override `src.api.dependencies.get_db`.
+  - Added `TESTING=1` environment variable to `docker-compose.test.yml` and updated `main.py` to skip default superuser creation during tests, preventing "user already exists" errors.
+
+- **Schema Validation Fix:**
+  - Updated `UserUpdate` schema to make the `email` field optional, allowing for partial updates and resolving 422 validation errors in `test_update_user`.
+
+- **CI/CD Configuration:**
+  - Updated `.github/workflows/backend-01-db-tests.yml` to include `tests/test_users_management.py` in the test execution list, ensuring these critical integration tests run in CI.
+
+### Validation
+
+- **Backend Tests:** All 12 tests in `tests/test_users_management.py` are now passing reliably.
+- **Frontend Tests:** Verified that all 119 frontend tests are passing.
+- **CI Workflow:** Verified that the CI workflow uses `docker-compose.test.yml`, ensuring it will pick up the environment configuration and dependency changes.
+
+### Remaining Work
+
+- Add missing backend tests for Role-Based Access Control (RBAC) and edge cases.
+- Perform manual UI verification of the User Management features.
+
 - Routing guards function correctly for lazy-loaded modules
 - User management system is fully operational
 

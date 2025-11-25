@@ -6,7 +6,20 @@ from passlib.context import CryptContext
 
 from src.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure Argon2 with balanced security parameters
+# Tuned for Docker environment while maintaining strong security
+# - argon2id: Hybrid mode (best of argon2i and argon2d)
+# - memory_cost: 8 MiB (reduced further for Docker testing stability)
+# - time_cost: 1 iteration (minimal for testing)
+# - parallelism: 1 thread (minimal for testing)
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto",
+    argon2__memory_cost=8192,  # 8 MiB
+    argon2__time_cost=1,
+    argon2__parallelism=1,
+    argon2__type="ID"  # Use Argon2id variant
+)
 
 
 def create_access_token(

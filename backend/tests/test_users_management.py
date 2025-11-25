@@ -17,6 +17,8 @@ def test_create_user(client: TestClient, db: Session) -> None:
     }
     
     response = client.post("/api/v1/users/", json=user_data)
+    if response.status_code != 200:
+        print(f"Error response: {response.json()}")
     assert response.status_code == 200
     
     data = response.json()

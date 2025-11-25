@@ -36,6 +36,7 @@ class UserCreate(UserBase):
         return v
 
 class UserUpdate(UserBase):
+    email: Optional[EmailStr] = None
     password: Optional[str] = None
     is_superuser: Optional[bool] = None
     employee_id: Optional[str] = None
