@@ -9,13 +9,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { UserService, UserListParams } from '../../services/user.service';
 import { User } from '../../models/user.model';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmationDialog } from '../confirmation-dialog/confirmation-dialog';
 import { PasswordResetDialog } from '../password-reset-dialog/password-reset-dialog';
+import { UserCreateModal } from '../user-create-modal/user-create-modal';
 
 @Component({
   selector: 'app-user-list',
@@ -35,11 +37,13 @@ import { PasswordResetDialog } from '../password-reset-dialog/password-reset-dia
     MatInputModule,
     MatSelectModule,
     MatTooltipModule,
+    MatProgressBarModule,
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['avatar', 'employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'actions'];
   dataSource: MatTableDataSource<User> = new MatTableDataSource();
+  isLoading = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -51,7 +55,8 @@ export class UserList implements OnInit, AfterViewInit {
 
   constructor(
     private userService: UserService, 
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -68,14 +73,22 @@ export class UserList implements OnInit, AfterViewInit {
   }
 
   loadUsers(): void {
+    this.isLoading = true;
     const params: UserListParams = {};
     
     if (this.user_type_filter) params.user_type = this.user_type_filter;
     if (this.is_active_filter) params.is_active = this.is_active_filter === 'true';
     if (this.search_filter) params.search = this.search_filter;
 
-    this.userService.getUsers(params).subscribe((users) => {
-      this.dataSource.data = users;
+    this.userService.getUsers(params).subscribe({
+      next: (users) => {
+        this.dataSource.data = users;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+        this.isLoading = false;
+      }
     });
   }
 
@@ -88,6 +101,24 @@ export class UserList implements OnInit, AfterViewInit {
     this.is_active_filter = '';
     this.search_filter = '';
     this.loadUsers();
+  }
+
+  addNewUser(): void {
+    const dialogRef = this.dialog.open(UserCreateModal, {
+      width: '500px',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // User was created successfully, refresh the list
+        this.loadUsers();
+      }
+    });
+  }
+
+  viewAuditLogs(): void {
+    // Navigate to the audit logs page
+    this.router.navigate(['/users/audit-logs']);
   }
 
   deactivateUser(id: number): void {

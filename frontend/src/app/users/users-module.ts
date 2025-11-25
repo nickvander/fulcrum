@@ -21,6 +21,9 @@ import { AccountManagement } from './components/account-management/account-manag
 import { PasswordResetDialog } from './components/password-reset-dialog/password-reset-dialog';
 import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 import { UserService } from './services/user.service';
+import { AuditLogList } from './components/audit-log-list/audit-log-list';
+import { UserCreateModal } from './components/user-create-modal/user-create-modal';
+import { AuditLogService } from './services/audit-log.service';
 
 
 @NgModule({
@@ -44,10 +47,13 @@ import { UserService } from './services/user.service';
     UserForm,
     AccountManagement,
     PasswordResetDialog,
-    ConfirmationDialog
+    ConfirmationDialog,
+    AuditLogList,
+    UserCreateModal
   ],
   providers: [
-    UserService
+    UserService,
+    AuditLogService
   ]
 })
 export class UsersModule { }

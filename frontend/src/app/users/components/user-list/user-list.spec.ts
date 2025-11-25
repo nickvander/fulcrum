@@ -16,17 +16,17 @@ import { of, throwError } from 'rxjs';
 
 import { UserList } from './user-list';
 import { UserService } from '../../services/user.service';
+import { UserServiceMock } from '../../services/user.service.mock';
 import { User } from '../../models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
-xdescribe('UserList', () => { // Disabled due to timeout issues in CI
+describe('UserList', () => {
   let component: UserList;
   let fixture: ComponentFixture<UserList>;
-  let userService: jasmine.SpyObj<UserService>;
+  let userService: UserService;
   let authService: jasmine.SpyObj<AuthService>;
 
   beforeEach(async () => {
-    const userServiceSpy = jasmine.createSpyObj('UserService', ['getUsers', 'deleteUser', 'deleteUserPermanent']);
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin']);
 
     await TestBed.configureTestingModule({
@@ -47,21 +47,27 @@ xdescribe('UserList', () => { // Disabled due to timeout issues in CI
         BrowserAnimationsModule
       ],
       providers: [
-        { provide: UserService, useValue: userServiceSpy },
+        { provide: UserService, useClass: UserServiceMock },
         { provide: AuthService, useValue: authServiceSpy }
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
-    userService = TestBed.inject(UserService) as jasmine.SpyObj<UserService>;
+    userService = TestBed.inject(UserService);
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
   });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(UserList);
     component = fixture.componentInstance;
-    
-    // Mock data for users
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should load users on initialization', () => {
     const mockUsers: User[] = [
       {
         id: 1,
@@ -72,7 +78,9 @@ xdescribe('UserList', () => { // Disabled due to timeout issues in CI
         user_type: 'admin',
         is_active: true,
         is_superuser: true,
-        avatar: 'https://example.com/admin-avatar.jpg'
+        avatar: 'https://example.com/admin-avatar.jpg',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z'
       },
       {
         id: 2,
@@ -83,27 +91,26 @@ xdescribe('UserList', () => { // Disabled due to timeout issues in CI
         user_type: 'employee',
         is_active: true,
         is_superuser: false,
-        avatar: null
+        avatar: null,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z'
       }
     ];
-    
-    userService.getUsers.and.returnValue(of(mockUsers));
-    fixture.detectChanges();
-  });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    spyOn(userService, 'getUsers').and.returnValue(of(mockUsers));
 
-  it('should load users on initialization', () => {
+    component.loadUsers();
+
     expect(userService.getUsers).toHaveBeenCalled();
     expect(component.dataSource.data.length).toBe(2);
   });
 
   it('should apply filters correctly', () => {
+    spyOn(userService, 'getUsers').and.returnValue(of([]));
+
     component.user_type_filter = 'admin';
     component.onFilterChange();
-    
+
     expect(userService.getUsers).toHaveBeenCalledWith({ user_type: 'admin' });
   });
 
@@ -111,9 +118,9 @@ xdescribe('UserList', () => { // Disabled due to timeout issues in CI
     component.user_type_filter = 'admin';
     component.is_active_filter = 'true';
     component.search_filter = 'test';
-    
+
     component.clearFilters();
-    
+
     expect(component.user_type_filter).toBe('');
     expect(component.is_active_filter).toBe('');
     expect(component.search_filter).toBe('');
@@ -121,20 +128,20 @@ xdescribe('UserList', () => { // Disabled due to timeout issues in CI
 
   it('should deactivate user', () => {
     spyOn(component, 'loadUsers');
-    userService.deleteUser.and.returnValue(of({ message: 'User deactivated' }));
-    
+    spyOn(userService, 'deleteUser').and.returnValue(of({ message: 'User deactivated' }));
+
     component.deactivateUser(1);
-    
+
     expect(userService.deleteUser).toHaveBeenCalledWith(1);
     expect(component.loadUsers).toHaveBeenCalled();
   });
 
   it('should permanently delete user', () => {
     spyOn(component, 'loadUsers');
-    userService.deleteUserPermanent.and.returnValue(of({ message: 'User deleted' }));
-    
+    spyOn(userService, 'deleteUserPermanent').and.returnValue(of({ message: 'User deleted' }));
+
     component.deleteUser(1);
-    
+
     expect(userService.deleteUserPermanent).toHaveBeenCalledWith(1);
     expect(component.loadUsers).toHaveBeenCalled();
   });

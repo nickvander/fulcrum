@@ -9,6 +9,11 @@
   margin-bottom: 20px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .filters {
   display: flex;
   gap: 20px;
@@ -26,8 +31,18 @@
 @media screen and (max-width: 768px) {
   .header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 10px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .header-actions button {
+    flex: 1;
   }
 
   .filters {
@@ -49,6 +64,23 @@
   .mat-mdc-table {
     display: block;
     overflow-x: auto;
+  }
+
+  /* Reduce padding on mobile for better space usage */
+  .mat-mdc-cell {
+    padding: 8px 4px !important;
+  }
+
+  /* Adjust icons for better touch targets */
+  .mat-icon-button {
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+  }
+
+  /* Adjust text sizes for better readability on mobile */
+  .status-label {
+    font-size: 0.75em;
   }
 }
 

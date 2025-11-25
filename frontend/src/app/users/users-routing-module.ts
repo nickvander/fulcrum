@@ -3,6 +3,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { UserList } from './components/user-list/user-list';
 import { UserForm } from './components/user-form/user-form';
 import { AccountManagement } from './components/account-management/account-management';
+import { AuditLogList } from './components/audit-log-list/audit-log-list';
 import { AdminGuard } from '../core/guards/admin.guard';
 
 const routes: Routes = [
@@ -10,6 +11,7 @@ const routes: Routes = [
   { path: 'create', component: UserForm, canActivate: [AdminGuard] },
   { path: 'edit/:id', component: UserForm, canActivate: [AdminGuard] },
   { path: 'account', component: AccountManagement }, // No guard for account management - users can access their own profile
+  { path: 'audit-logs', component: AuditLogList, canActivate: [AdminGuard] },
 ];
 
 @NgModule({

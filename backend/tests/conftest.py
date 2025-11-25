@@ -16,6 +16,7 @@ from src import models
 from src.models.product import Product, ProductImage
 from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
+from src.api import dependencies
 
 # Use the database URL from the environment settings
 engine = create_engine(settings.DATABASE_URL)
@@ -44,10 +45,10 @@ def create_test_database():
     yield
     
     # Downgrade the database to the base revision
-    command.downgrade(alembic_cfg, "base")
-    with engine.connect() as connection:
-        connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
-        connection.commit()
+    # command.downgrade(alembic_cfg, "base")
+    # with engine.connect() as connection:
+    #     connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
+    #     connection.commit()
 
 
 @pytest.fixture(scope="function")
@@ -67,6 +68,8 @@ def db(create_test_database):
         transaction.rollback()
         connection.close()
 
+
+
 @pytest.fixture(scope="function")
 def client(db: Session):
     """
@@ -76,6 +79,7 @@ def client(db: Session):
         yield db
 
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[dependencies.get_db] = override_get_db
     with TestClient(app) as c:
         yield c
 

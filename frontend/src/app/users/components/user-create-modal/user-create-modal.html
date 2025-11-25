@@ -1,0 +1,83 @@
+<h2 mat-dialog-title>Create New User</h2>
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="user-form">
+  <mat-dialog-content>
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Email</mat-label>
+        <input matInput formControlName="email" type="email">
+        <mat-error *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+          Email is required and must be valid
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Password</mat-label>
+        <input matInput formControlName="password" type="password">
+        <mat-error *ngIf="form.get('password')?.invalid && form.get('password')?.touched">
+          Password must be at least 8 characters with uppercase, lowercase, number and special character
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>First Name</mat-label>
+        <input matInput formControlName="first_name">
+        <mat-error *ngIf="form.get('first_name')?.invalid && form.get('first_name')?.touched">
+          First name is required
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Last Name</mat-label>
+        <input matInput formControlName="last_name">
+        <mat-error *ngIf="form.get('last_name')?.invalid && form.get('last_name')?.touched">
+          Last name is required
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>User Type</mat-label>
+        <mat-select formControlName="user_type">
+          <mat-option value="admin">Admin</mat-option>
+          <mat-option value="employee">Employee</mat-option>
+          <mat-option value="customer">Customer</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-slide-toggle formControlName="is_active" class="form-field">
+        Active
+      </mat-slide-toggle>
+    </div>
+
+    <mat-form-field appearance="fill" class="form-field full-width">
+      <mat-label>Confirm Password</mat-label>
+      <input matInput formControlName="confirm_password" type="password">
+      <mat-error *ngIf="form.get('confirm_password')?.invalid && form.get('confirm_password')?.touched">
+        Passwords must match
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Password Strength Indicator -->
+    <div class="password-strength-container" *ngIf="form.get('password')?.value">
+      <div class="password-strength-label">
+        Password strength: <span [ngClass]="getPasswordStrengthClass()">{{ getPasswordStrengthLabel() }}</span>
+      </div>
+      <div class="password-strength-bar">
+        <div 
+          class="strength-fill" 
+          [ngClass]="getPasswordStrengthClass()"
+          [style.width.%]="getPasswordStrength(form.get('password')?.value) * 25">
+        </div>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="!form.valid">Create User</button>
+  </mat-dialog-actions>
+</form>

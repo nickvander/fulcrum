@@ -1,0 +1,71 @@
+.user-form {
+  min-width: 400px;
+  width: 100%;
+
+  .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+
+    .form-field {
+      flex: 1;
+    }
+
+    .full-width {
+      flex: 1 0 100%;
+    }
+  }
+
+  .password-strength-container {
+    margin-top: 10px;
+
+    .password-strength-label {
+      margin-bottom: 5px;
+      font-size: 14px;
+
+      .password-strength-weak {
+        color: #f44336;
+        font-weight: bold;
+      }
+
+      .password-strength-medium {
+        color: #ff9800;
+        font-weight: bold;
+      }
+
+      .password-strength-strong {
+        color: #4caf50;
+        font-weight: bold;
+      }
+    }
+
+    .password-strength-bar {
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+
+      .strength-fill {
+        height: 100%;
+        width: 0;
+        transition: width 0.3s ease, background-color 0.3s ease;
+
+        &.password-strength-weak {
+          background-color: #f44336;
+        }
+
+        &.password-strength-medium {
+          background-color: #ff9800;
+        }
+
+        &.password-strength-strong {
+          background-color: #4caf50;
+        }
+      }
+    }
+  }
+}
+
+mat-dialog-actions {
+  padding: 20px;
+}
