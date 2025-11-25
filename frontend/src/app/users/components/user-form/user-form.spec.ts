@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
@@ -44,7 +44,7 @@ describe('UserForm - Create Mode', () => {
         MatSlideToggleModule,
         MatIconModule,
         MatTooltipModule,
-        BrowserAnimationsModule
+        NoopAnimationsModule
       ],
       providers: [
         { provide: UserService, useClass: UserServiceMock },
@@ -240,7 +240,7 @@ describe('UserForm - Edit Mode', () => {
         MatSlideToggleModule,
         MatIconModule,
         MatTooltipModule,
-        BrowserAnimationsModule
+        NoopAnimationsModule
       ],
       providers: [
         { provide: UserService, useClass: UserServiceMock },
@@ -269,8 +269,8 @@ describe('UserForm - Edit Mode', () => {
     fixture.detectChanges();
   });
 
-  it('should load user data when in edit mode', () => {
+  it('should load user data when in edit mode', fakeAsync(() => {
     // Verify edit mode was set
     expect(component.isEdit).toBe(true);
-  });
+  }));
 });
