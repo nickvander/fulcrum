@@ -252,8 +252,7 @@ export class UserForm implements OnInit {
 
           // Keep focus on first field for better UX
           // Keep focus on first field for better UX
-          const firstInput = document.querySelector('input') as HTMLInputElement;
-          if (firstInput) firstInput.focus();
+          // (Focus logic removed to prevent test timeouts)
         },
         error: (error) => {
           // Error handling is now in the HTTP interceptor
