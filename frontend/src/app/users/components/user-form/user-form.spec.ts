@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -123,7 +123,7 @@ describe('UserForm - Create Mode', () => {
     expect(component.getPasswordStrengthLabel()).toBe('Strong');
   });
 
-  it('should submit form for new user', () => {
+  it('should submit form for new user', fakeAsync(() => {
     const mockUser: User = {
       id: 1,
       email: 'test@example.com',
@@ -150,6 +150,7 @@ describe('UserForm - Create Mode', () => {
     spyOn(component['router'], 'navigate');
 
     component.onSubmit();
+    tick();
 
     expect(userService.createUser).toHaveBeenCalledWith({
       email: 'test@example.com',
@@ -161,9 +162,9 @@ describe('UserForm - Create Mode', () => {
       is_active: true,
       is_superuser: false
     });
-  });
+  }));
 
-  it('should handle form submission error', () => {
+  it('should handle form submission error', fakeAsync(() => {
     spyOn(userService, 'createUser').and.returnValue(throwError({ error: { detail: 'Email already exists' } }));
 
     component.form.patchValue({
@@ -177,9 +178,10 @@ describe('UserForm - Create Mode', () => {
 
     spyOn(console, 'error');
     component.onSubmit();
+    tick();
 
     expect(console.error).toHaveBeenCalledWith('Error creating user:', jasmine.any(Object));
-  });
+  }));
 
 
 });
