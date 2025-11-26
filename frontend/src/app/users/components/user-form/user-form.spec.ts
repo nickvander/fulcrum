@@ -103,7 +103,7 @@ describe('UserForm - Create Mode', () => {
     passwordControl?.setValue('weak');
     expect(component.getPasswordStrengthClass()).toBe('password-strength-weak');
 
-    passwordControl?.setValue('MediumPass1!');
+    passwordControl?.setValue('Test');
     expect(component.getPasswordStrengthClass()).toBe('password-strength-medium');
 
     passwordControl?.setValue('StrongPass123!');
@@ -116,7 +116,7 @@ describe('UserForm - Create Mode', () => {
     passwordControl?.setValue('weak');
     expect(component.getPasswordStrengthLabel()).toBe('Weak');
 
-    passwordControl?.setValue('MediumPass1!');
+    passwordControl?.setValue('Test');
     expect(component.getPasswordStrengthLabel()).toBe('Medium');
 
     passwordControl?.setValue('StrongPass123!');
@@ -186,7 +186,6 @@ describe('UserForm - Create Mode', () => {
 
 });
 
-/*
 describe('UserForm - Edit Mode', () => {
   let component: UserForm;
   let fixture: ComponentFixture<UserForm>;
@@ -248,4 +247,3 @@ describe('UserForm - Edit Mode', () => {
     expect(component.isEdit).toBe(true);
   });
 });
-*/
