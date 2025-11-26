@@ -11,6 +11,7 @@ pgvector
 python-dotenv
 pytest
 pytest-env
+pytest-timeout
 httpx
 Faker
 argon2-cffi>=23.1.0
