@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -30,6 +30,8 @@ describe('UserForm - Create Mode', () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin']);
     authServiceSpy.isAdmin.and.returnValue(of(false));
 
+    const matSnackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [
         UserForm,
@@ -49,6 +51,7 @@ describe('UserForm - Create Mode', () => {
       providers: [
         { provide: UserService, useClass: UserServiceMock },
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: MatSnackBar, useValue: matSnackBarSpy },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -223,6 +226,8 @@ describe('UserForm - Edit Mode', () => {
     const authServiceSpy = jasmine.createSpyObj('AuthService', ['isAdmin']);
     authServiceSpy.isAdmin.and.returnValue(of(false));
 
+    const matSnackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [
         UserForm,
@@ -242,6 +247,7 @@ describe('UserForm - Edit Mode', () => {
       providers: [
         { provide: UserService, useClass: UserServiceMock },
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: MatSnackBar, useValue: matSnackBarSpy },
         {
           provide: ActivatedRoute,
           useValue: {
