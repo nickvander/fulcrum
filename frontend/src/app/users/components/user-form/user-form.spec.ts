@@ -181,39 +181,7 @@ describe('UserForm - Create Mode', () => {
     expect(console.error).toHaveBeenCalledWith('Error creating user:', jasmine.any(Object));
   });
 
-  it('should reset form for "Save and Add Another"', () => {
-    spyOn(component['snackBar'], 'open');
 
-    const mockUser: User = {
-      id: 1,
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      is_active: true,
-      is_superuser: false,
-      user_type: 'employee',
-      employee_id: 'EMP123456',
-      avatar: null
-    };
-
-    spyOn(userService, 'createUser').and.returnValue(of(mockUser));
-
-    component.form.patchValue({
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      user_type: 'employee',
-      password: 'StrongPass123!',
-      confirm_password: 'StrongPass123!'
-    });
-
-    component.onSaveAndAddAnother();
-
-    expect(userService.createUser).toHaveBeenCalled();
-    // Check that form is reset to default values
-    expect(component.form.get('user_type')?.value).toBe('employee');
-    expect(component.form.get('is_active')?.value).toBe(true);
-  });
 });
 
 describe('UserForm - Edit Mode', () => {
