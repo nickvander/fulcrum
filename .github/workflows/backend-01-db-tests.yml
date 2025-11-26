@@ -39,8 +39,8 @@ jobs:
         echo "Running database migrations..."
         docker compose -f docker-compose.test.yml exec backend /app/migrate.sh
         echo "Migrations completed, running tests..."
-        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py"
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_ai_api.py tests/test_crud.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down
 
@@ -70,8 +70,8 @@ jobs:
         echo "Running database migrations..."
         docker compose -f docker-compose.test.yml exec backend /app/migrate.sh
         echo "Migrations completed, running tests..."
-        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py"
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_marketplace_api.py tests/test_products_api.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down
 
@@ -101,7 +101,7 @@ jobs:
         echo "Running database migrations..."
         docker compose -f docker-compose.test.yml exec backend /app/migrate.sh
         echo "Migrations completed, running tests..."
-        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py tests/test_users_management.py"
-        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py tests/test_users_management.py
+        echo "Executing: docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py tests/test_users_management.py"
+        docker compose -f docker-compose.test.yml exec backend python -m pytest -v -s --timeout=300 -c /app/pytest.ini tests/test_suppliers_api.py tests/test_uploads_api.py tests/test_users_api.py tests/test_superuser.py tests/test_users_management.py
         echo "Tests completed, tearing down..."
         docker compose -f docker-compose.test.yml down

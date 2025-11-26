@@ -49,6 +49,9 @@ def create_test_database():
     # with engine.connect() as connection:
     #     connection.execute(text("DROP TYPE IF EXISTS ordersource CASCADE;"))
     #     connection.commit()
+    
+    # Dispose of the engine to close all connections
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")

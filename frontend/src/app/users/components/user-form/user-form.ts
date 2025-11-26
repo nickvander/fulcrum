@@ -98,7 +98,7 @@ export class UserForm implements OnInit {
       // Remove required validation from password fields for edits
       this.form.get('password')?.clearValidators();
       this.form.get('confirm_password')?.clearValidators();
-      
+
       this.userService.getUser(+id).subscribe({
         next: (user) => {
           this.user = user;
@@ -146,17 +146,17 @@ export class UserForm implements OnInit {
     const isLongEnough = value.length >= 8;
 
     const isValid = hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough;
-    
+
     return isValid ? null : { weakPassword: true };
   }
 
   onSubmit(): void {
     if (this.form.valid) {
       const formValue = { ...this.form.value };
-      
+
       // Remove confirm_password from the submission
       delete formValue.confirm_password;
-      
+
       // Ensure non-empty password is provided when required
       if (this.isEdit && !formValue.password) {
         delete formValue.password; // Don't send empty password on update
@@ -196,26 +196,26 @@ export class UserForm implements OnInit {
 
   getPasswordStrength(password: string): number {
     if (!password) return 0;
-    
+
     let strength = 0;
-    
+
     // Length check
     if (password.length >= 8) strength += 1;
     if (password.length >= 12) strength += 1;
-    
+
     // Character variety checks
     if (/[a-z]/.test(password)) strength += 1;
     if (/[A-Z]/.test(password)) strength += 1;
     if (/[0-9]/.test(password)) strength += 1;
     if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    
+
     return Math.min(strength, 4); // Max strength is 4
   }
 
   getPasswordStrengthClass(): string {
     const password = this.form.get('password')?.value;
     const strength = this.getPasswordStrength(password);
-    
+
     if (strength <= 1) return 'password-strength-weak';
     if (strength <= 2) return 'password-strength-medium';
     return 'password-strength-strong';
@@ -224,7 +224,7 @@ export class UserForm implements OnInit {
   getPasswordStrengthLabel(): string {
     const password = this.form.get('password')?.value;
     const strength = this.getPasswordStrength(password);
-    
+
     if (strength <= 1) return 'Weak';
     if (strength <= 2) return 'Medium';
     if (strength >= 3) return 'Strong';
@@ -234,14 +234,14 @@ export class UserForm implements OnInit {
   onSaveAndAddAnother(): void {
     if (this.form.valid && !this.isEdit) { // Only for new users
       const formValue = { ...this.form.value };
-      
+
       // Remove confirm_password from the submission
       delete formValue.confirm_password;
-      
+
       this.userService.createUser(formValue).subscribe({
         next: (user) => {
           this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
-          
+
           // Reset form for new user creation
           this.form.reset();
           this.form.patchValue({
@@ -249,12 +249,11 @@ export class UserForm implements OnInit {
             is_active: true,
             is_superuser: false
           });
-          
+
           // Keep focus on first field for better UX
-          setTimeout(() => {
-            const firstInput = document.querySelector('input') as HTMLInputElement;
-            if (firstInput) firstInput.focus();
-          }, 100);
+          // Keep focus on first field for better UX
+          const firstInput = document.querySelector('input') as HTMLInputElement;
+          if (firstInput) firstInput.focus();
         },
         error: (error) => {
           // Error handling is now in the HTTP interceptor
