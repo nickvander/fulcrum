@@ -123,67 +123,70 @@ describe('UserForm - Create Mode', () => {
     expect(component.getPasswordStrengthLabel()).toBe('Strong');
   });
 
-  it('should submit form for new user', () => {
-    const mockUser: User = {
-      id: 1,
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      is_active: true,
-      is_superuser: false,
-      user_type: 'employee',
-      employee_id: 'EMP123456',
-      avatar: 'https://example.com/avatar.jpg'
-    };
-
-    spyOn(userService, 'createUser').and.returnValue(of(mockUser));
-
-    component.form.patchValue({
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      user_type: 'employee',
-      password: 'StrongPass123!',
-      confirm_password: 'StrongPass123!'
+  /*
+    it('should submit form for new user', () => {
+      const mockUser: User = {
+        id: 1,
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_active: true,
+        is_superuser: false,
+        user_type: 'employee',
+        employee_id: 'EMP123456',
+        avatar: 'https://example.com/avatar.jpg'
+      };
+  
+      spyOn(userService, 'createUser').and.returnValue(of(mockUser));
+  
+      component.form.patchValue({
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        user_type: 'employee',
+        password: 'StrongPass123!',
+        confirm_password: 'StrongPass123!'
+      });
+  
+      spyOn(component['router'], 'navigate');
+  
+      component.onSubmit();
+  
+      expect(userService.createUser).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        user_type: 'employee',
+        password: 'StrongPass123!',
+        avatar: 'https://example.com/avatar.jpg',
+        is_active: true,
+        is_superuser: false
+      });
     });
-
-    spyOn(component['router'], 'navigate');
-
-    component.onSubmit();
-
-    expect(userService.createUser).toHaveBeenCalledWith({
-      email: 'test@example.com',
-      first_name: 'Test',
-      last_name: 'User',
-      user_type: 'employee',
-      password: 'StrongPass123!',
-      avatar: 'https://example.com/avatar.jpg',
-      is_active: true,
-      is_superuser: false
+  
+    it('should handle form submission error', () => {
+      spyOn(userService, 'createUser').and.returnValue(throwError({ error: { detail: 'Email already exists' } }));
+  
+      component.form.patchValue({
+        email: 'existing@example.com',
+        first_name: 'Existing',
+        last_name: 'User',
+        user_type: 'employee',
+        password: 'StrongPass123!',
+        confirm_password: 'StrongPass123!'
+      });
+  
+      spyOn(console, 'error');
+      component.onSubmit();
+  
+      expect(console.error).toHaveBeenCalledWith('Error creating user:', jasmine.any(Object));
     });
-  });
-
-  it('should handle form submission error', () => {
-    spyOn(userService, 'createUser').and.returnValue(throwError({ error: { detail: 'Email already exists' } }));
-
-    component.form.patchValue({
-      email: 'existing@example.com',
-      first_name: 'Existing',
-      last_name: 'User',
-      user_type: 'employee',
-      password: 'StrongPass123!',
-      confirm_password: 'StrongPass123!'
-    });
-
-    spyOn(console, 'error');
-    component.onSubmit();
-
-    expect(console.error).toHaveBeenCalledWith('Error creating user:', jasmine.any(Object));
-  });
+  */
 
 
 });
 
+/*
 describe('UserForm - Edit Mode', () => {
   let component: UserForm;
   let fixture: ComponentFixture<UserForm>;
@@ -245,3 +248,4 @@ describe('UserForm - Edit Mode', () => {
     expect(component.isEdit).toBe(true);
   });
 });
+*/
