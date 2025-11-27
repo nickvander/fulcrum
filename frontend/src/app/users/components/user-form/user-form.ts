@@ -21,15 +21,14 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    CommonModule,
-    // ReactiveFormsModule,
-    // MatFormFieldModule,
-    // MatInputModule,
-    // MatSlideToggleModule,
-    // MatSelectModule,
-    // MatButtonModule,
-    // MatSnackBarModule,
-    // MatTooltipModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSlideToggleModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatSnackBarModule,
+    MatTooltipModule,
   ],
 })
 export class UserForm implements OnInit {
