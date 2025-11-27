@@ -18,6 +18,11 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/users/login/access-token"
 )
 
+reusable_oauth2_optional = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/users/login/access-token",
+    auto_error=False
+)
+
 
 def get_db():
     db = SessionLocal()
@@ -47,6 +52,23 @@ def get_current_user(
     user = crud.user.get(db, id=token_data.sub)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+
+def get_current_user_optional(
+    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2_optional)
+) -> models.User | None:
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        token_data = token_schema.TokenPayload(**payload)
+    except (jwt.JWTError, ValidationError):
+        return None
+    
+    user = crud.user.get(db, id=token_data.sub)
     return user
 
 

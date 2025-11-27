@@ -151,7 +151,7 @@ def test_user_cannot_access_admin_endpoints(client: TestClient, db: Session, tes
         "username": test_employee_user.email,
         "password": "TestPassword123!"
     }
-    login_response = client.post("/api/v1/users/login-access-token", data=login_data)
+    login_response = client.post("/api/v1/users/login/access-token", data=login_data)
     assert login_response.status_code == 200
     
     token_data = login_response.json()
@@ -368,7 +368,7 @@ def test_concurrent_session_behavior(client: TestClient, db: Session, test_emplo
     access_token1 = token_data1["access_token"]
     
     # Login again to get second token
-    login_response2 = client.post("/api/v1/users/login-access-token", data=login_data)
+    login_response2 = client.post("/api/v1/users/login/access-token", data=login_data)
     assert login_response2.status_code == 200
     
     token_data2 = login_response2.json()

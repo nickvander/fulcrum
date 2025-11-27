@@ -4,7 +4,7 @@ from src.crud.base import CRUDBase
 from src.models.password_reset_token import PasswordResetToken
 from src.schemas.password_reset import PasswordResetTokenCreate, PasswordResetTokenInDB
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 class CRUDPasswordResetToken(CRUDBase[PasswordResetToken, PasswordResetTokenCreate, PasswordResetTokenInDB]):
     def create_reset_token(self, db: Session, *, user_id: int) -> PasswordResetToken:
@@ -13,7 +13,7 @@ class CRUDPasswordResetToken(CRUDBase[PasswordResetToken, PasswordResetTokenCrea
         token = secrets.token_urlsafe(32)
         
         # Set expiration time (e.g., 1 hour from now)
-        expires_at = datetime.now() + timedelta(hours=1)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
         
         db_obj = PasswordResetToken(
             token=token,
@@ -32,7 +32,7 @@ class CRUDPasswordResetToken(CRUDBase[PasswordResetToken, PasswordResetTokenCrea
             PasswordResetToken.token == token
         ).first()
         
-        if reset_token and not reset_token.used and reset_token.expires_at > datetime.now():
+        if reset_token and not reset_token.used and reset_token.expires_at > datetime.now(timezone.utc):
             return reset_token
         return None
     
