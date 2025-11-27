@@ -145,8 +145,17 @@ def test_employee_id_generation(client: TestClient, db: Session) -> None:
     assert user["employee_id"].startswith("EMP")  # Employee prefix
 
 
-def test_create_admin_with_admin_prefix(client: TestClient, db: Session) -> None:
+def test_create_admin_with_admin_prefix(client: TestClient, db: Session, test_admin_user: models.User) -> None:
     """Test that admin users get correct prefix in employee ID"""
+    # Login as admin (superuser) to create another admin
+    login_data = {
+        "username": test_admin_user.email,
+        "password": "TestPassword123!"
+    }
+    login_response = client.post("/api/v1/users/login/access-token", data=login_data)
+    assert login_response.status_code == 200
+    access_token = login_response.json()["access_token"]
+
     user_data = {
         "email": "adminid@test.com",
         "password": "TestPassword123!",
@@ -155,7 +164,9 @@ def test_create_admin_with_admin_prefix(client: TestClient, db: Session) -> None
         "last_name": "ID"
     }
     
-    response = client.post("/api/v1/users/", json=user_data)
+    response = client.post("/api/v1/users/", 
+                          json=user_data,
+                          headers={"Authorization": f"Bearer {access_token}"})
     assert response.status_code == 200
     
     user = response.json()

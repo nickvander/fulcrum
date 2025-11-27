@@ -56,6 +56,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 is_active=obj_in.is_active,
                 is_superuser=obj_in.is_superuser,
                 role=obj_in.user_type.value if obj_in.user_type else "employee" if obj_in.user_type else "employee",  # Maintain compatibility with existing role field
+                avatar=obj_in.avatar,
             )
             db.add(db_obj)
             logger.info("User object added to session.")

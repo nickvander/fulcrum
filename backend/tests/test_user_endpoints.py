@@ -156,7 +156,7 @@ def test_update_user_endpoint_non_admin(client: TestClient, db: Session, test_em
     response = client.put(f"/api/v1/users/{test_employee_user.id}",  # Update self is allowed, but for other user it won't be
                          json=update_data,
                          headers={"Authorization": f"Bearer {access_token}"})
-    assert response.status_code == 200  # Self update is allowed
+    assert response.status_code == 403  # Self update via this endpoint is forbidden (must use /profile)
     
     
     # Create another user to test updating other users
@@ -234,7 +234,7 @@ def test_user_deactivation_endpoint(client: TestClient, db: Session, test_admin_
         "username": test_admin_user.email,
         "password": "TestPassword123!"
     }
-    login_response = client.post("/api/v1/users/login-access-token", data=login_data)
+    login_response = client.post("/api/v1/users/login/access-token", data=login_data)
     assert login_response.status_code == 200
     
     token_data = login_response.json()

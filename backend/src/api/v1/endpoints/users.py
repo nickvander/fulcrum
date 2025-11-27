@@ -21,12 +21,21 @@ def create_user(
     *,
     db: Session = Depends(dependencies.get_db),
     user_in: user_schema.UserCreate,
+    current_user: Optional[models.User] = Depends(dependencies.get_current_user_optional),
 ) -> user_schema.User:
+    # Check privileges if trying to create an admin or superuser
+    if user_in.user_type == "admin" or user_in.is_superuser:
+        if not current_user or not crud.user.is_superuser(current_user):
+            raise HTTPException(
+                status_code=403,
+                detail="The user doesn't have enough privileges",
+            )
+
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system.",
+            detail="The user with this username already exists in the system",
         )
     user = crud.user.create(db, obj_in=user_in)
     return user_schema.User.from_orm(user)
@@ -242,7 +251,7 @@ def update_user_profile(
     user_in_data = user_in.model_dump(exclude_unset=True)
     
     # Remove sensitive fields that shouldn't be changed by regular users
-    allowed_fields = {"first_name", "last_name", "email", "is_active", "password"}
+    allowed_fields = {"first_name", "last_name", "email", "is_active", "password", "avatar"}
     filtered_data = {k: v for k, v in user_in_data.items() if k in allowed_fields}
     
     # For non-superusers, they shouldn't be able to change their own is_active status
