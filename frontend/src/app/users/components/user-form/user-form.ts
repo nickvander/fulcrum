@@ -21,14 +21,15 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSlideToggleModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatSnackBarModule,
-    MatTooltipModule,
+    CommonModule,
+    // ReactiveFormsModule,
+    // MatFormFieldModule,
+    // MatInputModule,
+    // MatSlideToggleModule,
+    // MatSelectModule,
+    // MatButtonModule,
+    // MatSnackBarModule,
+    // MatTooltipModule,
   ],
 })
 export class UserForm implements OnInit {
@@ -150,6 +151,8 @@ export class UserForm implements OnInit {
     return isValid ? null : { weakPassword: true };
   }
 
+
+
   onSubmit(): void {
     if (this.form.valid) {
       const formValue = { ...this.form.value };
@@ -177,17 +180,22 @@ export class UserForm implements OnInit {
         });
       } else {
         // Create new user
+        console.log('UserForm: Calling createUser');
+
         this.userService.createUser(formValue).subscribe({
           next: (user) => {
+            console.log('UserForm: createUser success');
             this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
-            this.router.navigate(['/users']);
+            this.router.navigate(['/users']).then(() => console.log('UserForm: Navigation complete'));
           },
           error: (error) => {
+            console.log('UserForm: createUser error');
             // Error handling is now in the HTTP interceptor, so the error message
             // should already be displayed via the interceptor
             console.error('Error creating user:', error);
           }
         });
+
       }
     } else {
       this.snackBar.open('Please fill in all required fields correctly', 'Close', { duration: 3000 });
