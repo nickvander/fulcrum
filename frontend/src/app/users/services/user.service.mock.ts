@@ -1,6 +1,6 @@
 import { Observable, of } from 'rxjs';
 import { UserListParams, CreateUserRequest } from './user.service';
-import { User } from '../models/user.model';
+import { User } from '../../shared/models/user.model';
 
 export class UserServiceMock {
   static mockUser: User = {
@@ -12,6 +12,7 @@ export class UserServiceMock {
     user_type: 'employee',
     is_active: true,
     is_superuser: false,
+    force_password_change: false,
     avatar: 'https://example.com/avatar.jpg',
     created_at: '2023-01-01T00:00:00Z',
     updated_at: '2023-01-01T00:00:00Z'
@@ -27,6 +28,7 @@ export class UserServiceMock {
       user_type: 'admin',
       is_active: true,
       is_superuser: true,
+      force_password_change: false,
       avatar: 'https://example.com/admin-avatar.jpg',
       created_at: '2023-01-01T00:00:00Z',
       updated_at: '2023-01-01T00:00:00Z'
@@ -40,6 +42,7 @@ export class UserServiceMock {
       user_type: 'employee',
       is_active: true,
       is_superuser: false,
+      force_password_change: false,
       avatar: null,
       created_at: '2023-01-01T00:00:00Z',
       updated_at: '2023-01-01T00:00:00Z'

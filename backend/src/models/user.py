@@ -15,6 +15,7 @@ class User(Base):
     user_type = Column(String)  # admin, employee, customer
     is_active = Column(Boolean, default=True)  # Track if user account is active
     is_superuser = Column(Boolean, default=False)
+    force_password_change = Column(Boolean, default=False)  # Force user to change password on next login
     role = Column(String)  # Keep existing role field
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

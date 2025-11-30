@@ -1219,3 +1219,42 @@ implementation now complete, it's essential to:
 - Authentication and authorization are working as expected
 - Database migrations have been applied successfully
 - The system is ready for comprehensive testing validation
+
+## Session: Force Password Change Feature Implementation
+
+**Date:** 2025-11-30
+
+### Summary of Work Completed
+
+Implemented a "Force Password Change" feature that requires users to change their password on first login or after an admin reset. This enhances system security by ensuring users set their own private passwords.
+
+### Key Changes Implemented
+
+- **Backend:**
+  - Added `force_password_change` boolean column to the `User` model.
+  - Updated `User`, `UserCreate`, and `UserUpdate` Pydantic schemas.
+  - Modified `create_user` endpoint to default `force_password_change=True` for admin-created users.
+  - Added new `POST /api/v1/users/change-password` endpoint to handle password changes and clear the flag.
+  - Updated `CRUDUser.create` to correctly persist the `force_password_change` flag.
+
+- **Frontend:**
+  - Updated `User` model interface.
+  - Created `ForcePasswordChangeComponent` with form validation and password strength checks.
+  - Added `changePassword` method to `UserService`.
+  - Updated `AuthService` to check for the flag on login and redirect users to the change password page.
+  - Updated `UserForm` (admin side) to allow toggling the `Force Password Change` setting.
+  - Added routing for `/users/force-password-change`.
+
+### Validation
+
+- **Backend Verification:**
+  - Verified via `curl` that creating a user with `force_password_change=True` correctly saves the state to the database.
+  - Verified that the flag is returned in the API response.
+  - Verified that the `change-password` endpoint successfully updates the password and clears the flag.
+
+- **Frontend Verification:**
+  - Verified the admin UI shows the toggle.
+  - Verified the redirection logic in `AuthService`.
+
+### Documentation
+- Created `docs/guides/user-management.md` detailing the new feature and general user management workflows.

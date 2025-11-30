@@ -43,7 +43,7 @@ def test_product_search(db: Session):
     search_embedding = np.array([0.11, 0.22, 0.33, 0.44] + [0] * 380)
 
     # 3. Perform the search
-    results = crud_product.product.search(db, embedding=search_embedding.tolist(), limit=1)
+    results = crud_product.product.get_similar(db, embedding=search_embedding.tolist(), limit=1)
 
     # 4. Verify that the closest result is Product A
     assert len(results) == 1

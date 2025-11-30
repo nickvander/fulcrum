@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { UserService } from '../../services/user.service';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -54,6 +54,7 @@ export class UserForm implements OnInit {
       avatar: [''],
       is_active: [true],
       is_superuser: [false],
+      force_password_change: [true], // Default to true for new users
       password: ['', []], // Optional for edits, required for new users
       confirm_password: ['', []],
     }, { validators: this.passwordMatchValidator });
@@ -110,6 +111,7 @@ export class UserForm implements OnInit {
             user_type: user.user_type,
             is_active: user.is_active,
             is_superuser: user.is_superuser,
+            force_password_change: user.force_password_change,
           });
         },
         error: (error) => {

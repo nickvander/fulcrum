@@ -14,7 +14,7 @@ export class AuthService {
   private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
   private currentUser = new BehaviorSubject<User | null>(this.getCurrentUser());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
   private hasToken(): boolean {
     const hasToken = !!localStorage.getItem(this.JWT_TOKEN);
@@ -68,7 +68,7 @@ export class AuthService {
     return this.getCurrentUser();
   }
 
-  login(credentials: {username: string, password: string}): Observable<User> {
+  login(credentials: { username: string, password: string }): Observable<User> {
     console.log('AuthService: Attempting login for', credentials.username);
     const formData = new URLSearchParams();
     formData.set('username', credentials.username);
@@ -115,6 +115,12 @@ export class AuthService {
       tap(user => {
         console.log('AuthService: Successfully fetched user profile', user);
         this.saveCurrentUser(user);
+
+        // Check if user needs to change password
+        if (user.force_password_change) {
+          console.log('AuthService: User must change password, redirecting...');
+          this.router.navigate(['/users/force-password-change']);
+        }
       }),
       catchError(error => {
         console.error('AuthService: Error fetching user profile', error);
@@ -136,7 +142,7 @@ export class AuthService {
     if (user) {
       return of(user.is_superuser);
     }
-    
+
     // If we don't have user data in storage, fetch it
     return this.fetchUserProfile().pipe(
       map(user => user ? user.is_superuser : false),
@@ -150,7 +156,7 @@ export class AuthService {
       console.log('AuthService: Returning cached isAdmin result', user.user_type === 'admin');
       return of(user.user_type === 'admin');
     }
-    
+
     console.log('AuthService: No cached user data, fetching from API');
     // If we don't have user data in storage, fetch it
     return this.fetchUserProfile().pipe(
@@ -171,7 +177,7 @@ export class AuthService {
     if (user) {
       return of(user.user_type === 'admin' || user.user_type === 'employee');
     }
-    
+
     // If we don't have user data in storage, fetch it
     return this.fetchUserProfile().pipe(
       map(user => user ? (user.user_type === 'admin' || user.user_type === 'employee') : false),
@@ -184,7 +190,7 @@ export class AuthService {
     if (user) {
       return of(user.user_type === 'customer');
     }
-    
+
     // If we don't have user data in storage, fetch it
     return this.fetchUserProfile().pipe(
       map(user => user ? user.user_type === 'customer' : false),

@@ -11,6 +11,7 @@ const routes: Routes = [
   { path: 'create', component: UserForm, canActivate: [AdminGuard] },
   { path: 'edit/:id', component: UserForm, canActivate: [AdminGuard] },
   { path: 'account', component: AccountManagement }, // No guard for account management - users can access their own profile
+  { path: 'force-password-change', loadComponent: () => import('./components/force-password-change/force-password-change.component').then(m => m.ForcePasswordChangeComponent) },
   { path: 'audit-logs', component: AuditLogList, canActivate: [AdminGuard] },
 ];
 

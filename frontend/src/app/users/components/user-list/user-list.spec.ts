@@ -17,7 +17,7 @@ import { of } from 'rxjs';
 import { UserList } from './user-list';
 import { UserService } from '../../services/user.service';
 import { UserServiceMock } from '../../services/user.service.mock';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
 import { Component } from '@angular/core';
@@ -98,6 +98,7 @@ describe('UserList', () => {
         user_type: 'admin',
         is_active: true,
         is_superuser: true,
+        force_password_change: false,
         avatar: 'https://example.com/admin-avatar.jpg',
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z'
@@ -111,6 +112,7 @@ describe('UserList', () => {
         user_type: 'employee',
         is_active: true,
         is_superuser: false,
+        force_password_change: false,
         avatar: null,
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z'

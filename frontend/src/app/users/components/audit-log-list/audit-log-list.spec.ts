@@ -16,7 +16,7 @@ import { AuditLogService } from '../../services/audit-log.service';
 import { UserService } from '../../services/user.service';
 import { UserServiceMock } from '../../services/user.service.mock';
 import { UserAuditLog } from '../../models/audit-log.model';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 
 describe('AuditLogList', () => {
     let component: AuditLogList;
@@ -54,6 +54,7 @@ describe('AuditLogList', () => {
             user_type: 'employee',
             is_active: true,
             is_superuser: false,
+            force_password_change: false,
             employee_id: 'EMP001',
             avatar: null,
             created_at: '2023-01-01T00:00:00Z',
@@ -67,6 +68,7 @@ describe('AuditLogList', () => {
             user_type: 'admin',
             is_active: true,
             is_superuser: true,
+            force_password_change: false,
             employee_id: 'EMP002',
             avatar: null,
             created_at: '2023-01-01T00:00:00Z',

@@ -50,17 +50,13 @@ phases.
 
 **Advanced Features**
 
-- Create bulk user import functionality for employee onboarding
-- Add user activity and audit logs view - _Note: Basic audit logging
-  implemented, but UI for viewing logs is needed_
-
 **UX Improvements**
-
-- Add password strength indicator and validation (Partially completed - basic
-  indicators added but more comprehensive approach possible)
-- Create modal dialog approach for new user creation (Partially completed - user
-  form exists but could be optimized as modal)
-- Add "Save and Add Another" functionality
+ 
+ - Add password strength indicator and validation (Completed - implemented in `ForcePasswordChangeComponent` and `UserForm`)
+ - Create modal dialog approach for new user creation (Partially completed - user
+   form exists but could be optimized as modal)
+ - Add "Save and Add Another" functionality (Completed - implemented in `UserForm`)
+ - **[NEW]** Force Password Change on First Login (Completed)
 
 **Comprehensive Testing Implementation**
 

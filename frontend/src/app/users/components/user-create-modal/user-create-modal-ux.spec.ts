@@ -14,7 +14,7 @@ import { of, throwError } from 'rxjs';
 import { UserCreateModal } from './user-create-modal';
 import { UserService } from '../../services/user.service';
 import { UserServiceMock } from '../../services/user.service.mock';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 
 describe('UserCreateModal - UX Tests', () => {
   let component: UserCreateModal;
