@@ -9,6 +9,10 @@ class PasswordResetTokenVerify(BaseModel):
     token: str  # The reset token from email
     new_password: str  # The new password to set
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
 class PasswordResetTokenInDB(BaseModel):
     id: int
     token: str

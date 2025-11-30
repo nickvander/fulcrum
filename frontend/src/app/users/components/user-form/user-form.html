@@ -43,7 +43,8 @@
         <mat-label>Password</mat-label>
         <input matInput formControlName="password" [type]="'password'" autocomplete="new-password">
         <mat-error *ngIf="form.get('password')?.hasError('required')">Password is required</mat-error>
-        <mat-error *ngIf="form.get('password')?.hasError('weakPassword')">Password must be at least 8 characters with uppercase, lowercase, number and special character</mat-error>
+        <mat-error *ngIf="form.get('password')?.hasError('weakPassword')">Password must be at least 8 characters with
+          uppercase, lowercase, number and special character</mat-error>
       </mat-form-field>
     </div>
 
@@ -70,6 +71,7 @@
     <div class="form-row">
       <mat-slide-toggle formControlName="is_active">Active</mat-slide-toggle>
       <mat-slide-toggle formControlName="is_superuser" *ngIf="isCurrentUserAdmin">Superuser</mat-slide-toggle>
+      <mat-slide-toggle formControlName="force_password_change">Force Password Change</mat-slide-toggle>
     </div>
 
     <div class="actions">

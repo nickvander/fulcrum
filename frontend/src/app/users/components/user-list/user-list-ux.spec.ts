@@ -21,7 +21,7 @@ import { of, throwError } from 'rxjs';
 import { UserList } from './user-list';
 import { UserService } from '../../services/user.service';
 import { UserServiceMock } from '../../services/user.service.mock';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 
@@ -62,7 +62,7 @@ describe('UserList - UX Tests', () => {
         { provide: AuthService, useValue: authServiceSpy }
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
     userService = TestBed.inject(UserService);
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
@@ -79,10 +79,10 @@ describe('UserList - UX Tests', () => {
     // Set loading state
     component.isLoading = true;
     fixture.detectChanges();
-    
+
     const progressBar = fixture.nativeElement.querySelector('mat-progress-bar');
     expect(progressBar).toBeTruthy();
-    
+
     // Check that table has reduced opacity during loading
     const table = fixture.nativeElement.querySelector('mat-table');
     expect(table.style.opacity).toBe('0.5');
@@ -92,14 +92,14 @@ describe('UserList - UX Tests', () => {
     // Set not loading state
     component.isLoading = false;
     fixture.detectChanges();
-    
+
     // Loading indicator should be in the DOM but not visible since it's conditional
     component.isLoading = true;
     fixture.detectChanges();
-    
+
     component.isLoading = false;
     fixture.detectChanges();
-    
+
     const progressBar = fixture.nativeElement.querySelector('mat-progress-bar');
     // When isLoading is false, the progress bar should not be added to the DOM
     expect(progressBar).toBeFalsy();
@@ -108,13 +108,13 @@ describe('UserList - UX Tests', () => {
   it('should apply filters correctly', () => {
     // Set up spy
     spyOn(userService, 'getUsers').and.returnValue(of([]));
-    
+
     component.user_type_filter = 'admin';
     component.is_active_filter = 'true';
     component.search_filter = 'test';
-    
+
     component.onFilterChange();
-    
+
     expect(userService.getUsers).toHaveBeenCalledWith({
       user_type: 'admin',
       is_active: true,
@@ -126,9 +126,9 @@ describe('UserList - UX Tests', () => {
     component.user_type_filter = 'admin';
     component.is_active_filter = 'true';
     component.search_filter = 'test';
-    
+
     component.clearFilters();
-    
+
     expect(component.user_type_filter).toBe('');
     expect(component.is_active_filter).toBe('');
     expect(component.search_filter).toBe('');
@@ -146,16 +146,17 @@ describe('UserList - UX Tests', () => {
         user_type: 'employee',
         is_active: true,
         is_superuser: false,
+        force_password_change: false,
         avatar: 'https://example.com/avatar.jpg',
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z'
       }
     ];
-    
+
     spyOn(userService, 'getUsers').and.returnValue(of(mockUsers));
     component.loadUsers();
     fixture.detectChanges();
-    
+
     // Check that the table has cells with matTooltip directive
     // This is more of a template check
     const avatarCells = fixture.nativeElement.querySelectorAll('.mat-column-avatar');
@@ -172,9 +173,9 @@ describe('UserList - UX Tests', () => {
     const dialogSpy = spyOn(component['dialog'], 'open').and.returnValue({
       afterClosed: () => of({ id: 1, email: 'newuser@test.com' })
     } as any);
-    
+
     component.addNewUser();
-    
+
     expect(dialogSpy).toHaveBeenCalled();
     expect(dialogSpy).toHaveBeenCalledWith(
       jasmine.any(Function), // UserCreateModal class
@@ -187,9 +188,9 @@ describe('UserList - UX Tests', () => {
     const dialogSpy = spyOn(component['dialog'], 'open').and.returnValue({
       afterClosed: () => of({ id: 1, email: 'newuser@test.com' })
     } as any);
-    
+
     component.addNewUser();
-    
+
     // The loadUsers method should be called after the modal closes with a result
     expect(component.loadUsers).toHaveBeenCalled();
   });
@@ -197,9 +198,9 @@ describe('UserList - UX Tests', () => {
   it('should handle error when loading users', () => {
     spyOn(userService, 'getUsers').and.returnValue(throwError({ error: 'Network error' }));
     spyOn(console, 'error');
-    
+
     component.loadUsers();
-    
+
     expect(component.isLoading).toBe(false);
     expect(console.error).toHaveBeenCalledWith('Error loading users:', jasmine.any(Object));
   });

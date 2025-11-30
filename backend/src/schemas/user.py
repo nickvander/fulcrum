@@ -16,10 +16,12 @@ class UserBase(BaseModel):
     user_type: Optional[UserType] = None
     is_active: bool = True
     avatar: Optional[str] = None
+    force_password_change: bool = False
 
 class UserCreate(UserBase):
     password: str
     employee_id: Optional[str] = None  # Optional: if not provided, system will auto-generate
+    force_password_change: Optional[bool] = None # Allow setting this on creation
     
     @field_validator('password')
     def validate_password(cls, v):
@@ -40,12 +42,14 @@ class UserUpdate(UserBase):
     password: Optional[str] = None
     is_superuser: Optional[bool] = None
     employee_id: Optional[str] = None
+    force_password_change: Optional[bool] = None
 
 class User(UserBase):
     id: int
     employee_id: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    force_password_change: bool = False
     
     @classmethod
     def from_orm(cls, obj):
@@ -57,6 +61,11 @@ class User(UserBase):
                 data[field_name] = value.isoformat()
             else:
                 data[field_name] = value
+        
+        # Ensure force_password_change is False if None (e.g. from legacy data)
+        if data.get('force_password_change') is None:
+            data['force_password_change'] = False
+            
         return cls(**data)
     
     model_config = ConfigDict(from_attributes=True)

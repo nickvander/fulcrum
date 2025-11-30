@@ -38,7 +38,45 @@ def create_user(
             detail="The user with this username already exists in the system",
         )
     user = crud.user.create(db, obj_in=user_in)
+    
+    # If created by admin/superuser and force_password_change was not explicitly set, default to True
+    if current_user and (crud.user.is_superuser(current_user) or current_user.user_type == "admin") and user_in.force_password_change is None:
+        user.force_password_change = True
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
     return user_schema.User.from_orm(user)
+
+
+@router.post("/change-password", tags=["users"])
+def change_password(
+    *,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user),
+    password_data: schemas.PasswordChange,
+) -> dict:
+    """
+    Change password for the current user.
+    Required when force_password_change is True.
+    """
+    # Verify current password
+    if not security.verify_password(password_data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect password")
+    
+    # Check if new password is the same as old password
+    if security.verify_password(password_data.new_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="New password cannot be the same as the current password")
+        
+    # Update password
+    hashed_password = security.get_password_hash(password_data.new_password)
+    current_user.hashed_password = hashed_password
+    current_user.force_password_change = False
+    
+    db.add(current_user)
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
 
 
 @router.post("/login/access-token", response_model=token_schema.Token, tags=["users"])

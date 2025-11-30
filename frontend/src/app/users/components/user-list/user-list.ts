@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { UserService, UserListParams } from '../../services/user.service';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

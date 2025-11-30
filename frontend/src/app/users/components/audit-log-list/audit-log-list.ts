@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { AuditLogService } from '../../services/audit-log.service';
 import { UserAuditLog } from '../../models/audit-log.model';
 import { UserService } from '../../services/user.service';
-import { User } from '../../models/user.model';
+import { User } from '../../../shared/models/user.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, forkJoin } from 'rxjs';
