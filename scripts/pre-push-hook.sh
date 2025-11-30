@@ -39,12 +39,12 @@ fi
 echo "Running frontend tests..."
 if command -v npm &> /dev/null; then
     # Run frontend tests but suppress the npm error that occurs after successful completion
-    npm run test:frontend 2>/dev/null
+    npm run test:frontend -- --watch=false --browsers=ChromeHeadless 2>/dev/null
     frontend_result=$?
     
     # The npm test command returns 0 even when there's an npm error at the end
     # So we need to check if the tests actually passed by looking for the success message
-    if npm run test:frontend 2>&1 | grep -q "all tests passed"; then
+    if npm run test:frontend -- --watch=false --browsers=ChromeHeadless 2>&1 | grep -q "Tests passed!"; then
         echo "✅ Frontend tests passed."
         frontend_result=0
     else

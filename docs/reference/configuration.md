@@ -59,4 +59,4 @@ initial administrative user.
 
 - **`FIRST_SUPERUSER_PASSWORD`**
   - **Description:** The password for the initial superuser account.
-  - **Default:** `changeme`
+  - **Default:** `SecurePass123!`

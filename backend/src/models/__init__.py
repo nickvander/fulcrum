@@ -9,6 +9,10 @@ from .order import SalesOrder, SalesOrderItem
 from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
 from .inventory import InventoryItem, InventoryAdjustment
 
+from .custom_field import ProductCustomField
+from .custom_field_template import CustomFieldTemplate
+from .product_template import ProductTemplate
+
 __all__ = [
     "User",
     "UserAuditLog",
@@ -25,4 +29,7 @@ __all__ = [
     "MarketplaceListing",
     "InventoryItem",
     "InventoryAdjustment",
+    "ProductCustomField",
+    "CustomFieldTemplate",
+    "ProductTemplate",
 ]

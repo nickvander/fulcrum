@@ -187,3 +187,19 @@ def test_customer_user(db: Session) -> models.User:
         last_name="User"
     )
     return user.create(db=db, obj_in=user_in)
+
+
+@pytest.fixture(scope="function")
+def admin_headers(client: TestClient, test_admin_user: models.User) -> dict:
+    """
+    Returns headers with a valid admin access token.
+    """
+    from src.config import settings
+    login_data = {
+        "username": test_admin_user.email,
+        "password": "TestPassword123!"
+    }
+    r = client.post(f"{settings.API_V1_STR}/users/login/access-token", data=login_data)
+    tokens = r.json()
+    a_token = tokens["access_token"]
+    return {"Authorization": f"Bearer {a_token}"}
