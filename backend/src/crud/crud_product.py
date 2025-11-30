@@ -110,7 +110,7 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
             raise HTTPException(status_code=409, detail="Product with this SKU already exists.")
         return super().create(db, obj_in=obj_in)
 
-    def search(self, db: Session, *, embedding: list[float], limit: int = 10) -> list[Product]:
+    def get_similar(self, db: Session, *, embedding: list[float], limit: int = 10) -> list[Product]:
         """
         Performs a vector similarity search for products.
         """

@@ -45,7 +45,8 @@ def test_create_product_duplicate_sku(client: TestClient, test_product: Product)
         },
     )
     assert response.status_code == 409
-    assert "Product with this SKU already exists" in response.text
+    assert response.status_code == 409
+    assert "A product with this SKU already exists" in response.text
 
 @pytest.mark.db
 def test_search_products(client: TestClient, db: Session, test_product: Product):
@@ -57,7 +58,7 @@ def test_search_products(client: TestClient, db: Session, test_product: Product)
 
     # The dummy AI service will return a random embedding, but for a single product
     # the search should still return that product.
-    response = client.get(f"/api/v1/products/search/?q={test_product.name}")
+    response = client.post(f"/api/v1/products/search?query={test_product.name}")
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
@@ -98,7 +99,13 @@ def test_upload_product_image(client: TestClient, test_product: Product):
     assert data["product_id"] == test_product.id
     assert "image_path" in data
     # Verify the file was created
-    with open(data["image_path"], "rb") as f:
+    # The path returned is relative to the project root or upload dir
+    # We need to ensure we check the correct location
+    # The path returned is relative to the project root or upload dir
+    # We need to ensure we check the correct location
+    full_path = os.path.join("uploads/product_images", data["image_path"])
+    assert os.path.exists(full_path)
+    with open(full_path, "rb") as f:
         assert f.read() == image_content
 
 @pytest.mark.db
@@ -191,7 +198,7 @@ def test_delete_product(client: TestClient, test_product: Product, db: Session):
 
 
 @pytest.mark.db
-def test_adjust_stock(client: TestClient, test_product: Product, db: Session):
+def test_adjust_stock(client: TestClient, test_product: Product, db: Session, admin_headers: dict):
     """
     Test adjusting stock for a product successfully.
     """
@@ -204,7 +211,7 @@ def test_adjust_stock(client: TestClient, test_product: Product, db: Session):
         "adjustment": 10,
         "reason": "Test adjustment"
     }
-    response = client.post(f"/api/v1/products/{test_product.id}/adjust-stock", json=adjustment_data)
+    response = client.post(f"/api/v1/products/{test_product.id}/adjust-stock", json=adjustment_data, headers=admin_headers)
     assert response.status_code == 200
     
     # Verify the response contains the updated product
@@ -217,11 +224,12 @@ def test_adjust_stock(client: TestClient, test_product: Product, db: Session):
     assert adjustment_record is not None
     assert adjustment_record.adjustment == 10
     assert adjustment_record.reason == "Test adjustment"
-    assert adjustment_record.created_by == "system"
+    # created_by will be the admin user's email
+    assert adjustment_record.created_by == "admin@test.com"
 
 
 @pytest.mark.db
-def test_adjust_stock_negative(client: TestClient, test_product: Product, db: Session):
+def test_adjust_stock_negative(client: TestClient, test_product: Product, db: Session, admin_headers: dict):
     """
     Test reducing stock for a product successfully.
     """
@@ -230,7 +238,7 @@ def test_adjust_stock_negative(client: TestClient, test_product: Product, db: Se
         "adjustment": -5,
         "reason": "Stock reduction"
     }
-    response = client.post(f"/api/v1/products/{test_product.id}/adjust-stock", json=adjustment_data)
+    response = client.post(f"/api/v1/products/{test_product.id}/adjust-stock", json=adjustment_data, headers=admin_headers)
     assert response.status_code == 200
     
     # Verify the response contains the updated product
@@ -246,7 +254,7 @@ def test_adjust_stock_negative(client: TestClient, test_product: Product, db: Se
 
 
 @pytest.mark.db
-def test_adjust_stock_product_not_found(client: TestClient):
+def test_adjust_stock_product_not_found(client: TestClient, admin_headers: dict):
     """
     Test adjusting stock for a non-existent product returns 404.
     """
@@ -254,7 +262,7 @@ def test_adjust_stock_product_not_found(client: TestClient):
         "adjustment": 10,
         "reason": "Test adjustment"
     }
-    response = client.post("/api/v1/products/99999/adjust-stock", json=adjustment_data)
+    response = client.post("/api/v1/products/99999/adjust-stock", json=adjustment_data, headers=admin_headers)
     assert response.status_code == 404
     assert "Product not found" in response.text
 
@@ -272,13 +280,15 @@ def test_delete_multiple_products(client: TestClient, test_product: Product, db:
             "description": "A product for testing",
             "sku": "TESTSKU456",
             "default_resale_price": 29.99,
+            "cost_price": 15.0,
         },
     )
     assert response.status_code == 200
     product2_data = response.json()
 
     delete_ids = [test_product.id, product2_data["id"]]
-    response = client.delete(f"{settings.API_V1_STR}/products/", json=delete_ids)
+    # Use request method for delete with body
+    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids)
     
     assert response.status_code == 200
     data = response.json()
@@ -299,7 +309,8 @@ def test_delete_multiple_products_with_nonexistent(client: TestClient, test_prod
     Test deleting multiple products where one does not exist returns 404.
     """
     delete_ids = [test_product.id, 99999]  # Second ID doesn't exist
-    response = client.delete(f"{settings.API_V1_STR}/products/", json=delete_ids)
+    # Use request method for delete with body
+    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids)
     
     assert response.status_code == 404
     assert "Product with id 99999 not found" in response.text

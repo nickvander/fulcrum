@@ -104,6 +104,32 @@ def delete_product(*, db: Session = Depends(get_db), product_id: int):
     return product
 
 
+@router.delete("", response_model=Dict[str, Any])
+def delete_multiple_products(
+    *,
+    db: Session = Depends(get_db),
+    product_ids: List[int],
+):
+    """
+    Delete multiple products.
+    """
+    deleted_count = 0
+    for product_id in product_ids:
+        product = crud_product.product.get(db, id=product_id)
+        if not product:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Product with id {product_id} not found",
+            )
+        crud_product.product.remove(db, id=product_id)
+        deleted_count += 1
+    
+    return {
+        "deleted_count": deleted_count,
+        "message": f"Successfully deleted {deleted_count} products"
+    }
+
+
 @router.post("/{product_id}/images", response_model=product_schema.ProductImage)
 def upload_product_image(
     product_id: int,
@@ -147,7 +173,9 @@ def delete_product_image(
     if not image or image.product_id != product_id:
         raise HTTPException(status_code=404, detail="Product image not found")
     
-    # TODO: Delete the actual file from storage
+    # Delete the actual file from storage
+    if image.image_path and os.path.exists(image.image_path):
+        os.remove(image.image_path)
     
     crud_product_image.product_image.remove(db=db, id=image_id)
     return Response(status_code=204)

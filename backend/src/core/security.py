@@ -13,7 +13,7 @@ from src.config import settings
 # - time_cost: 1 iteration (minimal for testing)
 # - parallelism: 1 thread (minimal for testing)
 pwd_context = CryptContext(
-    schemes=["argon2"],
+    schemes=["argon2", "bcrypt"],
     deprecated="auto",
     argon2__memory_cost=8192,  # 8 MiB
     argon2__time_cost=1,

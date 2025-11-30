@@ -6,6 +6,10 @@
         <mat-icon>add</mat-icon>
         New User
       </button>
+      <button mat-raised-button color="accent" (click)="openImportDialog()">
+        <mat-icon>upload_file</mat-icon>
+        Import Users
+      </button>
       <button mat-raised-button (click)="viewAuditLogs()">
         <mat-icon>receipt</mat-icon>
         View Audit Logs
@@ -48,10 +52,8 @@
     <ng-container matColumnDef="avatar">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
       <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
-        <img *ngIf="row.avatar" [src]="row.avatar" 
-             [alt]="row.first_name + ' ' + row.last_name" 
-             class="avatar" 
-             (error)="avatarError($event)">
+        <img *ngIf="row.avatar" [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
+          (error)="avatarError($event)">
         <div *ngIf="!row.avatar" class="avatar-placeholder">
           <mat-icon>person</mat-icon>
         </div>

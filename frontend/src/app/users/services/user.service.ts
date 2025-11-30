@@ -27,11 +27,11 @@ export interface CreateUserRequest {
 export class UserService {
   private apiUrl = `${environment.apiUrl}/users`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getUsers(params?: UserListParams): Observable<User[]> {
     let httpParams = new HttpParams();
-    
+
     if (params) {
       if (params.skip !== undefined) httpParams = httpParams.set('skip', params.skip.toString());
       if (params.limit !== undefined) httpParams = httpParams.set('limit', params.limit.toString());
@@ -39,7 +39,7 @@ export class UserService {
       if (params.is_active !== undefined) httpParams = httpParams.set('is_active', params.is_active.toString());
       if (params.search) httpParams = httpParams.set('search', params.search);
     }
-    
+
     return this.http.get<User[]>(this.apiUrl, { params: httpParams });
   }
 
@@ -80,7 +80,13 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/password-reset`, { token, new_password: newPassword });
   }
 
-  adminResetPassword(userId: number): Observable<{message: string, new_password?: string}> {
-    return this.http.post<{message: string, new_password?: string}>(`${this.apiUrl}/${userId}/admin-reset-password`, {});
+  adminResetPassword(userId: number): Observable<{ message: string, new_password?: string }> {
+    return this.http.post<{ message: string, new_password?: string }>(`${this.apiUrl}/${userId}/admin-reset-password`, {});
+  }
+
+  bulkImportUsers(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${environment.apiUrl}/bulk-users/bulk-import`, formData);
   }
 }

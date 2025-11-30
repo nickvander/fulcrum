@@ -18,6 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmationDialog } from '../confirmation-dialog/confirmation-dialog';
 import { PasswordResetDialog } from '../password-reset-dialog/password-reset-dialog';
 import { UserCreateModal } from '../user-create-modal/user-create-modal';
+import { UserBulkImportDialogComponent } from '../user-bulk-import-dialog/user-bulk-import-dialog';
 
 @Component({
   selector: 'app-user-list',
@@ -38,6 +39,7 @@ import { UserCreateModal } from '../user-create-modal/user-create-modal';
     MatSelectModule,
     MatTooltipModule,
     MatProgressBarModule,
+    UserBulkImportDialogComponent
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
@@ -54,10 +56,10 @@ export class UserList implements OnInit, AfterViewInit {
   search_filter: string = '';
 
   constructor(
-    private userService: UserService, 
+    private userService: UserService,
     private dialog: MatDialog,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadUsers();
@@ -75,7 +77,7 @@ export class UserList implements OnInit, AfterViewInit {
   loadUsers(): void {
     this.isLoading = true;
     const params: UserListParams = {};
-    
+
     if (this.user_type_filter) params.user_type = this.user_type_filter;
     if (this.is_active_filter) params.is_active = this.is_active_filter === 'true';
     if (this.search_filter) params.search = this.search_filter;
@@ -111,6 +113,19 @@ export class UserList implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // User was created successfully, refresh the list
+        this.loadUsers();
+      }
+    });
+  }
+
+  openImportDialog(): void {
+    const dialogRef = this.dialog.open(UserBulkImportDialogComponent, {
+      width: '600px',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Import completed, refresh the list
         this.loadUsers();
       }
     });

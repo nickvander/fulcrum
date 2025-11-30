@@ -20,6 +20,16 @@ import { UserServiceMock } from '../../services/user.service.mock';
 import { User } from '../../models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
+import { Component } from '@angular/core';
+import { UserBulkImportDialogComponent } from '../user-bulk-import-dialog/user-bulk-import-dialog';
+
+@Component({
+  selector: 'app-user-bulk-import-dialog',
+  template: '',
+  standalone: true
+})
+class MockUserBulkImportDialogComponent { }
+
 describe('UserList', () => {
   let component: UserList;
   let fixture: ComponentFixture<UserList>;
@@ -38,7 +48,9 @@ describe('UserList', () => {
         ReactiveFormsModule,
         RouterTestingModule,
         MatSnackBarModule,
+        MatSnackBarModule,
         MatDialogModule,
+        MatFormFieldModule,
         MatFormFieldModule,
         MatInputModule,
         MatSelectModule,
@@ -54,6 +66,10 @@ describe('UserList', () => {
         { provide: MatDialog, useValue: matDialogSpy }
       ]
     })
+      .overrideComponent(UserList, {
+        remove: { imports: [UserBulkImportDialogComponent] },
+        add: { imports: [MockUserBulkImportDialogComponent] }
+      })
       .compileComponents();
 
     userService = TestBed.inject(UserService);

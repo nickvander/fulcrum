@@ -27,6 +27,7 @@ Welcome to Fulcrum's documentation!
    guides/database-migrations.md
    guides/testing-and-ci.md
    guides/production-setup.md
+   guides/bulk-import.md
 
 .. toctree::
    :maxdepth: 2
