@@ -63,7 +63,10 @@
     <!-- Employee ID Column -->
     <ng-container matColumnDef="employee_id">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Employee ID</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.employee_id}}</mat-cell>
+      <mat-cell *matCellDef="let row"
+        [matTooltip]="row.employee_id ? 'Employee ID: ' + row.employee_id : 'Customer (no employee ID)'">
+        {{row.employee_id || '—'}}
+      </mat-cell>
     </ng-container>
 
     <!-- First Name Column -->

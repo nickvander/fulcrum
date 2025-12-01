@@ -84,6 +84,68 @@
   }
 }
 
+/* Prevent text overflow in table cells */
+.mat-mdc-table {
+  min-width: 1000px;
+  /* Ensure table doesn't get too cramped */
+
+  .mat-mdc-cell,
+  .mat-mdc-header-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 16px;
+    /* Add consistent padding between columns */
+  }
+
+  /* Allow actions column to overflow for buttons */
+  .mat-column-actions .mat-mdc-cell,
+  .mat-column-actions .mat-mdc-header-cell {
+    overflow: visible;
+    padding-right: 8px;
+    /* Less padding on the right edge */
+  }
+}
+
+/* Specific column width constraints for better layout */
+.mat-column-avatar {
+  flex: 0 0 70px;
+  max-width: 70px;
+}
+
+.mat-column-first_name,
+.mat-column-last_name {
+  flex: 1 1 150px;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+.mat-column-email {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.mat-column-user_type,
+.mat-column-is_active {
+  flex: 0 0 140px;
+  max-width: 140px;
+}
+
+.mat-column-employee_id {
+  flex: 0 0 120px;
+  max-width: 120px;
+}
+
+.mat-column-actions {
+  flex: 0 0 200px;
+  max-width: 200px;
+  min-width: 200px;
+  /* Ensure enough space for all buttons */
+  justify-content: flex-end;
+  padding-right: 0 !important;
+}
+
 .badge {
   padding: 4px 8px;
   border-radius: 4px;
@@ -164,7 +226,8 @@
 }
 
 .inactive-user {
-  color: #999 !important; /* Make inactive status visually distinct */
+  color: #999 !important;
+  /* Make inactive status visually distinct */
 }
 
 .mat-mdc-row.inactive-user {
@@ -186,6 +249,8 @@
   padding-right: 0;
 }
 
+/* Ensure action buttons are properly spaced */
 .mat-column-actions button {
-  margin-left: 4px;
+  margin-left: 2px;
+  margin-right: 2px;
 }
