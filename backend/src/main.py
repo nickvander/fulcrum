@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
@@ -7,6 +7,11 @@ from src.database import SessionLocal
 from src.crud import crud_user
 from src.schemas.user import UserCreate
 from src.config import settings
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from src.core.ratelimit import limiter
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +42,18 @@ async def lifespan(app: FastAPI):
     # Shutdown
 
 app = FastAPI(title="Fulcrum API", lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    return response
 
 # Mount the uploads directory to serve static files
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

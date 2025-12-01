@@ -19,4 +19,5 @@ python-jose[cryptography]
 passlib[argon2]==1.7.4
 python-multipart
 sentence-transformers
+slowapi
 ruff
