@@ -10,6 +10,19 @@
   margin-bottom: 16px;
 }
 
+/* Responsive design for mobile */
+@media screen and (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .half-width {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
+
 .half-width {
   flex: 1;
 }

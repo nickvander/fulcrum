@@ -19,4 +19,5 @@ passlib[argon2]==1.7.4
 python-multipart
 sentence-transformers
 flower
+slowapi
 ruff

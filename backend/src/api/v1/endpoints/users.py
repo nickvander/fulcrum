@@ -11,6 +11,7 @@ from src.schemas import token as token_schema, user as user_schema
 from src.api import dependencies
 from src.config import settings
 from src.core import security
+from src.core.ratelimit import limiter
 
 router = APIRouter()
 logging.basicConfig(level=logging.INFO)
@@ -82,7 +83,9 @@ def change_password(
 
 
 @router.post("/login/access-token", response_model=token_schema.Token, tags=["users"])
+@limiter.limit("5/minute")
 def login_access_token(
+    request: Request,
     db: Session = Depends(dependencies.get_db),
     form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> dict:
@@ -133,7 +136,9 @@ def read_users(
 
 
 @router.post("/password-reset-request", tags=["users"])
+@limiter.limit("3/minute")
 def request_password_reset(
+    request: Request,
     *,
     db: Session = Depends(dependencies.get_db),
     email_data: user_schema.UserEmail,
@@ -172,11 +177,12 @@ def request_password_reset(
 
 
 @router.post("/password-reset", tags=["users"])
+@limiter.limit("5/minute")
 def reset_password(
+    request: Request,
     *,
     db: Session = Depends(dependencies.get_db),
     reset_data: schemas.PasswordResetTokenVerify,
-    request: Request,
 ) -> dict:
     """
     Reset a user's password using a reset token.
