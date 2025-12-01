@@ -1,5 +1,96 @@
 # Progress Log
 
+## Session: User List UI/UX Polish (Phases 2-4)
+
+**Date:** 2025-11-30
+
+### Summary of Work Completed
+
+Implemented major UI/UX improvements to the user list component, focusing on better visual organization, enhanced tooltips, and force password change indicators.
+
+### Phase 2: Table Organization
+
+**Column Reordering:**
+- Changed order from: `avatar | employee_id | first_name | last_name | email | user_type | is_active | actions`
+- To: `avatar | first_name | last_name | user_type | is_active | email | employee_id | actions`
+
+**Rationale:**
+- Name fields together for easier scanning
+- Role and status visible earlier
+- Less critical info (email, employee_id) moved right
+- Actions remain at the end
+
+### Phase 3: Tooltips & Column Spacing
+
+**Enhancements:**
+1. Added employee ID tooltip - shows "Employee ID: XXX" or "Customer (no employee ID)"
+2. Display "—" for empty employee IDs instead of blank
+3. Fixed text overflow with ellipsis
+4. Increased actions column from 180px to 200px
+5. Added consistent 16px padding between columns
+6. Set table min-width to 1000px to prevent cramping
+7. Made name/email columns flexible within limits
+
+**CSS Improvements:**
+- `text-overflow: ellipsis` prevents text spilling into adjacent columns
+- Column width constraints ensure proper spacing
+- Action buttons properly spaced with 2px margins
+
+### Phase 4: Force Password Change Indicator
+
+**New Feature:**
+- Added orange/amber warning badge for `force_password_change=true`
+- Badge displays "Password Reset Required" with lock_reset icon
+- Tooltip: "User must change password on next login"
+- Badges stack vertically in a flex container
+
+**Visual Design:**
+- Green (#e8f5e8) - Active users
+- Red (#ffebee) - Inactive users
+- Orange (#fff3e0) - Password reset required
+- Increased status column width from 140px to 200px
+
+### Test Users Created
+
+Created 5 test users to demonstrate improvements:
+1. `admin@example.com` - admin user
+2. `john.employee@example.com` - has force_password_change badge
+3. `jane.employee-with-very-long-email-address@company-domain.com` - tests ellipsis
+4. `bob.customer@example.com` - customer (no employee ID)
+5. `inactive.user@example.com` - inactive status
+
+### Commits Made
+
+1. `52e6583` - ui: Improve user list table organization
+2. `7a50f23` - ui: Add tooltips and fix column spacing  
+3. `0f07909` - ui: Add force password change indicator badge
+
+### Testing Results
+
+- ✅ All 257 frontend tests passing
+- ✅ All lint checks passing
+- ✅ Successfully pushed to GitHub
+
+### Benefits Achieved
+
+1. **Better Information Hierarchy** - Most important info visible first
+2. **No Text Overflow** - Clean, professional appearance
+3. **Enhanced Visual Indicators** - Quick identification of user states
+4. **Improved Admin Efficiency** - Easily spot users needing password changes
+5. **Better Spacing** - No overlapping elements, proper padding
+
+### Remaining Work
+
+**Phase 5: Responsive Design** (Optional)
+- Hide less critical columns on small screens
+- Mobile-friendly table layout
+- Stack action buttons on mobile
+
+**Phase 6: Documentation** (To be completed)
+- Update walkthrough with screenshots
+- Final commit
+
+
 ## Session: Force Password Change Backend Tests
 
 **Date:** 2025-11-30
