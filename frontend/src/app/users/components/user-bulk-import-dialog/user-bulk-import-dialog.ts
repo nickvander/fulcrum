@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { UserService } from '../../services/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-user-bulk-import-dialog',
@@ -27,16 +28,22 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatTooltipModule
   ]
 })
-export class UserBulkImportDialogComponent {
+export class UserBulkImportDialogComponent implements OnDestroy {
   selectedFile: File | null = null;
   isUploading = false;
   importResult: any = null;
+  private destroy$ = new Subject<void>();
 
   constructor(
     public dialogRef: MatDialogRef<UserBulkImportDialogComponent>,
     private userService: UserService,
     private snackBar: MatSnackBar
   ) { }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
@@ -65,22 +72,24 @@ export class UserBulkImportDialogComponent {
     if (!this.selectedFile) return;
 
     this.isUploading = true;
-    this.userService.bulkImportUsers(this.selectedFile).subscribe({
-      next: (result) => {
-        this.isUploading = false;
-        this.importResult = result;
-        if (result.failed_users.length === 0) {
-          this.snackBar.open('Import completed successfully', 'Close', { duration: 3000 });
-        } else {
-          this.snackBar.open('Import completed with some errors', 'Close', { duration: 5000 });
+    this.userService.bulkImportUsers(this.selectedFile)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.isUploading = false;
+          this.importResult = result;
+          if (result.failed_users.length === 0) {
+            this.snackBar.open('Import completed successfully', 'Close', { duration: 3000 });
+          } else {
+            this.snackBar.open('Import completed with some errors', 'Close', { duration: 5000 });
+          }
+        },
+        error: (error) => {
+          this.isUploading = false;
+          console.error('Import failed', error);
+          this.snackBar.open(error.error?.detail || 'Import failed', 'Close', { duration: 5000 });
         }
-      },
-      error: (error) => {
-        this.isUploading = false;
-        console.error('Import failed', error);
-        this.snackBar.open(error.error?.detail || 'Import failed', 'Close', { duration: 5000 });
-      }
-    });
+      });
   }
 
   close(): void {
