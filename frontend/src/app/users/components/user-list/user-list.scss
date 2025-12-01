@@ -126,10 +126,15 @@
   max-width: 280px;
 }
 
-.mat-column-user_type,
-.mat-column-is_active {
+.mat-column-user_type {
   flex: 0 0 140px;
   max-width: 140px;
+}
+
+.mat-column-is_active {
+  flex: 0 0 200px;
+  max-width: 200px;
+  min-width: 180px;
 }
 
 .mat-column-employee_id {
@@ -169,30 +174,10 @@
   color: white;
 }
 
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  vertical-align: middle;
-}
-
-.avatar-placeholder {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
+.status-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: middle;
-}
-
-.avatar-placeholder mat-icon {
-  font-size: 18px;
-  height: 18px;
-  width: 18px;
-  color: #757575;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .status-badge {
@@ -202,6 +187,7 @@
   border-radius: 12px;
   font-size: 0.8em;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .status-active {
@@ -212,6 +198,12 @@
 .status-inactive {
   background-color: #ffebee;
   color: #c62828;
+}
+
+.status-warning {
+  background-color: #fff3e0;
+  color: #e65100;
+  font-size: 0.75em;
 }
 
 .status-icon {
