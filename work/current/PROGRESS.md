@@ -1,5 +1,82 @@
 # Progress Log
 
+## Session: Force Password Change Backend Tests
+
+**Date:** 2025-11-30
+
+### Summary of Work Completed
+
+Implemented comprehensive backend test coverage for the `force_password_change` feature. This feature was previously implemented but had no tests, creating a gap in test coverage.
+
+### Tests Created
+
+**File:** `backend/tests/test_force_password_change.py`
+
+**Test Coverage (8 tests, all passing):**
+
+1. **Admin-Created Users Default Behavior**
+   - `test_admin_creates_user_with_force_password_change`
+   - Verifies admin-created users have `force_password_change=True` by default
+
+2. **Explicit Force Password Change Control**
+   - `test_admin_creates_user_explicit_force_password_false`
+   - Confirms admins can explicitly set `force_password_change=False`
+
+3. **Self-Registration Behavior**
+   - `test_user_self_registration_no_force_password_change`
+   - Ensures self-registered users have `force_password_change=False`
+
+4. **Password Change Clears Flag**
+   - `test_force_password_change_cleared_after_password_update`
+   - Tests that changing password via `/change-password` clears the flag
+
+5. **Database Persistence**
+   - `test_force_password_change_persists_in_database`
+   - Verifies flag is properly stored and retrieved from database
+
+6. **Non-Admin User Creation**
+   - `test_non_admin_creates_user_without_force_password_change`
+   - Confirms non-admin created users don't get automatic flag
+
+7. **Admin Update Capability**
+   - `test_admin_updates_user_force_password_change`
+   - Tests admins can update another user's flag via PUT endpoint
+
+8. **User Self-Modification Restriction**
+   - `test_user_cannot_change_own_force_password_change_flag`
+   - Verifies users cannot change their own flag via profile endpoint
+
+### Test Results
+
+```
+8 passed, 1 warning in 0.55s
+```
+
+All tests pass successfully. The warning is a deprecation notice in the argon2 library (non-blocking).
+
+### Feature Behavior Verified
+
+- ✅ Admin-created users default to `force_password_change=True`
+- ✅ Self-registered users default to `force_password_change=False`
+- ✅ Flag is cleared when user changes password
+- ✅ Flag persists correctly in database
+- ✅ Admins can update the flag for any user
+- ✅ Regular users cannot change their own flag
+- ✅ Non-admin created users don't get automatic flag
+
+### Coverage Impact
+
+- **Before:** Force password change feature had 0 tests
+- **After:** Force password change feature has 8 comprehensive tests
+- **Total Backend User Tests:** 50 + 8 = **58 tests** (all passing)
+
+### Next Steps
+
+- Commit test implementation
+- Update MISSING_ITEMS.md to reflect completed work
+- Update walkthrough with Phase 3 completion
+
+
 ## Session: Frontend Bulk Import Dialog Test Improvements
 
 **Date:** 2025-11-30
