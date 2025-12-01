@@ -1,58 +1,77 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserBulkImportDialogComponent } from './user-bulk-import-dialog';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
+import { BulkImportService } from '../../services/bulk-import.service';
+import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-/* TEMPORARILY DISABLED: This entire test suite causes the test runner to hang for 120+ seconds in CI/CD.
+/**
+ * Tests for UserBulkImportDialogComponent
  * 
- * ROOT CAUSE: The component's template contains Material components (MatTabs, MatTable with dataSource)
- * that create uncompleted observables during initialization in the test environment. The timeout occurs
- * in beforeEach during fixture.detectChanges(), not in any specific test.
+ * STATUS: DISABLED - Test suite still times out at 120s despite multiple fix attempts.
  * 
- * ATTEMPTED FIXES (all failed):
- *   - fakeAsync/tick pattern: FAILED - still times out
- *   - async/await with fixture.whenStable(): FAILED - still times out
- *   - takeUntil pattern in component: FAILED - still times out
- *   - afterEach fixture.destroy(): FAILED - still times out
- *   - Simplified test (no async assertions): FAILED - still times out
- *   - Disabling individual test with xit(): FAILED - still times out
+ * IMPROVEMENTS MADE:
+ * - ✅ Refactored component to use BulkImportService (better architecture, easier to maintain)
+ * - ✅ Created comprehensive unit tests for BulkImportService (all passing)
+ * - ✅ Mocked BulkImportService in component tests
+ * - ✅ Added NO_ERRORS_SCHEMA to prevent Material component rendering
+ * - ✅ Removed fixture.detectChanges() from beforeEach
  * 
- * This is the same pattern seen in ProductForm tests (see work/PROGRESS.md). The issue is likely
- * caused by complex Material component templates creating uncompleted observables that the test
- * runner waits for indefinitely.
+ * ATTEMPTED FIXES (all failed to resolve timeout):
+ * 1. Service layer extraction with mocks - FAILED (still times out)
+ * 2. NO_ERRORS_SCHEMA - FAILED (still times out)
+ * 3. Skipping detectChanges() - FAILED (still times out)
+ * 4. fakeAsync/tick pattern - FAILED (from previous attempts)
+ * 5. async/await with fixture.whenStable() - FAILED (from previous attempts)
+ * 6. takeUntil pattern in component - FAILED (from previous attempts)
  * 
- * TODO: Future investigation needed to properly fix this test suite. For now, the entire suite is
- * disabled to prevent CI/CD pipeline failures. The component itself works correctly in production.
+ * CONCLUSION: The timeout issue appears to be deeper than Material component rendering.
+ * The BulkImportService is fully tested and component functionality works in production.
+ * Component architecture is improved but integration tests remain disabled pending deeper investigation.
+ * 
+ * TODO: Future investigation into test framework/Angular testing environment interaction.
  */
 xdescribe('UserBulkImportDialogComponent', () => {
   let component: UserBulkImportDialogComponent;
   let fixture: ComponentFixture<UserBulkImportDialogComponent>;
-  let userServiceSpy: jasmine.SpyObj<UserService>;
+  let bulkImportServiceSpy: jasmine.SpyObj<BulkImportService>;
   let dialogRefSpy: jasmine.SpyObj<MatDialogRef<UserBulkImportDialogComponent>>;
   let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
 
   beforeEach(async () => {
-    userServiceSpy = jasmine.createSpyObj('UserService', ['bulkImportUsers']);
+    bulkImportServiceSpy = jasmine.createSpyObj('BulkImportService', [
+      'validateFile',
+      'processFile',
+      'getTemplateContent',
+      'formatResultsAsCsv'
+    ]);
     dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
     snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [UserBulkImportDialogComponent, NoopAnimationsModule],
+      schemas: [NO_ERRORS_SCHEMA], // Prevents rendering of Material components
       providers: [
         { provide: MatDialogRef, useValue: dialogRefSpy },
-        { provide: UserService, useValue: userServiceSpy },
+        { provide: BulkImportService, useValue: bulkImportServiceSpy },
         { provide: MatSnackBar, useValue: snackBarSpy },
         { provide: MAT_DIALOG_DATA, useValue: {} }
       ]
     })
+      .overrideComponent(UserBulkImportDialogComponent, {
+        set: {
+          providers: [
+            { provide: BulkImportService, useValue: bulkImportServiceSpy }
+          ]
+        }
+      })
       .compileComponents();
 
     fixture = TestBed.createComponent(UserBulkImportDialogComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    // Don't call detectChanges() here - it triggers Material component initialization
   });
 
   afterEach(() => {
@@ -63,28 +82,158 @@ xdescribe('UserBulkImportDialogComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should validate file type on selection', () => {
-    const file = new File([''], 'test.txt', { type: 'text/plain' });
-    const event = { target: { files: [file] } };
-    component.onFileSelected(event);
-    expect(snackBarSpy.open).toHaveBeenCalledWith('Please select a CSV file', 'Close', { duration: 3000 });
-    expect(component.selectedFile).toBeNull();
+  describe('onFileSelected', () => {
+    it('should show error for invalid file', () => {
+      const file = new File([''], 'test.txt', { type: 'text/plain' });
+      const event = { target: { files: [file] } };
+
+      bulkImportServiceSpy.validateFile.and.returnValue({
+        valid: false,
+        error: 'Please select a CSV file'
+      });
+
+      component.onFileSelected(event);
+
+      expect(bulkImportServiceSpy.validateFile).toHaveBeenCalledWith(file);
+      expect(snackBarSpy.open).toHaveBeenCalledWith('Please select a CSV file', 'Close', { duration: 3000 });
+      expect(component.selectedFile).toBeNull();
+    });
+
+    it('should accept valid CSV file', () => {
+      const file = new File([''], 'test.csv', { type: 'text/csv' });
+      const event = { target: { files: [file] } };
+
+      bulkImportServiceSpy.validateFile.and.returnValue({ valid: true });
+
+      component.onFileSelected(event);
+
+      expect(component.selectedFile).toBe(file);
+      expect(component.importResult).toBeNull();
+    });
   });
 
-  it('should accept csv file', () => {
-    const file = new File([''], 'test.csv', { type: 'text/csv' });
-    const event = { target: { files: [file] } };
-    component.onFileSelected(event);
-    expect(component.selectedFile).toBe(file);
+  describe('upload', () => {
+    it('should call bulkImportService.processFile and handle success', (done) => {
+      const file = new File([''], 'test.csv', { type: 'text/csv' });
+      const mockResult = {
+        created_users: [{ email: 'test@example.com', temporary_password: 'pass123' }],
+        failed_users: []
+      };
+
+      component.selectedFile = file;
+      bulkImportServiceSpy.processFile.and.returnValue(of(mockResult));
+
+      component.upload();
+
+      expect(component.isUploading).toBe(true);
+
+      setTimeout(() => {
+        expect(bulkImportServiceSpy.processFile).toHaveBeenCalledWith(file);
+        expect(component.isUploading).toBe(false);
+        expect(component.importResult).toEqual(mockResult);
+        expect(snackBarSpy.open).toHaveBeenCalledWith('Import completed successfully', 'Close', { duration: 3000 });
+        done();
+      }, 100);
+    });
+
+    it('should handle import with failures', (done) => {
+      const file = new File([''], 'test.csv', { type: 'text/csv' });
+      const mockResult = {
+        created_users: [],
+        failed_users: [{ email: 'bad@example.com', error: 'Invalid data' }]
+      };
+
+      component.selectedFile = file;
+      bulkImportServiceSpy.processFile.and.returnValue(of(mockResult));
+
+      component.upload();
+
+      setTimeout(() => {
+        expect(component.isUploading).toBe(false);
+        expect(snackBarSpy.open).toHaveBeenCalledWith('Import completed with some errors', 'Close', { duration: 5000 });
+        done();
+      }, 100);
+    });
+
+    it('should handle import error', (done) => {
+      const file = new File([''], 'test.csv', { type: 'text/csv' });
+      const error = { error: { detail: 'Server error' } };
+
+      component.selectedFile = file;
+      bulkImportServiceSpy.processFile.and.returnValue(throwError(() => error));
+
+      component.upload();
+
+      setTimeout(() => {
+        expect(component.isUploading).toBe(false);
+        expect(snackBarSpy.open).toHaveBeenCalledWith('Server error', 'Close', { duration: 5000 });
+        done();
+      }, 100);
+    });
+
+    it('should not upload if no file selected', () => {
+      component.selectedFile = null;
+      component.upload();
+      expect(bulkImportServiceSpy.processFile).not.toHaveBeenCalled();
+    });
   });
 
-  it('should call bulkImportUsers on upload', () => {
-    const file = new File([''], 'test.csv', { type: 'text/csv' });
-    component.selectedFile = file;
-    userServiceSpy.bulkImportUsers.and.returnValue(of({ created_users: [], failed_users: [] }));
+  describe('downloadTemplate', () => {
+    it('should download template file', () => {
+      const templateContent = 'email,first_name,last_name,user_type\nuser@example.com,John,Doe,employee';
+      bulkImportServiceSpy.getTemplateContent.and.returnValue(templateContent);
 
-    component.upload();
+      spyOn(window.URL, 'createObjectURL').and.returnValue('blob:mock-url');
+      spyOn(window.URL, 'revokeObjectURL');
+      spyOn(document, 'createElement').and.callThrough();
 
-    expect(userServiceSpy.bulkImportUsers).toHaveBeenCalledWith(file);
+      component.downloadTemplate();
+
+      expect(bulkImportServiceSpy.getTemplateContent).toHaveBeenCalled();
+      expect(window.URL.createObjectURL).toHaveBeenCalled();
+      expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+    });
+  });
+
+  describe('close', () => {
+    it('should close with true if import result exists', () => {
+      component.importResult = { created_users: [], failed_users: [] };
+      component.close();
+      expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
+    });
+
+    it('should close with false if no import result', () => {
+      component.importResult = null;
+      component.close();
+      expect(dialogRefSpy.close).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('copyAll', () => {
+    it('should copy all results as CSV', (done) => {
+      const users = [{ email: 'user@test.com', temporary_password: 'pass' }];
+      component.importResult = { created_users: users, failed_users: [] };
+
+      bulkImportServiceSpy.formatResultsAsCsv.and.returnValue('Email,Temporary Password\nuser@test.com,pass');
+      spyOn(navigator.clipboard, 'writeText').and.returnValue(Promise.resolve());
+
+      component.copyAll();
+
+      setTimeout(() => {
+        expect(bulkImportServiceSpy.formatResultsAsCsv).toHaveBeenCalledWith(users);
+        expect(navigator.clipboard.writeText).toHaveBeenCalled();
+        expect(snackBarSpy.open).toHaveBeenCalledWith('All results copied to clipboard', 'Close', { duration: 2000 });
+        done();
+      }, 100);
+    });
+
+    it('should not copy if no import result', () => {
+      component.importResult = null;
+      spyOn(navigator.clipboard, 'writeText');
+
+      component.copyAll();
+
+      expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+    });
   });
 });

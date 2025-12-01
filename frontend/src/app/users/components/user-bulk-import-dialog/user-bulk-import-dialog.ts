@@ -1,6 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { UserService } from '../../services/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
+import { BulkImportService } from '../../services/bulk-import.service';
 
 @Component({
   selector: 'app-user-bulk-import-dialog',
@@ -26,7 +26,8 @@ import { Subject, takeUntil } from 'rxjs';
     MatTableModule,
     MatSnackBarModule,
     MatTooltipModule
-  ]
+  ],
+  providers: [BulkImportService]
 })
 export class UserBulkImportDialogComponent implements OnDestroy {
   selectedFile: File | null = null;
@@ -36,7 +37,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
 
   constructor(
     public dialogRef: MatDialogRef<UserBulkImportDialogComponent>,
-    private userService: UserService,
+    private bulkImportService: BulkImportService,
     private snackBar: MatSnackBar
   ) { }
 
@@ -48,8 +49,9 @@ export class UserBulkImportDialogComponent implements OnDestroy {
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
     if (file) {
-      if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-        this.snackBar.open('Please select a CSV file', 'Close', { duration: 3000 });
+      const validation = this.bulkImportService.validateFile(file);
+      if (!validation.valid) {
+        this.snackBar.open(validation.error!, 'Close', { duration: 3000 });
         return;
       }
       this.selectedFile = file;
@@ -58,7 +60,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
   }
 
   downloadTemplate(): void {
-    const csvContent = 'email,first_name,last_name,user_type\nuser@example.com,John,Doe,employee';
+    const csvContent = this.bulkImportService.getTemplateContent();
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -72,7 +74,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
     if (!this.selectedFile) return;
 
     this.isUploading = true;
-    this.userService.bulkImportUsers(this.selectedFile)
+    this.bulkImportService.processFile(this.selectedFile)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => {
@@ -105,9 +107,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
   copyAll(): void {
     if (!this.importResult || !this.importResult.created_users) return;
 
-    const headers = ['Email', 'Temporary Password'];
-    const rows = this.importResult.created_users.map((u: any) => `${u.email},${u.temporary_password}`);
-    const csvContent = [headers.join(','), ...rows].join('\n');
+    const csvContent = this.bulkImportService.formatResultsAsCsv(this.importResult.created_users);
 
     navigator.clipboard.writeText(csvContent).then(() => {
       this.snackBar.open('All results copied to clipboard', 'Close', { duration: 2000 });
