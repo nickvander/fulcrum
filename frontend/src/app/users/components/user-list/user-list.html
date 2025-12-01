@@ -100,13 +100,24 @@
     <!-- Active Status Column -->
     <ng-container matColumnDef="is_active">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row" [matTooltip]="row.is_active ? 'Active User' : 'Inactive User'">
-        <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}">
-          <mat-icon class="status-icon">
-            {{row.is_active ? 'check_circle' : 'cancel'}}
-          </mat-icon>
-          <span class="status-label">{{row.is_active ? 'Active' : 'Inactive'}}</span>
-        </span>
+      <mat-cell *matCellDef="let row">
+        <div class="status-container">
+          <!-- Active/Inactive Badge -->
+          <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}"
+            [matTooltip]="row.is_active ? 'Active User' : 'Inactive User'">
+            <mat-icon class="status-icon">
+              {{row.is_active ? 'check_circle' : 'cancel'}}
+            </mat-icon>
+            <span class="status-label">{{row.is_active ? 'Active' : 'Inactive'}}</span>
+          </span>
+
+          <!-- Force Password Change Badge -->
+          <span *ngIf="row.force_password_change" class="status-badge status-warning"
+            matTooltip="User must change password on next login">
+            <mat-icon class="status-icon">lock_reset</mat-icon>
+            <span class="status-label">Password Reset Required</span>
+          </span>
+        </div>
       </mat-cell>
     </ng-container>
 
