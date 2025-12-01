@@ -7,6 +7,14 @@ import { LoginGuard } from './auth/guards/login-guard';
 const routes: Routes = [
   { path: 'login', component: Login, canActivate: [LoginGuard] },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./auth/components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
     path: 'products',
     loadChildren: () => import('./products/products-module').then(m => m.ProductsModule),
     canActivate: [AuthGuard]
