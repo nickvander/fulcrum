@@ -43,7 +43,8 @@ import { UserBulkImportDialogComponent } from '../user-bulk-import-dialog/user-b
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['avatar', 'employee_id', 'first_name', 'last_name', 'email', 'user_type', 'is_active', 'actions'];
+  // Reordered columns: name/role/status first, then less critical info
+  displayedColumns: string[] = ['avatar', 'first_name', 'last_name', 'user_type', 'is_active', 'email', 'employee_id', 'actions'];
   dataSource: MatTableDataSource<User> = new MatTableDataSource();
   isLoading = false;
 
