@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 
 from .base import Base
@@ -23,6 +24,8 @@ class Product(Base):
     height = Column(Float, nullable=True)
     depth = Column(Float, nullable=True)
     weight = Column(Float, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     supplier = relationship("Supplier")
     images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")

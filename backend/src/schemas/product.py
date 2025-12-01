@@ -80,6 +80,8 @@ class Product(ProductBase):
     weight: Optional[float] = None
     custom_fields: List[ProductCustomField] = []
     variants: List[ProductVariant] = []
+    created_at: datetime
+    updated_at: datetime
 
     @classmethod
     def from_orm(cls, obj):
