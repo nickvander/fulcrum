@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -13,6 +14,7 @@ from src.core import security
 
 router = APIRouter()
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
 
@@ -148,12 +150,23 @@ def request_password_reset(
     # Create a password reset token
     reset_token = crud.password_reset_token.create_reset_token(db, user_id=user.id)
     
-    # In a real implementation, we would send the reset token via email here
-    # For now, we'll just log it
-    logger.info(f"Password reset token created: {reset_token.token} for user: {user.email}")
+    # Send password reset email
+    from src.services.email_service import get_email_service
+    email_service = get_email_service()
     
-    # TODO: Implement actual email sending with the reset token
-    # send_reset_email(user.email, reset_token.token)
+    # Get base URL from request or environment
+    base_url = os.getenv("FRONTEND_URL", "http://localhost:4200")
+    
+    try:
+        email_service.send_password_reset_email(
+            to_email=user.email,
+            reset_token=reset_token.token,
+            base_url=base_url
+        )
+        logger.info(f"Password reset email sent to: {user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send password reset email: {e}")
+        # Don't reveal the error to the user for security
     
     return {"message": "If the email exists, a reset link has been sent"}
 
