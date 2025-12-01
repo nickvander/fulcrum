@@ -50,7 +50,14 @@ def create_product(
             detail="A product with this SKU already exists.",
         )
     product = crud_product.product.create(db, obj_in=product_in)
-    generate_product_embedding.delay(product.id)
+    
+    # Try to generate embedding, but don't fail product creation if it fails
+    try:
+        generate_product_embedding.delay(product.id)
+    except Exception as e:
+        # Log the error but don't block product creation
+        print(f"Warning: Failed to queue embedding generation: {e}")
+    
     return product
 
 
