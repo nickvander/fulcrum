@@ -27,22 +27,51 @@
   flex: 1;
 }
 
-/* Responsive design for mobile devices */
+/* Responsive design for tablets (768px - 1024px) */
+@media screen and (max-width: 1024px) {
+  .header {
+    flex-wrap: wrap;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .filters mat-form-field {
+    width: 100%;
+  }
+
+  /* Hide employee_id on tablets */
+  .mat-column-employee_id {
+    display: none !important;
+  }
+}
+
+/* Responsive design for mobile devices (< 768px) */
 @media screen and (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
   .header {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
   }
 
+  .header h1 {
+    font-size: 1.5em;
+  }
+
   .header-actions {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     flex-wrap: wrap;
   }
 
   .header-actions button {
-    flex: 1;
+    flex: 1 1 45%;
+    font-size: 0.85em;
   }
 
   .filters {
@@ -54,33 +83,104 @@
     width: 100%;
   }
 
-  /* Hide less important columns on small screens */
-  .mat-column-avatar,
-  .mat-column-employee_id {
-    display: none;
+  /* Hide less critical columns on mobile */
+  .mat-column-employee_id,
+  .mat-column-email {
+    display: none !important;
+  }
+
+  /* Make avatar smaller */
+  .mat-column-avatar {
+    flex: 0 0 50px !important;
+    max-width: 50px !important;
+  }
+
+  .avatar,
+  .avatar-placeholder {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .avatar-placeholder mat-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
   }
 
   /* Adjust table for mobile */
   .mat-mdc-table {
     display: block;
     overflow-x: auto;
+    min-width: auto !important;
   }
 
   /* Reduce padding on mobile for better space usage */
-  .mat-mdc-cell {
-    padding: 8px 4px !important;
+  .mat-mdc-cell,
+  .mat-mdc-header-cell {
+    padding: 0 8px !important;
+    font-size: 0.85em;
+  }
+
+  /* Make name columns more compact */
+  .mat-column-first_name,
+  .mat-column-last_name {
+    flex: 1 1 80px !important;
+    min-width: 70px !important;
+    max-width: 100px !important;
+  }
+
+  /* Make status column more compact */
+  .mat-column-user_type,
+  .mat-column-is_active {
+    flex: 1 1 90px !important;
+    max-width: 120px !important;
+  }
+
+  /* Reduce actions column size */
+  .mat-column-actions {
+    flex: 0 0 150px !important;
+    max-width: 150px !important;
+    min-width: 150px !important;
   }
 
   /* Adjust icons for better touch targets */
   .mat-icon-button {
     width: 36px;
     height: 36px;
-    line-height: 36px;
+    padding: 6px !important;
   }
 
-  /* Adjust text sizes for better readability on mobile */
+  .mat-icon-button mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Adjust badges for mobile */
+  .badge,
+  .status-badge {
+    font-size: 0.7em;
+    padding: 2px 6px;
+  }
+
   .status-label {
     font-size: 0.75em;
+  }
+
+  .status-icon {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Hide text labels in status on very small screens, keep icons */
+  .status-warning .status-label {
+    display: none;
+  }
+
+  /* Compact pagination */
+  .mat-mdc-paginator {
+    font-size: 0.85em;
   }
 }
 
