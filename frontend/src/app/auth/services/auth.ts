@@ -17,9 +17,9 @@ export class AuthService {
 
   public isAuthenticated$: Observable<boolean> = this.isAuthenticatedSubject.asObservable();
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) { }
 
-  login(credentials: {email: string, password: string}): Observable<any> {
+  login(credentials: { email: string, password: string }): Observable<any> {
     const formData = new FormData();
     formData.append('username', credentials.email);
     formData.append('password', credentials.password);
@@ -30,6 +30,14 @@ export class AuthService {
         this.isAuthenticatedSubject.next(true);
       })
     );
+  }
+
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/password-reset-request`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/password-reset`, { token, new_password: newPassword });
   }
 
   logout(): void {

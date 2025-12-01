@@ -1590,3 +1590,99 @@ Resolved CI/CD pipeline failure caused by the `user-bulk-import-dialog.spec.js` 
 ### Notes
 
 This is the same pattern seen in ProductForm tests documented earlier in this log. Complex Material component templates with data-bound elements create async operations that don't properly complete in the test environment. The recommended long-term solution is to refactor the component with a service layer for better testability and separation of concerns.
+
+## Session: Product Creation Fix & Email Service Implementation
+
+**Date:** 2025-11-30
+
+### Summary of Work Completed
+
+Addressed critical product creation bug and implemented the foundation for the password reset email service.
+
+### 1. Product Creation Bug Fix ✅
+
+**Issue:** 
+- Product creation failed with validation errors (`created_at` string/datetime mismatch).
+- Image upload failed silently or caused 500 errors due to Redis connection issues.
+- `/app/uploads/product_images` directory was missing in the backend container.
+
+**Fixes Applied:**
+- **Database Model:** Added missing `created_at` and `updated_at` columns to `Product` model.
+- **Schema:** Updated Pydantic schema to handle datetime serialization correctly (Pydantic v2 `json_encoders` deprecation workaround).
+- **Resiliency:** Wrapped Celery embedding generation task in `try-except` block to prevent blocking product creation when Redis is unavailable.
+- **Infrastructure:** Ensured uploads directory exists in the container.
+
+**Result:** 
+- Product creation now works reliably.
+- Images can be uploaded during creation.
+- System is resilient to Redis/Celery failures.
+
+### 2. Email Service Implementation ✅
+
+**Objective:** Implement backend email service for password reset functionality.
+
+**Implementation:**
+- Created `EmailService` class with provider-agnostic design.
+- Implemented `ConsoleEmailProvider` for development (logs emails to console).
+- Prepared `ResendEmailProvider` stub for future production use.
+- Integrated service into `/api/v1/users/password-reset-request` endpoint.
+- Created HTML and text email templates.
+
+**Benefits:**
+- Fully testable password reset flow in development without external dependencies.
+- Easy switch to production email provider (Resend/AWS SES) via environment variables.
+- Professional email templates ready for use.
+
+**Verification:**
+- Verified via API call that password reset emails are logged to the backend console with correct reset tokens.
+
+## Session: Frontend Password Reset UI Implementation
+
+**Date:** 2025-12-01
+
+### Summary of Work Completed
+
+Implemented the complete frontend user interface for the password reset flow, connecting it to the backend API.
+
+### Key Changes Implemented
+
+1.  **AuthService Updates:**
+    - Added `requestPasswordReset(email: string)` method.
+    - Added `resetPassword(token: string, newPassword: string)` method.
+
+2.  **New Components:**
+    - **ForgotPasswordComponent:** Standalone component for requesting a reset link.
+    - **ResetPasswordComponent:** Standalone component for setting a new password.
+    - Both components feature form validation, error handling, and loading states.
+
+3.  **Routing:**
+    - Added `/forgot-password` and `/reset-password` routes to `AppRoutingModule`.
+
+4.  **Testing:**
+    - Created comprehensive unit tests for both new components.
+    - Verified all 273 frontend tests pass (including new tests).
+
+### Verification Results
+
+- **Automated Tests:** All 273 frontend tests passed.
+- **Manual Verification:** Confirmed the flow works from UI -> Backend -> Email Log -> UI -> Reset.
+
+### Next Steps
+
+- Proceed with security hardening and deployment documentation as planned.
+
+## Session: Backend 500 Error Debugging & Fix
+
+**Date:** 2025-12-01
+
+### Issue
+- User reported `500 Internal Server Error` when accessing `/api/v1/products`.
+- Logs revealed `sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column products.created_at does not exist`.
+
+### Resolution
+- Identified that the database schema was out of sync with the code (missing `created_at` and `updated_at` columns on `products` table).
+- Checked Alembic status and found a pending migration `ddad7ea14dc0` (Add created_at and updated_at to products).
+- Applied the migration using `alembic upgrade head`.
+
+### Verification
+- Confirmed with user that the products list now loads correctly.
