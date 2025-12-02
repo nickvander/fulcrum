@@ -12,11 +12,11 @@ services:
     volumes:
       - postgres_data_test:/var/lib/postgresql/data/
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fulcrum_test -d fulcrum_test"]
+      test: [ "CMD-SHELL", "pg_isready -U fulcrum_test -d fulcrum_test" ]
       interval: 5s
       timeout: 10s
       retries: 10
-      start_period: 30s
+      start_period: 60s
 
   redis:
     image: redis:7-alpine
@@ -24,7 +24,7 @@ services:
       - "6379:6379"
 
   backend:
-    build: 
+    build:
       context: ./backend
       args:
         REQUIREMENTS_FILE: requirements-test.txt
@@ -56,10 +56,10 @@ services:
       - FIRST_SUPERUSER_EMAIL=test@example.com
       - FIRST_SUPERUSER_PASSWORD=SecurePass123!
     healthcheck:
-      test: ["CMD", "celery", "-A", "src.celery_worker.celery_app", "status"]
+      test: [ "CMD", "celery", "-A", "src.celery_worker.celery_app", "status" ]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 10
 
 volumes:
   postgres_data_test:

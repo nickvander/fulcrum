@@ -14,6 +14,7 @@ COPY $REQUIREMENTS_FILE ./requirements.txt
 RUN python -m pip install --upgrade pip && \
     python -m venv /app/venv && \
     . /app/venv/bin/activate && \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt
 
 # --- Final Stage ---
