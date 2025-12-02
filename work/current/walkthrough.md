@@ -1,35 +1,41 @@
-# User Management Overhaul Walkthrough
+# Audit Logs View Implementation
 
 ## Overview
-This document summarizes the completion of the User Management Overhaul, including security hardening, responsive design, and documentation updates.
+Implemented a full Audit Logs View for administrators to track user actions and system events. This includes a backend API with filtering capabilities and a frontend UI with a searchable, paginated table.
 
-## Completed Features
+## Changes
 
-### Security Hardening
-- **Rate Limiting**: Implemented rate limiting for login and password reset endpoints using `slowapi` and Redis.
-  - Login: 5 requests per minute
-  - Password Reset Request: 3 requests per minute
-  - Password Reset: 5 requests per minute
-- **Security Headers**: Added middleware to set `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, and `Content-Security-Policy`.
-- **CORS**: Configured CORS settings (reviewed and confirmed).
+### Backend
+- **Model**: Verified `UserAuditLog` model structure.
+- **CRUD**: Updated `CRUDUserAuditLog` to support `start_date` and `end_date` filtering.
+- **API**: Created `GET /api/v1/audit-logs` endpoint, accessible only to superusers.
+    - Supports pagination (`skip`, `limit`).
+    - Supports filtering by `user_id`, `action`, `start_date`, `end_date`.
+- **Dependencies**: Added `get_current_active_superuser` dependency.
+- **Tests**: Added `tests/test_audit_logs_api.py` covering superuser access, filtering, and permission checks.
 
-### Responsive Design
-- **User List**: Optimized for mobile devices.
-  - Hidden less critical columns (Employee ID, Email) on small screens.
-  - Added horizontal scrolling for the table.
-- **User Form**: Optimized for mobile devices.
-  - Form rows stack vertically on small screens.
-
-### Documentation
-- Updated `docs/guides/production-setup.md` with new environment variables for rate limiting and security headers.
+### Frontend
+- **Service**: Created `AuditLogService` to fetch logs from the API with filter parameters.
+- **Component**: Created `AuditLogsComponent` (`admin/audit-logs`) displaying logs in a Material table.
+    - Columns: ID, Action, User, Performed By, Details, Date.
+    - Filters: Action, User ID, Date Range.
+    - Pagination: Integrated `mat-paginator`.
+- **Routing**: Added `/admin/audit-logs` route guarded by `AuthGuard`.
+- **Navigation**: Added "Audit Logs" link to the Sidenav, visible only to admins.
 
 ## Verification Results
 
-### Backend Tests
-- **User Management Tests**: Passed.
-- **Rate Limiting**: Verified manually (429 responses) and via tests (disabled for test suite to ensure pass).
-- **Note**: Some unrelated product stock tests failed, but user management functionality is verified.
+### Automated Tests
+- **Backend**: `tests/test_audit_logs_api.py` passed.
+    - Verified superuser access returns logs.
+    - Verified normal user access is forbidden (403).
+    - Verified filtering by action and date works correctly.
+- **Frontend**: `audit-log.service.spec.ts` and `audit-logs.component.spec.ts` passed.
 
-### Frontend Tests
-- All frontend tests passed.
-- Mobile layout verified via browser developer tools.
+### Manual Verification Steps
+1.  Log in as an Admin.
+2.  Open the Sidenav and click "Audit Logs".
+3.  Verify the table loads with audit log data.
+4.  Enter an action (e.g., "update") and press Enter. Verify the list filters.
+5.  Select a date range. Verify the list filters.
+6.  Log in as a non-admin user. Try to access `/admin/audit-logs`. Verify access is denied (or redirected).
