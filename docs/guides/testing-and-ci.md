@@ -57,6 +57,33 @@ Playwright to execute its unit tests. The configuration can be found in
   npm run test:frontend
   ```
 
+  npm run test:frontend
+  ```
+
+## End-to-End (E2E) Testing
+
+The project uses **[Playwright](https://playwright.dev/)** for End-to-End testing. These tests simulate real user interactions across the full stack (Frontend + Backend + Database).
+
+- **Configuration:** `playwright.config.ts`
+- **Test Directory:** `e2e/`
+
+### Running E2E Tests Locally
+
+To run E2E tests, you must have the backend and frontend running.
+
+1.  **Start the Backend:**
+    ```bash
+    docker compose up -d
+    ```
+2.  **Start the Frontend:**
+    ```bash
+    npm start --prefix frontend
+    ```
+3.  **Run Tests:**
+    ```bash
+    npm run test:e2e
+    ```
+
 ## Continuous Integration (CI) with GitHub Actions
 
 To automate our quality checks, this project uses GitHub Actions. The workflows
@@ -105,3 +132,14 @@ before commits and pushes:
   application.
 - **Process:** Installs Node.js and npm dependencies, installs the Playwright
   browsers, and executes the `npm run test:frontend` command.
+
+### 5. E2E Tests (`e2e-tests.yml`)
+
+- **Trigger:** Runs on `push` and `pull_request` to the `main` branch.
+- **Purpose:** Validates critical user flows across the full stack.
+- **Process:**
+    - Sets up Node.js and Python.
+    - Starts the full backend stack (DB, Redis, API) using Docker Compose.
+    - Starts the frontend application.
+    - Executes Playwright tests (`npm run test:e2e`).
+    - Uploads test reports as artifacts.

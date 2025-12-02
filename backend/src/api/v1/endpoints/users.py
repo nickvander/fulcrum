@@ -48,6 +48,8 @@ def create_user(
         db.add(user)
         db.commit()
         db.refresh(user)
+    else:
+        db.commit()
         
     return user_schema.User.from_orm(user)
 

@@ -127,16 +127,19 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user">
+        <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user" aria-label="Edit user">
           <mat-icon>edit</mat-icon>
         </button>
-        <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password">
+        <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password"
+          aria-label="Reset user password">
           <mat-icon>lock_reset</mat-icon>
         </button>
-        <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user">
+        <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user"
+          aria-label="Deactivate user">
           <mat-icon>block</mat-icon>
         </button>
-        <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn">
+        <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn"
+          aria-label="Permanently delete user">
           <mat-icon>delete_forever</mat-icon>
         </button>
       </mat-cell>

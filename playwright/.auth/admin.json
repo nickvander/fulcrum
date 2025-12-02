@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:4200",
+      "localStorage": [
+        {
+          "name": "FULCRUM_USER_DATA",
+          "value": "{\"email\":\"admin@example.com\",\"is_superuser\":true,\"first_name\":null,\"last_name\":null,\"user_type\":\"admin\",\"is_active\":true,\"avatar\":null,\"force_password_change\":false,\"id\":1,\"employee_id\":\"EMP513410\",\"created_at\":null,\"updated_at\":\"2025-11-30T06:47:29.392562+00:00\"}"
+        },
+        {
+          "name": "FULCRUM_JWT_TOKEN",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjUzNTEzNjYsInN1YiI6IjEifQ._16SMDykWt07ivS9Ug-xBLxnCE-evlLmsrBN8anUZp8"
+        }
+      ]
+    }
+  ]
+}
