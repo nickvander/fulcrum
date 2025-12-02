@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from src.crud.base import CRUDBase
@@ -14,9 +15,11 @@ class CRUDUserAuditLog(CRUDBase[UserAuditLog, UserAuditLogCreate, UserAuditLogUp
         skip: int = 0,
         limit: int = 100,
         user_id: Optional[int] = None,
-        action: Optional[str] = None
+        action: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None
     ) -> List[UserAuditLog]:
-        """Override get_multi to support filtering by user_id and action"""
+        """Override get_multi to support filtering by user_id, action, and date range"""
         query = db.query(self.model)
         
         if user_id is not None:
@@ -24,8 +27,14 @@ class CRUDUserAuditLog(CRUDBase[UserAuditLog, UserAuditLogCreate, UserAuditLogUp
         
         if action:
             query = query.filter(self.model.action == action)
+
+        if start_date:
+            query = query.filter(self.model.created_at >= start_date)
+            
+        if end_date:
+            query = query.filter(self.model.created_at <= end_date)
         
-        return query.offset(skip).limit(limit).all()
+        return query.order_by(self.model.created_at.desc()).offset(skip).limit(limit).all()
 
     def get_by_user(
         self,

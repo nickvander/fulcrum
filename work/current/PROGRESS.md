@@ -1734,3 +1734,27 @@ Completed the final phases of the User Management Overhaul, focusing on security
 
 ### Verification
 - Confirmed with user that the products list now loads correctly.
+
+## Session: Full Audit Logs View Implementation
+
+**Date:** 2025-12-01
+
+### Summary
+Implemented a comprehensive Audit Logs View for administrators, enabling tracking and filtering of user actions and system events.
+
+### Changes
+- **Backend:**
+  - Enhanced `UserAuditLog` CRUD with date range filtering.
+  - Added `GET /api/v1/audit-logs` endpoint (Superuser only).
+  - Added `get_current_active_superuser` dependency.
+- **Frontend:**
+  - Created `AuditLogService` for API integration.
+  - Created `AuditLogsComponent` with Material table, pagination, and filters (User, Action, Date).
+  - Added "Audit Logs" link to Admin Sidenav.
+- **Testing:**
+  - Backend API tests passed (covering permissions and filters).
+  - Frontend unit tests passed.
+
+### Verification
+- Verified end-to-end flow: Admin can view and filter logs; non-admins are restricted.
+
