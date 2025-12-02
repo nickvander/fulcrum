@@ -11,6 +11,9 @@
     "test:frontend": "npm test --prefix frontend",
     "test:backend": "docker compose -f docker-compose.test.yml up -d --build db-test backend && docker compose -f docker-compose.test.yml exec -T backend python -m pytest -c pytest.ini && docker compose -f docker-compose.test.yml down",
     "test:backend:fast": "cd backend && pytest -c pytest.ini -m 'not db'",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install chromium",
     "test:all": "npm run test:frontend && npm run test:backend",
     "lint:md": "prettier --check '**/*.md'",
     "format:md": "prettier --write '**/*.md'",
@@ -21,6 +24,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "playwright": "^1.57.0",
     "prettier": "^3.6.2"
   }
 }

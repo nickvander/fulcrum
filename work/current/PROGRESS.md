@@ -1758,3 +1758,47 @@ Implemented a comprehensive Audit Logs View for administrators, enabling trackin
 ### Verification
 - Verified end-to-end flow: Admin can view and filter logs; non-admins are restricted.
 
+
+## Session: E2E Testing Implementation & CI Integration
+
+**Date:** 2025-12-01
+
+### Summary of Work Completed
+
+Successfully implemented a comprehensive End-to-End (E2E) testing suite using Playwright, fixed critical backend bugs discovered during testing, and integrated E2E tests into the CI/CD pipeline.
+
+### Key Achievements
+
+1.  **E2E Testing Framework Setup:**
+    -   Installed and configured Playwright.
+    -   Implemented global authentication setup (`auth.setup.ts`) to optimize test execution speed.
+    -   Configured tests to run against local development environment.
+
+2.  **Test Implementation:**
+    -   **Admin Audit Logs:** Verified navigation, visibility, and filtering functionality.
+    -   **User Management:** Verified user creation, search/pagination, and permanent deletion workflows.
+    -   **Robustness:** Implemented smart waits (e.g., `waitForResponse`) to handle asynchronous operations and prevent flakiness.
+
+3.  **Critical Bug Fixes:**
+    -   **Backend Data Persistence:** Fixed a bug in `create_user` endpoint where the database transaction was not committed when `force_password_change` logic applied.
+    -   **API Schema:** Updated `UserAuditLog` schema to allow optional `user_id` for system actions (e.g., permanent deletion).
+    -   **Frontend Accessibility:** Added `aria-label` attributes to user list action buttons to improve accessibility and testability.
+    -   **Confirmation Dialog:** Updated confirmation dialog to support dynamic button text ("Delete Permanently").
+
+4.  **CI/CD Integration:**
+    -   Created `.github/workflows/e2e-tests.yml` to automate E2E testing.
+    -   Workflow spins up the full stack (Docker Compose + Frontend) and runs tests on every push/PR.
+
+5.  **Documentation:**
+    -   Updated `docs/guides/testing-and-ci.md` with E2E testing instructions and CI workflow details.
+    -   Updated `walkthrough.md` with verification results.
+
+### Verification
+
+-   ✅ All E2E tests passed locally (4/4 tests).
+-   ✅ Backend unit tests passed.
+-   ✅ Frontend unit tests passed.
+
+### Next Steps
+
+-   Monitor the first CI run on GitHub to ensure the new workflow passes in the remote environment.
