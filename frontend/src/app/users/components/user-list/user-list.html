@@ -127,21 +127,49 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let row">
-        <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user" aria-label="Edit user">
-          <mat-icon>edit</mat-icon>
-        </button>
-        <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password"
-          aria-label="Reset user password">
-          <mat-icon>lock_reset</mat-icon>
-        </button>
-        <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user"
-          aria-label="Deactivate user">
-          <mat-icon>block</mat-icon>
-        </button>
-        <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn"
-          aria-label="Permanently delete user">
-          <mat-icon>delete_forever</mat-icon>
-        </button>
+        <!-- Desktop Actions -->
+        <div class="desktop-actions">
+          <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user" aria-label="Edit user">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password"
+            aria-label="Reset user password">
+            <mat-icon>lock_reset</mat-icon>
+          </button>
+          <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user"
+            aria-label="Deactivate user">
+            <mat-icon>block</mat-icon>
+          </button>
+          <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn"
+            aria-label="Permanently delete user">
+            <mat-icon>delete_forever</mat-icon>
+          </button>
+        </div>
+
+        <!-- Mobile Actions -->
+        <div class="mobile-actions">
+          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item [routerLink]="['edit', row.id]">
+              <mat-icon>edit</mat-icon>
+              <span>Edit</span>
+            </button>
+            <button mat-menu-item (click)="resetUserPassword(row.id, row.email)">
+              <mat-icon>lock_reset</mat-icon>
+              <span>Reset Password</span>
+            </button>
+            <button mat-menu-item (click)="deactivateUser(row.id)">
+              <mat-icon>block</mat-icon>
+              <span>Deactivate</span>
+            </button>
+            <button mat-menu-item (click)="deleteUser(row.id)" class="warn-text">
+              <mat-icon color="warn">delete_forever</mat-icon>
+              <span class="warn-text">Delete Permanently</span>
+            </button>
+          </mat-menu>
+        </div>
       </mat-cell>
     </ng-container>
 
