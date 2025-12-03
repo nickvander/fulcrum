@@ -1,15 +1,36 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ProductList } from './product-list';
+import { ProductForm } from '../product-form/product-form';
+import { BatchActionToolbarComponent } from '../batch-action-toolbar/batch-action-toolbar';
+import { Directive } from '@angular/core';
+import { PaginationComponent } from '../pagination/pagination';
+import { ProductFiltersComponent } from '../product-filters/product-filters';
+import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ProductService } from '../../services/product';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
-import { Component } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { SharedModule } from '../../../shared/shared-module';
+import { BatchOperationsService } from '../../services/batch-operations.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { ProductComparisonService } from '../../services/product-comparison.service';
 
 // Create a stub for the AiSearchBar component
 @Component({
@@ -17,21 +38,58 @@ import { SharedModule } from '../../../shared/shared-module';
   template: '',
   standalone: true,
 })
-class AiSearchBarStubComponent {}
+class AiSearchBarStubComponent { }
 
-xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
+@Component({
+  selector: 'app-product-form',
+  template: '',
+  standalone: true
+})
+class ProductFormStubComponent { }
+
+@Component({
+  selector: 'app-batch-action-toolbar',
+  template: '',
+  standalone: true
+})
+class BatchActionToolbarStubComponent { }
+
+@Component({
+  selector: 'app-pagination',
+  template: '',
+  standalone: true
+})
+class PaginationStubComponent { }
+
+@Component({
+  selector: 'app-product-filters',
+  template: '',
+  standalone: true
+})
+class ProductFiltersStubComponent { }
+
+@Directive({
+  selector: '[appInfiniteScroll]',
+  standalone: true
+})
+class InfiniteScrollStubDirective { }
+
+xdescribe('ProductList', () => {
   let component: ProductList;
   let fixture: ComponentFixture<ProductList>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let batchOperationsServiceMock: jasmine.SpyObj<BatchOperationsService>;
+  let notificationServiceMock: jasmine.SpyObj<NotificationService>;
+  let comparisonServiceMock: jasmine.SpyObj<ProductComparisonService>;
   let productsSubject: BehaviorSubject<Product[]>;
 
   const mockProducts: Product[] = [
-    { 
-      id: 1, 
-      name: 'Product 1', 
-      sku: 'P001', 
-      description: '', 
+    {
+      id: 1,
+      name: 'Product 1',
+      sku: 'P001',
+      description: '',
       default_resale_price: 10,
       images: [
         { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 },
@@ -39,28 +97,28 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
       ],
       primary_image: { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 }
     },
-    { 
-      id: 2, 
-      name: 'Product 2', 
-      sku: 'P002', 
-      description: '', 
+    {
+      id: 2,
+      name: 'Product 2',
+      sku: 'P002',
+      description: '',
       default_resale_price: 20,
       images: [
         { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
       ],
       primary_image: { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
     },
-    { 
-      id: 3, 
-      name: 'Product 3', 
-      sku: 'P003', 
-      description: '', 
+    {
+      id: 3,
+      name: 'Product 3',
+      sku: 'P003',
+      description: '',
       default_resale_price: 30,
       images: [],
       primary_image: undefined
     },
   ];
-  
+
   const mockPaginatedProducts: PaginatedProducts = {
     data: mockProducts,
     currentPage: 1,
@@ -79,6 +137,9 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
     });
 
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+    batchOperationsServiceMock = jasmine.createSpyObj('BatchOperationsService', ['batchUpdatePrices', 'batchUpdateCategories', 'batchUpdateCustomFields']);
+    notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess', 'showError']);
+    comparisonServiceMock = jasmine.createSpyObj('ProductComparisonService', ['isInComparison', 'toggleProductInComparison', 'getProducts']);
 
     await TestBed.configureTestingModule({
       imports: [
@@ -90,13 +151,48 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
       providers: [
         { provide: ProductService, useValue: productServiceMock },
         { provide: MatDialog, useValue: dialogMock },
-      ]
+        { provide: BatchOperationsService, useValue: batchOperationsServiceMock },
+        { provide: NotificationService, useValue: notificationServiceMock },
+        { provide: ProductComparisonService, useValue: comparisonServiceMock }
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })
-    .overrideComponent(ProductList, {
-      remove: { imports: [SharedModule] },
-      add: { imports: [AiSearchBarStubComponent] }
-    })
-    .compileComponents();
+      .overrideComponent(ProductList, {
+        remove: {
+          imports: [
+            SharedModule,
+            ProductForm,
+            BatchActionToolbarComponent,
+            PaginationComponent,
+            ProductFiltersComponent,
+            InfiniteScrollDirective,
+            MatButtonModule,
+            MatIconModule,
+            MatCardModule,
+            MatCheckboxModule,
+            MatSidenavModule,
+            MatProgressSpinnerModule,
+            MatTooltipModule,
+            MatMenuModule,
+            MatDividerModule,
+            CommonModule,
+            FormsModule,
+            RouterModule
+          ]
+        },
+        add: {
+          imports: [
+            AiSearchBarStubComponent,
+            ProductFormStubComponent,
+            BatchActionToolbarStubComponent,
+            PaginationStubComponent,
+            ProductFiltersStubComponent,
+            InfiniteScrollStubDirective
+          ],
+          schemas: [CUSTOM_ELEMENTS_SCHEMA]
+        }
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ProductList);
     component = fixture.componentInstance;
@@ -116,7 +212,7 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
     fixture.detectChanges(); // ngOnInit
 
     expect(productServiceMock.getProducts).toHaveBeenCalled();
-    
+
     // The subscription to products$ will update the data
     productsSubject.next(mockProducts);
     expect(component.products).toEqual(mockProducts);
@@ -146,38 +242,38 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
       expect(productServiceMock.deleteProduct).not.toHaveBeenCalled();
     });
   });
-  
+
   describe('image handling', () => {
     beforeEach(() => {
       productServiceMock.getProducts.and.returnValue(of(mockPaginatedProducts));
       fixture.detectChanges(); // Initialize with mock products
     });
-    
+
     it('should get primary image when primary image exists', () => {
       const productWithPrimary = mockProducts[0];
       const primaryImagePath = component.getPrimaryImage(productWithPrimary);
       expect(primaryImagePath).toBe('product1.jpg');
     });
-    
+
     it('should get first image when no primary image exists', () => {
       const productWithoutPrimary = { ...mockProducts[0] };
       productWithoutPrimary.primary_image = undefined; // No primary image
       const imagePath = component.getPrimaryImage(productWithoutPrimary);
       expect(imagePath).toBe('product1.jpg'); // First image in the array
     });
-    
+
     it('should return placeholder when no images exist', () => {
       const productWithoutImages = mockProducts[2]; // Product with no images
       const imagePath = component.getPrimaryImage(productWithoutImages);
       expect(imagePath).toBe('placeholder.jpg');
     });
-    
+
     it('should format image URL correctly', () => {
       const imagePath = 'test.jpg';
       const formattedUrl = component.getImageUrl(imagePath);
       expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
     });
-    
+
     it('should handle image errors by setting placeholder', () => {
       const mockEvent = {
         target: { src: 'original.jpg' }
@@ -186,7 +282,53 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
       expect(mockEvent.target.src).toContain('data:image');
     });
   });
-  
+
+  describe('stock display', () => {
+    it('should calculate stock correctly for product with default location', () => {
+      const product = {
+        ...mockProducts[0],
+        inventory_items: [
+          { id: 1, product_id: 1, location: 'default', quantity: 50 },
+          { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
+        ]
+      };
+      expect(component.getCurrentStock(product)).toBe(50);
+    });
+
+    it('should calculate stock correctly for product without default location (sum all)', () => {
+      const product = {
+        ...mockProducts[0],
+        inventory_items: [
+          { id: 1, product_id: 1, location: 'store', quantity: 10 },
+          { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
+        ]
+      };
+      expect(component.getCurrentStock(product)).toBe(30);
+    });
+
+    it('should return 0 stock for product with no inventory items', () => {
+      const product = { ...mockProducts[0], inventory_items: [] };
+      expect(component.getCurrentStock(product)).toBe(0);
+    });
+
+    it('should display stock count in product card', () => {
+      const productWithStock = {
+        ...mockProducts[0],
+        inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }]
+      };
+
+      const paginatedWithStock = { ...mockPaginatedProducts, data: [productWithStock] };
+      productServiceMock.getProducts.and.returnValue(of(paginatedWithStock));
+
+      component.loadProducts();
+      fixture.detectChanges();
+
+      const compiled = fixture.nativeElement;
+      const stockElement = compiled.querySelector('.stock');
+      expect(stockElement.textContent).toContain('Stock: 42');
+    });
+  });
+
   describe('loadProducts functionality', () => {
     it('should load products with pagination', () => {
       const mockPaginatedResponse: PaginatedProducts = {
@@ -198,10 +340,10 @@ xdescribe('ProductList', () => { // Disabled due to timeout issues in CI
         hasNextPage: false,
         hasPrevPage: false
       };
-      
+
       productServiceMock.getProducts.and.returnValue(of(mockPaginatedResponse));
       component.loadProducts(1, 10);
-      
+
       expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, undefined);
       expect(component.products).toEqual(mockProducts);
     });

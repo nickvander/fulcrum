@@ -1,28 +1,32 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { StockAdjustmentDialog, StockAdjustmentData } from './stock-adjustment-dialog';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-import { StockAdjustmentDialog } from './stock-adjustment-dialog';
-
-xdescribe('StockAdjustmentDialog', () => {
+describe('StockAdjustmentDialog', () => {
   let component: StockAdjustmentDialog;
   let fixture: ComponentFixture<StockAdjustmentDialog>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<StockAdjustmentDialog>>;
-  const mockDialogData = {
+  let dialogRefMock: jasmine.SpyObj<MatDialogRef<StockAdjustmentDialog>>;
+
+  const mockData: StockAdjustmentData = {
     productName: 'Test Product',
-    currentQuantity: 5
+    currentQuantity: 10
   };
 
   beforeEach(async () => {
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    dialogRefMock = jasmine.createSpyObj('MatDialogRef', ['close']);
 
     await TestBed.configureTestingModule({
-      imports: [StockAdjustmentDialog, NoopAnimationsModule, FormsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
+      imports: [
+        StockAdjustmentDialog,
+        FormsModule,
+        NoopAnimationsModule
       ],
+      providers: [
+        { provide: MatDialogRef, useValue: dialogRefMock },
+        { provide: MAT_DIALOG_DATA, useValue: mockData }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StockAdjustmentDialog);
@@ -34,58 +38,45 @@ xdescribe('StockAdjustmentDialog', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should initialize with default adjustment value of 0', () => {
+  it('should initialize with data', () => {
+    expect(component.data).toEqual(mockData);
     expect(component.adjustment).toBe(0);
+    expect(component.showConfirmation).toBeFalse();
   });
 
-  it('should display product name and current quantity from dialog data', () => {
-    // Create a fresh component to test the template
-    const freshFixture = TestBed.createComponent(StockAdjustmentDialog);
-    const freshComponent = freshFixture.componentInstance;
-    freshFixture.detectChanges();
-    
-    const compiled = freshFixture.nativeElement;
-    expect(compiled.querySelector('h2').textContent).toContain('Adjust Stock for Test Product');
-    expect(compiled.textContent).toContain('Current Stock: 5');
+  it('should show confirmation on confirmAdjustment if adjustment is valid', () => {
+    component.adjustment = 5;
+    component.confirmAdjustment();
+    expect(component.showConfirmation).toBeTrue();
   });
 
-  it('should update adjustment value when input changes', async () => {
-    const inputElement = fixture.nativeElement.querySelector('input');
-    inputElement.value = '10';
-    inputElement.dispatchEvent(new Event('input'));
-    
-    fixture.detectChanges();
-    await fixture.whenStable();
-    
-    expect(component.adjustment).toBe(10);
+  it('should not show confirmation if adjustment is 0', () => {
+    component.adjustment = 0;
+    component.confirmAdjustment();
+    expect(component.showConfirmation).toBeFalse();
   });
 
-  it('should close dialog with adjustment value when confirm button is clicked', () => {
-    component.adjustment = 10;
-    
-    const confirmButton = fixture.nativeElement.querySelectorAll('button')[1]; // Second button is confirm
-    confirmButton.click();
-    
-    expect(mockDialogRef.close).toHaveBeenCalledWith(10);
+  it('should close with result on confirmAndClose', () => {
+    component.adjustment = 5;
+    component.reason = 'Restock';
+    component.confirmAndClose();
+    expect(dialogRefMock.close).toHaveBeenCalledWith({ adjustment: 5, reason: 'Restock' });
   });
 
-  it('should close dialog without value when cancel button is clicked', () => {
-    component.adjustment = 10;
-    
-    const cancelButton = fixture.nativeElement.querySelector('button'); // First button is cancel
-    cancelButton.click();
-    
-    expect(mockDialogRef.close).toHaveBeenCalledWith();
+  it('should close without result on onCancel', () => {
+    component.onCancel();
+    expect(dialogRefMock.close).toHaveBeenCalledWith();
   });
 
-  it('should handle negative adjustments correctly', async () => {
-    const inputElement = fixture.nativeElement.querySelector('input');
-    inputElement.value = '-5';
-    inputElement.dispatchEvent(new Event('input'));
-    
-    fixture.detectChanges();
-    await fixture.whenStable();
-    
-    expect(component.adjustment).toBe(-5);
+  it('should reset confirmation on goBack', () => {
+    component.showConfirmation = true;
+    component.goBack();
+    expect(component.showConfirmation).toBeFalse();
+  });
+
+  it('should reset confirmation on onAdjustmentChange', () => {
+    component.showConfirmation = true;
+    component.onAdjustmentChange();
+    expect(component.showConfirmation).toBeFalse();
   });
 });

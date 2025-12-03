@@ -61,7 +61,7 @@ import { ProductComparisonComponent } from '../product-comparison/product-compar
 export class ProductList implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('filterSidenav') filterSidenav!: MatSidenav;
-  
+
   products: Product[] = [];
   paginatedProducts: PaginatedProducts | null = null;
   selectedProducts = new Set<number>(); // Store IDs of selected products
@@ -83,7 +83,7 @@ export class ProductList implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private comparisonService: ProductComparisonService,
     private dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadProducts();
@@ -112,86 +112,94 @@ export class ProductList implements OnInit, OnDestroy {
     this.isLoading = true;
     this.currentPage = page;
     this.pageSize = size;
-    
+
     // Reset products if it's the first page for infinite scroll
     if (this.useInfiniteScroll && page === 1) {
       this.allProducts = [];
     }
-    
+
     // Determine if we should use search or filtered endpoint
-    const searchActive = Object.keys(this.activeFilters).some(key => 
+    const searchActive = Object.keys(this.activeFilters).some(key =>
       this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== ''
     );
-    
+
     if (this.useInfiniteScroll) {
       // For infinite scroll, we'll handle differently
       if (searchActive) {
-        this.productService.searchProductsAdvanced(this.activeFilters, page, size).subscribe({
-          next: (result) => {
-            if (page === 1) {
-              this.allProducts = result.data;
-              this.products = result.data;
-            } else {
-              this.allProducts = [...this.allProducts, ...result.data];
-              this.products = this.allProducts;
+        this.productService.searchProductsAdvanced(this.activeFilters, page, size)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (result) => {
+              if (page === 1) {
+                this.allProducts = result.data;
+                this.products = result.data;
+              } else {
+                this.allProducts = [...this.allProducts, ...result.data];
+                this.products = this.allProducts;
+              }
+              this.paginatedProducts = result;
+              this.hasMoreProducts = result.currentPage < result.totalPages;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading products with filters:', error);
+              this.isLoading = false;
             }
-            this.paginatedProducts = result;
-            this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error loading products with filters:', error);
-            this.isLoading = false;
-          }
-        });
+          });
       } else {
-        this.productService.getProducts(page, size, this.activeFilters).subscribe({
-          next: (result) => {
-            if (page === 1) {
-              this.allProducts = result.data;
-              this.products = result.data;
-            } else {
-              this.allProducts = [...this.allProducts, ...result.data];
-              this.products = this.allProducts;
+        this.productService.getProducts(page, size, this.activeFilters)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (result) => {
+              if (page === 1) {
+                this.allProducts = result.data;
+                this.products = result.data;
+              } else {
+                this.allProducts = [...this.allProducts, ...result.data];
+                this.products = this.allProducts;
+              }
+              this.paginatedProducts = result;
+              this.hasMoreProducts = result.currentPage < result.totalPages;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading products:', error);
+              this.isLoading = false;
             }
-            this.paginatedProducts = result;
-            this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error loading products:', error);
-            this.isLoading = false;
-          }
-        });
+          });
       }
     } else {
       // For regular pagination
       if (searchActive) {
         // Use the advanced search endpoint with filters
-        this.productService.searchProductsAdvanced(this.activeFilters, page, size).subscribe({
-          next: (result) => {
-            this.paginatedProducts = result;
-            this.products = result.data;
-            this.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error loading products with filters:', error);
-            this.isLoading = false;
-          }
-        });
+        this.productService.searchProductsAdvanced(this.activeFilters, page, size)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (result) => {
+              this.paginatedProducts = result;
+              this.products = result.data;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading products with filters:', error);
+              this.isLoading = false;
+            }
+          });
       } else {
         // Use the regular getProducts endpoint with pagination and filters
-        this.productService.getProducts(page, size, this.activeFilters).subscribe({
-          next: (result) => {
-            this.paginatedProducts = result;
-            this.products = result.data;
-            this.isLoading = false;
-          },
-          error: (error) => {
-            console.error('Error loading products:', error);
-            this.isLoading = false;
-          }
-        });
+        this.productService.getProducts(page, size, this.activeFilters)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (result) => {
+              this.paginatedProducts = result;
+              this.products = result.data;
+              this.isLoading = false;
+            },
+            error: (error) => {
+              console.error('Error loading products:', error);
+              this.isLoading = false;
+            }
+          });
       }
     }
   }
@@ -206,7 +214,9 @@ export class ProductList implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.productService.deleteProduct(id).subscribe();
+        this.productService.deleteProduct(id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe();
       }
     });
   }
@@ -235,16 +245,20 @@ export class ProductList implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.adjustment) {
-        this.productService.adjustStockWithReason(product.id, result.adjustment, result.reason).subscribe({
-          next: () => {
-            // The productService.adjustStock already calls getProducts() which should update the observable
-            // but we'll make sure the UI refreshes by triggering change detection if needed
-          },
-          error: (error) => {
-            console.error('Error adjusting stock:', error);
-            this.productService.getProducts().subscribe(); // Ensure we refresh even on error
-          }
-        });
+        this.productService.adjustStockWithReason(product.id, result.adjustment, result.reason)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // The productService.adjustStock already calls getProducts() which should update the observable
+              // but we'll make sure the UI refreshes by triggering change detection if needed
+            },
+            error: (error) => {
+              console.error('Error adjusting stock:', error);
+              this.productService.getProducts()
+                .pipe(takeUntil(this.destroy$))
+                .subscribe(); // Ensure we refresh even on error
+            }
+          });
       }
     });
   }
@@ -310,19 +324,23 @@ export class ProductList implements OnInit, OnDestroy {
       if (result) {
         // Convert selected product IDs to an array for processing
         const selectedIds = Array.from(this.selectedProducts);
-        
+
         // Delete all selected products
-        this.productService.deleteMultipleProducts(selectedIds).subscribe({
-          next: () => {
-            // Refresh the product list after deletion
-            this.productService.getProducts().subscribe();
-            // Clear the selection
-            this.selectedProducts.clear();
-          },
-          error: (error) => {
-            console.error('Error deleting selected products:', error);
-          }
-        });
+        this.productService.deleteMultipleProducts(selectedIds)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              // Refresh the product list after deletion
+              this.productService.getProducts()
+                .pipe(takeUntil(this.destroy$))
+                .subscribe();
+              // Clear the selection
+              this.selectedProducts.clear();
+            },
+            error: (error) => {
+              console.error('Error deleting selected products:', error);
+            }
+          });
       }
     });
   }
@@ -381,11 +399,11 @@ export class ProductList implements OnInit, OnDestroy {
       // Already showing a data URI, don't try again
       return;
     }
-    
+
     // Set a data URI placeholder image if the image fails to load
     event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
   }
-  
+
   openEditPanel(product: Product): void {
     this.selectedProductForEdit = product;
     this.isEditing = true;
@@ -393,20 +411,20 @@ export class ProductList implements OnInit, OnDestroy {
       this.sidenav?.open();
     }, 0);
   }
-  
 
-  
+
+
   closeEditPanel(): void {
     this.sidenav?.close();
     this.selectedProductForEdit = null;
   }
-  
+
   onProductSaved(): void {
     // Refresh the current page to ensure all changes are reflected
     this.loadProducts(this.currentPage, this.pageSize);
     this.closeEditPanel();
   }
-  
+
   onPageChange(page: number): void {
     if (this.paginatedProducts) {
       if (page >= 1 && page <= this.paginatedProducts.totalPages && page !== this.currentPage) {
@@ -418,23 +436,23 @@ export class ProductList implements OnInit, OnDestroy {
   onPageSizeChange(size: number): void {
     this.loadProducts(1, size); // Reset to first page when page size changes
   }
-  
+
   onFiltersChanged(filters: any): void {
     this.activeFilters = filters;
     this.loadProducts(1, this.pageSize); // Reset to first page when filters change
   }
-  
+
   onFiltersCleared(): void {
     this.activeFilters = {};
   }
-  
+
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
-  
+
   toggleInfiniteScroll(): void {
     this.useInfiniteScroll = !this.useInfiniteScroll;
-    
+
     if (this.useInfiniteScroll) {
       // Initialize for infinite scroll
       this.loadProducts(1, this.pageSize);
@@ -443,75 +461,81 @@ export class ProductList implements OnInit, OnDestroy {
       this.loadProducts(1, this.pageSize);
     }
   }
-  
-  onBatchPriceUpdate(event: {productIds: number[], price: number}): void {
+
+  onBatchPriceUpdate(event: { productIds: number[], price: number }): void {
     // Get the selected product IDs if not provided in the event
     const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    
+
     // In a real implementation, you would open a dialog to get the price adjustment
     // For now, let's just use a default value as an example
     const priceAdjustment = 10; // Example value - in reality you'd get this from a dialog
     const adjustmentType: 'set' | 'increase' = 'set'; // Example type
-    
-    this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType).subscribe({
-      next: () => {
-        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-        this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-        this.deselectAll(); // Clear selection after operation
-      },
-      error: (error) => {
-        console.error('Error updating product prices:', error);
-        this.notificationService.showError('Error updating product prices');
-      }
-    });
+
+    this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
+          this.deselectAll(); // Clear selection after operation
+        },
+        error: (error) => {
+          console.error('Error updating product prices:', error);
+          this.notificationService.showError('Error updating product prices');
+        }
+      });
   }
-  
-  onBatchCategoryUpdate(event: {productIds: number[], category: string}): void {
+
+  onBatchCategoryUpdate(event: { productIds: number[], category: string }): void {
     // Get the selected product IDs if not provided in the event
     const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    
+
     // In a real implementation, you would open a dialog to select the category
     // For now, let's just use a default value as an example
     const category = 'Electronics'; // Example value - in reality you'd get this from a dialog
-    
-    this.batchOperationsService.batchUpdateCategories(productIds, category).subscribe({
-      next: () => {
-        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-        this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-        this.deselectAll(); // Clear selection after operation
-      },
-      error: (error) => {
-        console.error('Error updating product categories:', error);
-        this.notificationService.showError('Error updating product categories');
-      }
-    });
+
+    this.batchOperationsService.batchUpdateCategories(productIds, category)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
+          this.deselectAll(); // Clear selection after operation
+        },
+        error: (error) => {
+          console.error('Error updating product categories:', error);
+          this.notificationService.showError('Error updating product categories');
+        }
+      });
   }
-  
-  onBatchCustomFieldUpdate(event: {productIds: number[], updates: {[key: string]: any}}): void {
+
+  onBatchCustomFieldUpdate(event: { productIds: number[], updates: { [key: string]: any } }): void {
     // Get the selected product IDs if not provided in the event
     const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    
+
     // In a real implementation, you would open a dialog to specify custom field updates
     // For now, let's just use a default value as an example
     const updates = { warranty_period: '12 months' }; // Example value - in reality you'd get this from a dialog
-    
-    this.batchOperationsService.batchUpdateCustomFields(productIds, updates).subscribe({
-      next: () => {
-        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-        this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-        this.deselectAll(); // Clear selection after operation
-      },
-      error: (error) => {
-        console.error('Error updating custom fields:', error);
-        this.notificationService.showError('Error updating custom fields');
-      }
-    });
+
+    this.batchOperationsService.batchUpdateCustomFields(productIds, updates)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
+          this.deselectAll(); // Clear selection after operation
+        },
+        error: (error) => {
+          console.error('Error updating custom fields:', error);
+          this.notificationService.showError('Error updating custom fields');
+        }
+      });
   }
-  
+
   applyQuickFilter(filterType: string, value: any): void {
     // Clear all other filters except the current one
     this.activeFilters = {};
-    
+
     switch (filterType) {
       case 'in_stock':
         this.activeFilters.min_stock = 1;
@@ -537,10 +561,10 @@ export class ProductList implements OnInit, OnDestroy {
         this.activeFilters[filterType] = value;
         break;
     }
-    
+
     this.loadProducts(1, this.pageSize);
   }
-  
+
   onWindowScroll(): void {
     if (this.useInfiniteScroll && this.hasMoreProducts && !this.isLoading) {
       // Load next page
@@ -550,45 +574,49 @@ export class ProductList implements OnInit, OnDestroy {
       }
     }
   }
-  
+
   private loadMoreProducts(page: number, size: number): void {
     this.isLoading = true;
-    
+
     // For infinite scroll, we'll need to get more products and append them
-    const searchActive = Object.keys(this.activeFilters).some(key => 
+    const searchActive = Object.keys(this.activeFilters).some(key =>
       this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== ''
     );
-    
+
     if (searchActive) {
-      this.productService.searchProductsAdvanced(this.activeFilters, page, size).subscribe({
-        next: (result) => {
-          // Append new products to existing products
-          this.allProducts = [...this.allProducts, ...result.data];
-          this.products = this.allProducts; // Update the displayed products
-          this.paginatedProducts = result;
-          this.hasMoreProducts = result.currentPage < result.totalPages;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading more products:', error);
-          this.isLoading = false;
-        }
-      });
+      this.productService.searchProductsAdvanced(this.activeFilters, page, size)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (result) => {
+            // Append new products to existing products
+            this.allProducts = [...this.allProducts, ...result.data];
+            this.products = this.allProducts; // Update the displayed products
+            this.paginatedProducts = result;
+            this.hasMoreProducts = result.currentPage < result.totalPages;
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error loading more products:', error);
+            this.isLoading = false;
+          }
+        });
     } else {
-      this.productService.getProducts(page, size, this.activeFilters).subscribe({
-        next: (result) => {
-          // Append new products to existing products
-          this.allProducts = [...this.allProducts, ...result.data];
-          this.products = this.allProducts; // Update the displayed products
-          this.paginatedProducts = result;
-          this.hasMoreProducts = result.currentPage < result.totalPages;
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error loading more products:', error);
-          this.isLoading = false;
-        }
-      });
+      this.productService.getProducts(page, size, this.activeFilters)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (result) => {
+            // Append new products to existing products
+            this.allProducts = [...this.allProducts, ...result.data];
+            this.products = this.allProducts; // Update the displayed products
+            this.paginatedProducts = result;
+            this.hasMoreProducts = result.currentPage < result.totalPages;
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error loading more products:', error);
+            this.isLoading = false;
+          }
+        });
     }
   }
 }

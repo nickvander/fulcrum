@@ -44,7 +44,8 @@ def db_session(db: Session):
 def test_adjust_stock_functionality(db_session: Session):
     """Test the direct functionality of the adjust_stock function."""
     # Get test data
-    test_product = db_session.query(Product).first()
+    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+
     
     # Create a mock current_user
     mock_current_user = Mock()
@@ -85,7 +86,7 @@ def test_adjust_stock_functionality(db_session: Session):
 def test_adjust_stock_negative_value(db_session: Session):
     """Test that negative adjustments (decreases) work properly."""
     # Get the existing inventory item and update its quantity for testing
-    test_product = db_session.query(Product).first()
+    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
     existing_inventory = db_session.query(InventoryItem).filter(
         InventoryItem.product_id == test_product.id,
         InventoryItem.location == "default"
@@ -120,7 +121,7 @@ def test_adjust_stock_negative_value(db_session: Session):
 @pytest.mark.db
 def test_adjust_stock_without_reason(db_session: Session):
     """Test that adjustments work without providing a reason."""
-    test_product = db_session.query(Product).first()
+    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
     
     # Create a mock current_user
     mock_current_user = Mock()
@@ -148,3 +149,52 @@ def test_adjust_stock_without_reason(db_session: Session):
     latest_adjustment = adjustments[0]
     assert latest_adjustment.adjustment == 7
     assert latest_adjustment.reason is None
+
+
+@pytest.mark.db
+def test_adjust_stock_zero_value(db_session: Session):
+    """Test that zero adjustments are handled correctly (should probably be allowed or no-op)."""
+    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    
+    mock_current_user = Mock()
+    mock_current_user.email = "test@example.com"
+    mock_current_user.id = 1
+    
+    stock_adjustment = StockAdjustment(adjustment=0, reason="Zero adjustment")
+    
+    result = adjust_stock(
+        product_id=test_product.id,
+        stock_adjustment=stock_adjustment,
+        current_user=mock_current_user,
+        db=db_session
+    )
+    
+    main_inventory = next((item for item in result.inventory_items if item.location == "default"), None)
+    assert main_inventory.quantity == 10
+    
+    # Check if adjustment record was created
+    adjustments = result.inventory_adjustments
+    assert len(adjustments) > 0
+    assert adjustments[0].adjustment == 0
+
+
+@pytest.mark.db
+def test_adjust_stock_large_value(db_session: Session):
+    """Test that large adjustments are handled correctly."""
+    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    
+    mock_current_user = Mock()
+    mock_current_user.email = "test@example.com"
+    mock_current_user.id = 1
+    
+    stock_adjustment = StockAdjustment(adjustment=1000000, reason="Large adjustment")
+    
+    result = adjust_stock(
+        product_id=test_product.id,
+        stock_adjustment=stock_adjustment,
+        current_user=mock_current_user,
+        db=db_session
+    )
+    
+    main_inventory = next((item for item in result.inventory_items if item.location == "default"), None)
+    assert main_inventory.quantity == 1000010
