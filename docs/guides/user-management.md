@@ -60,3 +60,22 @@ Users can manage their own profile via the "Account" link in the header.
     - `UserForm`: Create/Edit users.
     - `ForcePasswordChangeComponent`: Dedicated page for forced password updates.
 - **Security**: `AuthService` checks user status on login and handles redirection.
+### User List Interface
+The User List provides a comprehensive view of all system users with enhanced usability features:
+- **Column Layout**: Optimized order (Name, Type, Status) for quick scanning.
+- **Tooltips**: Hover over Employee IDs and User Types for additional context.
+- **Visual Indicators**:
+    - **Status Badges**: Clear green/red indicators for Active/Inactive users.
+    - **Password Reset Badge**: An amber warning badge appears for users who are required to change their password on next login.
+- **Responsive Design**:
+    - **Desktop**: Full table view with individual action buttons.
+    - **Mobile**: Compact view hiding less critical columns. Action buttons are grouped into a "More" menu to save space.
+
+### Audit Logs
+Administrators have access to a detailed Audit Log to track system activity.
+- **Access**: Via the "Audit Logs" link in the sidebar (Admin only).
+- **View**: Displays a chronological list of actions (e.g., LOGIN, CREATE_USER, UPDATE_USER).
+- **Filtering**:
+    - **Action**: Filter by specific event types.
+    - **User**: Search by User ID.
+    - **Date Range**: Filter logs within a specific timeframe.

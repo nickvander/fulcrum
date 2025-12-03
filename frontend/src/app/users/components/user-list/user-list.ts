@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatMenuModule } from '@angular/material/menu';
 import { UserService, UserListParams } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { RouterModule, Router } from '@angular/router';
@@ -39,6 +40,7 @@ import { UserBulkImportDialogComponent } from '../user-bulk-import-dialog/user-b
     MatSelectModule,
     MatTooltipModule,
     MatProgressBarModule,
+    MatMenuModule,
     UserBulkImportDialogComponent
   ],
 })
