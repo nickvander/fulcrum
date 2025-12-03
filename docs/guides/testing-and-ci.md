@@ -60,6 +60,16 @@ Playwright to execute its unit tests. The configuration can be found in
   npm run test:frontend
   ```
 
+### Frontend Testing Best Practices
+
+To ensure test stability and prevent hangs (especially in CI environments), follow these guidelines:
+
+1.  **Manage Subscriptions:** Always unsubscribe from Observables. Use the `takeUntil(this.destroy$)` pattern in components and ensure `ngOnDestroy` is called. In tests, avoid leaving open subscriptions.
+2.  **Mock Services:** Mock all dependent services using `jasmine.createSpyObj`. Avoid using real services that make HTTP calls or have complex initialization logic.
+3.  **Mock Initialization Logic:** For components that initialize data in `ngOnInit` (like `ProductForm`), mock the initialization service (e.g., `ProductFormInitializerService`) to return controlled test data immediately.
+4.  **Avoid `fixture.whenStable()`:** In some test environments, `await fixture.whenStable()` can hang indefinitely if there are pending macro-tasks (like `setInterval` or open subscriptions). Use `fakeAsync` and `tick()` if you need to control time, or rely on `fixture.detectChanges()` for synchronous updates.
+5.  **Isolate Tests:** If a test suite hangs, use `fit` to isolate specific tests and identify the culprit. Stub out child components using `TestBed.overrideComponent` to isolate the component under test.
+
 ## End-to-End (E2E) Testing
 
 The project uses **[Playwright](https://playwright.dev/)** for End-to-End testing. These tests simulate real user interactions across the full stack (Frontend + Backend + Database).

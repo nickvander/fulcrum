@@ -29,6 +29,7 @@ describe('ProductForm: Edit Mode', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let productFormInitializerService: ProductFormInitializerService;
 
   const mockProduct: Product = {
     id: 1,
@@ -50,7 +51,7 @@ describe('ProductForm: Edit Mode', () => {
     productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'getProductById']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    
+
     // Mock products$ as a BehaviorSubject for testing ngOnInit
     Object.defineProperty(productServiceMock, 'products$', {
       get: () => new BehaviorSubject([mockProduct]).asObservable()
@@ -92,6 +93,7 @@ describe('ProductForm: Edit Mode', () => {
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    productFormInitializerService = TestBed.inject(ProductFormInitializerService);
   });
 
   afterEach(() => {
@@ -102,19 +104,31 @@ describe('ProductForm: Edit Mode', () => {
     expect(component).toBeTruthy();
   });
 
-  xdescribe('Edit Mode', () => {
+  describe('Edit Mode', () => {
     beforeEach(() => {
       activatedRouteMock.snapshot.params['id'] = mockProduct.id;
       routerMock.getCurrentNavigation.and.returnValue(null);
     });
 
     it('should initialize the form with product data', () => {
+      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
+        customFields: [],
+        product: mockProduct,
+        isEditMode: true,
+        initialPrimaryImageId: null
+      }));
       fixture.detectChanges();
       expect(component.isEditMode).toBeTrue();
       expect(component.productForm.value.name).toBe(mockProduct.name);
     });
 
-    it('should call updateProduct on submit', async () => {
+    it('should call updateProduct on submit', () => {
+      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
+        customFields: [],
+        product: mockProduct,
+        isEditMode: true,
+        initialPrimaryImageId: null
+      }));
       fixture.detectChanges();
       productServiceMock.updateProduct.and.returnValue(of(mockProduct));
       productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
@@ -133,7 +147,6 @@ describe('ProductForm: Edit Mode', () => {
         weight: 12,
       });
       component.onSubmit();
-      await fixture.whenStable();
       expect(productServiceMock.updateProduct).toHaveBeenCalled();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
     });

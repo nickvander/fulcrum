@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +8,7 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angu
 import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-password-reset-dialog',
@@ -23,8 +24,9 @@ import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-
     MatButtonModule,
   ],
 })
-export class PasswordResetDialog {
+export class PasswordResetDialog implements OnDestroy {
   form: FormGroup;
+  private destroy$ = new Subject<void>();
 
   constructor(
     public dialogRef: MatDialogRef<PasswordResetDialog>,
@@ -43,6 +45,11 @@ export class PasswordResetDialog {
         confirmNewPassword: ['', Validators.required],
       }, { validators: this.passwordMatchValidator });
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   passwordMatchValidator(form: FormGroup) {
@@ -67,40 +74,42 @@ export class PasswordResetDialog {
     const isLongEnough = value.length >= 8;
 
     const isValid = hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && isLongEnough;
-    
+
     return isValid ? null : { weakPassword: true };
   }
 
   onSubmit(): void {
     if (this.data.isForAdmin) {
       // For admin reset, call the admin reset endpoint
-      this.userService.adminResetPassword(this.data.userId).subscribe({
-        next: (response) => {
-          if (response.new_password) {
-            // Show the generated password in a dedicated dialog with user email
-            const passwordDialogRef = this.dialog.open(GeneratedPasswordDialog, {
-              width: '500px',
-              data: { 
-                password: response.new_password,
-                userEmail: this.data.email 
-              }
-            });
-            
-            // Close the password reset dialog after showing the generated password dialog
-            this.dialogRef.close({ success: true, newPassword: response.new_password });
-          } else {
-            this.snackBar.open('Password reset successfully. New password has been generated and should be communicated to the user securely.', 'Close', {
-              duration: 5000,
-            });
-            this.dialogRef.close({ success: true });
+      this.userService.adminResetPassword(this.data.userId)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.new_password) {
+              // Show the generated password in a dedicated dialog with user email
+              const passwordDialogRef = this.dialog.open(GeneratedPasswordDialog, {
+                width: '500px',
+                data: {
+                  password: response.new_password,
+                  userEmail: this.data.email
+                }
+              });
+
+              // Close the password reset dialog after showing the generated password dialog
+              this.dialogRef.close({ success: true, newPassword: response.new_password });
+            } else {
+              this.snackBar.open('Password reset successfully. New password has been generated and should be communicated to the user securely.', 'Close', {
+                duration: 5000,
+              });
+              this.dialogRef.close({ success: true });
+            }
+          },
+          error: (error) => {
+            // Error handling is now in the HTTP interceptor, so the error message
+            // should already be displayed via the interceptor
+            console.error('Error resetting password:', error);
           }
-        },
-        error: (error) => {
-          // Error handling is now in the HTTP interceptor, so the error message
-          // should already be displayed via the interceptor
-          console.error('Error resetting password:', error);
-        }
-      });
+        });
     } else if (this.form.valid) {
       // For user reset, we would need the token - this is for self-initiated reset
       // However, since admin shouldn't be doing user's token-based reset, we'll just show an appropriate message

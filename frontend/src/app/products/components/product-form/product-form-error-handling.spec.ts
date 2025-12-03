@@ -20,7 +20,7 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
-xdescribe('ProductForm: Error Handling', () => {
+describe('ProductForm: Error Handling', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
@@ -29,6 +29,7 @@ xdescribe('ProductForm: Error Handling', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
+  let productFormInitializerService: ProductFormInitializerService;
 
   const mockProduct: Product = {
     id: 1,
@@ -91,6 +92,7 @@ xdescribe('ProductForm: Error Handling', () => {
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
+    productFormInitializerService = TestBed.inject(ProductFormInitializerService);
   });
 
   afterEach(() => {
@@ -98,12 +100,18 @@ xdescribe('ProductForm: Error Handling', () => {
   });
 
   describe('error handling', () => {
-    it('should handle form submission errors in create mode', async () => {
+    it('should handle form submission errors in create mode', () => {
+      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
+        customFields: [],
+        product: undefined,
+        isEditMode: false,
+        initialPrimaryImageId: null
+      }));
       fixture.detectChanges();
-      
+
       // Mock an error during product creation
       productServiceMock.createProduct.and.returnValue(throwError(() => new Error('API Error')));
-      
+
       component.productForm.setValue({
         name: 'New Product',
         sku: 'NP001',
@@ -118,19 +126,25 @@ xdescribe('ProductForm: Error Handling', () => {
         depth: 1,
         weight: 1,
       });
-      
+
       component.onSubmit();
-      await fixture.whenStable();
-      
+      // await fixture.whenStable();
+
       expect(notificationServiceMock.showError).toHaveBeenCalledWith('Failed to create product.');
     });
 
-    it('should handle form submission errors in edit mode', async () => {
+    it('should handle form submission errors in edit mode', () => {
+      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
+        customFields: [],
+        product: mockProduct,
+        isEditMode: true,
+        initialPrimaryImageId: null
+      }));
       fixture.detectChanges();
-      
+
       // Mock an error during product update
       productServiceMock.updateProduct.and.returnValue(throwError(() => new Error('API Error')));
-      
+
       component.productForm.setValue({
         name: 'Updated Product',
         sku: 'UPDATED001',
@@ -145,43 +159,50 @@ xdescribe('ProductForm: Error Handling', () => {
         depth: 15,
         weight: 15,
       });
-      
+
       component.onSubmit();
-      await fixture.whenStable();
-      
+      // await fixture.whenStable();
+
       expect(notificationServiceMock.showError).toHaveBeenCalledWith('Failed to update product.');
     });
 
     it('should handle cancellation with confirmation dialog', () => {
+      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
+        customFields: [],
+        product: mockProduct,
+        isEditMode: true,
+        initialPrimaryImageId: null
+      }));
+      fixture.detectChanges();
       // Mock dialog to return true (confirm cancellation)
       const dialogRefMock = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
       dialogRefMock.afterClosed.and.returnValue(of(true));
       dialogMock.open.and.returnValue(dialogRefMock);
-      
+
       // Set up a dirty form to trigger the confirmation dialog
       component.productForm.get('name')?.setValue('Changed Value');
-      
+
       component.onCancel();
-      
+
       expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
     });
-    
+
     it('should handle custom field fetch failures gracefully', async () => {
       // The async mock service should handle this scenario
       fixture.detectChanges();
       await fixture.whenStable();
-      
+
       // Should handle gracefully without throwing errors
       expect(component).toBeTruthy();
     });
-    
+
     it('should handle product fetch failures in edit mode', async () => {
       // Set up edit mode scenario
       activatedRouteMock.snapshot.params['id'] = 1;
-      
+
       fixture.detectChanges();
       await fixture.whenStable();
-      
+
       // Should handle gracefully without throwing errors
       expect(component.isEditMode).toBe(true);
     });
