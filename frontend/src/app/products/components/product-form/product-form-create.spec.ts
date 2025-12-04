@@ -54,7 +54,7 @@ describe('ProductForm: Create Mode', () => {
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
     productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
-    
+
     // Create a mock ProductService with a BehaviorSubject that immediately emits
     const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
     Object.defineProperty(productServiceMock, 'products$', {
@@ -159,7 +159,7 @@ describe('ProductForm: Create Mode', () => {
       req.flush([]);
       productServiceMock.createProduct.and.returnValue(of(mockProduct));
       productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
-      
+
       component.productForm.setValue({
         name: 'New Product',
         sku: 'NP001',
@@ -174,10 +174,10 @@ describe('ProductForm: Create Mode', () => {
         depth: 1,
         weight: 1,
       });
-      
+
       component.onSubmit();
       await fixture.whenStable();
-      
+
       expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
     });
 
@@ -185,15 +185,15 @@ describe('ProductForm: Create Mode', () => {
       fixture.detectChanges();
       const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
       req.flush([]);
-      
+
       // Add a staged image
       const testFile = new File([], 'test.jpg');
       component.stagedImages.push(testFile);
-      
+
       productServiceMock.createProduct.and.returnValue(of(mockProduct));
       productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
       productServiceMock.uploadProductImage.and.returnValue(of({ id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 0, title: '', description: '' }));
-      
+
       component.productForm.setValue({
         name: 'New Product',
         sku: 'NP002',
@@ -208,10 +208,10 @@ describe('ProductForm: Create Mode', () => {
         depth: 2,
         weight: 2,
       });
-      
+
       component.onSubmit();
       await fixture.whenStable();
-      
+
       expect(productServiceMock.uploadProductImage).toHaveBeenCalledWith(mockProduct.id, testFile);
     });
 
@@ -219,25 +219,25 @@ describe('ProductForm: Create Mode', () => {
       fixture.detectChanges();
       const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
       req.flush([]);
-      
+
       expect(component.isDirty).toBeFalse();
-      
+
       // Add a staged image
       component.stagedImages.push(new File([], 'test.jpg'));
-      
+
       expect(component.isDirty).toBeTrue();
     });
 
     it('should pre-fill form from navigation state', async () => {
-        const navigationState = { extras: { state: { productData: { name: 'AI Product' } } } };
-        routerMock.getCurrentNavigation.and.returnValue(navigationState as any);
-        component.ngOnInit();
-        fixture.detectChanges();
-        const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-        req.flush([]);
-        await fixture.whenStable();
-        expect(component.productForm.value.name).toBe('AI Product');
-      });
+      const navigationState = { extras: { state: { productData: { name: 'AI Product' } } } };
+      routerMock.getCurrentNavigation.and.returnValue(navigationState as any);
+      component.ngOnInit();
+      fixture.detectChanges();
+      const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
+      req.flush([]);
+      await fixture.whenStable();
+      expect(component.productForm.value.name).toBe('AI Product');
+    });
   });
 
   it('should navigate to /products on cancel', () => {

@@ -69,6 +69,7 @@ To ensure test stability and prevent hangs (especially in CI environments), foll
 3.  **Mock Initialization Logic:** For components that initialize data in `ngOnInit` (like `ProductForm`), mock the initialization service (e.g., `ProductFormInitializerService`) to return controlled test data immediately.
 4.  **Avoid `fixture.whenStable()`:** In some test environments, `await fixture.whenStable()` can hang indefinitely if there are pending macro-tasks (like `setInterval` or open subscriptions). Use `fakeAsync` and `tick()` if you need to control time, or rely on `fixture.detectChanges()` for synchronous updates.
 5.  **Isolate Tests:** If a test suite hangs, use `fit` to isolate specific tests and identify the culprit. Stub out child components using `TestBed.overrideComponent` to isolate the component under test.
+6.  **Standalone Components:** When testing standalone components that import complex child components, use `TestBed.overrideComponent` to remove those imports and add `NO_ERRORS_SCHEMA`. This prevents child component initialization from interfering with the unit test.
 
 ## End-to-End (E2E) Testing
 
