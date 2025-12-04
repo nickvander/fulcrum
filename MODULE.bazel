@@ -1,0 +1,59 @@
+module(
+    name = "fulcrum",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "aspect_rules_js", version = "2.1.0")
+bazel_dep(name = "aspect_rules_ts", version = "3.2.0")
+bazel_dep(name = "rules_oci", version = "2.0.0")
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.11",
+)
+use_repo(python, "python_3_11")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pip",
+    python_version = "3.11",
+    requirements_lock = "//backend:requirements_lock.txt",
+)
+use_repo(pip, "pip")
+
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm", dev_dependency = True)
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//frontend:pnpm-lock.yaml",
+    verify_node_modules_ignored = "//:.bazelignore",
+)
+use_repo(npm, "npm")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+oci.pull(
+    name = "python_base",
+    image = "docker.io/library/python",
+    platforms = ["linux/amd64"],
+    tag = "3.11-slim",
+)
+oci.pull(
+    name = "nginx_base",
+    image = "docker.io/library/nginx",
+    platforms = ["linux/amd64"],
+    tag = "alpine",
+)
+oci.pull(
+    name = "postgres_base",
+    image = "docker.io/library/postgres",
+    platforms = ["linux/amd64"],
+    tag = "16-alpine",
+)
+oci.pull(
+    name = "redis_base",
+    image = "docker.io/library/redis",
+    platforms = ["linux/amd64"],
+    tag = "7-alpine",
+)
+use_repo(oci, "nginx_base", "nginx_base_linux_amd64", "postgres_base", "postgres_base_linux_amd64", "python_base", "python_base_linux_amd64", "redis_base", "redis_base_linux_amd64")

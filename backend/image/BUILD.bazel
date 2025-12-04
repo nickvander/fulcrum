@@ -1,0 +1,30 @@
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# Package the Python application binary and its dependencies
+pkg_tar(
+    name = "app_layer",
+    srcs = ["//backend/src:main"],
+    package_dir = "/app",
+    mode = "0755",
+)
+
+# Create the OCI image
+oci_image(
+    name = "backend_image",
+    base = "@python_base",
+    tars = [":app_layer"],
+    entrypoint = ["/app/main"],
+    env = {
+        "PYTHONUNBUFFERED": "1",
+        "PATH": "/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/app",
+    },
+    workdir = "/app",
+)
+
+# Load into Docker daemon or create tarball
+oci_load(
+    name = "backend_tarball",
+    image = ":backend_image",
+    repo_tags = ["fulcrum/backend:latest"],
+)
