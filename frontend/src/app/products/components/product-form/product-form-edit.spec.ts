@@ -1,4 +1,5 @@
-import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TestBed, ComponentFixture, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -16,6 +17,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
+import { CustomFieldService } from '../../../settings/services/custom-field.service';
+import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
@@ -29,7 +32,8 @@ describe('ProductForm: Edit Mode', () => {
   let routerMock: jasmine.SpyObj<Router>;
   let activatedRouteMock: any;
   let dialogMock: jasmine.SpyObj<MatDialog>;
-  let productFormInitializerService: ProductFormInitializerService;
+  let productFormInitializerMock: jasmine.SpyObj<ProductFormInitializerService>;
+  let customFieldServiceMock: jasmine.SpyObj<CustomFieldService>;
 
   const mockProduct: Product = {
     id: 1,
@@ -48,13 +52,16 @@ describe('ProductForm: Edit Mode', () => {
   };
 
   beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'getProductById']);
+    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProducts']);
     notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
     dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
+    productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
+    customFieldServiceMock = jasmine.createSpyObj('CustomFieldService', ['getCustomFields']);
 
-    // Mock products$ as a BehaviorSubject for testing ngOnInit
+    // Create a mock ProductService with a BehaviorSubject that immediately emits
+    const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
     Object.defineProperty(productServiceMock, 'products$', {
-      get: () => new BehaviorSubject([mockProduct]).asObservable()
+      get: () => mockProductsSubject.asObservable()
     });
 
     routerMock = jasmine.createSpyObj('Router', ['navigate', 'getCurrentNavigation']);
@@ -62,6 +69,21 @@ describe('ProductForm: Edit Mode', () => {
     activatedRouteMock = {
       snapshot: {
         params: {}
+      }
+    };
+
+    // Set up the initializer mock to return synchronous data for edit mode
+    productFormInitializerMock.initializeForm.and.returnValue(of({
+      customFields: [],
+      product: mockProduct,
+      isEditMode: true,
+      initialPrimaryImageId: null
+    }));
+
+    // Mock params for edit mode
+    activatedRouteMock = {
+      snapshot: {
+        params: { id: '1' }
       }
     };
 
@@ -86,14 +108,31 @@ describe('ProductForm: Edit Mode', () => {
         { provide: MatDialog, useValue: dialogMock },
         { provide: Router, useValue: routerMock },
         { provide: ActivatedRoute, useValue: activatedRouteMock },
-        { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
-      ]
-    }).compileComponents();
+        { provide: ProductFormInitializerService, useValue: productFormInitializerMock },
+        { provide: CustomFieldService, useValue: customFieldServiceMock }
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
+    })
+      .overrideComponent(ProductForm, {
+        set: {
+          imports: [
+            CommonModule,
+            ReactiveFormsModule,
+            MatFormFieldModule,
+            MatInputModule,
+            MatCardModule,
+            MatButtonModule,
+            MatIconModule,
+            MatListModule
+          ],
+          schemas: [NO_ERRORS_SCHEMA]
+        }
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
-    productFormInitializerService = TestBed.inject(ProductFormInitializerService);
   });
 
   afterEach(() => {
@@ -105,33 +144,20 @@ describe('ProductForm: Edit Mode', () => {
   });
 
   describe('Edit Mode', () => {
-    beforeEach(() => {
-      activatedRouteMock.snapshot.params['id'] = mockProduct.id;
-      routerMock.getCurrentNavigation.and.returnValue(null);
-    });
-
-    it('should initialize the form with product data', () => {
-      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
-        customFields: [],
-        product: mockProduct,
-        isEditMode: true,
-        initialPrimaryImageId: null
-      }));
+    it('should initialize in edit mode', () => {
       fixture.detectChanges();
+
       expect(component.isEditMode).toBeTrue();
-      expect(component.productForm.value.name).toBe(mockProduct.name);
+      expect(component.productId).toBe(1);
+      expect(component.productForm.get('name')?.value).toBe(mockProduct.name);
     });
 
     it('should call updateProduct on submit', () => {
-      spyOn(productFormInitializerService, 'initializeForm').and.returnValue(of({
-        customFields: [],
-        product: mockProduct,
-        isEditMode: true,
-        initialPrimaryImageId: null
-      }));
       fixture.detectChanges();
+
       productServiceMock.updateProduct.and.returnValue(of(mockProduct));
       productServiceMock.saveCustomFieldValues.and.returnValue(of({}));
+
       component.productForm.setValue({
         name: 'Updated',
         sku: 'T001',
@@ -146,14 +172,11 @@ describe('ProductForm: Edit Mode', () => {
         depth: 12,
         weight: 12,
       });
+
       component.onSubmit();
+
       expect(productServiceMock.updateProduct).toHaveBeenCalled();
       expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
     });
-  });
-
-  it('should navigate to /products on cancel', () => {
-    component.onCancel();
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
   });
 });

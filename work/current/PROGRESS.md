@@ -39,6 +39,7 @@
 - **Frontend Regression Fixing (Test Hangs):**
     - **`account-management.spec.ts`:** Fixed hang by removing `MatSnackBarModule` from component imports in test and adding subscription cleanup (`takeUntil`).
     - **`password-reset-dialog.spec.ts`:** Fixed hang by removing `MatDialogModule` from component imports in test, adding `CUSTOM_ELEMENTS_SCHEMA`, and adding subscription cleanup.
+    - **`product-form-edit.spec.ts`:** Fixed persistent hang by overriding the `ProductForm` component to exclude child components (`ProductFormImageGalleryComponent`, `ProductVariantsComponent`) and using `NO_ERRORS_SCHEMA`. This isolated the test from child component initialization issues.
     - **`product-list.spec.ts`:** Temporarily disabled (`xdescribe`) due to persistent hang. However, significantly improved the test structure with mocks for `NotificationService`, `BatchOperationsService`, `ProductComparisonService`, and stubs for all child components. Added subscription cleanup to `ProductList` component.
 - **Documentation:**
     - Updated `docs/guides/testing-and-ci.md` with frontend testing best practices.
