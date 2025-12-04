@@ -4,7 +4,8 @@
       <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
       <div class="header-actions">
         <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
-        <button type="submit" mat-raised-button color="primary" [disabled]="!isDirty || productForm.invalid">Save</button>
+        <button type="submit" mat-raised-button color="primary"
+          [disabled]="!isDirty || productForm.invalid">Save</button>
       </div>
     </div>
 
@@ -85,18 +86,13 @@
             <mat-card-title>Images</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <app-product-form-image-gallery
-              [existingImages]="product?.images || []"
-              [stagedImages]="stagedImages"
-              [stagedImagePreviews]="stagedImagePreviews"
-              [productId]="productId"
+            <app-product-form-image-gallery [existingImages]="product?.images || []" [stagedImages]="stagedImages"
+              [stagedImagePreviews]="stagedImagePreviews" [productId]="productId"
               (stagedImagesChange)="onStagedImagesChange($event)"
               (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
-              (imagesToDelete)="onImagesToDelete($event)"
-              (primaryImageChange)="onPrimaryImageChange($event)"
+              (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
               (imageUpdated)="onImageUpdated($event)"
-              (existingImagesChange)="onExistingImagesOrderChange($event)"
-            ></app-product-form-image-gallery>
+              (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
           </mat-card-content>
         </mat-card>
 
@@ -119,9 +115,7 @@
             <mat-card-title>Product Variants</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <app-product-variants
-              [productVariants]="productVariants"
-              (variantsChanged)="productVariants = $event"
+            <app-product-variants [productVariants]="productVariants" (variantsChanged)="productVariants = $event"
               (addVariant)="onAddVariant()">
             </app-product-variants>
           </mat-card-content>

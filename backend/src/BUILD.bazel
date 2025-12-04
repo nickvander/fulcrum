@@ -1,0 +1,51 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@pip//:requirements.bzl", "requirement")
+
+py_library(
+    name = "app_lib",
+    srcs = glob(["**/*.py"], exclude = ["main.py", "celery_worker.py"]),
+    imports = [".."],
+    deps = [
+        requirement("fastapi"),
+        requirement("uvicorn"),
+        requirement("sqlalchemy"),
+        requirement("alembic"),
+        requirement("pydantic"),
+        requirement("pydantic-settings"),
+        requirement("celery"),
+        requirement("redis"),
+        requirement("psycopg2-binary"),
+        requirement("pgvector"),
+        requirement("python-dotenv"),
+        requirement("python-jose"),
+        requirement("passlib"),
+        requirement("python-multipart"),
+        requirement("sentence-transformers"),
+        requirement("flower"),
+        requirement("slowapi"),
+        requirement("argon2-cffi"),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "main",
+    srcs = ["main.py"],
+    imports = [".."],
+    deps = [
+        ":app_lib",
+        requirement("uvicorn"),
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_binary(
+    name = "celery_worker",
+    srcs = ["celery_worker.py"],
+    imports = [".."],
+    deps = [
+        ":app_lib",
+        requirement("celery"),
+    ],
+    visibility = ["//visibility:public"],
+)

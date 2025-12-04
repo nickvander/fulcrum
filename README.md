@@ -79,5 +79,34 @@ The backend API will be available at `http://localhost:8000`.
 
 The frontend application will be available at `http://localhost:4200`.
 
+## Building with Bazel (Optional)
+
+Fulcrum supports building with [Bazel](https://bazel.build/) as an alternative
+build system for improved build performance and reproducibility.
+
+### Prerequisites
+
+- [Bazelisk](https://github.com/bazelbuild/bazelisk) (recommended) or Bazel
+  8.4.2+
+- pnpm (for frontend dependencies)
+
+### Quick Start
+
+```bash
+# Build backend
+bazel build //backend/src:main
+bazel build //backend/src:celery_worker
+
+# Run tests
+bazel test //backend/tests:test_fast_dummy
+
+# Check dependency graph
+bazel mod graph
+```
+
+**Note:** Bazel runs alongside Docker Compose. You can use either build system
+based on your needs. See [docs/guides/using-bazel.md](docs/guides/using-bazel.md)
+for comprehensive documentation including Docker integration.
+
 For detailed setup instructions, please see the
 **[Getting Started](docs/getting-started/backend-setup.md)** guide.

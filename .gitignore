@@ -23,3 +23,9 @@ venv/
 
 # Documentation build artifacts
 docs/_build/
+
+# Bazel
+bazel-bin/
+bazel-out/
+bazel-testlogs/
+bazel-fulcrum/

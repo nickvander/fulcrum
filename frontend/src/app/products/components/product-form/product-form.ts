@@ -17,8 +17,8 @@ import { ImageDialogComponent } from '../../../shared/components/image-dialog/im
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
 import { ProductVariantsComponent } from '../product-variants/product-variants';
-import { switchMap, map, takeUntil } from 'rxjs/operators';
-import { forkJoin, of, Subject } from 'rxjs';
+import { switchMap, map, takeUntil, catchError, tap } from 'rxjs/operators';
+import { forkJoin, of, Subject, Observable } from 'rxjs';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
@@ -88,148 +88,129 @@ export class ProductForm implements OnInit {
   }
 
   ngOnInit(): void {
+    console.log('ProductForm: ngOnInit started');
     // Check if product is passed via @Input (side panel mode)
     if (this.product) {
-      // Side panel mode - use the passed product
-      this.isEditMode = true;
-      this.productId = this.product.id || null;
-      
-      // Load the full product details to ensure all data (images, custom fields, etc.) is available
-      this.productService.getProductById(this.product.id!).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (fullProduct: Product) => {
-          // Set the full product data
-          this.product = fullProduct;
-          this.productId = fullProduct.id || null;
-          
-          // Patch form values with the full product data
-          if (fullProduct) {
-            this.productForm.patchValue(fullProduct);
-            
-            // Store original values for dirty checking (only for edit mode)
-            if (this.isEditMode) {
-              this.originalValues = { ...fullProduct };
-              
-              // Store original custom field values
-              this.originalCustomFieldValues = {};
-              if (fullProduct.custom_fields) {
-                fullProduct.custom_fields.forEach(fieldValue => {
-                  this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
-                });
-              }
-            }
-          }
-          
-          // Load custom fields and handle initialization
-          this.customFieldService.getCustomFields().pipe(
-            takeUntil(this.destroy$)
-          ).subscribe({
-            next: (customFields: CustomField[]) => {
-              this.customFields = customFields;
-              this.addCustomFieldControls();
-              this.patchCustomFieldValues();
-            },
-            error: (error: any) => {
-              console.error('Error getting custom fields:', error);
-              this.customFields = [];
-              this.addCustomFieldControls();
-            }
-          });
-          
-          // Load product variants
-          if (this.productId) {
-            this.productService.getProductVariants(this.productId).pipe(
-              takeUntil(this.destroy$)
-            ).subscribe({
-              next: (variants: ProductVariant[]) => {
-                this.productVariants = variants;
-              },
-              error: (error: any) => {
-                console.error('Error loading product variants:', error);
-                this.productVariants = [];
-              }
+      console.log('ProductForm: Side panel mode');
+      this.initializeSidePanelMode();
+    } else {
+      console.log('ProductForm: Route mode');
+      this.initializeRouteMode();
+    }
+  }
+
+  private initializeSidePanelMode(): void {
+    console.log('ProductForm: initializeSidePanelMode');
+    // Side panel mode - use the passed product
+    this.isEditMode = true;
+    this.productId = this.product!.id || null;
+
+    // Use forkJoin to load all necessary data in parallel
+    const product$ = this.productService.getProductById(this.product!.id!).pipe(
+      catchError(error => {
+        console.error('Error loading full product details:', error);
+        return of(this.product!); // Fallback to partial product
+      })
+    );
+
+    const customFields$ = this.customFieldService.getCustomFields().pipe(
+      catchError(error => {
+        console.error('Error getting custom fields:', error);
+        return of([] as CustomField[]);
+      })
+    );
+
+    const variants$ = this.productId
+      ? this.productService.getProductVariants(this.productId).pipe(
+        catchError(error => {
+          console.error('Error loading product variants:', error);
+          return of([] as ProductVariant[]);
+        })
+      )
+      : of([] as ProductVariant[]);
+
+    forkJoin({
+      product: product$,
+      customFields: customFields$,
+      variants: variants$
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(({ product, customFields, variants }) => {
+      console.log('ProductForm: Side panel data loaded');
+      // Handle Product Data
+      this.product = product;
+      this.productId = product.id || null;
+
+      if (product) {
+        this.productForm.patchValue(product);
+
+        if (this.isEditMode) {
+          this.originalValues = { ...product };
+          this.originalCustomFieldValues = {};
+          if (product.custom_fields) {
+            product.custom_fields.forEach(fieldValue => {
+              this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
             });
           }
-        },
-        error: (error) => {
-          console.error('Error loading full product details:', error);
-          // Fallback to using the partial product data if full loading fails
-          if (this.product) {
-            this.productForm.patchValue(this.product);
-            
-            // Store original values for dirty checking (only for edit mode)
-            if (this.isEditMode) {
-              this.originalValues = { ...this.product };
-              
-              // Store original custom field values
-              this.originalCustomFieldValues = {};
-              if (this.product.custom_fields) {
-                this.product.custom_fields.forEach(fieldValue => {
-                  this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
-                });
-              }
-            }
-          }
-          
-          // Load custom fields anyway
-          this.customFieldService.getCustomFields().pipe(
-            takeUntil(this.destroy$)
-          ).subscribe({
-            next: (customFields: CustomField[]) => {
-              this.customFields = customFields;
-              this.addCustomFieldControls();
-              this.patchCustomFieldValues();
-            },
-            error: (error: any) => {
-              console.error('Error getting custom fields:', error);
-              this.customFields = [];
-              this.addCustomFieldControls();
-            }
-          });
         }
-      });
-    } else {
-      // Route-based mode - use existing routing logic
-      const idParam = this.route.snapshot.params['id'];
-      const isEditMode = !!idParam;
-      const productId = idParam ? +idParam : null;
-      
-      // Use the initialization service instead of complex observables in component
-      this.productFormInitializer.initializeForm(isEditMode, productId).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe({
-        next: (initializationData: ProductFormInitializationData) => {
-          this.handleInitializationData(initializationData);
-        },
-        error: (error) => {
-          console.error('Error initializing form:', error);
-          // Fallback to safe defaults
-          this.handleInitializationData({
-            customFields: [],
-            isEditMode,
-            initialPrimaryImageId: null
-          });
-        }
-      });
-    }
+      }
+
+      // Handle Custom Fields
+      this.customFields = customFields;
+      this.addCustomFieldControls();
+      this.patchCustomFieldValues();
+
+      // Handle Variants
+      this.productVariants = variants;
+    });
+  }
+
+  private initializeRouteMode(): void {
+    console.log('ProductForm: initializeRouteMode');
+    // Route-based mode - use existing routing logic
+    const idParam = this.route.snapshot.params['id'];
+    const isEditMode = !!idParam;
+    const productId = idParam ? +idParam : null;
+
+    console.log('ProductForm: calling initializeForm');
+    // Use the initialization service instead of complex observables in component
+    this.productFormInitializer.initializeForm(isEditMode, productId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (initializationData: ProductFormInitializationData) => {
+        console.log('ProductForm: initializeForm next');
+        this.handleInitializationData(initializationData);
+      },
+      error: (error) => {
+        console.error('Error initializing form:', error);
+        // Fallback to safe defaults
+        this.handleInitializationData({
+          customFields: [],
+          isEditMode,
+          initialPrimaryImageId: null
+        });
+      },
+      complete: () => {
+        console.log('ProductForm: initializeForm complete');
+      }
+    });
   }
 
   private handleInitializationData(data: ProductFormInitializationData): void {
     this.customFields = data.customFields;
     this.isEditMode = data.isEditMode;
     this.initialPrimaryImageId = data.initialPrimaryImageId;
-    
+
     if (data.product) {
       this.product = data.product;
       this.productId = data.product.id || null;
       this.productForm.patchValue(data.product);
-      
+
       // Store original values for dirty checking (only for edit mode)
       if (this.isEditMode) {
         this.originalValues = { ...data.product };
         this.patchCustomFieldValues();
-        
+
         // Store original custom field values
         this.originalCustomFieldValues = {};
         if (data.product.custom_fields) {
@@ -283,21 +264,21 @@ export class ProductForm implements OnInit {
 
     // Check if there are actual changes to form controls by comparing to original values
     let formControlsChanged = false;
-    
+
     if (this.isEditMode) {
       // Compare current form values with original values for standard fields
       const standardFields = [
         'name', 'sku', 'description', 'default_resale_price', 'cost_price',
         'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight'
       ];
-      
+
       for (const key of standardFields) {
         const control = this.productForm.get(key);
         if (control) {
           // Convert values to the same type for comparison to avoid type mismatches
           const controlValue = control.value;
           const originalValue = this.originalValues[key];
-          
+
           // Handle potential type differences (e.g., number vs string)
           if (String(controlValue) !== String(originalValue)) {
             formControlsChanged = true;
@@ -305,7 +286,7 @@ export class ProductForm implements OnInit {
           }
         }
       }
-      
+
       // Also check custom field values
       if (!formControlsChanged) {
         for (const key of Object.keys(this.productForm.controls)) {
@@ -348,102 +329,79 @@ export class ProductForm implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.productForm.invalid || !this.isDirty) {
+    if (this.productForm.invalid) {
       return;
     }
 
     const formValue = this.productForm.value;
-    const productData: any = {};
-    const customFieldValues: { [key: string]: any } = {};
+    const productData: Partial<Product> = {
+      name: formValue.name,
+      sku: formValue.sku,
+      description: formValue.description,
+      default_resale_price: formValue.default_resale_price,
+      cost_price: formValue.cost_price,
+      manufacturer: formValue.manufacturer,
+      brand: formValue.brand,
+      category: formValue.category,
+      width: formValue.width,
+      height: formValue.height,
+      depth: formValue.depth,
+      weight: formValue.weight,
+    };
 
-    Object.keys(formValue).forEach(key => {
-      if (key.startsWith('custom_field_')) {
-        customFieldValues[key.replace('custom_field_', '')] = formValue[key];
-      } else {
-        productData[key] = formValue[key];
+    // Handle custom fields
+    const customFieldValues: { [key: number]: any } = {};
+    this.customFields.forEach(field => {
+      const controlName = `custom_field_${field.id}`;
+      if (formValue[controlName] !== undefined) {
+        customFieldValues[field.id] = formValue[controlName];
       }
     });
 
     if (this.isEditMode && this.productId) {
-      const updateObservables = [];
-      const productId = this.productId;
-
-      // 1. Update core product details if form is dirty
-      if (this.productForm.dirty) {
-        const productToUpdate: Product = { id: productId, ...productData };
-        updateObservables.push(this.productService.updateProduct(productToUpdate));
-        updateObservables.push(this.productService.saveCustomFieldValues(productId, customFieldValues));
-      }
-
-      // 2. Delete images marked for deletion
-      if (this.imagesToDelete.length > 0) {
-        this.imagesToDelete.forEach(imageId => {
-          updateObservables.push(this.productService.deleteProductImage(productId, imageId));
-        });
-      }
-
-      // 3. Set new primary image if it has changed
-      const primaryImage = this.product?.images?.find(img => img.is_primary);
-      const currentPrimaryId = primaryImage ? primaryImage.id : null;
-      if (this.initialPrimaryImageId !== currentPrimaryId && currentPrimaryId) {
-        updateObservables.push(this.productService.setPrimaryProductImage(productId, currentPrimaryId));
-      }
-      
-      // 4. Upload new images (staged in edit mode, though current UI doesn't support it, this makes it robust)
-      // This part of onFileSelected needs to be adjusted to stage images in edit mode too.
-      // For now, this will handle any images that might get staged.
-      if (this.stagedImages.length > 0) {
-        this.stagedImages.forEach(file => {
-          updateObservables.push(this.productService.uploadProductImage(productId, file));
-        });
-      }
-      
-      // 5. Handle product variants (create, update, delete)
-      // For now, we'll just log these operations - in a real implementation, you'd implement the actual API calls
-      console.log('Product variants to save:', this.productVariants);
-      // TODO: Implement actual variant operations
-
-      forkJoin(updateObservables.length > 0 ? updateObservables : [Promise.resolve()]).subscribe({
-        next: () => {
-          this.notificationService.showSuccess('Product updated successfully.');
-          
-          // Emit event instead of navigating if in side panel mode
-          if (this.product) {
-            this.productSaved.emit();
-          } else {
-            this.router.navigate(['/products']);
-          }
-        },
-        error: (err) => this.notificationService.showError('Failed to update product.')
-      });
-
-    } else { // Create Mode
-      this.productService.createProduct(productData).pipe(
-        switchMap(newProduct => {
-          const operations = [];
+      this.productService.updateProduct({ ...productData, id: this.productId } as Product).pipe(
+        switchMap(updatedProduct => {
           // Save custom fields
-          operations.push(this.productService.saveCustomFieldValues(newProduct.id, customFieldValues));
-          
-          // Upload staged images
-          if (this.stagedImages.length > 0) {
-            this.stagedImages.forEach(file => 
-              operations.push(this.productService.uploadProductImage(newProduct.id, file))
+          if (Object.keys(customFieldValues).length > 0) {
+            return this.productService.saveCustomFieldValues(updatedProduct.id, customFieldValues).pipe(
+              map(() => updatedProduct)
             );
           }
-          
-          // Handle product variants
-          // For now, we'll just log these operations - in a real implementation, you'd implement the actual API calls
-          if (this.productVariants && this.productVariants.length > 0) {
-            console.log('Creating variants for new product:', this.productVariants);
-            // TODO: Implement actual variant creation operations after product is created
+          return of(updatedProduct);
+        }),
+        switchMap(updatedProduct => {
+          // Handle image deletions
+          if (this.imagesToDelete.length > 0) {
+            const deleteObservables = this.imagesToDelete.map(imageId =>
+              this.productService.deleteProductImage(updatedProduct.id, imageId)
+            );
+            return forkJoin(deleteObservables).pipe(map(() => updatedProduct));
           }
-          
-          return forkJoin(operations.length > 0 ? operations : [Promise.resolve()]).pipe(map(() => newProduct));
+          return of(updatedProduct);
+        }),
+        switchMap(updatedProduct => {
+          // Handle new image uploads
+          if (this.stagedImages.length > 0) {
+            const uploadObservables = this.stagedImages.map(image =>
+              this.productService.uploadProductImage(updatedProduct.id, image)
+            );
+            return forkJoin(uploadObservables).pipe(map(() => updatedProduct));
+          }
+          return of(updatedProduct);
+        }),
+        switchMap(updatedProduct => {
+          // Handle primary image update
+          const primaryImage = this.product?.images?.find(img => img.is_primary);
+          if (primaryImage && primaryImage.id !== this.initialPrimaryImageId) {
+            return this.productService.setPrimaryProductImage(updatedProduct.id, primaryImage.id).pipe(
+              map(() => updatedProduct)
+            );
+          }
+          return of(updatedProduct);
         })
       ).subscribe({
         next: () => {
-          this.notificationService.showSuccess('Product created successfully.');
-          
+          this.notificationService.showSuccess('Product updated successfully');
           // Emit event instead of navigating if in side panel mode
           if (this.product) {
             this.productSaved.emit();
@@ -451,7 +409,47 @@ export class ProductForm implements OnInit {
             this.router.navigate(['/products']);
           }
         },
-        error: (err) => this.notificationService.showError('Failed to create product.')
+        error: (error) => {
+          console.error('Error updating product:', error);
+          this.notificationService.showError('Error updating product');
+        }
+      });
+
+    } else {
+      this.productService.createProduct(productData as Product).pipe(
+        switchMap(newProduct => {
+          // Save custom fields
+          if (Object.keys(customFieldValues).length > 0) {
+            return this.productService.saveCustomFieldValues(newProduct.id, customFieldValues).pipe(
+              map(() => newProduct)
+            );
+          }
+          return of(newProduct);
+        }),
+        switchMap(newProduct => {
+          // Handle image uploads
+          if (this.stagedImages.length > 0) {
+            const uploadObservables = this.stagedImages.map(image =>
+              this.productService.uploadProductImage(newProduct.id, image)
+            );
+            return forkJoin(uploadObservables).pipe(map(() => newProduct));
+          }
+          return of(newProduct);
+        })
+      ).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('Product created successfully');
+          // Emit event instead of navigating if in side panel mode
+          if (this.product) {
+            this.productSaved.emit();
+          } else {
+            this.router.navigate(['/products']);
+          }
+        },
+        error: (error) => {
+          console.error('Error creating product:', error);
+          this.notificationService.showError('Error creating product');
+        }
       });
     }
   }
@@ -483,7 +481,7 @@ export class ProductForm implements OnInit {
       }
     }
   }
-  
+
   // Methods to handle events from the child component
   onStagedImagesChange(images: File[]): void {
     this.stagedImages = images;
@@ -517,7 +515,7 @@ export class ProductForm implements OnInit {
     }
   }
 
-  onImageUpdated(event: {imageId: number, field: 'title' | 'description', value: string}): void {
+  onImageUpdated(event: { imageId: number, field: 'title' | 'description', value: string }): void {
     if (this.product && this.product.images) {
       const image = this.product.images.find(img => img.id === event.imageId);
       if (image) {

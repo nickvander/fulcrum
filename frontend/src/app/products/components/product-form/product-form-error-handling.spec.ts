@@ -8,7 +8,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
 import { of, BehaviorSubject, throwError } from 'rxjs';
-import { Product } from '../../models/product.model';
+import { Product, ProductImage, ProductVariant } from '../../models/product.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +19,39 @@ import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
+import { ProductVariantsComponent } from '../product-variants/product-variants';
+
+// Mock Child Components
+@Component({
+  selector: 'app-product-form-image-gallery',
+  standalone: true,
+  template: ''
+})
+class MockProductFormImageGalleryComponent {
+  @Input() existingImages: ProductImage[] = [];
+  @Input() stagedImages: File[] = [];
+  @Input() stagedImagePreviews: string[] = [];
+  @Input() productId: number | null = null;
+  @Output() stagedImagesChange = new EventEmitter<File[]>();
+  @Output() stagedImagePreviewsChange = new EventEmitter<string[]>();
+  @Output() imagesToDelete = new EventEmitter<number[]>();
+  @Output() primaryImageChange = new EventEmitter<number | null>();
+  @Output() imageUpdated = new EventEmitter<{ imageId: number, field: 'title' | 'description', value: string }>();
+  @Output() existingImagesChange = new EventEmitter<ProductImage[]>();
+}
+
+@Component({
+  selector: 'app-product-variants',
+  standalone: true,
+  template: ''
+})
+class MockProductVariantsComponent {
+  @Input() productVariants: ProductVariant[] = [];
+  @Output() variantsChanged = new EventEmitter<ProductVariant[]>();
+  @Output() addVariant = new EventEmitter<void>();
+}
 
 describe('ProductForm: Error Handling', () => {
   let component: ProductForm;
@@ -87,7 +120,12 @@ describe('ProductForm: Error Handling', () => {
         { provide: ActivatedRoute, useValue: activatedRouteMock },
         { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
       ]
-    }).compileComponents();
+    })
+      .overrideComponent(ProductForm, {
+        remove: { imports: [ProductFormImageGalleryComponent, ProductVariantsComponent] },
+        add: { imports: [MockProductFormImageGalleryComponent, MockProductVariantsComponent] }
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ProductForm);
     component = fixture.componentInstance;
@@ -158,6 +196,7 @@ describe('ProductForm: Error Handling', () => {
         height: 15,
         depth: 15,
         weight: 15,
+        custom_field_1: '' // Add this if needed, or rely on dynamic addition
       });
 
       component.onSubmit();

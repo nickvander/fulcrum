@@ -1,0 +1,142 @@
+load("@rules_python//python:defs.bzl", "py_test")
+load("@pip//:requirements.bzl", "requirement")
+
+py_test(
+    name = "test_fast_dummy",
+    srcs = ["test_fast_dummy.py"],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "test_crud",
+    srcs = [
+        "conftest.py",
+        "test_crud.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+        requirement("faker"),
+    ],
+)
+
+py_test(
+    name = "test_products_api",
+    srcs = [
+        "conftest.py",
+        "test_products_api.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+py_test(
+    name = "test_users_api",
+    srcs = [
+        "conftest.py",
+        "test_users_api.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+py_test(
+    name = "test_security",
+    srcs = [
+        "conftest.py",
+        "test_security.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+py_test(
+    name = "test_user_endpoints",
+    srcs = [
+        "conftest.py",
+        "test_user_endpoints.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+        requirement("faker"),
+    ],
+)
+
+py_test(
+    name = "test_users_comprehensive",
+    srcs = [
+        "conftest.py",
+        "test_users_comprehensive.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+py_test(
+    name = "test_audit_logging",
+    srcs = [
+        "conftest.py",
+        "test_audit_logging.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+py_test(
+    name = "test_force_password_change",
+    srcs = [
+        "conftest.py",
+        "test_force_password_change.py",
+    ],
+    imports = ["../.."],
+    deps = [
+        "//backend/src:app_lib",
+        requirement("pytest"),
+        requirement("httpx"),
+    ],
+)
+
+# Test suite that runs all backend tests
+test_suite(
+    name = "all_backend_tests",
+    tests = [
+        ":test_fast_dummy",
+        ":test_crud",
+        ":test_products_api",
+        ":test_users_api",
+        ":test_security",
+        ":test_user_endpoints",
+        ":test_users_comprehensive",
+        ":test_audit_logging",
+        ":test_force_password_change",
+    ],
+)
