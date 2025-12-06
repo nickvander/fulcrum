@@ -41,11 +41,13 @@
 - [x] Configure asset handling
 - [x] Build PWA successfully
 
-## Phase 6: Frontend Testing 🚧 IN PROGRESS
+## Phase 6: Frontend Testing ⏸️ DEFERRED
 - [x] Create test rules for spec files (`frontend/BUILD.bazel`)
 - [x] Resolve "phantom dependency" graph for Bazel sandbox (~50 packages)
-- [ ] Fix "Web Test Runner is not installed" error in Angular Builder (Blocked)
-- [ ] Make all frontend tests pass with Bazel
+- [~] Fix "Web Test Runner is not installed" error in Angular Builder
+  - **Deferred**: Angular's builder is experimental; see `work/future/bazel-frontend-testing.md`
+  - **Workaround**: Use `pnpm ng test` locally (144 tests pass)
+- [~] Make all frontend tests pass with Bazel (using local workaround)
 
 ## Phase 7: Docker Integration ✅ COMPLETE
 
@@ -60,13 +62,13 @@
 - [x] Add visibility to py_binary targets
 - [x] Run bazel mod tidy
 
-### Frontend Container 🚧 NOT STARTED
-- [ ] Create frontend/image/BUILD.bazel
-- [ ] Configure nginx.conf
-- [ ] Package Angular build output
-- [ ] Configure oci_image for frontend
-- [ ] Configure oci_load for Docker export
-- [ ] Test frontend container build
+### Frontend Container ✅ COMPLETE
+- [x] Create frontend/image/BUILD.bazel
+- [x] Configure nginx.conf
+- [x] Package Angular build output
+- [x] Configure oci_image for frontend
+- [x] Configure oci_load for Docker export
+- [x] Test frontend container build
 
 ### Test Containers ✅ COMPLETE
 - [x] Configure PostgreSQL test container with pgvector
@@ -161,11 +163,9 @@
 
 ## Blockers / Open Questions
 
-1. **Angular Build Strategy**: Need to decide between:
-   - Using Angular CLI via Bazel (simpler, less control)
-   - Direct TypeScript compilation (more complex, more control)
-   
-2. **Test Container Management**: How to best integrate Docker test containers with Bazel's hermetic build?
+1. ~~**Angular Build Strategy**~~: ✅ Decided to use Angular CLI via Bazel (simpler)
+
+2. ~~**Test Container Management**~~: ✅ Solved with testcontainers
 
 3. **Remote Caching**: Which solution to use?
    - GitHub Actions cache (free, simpler)
@@ -173,6 +173,11 @@
    - Cloud provider (GCS, S3)
 
 4. **Development Workflow**: Should Bazel replace docker-compose for local dev, or complement it?
+
+5. ~~**Frontend Testing in Bazel**~~: ⏸️ Deferred
+   - Angular's Web Test Runner builder is experimental and incompatible with Bazel sandbox
+   - See `work/future/bazel-frontend-testing.md` for options (Jest migration, wait for maturity)
+   - **Workaround**: Use `pnpm ng test` for local testing
 
 ## Success Metrics
 

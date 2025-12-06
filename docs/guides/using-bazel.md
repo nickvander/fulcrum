@@ -88,14 +88,19 @@ Bazel can build Docker containers using `rules_oci`, providing better caching an
 
 ```bash
 # Build backend Docker image
-bazel build //backend/image:backend_tarball
+bazel build //backend/image:backend_image
 
-# Load image into Docker daemon
+# Build frontend Docker image
+bazel build //frontend/image:frontend_image
+
+# Load images into Docker daemon
 bazel run //backend/image:backend_tarball
+bazel run //frontend/image:frontend_tarball
 
-# Verify the image
-docker images | grep fulcrum/backend
-# Output: fulcrum/backend  latest  77533e966929  124MB
+# Verify the images
+docker images | grep fulcrum
+# fulcrum/backend   latest  ...  124MB
+# fulcrum/frontend  latest  ...  54.5MB
 ```
 
 ### Using with Docker Compose
@@ -103,8 +108,9 @@ docker images | grep fulcrum/backend
 The project includes `docker-compose.bazel.yml` for using Bazel-built images:
 
 ```bash
-# Build the image first
+# Build both images first
 bazel run //backend/image:backend_tarball
+bazel run //frontend/image:frontend_tarball
 
 # Start services with Bazel-built images
 docker compose -f docker-compose.bazel.yml up
@@ -112,20 +118,20 @@ docker compose -f docker-compose.bazel.yml up
 
 ### Container Build Configuration
 
+#### Backend Container
+
 The backend container is defined in `backend/image/BUILD.bazel`:
 
 ```starlark
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_load")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
-# Package the application
 pkg_tar(
     name = "app_layer",
     srcs = ["//backend/src:main"],
     package_dir = "/app",
 )
 
-# Build OCI image
 oci_image(
     name = "backend_image",
     base = "@python_base",
@@ -133,11 +139,43 @@ oci_image(
     entrypoint = ["/app/main"],
 )
 
-# Load into Docker
 oci_load(
     name = "backend_tarball",
     image = ":backend_image",
     repo_tags = ["fulcrum/backend:latest"],
+)
+```
+
+#### Frontend Container
+
+The frontend container is defined in `frontend/image/BUILD.bazel`:
+
+```starlark
+pkg_tar(
+    name = "app_layer",
+    srcs = ["//frontend:build"],
+    package_dir = "/usr/share/nginx/html",
+    strip_prefix = "dist/frontend/browser",
+)
+
+pkg_tar(
+    name = "config_layer",
+    srcs = ["nginx.conf"],
+    package_dir = "/etc/nginx/conf.d",
+    remap_paths = {"nginx.conf": "default.conf"},
+)
+
+oci_image(
+    name = "frontend_image",
+    base = "@nginx_base",
+    tars = [":app_layer", ":config_layer"],
+    exposed_ports = ["80/tcp"],
+)
+
+oci_load(
+    name = "frontend_tarball",
+    image = ":frontend_image",
+    repo_tags = ["fulcrum/frontend:latest"],
 )
 ```
 
