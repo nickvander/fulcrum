@@ -26,12 +26,14 @@ services:
       - "6379:6379"
 
   backend:
-    # Use the Bazel-built image instead of building from Dockerfile
-    image: fulcrum/backend:latest
-    # If the image doesn't exist, run: bazel run //backend/image:backend_tarball
+    # Build from Dockerfile (Bazel py_binary has runfiles issue, use traditional Docker for backend)
+    build:
+      context: ./backend
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
     ports:
       - "8000:8000"
     environment:
@@ -40,7 +42,7 @@ services:
       SECRET_KEY: dev-secret-key-change-in-production
       FIRST_SUPERUSER_EMAIL: admin@fulcrum.local
       FIRST_SUPERUSER_PASSWORD: admin123
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
 
   frontend:
     # Use the Bazel-built nginx image
@@ -50,6 +52,8 @@ services:
       - backend
     ports:
       - "4200:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   celery:
     image: fulcrum/backend:latest

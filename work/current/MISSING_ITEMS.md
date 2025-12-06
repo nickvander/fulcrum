@@ -51,7 +51,7 @@
 
 ## Phase 7: Docker Integration ✅ COMPLETE
 
-### Backend Container ✅ COMPLETE
+### Backend Container ⏸️ DEFERRED (Runfiles Issue)
 - [x] Add OCI base image pulls to MODULE.bazel (python:3.11-slim)
 - [x] Create backend/image/BUILD.bazel
 - [x] Configure pkg_tar for backend application
@@ -61,6 +61,7 @@
 - [x] Verify backend container loads into Docker
 - [x] Add visibility to py_binary targets
 - [x] Run bazel mod tidy
+- [~] Container runtime works (py_binary runfiles issue - use traditional Docker for now)
 
 ### Frontend Container ✅ COMPLETE
 - [x] Create frontend/image/BUILD.bazel
@@ -80,6 +81,7 @@
 - [x] Create docker-compose.bazel.yml example
 - [x] Document how to use Bazel vs traditional docker-compose
 - [x] Maintain backward compatibility
+- [x] **Hybrid approach**: Frontend from Bazel, backend from traditional Docker
 
 ## Phase 8: CI/CD Integration 🚧 NOT STARTED
 
