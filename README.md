@@ -97,8 +97,15 @@ build system for improved build performance and reproducibility.
 bazel build //backend/src:main
 bazel build //backend/src:celery_worker
 
-# Run tests
+# Build frontend
+bazel build //frontend:build
+
+# Run backend tests
 bazel test //backend/tests:test_fast_dummy
+
+# Build Docker images
+bazel run //backend/image:backend_tarball   # Loads fulcrum/backend:latest
+bazel run //frontend/image:frontend_tarball # Loads fulcrum/frontend:latest
 
 # Check dependency graph
 bazel mod graph

@@ -1,7 +1,9 @@
 # Example Docker Compose configuration using Bazel-built images
 #
 # To use this:
-# 1. Build the image with Bazel: bazel run //backend/image:backend_tarball
+# 1. Build the images with Bazel:
+#    bazel run //backend/image:backend_tarball
+#    bazel run //frontend/image:frontend_tarball
 # 2. Start services: docker compose -f docker-compose.bazel.yml up
 #
 # This demonstrates integrating Bazel builds with Docker Compose
@@ -39,6 +41,15 @@ services:
       FIRST_SUPERUSER_EMAIL: admin@fulcrum.local
       FIRST_SUPERUSER_PASSWORD: admin123
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    # Use the Bazel-built nginx image
+    image: fulcrum/frontend:latest
+    # If the image doesn't exist, run: bazel run //frontend/image:frontend_tarball
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
 
   celery:
     image: fulcrum/backend:latest

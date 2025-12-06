@@ -86,7 +86,33 @@ This will be addressed in the Docker integration phase.
   - Fixed code errors in `product-templates.ts` (imports) and `products.html` (event bindings).
   - Verified successful build of the PWA.
 
+## Session: 2025-12-05
+
+### Frontend Testing Decision ⏸️
+
+After research into the "Web Test Runner is not installed" error, determined that:
+- The Angular `web-test-runner` builder is **experimental** and has known Bazel
+  sandbox compatibility issues
+- Multiple workaround attempts (phantom dependencies, pnpm patching) unsuccessful
+- Root cause is internal `require()` resolution in the Angular builder
+
+**Decision**: Defer Bazel-based frontend testing; use local `pnpm ng test` workaround.
+
+**Documentation**: Created `work/future/bazel-frontend-testing.md` with:
+- Issue summary and root cause analysis
+- Attempted solutions
+- Future options (Jest migration, wait for Angular maturity)
+
+### Phase 7: Frontend Container ✅
+
+Built nginx-based Docker container for Angular PWA:
+- Created `frontend/image/nginx.conf` with SPA routing, gzip, caching, PWA support
+- Created `frontend/image/BUILD.bazel` with `pkg_tar`, `oci_image`, `oci_load` rules
+- Updated `docker-compose.bazel.yml` with frontend service
+- Image: `fulcrum/frontend:latest` (54.5MB)
+
 ## Next Steps
 
-1.  **Frontend Testing**: Integrate Web Test Runner with Bazel (Phase 6).
-2.  **CI/CD**: Update GitHub Actions to use Bazel (Phase 8).
+1.  **CI/CD**: Update GitHub Actions to use Bazel (Phase 8).
+2.  **Documentation**: Complete README and CONTRIBUTING updates (Phase 9).
+3.  **Verification**: Container integration testing (Phase 10).
