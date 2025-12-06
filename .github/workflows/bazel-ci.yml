@@ -5,7 +5,6 @@ on:
   push:
     branches: [main]
     paths:
-      - 'backend/**'
       - 'frontend/**'
       - 'MODULE.bazel'
       - '.bazelrc'
@@ -13,18 +12,17 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'backend/**'
       - 'frontend/**'
       - 'MODULE.bazel'
       - '.bazelrc'
 
 jobs:
-  bazel-build:
-    name: Bazel Build
+  bazel-frontend:
+    name: Bazel Frontend Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     concurrency:
-      group: ${{ github.workflow }}-build-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
 
     steps:
@@ -37,9 +35,6 @@ jobs:
           bazelisk-cache: true
           disk-cache: ${{ github.workflow }}
           repository-cache: true
-
-      - name: Build Backend
-        run: bazel build //backend/src:main //backend/src:celery_worker
 
       - name: Build Frontend
         run: bazel build //frontend:build
@@ -47,24 +42,6 @@ jobs:
       - name: Build Frontend Container
         run: bazel build //frontend/image:frontend_image
 
-  bazel-test:
-    name: Bazel Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    concurrency:
-      group: ${{ github.workflow }}-test-${{ github.ref }}
-      cancel-in-progress: true
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.14.0
-        with:
-          bazelisk-cache: true
-          disk-cache: ${{ github.workflow }}
-          repository-cache: true
-
-      - name: Run Backend Fast Tests
-        run: bazel test //backend/tests:test_fast_dummy --test_output=errors
+# Note: Backend Bazel builds are disabled in CI due to heavy NVIDIA CUDA
+# dependencies (nvidia-cublas-cu12 ~594MB) that fill the runner disk.
+# Backend tests continue to use the existing docker-compose workflows.
