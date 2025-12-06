@@ -120,7 +120,8 @@
     "https://bcr.bazel.build/modules/rules_license/1.0.0/source.json": "a52c89e54cc311196e478f8382df91c15f7a2bfdf4c6cd0e2675cc2ff0b56efb",
     "https://bcr.bazel.build/modules/rules_nodejs/6.2.0/MODULE.bazel": "ec27907f55eb34705adb4e8257952162a2d4c3ed0f0b3b4c3c1aad1fac7be35e",
     "https://bcr.bazel.build/modules/rules_nodejs/6.3.0/MODULE.bazel": "45345e4aba35dd6e4701c1eebf5a4e67af4ed708def9ebcdc6027585b34ee52d",
-    "https://bcr.bazel.build/modules/rules_nodejs/6.3.0/source.json": "1254ffd8d0d908a19c67add7fb5e2a1f604df133bc5d206425264293e2e537fc",
+    "https://bcr.bazel.build/modules/rules_nodejs/6.4.0/MODULE.bazel": "ce1fe1795222521d4b4494df58583a06f3bd6dd5d0d9409ea481fcab0e86f852",
+    "https://bcr.bazel.build/modules/rules_nodejs/6.4.0/source.json": "3e3e8ad75b171b0b67c84fbe624c6d5b0a87b11f0bda17b4050eca95297ae040",
     "https://bcr.bazel.build/modules/rules_oci/2.0.0/MODULE.bazel": "5d5cf1932238b009f874d5a9f214bbedf5d8cec8e5028e083f1147726876572f",
     "https://bcr.bazel.build/modules/rules_oci/2.0.0/source.json": "ea89dd54d1f473a6fb1a6c2d0660b741ee832d5141ac0b9c90d5c8fc9b5e3bb3",
     "https://bcr.bazel.build/modules/rules_pkg/0.7.0/MODULE.bazel": "df99f03fc7934a4737122518bb87e667e62d780b610910f0447665a7e2be62dc",
@@ -854,8 +855,8 @@
     },
     "@@rules_nodejs+//nodejs:extensions.bzl%node": {
       "general": {
-        "bzlTransitiveDigest": "SqbzUarOVzAfK28Ca5+NIU3LUwnW/b3h0xXBUS97oyI=",
-        "usagesDigest": "34/6ou8eW2MB82HSiYBcfVzZkGk1rL1teO3wuFqFAe0=",
+        "bzlTransitiveDigest": "MLpfA+65GINLc2EHubnI97nNK9NXPVkAUVpbgIrPV/M=",
+        "usagesDigest": "oUx40pxFxUmnfonjZ3OOCRbNE0Lc3F0+0/24bjy+8B0=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -868,7 +869,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "linux_amd64"
             }
@@ -881,7 +882,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "linux_arm64"
             }
@@ -894,7 +895,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "linux_s390x"
             }
@@ -907,7 +908,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "linux_ppc64le"
             }
@@ -920,7 +921,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "darwin_amd64"
             }
@@ -933,7 +934,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "darwin_arm64"
             }
@@ -946,7 +947,7 @@
               "node_urls": [
                 "https://nodejs.org/dist/v{version}/{filename}"
               ],
-              "node_version": "18.20.4",
+              "node_version": "22.12.0",
               "include_headers": false,
               "platform": "windows_amd64"
             }
@@ -1502,7 +1503,7 @@
         "bzlTransitiveDigest": "nsM9TJlv/3UhfShpdNe4npF8AD7NuDCHDmBSVNYOB98=",
         "usagesDigest": "Whp4OzIC8TwGbgNxdyXZ4Z7AoSKGTDz9kcTivy7zrT4=",
         "recordedFileInputs": {
-          "@@//backend/requirements_lock.txt": "937fdea344945c861714a87a84ea22f5047f3c1b7e95dceca6ad00efc3f8c00b",
+          "@@//backend/requirements_lock.txt": "d185854ec8c0f52c3564ffb4522195befccf0d03934055579c6aa03b674ad6b9",
           "@@protobuf+//python/requirements.txt": "983be60d3cec4b319dcab6d48aeb3f5b2f7c3350f26b3a9e97486c37967c73c5",
           "@@rules_fuzzing+//fuzzing/requirements.txt": "ab04664be026b632a0d2a2446c4f65982b7654f5b6851d2f9d399a19b7242a5b",
           "@@rules_python+//tools/publish/requirements_darwin.txt": "2994136eab7e57b083c3de76faf46f70fad130bc8e7360a7fed2b288b69e79dc",
@@ -1693,6 +1694,15 @@
               "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
               "repo": "pip_311",
               "requirement": "dnspython==2.8.0"
+            }
+          },
+          "pip_311_docker": {
+            "repoRuleId": "@@rules_python+//python/private/pypi:whl_library.bzl%whl_library",
+            "attributes": {
+              "dep_template": "@pip//{name}:{target}",
+              "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
+              "repo": "pip_311",
+              "requirement": "docker==7.1.0"
             }
           },
           "pip_311_ecdsa": {
@@ -2088,7 +2098,7 @@
               "dep_template": "@pip//{name}:{target}",
               "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
               "repo": "pip_311",
-              "requirement": "passlib[argon2]==1.7.4"
+              "requirement": "passlib==1.7.4"
             }
           },
           "pip_311_pgvector": {
@@ -2169,7 +2179,7 @@
               "dep_template": "@pip//{name}:{target}",
               "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
               "repo": "pip_311",
-              "requirement": "pydantic[email]==2.12.5"
+              "requirement": "pydantic==2.12.5"
             }
           },
           "pip_311_pydantic_core": {
@@ -2241,7 +2251,7 @@
               "dep_template": "@pip//{name}:{target}",
               "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
               "repo": "pip_311",
-              "requirement": "python-jose[cryptography]==3.5.0"
+              "requirement": "python-jose==3.5.0"
             }
           },
           "pip_311_python_multipart": {
@@ -2397,6 +2407,15 @@
               "requirement": "sympy==1.14.0"
             }
           },
+          "pip_311_testcontainers": {
+            "repoRuleId": "@@rules_python+//python/private/pypi:whl_library.bzl%whl_library",
+            "attributes": {
+              "dep_template": "@pip//{name}:{target}",
+              "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
+              "repo": "pip_311",
+              "requirement": "testcontainers==4.13.3"
+            }
+          },
           "pip_311_threadpoolctl": {
             "repoRuleId": "@@rules_python+//python/private/pypi:whl_library.bzl%whl_library",
             "attributes": {
@@ -2520,7 +2539,7 @@
               "dep_template": "@pip//{name}:{target}",
               "python_interpreter_target": "@@rules_python++python+python_3_11_host//:python",
               "repo": "pip_311",
-              "requirement": "uvicorn[standard]==0.38.0"
+              "requirement": "uvicorn==0.38.0"
             }
           },
           "pip_311_uvloop": {
@@ -5091,6 +5110,7 @@
                 "cryptography": "{\"pip_311_cryptography\":[{\"version\":\"3.11\"}]}",
                 "deprecated": "{\"pip_311_deprecated\":[{\"version\":\"3.11\"}]}",
                 "dnspython": "{\"pip_311_dnspython\":[{\"version\":\"3.11\"}]}",
+                "docker": "{\"pip_311_docker\":[{\"version\":\"3.11\"}]}",
                 "ecdsa": "{\"pip_311_ecdsa\":[{\"version\":\"3.11\"}]}",
                 "email_validator": "{\"pip_311_email_validator\":[{\"version\":\"3.11\"}]}",
                 "exceptiongroup": "{\"pip_311_exceptiongroup\":[{\"version\":\"3.11\"}]}",
@@ -5169,6 +5189,7 @@
                 "sqlalchemy": "{\"pip_311_sqlalchemy\":[{\"version\":\"3.11\"}]}",
                 "starlette": "{\"pip_311_starlette\":[{\"version\":\"3.11\"}]}",
                 "sympy": "{\"pip_311_sympy\":[{\"version\":\"3.11\"}]}",
+                "testcontainers": "{\"pip_311_testcontainers\":[{\"version\":\"3.11\"}]}",
                 "threadpoolctl": "{\"pip_311_threadpoolctl\":[{\"version\":\"3.11\"}]}",
                 "tokenizers": "{\"pip_311_tokenizers\":[{\"version\":\"3.11\"}]}",
                 "tomli": "{\"pip_311_tomli\":[{\"version\":\"3.11\"}]}",
@@ -5211,6 +5232,7 @@
                 "cryptography",
                 "deprecated",
                 "dnspython",
+                "docker",
                 "ecdsa",
                 "email_validator",
                 "exceptiongroup",
@@ -5289,6 +5311,7 @@
                 "sqlalchemy",
                 "starlette",
                 "sympy",
+                "testcontainers",
                 "threadpoolctl",
                 "tokenizers",
                 "tomli",

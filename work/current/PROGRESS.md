@@ -67,9 +67,26 @@ This will be addressed in the Docker integration phase.
 - [x] Fixed visibility for py_binary targets
 - [x] Ran `bazel mod tidy` to clean up MODULE.bazel
 
-### Next Steps:
-1. Create backend test rules (py_test)
-2. Configure frontend with aspect_rules_js
-3. Set up Docker build rules with rules_oci
-4. Update CI/CD workflows
-5. Update documentation
+### Phase 3: Backend Testing ✅
+- [x] **Implemented Testcontainers**: Integrated `testcontainers[postgres,redis]` to provide ephemeral databases for tests.
+- [x] **Configured Bazel Tests**: Updated `backend/tests/BUILD.bazel` with necessary environment variables and `requires-network` tags.
+- [x] **Verified All Tests**: Successfully ran all 9 backend test modules with `bazel test //backend/tests:all_backend_tests`.
+
+#### Phase 5: Frontend Build
+- **Status**: Completed
+- **Frontend Build**: Configured `frontend/BUILD.bazel` to wrap Angular CLI. Build works (`bazel build //frontend:build`).
+    - **Frontend Testing**: Configured `bazel test //frontend:test`.
+    - **Status**: **In Progress** (Dependency Hell Resolved).
+    - **Achievements**: Identified and installed ~50 phantom dependencies required by the Bazel sandbox (including full dependency trees for `postcss`, `fast-glob`, `micromatch`, `babel`). Addressed initial `MODULE_NOT_FOUND` errors.
+    - **Current Blocker**: Tests fail with "Web Test Runner is not installed" despite `@web/test-runner` being present in `package.json` and `node_modules`. This indicates a resolution path issue within the Angular builder in the Bazel environment.
+    - **Workaround**: Run tests locally using `pnpm ng test`. Local tests pass (144 tests passed).
+    - **Documentation**: Updated `docs/getting-started/frontend-setup.md` with the complete list of required phantom dependencies.
+  - Updated `MODULE.bazel` to use `rules_nodejs` 6.4.0 and Node.js v22.12.0.
+  - Added `pnpm.onlyBuiltDependencies` to `frontend/package.json`.
+  - Fixed code errors in `product-templates.ts` (imports) and `products.html` (event bindings).
+  - Verified successful build of the PWA.
+
+## Next Steps
+
+1.  **Frontend Testing**: Integrate Web Test Runner with Bazel (Phase 6).
+2.  **CI/CD**: Update GitHub Actions to use Bazel (Phase 8).

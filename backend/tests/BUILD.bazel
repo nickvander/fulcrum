@@ -23,7 +23,17 @@ py_test(
         requirement("pytest"),
         requirement("httpx"),
         requirement("faker"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -37,7 +47,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -51,7 +71,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -65,7 +95,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -80,7 +120,17 @@ py_test(
         requirement("pytest"),
         requirement("httpx"),
         requirement("faker"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -94,7 +144,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -108,7 +168,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 py_test(
@@ -122,7 +192,17 @@ py_test(
         "//backend/src:app_lib",
         requirement("pytest"),
         requirement("httpx"),
+        requirement("testcontainers"),
     ],
+    env = {
+        "BAZEL_TEST": "1",
+        "SECRET_KEY": "test_secret_key",
+        "FIRST_SUPERUSER_EMAIL": "admin@example.com",
+        "FIRST_SUPERUSER_PASSWORD": "password",
+        "DATABASE_URL": "postgresql://user:password@localhost:5432/db",
+        "REDIS_URL": "redis://localhost:6379/0",
+    },
+    tags = ["requires-network"],
 )
 
 # Test suite that runs all backend tests

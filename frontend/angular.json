@@ -33,7 +33,6 @@
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
-
             "assets": [
               {
                 "glob": "**/*",
@@ -96,7 +95,8 @@
               "zone.js/testing",
               "src/test.ts"
             ],
-            "tsConfig": "tsconfig.spec.json"
+            "tsConfig": "tsconfig.spec.json",
+            "preserveSymlinks": true
           }
         }
       }

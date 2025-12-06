@@ -24,6 +24,7 @@ py_library(
         requirement("flower"),
         requirement("slowapi"),
         requirement("argon2-cffi"),
+        requirement("email-validator"),
     ],
     visibility = ["//visibility:public"],
 )

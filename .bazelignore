@@ -2,3 +2,4 @@ node_modules/
 frontend/node_modules/
 .venv/
 backend/venv/
+frontend/dist/

@@ -6,8 +6,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
-import { ProductTemplateService } from '../services/product-template.service';
-import { ProductTemplate } from '../models/product-template.model';
+import { ProductTemplateService } from '../../services/product-template.service';
+import { ProductTemplate } from '../../models/product-template.model';
 
 @Component({
   selector: 'app-product-templates',
@@ -28,7 +28,7 @@ export class ProductTemplatesComponent implements OnInit {
   templates: ProductTemplate[] = [];
   isLoading: boolean = false;
 
-  constructor(private templateService: ProductTemplateService) {}
+  constructor(private templateService: ProductTemplateService) { }
 
   ngOnInit(): void {
     this.loadTemplates();
@@ -37,11 +37,11 @@ export class ProductTemplatesComponent implements OnInit {
   loadTemplates(): void {
     this.isLoading = true;
     this.templateService.getProductTemplates().subscribe({
-      next: (templates) => {
+      next: (templates: ProductTemplate[]) => {
         this.templates = templates;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading templates:', error);
         this.isLoading = false;
       }
@@ -54,7 +54,7 @@ export class ProductTemplatesComponent implements OnInit {
         next: () => {
           this.loadTemplates(); // Refresh the list
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error deleting template:', error);
         }
       });

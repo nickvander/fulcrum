@@ -18,9 +18,66 @@ from src.crud import crud_product, crud_product_image
 from src.schemas.product import ProductCreate, ProductImageCreate
 from src.api import dependencies
 
+
+# Check if running in Bazel
+IS_BAZEL = os.environ.get("BAZEL_TEST") == "1"
+
+if IS_BAZEL:
+    from testcontainers.postgres import PostgresContainer
+    from testcontainers.redis import RedisContainer
+
+
 # Use the database URL from the environment settings
 engine = create_engine(settings.DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture(scope="session", autouse=True)
+def test_containers():
+    """
+    Spin up containers if running in Bazel.
+    """
+    if not IS_BAZEL:
+        yield
+        return
+
+    # Start Postgres
+    postgres = PostgresContainer("postgres:16-alpine", driver="psycopg2")
+    postgres.start()
+    
+    # Enable vector extension
+    with postgres.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        conn.commit()
+
+    # Start Redis
+    redis = RedisContainer("redis:7-alpine")
+    redis.start()
+
+    # Update settings
+    # We need to patch the settings object or environment variables
+    # Since settings are likely already loaded, we might need to reload or patch
+    os.environ["DATABASE_URL"] = postgres.get_connection_url()
+    os.environ["REDIS_URL"] = f"redis://{redis.get_container_host_ip()}:{redis.get_exposed_port(6379)}/0"
+    
+    # Re-create engine with new URL
+    global engine, TestingSessionLocal
+    engine.dispose()
+    engine = create_engine(os.environ["DATABASE_URL"])
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    
+    # Update settings object if possible, or rely on env vars if code reads them dynamically
+    # Assuming settings reads from env vars, but might be cached.
+    # For now, let's assume re-creating engine is enough for DB access in tests
+    # But app code might use settings.DATABASE_URL
+    settings.DATABASE_URL = os.environ["DATABASE_URL"]
+    settings.REDIS_URL = os.environ["REDIS_URL"]
+
+    yield
+
+    postgres.stop()
+    redis.stop()
+
 
 @pytest.fixture(scope="session")
 def create_test_database():
