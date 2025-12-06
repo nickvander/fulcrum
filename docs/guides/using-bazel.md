@@ -115,28 +115,40 @@ bazel run //frontend/image:frontend_tarball
 docker compose -f docker-compose.bazel.yml up
 ```
 
-### Hybrid Approach (Recommended)
+### Local Development (Recommended)
 
-Due to a limitation with Bazel's `py_binary` runfiles packaging, the **recommended
-approach** is to use Bazel for the frontend container and traditional Docker for
-the backend:
+For local development, use the traditional docker-compose for backend and `ng serve`
+for frontend. This gives you the best experience with hot reloading and API proxy:
 
 ```bash
-# 1. Build and load the Bazel frontend image
-bazel run //frontend/image:frontend_tarball
+# 1. Start backend services
+docker compose up -d db redis backend
 
-# 2. Start traditional backend + Bazel frontend
-docker compose up -d backend db redis  # Traditional backend
-docker compose -f docker-compose.bazel.yml up -d frontend  # Bazel frontend
+# 2. Run migrations
+docker compose exec backend alembic upgrade head
+
+# 3. Start frontend with dev server (in another terminal)
+cd frontend && pnpm ng serve
 ```
 
 This gives you:
-- **Frontend**: http://localhost:4200 (Bazel-built nginx container)
-- **Backend API**: http://localhost:8000 (Traditional Docker)
+- **Frontend**: http://localhost:4200 (with hot reload + API proxy)
+- **Backend API**: http://localhost:8000
+
+### Production Containers
+
+For production, use the Bazel-built frontend container:
+
+```bash
+# Build the Bazel frontend image
+bazel run //frontend/image:frontend_tarball
+
+# The image is: fulcrum/frontend:latest (~55MB nginx-alpine)
+```
 
 > [!NOTE]
-> The backend container issue is documented in `work/current/MISSING_ITEMS.md`.
-> Future work may use `rules_pex` to create self-contained Python executables.
+> The Bazel backend container has a `py_binary` runfiles issue. Use traditional
+> Docker for backend until this is resolved with `rules_pex`.
 
 ### Container Build Configuration
 
