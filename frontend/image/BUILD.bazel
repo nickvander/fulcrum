@@ -6,16 +6,13 @@ pkg_tar(
     name = "app_layer",
     srcs = ["//frontend:build"],
     package_dir = "/usr/share/nginx/html",
-    strip_prefix = "dist/frontend/browser",
 )
 
 # Package the nginx configuration
 pkg_tar(
     name = "config_layer",
-    srcs = ["nginx.conf"],
+    srcs = ["default.conf"],
     package_dir = "/etc/nginx/conf.d",
-    # Replace default.conf with our SPA-optimized config
-    remap_paths = {"nginx.conf": "default.conf"},
 )
 
 # Create the OCI image

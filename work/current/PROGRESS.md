@@ -106,13 +106,19 @@ After research into the "Web Test Runner is not installed" error, determined tha
 ### Phase 7: Frontend Container ✅
 
 Built nginx-based Docker container for Angular PWA:
-- Created `frontend/image/nginx.conf` with SPA routing, gzip, caching, PWA support
+- Created `frontend/image/default.conf` with SPA routing, gzip, caching, PWA support
 - Created `frontend/image/BUILD.bazel` with `pkg_tar`, `oci_image`, `oci_load` rules
 - Updated `docker-compose.bazel.yml` with frontend service
-- Image: `fulcrum/frontend:latest` (54.5MB)
+- Image: `fulcrum/frontend:latest` (~55MB)
+- Fixed nginx root path to match Bazel output directory structure
+
+**Backend Container Issue**: The Bazel-built backend container fails due to py_binary
+runfiles packaging. The bootstrap script needs `.runfiles` directory which isn't
+correctly packaged. **Decision**: Use hybrid approach - Bazel frontend, traditional
+Docker for backend.
 
 ## Next Steps
 
 1.  **CI/CD**: Update GitHub Actions to use Bazel (Phase 8).
-2.  **Documentation**: Complete README and CONTRIBUTING updates (Phase 9).
-3.  **Verification**: Container integration testing (Phase 10).
+2.  **Backend Container**: Fix py_binary packaging with rules_pex (future).
+3.  **Documentation**: Complete README and CONTRIBUTING updates (Phase 9).

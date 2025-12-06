@@ -108,13 +108,35 @@ docker images | grep fulcrum
 The project includes `docker-compose.bazel.yml` for using Bazel-built images:
 
 ```bash
-# Build both images first
-bazel run //backend/image:backend_tarball
+# Build the frontend image
 bazel run //frontend/image:frontend_tarball
 
-# Start services with Bazel-built images
+# Start services (frontend from Bazel, backend from traditional Docker)
 docker compose -f docker-compose.bazel.yml up
 ```
+
+### Hybrid Approach (Recommended)
+
+Due to a limitation with Bazel's `py_binary` runfiles packaging, the **recommended
+approach** is to use Bazel for the frontend container and traditional Docker for
+the backend:
+
+```bash
+# 1. Build and load the Bazel frontend image
+bazel run //frontend/image:frontend_tarball
+
+# 2. Start traditional backend + Bazel frontend
+docker compose up -d backend db redis  # Traditional backend
+docker compose -f docker-compose.bazel.yml up -d frontend  # Bazel frontend
+```
+
+This gives you:
+- **Frontend**: http://localhost:4200 (Bazel-built nginx container)
+- **Backend API**: http://localhost:8000 (Traditional Docker)
+
+> [!NOTE]
+> The backend container issue is documented in `work/current/MISSING_ITEMS.md`.
+> Future work may use `rules_pex` to create self-contained Python executables.
 
 ### Container Build Configuration
 
