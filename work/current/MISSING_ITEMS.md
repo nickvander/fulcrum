@@ -63,13 +63,14 @@
 - [x] Run bazel mod tidy
 - [~] Container runtime works (py_binary runfiles issue - use traditional Docker for now)
 
-### Frontend Container ✅ COMPLETE
+### Frontend Container ✅ COMPLETE (with limitations)
 - [x] Create frontend/image/BUILD.bazel
-- [x] Configure nginx.conf
+- [x] Configure default.conf (nginx)
 - [x] Package Angular build output
 - [x] Configure oci_image for frontend
 - [x] Configure oci_load for Docker export
 - [x] Test frontend container build
+- [~] Docker network limitation when running hybrid (documented)
 
 ### Test Containers ✅ COMPLETE
 - [x] Configure PostgreSQL test container with pgvector
