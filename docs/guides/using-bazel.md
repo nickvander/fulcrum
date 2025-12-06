@@ -146,6 +146,15 @@ bazel run //frontend/image:frontend_tarball
 # The image is: fulcrum/frontend:latest (~55MB nginx-alpine)
 ```
 
+> [!WARNING]
+> **Frontend Container Networking Limitation**: The Bazel-built frontend container
+> uses nginx to proxy `/api/` requests to the backend. However, when running from
+> `docker-compose.bazel.yml` while the backend runs from `docker-compose.yml`,
+> they are on different Docker networks and cannot communicate. For local
+> development, use `ng serve` which has a working API proxy. The Bazel frontend
+> container is designed for production deployments where networking is configured
+> at the infrastructure level.
+
 > [!NOTE]
 > The Bazel backend container has a `py_binary` runfiles issue. Use traditional
 > Docker for backend until this is resolved with `rules_pex`.
