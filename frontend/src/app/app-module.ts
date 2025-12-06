@@ -2,7 +2,8 @@ import { NgModule, provideBrowserGlobalErrorListeners, isDevMode } from '@angula
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, HttpClientModule } from '@angular/common/http';
+
 
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
@@ -21,6 +22,7 @@ import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
+    HttpClientModule,
     CoreModule,
     AuthModule,
     ServiceWorkerModule.register('ngsw-worker.js', {

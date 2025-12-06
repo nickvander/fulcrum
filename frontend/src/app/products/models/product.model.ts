@@ -43,6 +43,15 @@ export interface ProductVariant {
   updated_at?: string;
 }
 
+export interface MarketplaceListing {
+  id: number;
+  product_id: number;
+  marketplace_id: number;
+  external_listing_id?: string;
+  listing_url?: string;
+  status?: string;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -65,4 +74,5 @@ export interface Product {
   primary_image?: ProductImage;
   custom_fields?: ProductCustomField[];
   variants?: ProductVariant[];
+  marketplace_listings?: MarketplaceListing[];
 }

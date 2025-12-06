@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
@@ -41,6 +42,7 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
     MatTooltipModule,
     ProductFormImageGalleryComponent,
     ProductVariantsComponent,
+    MatTabsModule
   ],
 })
 export class ProductForm implements OnInit {
@@ -558,6 +560,16 @@ export class ProductForm implements OnInit {
           }
         });
       }
+    }
+  }
+
+  getMarketplaceName(id: number): string {
+    switch (id) {
+      case 1: return 'Amazon';
+      case 2: return 'eBay';
+      case 3: return 'Shopify';
+      case 4: return 'MercadoLibre';
+      default: return 'Marketplace ' + id;
     }
   }
 

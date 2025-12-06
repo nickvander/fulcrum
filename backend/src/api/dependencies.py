@@ -103,7 +103,7 @@ def get_current_active_superuser(
 def get_current_admin(
     current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:
-    if current_user.user_type != "admin":
+    if current_user.user_type != "admin" and not crud.user.is_superuser(current_user):
         raise HTTPException(
             status_code=403, detail="The user doesn't have admin privileges"
         )

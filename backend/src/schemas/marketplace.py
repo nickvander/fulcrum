@@ -15,3 +15,15 @@ class Marketplace(MarketplaceBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class MarketplaceListingBase(BaseModel):
+    product_id: int
+    marketplace_id: int
+    external_listing_id: Optional[str] = None
+    listing_url: Optional[str] = None
+    status: Optional[str] = None
+
+class MarketplaceListing(MarketplaceListingBase):
+    id: int
+    
+    model_config = ConfigDict(from_attributes=True)

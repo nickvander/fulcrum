@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 
 import { environment } from '../../../environments/environment';
 import { User } from '../../shared/models/user.model';
@@ -52,6 +52,23 @@ export class AuthService {
 
   public isLoggedIn(): boolean {
     return this.hasToken();
+  }
+
+  public isAdmin(): Observable<boolean> {
+    return this.isAuthenticated$.pipe(
+      map(isAuthenticated => {
+        if (!isAuthenticated) return false;
+        const token = this.getToken();
+        if (!token) return false;
+        try {
+          // Simple payload decode to check role
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          return payload.user_type === 'admin' || payload.is_superuser === true;
+        } catch (e) {
+          return false;
+        }
+      })
+    );
   }
 
   private hasToken(): boolean {

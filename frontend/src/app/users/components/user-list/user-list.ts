@@ -40,8 +40,7 @@ import { UserBulkImportDialogComponent } from '../user-bulk-import-dialog/user-b
     MatSelectModule,
     MatTooltipModule,
     MatProgressBarModule,
-    MatMenuModule,
-    UserBulkImportDialogComponent
+    MatMenuModule
   ],
 })
 export class UserList implements OnInit, AfterViewInit {
