@@ -1,7 +1,7 @@
 export interface UserAuditLog {
   id: number;
-  user_id: number;
-  action_performed_by: number;
+  user_id: number | null;
+  action_performed_by: number | null;
   action: string;
   details: string;
   ip_address?: string;

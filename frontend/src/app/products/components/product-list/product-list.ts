@@ -14,6 +14,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { Subject, takeUntil } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -31,6 +34,9 @@ import { BatchOperationsService } from '../../services/batch-operations.service'
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductComparisonService } from '../../services/product-comparison.service';
 import { ProductComparisonComponent } from '../product-comparison/product-comparison';
+
+import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
+import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 
 @Component({
   selector: 'app-product-list',
@@ -55,15 +61,30 @@ import { ProductComparisonComponent } from '../product-comparison/product-compar
     BatchActionToolbarComponent,
     ProductForm,
     PaginationComponent,
-    ProductFiltersComponent
+    ProductFiltersComponent,
+    MatTableModule,
+    MatSortModule,
+    MatButtonToggleModule,
+    MarketplaceStatusComponent,
+    AiSearchBar
   ],
 })
 export class ProductList implements OnInit, OnDestroy {
   @ViewChild('sidenav') sidenav!: MatSidenav;
   @ViewChild('filterSidenav') filterSidenav!: MatSidenav;
+  @ViewChild(MatSort) sort!: MatSort;
 
   products: Product[] = [];
   paginatedProducts: PaginatedProducts | null = null;
+  currentSearchQuery: string = '';
+
+  // Table View Data Source
+  dataSource: MatTableDataSource<Product> = new MatTableDataSource();
+  displayedColumns: string[] = ['select', 'image', 'name', 'sku', 'price', 'stock', 'marketplaces', 'actions'];
+
+  // View/UI State
+  viewMode: 'grid' | 'list' = 'grid';
+
   selectedProducts = new Set<number>(); // Store IDs of selected products
   selectedProductForEdit: Product | null = null;
   isEditing = false;
@@ -186,7 +207,6 @@ export class ProductList implements OnInit, OnDestroy {
             }
           });
       } else {
-        // Use the regular getProducts endpoint with pagination and filters
         this.productService.getProducts(page, size, this.activeFilters)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
@@ -266,17 +286,17 @@ export class ProductList implements OnInit, OnDestroy {
   onSearchQuery(query: string): void {
     if (query) {
       // Update active filters to include search query
-      this.activeFilters.search_term = query;
+      this.activeFilters.q = query;
       this.loadProducts(1, this.pageSize);
     } else {
       // Remove search term from filters if query is empty
-      delete this.activeFilters.search_term;
+      delete this.activeFilters.q;
       this.loadProducts(1, this.pageSize);
     }
   }
 
   clearSearch(): void {
-    delete this.activeFilters.search_term;
+    delete this.activeFilters.q;
     this.loadProducts(1, this.pageSize);
   }
 
@@ -342,7 +362,24 @@ export class ProductList implements OnInit, OnDestroy {
             }
           });
       }
-    });
+    }); // Closes dialogRef.afterClosed().subscribe
+  } // Closes deleteSelected
+
+  updateDataSource(): void {
+    this.dataSource.data = this.products;
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+    }
+  }
+
+  setViewMode(mode: 'grid' | 'list'): void {
+    this.viewMode = mode;
+    // If switching to list, ensure data source is updated and sorted
+    if (mode === 'list') {
+      setTimeout(() => {
+        this.updateDataSource();
+      });
+    }
   }
 
   onAddProduct(): void {
@@ -411,8 +448,6 @@ export class ProductList implements OnInit, OnDestroy {
       this.sidenav?.open();
     }, 0);
   }
-
-
 
   closeEditPanel(): void {
     this.sidenav?.close();

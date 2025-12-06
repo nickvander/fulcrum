@@ -33,5 +33,5 @@ class MarketplaceListing(Base):
     listing_url = Column(String)
     status = Column(String)
 
-    product = relationship("Product")
+    product = relationship("Product", back_populates="marketplace_listings")
     marketplace = relationship("Marketplace")

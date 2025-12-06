@@ -9,118 +9,179 @@
       </div>
     </div>
 
-    <div class="form-columns">
-      <!-- Left Column -->
-      <div class="form-column">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Core Details</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <mat-form-field>
-              <mat-label>Name</mat-label>
-              <input matInput formControlName="name" placeholder="Product Name">
-            </mat-form-field>
+    <mat-tab-group animationDuration="0ms" class="product-tabs">
+      <!-- Tab 1: Product Details -->
+      <mat-tab label="Product Details">
+        <div class="form-columns">
+          <!-- Left Column -->
+          <div class="form-column">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Core Details</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field>
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" placeholder="Product Name">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>SKU</mat-label>
-              <input matInput formControlName="sku" placeholder="Product SKU">
-            </mat-form-field>
+                <mat-form-field>
+                  <mat-label>SKU</mat-label>
+                  <input matInput formControlName="sku" placeholder="Product SKU">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
-            </mat-form-field>
-          </mat-card-content>
-        </mat-card>
+                <mat-form-field>
+                  <mat-label>Description</mat-label>
+                  <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
 
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Pricing & Supplier</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <mat-form-field>
-              <mat-label>Resale Price</mat-label>
-              <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
-            </mat-form-field>
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Pricing & Supplier</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <mat-form-field>
+                  <mat-label>Resale Price</mat-label>
+                  <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>Cost Price</mat-label>
-              <input matInput formControlName="cost_price" type="number" placeholder="0.00">
-            </mat-form-field>
-          </mat-card-content>
-        </mat-card>
+                <mat-form-field>
+                  <mat-label>Cost Price</mat-label>
+                  <input matInput formControlName="cost_price" type="number" placeholder="0.00">
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
 
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Dimensions & Weight</mat-card-title>
-          </mat-card-header>
-          <mat-card-content class="dimensions-grid">
-            <mat-form-field>
-              <mat-label>Width</mat-label>
-              <input matInput formControlName="width" type="number" placeholder="0.00">
-            </mat-form-field>
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Dimensions & Weight</mat-card-title>
+              </mat-card-header>
+              <mat-card-content class="dimensions-grid">
+                <mat-form-field>
+                  <mat-label>Width</mat-label>
+                  <input matInput formControlName="width" type="number" placeholder="0.00">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>Height</mat-label>
-              <input matInput formControlName="height" type="number" placeholder="0.00">
-            </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Height</mat-label>
+                  <input matInput formControlName="height" type="number" placeholder="0.00">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>Depth</mat-label>
-              <input matInput formControlName="depth" type="number" placeholder="0.00">
-            </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Depth</mat-label>
+                  <input matInput formControlName="depth" type="number" placeholder="0.00">
+                </mat-form-field>
 
-            <mat-form-field>
-              <mat-label>Weight</mat-label>
-              <input matInput formControlName="weight" type="number" placeholder="0.00">
-            </mat-form-field>
-          </mat-card-content>
-        </mat-card>
-      </div>
+                <mat-form-field>
+                  <mat-label>Weight</mat-label>
+                  <input matInput formControlName="weight" type="number" placeholder="0.00">
+                </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+          </div>
 
-      <!-- Right Column -->
-      <div class="form-column">
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Images</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <app-product-form-image-gallery [existingImages]="product?.images || []" [stagedImages]="stagedImages"
-              [stagedImagePreviews]="stagedImagePreviews" [productId]="productId"
-              (stagedImagesChange)="onStagedImagesChange($event)"
-              (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
-              (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
-              (imageUpdated)="onImageUpdated($event)"
-              (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
-          </mat-card-content>
-        </mat-card>
+          <!-- Right Column -->
+          <div class="form-column">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Images</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <app-product-form-image-gallery [existingImages]="product?.images || []" [stagedImages]="stagedImages"
+                  [stagedImagePreviews]="stagedImagePreviews" [productId]="productId"
+                  (stagedImagesChange)="onStagedImagesChange($event)"
+                  (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
+                  (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
+                  (imageUpdated)="onImageUpdated($event)"
+                  (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
+              </mat-card-content>
+            </mat-card>
 
-        <mat-card *ngIf="customFields.length > 0">
-          <mat-card-header>
-            <mat-card-title>Custom Fields</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <div *ngFor="let field of customFields">
-              <mat-form-field>
-                <mat-label>{{ field.name }}</mat-label>
-                <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
-              </mat-form-field>
-            </div>
-          </mat-card-content>
-        </mat-card>
+            <mat-card *ngIf="customFields.length > 0">
+              <mat-card-header>
+                <mat-card-title>Custom Fields</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div *ngFor="let field of customFields">
+                  <mat-form-field>
+                    <mat-label>{{ field.name }}</mat-label>
+                    <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
+                  </mat-form-field>
+                </div>
+              </mat-card-content>
+            </mat-card>
 
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>Product Variants</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <app-product-variants [productVariants]="productVariants" (variantsChanged)="productVariants = $event"
-              (addVariant)="onAddVariant()">
-            </app-product-variants>
-          </mat-card-content>
-        </mat-card>
-      </div>
-    </div>
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Product Variants</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <app-product-variants [productVariants]="productVariants" (variantsChanged)="productVariants = $event"
+                  (addVariant)="onAddVariant()">
+                </app-product-variants>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 2: Channels -->
+      <mat-tab label="Channels">
+        <div class="channels-tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Active Listings</mat-card-title>
+              <mat-card-subtitle>Manage product availability across marketplaces</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="listings-list">
+                <mat-list>
+                  <mat-list-item *ngFor="let listing of product?.marketplace_listings" class="listing-item">
+                    <mat-icon matListItemIcon>store</mat-icon>
+                    <h3 matListItemTitle class="listing-title">
+                      {{ getMarketplaceName(listing.marketplace_id) }}
+                      <span class="status-badge" [class.active]="listing.status === 'active'"
+                        [class.error]="listing.status === 'error'" [class.pending]="listing.status === 'pending'">{{
+                        listing.status | titlecase }}</span>
+                    </h3>
+                    <p matListItemLine>
+                      External ID: {{ listing.external_listing_id || 'N/A' }} |
+                      <a *ngIf="listing.listing_url" [href]="listing.listing_url" target="_blank"
+                        (click)="$event.stopPropagation()">View Listing</a>
+                    </p>
+                    <button mat-icon-button matListItemMeta>
+                      <mat-icon>open_in_new</mat-icon>
+                    </button>
+                  </mat-list-item>
+
+                  <mat-list-item *ngIf="!product?.marketplace_listings?.length">
+                    <mat-icon matListItemIcon>info</mat-icon>
+                    <div matListItemTitle>No active listings</div>
+                    <div matListItemLine>This product is not listed on any marketplace yet.</div>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+
+              <div class="channel-actions">
+                <h3>Available Channels</h3>
+                <div class="action-buttons">
+                  <button mat-stroked-button>
+                    <mat-icon>add</mat-icon> Publish to Amazon
+                  </button>
+                  <button mat-stroked-button>
+                    <mat-icon>add</mat-icon> Publish to eBay
+                  </button>
+                  <button mat-stroked-button>
+                    <mat-icon>add</mat-icon> Publish to Shopify
+                  </button>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
   </form>
 </div>

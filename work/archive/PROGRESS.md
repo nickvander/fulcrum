@@ -1976,3 +1976,26 @@ Successfully implemented a comprehensive End-to-End (E2E) testing suite using Pl
 **Next Steps:**
 - Investigate root cause of `product-list.spec.ts` hang (likely deep dependency or `StockHistoryDialog` interaction).
 - Continue with remaining items in `MISSING_ITEMS.md`.
+
+## 2025-12-05
+
+### Session: Audit Log Consolidation & Bootstrap Error Fix
+
+**Status:** Completed
+
+**Accomplishments:**
+-   **Audit Log Consolidation:** Removed redundant `/admin/audit-logs` route and
+    component. Audit logs are now accessed exclusively via `/users/audit-logs`.
+-   **JIT Compilation Fix:** Changed `main.ts` to use `platformBrowserDynamic`
+    instead of `platformBrowser` to enable JIT compilation for dev server.
+-   **Missing Method Fix:** Implemented `isAdmin()` method in `AuthService`.
+-   **Circular Dependency Fix:** Refactored `AuthInterceptor` to read JWT
+    directly from localStorage.
+-   **Safety Net:** Added global error handler to `main.ts` to surface runtime
+    errors on screen.
+
+**Verification:**
+-   ✅ Dev server starts successfully
+-   ✅ Login page loads correctly
+-   ✅ Audit logs accessible via Users section
+

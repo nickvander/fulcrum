@@ -21,7 +21,7 @@ def read_audit_logs(
     action: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    current_user: User = Depends(dependencies.get_current_active_superuser),
+    current_user: User = Depends(dependencies.get_current_active_user),
 ) -> Any:
     """
     Retrieve audit logs.

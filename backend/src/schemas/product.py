@@ -5,6 +5,7 @@ from datetime import datetime
 from ..schemas.custom_field import ProductCustomField
 from ..schemas.inventory import InventoryItem as InventoryItemSchema, InventoryAdjustment as InventoryAdjustmentSchema
 from ..schemas.product_variant import ProductVariant
+from ..schemas.marketplace import MarketplaceListing
 
 
 # Schema for Product Images
@@ -80,6 +81,7 @@ class Product(ProductBase):
     weight: Optional[float] = None
     custom_fields: List[ProductCustomField] = []
     variants: List[ProductVariant] = []
+    marketplace_listings: List[MarketplaceListing] = []
     created_at: datetime
     updated_at: datetime
 
@@ -87,3 +89,12 @@ class Product(ProductBase):
         from_attributes=True,
         json_encoders={datetime: lambda v: v.isoformat() if v else None}
     )
+
+class PaginatedProducts(BaseModel):
+    data: List[Product]
+    currentPage: int
+    totalPages: int
+    totalItems: int
+    pageSize: int
+    hasNextPage: bool
+    hasPrevPage: bool

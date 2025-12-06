@@ -74,7 +74,15 @@ class ProductFiltersStubComponent { }
 })
 class InfiniteScrollStubDirective { }
 
-xdescribe('ProductList', () => {
+@Component({
+  selector: 'app-marketplace-status',
+  template: '',
+  standalone: true,
+  inputs: ['listings']
+})
+class MarketplaceStatusStubComponent { }
+
+describe('ProductList', () => {
   let component: ProductList;
   let fixture: ComponentFixture<ProductList>;
   let productServiceMock: jasmine.SpyObj<ProductService>;
@@ -187,7 +195,8 @@ xdescribe('ProductList', () => {
             BatchActionToolbarStubComponent,
             PaginationStubComponent,
             ProductFiltersStubComponent,
-            InfiniteScrollStubDirective
+            InfiniteScrollStubDirective,
+            MarketplaceStatusStubComponent,
           ],
           schemas: [CUSTOM_ELEMENTS_SCHEMA]
         }

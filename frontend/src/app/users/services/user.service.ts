@@ -40,7 +40,7 @@ export class UserService {
       if (params.search) httpParams = httpParams.set('search', params.search);
     }
 
-    return this.http.get<User[]>(this.apiUrl, { params: httpParams });
+    return this.http.get<User[]>(`${this.apiUrl}/`, { params: httpParams });
   }
 
   getUser(id: number): Observable<User> {
@@ -52,7 +52,7 @@ export class UserService {
   }
 
   createUser(user: CreateUserRequest): Observable<User> {
-    return this.http.post<User>(this.apiUrl, user);
+    return this.http.post<User>(`${this.apiUrl}/`, user);
   }
 
   deleteUser(id: number): Observable<any> {

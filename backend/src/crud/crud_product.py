@@ -12,40 +12,44 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100, filters: dict = {}
     ) -> List[Product]:
-        query = db.query(self.model).options(joinedload(self.model.images))
+        query = db.query(self.model).options(
+            joinedload(self.model.images),
+            joinedload(self.model.marketplace_listings),
+            joinedload(self.model.inventory_items)
+        )
         
         # Apply filters if provided
         if filters:
             for field, value in filters.items():
-                if hasattr(self.model, field):
-                    if isinstance(value, dict) and 'min' in value and 'max' in value:
-                        # Handle min/max ranges
+                if field == 'search_term':
+                    from sqlalchemy import or_
+                    query = query.filter(
+                        or_(
+                            self.model.name.ilike(f"%{value}%"),
+                            self.model.sku.ilike(f"%{value}%"),
+                            self.model.description.ilike(f"%{value}%")
+                        )
+                    )
+                elif field == 'min_price':
+                    query = query.filter(self.model.default_resale_price >= value)
+                elif field == 'max_price':
+                    query = query.filter(self.model.default_resale_price <= value)
+                elif field == 'min_stock':
+                     # optimized stock query needed
+                     pass
+                elif field == 'max_stock':
+                     # optimized stock query needed
+                     pass
+                elif field == 'category':
+                    query = query.filter(self.model.category == value)
+                elif field == 'brand':
+                    query = query.filter(self.model.brand == value)
+                elif isinstance(value, dict) and 'min' in value and 'max' in value:
+                     if hasattr(self.model, field):
                         attr = getattr(self.model, field)
                         query = query.filter(attr >= value['min'], attr <= value['max'])
-                    elif field == 'category':
-                        query = query.filter(self.model.category == value)
-                    elif field == 'brand':
-                        query = query.filter(self.model.brand == value)
-                    elif field == 'min_price':
-                        query = query.filter(self.model.default_resale_price >= value)
-                    elif field == 'max_price':
-                        query = query.filter(self.model.default_resale_price <= value)
-                    elif field == 'min_stock':
-                        # This would require joining with inventory_items
-                        pass
-                    elif field == 'max_stock':
-                        # This would require joining with inventory_items
-                        pass
-                    elif field == 'search_term':
-                        # This would be for search functionality
-                        from sqlalchemy import or_
-                        query = query.filter(
-                            or_(
-                                self.model.name.ilike(f"%{value}%"),
-                                self.model.sku.ilike(f"%{value}%"),
-                                self.model.description.ilike(f"%{value}%")
-                            )
-                        )
+                elif hasattr(self.model, field):
+                    query = query.filter(getattr(self.model, field) == value)
         
         return (
             query
@@ -57,34 +61,46 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_multi_paginated(
         self, db: Session, *, skip: int = 0, limit: int = 10, filters: dict = {}
     ) -> dict:
-        query = db.query(self.model).options(joinedload(self.model.images))
+        print(f"DEBUG: get_multi_paginated called with filters={filters}")
+        query = db.query(self.model).options(
+            joinedload(self.model.images),
+            joinedload(self.model.marketplace_listings),
+            joinedload(self.model.inventory_items)
+        )
         
+        # Apply filters if provided
         # Apply filters if provided
         if filters:
             for field, value in filters.items():
-                if hasattr(self.model, field):
-                    if isinstance(value, dict) and 'min' in value and 'max' in value:
-                        # Handle min/max ranges
+                if field == 'search_term':
+                    from sqlalchemy import or_
+                    query = query.filter(
+                        or_(
+                            self.model.name.ilike(f"%{value}%"),
+                            self.model.sku.ilike(f"%{value}%"),
+                            self.model.description.ilike(f"%{value}%")
+                        )
+                    )
+                elif field == 'min_price':
+                    query = query.filter(self.model.default_resale_price >= value)
+                elif field == 'max_price':
+                    query = query.filter(self.model.default_resale_price <= value)
+                elif field == 'min_stock':
+                     # optimized stock query needed
+                     pass
+                elif field == 'max_stock':
+                     # optimized stock query needed
+                     pass
+                elif field == 'category':
+                    query = query.filter(self.model.category == value)
+                elif field == 'brand':
+                    query = query.filter(self.model.brand == value)
+                elif isinstance(value, dict) and 'min' in value and 'max' in value:
+                     if hasattr(self.model, field):
                         attr = getattr(self.model, field)
                         query = query.filter(attr >= value['min'], attr <= value['max'])
-                    elif field == 'category':
-                        query = query.filter(self.model.category == value)
-                    elif field == 'brand':
-                        query = query.filter(self.model.brand == value)
-                    elif field == 'min_price':
-                        query = query.filter(self.model.default_resale_price >= value)
-                    elif field == 'max_price':
-                        query = query.filter(self.model.default_resale_price <= value)
-                    elif field == 'search_term':
-                        # This would be for search functionality
-                        from sqlalchemy import or_
-                        query = query.filter(
-                            or_(
-                                self.model.name.ilike(f"%{value}%"),
-                                self.model.sku.ilike(f"%{value}%"),
-                                self.model.description.ilike(f"%{value}%")
-                            )
-                        )
+                elif hasattr(self.model, field):
+                    query = query.filter(getattr(self.model, field) == value)
         
         total_items = query.count()
         data = query.offset(skip).limit(limit).all()

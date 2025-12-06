@@ -15,12 +15,13 @@ from src.tasks import generate_product_embedding
 router = APIRouter()
 
 
-@router.get("", response_model=List[product_schema.Product])
+@router.get("", response_model=product_schema.PaginatedProducts)
 def read_products(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
     sku: str = None,
+    q: str = None,
 ):
     """
     Retrieve products.
@@ -29,8 +30,22 @@ def read_products(
         products = crud_product.product.get_by_sku(db, sku=sku)
         if not products:
             raise HTTPException(status_code=404, detail="Product not found")
-        return [products]
-    products = crud_product.product.get_multi(db, skip=skip, limit=limit)
+        # Wrap single product in paginated response
+        return {
+            "data": [products],
+            "currentPage": 1,
+            "totalPages": 1,
+            "totalItems": 1,
+            "pageSize": 1,
+            "hasNextPage": False,
+            "hasPrevPage": False
+        }
+    
+    filters = {}
+    if q:
+        filters['search_term'] = q
+        
+    products = crud_product.product.get_multi_paginated(db, skip=skip, limit=limit, filters=filters)
     return products
 
 

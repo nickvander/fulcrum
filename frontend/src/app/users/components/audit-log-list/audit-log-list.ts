@@ -12,7 +12,8 @@ import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-audit-log-list',
@@ -78,35 +79,43 @@ export class AuditLogList implements OnInit {
     const actorIds = new Set<number>();
 
     auditLogs.forEach(log => {
-      userIds.add(log.user_id);
-      actorIds.add(log.action_performed_by);
+      if (log.user_id) userIds.add(log.user_id);
+      if (log.action_performed_by) actorIds.add(log.action_performed_by);
     });
 
     const userIdsArray = Array.from(userIds);
     const actorIdsArray = Array.from(actorIds);
 
     // Fetch user details for both affected users and actors
-    const userRequests = userIdsArray.map(id => this.userService.getUser(id));
-    const actorRequests = actorIdsArray.map(id => this.userService.getUser(id));
+    const userRequests = userIdsArray.map(id =>
+      this.userService.getUser(id).pipe(catchError(() => of(null)))
+    );
+    const actorRequests = actorIdsArray.map(id =>
+      this.userService.getUser(id).pipe(catchError(() => of(null)))
+    );
 
     forkJoin([...userRequests, ...actorRequests]).subscribe(results => {
       // Create mapping of user ID to email
       const userMap: { [key: number]: string } = {};
 
       // Process users first (results from userRequests)
-      results.slice(0, userRequests.length).forEach((user, index) => {
-        userMap[userIdsArray[index]] = user.email;
+      results.slice(0, userRequests.length).forEach((user: any, index) => {
+        if (user) {
+          userMap[userIdsArray[index]] = user.email;
+        }
       });
 
       // Process actors next (results from actorRequests)
-      results.slice(userRequests.length).forEach((user, index) => {
-        userMap[actorIdsArray[index]] = user.email;
+      results.slice(userRequests.length).forEach((user: any, index) => {
+        if (user) {
+          userMap[actorIdsArray[index]] = user.email;
+        }
       });
 
       // Update audit logs with user/actor emails
       auditLogs.forEach(log => {
-        log.user_email = userMap[log.user_id] || 'Unknown';
-        log.actor_email = userMap[log.action_performed_by] || 'System';
+        log.user_email = log.user_id ? (userMap[log.user_id] || 'Unknown') : 'System/Deleted';
+        log.actor_email = log.action_performed_by ? (userMap[log.action_performed_by] || 'System') : 'System';
       });
 
       // Update the data source
