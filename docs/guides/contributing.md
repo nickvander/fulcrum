@@ -56,6 +56,26 @@ itself.
     - To check for formatting issues: `npm run lint:md`
     - To automatically fix formatting issues: `npm run format:md`
 
+## Building with Bazel (Optional)
+
+Fulcrum supports [Bazel](https://bazel.build/) as an alternative build system
+for faster incremental builds and reproducible containers.
+
+```bash
+# Build frontend and backend
+bazel build //frontend:build
+bazel build //backend/src:main
+
+# Run tests
+bazel test //backend/tests:test_fast_dummy
+
+# Build Docker images
+bazel run //frontend/image:frontend_tarball
+```
+
+See **[Building with Bazel](./using-bazel.md)** for comprehensive documentation
+including Docker integration and troubleshooting.
+
 ## Contributing to the Documentation
 
 ### Tech Stack
