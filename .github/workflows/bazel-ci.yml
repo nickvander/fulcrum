@@ -1,0 +1,70 @@
+name: Bazel CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'MODULE.bazel'
+      - '.bazelrc'
+      - '.github/workflows/bazel-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'MODULE.bazel'
+      - '.bazelrc'
+
+jobs:
+  bazel-build:
+    name: Bazel Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Build Backend
+        run: bazel build //backend/src:main //backend/src:celery_worker
+
+      - name: Build Frontend
+        run: bazel build //frontend:build
+
+      - name: Build Frontend Container
+        run: bazel build //frontend/image:frontend_image
+
+  bazel-test:
+    name: Bazel Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: ${{ github.workflow }}-test-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+
+      - name: Run Backend Fast Tests
+        run: bazel test //backend/tests:test_fast_dummy --test_output=errors

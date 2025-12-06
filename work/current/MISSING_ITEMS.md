@@ -84,16 +84,15 @@
 - [x] Maintain backward compatibility
 - [x] **Hybrid approach**: Frontend from Bazel, backend from traditional Docker
 
-## Phase 8: CI/CD Integration 🚧 NOT STARTED
+## Phase 8: CI/CD Integration 🚧 IN PROGRESS
 
 ### GitHub Actions Updates
-- [ ] Update .github/workflows/backend-tests.yml
-  - [ ] Install Bazel (or use bazelisk)
-  - [ ] Replace pytest with bazel test
-  - [ ] Configure environment for Docker containers
-- [ ] Update .github/workflows/frontend-tests.yml
-  - [ ] Replace Web Test Runner with bazel test
-- [ ] Update .github/workflows/e2e-tests.yml (if needed)
+- [x] Create .github/workflows/bazel-ci.yml for Bazel builds
+  - [x] Install Bazel using setup-bazel action
+  - [x] Configure caching (disk, repository, bazelisk)
+  - [x] Build backend and frontend targets
+  - [x] Run backend fast tests
+- [ ] Update existing workflows to optionally use Bazel (future)
 - [ ] Create .github/workflows/bazel-build.yml for general builds
 
 ### Performance Optimization
