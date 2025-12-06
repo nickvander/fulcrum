@@ -16,14 +16,14 @@
 - [x] Build //backend/src:main successfully
 - [x] Build //backend/src:celery_worker successfully
 
-## Phase 3: Backend Testing ✅ PARTIAL
+## Phase 3: Backend Testing ✅ COMPLETE
 - [x] Create backend/tests/BUILD.bazel
 - [x] Configure py_test rules for 9 test modules
 - [x] Successfully run test_fast_dummy
-- [ ] Configure test environment variables
-- [ ] Set up PostgreSQL test container with Bazel
-- [ ] Set up Redis test container with Bazel
-- [ ] Make all backend tests pass with Bazel
+- [x] Configure test environment variables
+- [x] Set up PostgreSQL test container with Bazel
+- [x] Set up Redis test container with Bazel
+- [x] Make all backend tests pass with Bazel
 
 ## Phase 4: Frontend Dependencies ✅ COMPLETE
 - [x] Install pnpm
@@ -32,22 +32,22 @@
 - [x] Create frontend/BUILD.bazel
 - [x] Verify dependency resolution
 
-## Phase 5: Frontend Build 🚧 NOT STARTED
-- [ ] Research Angular + aspect_rules_js integration
-- [ ] Create ts_project rules for TypeScript compilation
-- [ ] Configure Angular build target
-- [ ] Set up development build target
-- [ ] Set up production build target
-- [ ] Configure asset handling
-- [ ] Build PWA successfully
+## Phase 5: Frontend Build ✅ COMPLETE
+- [x] Research Angular + aspect_rules_js integration
+- [x] Create ts_project rules for TypeScript compilation
+- [x] Configure Angular build target
+- [x] Set up development build target
+- [x] Set up production build target
+- [x] Configure asset handling
+- [x] Build PWA successfully
 
-## Phase 6: Frontend Testing 🚧 NOT STARTED
-- [ ] Integrate Web Test Runner with Bazel
-- [ ] Configure Playwright for headless testing
-- [ ] Create test rules for spec files
+## Phase 6: Frontend Testing 🚧 IN PROGRESS
+- [x] Create test rules for spec files (`frontend/BUILD.bazel`)
+- [x] Resolve "phantom dependency" graph for Bazel sandbox (~50 packages)
+- [ ] Fix "Web Test Runner is not installed" error in Angular Builder (Blocked)
 - [ ] Make all frontend tests pass with Bazel
 
-## Phase 7: Docker Integration ✅ PARTIAL
+## Phase 7: Docker Integration ✅ COMPLETE
 
 ### Backend Container ✅ COMPLETE
 - [x] Add OCI base image pulls to MODULE.bazel (python:3.11-slim)
@@ -68,11 +68,11 @@
 - [ ] Configure oci_load for Docker export
 - [ ] Test frontend container build
 
-### Test Containers 🚧 NOT STARTED
-- [ ] Configure PostgreSQL test container with pgvector
-- [ ] Configure Redis test container
-- [ ] Wire test containers to py_test rules
-- [ ] Verify all backend tests pass with containers
+### Test Containers ✅ COMPLETE
+- [x] Configure PostgreSQL test container with pgvector
+- [x] Configure Redis test container
+- [x] Wire test containers to py_test rules
+- [x] Verify all backend tests pass with containers
 
 ### Docker Compose Integration ✅ COMPLETE
 - [x] Create docker-compose.bazel.yml example

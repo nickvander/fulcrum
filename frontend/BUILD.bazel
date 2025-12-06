@@ -1,1 +1,51 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//frontend:@angular/cli/package_json.bzl", "bin")
+
+npm_link_all_packages(name = "node_modules")
+
+bin.ng(
+    name = "build",
+    srcs = glob([
+        "src/**/*",
+    ]) + [
+        "angular.json",
+        "tsconfig.app.json",
+        "tsconfig.json",
+        "package.json",
+        ":node_modules",
+    ],
+    args = [
+        "build",
+        "--output-path=dist/frontend",
+        "--preserve-symlinks",
+    ],
+    out_dirs = ["dist/frontend"],
+    chdir = "frontend",
+    visibility = ["//visibility:public"],
+)
+
+bin.ng_test(
+    name = "test",
+    data = glob([
+        "src/**/*",
+    ]) + [
+        "angular.json",
+        "tsconfig.spec.json",
+        "tsconfig.json",
+        "package.json",
+        ":node_modules",
+    ],
+    args = [
+        "test",
+        "--watch=false",
+        "--preserve-symlinks",
+    ],
+    chdir = "frontend",
+    env = {
+        "NODE_PRESERVE_SYMLINKS": "1",
+    },
+    tags = ["requires-network"],
+    visibility = ["//visibility:public"],
+)
+
 exports_files(["pnpm-lock.yaml", "package.json"])
