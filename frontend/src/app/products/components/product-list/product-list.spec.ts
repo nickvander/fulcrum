@@ -31,6 +31,8 @@ import { SharedModule } from '../../../shared/shared-module';
 import { BatchOperationsService } from '../../services/batch-operations.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductComparisonService } from '../../services/product-comparison.service';
+import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
+import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 
 // Create a stub for the AiSearchBar component
 @Component({
@@ -185,7 +187,9 @@ describe('ProductList', () => {
             MatDividerModule,
             CommonModule,
             FormsModule,
-            RouterModule
+            RouterModule,
+            MarketplaceStatusComponent,
+            AiSearchBar
           ]
         },
         add: {
