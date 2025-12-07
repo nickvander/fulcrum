@@ -22,12 +22,33 @@ Two related issues affect frontend test reliability:
 - Avoids Karma legacy complexities
 - Cleaner integration with Angular application builder
 
-**Why Retry Jest Now:**
-- `jest-preset-angular` has matured significantly since the failed attempt
-- Angular 18/19 has better Jest compatibility
-- The alternative (WTR) has proven unreliable in Bazel + parallel test scenarios
+## Angular 2025 Roadmap: Testing
 
-## Why Jest?
+> **From the Angular team's 2025 strategy blog post:**
+> 
+> "Replace Karma — with the deprecation of Karma we'd like to identify a good 
+> replacement that we'll enable as the default recommendation for apps built with
+> Angular. We've been exploring **Web Test Runner, Jest, and Vitest** and as part 
+> of this project will evaluate each of these runners and integrate it with the CLI."
+
+This means:
+1. **Angular team acknowledges testing needs improvement**
+2. **Official CLI integration is coming** for the chosen runner
+3. **All three options are being evaluated** (not just WTR)
+
+### Recommendation: Wait vs. Migrate Now
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **Wait for Angular's choice** | Official support, CLI schematics, less work | Continued intermittent timeouts |
+| **Migrate to Jest now** | Immediate stability, Bazel support | May need re-migration if Angular picks Vitest |
+| **Try Vitest** | Faster than Jest, modern ESM-first | Less Angular ecosystem support currently |
+
+**Suggested approach:** Wait until Angular v20 (expected mid-2025) for the official
+recommendation. If timeouts become blocking before then, migrate to Jest since it
+has the most mature Bazel integration.
+
+## Why Jest? (If Not Waiting)
 
 - **Mature & Stable**: Battle-tested in thousands of Angular projects
 - **Better Parallelism**: Worker-based isolation prevents resource contention
@@ -170,4 +191,5 @@ Keep Web Test Runner config files until Jest is fully validated:
 |------|----------|-----------|
 | 2025-12-05 | Accept local WTR workaround | Other Bazel phases more urgent |
 | 2025-12-06 | Queue Jest migration | Intermittent timeouts + Bazel issues justify investment |
+| 2025-12-06 | Consider waiting for Angular v20 | Angular team evaluating WTR/Jest/Vitest for official recommendation |
 
