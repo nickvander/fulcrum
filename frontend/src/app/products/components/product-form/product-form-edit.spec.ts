@@ -23,6 +23,8 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
+// DISABLED: Complex observable chain issues with ProductFormInitializerService.
+// See work/archive/44-product-form-create-test-hanging-deep-dive.md for investigation.
 xdescribe('ProductForm: Edit Mode', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
