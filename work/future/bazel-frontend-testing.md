@@ -1,68 +1,173 @@
-# Future Work: Bazel Frontend Testing
+# Future Work: Frontend Testing Migration to Jest
 
-## Issue Summary
+## Problem Summary
 
-The Angular `@angular-devkit/build-angular:web-test-runner` builder fails to detect
-`@web/test-runner` when running in Bazel's sandbox environment, despite the package
-being correctly installed in `node_modules`.
+Two related issues affect frontend test reliability:
 
-**Error**: "Web Test Runner is not installed"
+1. **Bazel Sandbox Issue**: The Angular `@angular-devkit/build-angular:web-test-runner` 
+   builder fails to detect `@web/test-runner` in Bazel's sandbox environment.
 
-## Root Cause
+2. **Intermittent Timeouts**: Tests randomly timeout (120s) during parallel runs, 
+   especially in pre-push hooks, due to Web Test Runner resource contention.
 
-1. **Experimental Builder**: The Web Test Runner builder is marked as experimental
-   and not production-ready.
-2. **Bazel Sandbox Isolation**: Bazel's strict sandboxing creates different
-   `node_modules` resolution paths than the builder expects.
-3. **Module Resolution**: The builder uses internal `require()` calls that fail in
-   the sandboxed environment.
+## Historical Context
 
-## Attempted Solutions (Did Not Work)
+**Previous Jest Attempt (Failed)** - See `work/archive/05-frontend-testing-hardening.md`:
+- Jest migration was attempted but failed due to deep dependency conflicts
+- `Cannot find module '@angular/animations/browser'` couldn't be resolved
+- `moduleNameMapper` workarounds didn't work
 
-- Adding `@web/test-runner` as explicit dependency
-- Adding ~50 phantom dependencies for Bazel sandbox
-- Patching pnpm with `onlyBuiltDependencies`
-- Setting `NODE_PRESERVE_SYMLINKS=1`
+**Why Web Test Runner Was Chosen** - See `work/archive/06-frontend-testing-migration-to-web-test-runner.md`:
+- Angular's officially supported modern test runner
+- Avoids Karma legacy complexities
+- Cleaner integration with Angular application builder
 
-## Current Workaround
+**Why Retry Jest Now:**
+- `jest-preset-angular` has matured significantly since the failed attempt
+- Angular 18/19 has better Jest compatibility
+- The alternative (WTR) has proven unreliable in Bazel + parallel test scenarios
 
-Run frontend tests locally using `pnpm ng test` instead of `bazel test
-//frontend:test`. All 144 tests pass with this approach.
+## Why Jest?
 
-## Future Options
+- **Mature & Stable**: Battle-tested in thousands of Angular projects
+- **Better Parallelism**: Worker-based isolation prevents resource contention
+- **Bazel Support**: `rules_jest` has excellent community support
+- **Faster Execution**: Jest's caching and parallelization are more efficient
+- **Better DX**: Clearer error messages, snapshot testing, better mocking
 
-### Option 1: Wait for Angular Maturity (Recommended)
+---
 
-Monitor Angular releases for Web Test Runner stability improvements. The builder is
-still experimental and may receive fixes that resolve Bazel compatibility.
+## Migration Plan
 
-### Option 2: Migrate to Jest
+### Phase 1: Setup (Estimated: 2-4 hours)
 
-Replace Web Test Runner with Jest + `jest-preset-angular`:
-
-1. Install Jest dependencies:
+1. **Install Jest dependencies**:
    ```bash
-   pnpm add -D jest @types/jest jest-preset-angular
+   cd frontend
+   pnpm add -D jest @types/jest jest-preset-angular @angular-builders/jest
    ```
 
-2. Create `jest.config.js` with Angular preset
+2. **Create `jest.config.js`**:
+   ```javascript
+   module.exports = {
+     preset: 'jest-preset-angular',
+     setupFilesAfterEnv: ['<rootDir>/src/setup-jest.ts'],
+     testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+     globals: {
+       'ts-jest': {
+         tsconfig: '<rootDir>/tsconfig.spec.json',
+         stringifyContentPathRegex: '\\.html$'
+       }
+     },
+     moduleNameMapper: {
+       '@app/(.*)': '<rootDir>/src/app/$1',
+       '@environments/(.*)': '<rootDir>/src/environments/$1'
+     },
+     testMatch: ['**/*.spec.ts'],
+     collectCoverageFrom: ['src/app/**/*.ts', '!src/app/**/*.module.ts']
+   };
+   ```
 
-3. Update `angular.json` to use Jest builder (or custom Bazel rules)
+3. **Create `src/setup-jest.ts`**:
+   ```typescript
+   import 'jest-preset-angular/setup-jest';
+   
+   // Mock global objects not available in jsdom
+   Object.defineProperty(window, 'getComputedStyle', {
+     value: () => ({ getPropertyValue: () => '' })
+   });
+   ```
 
-4. Use Bazel's `rules_jest` which has better community support
+4. **Update `angular.json`**:
+   ```json
+   "test": {
+     "builder": "@angular-builders/jest:run",
+     "options": {
+       "configPath": "jest.config.js"
+     }
+   }
+   ```
 
-**Effort**: Medium-High (requires test syntax review, setup changes)
+### Phase 2: Test Syntax Updates (Estimated: 4-8 hours)
 
-### Option 3: Custom Bazel Rule
+Most Jasmine tests work directly in Jest, but some changes are needed:
 
-Write a custom Bazel rule that invokes `@web/test-runner` directly, bypassing the
-Angular builder's detection logic.
+| Jasmine | Jest |
+|---------|------|
+| `jasmine.createSpyObj()` | `jest.fn()` with object |
+| `spyOn().and.returnValue()` | `jest.spyOn().mockReturnValue()` |
+| `spyOn().and.callFake()` | `jest.spyOn().mockImplementation()` |
+| `expect().toHaveBeenCalledWith(jasmine.any())` | `expect().toHaveBeenCalledWith(expect.any())` |
 
-**Effort**: High (requires deep Bazel and Web Test Runner knowledge)
+**Automated migration tool**:
+```bash
+npx jest-codemods --force --parser ts src/**/*.spec.ts
+```
+
+### Phase 3: Bazel Integration (Estimated: 2-4 hours)
+
+1. **Add `rules_jest` to `WORKSPACE.bazel`**:
+   ```starlark
+   http_archive(
+       name = "aspect_rules_jest",
+       sha256 = "...",
+       strip_prefix = "rules_jest-0.18.4",
+       url = "https://github.com/aspect-build/rules_jest/releases/download/v0.18.4/rules_jest-v0.18.4.tar.gz",
+   )
+   
+   load("@aspect_rules_jest//jest:dependencies.bzl", "rules_jest_dependencies")
+   rules_jest_dependencies()
+   ```
+
+2. **Update `frontend/BUILD.bazel`**:
+   ```starlark
+   load("@aspect_rules_jest//jest:defs.bzl", "jest_test")
+   
+   jest_test(
+       name = "test",
+       config = "jest.config.js",
+       data = [
+           ":node_modules",
+           "//frontend/src:sources",
+       ],
+       node_modules = "//:node_modules",
+   )
+   ```
+
+### Phase 4: CI/Hook Updates (Estimated: 1 hour)
+
+1. Update `package.json` scripts:
+   ```json
+   "test": "jest",
+   "test:watch": "jest --watch",
+   "test:coverage": "jest --coverage"
+   ```
+
+2. Pre-push hook already uses `npm test` - no changes needed
+
+---
+
+## Rollback Plan
+
+Keep Web Test Runner config files until Jest is fully validated:
+- `angular.json` (backup test config)
+- `web-test-runner.config.js` (if created)
+
+---
+
+## Success Criteria
+
+- [ ] All 302 tests pass with Jest
+- [ ] No intermittent timeouts in pre-push or CI
+- [ ] `bazel test //frontend:test` works in sandbox
+- [ ] Test execution time ≤ current baseline (ideally faster)
+
+---
 
 ## Decision Log
 
-**Date**: 2025-12-05
-**Decision**: Accept local testing workaround (Option A)
-**Rationale**: The local workflow functions correctly, and other Bazel phases
-(CI/CD, documentation, frontend container) provide more immediate value.
+| Date | Decision | Rationale |
+|------|----------|-----------|
+| 2025-12-05 | Accept local WTR workaround | Other Bazel phases more urgent |
+| 2025-12-06 | Queue Jest migration | Intermittent timeouts + Bazel issues justify investment |
+
