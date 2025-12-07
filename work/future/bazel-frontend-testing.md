@@ -10,66 +10,56 @@ Two related issues affect frontend test reliability:
 2. **Intermittent Timeouts**: Tests randomly timeout (120s) during parallel runs, 
    especially in pre-push hooks, due to Web Test Runner resource contention.
 
-## Solution: Angular v20 Includes Vitest Support! 🎉
+## Solution: Angular v21 Makes Vitest the Default! 🎉
 
-**Angular v20 (released December 2024) includes experimental Vitest support with watch
-mode and browser testing!**
+**Angular v21 (released November 2025) promotes Vitest to STABLE and makes it the 
+default test runner!**
 
-> "With the deprecation of Karma, we worked with testing framework authors to find a 
-> well maintained replacement that enables browser testing. In v20, Angular CLI comes 
-> in with an experimental vitest support that has watch mode and browser testing!"
+> "After getting positive feedback from the community we decided on Vitest as our 
+> new default test runner, and are promoting it to stable in Angular v21 🎉"
+
+**Key changes:**
+- ✅ **Vitest is now STABLE** and production-ready
+- ✅ **Official migration schematic** available
+- ⚠️ **WTR and Jest are DEPRECATED** (will be removed in v22)
 
 ---
 
-## Migration Plan (Recommended)
+## Migration Plan
 
-### Step 1: Install Dependencies
+### Step 1: Upgrade to Angular v21
 
 ```bash
-cd frontend
-pnpm add -D vitest jsdom
+ng update @angular/core @angular/cli
 ```
 
-### Step 2: Update `angular.json`
+### Step 2: Run the Official Migration Schematic
 
-Replace the current test configuration:
-
-```json
-"test": {
-    "builder": "@angular/build:unit-test",
-    "options": {
-        "tsConfig": "tsconfig.spec.json",
-        "buildTarget": "::development",
-        "runner": "vitest"
-    }
-}
+```bash
+ng g @schematics/angular:refactor-jasmine-vitest
 ```
 
-### Step 3: Update Test Files (imports)
+This automatically refactors your tests from Jasmine to Vitest syntax.
 
-Update spec files to use Vitest imports:
-
-```typescript
-import { describe, beforeEach, it, expect } from 'vitest';
-```
-
-### Step 4: Run Tests
+### Step 3: Run Tests
 
 ```bash
 ng test
 ```
 
+That's it! 🎉
+
 ---
 
-## Why Vitest Over Jest?
+## Why Vitest?
 
-| Feature | Vitest | Jest |
-|---------|--------|------|
-| **Official Angular Support** | ✅ v20 built-in | ❌ Community only |
-| **ESM-first** | ✅ Native | ⚠️ Via transforms |
-| **Speed** | Faster | Slower |
-| **Browser Testing** | ✅ Supported | ⚠️ Requires extra config |
-| **Watch Mode** | ✅ Built-in | ✅ Built-in |
+| Feature | Status |
+|---------|--------|
+| **Official Angular Support** | ✅ Stable in v21 |
+| **Browser Testing** | ✅ Supported |
+| **Watch Mode** | ✅ Built-in |
+| **Migration Path** | ✅ Official schematic |
+| **Future-proof** | ✅ WTR/Jest deprecated |
 
 ---
 
@@ -110,5 +100,5 @@ Once Vitest is working locally, Bazel integration options:
 | Date | Decision | Rationale |
 |------|----------|-----------|
 | 2025-12-05 | Accept local WTR workaround | Other Bazel phases more urgent |
-| 2025-12-06 | Queue test runner migration | Intermittent timeouts + Bazel issues |
-| 2025-12-06 | **Migrate to Vitest** | Angular v20 includes official experimental support |
+| 2025-12-06 | **Upgrade to Angular v21 + Vitest** | v21 makes Vitest STABLE with official migration schematic |
+
