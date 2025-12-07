@@ -20,6 +20,8 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceAsyncMock } from '../../services/product-form-initializer.service.async.mock';
 
+// DISABLED: Async mock service interactions cause test instability.
+// See work/archive/44-product-form-create-test-hanging-deep-dive.md for details.
 xdescribe('ProductForm: Advanced Error Handling with Async Mock', () => {
   let component: ProductForm;
   let fixture: ComponentFixture<ProductForm>;
@@ -107,7 +109,7 @@ xdescribe('ProductForm: Advanced Error Handling with Async Mock', () => {
     it('should handle initialization with async mock service', async () => {
       fixture.detectChanges();
       await fixture.whenStable();
-      
+
       expect(component).toBeTruthy();
       expect(component.isEditMode).toBe(false); // Since no ID param provided
     });
@@ -115,10 +117,10 @@ xdescribe('ProductForm: Advanced Error Handling with Async Mock', () => {
     it('should handle edit mode with async mock service', async () => {
       // Setup edit mode
       activatedRouteMock.snapshot.params['id'] = mockProduct.id;
-      
+
       fixture.detectChanges();
       await fixture.whenStable();
-      
+
       expect(component.isEditMode).toBe(true);
     });
   });

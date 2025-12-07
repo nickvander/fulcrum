@@ -114,6 +114,8 @@ describe('ProductForm: Create Mode', () => {
     expect(component).toBeTruthy();
   });
 
+  // DISABLED: HTTP mock expectations conflict with mocked initializer service.
+  // Re-enabling requires updating tests to not expect /custom-fields HTTP calls.
   xdescribe('Create Mode', () => {
     beforeEach(() => {
       routerMock.getCurrentNavigation.and.returnValue(null);

@@ -6,7 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from './pagination';
 
-xdescribe('PaginationComponent', () => { // Disabled due to timeout issues in CI
+describe('PaginationComponent', () => {
   let component: PaginationComponent;
   let fixture: ComponentFixture<PaginationComponent>;
 
@@ -20,7 +20,7 @@ xdescribe('PaginationComponent', () => { // Disabled due to timeout issues in CI
         PaginationComponent
       ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(PaginationComponent);
     component = fixture.componentInstance;
@@ -73,7 +73,7 @@ xdescribe('PaginationComponent', () => { // Disabled due to timeout issues in CI
     component.currentPage = 5;
     component.totalPages = 10;
     fixture.detectChanges();
-    
+
     // Test page numbers are generated properly by checking the component's pages array
     expect(component.pages.length).toBeGreaterThan(0);
   });

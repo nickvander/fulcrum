@@ -46,7 +46,7 @@ describe('ProductService', () => {
     it('should fetch products and update the products$ stream', () => {
       service.getProducts(1, 10).subscribe(); // Explicitly call with page and limit params
 
-      const req = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/products?skip=0&limit=10`);
       expect(req.request.method).toBe('GET');
       req.flush({ data: mockProducts, currentPage: 1, totalPages: 1, totalItems: 2, pageSize: 10, hasNextPage: false, hasPrevPage: false });
 
@@ -73,7 +73,7 @@ describe('ProductService', () => {
       req.flush(createdProduct);
 
       // Expect and flush the GET request that should be made after the POST
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products?skip=0&limit=10`);
       getReq.flush([...mockProducts, createdProduct]);
 
       // Verify that the products stream was updated
@@ -91,7 +91,7 @@ describe('ProductService', () => {
     it('should update a product, update the stream, and show notification', () => {
       // First populate the internal cache by calling getProducts
       service['getProductsLegacy']().subscribe();
-      const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+      const req = httpMock.expectOne(`${environment.apiUrl}/products`);
       req.flush(mockProducts);
 
       const updatedProduct: Product = { ...mockProducts[0], name: 'Updated Name' };
@@ -125,7 +125,7 @@ describe('ProductService', () => {
       expect(deleteReq.request.method).toBe('DELETE');
       deleteReq.flush({});
 
-      const getReq = httpMock.expectOne(`${environment.apiUrl}/products/?skip=0&limit=10`);
+      const getReq = httpMock.expectOne(`${environment.apiUrl}/products?skip=0&limit=10`);
       getReq.flush(mockProducts.filter(p => p.id !== productIdToDelete));
 
       service.products$.subscribe(products => {
@@ -186,7 +186,7 @@ describe('ProductService', () => {
   describe('deleteMultipleProducts', () => {
     it('should delete multiple products and show notification', () => {
       const productIds = [1, 2, 3];
-      
+
       service.deleteMultipleProducts(productIds).subscribe();
 
       const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
