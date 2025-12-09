@@ -4,7 +4,7 @@ import { Product } from '../../models/product.model';
 import { ProductService } from '../../services/product';
 import { ProductList } from '../product-list/product-list';
 import { ProductForm } from '../product-form/product-form';
-import { CommonModule } from '@angular/common';
+
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,13 +15,12 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./products.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatSidenavModule,
     MatButtonModule,
     MatIconModule,
     ProductList,
     ProductForm
-  ]
+]
 })
 export class ProductsComponent implements OnInit {
   @ViewChild('sidenav') sidenav!: MatSidenav;

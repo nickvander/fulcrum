@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ResetPasswordComponent } from './reset-password.component';
 import { AuthService } from '../../services/auth';
@@ -8,12 +9,18 @@ import { ActivatedRoute, Router } from '@angular/router';
 describe('ResetPasswordComponent', () => {
     let component: ResetPasswordComponent;
     let fixture: ComponentFixture<ResetPasswordComponent>;
-    let authServiceSpy: jasmine.SpyObj<AuthService>;
-    let routerSpy: jasmine.SpyObj<Router>;
+    let authServiceSpy: MockedObject<AuthService>;
+    let routerSpy: MockedObject<Router>;
 
     beforeEach(async () => {
-        const authSpy = jasmine.createSpyObj('AuthService', ['resetPassword']);
-        const rSpy = jasmine.createSpyObj('Router', ['navigate', 'createUrlTree', 'serializeUrl']);
+        const authSpy = {
+            resetPassword: vi.fn().mockName("AuthService.resetPassword")
+        } as any;
+        const rSpy = {
+            navigate: vi.fn().mockName("Router.navigate"),
+            createUrlTree: vi.fn().mockName("Router.createUrlTree"),
+            serializeUrl: vi.fn().mockName("Router.serializeUrl")
+        } as any;
         rSpy.events = of(null); // Mock events observable
 
         await TestBed.configureTestingModule({
@@ -30,8 +37,8 @@ describe('ResetPasswordComponent', () => {
             ]
         }).compileComponents();
 
-        authServiceSpy = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
-        routerSpy = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+        authServiceSpy = TestBed.inject(AuthService) as MockedObject<AuthService>;
+        routerSpy = TestBed.inject(Router) as MockedObject<Router>;
         fixture = TestBed.createComponent(ResetPasswordComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
@@ -48,23 +55,23 @@ describe('ResetPasswordComponent', () => {
     it('should call resetPassword on submit with valid form', () => {
         component.resetPasswordForm.controls['password'].setValue('newpassword123');
         component.resetPasswordForm.controls['confirmPassword'].setValue('newpassword123');
-        authServiceSpy.resetPassword.and.returnValue(of({ message: 'Success' }));
+        authServiceSpy.resetPassword.mockReturnValue(of({ message: 'Success' }));
 
-        jasmine.clock().install();
+        vi.useFakeTimers();
         component.onSubmit();
 
         expect(authServiceSpy.resetPassword).toHaveBeenCalledWith('valid-token', 'newpassword123');
         expect(component.message).toBe('Password has been reset successfully. Redirecting to login...');
 
-        jasmine.clock().tick(3001);
+        vi.advanceTimersByTime(3001);
         expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
-        jasmine.clock().uninstall();
+        vi.useRealTimers();
     });
 
     it('should handle error on submit', () => {
         component.resetPasswordForm.controls['password'].setValue('newpassword123');
         component.resetPasswordForm.controls['confirmPassword'].setValue('newpassword123');
-        authServiceSpy.resetPassword.and.returnValue(throwError(() => ({ error: { detail: 'Error detail' } })));
+        authServiceSpy.resetPassword.mockReturnValue(throwError(() => ({ error: { detail: 'Error detail' } })));
 
         component.onSubmit();
 
@@ -79,6 +86,6 @@ describe('ResetPasswordComponent', () => {
         // Trigger validation
         component.resetPasswordForm.updateValueAndValidity();
 
-        expect(component.resetPasswordForm.controls['confirmPassword'].hasError('passwordMismatch')).toBeTrue();
+        expect(component.resetPasswordForm.controls['confirmPassword'].hasError('passwordMismatch')).toBe(true);
     });
 });

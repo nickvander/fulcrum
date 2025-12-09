@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AccountManagement } from './account-management';
 import { UserService } from '../../services/user.service';
@@ -10,8 +11,8 @@ import { User } from '../../../shared/models/user.model';
 describe('AccountManagement', () => {
     let component: AccountManagement;
     let fixture: ComponentFixture<AccountManagement>;
-    let userServiceMock: jasmine.SpyObj<UserService>;
-    let snackBarMock: jasmine.SpyObj<MatSnackBar>;
+    let userServiceMock: MockedObject<UserService>;
+    let snackBarMock: MockedObject<MatSnackBar>;
 
     const mockUser: User = {
         id: 1,
@@ -26,11 +27,16 @@ describe('AccountManagement', () => {
     };
 
     beforeEach(async () => {
-        userServiceMock = jasmine.createSpyObj('UserService', ['getProfile', 'updateProfile']);
-        snackBarMock = jasmine.createSpyObj('MatSnackBar', ['open']);
+        userServiceMock = {
+            getProfile: vi.fn().mockName("UserService.getProfile"),
+            updateProfile: vi.fn().mockName("UserService.updateProfile")
+        } as any;
+        snackBarMock = {
+            open: vi.fn().mockName("MatSnackBar.open")
+        } as any;
 
-        userServiceMock.getProfile.and.returnValue(of(mockUser));
-        userServiceMock.updateProfile.and.returnValue(of(mockUser));
+        userServiceMock.getProfile.mockReturnValue(of(mockUser));
+        userServiceMock.updateProfile.mockReturnValue(of(mockUser));
 
         await TestBed.configureTestingModule({
             imports: [
@@ -44,8 +50,8 @@ describe('AccountManagement', () => {
             ]
         })
             .overrideComponent(AccountManagement, {
-                remove: { imports: [MatSnackBarModule] }
-            })
+            remove: { imports: [MatSnackBarModule] }
+        })
             .compileComponents();
 
         fixture = TestBed.createComponent(AccountManagement);
@@ -68,13 +74,13 @@ describe('AccountManagement', () => {
     });
 
     it('should update profile on submit', () => {
-        const updatedUser = { ...mockUser, first_name: 'Updated' };
-        userServiceMock.updateProfile.and.returnValue(of(updatedUser));
+        const updatedUser = { ...mockUser, first_name: 'Updated' } as any;
+        userServiceMock.updateProfile.mockReturnValue(of(updatedUser));
 
         component.form.patchValue({ first_name: 'Updated' });
         component.onSubmit();
 
-        expect(userServiceMock.updateProfile).toHaveBeenCalledWith(jasmine.objectContaining({
+        expect(userServiceMock.updateProfile).toHaveBeenCalledWith(expect.objectContaining({
             first_name: 'Updated'
         }));
         expect(component.user).toEqual(updatedUser);

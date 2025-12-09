@@ -2,16 +2,16 @@
   <div class="comparison-header">
     <h2>Product Comparison</h2>
     <div class="header-actions">
-      <button 
-        mat-icon-button 
-        (click)="onExportComparison()" 
+      <button
+        mat-icon-button
+        (click)="onExportComparison()"
         matTooltip="Export comparison"
         class="export-btn">
         <mat-icon>download</mat-icon>
       </button>
-      <button 
-        mat-icon-button 
-        (click)="onClose()" 
+      <button
+        mat-icon-button
+        (click)="onClose()"
         matTooltip="Close comparison"
         class="close-btn">
         <mat-icon>close</mat-icon>
@@ -19,68 +19,71 @@
     </div>
   </div>
 
-  <div class="comparison-content" *ngIf="products.length > 0; else noProducts">
-    <div class="products-list">
-      <div 
-        class="product-card" 
-        *ngFor="let product of products; let i = index; trackBy: trackByFn">
-        <div class="product-header">
-          <div class="product-image" *ngIf="product.images && product.images.length > 0">
-            <img [src]="getImageUrl(product.images[0].image_path)" [alt]="product.name" (error)="onImageError($event)">
+  @if (products.length > 0) {
+    <div class="comparison-content">
+      <div class="products-list">
+        @for (product of products; track trackByFn(i, product); let i = $index) {
+          <div
+            class="product-card"
+            >
+            <div class="product-header">
+              @if (product.images && product.images.length > 0) {
+                <div class="product-image">
+                  <img [src]="getImageUrl(product.images[0].image_path)" [alt]="product.name" (error)="onImageError($event)">
+                </div>
+              }
+              <div class="product-info">
+                <h4>{{ product.name }}</h4>
+                <p class="sku">{{ product.sku }}</p>
+                <p class="price">{{ product.default_resale_price | currency }}</p>
+              </div>
+              <button
+                mat-icon-button
+                (click)="removeProduct(i)"
+                matTooltip="Remove from comparison"
+                class="remove-btn">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
           </div>
-          <div class="product-info">
-            <h4>{{ product.name }}</h4>
-            <p class="sku">{{ product.sku }}</p>
-            <p class="price">{{ product.default_resale_price | currency }}</p>
-          </div>
-          <button 
-            mat-icon-button 
-            (click)="removeProduct(i)" 
-            matTooltip="Remove from comparison"
-            class="remove-btn">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
+        }
+      </div>
+      <div class="comparison-table-container">
+        <table mat-table [dataSource]="comparisonData" class="comparison-table">
+          <!-- Attribute column -->
+          <ng-container matColumnDef="attribute">
+            <th mat-header-cell *matHeaderCellDef class="attribute-header">Attribute</th>
+            <td mat-cell *matCellDef="let element" class="attribute-cell">{{ element.attribute }}</td>
+          </ng-container>
+          <!-- Dynamic product columns -->
+          @for (product of products; track product; let productIndex = $index) {
+            <ng-container
+              [matColumnDef]="'product' + productIndex">
+              <th mat-header-cell *matHeaderCellDef class="product-header">
+                <div class="product-header-content">
+                  <span>{{ product.name }}</span>
+                </div>
+              </th>
+              <td
+                mat-cell
+                *matCellDef="let element"
+                class="product-cell"
+                [class.different]="hasDifference(element, productIndex)">
+                {{ element['product' + productIndex] }}
+              </td>
+            </ng-container>
+          }
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
       </div>
     </div>
-
-    <div class="comparison-table-container">
-      <table mat-table [dataSource]="comparisonData" class="comparison-table">
-        <!-- Attribute column -->
-        <ng-container matColumnDef="attribute">
-          <th mat-header-cell *matHeaderCellDef class="attribute-header">Attribute</th>
-          <td mat-cell *matCellDef="let element" class="attribute-cell">{{ element.attribute }}</td>
-        </ng-container>
-
-        <!-- Dynamic product columns -->
-        <ng-container 
-          *ngFor="let product of products; let productIndex = index" 
-          [matColumnDef]="'product' + productIndex">
-          <th mat-header-cell *matHeaderCellDef class="product-header">
-            <div class="product-header-content">
-              <span>{{ product.name }}</span>
-            </div>
-          </th>
-          <td 
-            mat-cell 
-            *matCellDef="let element" 
-            class="product-cell"
-            [class.different]="hasDifference(element, productIndex)">
-            {{ element['product' + productIndex] }}
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </div>
-  </div>
-
-  <ng-template #noProducts>
+  } @else {
     <div class="no-products">
       <mat-icon class="no-products-icon">compare</mat-icon>
       <h3>No Products for Comparison</h3>
       <p>Add products to compare their features side by side.</p>
     </div>
-  </ng-template>
+  }
+
 </div>

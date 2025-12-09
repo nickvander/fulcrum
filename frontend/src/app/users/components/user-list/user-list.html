@@ -46,17 +46,23 @@
     <button mat-button (click)="clearFilters()">Clear Filters</button>
   </div>
 
-  <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+  @if (isLoading) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
   <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
     <!-- Avatar Column -->
     <ng-container matColumnDef="avatar">
       <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
       <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
-        <img *ngIf="row.avatar" [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
-          (error)="avatarError($event)">
-        <div *ngIf="!row.avatar" class="avatar-placeholder">
-          <mat-icon>person</mat-icon>
-        </div>
+        @if (row.avatar) {
+          <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
+            (error)="avatarError($event)">
+        }
+        @if (!row.avatar) {
+          <div class="avatar-placeholder">
+            <mat-icon>person</mat-icon>
+          </div>
+        }
       </mat-cell>
     </ng-container>
 
@@ -112,11 +118,13 @@
           </span>
 
           <!-- Force Password Change Badge -->
-          <span *ngIf="row.force_password_change" class="status-badge status-warning"
-            matTooltip="User must change password on next login">
-            <mat-icon class="status-icon">lock_reset</mat-icon>
-            <span class="status-label">Password Reset Required</span>
-          </span>
+          @if (row.force_password_change) {
+            <span class="status-badge status-warning"
+              matTooltip="User must change password on next login">
+              <mat-icon class="status-icon">lock_reset</mat-icon>
+              <span class="status-label">Password Reset Required</span>
+            </span>
+          }
         </div>
       </mat-cell>
     </ng-container>

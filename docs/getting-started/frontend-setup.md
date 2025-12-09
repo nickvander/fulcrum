@@ -41,8 +41,8 @@ sudo apt-get update && sudo apt-get install -y nodejs npm
     > ```
     >
     > **Note on Bazel Testing:**
-    > Currently, `bazel test //frontend:test` may fail with `MODULE_NOT_FOUND: postcss` due to resolution issues with `beasties` (critical CSS inlining) in the Bazel sandbox.
-    > As a workaround, run tests locally using:
+    > Currently, `bazel test //frontend:test` is blocked by a Sass compilation environment incompatibility (`sass-embedded` in sandbox).
+    > We recommend running tests locally using:
     > ```bash
     > pnpm ng test
     > ```

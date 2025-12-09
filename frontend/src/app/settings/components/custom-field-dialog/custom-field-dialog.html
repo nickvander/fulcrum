@@ -7,9 +7,11 @@
   <mat-form-field>
     <mat-label>Type</mat-label>
     <mat-select formControlName="type">
-      <mat-option *ngFor="let type of fieldTypes" [value]="type">
-        {{ type }}
-      </mat-option>
+      @for (type of fieldTypes; track type) {
+        <mat-option [value]="type">
+          {{ type }}
+        </mat-option>
+      }
     </mat-select>
   </mat-form-field>
 </mat-dialog-content>

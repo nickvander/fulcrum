@@ -47,10 +47,7 @@ the testing process.
 
 ## Frontend (Angular)
 
-The frontend application uses the
-**[Web Test Runner](https://modern-web.dev/docs/test-runner/overview/)** with
-Playwright to execute its unit tests. The configuration can be found in
-`frontend/web-test-runner.config.mjs`.
+The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v20+ experimental support) to execute its unit tests. The configuration is managed by the Angular CLI and `vitest.config.ts`.
 
 - **Run the frontend test suite:**
   ```bash

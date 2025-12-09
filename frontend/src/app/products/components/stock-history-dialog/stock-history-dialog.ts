@@ -42,43 +42,49 @@ export interface StockHistoryDialogData {
           <span class="current-stock-value">{{ data.currentStock }}</span>
         </div>
       </div>
-      
-      <div *ngIf="data.inventoryAdjustments.length === 0; else historyList" class="no-history">
-        <p>No stock adjustments recorded yet.</p>
-      </div>
-      
-      <ng-template #historyList>
+    
+      @if (data.inventoryAdjustments.length === 0) {
+        <div class="no-history">
+          <p>No stock adjustments recorded yet.</p>
+        </div>
+      } @else {
         <mat-list>
-          <mat-list-item *ngFor="let adjustment of data.inventoryAdjustments | orderBy:'timestamp':true" class="adjustment-item">
-            <div class="adjustment-content">
-              <div class="adjustment-main">
-                <div class="adjustment-amount-container">
-                  <div class="adjustment-amount" [class.positive]="adjustment.adjustment > 0" [class.negative]="adjustment.adjustment < 0">
-                    <span class="adjustment-sign">{{ adjustment.adjustment > 0 ? '+' : '' }}</span>
-                    <span class="adjustment-value">{{ adjustment.adjustment }}</span>
+          @for (adjustment of data.inventoryAdjustments | orderBy:'timestamp':true; track adjustment) {
+            <mat-list-item class="adjustment-item">
+              <div class="adjustment-content">
+                <div class="adjustment-main">
+                  <div class="adjustment-amount-container">
+                    <div class="adjustment-amount" [class.positive]="adjustment.adjustment > 0" [class.negative]="adjustment.adjustment < 0">
+                      <span class="adjustment-sign">{{ adjustment.adjustment > 0 ? '+' : '' }}</span>
+                      <span class="adjustment-value">{{ adjustment.adjustment }}</span>
+                    </div>
                   </div>
-                </div>
-                
-                <div class="adjustment-details">
-                  <div class="adjustment-date-user">
-                    <span class="adjustment-date">{{ adjustment.timestamp | date:'short' }}</span>
-                    <span class="adjustment-user" *ngIf="adjustment.created_by">• {{ adjustment.created_by }}</span>
-                  </div>
-                  <div class="adjustment-reason" *ngIf="adjustment.reason">
-                    <mat-icon class="reason-icon">info</mat-icon>
-                    <span>{{ adjustment.reason }}</span>
+                  <div class="adjustment-details">
+                    <div class="adjustment-date-user">
+                      <span class="adjustment-date">{{ adjustment.timestamp | date:'short' }}</span>
+                      @if (adjustment.created_by) {
+                        <span class="adjustment-user">• {{ adjustment.created_by }}</span>
+                      }
+                    </div>
+                    @if (adjustment.reason) {
+                      <div class="adjustment-reason">
+                        <mat-icon class="reason-icon">info</mat-icon>
+                        <span>{{ adjustment.reason }}</span>
+                      </div>
+                    }
                   </div>
                 </div>
               </div>
-            </div>
-          </mat-list-item>
+            </mat-list-item>
+          }
         </mat-list>
-      </ng-template>
+      }
+    
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       <button mat-button (click)="onClose()" cdkFocusInitial>Close</button>
     </mat-dialog-actions>
-  `,
+    `,
   styles: [`
     .no-history {
       text-align: center;

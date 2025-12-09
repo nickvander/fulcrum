@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatIconModule } from '@angular/material/icon';
 import { MarketplaceListing } from '../../../products/models/product.model';
@@ -7,20 +7,26 @@ import { MarketplaceListing } from '../../../products/models/product.model';
 @Component({
     selector: 'app-marketplace-status',
     standalone: true,
-    imports: [CommonModule, MatTooltipModule, MatIconModule],
+    imports: [MatTooltipModule, MatIconModule],
     template: `
-    <div class="status-container" *ngIf="listings && listings.length > 0">
-      <div *ngFor="let listing of listings" class="marketplace-badge" 
-           [matTooltip]="getTooltip(listing)"
-           [class.status-active]="listing.status === 'active'"
-           [class.status-error]="listing.status === 'error'"
-           [class.status-pending]="listing.status === 'pending'">
-        <span class="marketplace-icon">{{ getMarketplaceIcon(listing.marketplace_id) }}</span>
-        <span class="status-dot"></span>
+    @if (listings && listings.length > 0) {
+      <div class="status-container">
+        @for (listing of listings; track listing) {
+          <div class="marketplace-badge"
+            [matTooltip]="getTooltip(listing)"
+            [class.status-active]="listing.status === 'active'"
+            [class.status-error]="listing.status === 'error'"
+            [class.status-pending]="listing.status === 'pending'">
+            <span class="marketplace-icon">{{ getMarketplaceIcon(listing.marketplace_id) }}</span>
+            <span class="status-dot"></span>
+          </div>
+        }
       </div>
-    </div>
-    <span *ngIf="!listings || listings.length === 0" class="no-listings">-</span>
-  `,
+    }
+    @if (!listings || listings.length === 0) {
+      <span class="no-listings">-</span>
+    }
+    `,
     styles: [`
     .status-container {
       display: flex;

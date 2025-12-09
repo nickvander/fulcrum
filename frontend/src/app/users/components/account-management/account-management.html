@@ -1,26 +1,34 @@
 <div class="container">
   <h1>Account Management</h1>
-  
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>First Name</mat-label>
         <input matInput formControlName="first_name" autocomplete="off">
-        <mat-error *ngIf="form.get('first_name')?.hasError('required')">First name is required</mat-error>
+        @if (form.get('first_name')?.hasError('required')) {
+          <mat-error>First name is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Last Name</mat-label>
         <input matInput formControlName="last_name" autocomplete="off">
-        <mat-error *ngIf="form.get('last_name')?.hasError('required')">Last name is required</mat-error>
+        @if (form.get('last_name')?.hasError('required')) {
+          <mat-error>Last name is required</mat-error>
+        }
       </mat-form-field>
     </div>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" autocomplete="off">
-      <mat-error *ngIf="form.get('email')?.hasError('required')">Email is required</mat-error>
-      <mat-error *ngIf="form.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+      @if (form.get('email')?.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      }
+      @if (form.get('email')?.hasError('email')) {
+        <mat-error>Please enter a valid email</mat-error>
+      }
     </mat-form-field>
 
     <div class="actions">

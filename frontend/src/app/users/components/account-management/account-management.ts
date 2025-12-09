@@ -4,7 +4,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
+
 import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { Subject, takeUntil } from 'rxjs';
@@ -15,13 +15,12 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrls: ['./account-management.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSnackBarModule,
-  ],
+    MatSnackBarModule
+],
 })
 export class AccountManagement implements OnInit, OnDestroy {
   form: FormGroup;

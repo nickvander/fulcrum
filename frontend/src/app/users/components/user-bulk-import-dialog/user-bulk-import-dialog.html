@@ -1,92 +1,100 @@
 <h2 mat-dialog-title>Bulk Import Users</h2>
 
 <mat-dialog-content class="mat-typography">
-    <div *ngIf="!importResult">
-        <p>Upload a CSV file to import users. The file must have the following columns: <code>email</code>,
-            <code>first_name</code>, <code>last_name</code>, <code>user_type</code>.
-        </p>
-
-        <div class="actions-row">
-            <button mat-stroked-button color="primary" (click)="downloadTemplate()">
-                <mat-icon>download</mat-icon> Download Template
-            </button>
-        </div>
-
-        <div class="file-input-container">
-            <input type="file" (change)="onFileSelected($event)" accept=".csv" #fileInput>
-        </div>
+  @if (!importResult) {
+    <div>
+      <p>Upload a CSV file to import users. The file must have the following columns: <code>email</code>,
+      <code>first_name</code>, <code>last_name</code>, <code>user_type</code>.
+    </p>
+    <div class="actions-row">
+      <button mat-stroked-button color="primary" (click)="downloadTemplate()">
+        <mat-icon>download</mat-icon> Download Template
+      </button>
     </div>
-
-    <div *ngIf="isUploading" class="loading-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Importing users...</p>
+    <div class="file-input-container">
+      <input type="file" (change)="onFileSelected($event)" accept=".csv" #fileInput>
     </div>
+  </div>
+}
 
-    <div *ngIf="importResult" class="results-container">
-        <div class="summary">
-            <p class="success-text">Created: {{ importResult.created_users.length }}</p>
-            <p class="error-text">Failed: {{ importResult.failed_users.length }}</p>
-        </div>
+@if (isUploading) {
+  <div class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Importing users...</p>
+  </div>
+}
 
-        <mat-tab-group>
-            <mat-tab label="Created Users" *ngIf="importResult.created_users.length > 0">
-                <div class="table-container">
-                    <table mat-table [dataSource]="importResult.created_users" class="mat-elevation-z0">
-                        <ng-container matColumnDef="email">
-                            <th mat-header-cell *matHeaderCellDef> Email </th>
-                            <td mat-cell *matCellDef="let user"> {{user.email}} </td>
-                        </ng-container>
-                        <ng-container matColumnDef="password">
-                            <th mat-header-cell *matHeaderCellDef> Temporary Password </th>
-                            <td mat-cell *matCellDef="let user">
-                                <div class="password-cell-content">
-                                    <code>{{user.temporary_password}}</code>
-                                    <button mat-icon-button class="small-copy-btn"
-                                        (click)="copyPassword(user.temporary_password)" matTooltip="Copy password">
-                                        <mat-icon>content_copy</mat-icon>
-                                    </button>
-                                </div>
-                            </td>
-                        </ng-container>
-                        <tr mat-header-row *matHeaderRowDef="['email', 'password']"></tr>
-                        <tr mat-row *matRowDef="let row; columns: ['email', 'password'];"></tr>
-                    </table>
-                </div>
-                <div class="actions-row" style="margin-top: 16px; text-align: right;">
-                    <button mat-stroked-button (click)="copyAll()">
-                        <mat-icon>content_copy</mat-icon> Copy All Results
+@if (importResult) {
+  <div class="results-container">
+    <div class="summary">
+      <p class="success-text">Created: {{ importResult.created_users.length }}</p>
+      <p class="error-text">Failed: {{ importResult.failed_users.length }}</p>
+    </div>
+    <mat-tab-group>
+      @if (importResult.created_users.length > 0) {
+        <mat-tab label="Created Users">
+          <div class="table-container">
+            <table mat-table [dataSource]="importResult.created_users" class="mat-elevation-z0">
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef> Email </th>
+                <td mat-cell *matCellDef="let user"> {{user.email}} </td>
+              </ng-container>
+              <ng-container matColumnDef="password">
+                <th mat-header-cell *matHeaderCellDef> Temporary Password </th>
+                <td mat-cell *matCellDef="let user">
+                  <div class="password-cell-content">
+                    <code>{{user.temporary_password}}</code>
+                    <button mat-icon-button class="small-copy-btn"
+                      (click)="copyPassword(user.temporary_password)" matTooltip="Copy password">
+                      <mat-icon>content_copy</mat-icon>
                     </button>
-                </div>
-            </mat-tab>
-
-            <mat-tab label="Failed Rows" *ngIf="importResult.failed_users.length > 0">
-                <div class="table-container">
-                    <table mat-table [dataSource]="importResult.failed_users" class="mat-elevation-z0">
-                        <ng-container matColumnDef="row">
-                            <th mat-header-cell *matHeaderCellDef> Row </th>
-                            <td mat-cell *matCellDef="let item"> {{item.row}} </td>
-                        </ng-container>
-                        <ng-container matColumnDef="email">
-                            <th mat-header-cell *matHeaderCellDef> Email </th>
-                            <td mat-cell *matCellDef="let item"> {{item.email}} </td>
-                        </ng-container>
-                        <ng-container matColumnDef="error">
-                            <th mat-header-cell *matHeaderCellDef> Error </th>
-                            <td mat-cell *matCellDef="let item" class="error-text"> {{item.error}} </td>
-                        </ng-container>
-                        <tr mat-header-row *matHeaderRowDef="['row', 'email', 'error']"></tr>
-                        <tr mat-row *matRowDef="let row; columns: ['row', 'email', 'error'];"></tr>
-                    </table>
-                </div>
-            </mat-tab>
-        </mat-tab-group>
-    </div>
+                  </div>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['email', 'password']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['email', 'password'];"></tr>
+            </table>
+          </div>
+          <div class="actions-row" style="margin-top: 16px; text-align: right;">
+            <button mat-stroked-button (click)="copyAll()">
+              <mat-icon>content_copy</mat-icon> Copy All Results
+            </button>
+          </div>
+        </mat-tab>
+      }
+      @if (importResult.failed_users.length > 0) {
+        <mat-tab label="Failed Rows">
+          <div class="table-container">
+            <table mat-table [dataSource]="importResult.failed_users" class="mat-elevation-z0">
+              <ng-container matColumnDef="row">
+                <th mat-header-cell *matHeaderCellDef> Row </th>
+                <td mat-cell *matCellDef="let item"> {{item.row}} </td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef> Email </th>
+                <td mat-cell *matCellDef="let item"> {{item.email}} </td>
+              </ng-container>
+              <ng-container matColumnDef="error">
+                <th mat-header-cell *matHeaderCellDef> Error </th>
+                <td mat-cell *matCellDef="let item" class="error-text"> {{item.error}} </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="['row', 'email', 'error']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['row', 'email', 'error'];"></tr>
+            </table>
+          </div>
+        </mat-tab>
+      }
+    </mat-tab-group>
+  </div>
+}
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-    <button mat-button (click)="close()">{{ importResult ? 'Close' : 'Cancel' }}</button>
+  <button mat-button (click)="close()">{{ importResult ? 'Close' : 'Cancel' }}</button>
+  @if (!importResult) {
     <button mat-raised-button color="primary" (click)="upload()" [disabled]="!selectedFile || isUploading"
-        *ngIf="!importResult">
-        Import
+      >
+      Import
     </button>
+  }
 </mat-dialog-actions>

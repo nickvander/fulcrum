@@ -1,13 +1,15 @@
-<div class="loading-overlay" *ngIf="loading$ | async">
-  <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
-</div>
+@if (loading$ | async) {
+  <div class="loading-overlay">
+    <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
+  </div>
+}
 
-<ng-container *ngIf="!isLoginPage; else loginPage">
+@if (!isLoginPage) {
   <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #drawer class="sidenav" fixedInViewport
-        [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-        [mode]="(isHandset$ | async) ? 'over' : 'side'"
-        [opened]="(isHandset$ | async) === false">
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+      [mode]="(isHandset$ | async) ? 'over' : 'side'"
+      [opened]="(isHandset$ | async) === false">
       <app-sidenav></app-sidenav>
     </mat-sidenav>
     <mat-sidenav-content>
@@ -17,8 +19,7 @@
       </main>
     </mat-sidenav-content>
   </mat-sidenav-container>
-</ng-container>
-
-<ng-template #loginPage>
+} @else {
   <router-outlet></router-outlet>
-</ng-template>
+}
+

@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { StockHistoryDialog, StockHistoryDialogData } from './stock-history-dialog';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,7 +9,7 @@ import { DatePipe } from '@angular/common';
 describe('StockHistoryDialog', () => {
     let component: StockHistoryDialog;
     let fixture: ComponentFixture<StockHistoryDialog>;
-    let dialogRefMock: jasmine.SpyObj<MatDialogRef<StockHistoryDialog>>;
+    let dialogRefMock: MockedObject<MatDialogRef<StockHistoryDialog>>;
 
     const mockData: StockHistoryDialogData = {
         productName: 'Test Product',
@@ -32,7 +33,9 @@ describe('StockHistoryDialog', () => {
     };
 
     beforeEach(async () => {
-        dialogRefMock = jasmine.createSpyObj('MatDialogRef', ['close']);
+        dialogRefMock = {
+            close: vi.fn().mockName("MatDialogRef.close")
+        } as any;
 
         await TestBed.configureTestingModule({
             imports: [
@@ -68,7 +71,7 @@ describe('StockHistoryDialog', () => {
 
     it('should display no history message when adjustments are empty', () => {
         TestBed.resetTestingModule();
-        const emptyData = { ...mockData, inventoryAdjustments: [] };
+        const emptyData = { ...mockData, inventoryAdjustments: [] } as any;
 
         TestBed.configureTestingModule({
             imports: [StockHistoryDialog, NoopAnimationsModule],

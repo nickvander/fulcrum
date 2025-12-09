@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
@@ -27,121 +28,139 @@ import { ProductFormInitializerService } from '../../services/product-form-initi
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
 describe('ProductForm: Image Management', () => {
-  let component: ProductForm;
-  let fixture: ComponentFixture<ProductForm>;
-  let productServiceMock: jasmine.SpyObj<ProductService>;
-  let notificationServiceMock: jasmine.SpyObj<NotificationService>;
-  let httpMock: HttpTestingController;
-  let routerMock: jasmine.SpyObj<Router>;
-  let activatedRouteMock: any;
-  let dialogMock: jasmine.SpyObj<MatDialog>;
-  let productFormInitializerMock: jasmine.SpyObj<ProductFormInitializerService>;
+    let component: ProductForm;
+    let fixture: ComponentFixture<ProductForm>;
+    let productServiceMock: MockedObject<ProductService>;
+    let notificationServiceMock: MockedObject<NotificationService>;
+    let httpMock: HttpTestingController;
+    let routerMock: MockedObject<Router>;
+    let activatedRouteMock: any;
+    let dialogMock: MockedObject<MatDialog>;
+    let productFormInitializerMock: MockedObject<ProductFormInitializerService>;
 
-  const mockProduct: Product = {
-    id: 1,
-    name: 'Test Product',
-    sku: 'T001',
-    description: '',
-    default_resale_price: 100,
-    cost_price: 50,
-    manufacturer: 'Test Manufacturer',
-    brand: 'Test Brand',
-    category: 'Test Category',
-    width: 10,
-    height: 10,
-    depth: 10,
-    weight: 10,
-  };
-
-  beforeEach(async () => {
-    productServiceMock = jasmine.createSpyObj('ProductService', ['createProduct', 'updateProduct', 'saveCustomFieldValues', 'updateProductImage', 'deleteProductImage', 'setPrimaryProductImage', 'uploadProductImage', 'getProductById']);
-    notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess']);
-    dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    productFormInitializerMock = jasmine.createSpyObj('ProductFormInitializerService', ['initializeForm']);
-    
-    // Create a mock ProductService with a BehaviorSubject that immediately emits
-    const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
-    Object.defineProperty(productServiceMock, 'products$', {
-      get: () => mockProductsSubject.asObservable()
-    });
-
-    routerMock = jasmine.createSpyObj('Router', ['navigate', 'getCurrentNavigation']);
-
-    activatedRouteMock = {
-      snapshot: {
-        params: {}
-      }
+    const mockProduct: Product = {
+        id: 1,
+        name: 'Test Product',
+        sku: 'T001',
+        description: '',
+        default_resale_price: 100,
+        cost_price: 50,
+        manufacturer: 'Test Manufacturer',
+        brand: 'Test Brand',
+        category: 'Test Category',
+        width: 10,
+        height: 10,
+        depth: 10,
+        weight: 10,
     };
 
-    // Set up the initializer mock to return synchronous data for edit mode
-    productFormInitializerMock.initializeForm.and.returnValue(of({
-      customFields: [],
-      product: mockProduct,
-      isEditMode: true,
-      initialPrimaryImageId: null
-    }));
+    beforeEach(async () => {
+        productServiceMock = {
+            createProduct: vi.fn().mockName("ProductService.createProduct"),
+            updateProduct: vi.fn().mockName("ProductService.updateProduct"),
+            saveCustomFieldValues: vi.fn().mockName("ProductService.saveCustomFieldValues"),
+            updateProductImage: vi.fn().mockName("ProductService.updateProductImage"),
+            deleteProductImage: vi.fn().mockName("ProductService.deleteProductImage"),
+            setPrimaryProductImage: vi.fn().mockName("ProductService.setPrimaryProductImage"),
+            uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage"),
+            getProductById: vi.fn().mockName("ProductService.getProductById")
+        } as any;
+        notificationServiceMock = {
+            showSuccess: vi.fn().mockName("NotificationService.showSuccess")
+        } as any;
+        dialogMock = {
+            open: vi.fn().mockName("MatDialog.open")
+        } as any;
+        productFormInitializerMock = {
+            initializeForm: vi.fn().mockName("ProductFormInitializerService.initializeForm")
+        } as any;
 
-    await TestBed.configureTestingModule({
-      imports: [
-        ProductForm,
-        RouterTestingModule,
-        HttpClientTestingModule,
-        ReactiveFormsModule,
-        NoopAnimationsModule,
-        CommonModule,
-        MatIconModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatListModule
-      ],
-      providers: [
-        { provide: ProductService, useValue: productServiceMock },
-        { provide: NotificationService, useValue: notificationServiceMock },
-        { provide: MatDialog, useValue: dialogMock },
-        CustomFieldService,
-        { provide: Router, useValue: routerMock },
-        { provide: ActivatedRoute, useValue: activatedRouteMock },
-        { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
-      ]
-    })
-    .compileComponents();
+        // Create a mock ProductService with a BehaviorSubject that immediately emits
+        const mockProductsSubject = new BehaviorSubject<Product[]>([mockProduct]);
+        Object.defineProperty(productServiceMock, 'products$', {
+            get: () => mockProductsSubject.asObservable()
+        });
 
-    fixture = TestBed.createComponent(ProductForm);
-    component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-  });
+        routerMock = {
+            navigate: vi.fn().mockName("Router.navigate"),
+            getCurrentNavigation: vi.fn().mockName("Router.getCurrentNavigation")
+        } as any;
 
-  afterEach(() => {
-    httpMock.verify();
-  });
+        activatedRouteMock = {
+            snapshot: {
+                params: {}
+            }
+        } as any;
 
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
+        // Set up the initializer mock to return synchronous data for edit mode
+        productFormInitializerMock.initializeForm.mockReturnValue(of({
+            customFields: [],
+            product: mockProduct,
+            isEditMode: true,
+            initialPrimaryImageId: null
+        }));
 
-  it('should navigate to /products on cancel', () => {
-    component.onCancel();
-    expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
-  });
-  
-  describe('image handling', () => {
-    beforeEach(() => {
-      // These tests require the component to be in "edit mode"
-      activatedRouteMock.snapshot.params['id'] = mockProduct.id;
-      routerMock.getCurrentNavigation.and.returnValue(null);
-      // Mock the getProductById method to return an observable with the mock product
-      productServiceMock.getProductById.and.returnValue(of(mockProduct));
-      fixture.detectChanges();
+        await TestBed.configureTestingModule({
+            imports: [
+                ProductForm,
+                RouterTestingModule,
+                HttpClientTestingModule,
+                ReactiveFormsModule,
+                NoopAnimationsModule,
+                CommonModule,
+                MatIconModule,
+                MatCardModule,
+                MatFormFieldModule,
+                MatInputModule,
+                MatButtonModule,
+                MatListModule
+            ],
+            providers: [
+                { provide: ProductService, useValue: productServiceMock },
+                { provide: NotificationService, useValue: notificationServiceMock },
+                { provide: MatDialog, useValue: dialogMock },
+                CustomFieldService,
+                { provide: Router, useValue: routerMock },
+                { provide: ActivatedRoute, useValue: activatedRouteMock },
+                { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
+            ]
+        })
+            .compileComponents();
+
+        fixture = TestBed.createComponent(ProductForm);
+        component = fixture.componentInstance;
+        httpMock = TestBed.inject(HttpTestingController);
     });
 
-    it('should format image URL correctly', () => {
-      const imagePath = 'test.jpg';
-      const formattedUrl = component.getImageUrl(imagePath);
-      expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
+    afterEach(() => {
+        httpMock.verify();
     });
 
-    // Removed specific image handling tests since they are now in the child component
-  });
+    it('should create the component', () => {
+        expect(component).toBeTruthy();
+    });
+
+    it('should navigate to /products on cancel', () => {
+        component.onCancel();
+        expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
+    });
+
+    describe('image handling', () => {
+        beforeEach(() => {
+            // These tests require the component to be in "edit mode"
+            activatedRouteMock.snapshot.params['id'] = mockProduct.id;
+            routerMock.getCurrentNavigation.mockReturnValue(null);
+            // Mock the getProductById method to return an observable with the mock product
+            productServiceMock.getProductById.mockReturnValue(of(mockProduct));
+            fixture.detectChanges();
+        });
+
+        it('should format image URL correctly', () => {
+            const imagePath = 'test.jpg';
+            const formattedUrl = component.getImageUrl(imagePath);
+            expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
+        });
+
+        // Removed specific image handling tests since they are now in the child component
+    });
 });

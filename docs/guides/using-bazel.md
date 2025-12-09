@@ -155,6 +155,9 @@ bazel run //frontend/image:frontend_tarball
 > container is designed for production deployments where networking is configured
 > at the infrastructure level.
 
+> [!WARNING]
+> **Frontend Tests Blocked**: `bazel test //frontend:test` is currently failing due to `sass-embedded` compilation issues within the Bazel sandbox. Use `ng test` for frontend unit testing until this is resolved.
+
 > [!NOTE]
 > The Bazel backend container has a `py_binary` runfiles issue. Use traditional
 > Docker for backend until this is resolved with `rules_pex`.

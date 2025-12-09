@@ -5,21 +5,29 @@
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" autocomplete="off">
-      <mat-error *ngIf="form.get('email')?.hasError('required')">Email is required</mat-error>
-      <mat-error *ngIf="form.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+      @if (form.get('email')?.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      }
+      @if (form.get('email')?.hasError('email')) {
+        <mat-error>Please enter a valid email</mat-error>
+      }
     </mat-form-field>
 
     <div class="form-row">
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>First Name</mat-label>
         <input matInput formControlName="first_name" autocomplete="off">
-        <mat-error *ngIf="form.get('first_name')?.hasError('required')">First name is required</mat-error>
+        @if (form.get('first_name')?.hasError('required')) {
+          <mat-error>First name is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Last Name</mat-label>
         <input matInput formControlName="last_name" autocomplete="off">
-        <mat-error *ngIf="form.get('last_name')?.hasError('required')">Last name is required</mat-error>
+        @if (form.get('last_name')?.hasError('required')) {
+          <mat-error>Last name is required</mat-error>
+        }
       </mat-form-field>
     </div>
 
@@ -31,7 +39,9 @@
           <mat-option value="employee">Employee</mat-option>
           <mat-option value="customer">Customer</mat-option>
         </mat-select>
-        <mat-error *ngIf="form.get('user_type')?.hasError('required')">User type is required</mat-error>
+        @if (form.get('user_type')?.hasError('required')) {
+          <mat-error>User type is required</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="half-width">
@@ -42,9 +52,13 @@
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Password</mat-label>
         <input matInput formControlName="password" [type]="'password'" autocomplete="new-password">
-        <mat-error *ngIf="form.get('password')?.hasError('required')">Password is required</mat-error>
-        <mat-error *ngIf="form.get('password')?.hasError('weakPassword')">Password must be at least 8 characters with
+        @if (form.get('password')?.hasError('required')) {
+          <mat-error>Password is required</mat-error>
+        }
+        @if (form.get('password')?.hasError('weakPassword')) {
+          <mat-error>Password must be at least 8 characters with
           uppercase, lowercase, number and special character</mat-error>
+        }
       </mat-form-field>
     </div>
 
@@ -52,25 +66,33 @@
       <mat-form-field appearance="outline" class="half-width">
         <mat-label>Confirm Password</mat-label>
         <input matInput formControlName="confirm_password" [type]="'password'" autocomplete="off">
-        <mat-error *ngIf="form.get('confirm_password')?.hasError('required')">Please confirm password</mat-error>
-        <mat-error *ngIf="form.hasError('passwordMismatch')">Passwords do not match</mat-error>
+        @if (form.get('confirm_password')?.hasError('required')) {
+          <mat-error>Please confirm password</mat-error>
+        }
+        @if (form.hasError('passwordMismatch')) {
+          <mat-error>Passwords do not match</mat-error>
+        }
       </mat-form-field>
     </div>
 
     <!-- Password Strength Indicator -->
-    <div class="form-row" *ngIf="form.get('password')?.value">
-      <div class="password-strength-container">
-        <label>Password Strength</label>
-        <div class="password-strength-bar">
-          <div class="password-strength-fill" [ngClass]="getPasswordStrengthClass()"></div>
+    @if (form.get('password')?.value) {
+      <div class="form-row">
+        <div class="password-strength-container">
+          <label>Password Strength</label>
+          <div class="password-strength-bar">
+            <div class="password-strength-fill" [ngClass]="getPasswordStrengthClass()"></div>
+          </div>
+          <div class="password-strength-label">{{ getPasswordStrengthLabel() }}</div>
         </div>
-        <div class="password-strength-label">{{ getPasswordStrengthLabel() }}</div>
       </div>
-    </div>
+    }
 
     <div class="form-row">
       <mat-slide-toggle formControlName="is_active">Active</mat-slide-toggle>
-      <mat-slide-toggle formControlName="is_superuser" *ngIf="isCurrentUserAdmin">Superuser</mat-slide-toggle>
+      @if (isCurrentUserAdmin) {
+        <mat-slide-toggle formControlName="is_superuser">Superuser</mat-slide-toggle>
+      }
       <mat-slide-toggle formControlName="force_password_change">Force Password Change</mat-slide-toggle>
     </div>
 

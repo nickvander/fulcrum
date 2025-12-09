@@ -1,6 +1,6 @@
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,13 +16,12 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrls: ['./password-reset-dialog.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule,
-  ],
+    MatButtonModule
+],
 })
 export class PasswordResetDialog implements OnDestroy {
   form: FormGroup;

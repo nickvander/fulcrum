@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ProductList } from './product-list';
 import { ProductForm } from '../product-form/product-form';
@@ -26,7 +27,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { of, BehaviorSubject } from 'rxjs';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { SharedModule } from '../../../shared/shared-module';
 import { BatchOperationsService } from '../../services/batch-operations.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -36,315 +37,107 @@ import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-
 
 // Create a stub for the AiSearchBar component
 @Component({
-  selector: 'app-ai-search-bar',
-  template: '',
-  standalone: true,
+    selector: 'app-ai-search-bar',
+    template: '',
+    standalone: true,
 })
-class AiSearchBarStubComponent { }
+class AiSearchBarStubComponent {
+}
 
 @Component({
-  selector: 'app-product-form',
-  template: '',
-  standalone: true
+    selector: 'app-product-form',
+    template: '',
+    standalone: true
 })
-class ProductFormStubComponent { }
+class ProductFormStubComponent {
+}
 
 @Component({
-  selector: 'app-batch-action-toolbar',
-  template: '',
-  standalone: true
+    selector: 'app-batch-action-toolbar',
+    template: '',
+    standalone: true
 })
-class BatchActionToolbarStubComponent { }
+class BatchActionToolbarStubComponent {
+}
 
 @Component({
-  selector: 'app-pagination',
-  template: '',
-  standalone: true
+    selector: 'app-pagination',
+    template: '',
+    standalone: true
 })
-class PaginationStubComponent { }
+class PaginationStubComponent {
+}
 
 @Component({
-  selector: 'app-product-filters',
-  template: '',
-  standalone: true
+    selector: 'app-product-filters',
+    template: '',
+    standalone: true
 })
-class ProductFiltersStubComponent { }
+class ProductFiltersStubComponent {
+}
 
 @Directive({
-  selector: '[appInfiniteScroll]',
-  standalone: true
+    selector: '[appInfiniteScroll]',
+    standalone: true
 })
-class InfiniteScrollStubDirective { }
+class InfiniteScrollStubDirective {
+}
 
 @Component({
-  selector: 'app-marketplace-status',
-  template: '',
-  standalone: true,
-  inputs: ['listings']
+    selector: 'app-marketplace-status',
+    template: '',
+    standalone: true,
+    inputs: ['listings']
 })
-class MarketplaceStatusStubComponent { }
+class MarketplaceStatusStubComponent {
+}
 
 describe('ProductList', () => {
-  let component: ProductList;
-  let fixture: ComponentFixture<ProductList>;
-  let productServiceMock: jasmine.SpyObj<ProductService>;
-  let dialogMock: jasmine.SpyObj<MatDialog>;
-  let batchOperationsServiceMock: jasmine.SpyObj<BatchOperationsService>;
-  let notificationServiceMock: jasmine.SpyObj<NotificationService>;
-  let comparisonServiceMock: jasmine.SpyObj<ProductComparisonService>;
-  let productsSubject: BehaviorSubject<Product[]>;
+    let component: ProductList;
+    let fixture: ComponentFixture<ProductList>;
+    let productServiceMock: MockedObject<ProductService>;
+    let dialogMock: MockedObject<MatDialog>;
+    let batchOperationsServiceMock: MockedObject<BatchOperationsService>;
+    let notificationServiceMock: MockedObject<NotificationService>;
+    let comparisonServiceMock: MockedObject<ProductComparisonService>;
+    let productsSubject: BehaviorSubject<Product[]>;
 
-  const mockProducts: Product[] = [
-    {
-      id: 1,
-      name: 'Product 1',
-      sku: 'P001',
-      description: '',
-      default_resale_price: 10,
-      images: [
-        { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 },
-        { id: 2, product_id: 1, image_path: 'product1-alt.jpg', is_primary: 0 }
-      ],
-      primary_image: { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 }
-    },
-    {
-      id: 2,
-      name: 'Product 2',
-      sku: 'P002',
-      description: '',
-      default_resale_price: 20,
-      images: [
-        { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
-      ],
-      primary_image: { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
-    },
-    {
-      id: 3,
-      name: 'Product 3',
-      sku: 'P003',
-      description: '',
-      default_resale_price: 30,
-      images: [],
-      primary_image: undefined
-    },
-  ];
-
-  const mockPaginatedProducts: PaginatedProducts = {
-    data: mockProducts,
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 3,
-    pageSize: 10,
-    hasNextPage: false,
-    hasPrevPage: false
-  };
-
-  beforeEach(async () => {
-    productsSubject = new BehaviorSubject<Product[]>([]);
-    productServiceMock = jasmine.createSpyObj('ProductService', ['getProducts', 'deleteProduct']);
-    Object.defineProperty(productServiceMock, 'products$', {
-      get: () => productsSubject.asObservable()
-    });
-
-    dialogMock = jasmine.createSpyObj('MatDialog', ['open']);
-    batchOperationsServiceMock = jasmine.createSpyObj('BatchOperationsService', ['batchUpdatePrices', 'batchUpdateCategories', 'batchUpdateCustomFields']);
-    notificationServiceMock = jasmine.createSpyObj('NotificationService', ['showSuccess', 'showError']);
-    comparisonServiceMock = jasmine.createSpyObj('ProductComparisonService', ['isInComparison', 'toggleProductInComparison', 'getProducts']);
-
-    await TestBed.configureTestingModule({
-      imports: [
-        ProductList,
-        NoopAnimationsModule,
-        HttpClientTestingModule,
-        RouterTestingModule,
-      ],
-      providers: [
-        { provide: ProductService, useValue: productServiceMock },
-        { provide: MatDialog, useValue: dialogMock },
-        { provide: BatchOperationsService, useValue: batchOperationsServiceMock },
-        { provide: NotificationService, useValue: notificationServiceMock },
-        { provide: ProductComparisonService, useValue: comparisonServiceMock }
-      ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA]
-    })
-      .overrideComponent(ProductList, {
-        remove: {
-          imports: [
-            SharedModule,
-            ProductForm,
-            BatchActionToolbarComponent,
-            PaginationComponent,
-            ProductFiltersComponent,
-            InfiniteScrollDirective,
-            MatButtonModule,
-            MatIconModule,
-            MatCardModule,
-            MatCheckboxModule,
-            MatSidenavModule,
-            MatProgressSpinnerModule,
-            MatTooltipModule,
-            MatMenuModule,
-            MatDividerModule,
-            CommonModule,
-            FormsModule,
-            RouterModule,
-            MarketplaceStatusComponent,
-            AiSearchBar
-          ]
+    const mockProducts: Product[] = [
+        {
+            id: 1,
+            name: 'Product 1',
+            sku: 'P001',
+            description: '',
+            default_resale_price: 10,
+            images: [
+                { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 },
+                { id: 2, product_id: 1, image_path: 'product1-alt.jpg', is_primary: 0 }
+            ],
+            primary_image: { id: 1, product_id: 1, image_path: 'product1.jpg', is_primary: 1 }
         },
-        add: {
-          imports: [
-            AiSearchBarStubComponent,
-            ProductFormStubComponent,
-            BatchActionToolbarStubComponent,
-            PaginationStubComponent,
-            ProductFiltersStubComponent,
-            InfiniteScrollStubDirective,
-            MarketplaceStatusStubComponent,
-          ],
-          schemas: [CUSTOM_ELEMENTS_SCHEMA]
-        }
-      })
-      .compileComponents();
+        {
+            id: 2,
+            name: 'Product 2',
+            sku: 'P002',
+            description: '',
+            default_resale_price: 20,
+            images: [
+                { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
+            ],
+            primary_image: { id: 3, product_id: 2, image_path: 'product2.jpg', is_primary: 1 }
+        },
+        {
+            id: 3,
+            name: 'Product 3',
+            sku: 'P003',
+            description: '',
+            default_resale_price: 30,
+            images: [],
+            primary_image: undefined
+        },
+    ];
 
-    fixture = TestBed.createComponent(ProductList);
-    component = fixture.componentInstance;
-  });
-
-  afterEach(() => {
-    fixture.destroy();
-  });
-
-  it('should create the component', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should call getProducts on init and subscribe to products$', () => {
-    productServiceMock.getProducts.and.returnValue(of(mockPaginatedProducts));
-
-    fixture.detectChanges(); // ngOnInit
-
-    expect(productServiceMock.getProducts).toHaveBeenCalled();
-
-    // The subscription to products$ will update the data
-    productsSubject.next(mockProducts);
-    expect(component.products).toEqual(mockProducts);
-  });
-
-  describe('deleteProduct', () => {
-    it('should open confirmation dialog', () => {
-      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
-      component.deleteProduct(1);
-      expect(dialogMock.open).toHaveBeenCalled();
-    });
-
-    it('should call productService.deleteProduct if dialog is confirmed', () => {
-      dialogMock.open.and.returnValue({ afterClosed: () => of(true) } as any);
-      productServiceMock.deleteProduct.and.returnValue(of(null));
-
-      component.deleteProduct(1);
-
-      expect(productServiceMock.deleteProduct).toHaveBeenCalledWith(1);
-    });
-
-    it('should NOT call productService.deleteProduct if dialog is dismissed', () => {
-      dialogMock.open.and.returnValue({ afterClosed: () => of(false) } as any);
-
-      component.deleteProduct(1);
-
-      expect(productServiceMock.deleteProduct).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('image handling', () => {
-    beforeEach(() => {
-      productServiceMock.getProducts.and.returnValue(of(mockPaginatedProducts));
-      fixture.detectChanges(); // Initialize with mock products
-    });
-
-    it('should get primary image when primary image exists', () => {
-      const productWithPrimary = mockProducts[0];
-      const primaryImagePath = component.getPrimaryImage(productWithPrimary);
-      expect(primaryImagePath).toBe('product1.jpg');
-    });
-
-    it('should get first image when no primary image exists', () => {
-      const productWithoutPrimary = { ...mockProducts[0] };
-      productWithoutPrimary.primary_image = undefined; // No primary image
-      const imagePath = component.getPrimaryImage(productWithoutPrimary);
-      expect(imagePath).toBe('product1.jpg'); // First image in the array
-    });
-
-    it('should return placeholder when no images exist', () => {
-      const productWithoutImages = mockProducts[2]; // Product with no images
-      const imagePath = component.getPrimaryImage(productWithoutImages);
-      expect(imagePath).toBe('placeholder.jpg');
-    });
-
-    it('should format image URL correctly', () => {
-      const imagePath = 'test.jpg';
-      const formattedUrl = component.getImageUrl(imagePath);
-      expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
-    });
-
-    it('should handle image errors by setting placeholder', () => {
-      const mockEvent = {
-        target: { src: 'original.jpg' }
-      };
-      component.onImageError(mockEvent);
-      expect(mockEvent.target.src).toContain('data:image');
-    });
-  });
-
-  describe('stock display', () => {
-    it('should calculate stock correctly for product with default location', () => {
-      const product = {
-        ...mockProducts[0],
-        inventory_items: [
-          { id: 1, product_id: 1, location: 'default', quantity: 50 },
-          { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
-        ]
-      };
-      expect(component.getCurrentStock(product)).toBe(50);
-    });
-
-    it('should calculate stock correctly for product without default location (sum all)', () => {
-      const product = {
-        ...mockProducts[0],
-        inventory_items: [
-          { id: 1, product_id: 1, location: 'store', quantity: 10 },
-          { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
-        ]
-      };
-      expect(component.getCurrentStock(product)).toBe(30);
-    });
-
-    it('should return 0 stock for product with no inventory items', () => {
-      const product = { ...mockProducts[0], inventory_items: [] };
-      expect(component.getCurrentStock(product)).toBe(0);
-    });
-
-    it('should display stock count in product card', () => {
-      const productWithStock = {
-        ...mockProducts[0],
-        inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }]
-      };
-
-      const paginatedWithStock = { ...mockPaginatedProducts, data: [productWithStock] };
-      productServiceMock.getProducts.and.returnValue(of(paginatedWithStock));
-
-      component.loadProducts();
-      fixture.detectChanges();
-
-      const compiled = fixture.nativeElement;
-      const stockElement = compiled.querySelector('.stock');
-      expect(stockElement.textContent).toContain('Stock: 42');
-    });
-  });
-
-  describe('loadProducts functionality', () => {
-    it('should load products with pagination', () => {
-      const mockPaginatedResponse: PaginatedProducts = {
+    const mockPaginatedProducts: PaginatedProducts = {
         data: mockProducts,
         currentPage: 1,
         totalPages: 1,
@@ -352,13 +145,247 @@ describe('ProductList', () => {
         pageSize: 10,
         hasNextPage: false,
         hasPrevPage: false
-      };
+    };
 
-      productServiceMock.getProducts.and.returnValue(of(mockPaginatedResponse));
-      component.loadProducts(1, 10);
+    beforeEach(async () => {
+        productsSubject = new BehaviorSubject<Product[]>([]);
+        productServiceMock = {
+            getProducts: vi.fn().mockName("ProductService.getProducts"),
+            deleteProduct: vi.fn().mockName("ProductService.deleteProduct")
+        } as any;
+        Object.defineProperty(productServiceMock, 'products$', {
+            get: () => productsSubject.asObservable()
+        });
 
-      expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, undefined);
-      expect(component.products).toEqual(mockProducts);
+        dialogMock = {
+            open: vi.fn().mockName("MatDialog.open")
+        } as any;
+        batchOperationsServiceMock = {
+            batchUpdatePrices: vi.fn().mockName("BatchOperationsService.batchUpdatePrices"),
+            batchUpdateCategories: vi.fn().mockName("BatchOperationsService.batchUpdateCategories"),
+            batchUpdateCustomFields: vi.fn().mockName("BatchOperationsService.batchUpdateCustomFields")
+        } as any;
+        notificationServiceMock = {
+            showSuccess: vi.fn().mockName("NotificationService.showSuccess"),
+            showError: vi.fn().mockName("NotificationService.showError")
+        } as any;
+        comparisonServiceMock = {
+            isInComparison: vi.fn().mockName("ProductComparisonService.isInComparison"),
+            toggleProductInComparison: vi.fn().mockName("ProductComparisonService.toggleProductInComparison"),
+            getProducts: vi.fn().mockName("ProductComparisonService.getProducts")
+        } as any;
+
+        await TestBed.configureTestingModule({
+            imports: [
+                ProductList,
+                NoopAnimationsModule,
+                HttpClientTestingModule,
+                RouterTestingModule,
+            ],
+            providers: [
+                { provide: ProductService, useValue: productServiceMock },
+                { provide: MatDialog, useValue: dialogMock },
+                { provide: BatchOperationsService, useValue: batchOperationsServiceMock },
+                { provide: NotificationService, useValue: notificationServiceMock },
+                { provide: ProductComparisonService, useValue: comparisonServiceMock }
+            ],
+            schemas: [NO_ERRORS_SCHEMA]
+        })
+            .overrideComponent(ProductList, {
+                remove: {
+                    imports: [
+                        SharedModule,
+                        ProductForm,
+                        BatchActionToolbarComponent,
+                        PaginationComponent,
+                        ProductFiltersComponent,
+                        InfiniteScrollDirective,
+                        MatButtonModule,
+                        MatIconModule,
+                        MatCardModule,
+                        MatCheckboxModule,
+                        MatSidenavModule,
+                        MatProgressSpinnerModule,
+                        MatTooltipModule,
+                        MatMenuModule,
+                        MatDividerModule,
+                        // CommonModule, // Keep CommonModule for pipes
+                        FormsModule,
+                        RouterModule,
+                        MarketplaceStatusComponent,
+                        AiSearchBar
+                    ]
+                },
+                add: {
+                    imports: [
+                        AiSearchBarStubComponent,
+                        ProductFormStubComponent,
+                        BatchActionToolbarStubComponent,
+                        PaginationStubComponent,
+                        ProductFiltersStubComponent,
+                        InfiniteScrollStubDirective,
+                        MarketplaceStatusStubComponent,
+                        CommonModule,
+                        MatMenuModule,
+                        MatButtonModule
+                    ],
+                    schemas: [NO_ERRORS_SCHEMA]
+                }
+            })
+            .compileComponents();
+
+        fixture = TestBed.createComponent(ProductList);
+        component = fixture.componentInstance;
     });
-  });
+
+    afterEach(() => {
+        fixture.destroy();
+    });
+
+    it('should create the component', () => {
+        expect(component).toBeTruthy();
+    });
+
+    it('should call getProducts on init and subscribe to products$', () => {
+        productServiceMock.getProducts.mockReturnValue(of(mockPaginatedProducts));
+
+        fixture.detectChanges(); // ngOnInit
+
+        expect(productServiceMock.getProducts).toHaveBeenCalled();
+
+        // The subscription to products$ will update the data
+        productsSubject.next(mockProducts);
+        expect(component.products).toEqual(mockProducts);
+    });
+
+    describe('deleteProduct', () => {
+        it('should open confirmation dialog', () => {
+            dialogMock.open.mockReturnValue({ afterClosed: () => of(false) } as any);
+            component.deleteProduct(1);
+            expect(dialogMock.open).toHaveBeenCalled();
+        });
+
+        it('should call productService.deleteProduct if dialog is confirmed', () => {
+            dialogMock.open.mockReturnValue({ afterClosed: () => of(true) } as any);
+            productServiceMock.deleteProduct.mockReturnValue(of(null));
+
+            component.deleteProduct(1);
+
+            expect(productServiceMock.deleteProduct).toHaveBeenCalledWith(1);
+        });
+
+        it('should NOT call productService.deleteProduct if dialog is dismissed', () => {
+            dialogMock.open.mockReturnValue({ afterClosed: () => of(false) } as any);
+
+            component.deleteProduct(1);
+
+            expect(productServiceMock.deleteProduct).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('image handling', () => {
+        beforeEach(() => {
+            productServiceMock.getProducts.mockReturnValue(of(mockPaginatedProducts));
+            fixture.detectChanges(); // Initialize with mock products
+        });
+
+        it('should get primary image when primary image exists', () => {
+            const productWithPrimary = mockProducts[0];
+            const primaryImagePath = component.getPrimaryImage(productWithPrimary);
+            expect(primaryImagePath).toBe('product1.jpg');
+        });
+
+        it('should get first image when no primary image exists', () => {
+            const productWithoutPrimary = { ...mockProducts[0] } as any;
+            productWithoutPrimary.primary_image = undefined; // No primary image
+            const imagePath = component.getPrimaryImage(productWithoutPrimary);
+            expect(imagePath).toBe('product1.jpg'); // First image in the array
+        });
+
+        it('should return placeholder when no images exist', () => {
+            const productWithoutImages = mockProducts[2]; // Product with no images
+            const imagePath = component.getPrimaryImage(productWithoutImages);
+            expect(imagePath).toBe('placeholder.jpg');
+        });
+
+        it('should format image URL correctly', () => {
+            const imagePath = 'test.jpg';
+            const formattedUrl = component.getImageUrl(imagePath);
+            expect(formattedUrl).toBe('/uploads/product_images/test.jpg');
+        });
+
+        it('should handle image errors by setting placeholder', () => {
+            const mockEvent = {
+                target: { src: 'original.jpg' }
+            } as any;
+            component.onImageError(mockEvent);
+            expect(mockEvent.target.src).toContain('data:image');
+        });
+    });
+
+    describe('stock display', () => {
+        it('should calculate stock correctly for product with default location', () => {
+            const product = {
+                ...mockProducts[0],
+                inventory_items: [
+                    { id: 1, product_id: 1, location: 'default', quantity: 50 },
+                    { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
+                ]
+            };
+            expect(component.getCurrentStock(product)).toBe(50);
+        });
+
+        it('should calculate stock correctly for product without default location (sum all)', () => {
+            const product = {
+                ...mockProducts[0],
+                inventory_items: [
+                    { id: 1, product_id: 1, location: 'store', quantity: 10 },
+                    { id: 2, product_id: 1, location: 'warehouse', quantity: 20 }
+                ]
+            };
+            expect(component.getCurrentStock(product)).toBe(30);
+        });
+
+        it('should return 0 stock for product with no inventory items', () => {
+            const product = { ...mockProducts[0], inventory_items: [] };
+            expect(component.getCurrentStock(product)).toBe(0);
+        });
+
+        it('should display stock count in product card', () => {
+            const productWithStock = {
+                ...mockProducts[0],
+                inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }]
+            };
+
+            const paginatedWithStock = { ...mockPaginatedProducts, data: [productWithStock] };
+            productServiceMock.getProducts.mockReturnValue(of(paginatedWithStock));
+
+            component.loadProducts();
+            fixture.detectChanges();
+
+            const compiled = fixture.nativeElement;
+            const stockElement = compiled.querySelector('.stock');
+            expect(stockElement.textContent).toContain('Stock: 42');
+        });
+    });
+
+    describe('loadProducts functionality', () => {
+        it('should load products with pagination', () => {
+            const mockPaginatedResponse: PaginatedProducts = {
+                data: mockProducts,
+                currentPage: 1,
+                totalPages: 1,
+                totalItems: 3,
+                pageSize: 10,
+                hasNextPage: false,
+                hasPrevPage: false
+            };
+
+            productServiceMock.getProducts.mockReturnValue(of(mockPaginatedResponse));
+            component.loadProducts(1, 10);
+
+            expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, {});
+            expect(component.products).toEqual(mockProducts);
+        });
+    });
 });

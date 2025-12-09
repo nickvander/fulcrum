@@ -8,6 +8,7 @@ describe('AuthInterceptor', () => {
     TestBed.runInInjectionContext(() => AuthInterceptor(req, next));
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
   });
 

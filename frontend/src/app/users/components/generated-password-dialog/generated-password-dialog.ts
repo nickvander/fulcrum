@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,11 +10,10 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./generated-password-dialog.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
-    MatIconModule,
-  ],
+    MatIconModule
+],
 })
 export class GeneratedPasswordDialog {
   constructor(

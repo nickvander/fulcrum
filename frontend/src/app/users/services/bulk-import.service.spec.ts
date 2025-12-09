@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { BulkImportService } from './bulk-import.service';
@@ -5,11 +6,13 @@ import { UserService } from './user.service';
 
 describe('BulkImportService', () => {
     let service: BulkImportService;
-    let userServiceMock: jasmine.SpyObj<UserService>;
+    let userServiceMock: MockedObject<UserService>;
 
     beforeEach(() => {
         // Create mock UserService
-        userServiceMock = jasmine.createSpyObj('UserService', ['bulkImportUsers']);
+        userServiceMock = {
+            bulkImportUsers: vi.fn().mockName("UserService.bulkImportUsers")
+        } as unknown as MockedObject<UserService>;
 
         TestBed.configureTestingModule({
             providers: [
@@ -54,33 +57,33 @@ describe('BulkImportService', () => {
     });
 
     describe('processFile', () => {
-        it('should call userService.bulkImportUsers', (done) => {
+        it('should call userService.bulkImportUsers', async () => {
             const file = new File(['test'], 'test.csv', { type: 'text/csv' });
             const mockResult = {
                 created_users: [{ email: 'test@example.com', temporary_password: 'pass123' }],
                 failed_users: []
-            };
+            } as any;
 
-            userServiceMock.bulkImportUsers.and.returnValue(of(mockResult));
+            userServiceMock.bulkImportUsers.mockReturnValue(of(mockResult));
 
             service.processFile(file).subscribe(result => {
                 expect(result).toEqual(mockResult);
                 expect(userServiceMock.bulkImportUsers).toHaveBeenCalledWith(file);
-                done();
+                ;
             });
         });
 
-        it('should propagate errors from userService', (done) => {
+        it('should propagate errors from userService', async () => {
             const file = new File(['test'], 'test.csv', { type: 'text/csv' });
-            const error = { error: { detail: 'Import failed' } };
+            const error = { error: { detail: 'Import failed' } } as any;
 
-            userServiceMock.bulkImportUsers.and.returnValue(throwError(() => error));
+            userServiceMock.bulkImportUsers.mockReturnValue(throwError(() => error));
 
             service.processFile(file).subscribe({
-                next: () => fail('should have errored'),
+                next: () => expect.fail('should have errored'),
                 error: (err) => {
                     expect(err).toEqual(error);
-                    done();
+                    ;
                 }
             });
         });

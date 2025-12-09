@@ -11,10 +11,12 @@
     <mat-icon matListItemIcon>local_shipping</mat-icon>
     <span matListItemTitle>Suppliers</span>
   </a>
-  <a mat-list-item routerLink="/users" routerLinkActive="active-link" *ngIf="isAdmin$ | async">
-    <mat-icon matListItemIcon>people</mat-icon>
-    <span matListItemTitle>Users</span>
-  </a>
+  @if (isAdmin$ | async) {
+    <a mat-list-item routerLink="/users" routerLinkActive="active-link">
+      <mat-icon matListItemIcon>people</mat-icon>
+      <span matListItemTitle>Users</span>
+    </a>
+  }
 
   <a mat-list-item routerLink="/settings" routerLinkActive="active-link">
     <mat-icon matListItemIcon>settings</mat-icon>
