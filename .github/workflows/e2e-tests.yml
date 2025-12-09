@@ -13,16 +13,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
           
       - name: Install Root Dependencies
         run: npm ci
         
       - name: Install Frontend Dependencies
-        run: npm ci --prefix frontend
+        working-directory: ./frontend
+        run: pnpm install
         
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
@@ -39,7 +47,7 @@ jobs:
           timeout 60s bash -c 'until curl -s http://localhost:8000/docs > /dev/null; do sleep 2; done'
           
       - name: Start Frontend
-        run: npm start --prefix frontend &
+        run: cd frontend && pnpm start &
         
       - name: Wait for Frontend
         run: npx wait-on http://localhost:4200 --timeout 120000
