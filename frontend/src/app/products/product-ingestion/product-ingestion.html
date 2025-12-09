@@ -12,13 +12,17 @@
     </button>
   </div>
 
-  <div class="results" *ngIf="scannedData">
-    <h2>Scanned Barcode Data:</h2>
-    <pre>{{ scannedData | json }}</pre>
-  </div>
+  @if (scannedData) {
+    <div class="results">
+      <h2>Scanned Barcode Data:</h2>
+      <pre>{{ scannedData | json }}</pre>
+    </div>
+  }
 
-  <div class="results" *ngIf="capturedImage">
-    <h2>Captured Image:</h2>
-    <img [src]="capturedImage | safeUrl" alt="Captured product image" />
-  </div>
+  @if (capturedImage) {
+    <div class="results">
+      <h2>Captured Image:</h2>
+      <img [src]="capturedImage | safeUrl" alt="Captured product image" />
+    </div>
+  }
 </div>

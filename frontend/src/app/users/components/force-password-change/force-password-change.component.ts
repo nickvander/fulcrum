@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { CommonModule } from '@angular/common';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,15 +14,14 @@ import { MatIconModule } from '@angular/material/icon';
     selector: 'app-force-password-change',
     standalone: true,
     imports: [
-        CommonModule,
-        ReactiveFormsModule,
-        MatCardModule,
-        MatFormFieldModule,
-        MatInputModule,
-        MatButtonModule,
-        MatIconModule,
-        MatSnackBarModule
-    ],
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSnackBarModule
+],
     template: `
     <div class="container">
       <mat-card>
@@ -38,39 +37,49 @@ import { MatIconModule } from '@angular/material/icon';
               <button mat-icon-button matSuffix (click)="hideCurrent = !hideCurrent" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideCurrent" type="button">
                 <mat-icon>{{hideCurrent ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
-              <mat-error *ngIf="passwordForm.get('currentPassword')?.hasError('required')">
-                Current password is required
-              </mat-error>
+              @if (passwordForm.get('currentPassword')?.hasError('required')) {
+                <mat-error>
+                  Current password is required
+                </mat-error>
+              }
             </mat-form-field>
-
+    
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>New Password</mat-label>
               <input matInput [type]="hideNew ? 'password' : 'text'" formControlName="newPassword">
               <button mat-icon-button matSuffix (click)="hideNew = !hideNew" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideNew" type="button">
                 <mat-icon>{{hideNew ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
-              <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('required')">
-                New password is required
-              </mat-error>
-              <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('minlength')">
-                Password must be at least 8 characters
-              </mat-error>
+              @if (passwordForm.get('newPassword')?.hasError('required')) {
+                <mat-error>
+                  New password is required
+                </mat-error>
+              }
+              @if (passwordForm.get('newPassword')?.hasError('minlength')) {
+                <mat-error>
+                  Password must be at least 8 characters
+                </mat-error>
+              }
             </mat-form-field>
-
+    
             <mat-form-field appearance="fill" class="full-width">
               <mat-label>Confirm New Password</mat-label>
               <input matInput [type]="hideConfirm ? 'password' : 'text'" formControlName="confirmPassword">
               <button mat-icon-button matSuffix (click)="hideConfirm = !hideConfirm" [attr.aria-label]="'Hide password'" [attr.aria-pressed]="hideConfirm" type="button">
                 <mat-icon>{{hideConfirm ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
-              <mat-error *ngIf="passwordForm.get('confirmPassword')?.hasError('required')">
-                Confirm password is required
-              </mat-error>
-              <mat-error *ngIf="passwordForm.hasError('mismatch')">
-                Passwords do not match
-              </mat-error>
+              @if (passwordForm.get('confirmPassword')?.hasError('required')) {
+                <mat-error>
+                  Confirm password is required
+                </mat-error>
+              }
+              @if (passwordForm.hasError('mismatch')) {
+                <mat-error>
+                  Passwords do not match
+                </mat-error>
+              }
             </mat-form-field>
-
+    
             <div class="actions">
               <button mat-raised-button color="primary" type="submit" [disabled]="passwordForm.invalid || isLoading">
                 {{ isLoading ? 'Updating...' : 'Update Password' }}
@@ -80,7 +89,7 @@ import { MatIconModule } from '@angular/material/icon';
         </mat-card-content>
       </mat-card>
     </div>
-  `,
+    `,
     styles: [`
     .container {
       display: flex;

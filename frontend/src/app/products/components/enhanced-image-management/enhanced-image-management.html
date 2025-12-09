@@ -4,64 +4,63 @@
     <span class="image-count">{{ images.length }} images</span>
   </div>
 
-  <div 
-    cdkDropList 
+  <div
+    cdkDropList
     class="image-list"
     (cdkDropListDropped)="onReorder($event)">
-    
-    <div 
-      *ngFor="let image of images; trackBy: trackByFn"
-      cdkDrag
-      [cdkDragData]="image"
-      class="image-item"
-      [class.primary]="image.is_primary === 1">
-      
-      <div class="image-info">
-        <img 
-          [src]="getImageUrl(image.image_path)" 
-          [alt]="image.title || 'Product Image'" 
-          class="image-preview"
-          (error)="onImageError($event)">
-        
-        <div class="image-details">
-          <div class="image-title" *ngIf="image.title">{{ image.title }}</div>
-          <div class="image-description" *ngIf="image.description">{{ image.description }}</div>
-          
-          <div class="alt-text-input">
-            <label>Alt Text:</label>
-            <input 
-              type="text" 
-              [value]="image.title || ''"
-              (input)="onAltTextChange(image.id, $any($event.target).value)"
-              placeholder="Alternative text for accessibility">
+
+    @for (image of images; track trackByFn($index, image)) {
+      <div
+        cdkDrag
+        [cdkDragData]="image"
+        class="image-item"
+        [class.primary]="image.is_primary === 1">
+        <div class="image-info">
+          <img
+            [src]="getImageUrl(image.image_path)"
+            [alt]="image.title || 'Product Image'"
+            class="image-preview"
+            (error)="onImageError($event)">
+          <div class="image-details">
+            @if (image.title) {
+              <div class="image-title">{{ image.title }}</div>
+            }
+            @if (image.description) {
+              <div class="image-description">{{ image.description }}</div>
+            }
+            <div class="alt-text-input">
+              <label>Alt Text:</label>
+              <input
+                type="text"
+                [value]="image.title || ''"
+                (input)="onAltTextChange(image.id, $any($event.target).value)"
+                placeholder="Alternative text for accessibility">
+            </div>
           </div>
         </div>
+        <div class="image-actions">
+          <button
+            mat-icon-button
+            cdkDragHandle
+            matTooltip="Drag to reorder">
+            <mat-icon>drag_indicator</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            [color]="image.is_primary === 1 ? 'accent' : 'basic'"
+            (click)="setAsPrimary(image.id)"
+            matTooltip="{{ image.is_primary === 1 ? 'Primary image' : 'Set as primary image' }}">
+            <mat-icon>star</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            color="warn"
+            (click)="deleteImage(image.id)"
+            matTooltip="Delete image">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
       </div>
-      
-      <div class="image-actions">
-        <button 
-          mat-icon-button 
-          cdkDragHandle
-          matTooltip="Drag to reorder">
-          <mat-icon>drag_indicator</mat-icon>
-        </button>
-        
-        <button 
-          mat-icon-button 
-          [color]="image.is_primary === 1 ? 'accent' : 'basic'"
-          (click)="setAsPrimary(image.id)"
-          matTooltip="{{ image.is_primary === 1 ? 'Primary image' : 'Set as primary image' }}">
-          <mat-icon>star</mat-icon>
-        </button>
-        
-        <button 
-          mat-icon-button 
-          color="warn" 
-          (click)="deleteImage(image.id)"
-          matTooltip="Delete image">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    </div>
+    }
   </div>
 </div>

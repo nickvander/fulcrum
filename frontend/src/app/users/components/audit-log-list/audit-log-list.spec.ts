@@ -1,3 +1,4 @@
+import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ import { User } from '../../../shared/models/user.model';
 describe('AuditLogList', () => {
     let component: AuditLogList;
     let fixture: ComponentFixture<AuditLogList>;
-    let auditLogService: jasmine.SpyObj<AuditLogService>;
+    let auditLogService: MockedObject<AuditLogService>;
     let userService: UserService;
 
     const mockAuditLogs: UserAuditLog[] = [
@@ -77,8 +78,10 @@ describe('AuditLogList', () => {
     ];
 
     beforeEach(async () => {
-        const auditLogServiceSpy = jasmine.createSpyObj('AuditLogService', ['getAuditLogs']);
-        auditLogServiceSpy.getAuditLogs.and.returnValue(of(mockAuditLogs));
+        const auditLogServiceSpy = {
+            getAuditLogs: vi.fn().mockName("AuditLogService.getAuditLogs")
+        } as any;
+        auditLogServiceSpy.getAuditLogs.mockReturnValue(of(mockAuditLogs));
 
         await TestBed.configureTestingModule({
             imports: [
@@ -101,17 +104,17 @@ describe('AuditLogList', () => {
         })
             .compileComponents();
 
-        auditLogService = TestBed.inject(AuditLogService) as jasmine.SpyObj<AuditLogService>;
+        auditLogService = TestBed.inject(AuditLogService) as MockedObject<AuditLogService>;
         userService = TestBed.inject(UserService);
 
         // Mock getUser to return specific users
-        spyOn(userService, 'getUser').and.callFake((id) => {
+        vi.spyOn(userService, 'getUser').mockImplementation((id) => {
             const user = mockUsers.find(u => u.id === id);
             return of(user || mockUsers[0]);
         });
 
         // Mock getUsers to return all users
-        spyOn(userService, 'getUsers').and.returnValue(of(mockUsers));
+        vi.spyOn(userService, 'getUsers').mockReturnValue(of(mockUsers));
     });
 
     beforeEach(() => {

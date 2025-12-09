@@ -12,7 +12,9 @@
       <mat-label>Category</mat-label>
       <mat-select [(value)]="category" (selectionChange)="onFiltersChange()">
         <mat-option value="">All Categories</mat-option>
-        <mat-option *ngFor="let cat of categories" [value]="cat">{{ cat }}</mat-option>
+        @for (cat of categories; track cat) {
+          <mat-option [value]="cat">{{ cat }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
@@ -23,7 +25,9 @@
       <mat-label>Brand</mat-label>
       <mat-select [(value)]="brand" (selectionChange)="onFiltersChange()">
         <mat-option value="">All Brands</mat-option>
-        <mat-option *ngFor="let brandOption of brands" [value]="brandOption">{{ brandOption }}</mat-option>
+        @for (brandOption of brands; track brandOption) {
+          <mat-option [value]="brandOption">{{ brandOption }}</mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </div>
@@ -33,21 +37,21 @@
     <div class="price-range">
       <mat-form-field class="price-input">
         <mat-label>Min</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          [(ngModel)]="minPrice" 
-          (input)="onFiltersChange()" 
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="minPrice"
+          (input)="onFiltersChange()"
           placeholder="0">
       </mat-form-field>
       <span class="range-separator">to</span>
       <mat-form-field class="price-input">
         <mat-label>Max</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          [(ngModel)]="maxPrice" 
-          (input)="onFiltersChange()" 
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="maxPrice"
+          (input)="onFiltersChange()"
           placeholder="1000">
       </mat-form-field>
     </div>
@@ -58,21 +62,21 @@
     <div class="stock-range">
       <mat-form-field class="stock-input">
         <mat-label>Min</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          [(ngModel)]="minStock" 
-          (input)="onFiltersChange()" 
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="minStock"
+          (input)="onFiltersChange()"
           placeholder="0">
       </mat-form-field>
       <span class="range-separator">to</span>
       <mat-form-field class="stock-input">
         <mat-label>Max</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          [(ngModel)]="maxStock" 
-          (input)="onFiltersChange()" 
+        <input
+          matInput
+          type="number"
+          [(ngModel)]="maxStock"
+          (input)="onFiltersChange()"
           placeholder="1000">
       </mat-form-field>
     </div>
@@ -80,8 +84,8 @@
 
   <div class="filter-section">
     <h4>Availability</h4>
-    <mat-checkbox 
-      [checked]="inStockOnly" 
+    <mat-checkbox
+      [checked]="inStockOnly"
       (change)="inStockOnly = $event.checked; onFiltersChange()">
       In Stock Only
     </mat-checkbox>
@@ -91,10 +95,10 @@
     <h4>Search</h4>
     <mat-form-field class="full-width">
       <mat-label>Search products...</mat-label>
-      <input 
-        matInput 
-        [(ngModel)]="searchQuery" 
-        (input)="onFiltersChange()" 
+      <input
+        matInput
+        [(ngModel)]="searchQuery"
+        (input)="onFiltersChange()"
         placeholder="Search by name, SKU, or description">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>

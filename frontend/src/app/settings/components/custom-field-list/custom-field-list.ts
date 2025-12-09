@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
   templateUrl: './custom-field-list.html',
   styleUrls: ['./custom-field-list.scss'],
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule],
 })
 export class CustomFieldList implements OnInit, OnDestroy {
   displayedColumns: string[] = ['name', 'type', 'actions'];

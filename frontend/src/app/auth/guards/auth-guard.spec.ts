@@ -8,6 +8,7 @@ describe('AuthGuard', () => {
       TestBed.runInInjectionContext(() => AuthGuard(...guardParameters));
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
   });
 

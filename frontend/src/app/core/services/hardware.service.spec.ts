@@ -5,6 +5,7 @@ describe('HardwareService', () => {
   let service: HardwareService;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({});
     service = TestBed.inject(HardwareService);
   });

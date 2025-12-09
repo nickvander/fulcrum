@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,6 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
   selector: 'app-product-form-image-gallery',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatIconModule,
@@ -23,8 +22,8 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
     MatTooltipModule,
     CdkDropList,
     CdkDrag,
-    CdkDragHandle,
-  ],
+    CdkDragHandle
+],
   template: `
     <div class="image-section">
       <div class="image-upload">
@@ -34,58 +33,76 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
           <span>Upload Image</span>
         </button>
       </div>
-
-      <div class="staged-images" *ngIf="stagedImagePreviews.length > 0">
-        <p class="mat-body-strong">New Images (to be uploaded on save):</p>
-        <div class="image-gallery">
-          <div *ngFor="let preview of stagedImagePreviews; let i = index" class="image-container">
-            <img [src]="preview" alt="Staged image preview">
-            <div class="image-overlay">
-               <div class="image-overlay-content">
-                  <button mat-icon-button class="overlay-button" color="warn" matTooltip="Remove" (click)="removeStagedImage(i)">
-                    <mat-icon>close</mat-icon>
+    
+      @if (stagedImagePreviews.length > 0) {
+        <div class="staged-images">
+          <p class="mat-body-strong">New Images (to be uploaded on save):</p>
+          <div class="image-gallery">
+            @for (preview of stagedImagePreviews; track preview; let i = $index) {
+              <div class="image-container">
+                <img [src]="preview" alt="Staged image preview">
+                <div class="image-overlay">
+                  <div class="image-overlay-content">
+                    <button mat-icon-button class="overlay-button" color="warn" matTooltip="Remove" (click)="removeStagedImage(i)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    
+      @if (stagedImages.length > 0 && existingImages?.length) {
+        <mat-divider></mat-divider>
+      }
+    
+      @if (existingImages?.length) {
+        <p class="mat-body-strong">Current Images:</p>
+      }
+      @if (existingImages?.length) {
+        <div
+          cdkDropList
+          class="image-gallery"
+          (cdkDropListDropped)="onImageReorder($event)"
+          >
+          @for (image of existingImages; track trackByFn($index, image)) {
+            <div
+              cdkDrag
+              [cdkDragData]="image"
+              class="image-container"
+              [class.primary-image-container]="image.is_primary">
+              <div class="image-drag-handle" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
+              </div>
+              <img [src]="getImageUrl(image.image_path)" [alt]="image.title || 'Product Image'" [class.primary-image]="image.is_primary" (click)="openImageDialog(image)">
+              <div class="image-overlay" (click)="openImageDialog(image)">
+                <div class="image-overlay-content">
+                  <button type="button" mat-icon-button class="overlay-button" matTooltip="Set as primary image" [class.selected]="image.is_primary" (click)="$event.stopPropagation(); setPrimaryImage($event, image.id)">
+                    <mat-icon>{{ image.is_primary ? 'star' : 'star_border' }}</mat-icon>
                   </button>
-               </div>
+                  <button type="button" mat-icon-button class="overlay-button" color="warn" matTooltip="Delete image" (click)="$event.stopPropagation(); deleteImage($event, image.id)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
+          }
         </div>
-      </div>
-
-      <mat-divider *ngIf="stagedImages.length > 0 && existingImages?.length"></mat-divider>
-      
-      <p class="mat-body-strong" *ngIf="existingImages?.length">Current Images:</p>
-      <div 
-        cdkDropList 
-        class="image-gallery"
-        (cdkDropListDropped)="onImageReorder($event)"
-        *ngIf="existingImages?.length">
-        <div *ngFor="let image of existingImages; trackBy: trackByFn" 
-             cdkDrag 
-             [cdkDragData]="image" 
-             class="image-container" 
-             [class.primary-image-container]="image.is_primary">
-          <div class="image-drag-handle" cdkDragHandle>
-            <mat-icon>drag_indicator</mat-icon>
-          </div>
-          <img [src]="getImageUrl(image.image_path)" [alt]="image.title || 'Product Image'" [class.primary-image]="image.is_primary" (click)="openImageDialog(image)">
-          <div class="image-overlay" (click)="openImageDialog(image)">
-            <div class="image-overlay-content">
-              <button type="button" mat-icon-button class="overlay-button" matTooltip="Set as primary image" [class.selected]="image.is_primary" (click)="$event.stopPropagation(); setPrimaryImage($event, image.id)">
-                <mat-icon>{{ image.is_primary ? 'star' : 'star_border' }}</mat-icon>
-              </button>
-              <button type="button" mat-icon-button class="overlay-button" color="warn" matTooltip="Delete image" (click)="$event.stopPropagation(); deleteImage($event, image.id)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </div>
+      }
+      @if (!existingImages?.length) {
+        <div class="no-images">
+          @if (!stagedImages.length) {
+            <p>No images uploaded for this product yet.</p>
+          }
+          @if (stagedImages.length && !existingImages.length) {
+            <p>No existing images. New images will be uploaded on save.</p>
+          }
         </div>
-      </div>
-      <div *ngIf="!existingImages?.length" class="no-images">
-        <p *ngIf="!stagedImages.length">No images uploaded for this product yet.</p>
-        <p *ngIf="stagedImages.length && !existingImages.length">No existing images. New images will be uploaded on save.</p>
-      </div>
+      }
     </div>
-  `,
+    `,
   styleUrls: ['./product-form-image-gallery.component.scss']
 })
 export class ProductFormImageGalleryComponent implements OnInit {

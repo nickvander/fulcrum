@@ -7,9 +7,11 @@
       <mat-label>User</mat-label>
       <mat-select [(value)]="user_filter" (selectionChange)="onFilterChange()">
         <mat-option [value]="null">All Users</mat-option>
-        <mat-option *ngFor="let user of users" [value]="user.id">
-          {{ user.first_name }} {{ user.last_name }} ({{ user.email }})
-        </mat-option>
+        @for (user of users; track user) {
+          <mat-option [value]="user.id">
+            {{ user.first_name }} {{ user.last_name }} ({{ user.email }})
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -68,8 +70,8 @@
   </div>
 
   <!-- Paginator -->
-  <mat-paginator 
-    [pageSizeOptions]="[5, 10, 20, 50]" 
+  <mat-paginator
+    [pageSizeOptions]="[5, 10, 20, 50]"
     showFirstLastButtons
     aria-label="Select page of audit logs">
   </mat-paginator>

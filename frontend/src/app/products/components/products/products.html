@@ -14,14 +14,16 @@
           <mat-icon>close</mat-icon>
         </button>
       </div>
-      
-      <div class="sidenav-body" *ngIf="selectedProduct">
-        <app-product-form 
-          [product]="selectedProduct" 
-          (productSaved)="onProductSaved()" 
-          (formClosed)="closeEditPanel()">
-        </app-product-form>
-      </div>
+
+      @if (selectedProduct) {
+        <div class="sidenav-body">
+          <app-product-form
+            [product]="selectedProduct"
+            (productSaved)="onProductSaved()"
+            (formClosed)="closeEditPanel()">
+          </app-product-form>
+        </div>
+      }
     </div>
   </mat-sidenav>
 </mat-sidenav-container>

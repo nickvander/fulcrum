@@ -12,88 +12,88 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProductFiltersComponent } from './product-filters';
 
 describe('ProductFiltersComponent', () => {
-  let component: ProductFiltersComponent;
-  let fixture: ComponentFixture<ProductFiltersComponent>;
+    let component: ProductFiltersComponent;
+    let fixture: ComponentFixture<ProductFiltersComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        MatIconModule,
-        MatButtonModule,
-        MatInputModule,
-        MatSelectModule,
-        MatFormFieldModule,
-        MatCheckboxModule,
-        MatSliderModule,
-        MatTooltipModule,
-        FormsModule,
-        ProductFiltersComponent
-      ]
-    })
-    .compileComponents();
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [
+                MatIconModule,
+                MatButtonModule,
+                MatInputModule,
+                MatSelectModule,
+                MatFormFieldModule,
+                MatCheckboxModule,
+                MatSliderModule,
+                MatTooltipModule,
+                FormsModule,
+                ProductFiltersComponent
+            ]
+        })
+            .compileComponents();
 
-    fixture = TestBed.createComponent(ProductFiltersComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should emit filtersChanged event when filter properties change', () => {
-    spyOn(component.filtersChanged, 'emit');
-
-    component.category = 'Electronics';
-    component.onFiltersChange();
-
-    expect(component.filtersChanged.emit).toHaveBeenCalledWith({ category: 'Electronics' });
-  });
-
-  it('should emit filtersChanged event when multiple filters are applied', () => {
-    spyOn(component.filtersChanged, 'emit');
-
-    component.category = 'Electronics';
-    component.brand = 'Brand A';
-    component.minPrice = 10;
-    component.maxPrice = 100;
-    component.onFiltersChange();
-
-    expect(component.filtersChanged.emit).toHaveBeenCalledWith({
-      category: 'Electronics',
-      brand: 'Brand A',
-      min_price: 10,
-      max_price: 100
+        fixture = TestBed.createComponent(ProductFiltersComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
     });
-  });
 
-  it('should emit filtersCleared event when filters are cleared', () => {
-    spyOn(component.filtersCleared, 'emit');
-    spyOn(component.filtersChanged, 'emit');
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 
-    component.onClearFilters();
+    it('should emit filtersChanged event when filter properties change', () => {
+        vi.spyOn(component.filtersChanged, 'emit');
 
-    expect(component.filtersCleared.emit).toHaveBeenCalled();
-    expect(component.filtersChanged.emit).toHaveBeenCalledWith({});
-  });
+        component.category = 'Electronics';
+        component.onFiltersChange();
 
-  it('should have default filter values', () => {
-    expect(component.category).toBe('');
-    expect(component.brand).toBe('');
-    expect(component.minPrice).toBeNull();
-    expect(component.maxPrice).toBeNull();
-    expect(component.minStock).toBeNull();
-    expect(component.maxStock).toBeNull();
-    expect(component.searchQuery).toBe('');
-    expect(component.inStockOnly).toBeFalse();
-  });
+        expect(component.filtersChanged.emit).toHaveBeenCalledWith({ category: 'Electronics' });
+    });
 
-  it('should update filters when search query changes', () => {
-    spyOn(component.filtersChanged, 'emit');
-    
-    component.searchQuery = 'test product';
-    component.onFiltersChange();
-    
-    expect(component.filtersChanged.emit).toHaveBeenCalledWith({ search_term: 'test product' });
-  });
+    it('should emit filtersChanged event when multiple filters are applied', () => {
+        vi.spyOn(component.filtersChanged, 'emit');
+
+        component.category = 'Electronics';
+        component.brand = 'Brand A';
+        component.minPrice = 10;
+        component.maxPrice = 100;
+        component.onFiltersChange();
+
+        expect(component.filtersChanged.emit).toHaveBeenCalledWith({
+            category: 'Electronics',
+            brand: 'Brand A',
+            min_price: 10,
+            max_price: 100
+        });
+    });
+
+    it('should emit filtersCleared event when filters are cleared', () => {
+        vi.spyOn(component.filtersCleared, 'emit');
+        vi.spyOn(component.filtersChanged, 'emit');
+
+        component.onClearFilters();
+
+        expect(component.filtersCleared.emit).toHaveBeenCalled();
+        expect(component.filtersChanged.emit).toHaveBeenCalledWith({});
+    });
+
+    it('should have default filter values', () => {
+        expect(component.category).toBe('');
+        expect(component.brand).toBe('');
+        expect(component.minPrice).toBeNull();
+        expect(component.maxPrice).toBeNull();
+        expect(component.minStock).toBeNull();
+        expect(component.maxStock).toBeNull();
+        expect(component.searchQuery).toBe('');
+        expect(component.inStockOnly).toBe(false);
+    });
+
+    it('should update filters when search query changes', () => {
+        vi.spyOn(component.filtersChanged, 'emit');
+
+        component.searchQuery = 'test product';
+        component.onFiltersChange();
+
+        expect(component.filtersChanged.emit).toHaveBeenCalledWith({ search_term: 'test product' });
+    });
 });

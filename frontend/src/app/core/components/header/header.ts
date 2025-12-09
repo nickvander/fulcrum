@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { MatSidenav } from '@angular/material/sidenav';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,13 +14,12 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './header.scss',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule,
-  ],
+    MatMenuModule
+],
 })
 export class Header {
   @Input() drawer!: MatSidenav;

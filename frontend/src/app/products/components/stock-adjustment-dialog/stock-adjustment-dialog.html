@@ -1,32 +1,41 @@
 <h2 mat-dialog-title>Adjust Stock for {{ data.productName }}</h2>
 <mat-dialog-content>
-  <div *ngIf="!showConfirmation; else confirmationTemplate">
-    <p class="current-stock">Current Stock: <strong>{{ data.currentQuantity }}</strong></p>
-    <mat-form-field class="full-width">
-      <mat-label>Adjustment Amount</mat-label>
-      <input matInput type="number" [(ngModel)]="adjustment" placeholder="Enter amount to add/remove" (input)="onAdjustmentChange()">
-      <mat-hint>Enter positive number to increase, negative to decrease</mat-hint>
-    </mat-form-field>
-    <mat-form-field class="full-width">
-      <mat-label>Reason (Optional)</mat-label>
-      <input matInput [(ngModel)]="reason" placeholder="Reason for adjustment">
-    </mat-form-field>
-  </div>
-  
-  <ng-template #confirmationTemplate>
+  @if (!showConfirmation) {
+    <div>
+      <p class="current-stock">Current Stock: <strong>{{ data.currentQuantity }}</strong></p>
+      <mat-form-field class="full-width">
+        <mat-label>Adjustment Amount</mat-label>
+        <input matInput type="number" [(ngModel)]="adjustment" placeholder="Enter amount to add/remove" (input)="onAdjustmentChange()">
+        <mat-hint>Enter positive number to increase, negative to decrease</mat-hint>
+      </mat-form-field>
+      <mat-form-field class="full-width">
+        <mat-label>Reason (Optional)</mat-label>
+        <input matInput [(ngModel)]="reason" placeholder="Reason for adjustment">
+      </mat-form-field>
+    </div>
+  } @else {
     <p class="confirmation-title">Confirm Stock Adjustment</p>
     <div class="confirmation-details">
       <p><strong>Product:</strong> {{ data.productName }}</p>
       <p><strong>Current Stock:</strong> {{ data.currentQuantity }}</p>
       <p><strong>Adjustment:</strong> {{ adjustment > 0 ? '+' : '' }}{{ adjustment }}</p>
       <p><strong>New Stock:</strong> {{ data.currentQuantity + adjustment }}</p>
-      <p *ngIf="reason"><strong>Reason:</strong> {{ reason }}</p>
+      @if (reason) {
+        <p><strong>Reason:</strong> {{ reason }}</p>
+      }
     </div>
-  </ng-template>
+  }
+
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button *ngIf="!showConfirmation" mat-button (click)="confirmAdjustment()" cdkFocusInitial color="primary" [disabled]="adjustment === 0 || !adjustment">Preview</button>
-  <button *ngIf="showConfirmation" mat-button (click)="confirmAndClose()" color="primary">Confirm Adjustment</button>
-  <button *ngIf="showConfirmation" mat-button (click)="goBack()" color="accent">Edit</button>
+  @if (!showConfirmation) {
+    <button mat-button (click)="confirmAdjustment()" cdkFocusInitial color="primary" [disabled]="adjustment === 0 || !adjustment">Preview</button>
+  }
+  @if (showConfirmation) {
+    <button mat-button (click)="confirmAndClose()" color="primary">Confirm Adjustment</button>
+  }
+  @if (showConfirmation) {
+    <button mat-button (click)="goBack()" color="accent">Edit</button>
+  }
 </mat-dialog-actions>

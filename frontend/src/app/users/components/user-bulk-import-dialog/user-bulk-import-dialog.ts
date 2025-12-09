@@ -1,7 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -17,7 +17,6 @@ import { BulkImportService } from '../../services/bulk-import.service';
   styleUrls: ['./user-bulk-import-dialog.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -26,7 +25,7 @@ import { BulkImportService } from '../../services/bulk-import.service';
     MatTableModule,
     MatSnackBarModule,
     MatTooltipModule
-  ],
+],
   providers: [BulkImportService]
 })
 export class UserBulkImportDialogComponent implements OnDestroy {

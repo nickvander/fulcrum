@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-batch-action-toolbar',
@@ -10,11 +10,10 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./batch-action-toolbar.scss'],
   standalone: true,
   imports: [
-    CommonModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule
-  ]
+]
 })
 export class BatchActionToolbarComponent {
   @Input() selectedCount: number = 0;

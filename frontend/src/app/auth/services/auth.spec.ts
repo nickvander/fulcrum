@@ -6,6 +6,7 @@ describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
     });

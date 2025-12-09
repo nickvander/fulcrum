@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -17,14 +17,13 @@ export interface ProductImage {
   selector: 'app-enhanced-image-management',
   standalone: true,
   imports: [
-    CommonModule,
     CdkDropList,
     CdkDrag,
     CdkDragHandle,
     MatButtonModule,
     MatIconModule,
     MatTooltipModule
-  ],
+],
   templateUrl: './enhanced-image-management.html',
   styleUrls: ['./enhanced-image-management.scss']
 })

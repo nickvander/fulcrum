@@ -5,98 +5,94 @@ import { MatIconModule } from '@angular/material/icon';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('BatchActionToolbarComponent', () => {
-  let component: BatchActionToolbarComponent;
-  let fixture: ComponentFixture<BatchActionToolbarComponent>;
+    let component: BatchActionToolbarComponent;
+    let fixture: ComponentFixture<BatchActionToolbarComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [BatchActionToolbarComponent, MatButtonModule, MatIconModule, NoopAnimationsModule]
-    }).compileComponents();
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            imports: [BatchActionToolbarComponent, MatButtonModule, MatIconModule, NoopAnimationsModule]
+        }).compileComponents();
 
-    fixture = TestBed.createComponent(BatchActionToolbarComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+        fixture = TestBed.createComponent(BatchActionToolbarComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
 
-  it('should display the correct number of selected items', () => {
-    component.selectedCount = 3;
-    fixture.detectChanges();
+    it('should display the correct number of selected items', () => {
+        component.selectedCount = 3;
+        fixture.detectChanges();
 
-    const compiled = fixture.nativeElement;
-    expect(compiled.textContent).toContain('3 selected');
-  });
+        const compiled = fixture.nativeElement;
+        expect(compiled.textContent).toContain('3 selected');
+    });
 
-  it('should emit deleteSelected event when delete button is clicked', async () => {
-    spyOn(component.deleteSelected, 'emit');
-    component.selectedCount = 3;
-    fixture.detectChanges();
+    it('should emit deleteSelected event when delete button is clicked', async () => {
+        vi.spyOn(component.deleteSelected, 'emit');
+        component.selectedCount = 3;
+        fixture.detectChanges();
 
-    await fixture.whenStable();
+        await fixture.whenStable();
 
-    const deleteButton = fixture.nativeElement.querySelector('button[color="warn"]');
-    deleteButton.click();
+        const deleteButton = fixture.nativeElement.querySelector('button[color="warn"]');
+        deleteButton.click();
 
-    expect(component.deleteSelected.emit).toHaveBeenCalled();
-  });
+        expect(component.deleteSelected.emit).toHaveBeenCalled();
+    });
 
-  it('should emit selectAll event when "Select All" button is clicked', async () => {
-    spyOn(component.selectAll, 'emit');
-    component.selectedCount = 0;
-    fixture.detectChanges();
+    it('should emit selectAll event when "Select All" button is clicked', async () => {
+        vi.spyOn(component.selectAll, 'emit');
+        component.selectedCount = 0;
+        fixture.detectChanges();
 
-    await fixture.whenStable();
+        await fixture.whenStable();
 
-    const selectAllButton = fixture.nativeElement.querySelector('button');
-    selectAllButton.click();
+        const selectAllButton = fixture.nativeElement.querySelector('button');
+        selectAllButton.click();
 
-    expect(component.selectAll.emit).toHaveBeenCalled();
-  });
+        expect(component.selectAll.emit).toHaveBeenCalled();
+    });
 
-  it('should emit deselectAll event when "Deselect All" button is clicked', () => {
-    spyOn(component.deselectAll, 'emit');
-    component.selectedCount = 5;
-    fixture.detectChanges();
+    it('should emit deselectAll event when "Deselect All" button is clicked', () => {
+        vi.spyOn(component.deselectAll, 'emit');
+        component.selectedCount = 5;
+        fixture.detectChanges();
 
-    const deselectButton = fixture.nativeElement.querySelector('button');
-    // The first button is "Select All", second is "Deselect All"
-    const buttons = fixture.nativeElement.querySelectorAll('button');
-    if (buttons.length > 1) {
-      buttons[1].click();
-    } else {
-      // If only one button exists, it might be "Deselect All"
-      buttons[0].click();
-    }
 
-    expect(component.deselectAll.emit).toHaveBeenCalled();
-  });
+        // The first button is "Select All", second is "Deselect All"
+        const buttons = fixture.nativeElement.querySelectorAll('button');
+        const deselectButton = Array.from(buttons).find((btn: any) => btn.textContent.includes('Deselect All')) as HTMLElement;
+        deselectButton.click();
 
-  it('should emit closeToolbar event when close button is clicked', () => {
-    spyOn(component.closeToolbar, 'emit');
-    fixture.detectChanges();
+        expect(component.deselectAll.emit).toHaveBeenCalled();
+    });
 
-    const closeButton = fixture.nativeElement.querySelector('.close-button');
-    closeButton.click();
+    it('should emit closeToolbar event when close button is clicked', () => {
+        vi.spyOn(component.closeToolbar, 'emit');
+        fixture.detectChanges();
 
-    expect(component.closeToolbar.emit).toHaveBeenCalled();
-  });
+        const closeButton = fixture.nativeElement.querySelector('.close-button');
+        closeButton.click();
 
-  it('should show "Select All" button when no items are selected', () => {
-    component.selectedCount = 0;
-    fixture.detectChanges();
+        expect(component.closeToolbar.emit).toHaveBeenCalled();
+    });
 
-    const compiled = fixture.nativeElement;
-    expect(compiled.textContent).toContain('Select All');
-  });
+    it('should show "Select All" button when no items are selected', () => {
+        component.selectedCount = 0;
+        fixture.detectChanges();
 
-  it('should show "Deselect All" button when items are selected', () => {
-    component.selectedCount = 2;
-    fixture.detectChanges();
+        const compiled = fixture.nativeElement;
+        expect(compiled.textContent).toContain('Select All');
+    });
 
-    const compiled = fixture.nativeElement;
-    expect(compiled.textContent).toContain('Deselect All');
-  });
+    it('should show "Deselect All" button when items are selected', () => {
+        component.selectedCount = 2;
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement;
+        expect(compiled.textContent).toContain('Deselect All');
+    });
 });

@@ -4,7 +4,9 @@
   <button mat-icon-button matSuffix (click)="startVoiceSearch()" aria-label="Search by voice">
     <mat-icon>mic</mat-icon>
   </button>
-  <button *ngIf="searchControl.value" mat-icon-button matSuffix (click)="clearSearch()" aria-label="Clear search">
-    <mat-icon>close</mat-icon>
-  </button>
+  @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="clearSearch()" aria-label="Clear search">
+      <mat-icon>close</mat-icon>
+    </button>
+  }
 </mat-form-field>
