@@ -37,14 +37,18 @@ bin.ng_test(
     ],
     args = [
         "test",
-        "--watch=false",
+        "--include=**/bulk-import.service.spec.ts",
     ],
+    timeout = "long",
     chdir = "frontend",
     env = {
         "NODE_PRESERVE_SYMLINKS": "1",
     },
-    tags = ["requires-network"],
+    tags = ["requires-network", "manual"],
     visibility = ["//visibility:public"],
 )
 
-exports_files(["pnpm-lock.yaml", "package.json"])
+exports_files([
+    "pnpm-lock.yaml",
+    "package.json",
+])

@@ -1,3 +1,4 @@
+import { expect, vi, describe, it, beforeEach, assert } from 'vitest';
 import type { MockedObject } from "vitest";
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -80,7 +81,7 @@ describe('BulkImportService', () => {
             userServiceMock.bulkImportUsers.mockReturnValue(throwError(() => error));
 
             service.processFile(file).subscribe({
-                next: () => expect.fail('should have errored'),
+                next: () => assert.fail('should have errored'),
                 error: (err) => {
                     expect(err).toEqual(error);
                     ;

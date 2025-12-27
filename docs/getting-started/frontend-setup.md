@@ -41,8 +41,8 @@ sudo apt-get update && sudo apt-get install -y nodejs npm
     > ```
     >
     > **Note on Bazel Testing:**
-    > Currently, `bazel test //frontend:test` is blocked by a Sass compilation environment incompatibility (`sass-embedded` in sandbox).
-    > We recommend running tests locally using:
+    > Currently, strict Bazel integration (`bazel test //frontend:test`) is deferred due to sandbox incompatibilities with the Angular Builder.
+    > Tests should be run locally using the stable Vitest runner:
     > ```bash
     > pnpm ng test
     > ```
@@ -89,5 +89,5 @@ All scripts should be run from the `frontend` directory.
 - **`npm start`**: Runs the local development server.
 - **`npm run build`**: Compiles and builds the application for production. The
   output is placed in the `frontend/dist/` directory.
-- **`npm test`**: Runs the unit test suite using the Web Test Runner. See the
+- **`npm test`**: Runs the unit test suite using Vitest (via Angular CLI). See the
   [Testing & CI Guide](../guides/testing-and-ci.md) for more details.

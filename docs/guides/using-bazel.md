@@ -156,7 +156,7 @@ bazel run //frontend/image:frontend_tarball
 > at the infrastructure level.
 
 > [!WARNING]
-> **Frontend Tests Blocked**: `bazel test //frontend:test` is currently failing due to `sass-embedded` compilation issues within the Bazel sandbox. Use `ng test` for frontend unit testing until this is resolved.
+> **Frontend Tests Blocked**: `bazel test //frontend:test` is currently incompatible with the Angular Builder's virtual filesystem and sandbox requirements. The target is marked as `manual` and should be skipped in favor of running `ng test` locally until this is resolved (Deferred).
 
 > [!NOTE]
 > The Bazel backend container has a `py_binary` runfiles issue. Use traditional
