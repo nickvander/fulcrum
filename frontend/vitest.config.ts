@@ -7,5 +7,6 @@ export default defineConfig({
         setupFiles: ['src/test-setup.ts'],
         include: ['src/**/*.spec.ts'],
         reporters: ['default'],
+        pool: 'forks',
     },
 });

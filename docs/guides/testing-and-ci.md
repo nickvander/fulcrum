@@ -47,13 +47,10 @@ the testing process.
 
 ## Frontend (Angular)
 
-The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v20+ experimental support) to execute its unit tests. The configuration is managed by the Angular CLI and `vitest.config.ts`.
+The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v21 stable support) to execute its unit tests. The configuration is managed by the Angular CLI and `vitest.config.ts`.
 
 - **Run the frontend test suite:**
   ```bash
-  npm run test:frontend
-  ```
-
   npm run test:frontend
   ```
 

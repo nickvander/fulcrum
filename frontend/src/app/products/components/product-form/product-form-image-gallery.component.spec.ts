@@ -76,7 +76,9 @@ describe('ProductFormImageGalleryComponent', () => {
     });
 
     it('should remove staged image when removeStagedImage is called', () => {
-        component.stagedImages = [new File([], 'test1.jpg'), new File([], 'test2.jpg')];
+        const file1 = new File([], 'test1.jpg');
+        const file2 = new File([], 'test2.jpg');
+        component.stagedImages = [file1, file2];
         component.stagedImagePreviews = ['preview1', 'preview2'];
 
         vi.spyOn(component.stagedImagesChange, 'emit');
@@ -84,7 +86,7 @@ describe('ProductFormImageGalleryComponent', () => {
 
         component.removeStagedImage(0);
 
-        expect(component.stagedImagesChange.emit).toHaveBeenCalledWith([new File([], 'test2.jpg')]);
+        expect(component.stagedImagesChange.emit).toHaveBeenCalledWith([file2]);
         expect(component.stagedImagePreviewsChange.emit).toHaveBeenCalledWith(['preview2']);
     });
 

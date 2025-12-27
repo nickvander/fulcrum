@@ -33,6 +33,7 @@ npm.npm_translate_lock(
     pnpm_lock = "//frontend:pnpm-lock.yaml",
     verify_node_modules_ignored = "//:.bazelignore",
 )
+# Force re-eval for patches
 use_repo(npm, "npm")
 
 oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
