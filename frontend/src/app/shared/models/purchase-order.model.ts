@@ -10,6 +10,12 @@ export interface PurchaseOrderItem {
     id?: number;
     product_id: number;
     product_name?: string; // Enriched in frontend if needed
+    product?: {
+        id: number;
+        name: string;
+        sku: string;
+        images?: any[];
+    };
     quantity_ordered: number;
     quantity_received?: number;
     unit_cost: number;

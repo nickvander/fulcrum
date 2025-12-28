@@ -7,6 +7,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { OrderByPipe } from '../../pipes/order-by.pipe';
 import { DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 
 export interface StockHistoryDialogData {
   productName: string;
@@ -69,7 +70,13 @@ export interface StockHistoryDialogData {
                     @if (adjustment.reason) {
                       <div class="adjustment-reason">
                         <mat-icon class="reason-icon">info</mat-icon>
-                        <span>{{ adjustment.reason }}</span>
+                        <span>
+                            @if (isPoReason(adjustment.reason)) {
+                                Received <a href="javascript:void(0)" (click)="goToPo(adjustment.reason!)">{{ getPoLabel(adjustment.reason!) }}</a>
+                            } @else {
+                                {{ adjustment.reason }}
+                            }
+                        </span>
                       </div>
                     }
                   </div>
@@ -228,10 +235,27 @@ export interface StockHistoryDialogData {
 export class StockHistoryDialog {
   constructor(
     public dialogRef: MatDialogRef<StockHistoryDialog>,
+    private router: Router,
     @Inject(MAT_DIALOG_DATA) public data: StockHistoryDialogData
-  ) {}
+  ) { }
 
   onClose(): void {
     this.dialogRef.close();
+  }
+
+  isPoReason(reason: string | null): boolean {
+    return !!reason && reason.startsWith('Received PO #');
+  }
+
+  getPoLabel(reason: string): string {
+    return reason;
+  }
+
+  goToPo(reason: string): void {
+    const match = reason.match(/#(\d+)/);
+    if (match && match[1]) {
+      this.onClose();
+      this.router.navigate(['/suppliers/po', match[1]]);
+    }
   }
 }

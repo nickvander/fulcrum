@@ -80,7 +80,7 @@ export class ProductList implements OnInit, OnDestroy {
 
   // Table View Data Source
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
-  displayedColumns: string[] = ['select', 'image', 'name', 'sku', 'price', 'stock', 'marketplaces', 'actions'];
+  displayedColumns: string[] = ['select', 'image', 'name', 'sku', 'cost_price', 'price', 'stock', 'marketplaces', 'actions'];
 
   // View/UI State
   viewMode: 'grid' | 'list' = 'grid';

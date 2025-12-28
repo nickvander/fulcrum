@@ -24,10 +24,11 @@ class PurchaseOrderService:
         updated_po = crud_purchase_order.update(db=db, db_obj=po, obj_in={"status": new_status})
         return updated_po
 
-    def receive_items(self, db: Session, po_id: int, received_items: list):
+    def receive_items(self, db: Session, po_id: int, received_items: list, user=None):
         """
         Process receiving items for a Purchase Order.
         received_items: List of dicts { "product_id": int, "quantity_received": int }
+        user: Current user object (optional)
         """
         from src.services.inventory_service import inventory_service
         
@@ -70,7 +71,8 @@ class PurchaseOrderService:
                 product_id=pid,
                 adjustment=qty,
                 reason=f"Received PO #{po.id}",
-                user_id="system" # Or pass user from API
+
+                user_id=user.email if user else "system" 
             )
             updated_items_count += 1
         
