@@ -10,6 +10,16 @@
     align-items: center;
     margin-bottom: 24px;
 
+    .title-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        h1 {
+            margin: 0;
+        }
+    }
+
     h1 {
         margin: 0;
         font-size: 24px;
@@ -163,4 +173,44 @@
     color: #666;
     font-style: italic;
     margin-bottom: 16px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.85em;
+    font-weight: 500;
+    text-transform: uppercase;
+
+    &.draft {
+        background: #e0e0e0;
+        color: #616161;
+    }
+
+    &.ordered {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    &.partially_received {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    &.completed {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    &.closed {
+        background: #ffebee;
+        color: #c62828;
+    }
+}
+
+.place-order-btn {
+    background-color: #2e7d32 !important;
+    /* Green */
+    color: white !important;
+    margin-left: 8px;
 }
