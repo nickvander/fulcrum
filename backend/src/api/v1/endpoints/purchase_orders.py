@@ -46,6 +46,7 @@ class CostAllocationPreview(BaseModel):
 class ApplyCostsRequest(BaseModel):
     """Request to apply costs to PO items."""
     confirm: bool = True  # Must be True to apply
+    excluded_items: List[int] = []  # IDs of items to exclude from allocation
 
 
 @router.post("/", response_model=po_schema.PurchaseOrder)
@@ -144,6 +145,7 @@ def preview_cost_allocation(
     *,
     db: Session = Depends(get_db),
     id: int,
+    excluded_items: List[int] = [],  # Passed as query params: ?excluded_items=1&excluded_items=2
 ):
     """
     Preview how additional costs (shipping, taxes, other) will be allocated
@@ -153,17 +155,22 @@ def preview_cost_allocation(
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     
-    # Calculate total quantity across all items
-    total_qty = sum(item.quantity_ordered for item in po.items)
-    if total_qty == 0:
-        raise HTTPException(status_code=400, detail="No items in PO to allocate costs to")
+    # Calculate total quantity across all items (excluding ignored ones)
+    allocatable_items = [item for item in po.items if item.id not in excluded_items]
+    total_qty = sum(item.quantity_ordered for item in allocatable_items)
     
-    # Calculate per-unit costs
-    per_unit_shipping = (po.shipping_cost or 0) / total_qty
-    per_unit_taxes = (po.tax_amount or 0) / total_qty
-    per_unit_other = (po.other_costs or 0) / total_qty
+    # Calculate per-unit costs (handled gracefully if no items)
+    if total_qty > 0:
+        per_unit_shipping = (po.shipping_cost or 0) / total_qty
+        per_unit_taxes = (po.tax_amount or 0) / total_qty
+        per_unit_other = (po.other_costs or 0) / total_qty
+    else:
+        per_unit_shipping = 0
+        per_unit_taxes = 0
+        per_unit_other = 0
     
     # Build preview for each item
+    preview_items = []
     preview_items = []
     for item in po.items:
         product_name = item.product.name if item.product else f"Product #{item.product_id}"
@@ -171,17 +178,30 @@ def preview_cost_allocation(
         # Use existing base_cost if set, otherwise use current unit_cost
         base = item.base_cost if item.base_cost > 0 else item.unit_cost
         
-        preview_items.append(CostAllocationPreviewItem(
-            item_id=item.id,
-            product_name=product_name,
-            quantity=item.quantity_ordered,
-            current_unit_cost=item.unit_cost,
-            base_cost=base,
-            shipping_to_add=per_unit_shipping,
-            taxes_to_add=per_unit_taxes,
-            other_to_add=per_unit_other,
-            new_unit_cost=base + per_unit_shipping + per_unit_taxes + per_unit_other,
-        ))
+        if item.id in excluded_items:
+             preview_items.append(CostAllocationPreviewItem(
+                item_id=item.id,
+                product_name=product_name,
+                quantity=item.quantity_ordered,
+                current_unit_cost=item.unit_cost,
+                base_cost=base,
+                shipping_to_add=0,
+                taxes_to_add=0,
+                other_to_add=0,
+                new_unit_cost=base,
+            ))
+        else:
+            preview_items.append(CostAllocationPreviewItem(
+                item_id=item.id,
+                product_name=product_name,
+                quantity=item.quantity_ordered,
+                current_unit_cost=item.unit_cost,
+                base_cost=base,
+                shipping_to_add=per_unit_shipping,
+                taxes_to_add=per_unit_taxes,
+                other_to_add=per_unit_other,
+                new_unit_cost=base + per_unit_shipping + per_unit_taxes + per_unit_other,
+            ))
     
     return CostAllocationPreview(
         po_id=po.id,
@@ -215,15 +235,20 @@ def apply_cost_allocation(
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     
-    # Calculate total quantity
-    total_qty = sum(item.quantity_ordered for item in po.items)
-    if total_qty == 0:
-        raise HTTPException(status_code=400, detail="No items in PO to allocate costs to")
+    # Calculate total quantity (excluding ignored)
+    excluded_ids = request.excluded_items
+    allocatable_items = [item for item in po.items if item.id not in excluded_ids]
+    total_qty = sum(item.quantity_ordered for item in allocatable_items)
     
-    # Calculate per-unit costs
-    per_unit_shipping = (po.shipping_cost or 0) / total_qty
-    per_unit_taxes = (po.tax_amount or 0) / total_qty
-    per_unit_other = (po.other_costs or 0) / total_qty
+    if total_qty > 0:
+        per_unit_shipping = (po.shipping_cost or 0) / total_qty
+        per_unit_taxes = (po.tax_amount or 0) / total_qty
+        per_unit_other = (po.other_costs or 0) / total_qty
+    else:
+        # If everything is excluded, or 0 qty, no costs applied
+        per_unit_shipping = 0
+        per_unit_taxes = 0
+        per_unit_other = 0
     
     # Apply to each item
     now = datetime.now(timezone.utc)
@@ -231,15 +256,21 @@ def apply_cost_allocation(
         # Set base_cost from current unit_cost if not already set
         if item.base_cost == 0:
             item.base_cost = item.unit_cost
-        
-        # Record allocated amounts
-        item.shipping_allocated = per_unit_shipping
-        item.taxes_allocated = per_unit_taxes
-        item.other_allocated = per_unit_other
+            
+        if item.id in excluded_ids:
+            # Reset allocations for excluded items
+            item.shipping_allocated = 0
+            item.taxes_allocated = 0
+            item.other_allocated = 0
+            item.unit_cost = item.base_cost # Revert to base
+        else:
+            # Record allocated amounts
+            item.shipping_allocated = per_unit_shipping
+            item.taxes_allocated = per_unit_taxes
+            item.other_allocated = per_unit_other
+            item.unit_cost = item.base_cost + per_unit_shipping + per_unit_taxes + per_unit_other
+            
         item.costs_applied_at = now
-        
-        # Update total unit cost
-        item.unit_cost = item.base_cost + per_unit_shipping + per_unit_taxes + per_unit_other
     
     db.commit()
     db.refresh(po)

@@ -21,6 +21,11 @@
         - Added fields: `supplier_sku`, `cost_price`, `is_primary`, `lead_time_days`.
         - Created CRUD with `get_by_product()`, `get_by_supplier()`, `set_as_primary()`.
         - Added full REST API at `/supplier-products`.
+    - **UX Improvements**:
+        - Renamed "Suppliers" nav to "Purchasing".
+        - **Included Cost Allocation Exclusions**: Users can opt-out specific items from cost distribution.
+        - **Better Draft Management**: Clear Draft/Cancel actions, and auto-creation of Backend Drafts for advanced features (Uploads, Cost Dialog).
+        - **Visual Polish**: Real-time allocation hints in table, Invoice layout fixes.
 
 - **2025-12-27**: Completed Phase 5 - Supplier Order Management.
     - **Backend**:

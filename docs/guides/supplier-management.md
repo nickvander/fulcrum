@@ -119,7 +119,10 @@ When creating a PO, you can track extra costs beyond product prices:
 2. The system calculates the **total extra costs** and **cost per unit**.
 3. Click **"Add to Unit Costs"** to open the Cost Allocation Preview.
 4. Review the itemized breakdown showing how costs will be distributed.
-5. Click **"Apply Costs"** to confirm.
+5. **Exclude Items**: Uncheck items that should not receive any cost allocation (e.g., service items).
+6. Click **"Apply Costs"** to confirm.
+
+> **Note on Drafts**: To use advanced features like Cost Allocation or Invoice Upload on a new order, the system will prompt you to save the order as a **Draft** first. This ensures your data is safe and allows complex operations to run on the server.
 
 ### Cost Breakdown Tracking
 
@@ -141,7 +144,7 @@ You can attach supplier invoices (PDF or images) to Purchase Orders for record-k
 
 ### Uploading Invoices
 
-1. Navigate to a Purchase Order in "Ordered" or later status.
+1. Navigate to a Purchase Order (or start a new one and save as Draft).
 2. In the Invoices section, click **"Upload Invoice"**.
 3. Select a PDF, JPG, or PNG file (max 10MB).
 4. Optionally enter the invoice number.
