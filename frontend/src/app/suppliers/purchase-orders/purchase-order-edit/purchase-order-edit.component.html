@@ -69,6 +69,12 @@
                         <span matPrefix>$&nbsp;</span>
                         <input matInput type="number" formControlName="unit_cost" min="0" step="0.01"
                             autocomplete="off">
+                        <!-- Projected Cost Hint -->
+                        <mat-hint *ngIf="calculatePerUnitLandedCost() > 0" class="projected-cost-hint">
+                            + ${{ calculatePerUnitLandedCost() | number:'1.2-2' }} alloc.
+                            = <strong>${{ getEstimatedAllocatedCost(item.get('unit_cost')?.value) | number:'1.2-2'
+                                }}</strong>
+                        </mat-hint>
                     </mat-form-field>
 
                     <button mat-icon-button color="warn" type="button" (click)="removeItem(i)">
@@ -130,7 +136,7 @@
 
         <!-- Invoices Section -->
         <mat-card class="form-section">
-            <div class="section-header">
+            <div class="section-header invoice-header">
                 <h3>Supplier Invoices</h3>
                 <div class="actions-right" *ngIf="poId">
                     <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
@@ -177,6 +183,13 @@
         </mat-card>
 
         <div class="actions">
+            <!-- Left aligned actions -->
+            <div class="actions-left">
+                <button mat-button type="button" (click)="cancel()">Cancel</button>
+                <button mat-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">Clear
+                    Draft</button>
+            </div>
+
             <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid">
                 {{ isEditMode ? 'Update' : 'Create' }} Order
             </button>

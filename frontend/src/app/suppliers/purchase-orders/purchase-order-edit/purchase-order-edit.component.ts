@@ -64,7 +64,6 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       this.poId = +idParam;
       this.loadPurchaseOrder(this.poId);
       this.loadInvoices();
-      this.loadInvoices();
     } else {
       this.loadDraft();
     }
@@ -227,9 +226,13 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     return this.calculateTotalAdditionalCosts() / totalQty;
   }
 
+  getEstimatedAllocatedCost(unitCost: number): number {
+    return Number(unitCost || 0) + this.calculatePerUnitLandedCost();
+  }
+
   applyLandedCostToItems(): void {
     if (!this.isEditMode || !this.poId) {
-      // For new POs, apply locally (old behavior as fallback)
+      // For new POs, apply locally
       const perUnitCost = this.calculatePerUnitLandedCost();
       if (perUnitCost === 0) return;
       this.items.controls.forEach(item => {
@@ -271,7 +274,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         exchange_rate: 1.0,
         notes: formValue.notes,
         shipping_cost: formValue.shipping_cost,
-        tax_amount: formValue.import_cost, // Map import_cost to tax_amount
+        tax_amount: formValue.import_cost,
         other_costs: formValue.other_costs,
         items: formValue.items.map((item: any) => ({
           product_id: item.product_id,
@@ -345,6 +348,36 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     } else {
       this.addLineItem();
     }
+  }
+
+  clearDraft(): void {
+    if (confirm('Are you sure you want to clear this draft? All entered data will be lost.')) {
+      sessionStorage.removeItem('fulcrum_po_create_draft');
+      // Reset form
+      this.poForm.reset({
+        supplier_id: null,
+        status: 'draft',
+        currency: 'USD',
+        notes: '',
+        shipping_cost: 0,
+        import_cost: 0,
+        other_costs: 0
+      });
+      this.items.clear();
+      this.productSearchControls = [];
+      this.filteredProducts$ = [];
+      this.addLineItem(); // Add one empty row
+      this.snackBar.open('Draft cleared', 'Close', { duration: 3000 });
+    }
+  }
+
+  cancel(): void {
+    if (this.poForm.dirty) {
+      if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
+        return;
+      }
+    }
+    this.router.navigate(['/suppliers/po/list']);
   }
 
   // --- Invoice Management ---

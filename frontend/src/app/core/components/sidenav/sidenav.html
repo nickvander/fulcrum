@@ -8,14 +8,14 @@
     <span matListItemTitle>Products</span>
   </a>
   <a mat-list-item routerLink="/suppliers" routerLinkActive="active-link">
-    <mat-icon matListItemIcon>local_shipping</mat-icon>
-    <span matListItemTitle>Suppliers</span>
+    <mat-icon matListItemIcon>shopping_cart</mat-icon>
+    <span matListItemTitle>Purchasing</span>
   </a>
   @if (isAdmin$ | async) {
-    <a mat-list-item routerLink="/users" routerLinkActive="active-link">
-      <mat-icon matListItemIcon>people</mat-icon>
-      <span matListItemTitle>Users</span>
-    </a>
+  <a mat-list-item routerLink="/users" routerLinkActive="active-link">
+    <mat-icon matListItemIcon>people</mat-icon>
+    <span matListItemTitle>Users</span>
+  </a>
   }
 
   <a mat-list-item routerLink="/settings" routerLinkActive="active-link">
