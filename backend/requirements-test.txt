@@ -12,6 +12,8 @@ python-dotenv
 pytest
 pytest-env
 pytest-timeout
+pytest-asyncio
+anyio
 httpx
 Faker
 argon2-cffi>=23.1.0

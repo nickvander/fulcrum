@@ -1,17 +1,17 @@
 # Missing Items & Roadmap
 
-## 🚀 Phase 6: Marketplaces & Widgets
+## ✅ Completed Phases
 
-- [x] **Dashboard Setup**
-    - [x] `DashboardModule` & `DashboardComponent`.
-    - [x] Widget Infrastructure (Standalone components, grid layout).
-    - [x] Basic KPIs (Inventory Value, Stock Health, Inbound Pipeline).
+- **Phase 6: Marketplaces & Widgets** - Complete
+- **Phase 7: Deep Marketplace Integration** - Complete
+  - Encrypted Credential Management (AES-256-GCM)
+  - Real-time Product Mapping (SKU-based auto-mapping)
+  - Full OAuth Token Refresh Cycle (Amazon SP-API, MercadoLibre)
+  - Settings UI for multi-account management
 
-- [x] **Phase 6: Marketplace Architecture**
-    - [x] Connector Strategy (Amazon/MercadoLibre stubs).
-    - [x] Listing Management UI.
+## 🚀 Upcoming Phases
 
-- [ ] **Phase 7: Deep Marketplace Integration**
-    - [ ] Encrypted Credential Management (Vault/Secrets).
-    - [ ] Real-time Product Mapping (ASIN/ML-ID mapping service).
-    - [ ] Full OAuth Token Refresh Cycle implementation.
+- [ ] **Phase 8: Advanced Analytics**
+  - [ ] Sales performance dashboard
+  - [ ] Inventory forecasting
+  - [ ] Multi-channel reporting

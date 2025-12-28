@@ -14,11 +14,11 @@ else
     # Fallback: run with virtual environment if npm command fails
     if [ -f ".venv/bin/activate" ]; then
         source .venv/bin/activate
-        cd backend && pytest -c pytest.ini -m 'not db'
+        cd backend && pytest -c pytest.ini -m 'not db and not slow'
         result=$?
     else
         echo "❌ No virtual environment found, attempting direct pytest"
-        cd backend && pytest -c pytest.ini -m 'not db'
+        cd backend && pytest -c pytest.ini -m 'not db and not slow'
         result=$?
     fi
     

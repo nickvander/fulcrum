@@ -44,4 +44,22 @@ export class MarketplacesService {
   syncListing(listingId: number): Observable<MarketplaceListing> {
     return this.http.post<MarketplaceListing>(`${this.apiUrl}/listings/${listingId}/sync`, {});
   }
+
+  // OAuth methods
+  getAuthUrl(marketplaceName: string): Observable<{ auth_url: string; marketplace_id: number }> {
+    // Use the by-name endpoint which auto-creates the marketplace if needed
+    return this.http.get<{ auth_url: string; marketplace_id: number }>(
+      `${environment.apiUrl}/marketplace-credentials/by-name/${marketplaceName.toLowerCase()}/authorize`
+    );
+  }
+
+  importListings(marketplaceId: number): Observable<{ synced: number; created_product_shell: number; orphaned: number }> {
+    return this.http.post<{ synced: number; created_product_shell: number; orphaned: number }>(`${this.apiUrl}/import`, null, {
+      params: { marketplace_id: marketplaceId.toString() }
+    });
+  }
+
+  createMarketplace(marketplace: { name: string; api_base_url: string }): Observable<Marketplace> {
+    return this.http.post<Marketplace>(`${this.apiUrl}/`, marketplace);
+  }
 }

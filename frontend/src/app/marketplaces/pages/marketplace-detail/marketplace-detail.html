@@ -1,0 +1,99 @@
+<div class="detail-container">
+    <nav class="breadcrumb">
+        <a routerLink="/marketplaces" class="back-link">
+            <mat-icon>arrow_back</mat-icon>
+            <span>Marketplace Channels</span>
+        </a>
+    </nav>
+
+    <div class="page-header">
+        <div class="header-text">
+            <h1>Channel Listings</h1>
+            <p>Review and manage individual product status for Channel: <strong>#{{ marketplaceId }}</strong></p>
+        </div>
+        <div class="header-actions">
+            <button mat-stroked-button color="warn" (click)="comingSoon('Disconnect')">
+                <mat-icon>link_off</mat-icon>
+                Disconnect
+            </button>
+            <button mat-flat-button color="primary" (click)="syncAll()">
+                <mat-icon>sync</mat-icon>
+                Bulk Re-Sync
+            </button>
+        </div>
+    </div>
+
+    <div class="table-card mat-elevation-z2">
+        <mat-table [dataSource]="(listings$ | async) || []">
+            <!-- Product ID Column -->
+            <ng-container matColumnDef="product">
+                <mat-header-cell *matHeaderCellDef> Product Entity </mat-header-cell>
+                <mat-cell *matCellDef="let listing">
+                    <div class="product-info">
+                        <span class="product-id">Product #{{ listing.product_id }}</span>
+                        <span class="external-id">Marketplace Ref: {{ listing.external_listing_id || 'N/A' }}</span>
+                    </div>
+                </mat-cell>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+                <mat-header-cell *matHeaderCellDef> Channel Status </mat-header-cell>
+                <mat-cell *matCellDef="let listing">
+                    <mat-chip-set>
+                        <mat-chip class="listing-status-chip" [ngClass]="listing.status">{{ listing.status | titlecase
+                            }}</mat-chip>
+                    </mat-chip-set>
+                </mat-cell>
+            </ng-container>
+
+            <!-- Sync Column -->
+            <ng-container matColumnDef="sync">
+                <mat-header-cell *matHeaderCellDef> Sync Health </mat-header-cell>
+                <mat-cell *matCellDef="let listing">
+                    <div class="sync-status">
+                        <mat-icon [ngClass]="listing.sync_status === 'IN_SYNC' ? 'success' : 'warning'">
+                            {{ listing.sync_status === 'IN_SYNC' ? 'check_circle' : 'sync_problem' }}
+                        </mat-icon>
+                        <span>{{ listing.sync_status === 'IN_SYNC' ? 'Synced' : (listing.sync_status || 'Pending')
+                            }}</span>
+                    </div>
+                </mat-cell>
+            </ng-container>
+
+            <!-- Price Column -->
+            <ng-container matColumnDef="price">
+                <mat-header-cell *matHeaderCellDef> Marketplace Price </mat-header-cell>
+                <mat-cell *matCellDef="let listing">
+                    <span class="price-value">{{ listing.marketplace_price | currency:'USD' }}</span>
+                </mat-cell>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+                <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+                <mat-cell *matCellDef="let listing">
+                    <button mat-icon-button color="primary" matTooltip="Force Individual Sync"
+                        (click)="syncListing(listing.id)">
+                        <mat-icon>sync</mat-icon>
+                    </button>
+                    @if (listing.listing_url) {
+                    <a mat-icon-button [href]="listing.listing_url" target="_blank" matTooltip="Open on Marketplace">
+                        <mat-icon>open_in_new</mat-icon>
+                    </a>
+                    }
+                </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+
+        @if (!((listings$ | async)?.length)) {
+        <div class="empty-table">
+            <mat-icon>info</mat-icon>
+            <p>No active listings found for this channel. Start by pushing products from the Inventory manager.</p>
+        </div>
+        }
+    </div>
+</div>

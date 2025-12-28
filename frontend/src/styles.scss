@@ -10,3 +10,24 @@ body {
     margin: 0;
     font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+
+// Global override for marketplace dialog buttons
+.marketplace-option.mdc-button {
+    .mdc-button__label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 1rem !important;
+        width: 100% !important;
+    }
+}
+
+.marketplace-option {
+    .marketplace-info {
+        flex: 1 !important;
+        text-align: left !important;
+    }
+
+    .arrow-icon {
+        margin-left: auto !important;
+    }
+}
