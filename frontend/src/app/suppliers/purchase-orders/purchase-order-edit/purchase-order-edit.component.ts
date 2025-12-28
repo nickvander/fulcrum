@@ -64,9 +64,20 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       this.poId = +idParam;
       this.loadPurchaseOrder(this.poId);
       this.loadInvoices();
+      this.loadInvoices();
     } else {
-      this.addLineItem();
+      this.loadDraft();
     }
+
+    // Auto-save draft changes
+    this.poForm.valueChanges.pipe(
+      debounceTime(2000),
+      takeUntil(this.destroy$)
+    ).subscribe(val => {
+      if (!this.isEditMode) {
+        sessionStorage.setItem('fulcrum_po_create_draft', JSON.stringify(val));
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -270,6 +281,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       };
 
       this.suppliersService.createPurchaseOrder(newPo).subscribe(po => {
+        sessionStorage.removeItem('fulcrum_po_create_draft');
         this.router.navigate(['/suppliers/po', po.id]);
       });
     }
@@ -290,6 +302,49 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  // --- Draft Management ---
+
+  loadDraft(): void {
+    const saved = sessionStorage.getItem('fulcrum_po_create_draft');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+
+        // Patch simple fields
+        this.poForm.patchValue({
+          supplier_id: data.supplier_id,
+          currency: data.currency,
+          notes: data.notes,
+          shipping_cost: data.shipping_cost,
+          import_cost: data.import_cost,
+          other_costs: data.other_costs
+        });
+
+        // Rebuild items array
+        this.items.clear();
+        this.productSearchControls = [];
+        this.filteredProducts$ = [];
+
+        if (data.items && Array.isArray(data.items)) {
+          data.items.forEach((item: any) => {
+            this.addLineItem(item);
+          });
+        }
+
+        if (this.items.length === 0) {
+          this.addLineItem();
+        }
+
+        this.snackBar.open('Restored draft from previous session', 'Close', { duration: 3000 });
+      } catch (e) {
+        console.error('Failed to parse draft', e);
+        this.addLineItem();
+      }
+    } else {
+      this.addLineItem();
+    }
   }
 
   // --- Invoice Management ---
