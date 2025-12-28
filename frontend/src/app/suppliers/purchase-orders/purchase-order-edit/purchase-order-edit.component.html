@@ -1,7 +1,13 @@
 <div class="po-edit-container">
     <div class="header">
-        <h1>{{ isEditMode ? 'Edit Purchase Order #' + poId : 'Create Purchase Order' }}</h1>
-        <button mat-raised-button color="accent" *ngIf="isEditMode" (click)="openReceivingDialog()">
+        <div class="title-group">
+            <h1>{{ isEditMode ? 'Edit Purchase Order #' + poId : 'Create Purchase Order' }}</h1>
+            <span class="status-badge" [class]="poForm.get('status')?.value" *ngIf="poForm.get('status')?.value">
+                {{ poForm.get('status')?.value | titlecase }}
+            </span>
+        </div>
+        <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
+            (click)="openReceivingDialog()">
             Receive Items
         </button>
     </div>
@@ -192,6 +198,11 @@
 
             <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid">
                 {{ isEditMode ? 'Update' : 'Create' }} Order
+            </button>
+
+            <button mat-raised-button class="place-order-btn" type="button"
+                *ngIf="poForm.get('status')?.value === 'draft'" (click)="placeOrder()" [disabled]="poForm.invalid">
+                Place Order
             </button>
         </div>
     </form>

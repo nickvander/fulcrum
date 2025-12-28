@@ -302,6 +302,26 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  placeOrder(): void {
+    if (this.poForm.invalid && this.items.length === 0) return;
+
+    // If it's a new PO, create it with ORDERED status
+    if (!this.poId) {
+      this.poForm.patchValue({ status: PurchaseOrderStatus.ORDERED });
+      this.onSubmit();
+      return;
+    }
+
+    // If existing, update status
+    if (confirm('Are you sure you want to place this order? This will mark it as Ordered.')) {
+      this.suppliersService.updatePurchaseOrderStatus(this.poId, PurchaseOrderStatus.ORDERED).subscribe(() => {
+        this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
+        this.loadPurchaseOrder(this.poId!);
+        this.router.navigate(['/suppliers/po/list']);
+      });
+    }
+  }
+
   onSubmit(): void {
     if (this.poForm.invalid) return;
 
@@ -314,7 +334,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     } else {
       const newPo: PurchaseOrderCreate = {
         supplier_id: formValue.supplier_id,
-        status: formValue.status,
+        status: formValue.status, // Uses form value which defaults to draft
         currency: formValue.currency,
         exchange_rate: 1.0,
         notes: formValue.notes,
