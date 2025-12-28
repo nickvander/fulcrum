@@ -148,3 +148,13 @@ before commits and pushes:
     - Starts the frontend application.
     - Executes Playwright tests (`npm run test:e2e`).
     - Uploads test reports as artifacts.
+
+### 6. Live Integration Tests (MercadoLibre)
+
+- **Purpose:** Verifies the full sync lifecycle with MercadoLibre using live API calls and generated test users.
+- **Location:** `backend/tests/integration/test_mercadolibre_live.py`
+- **Prerequisites:** Requires a valid `ML_ACCESS_TOKEN` from a real developer account.
+- **Running Locally:**
+  ```bash
+  docker compose exec -e ML_ACCESS_TOKEN="YOUR_TOKEN" backend pytest -m integration_ml tests/integration/test_mercadolibre_live.py
+  ```

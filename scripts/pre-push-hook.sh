@@ -9,12 +9,12 @@ echo "Running fast backend tests..."
 if [ -f ".venv/bin/activate" ]; then
     # Use virtual environment if available
     source .venv/bin/activate
-    cd backend && python -m pytest -c pytest.ini -m 'not db'
+    cd backend && python -m pytest -c pytest.ini -m 'not db and not integration'
     backend_result=$?
     cd ..
 elif command -v pytest &> /dev/null; then
     # Fallback to system pytest if available
-    cd backend && pytest -c pytest.ini -m 'not db'
+    cd backend && pytest -c pytest.ini -m 'not db and not integration'
     backend_result=$?
     cd ..
 else
