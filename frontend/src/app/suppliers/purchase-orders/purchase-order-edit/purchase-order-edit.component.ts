@@ -113,14 +113,14 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     const itemGroup = this.fb.group({
       product_id: [item?.product_id || null, Validators.required],
-      product_name: [item?.product_name || ''],
+      product_name: [item?.product_name || item?.product?.name || ''],
       quantity_ordered: [item?.quantity_ordered || 1, [Validators.required, Validators.min(1)]],
       unit_cost: [item?.unit_cost || 0, [Validators.required, Validators.min(0)]]
     });
     this.items.push(itemGroup);
 
     // Setup autocomplete for this line
-    const searchControl = new FormControl(item?.product_name || '');
+    const searchControl = new FormControl(item?.product_name || item?.product?.name || '');
     this.productSearchControls.push(searchControl);
 
     // Use getProducts with name filter for search
