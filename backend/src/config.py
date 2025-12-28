@@ -18,6 +18,19 @@ class Settings(BaseSettings):
     RATE_LIMIT_REDIS_URL: Optional[str] = None
     RATE_LIMIT_DEFAULT: str = "100/minute"
 
+    # Marketplace Encryption
+    MARKETPLACE_ENCRYPTION_KEY: str
+
+    # Amazon SP-API
+    AMAZON_CLIENT_ID: Optional[str] = None
+    AMAZON_CLIENT_SECRET: Optional[str] = None
+    AMAZON_REDIRECT_URI: Optional[str] = "http://localhost:4200/marketplaces/amazon/callback"
+
+    # MercadoLibre Mexico
+    ML_CLIENT_ID: Optional[str] = None
+    ML_CLIENT_SECRET: Optional[str] = None
+    ML_REDIRECT_URI: Optional[str] = "http://localhost:4200/marketplaces/mercadolibre/callback"
+
     # Testing
     TESTING: bool = False
 

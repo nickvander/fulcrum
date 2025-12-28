@@ -6,7 +6,7 @@ from .supplier import Supplier
 from .product import Product, ProductImage
 from .product_variant import ProductVariant
 from .order import SalesOrder, SalesOrderItem
-from .marketplace import Marketplace, MarketplaceCredentials, MarketplaceListing
+from .marketplace import Marketplace, MarketplaceCredential, MarketplaceListing, WebhookSubscription, WebhookEvent
 from .inventory import InventoryItem, InventoryAdjustment
 
 from .custom_field import ProductCustomField
@@ -30,8 +30,10 @@ __all__ = [
     "SalesOrder",
     "SalesOrderItem",
     "Marketplace",
-    "MarketplaceCredentials",
+    "MarketplaceCredential",
     "MarketplaceListing",
+    "WebhookSubscription",
+    "WebhookEvent",
     "InventoryItem",
     "InventoryAdjustment",
     "ProductCustomField",

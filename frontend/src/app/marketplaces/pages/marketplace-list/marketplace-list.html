@@ -1,0 +1,114 @@
+<div class="marketplace-container">
+    <div class="page-header">
+        <div class="header-text">
+            <h1>Marketplace Channels</h1>
+            <p>Orchestrate your multi-channel sales and inventory synchronization from one central hub.</p>
+        </div>
+        <button mat-flat-button color="primary" (click)="showAddDialog = true">
+            <mat-icon>add</mat-icon>
+            Add Marketplace Account
+        </button>
+    </div>
+
+    <!-- Add Marketplace Dialog -->
+    @if (showAddDialog) {
+    <div class="dialog-overlay" (click)="showAddDialog = false">
+        <div class="dialog-content" (click)="$event.stopPropagation()">
+            <h2>Choose a Marketplace</h2>
+            <p>Select the marketplace you want to connect.</p>
+
+            <div class="marketplace-options">
+                <button mat-stroked-button class="marketplace-option amazon" routerLink="/marketplaces/settings/amazon"
+                    (click)="showAddDialog = false">
+                    <img src="images/marketplaces/amazon.png" alt="Amazon" class="marketplace-logo">
+                    <div class="marketplace-info">
+                        <span class="marketplace-name">Amazon Seller Central</span>
+                        <span class="marketplace-desc">Connect your Amazon seller account</span>
+                    </div>
+                    <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                </button>
+
+                <button mat-stroked-button class="marketplace-option mercadolibre"
+                    routerLink="/marketplaces/settings/mercadolibre" (click)="showAddDialog = false">
+                    <img src="images/marketplaces/mercadolibre.png" alt="MercadoLibre" class="marketplace-logo">
+                    <div class="marketplace-info">
+                        <span class="marketplace-name">MercadoLibre</span>
+                        <span class="marketplace-desc">Connect your MercadoLibre seller account</span>
+                    </div>
+                    <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                </button>
+            </div>
+
+            <div class="dialog-actions">
+                <button mat-button (click)="showAddDialog = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+    }
+
+    <div class="marketplace-grid">
+        @for (market of marketplaces$ | async; track market.id) {
+        <mat-card class="channel-card">
+            <div class="card-glow" [ngClass]="market.name.toLowerCase()"></div>
+            <mat-card-header>
+                <div mat-card-avatar class="channel-avatar" [ngClass]="market.name.toLowerCase()">
+                    <mat-icon>{{ market.name.toLowerCase() === 'amazon' ? 'store' : 'language' }}</mat-icon>
+                </div>
+                <mat-card-title>{{ market.name }}</mat-card-title>
+                <mat-card-subtitle>Active Connection • ID: {{ market.id }}</mat-card-subtitle>
+            </mat-card-header>
+
+            <mat-card-content>
+                <div class="status-indicator">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">Operational</span>
+                    <span class="spacer"></span>
+                    <mat-chip-set>
+                        <mat-chip class="sync-chip">Auto-Sync ON</mat-chip>
+                    </mat-chip-set>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">--</span>
+                        <span class="stat-label">Listings</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value success">--</span>
+                        <span class="stat-label">Healthy</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value warning">--</span>
+                        <span class="stat-label">Issues</span>
+                    </div>
+                </div>
+            </mat-card-content>
+
+            <mat-divider></mat-divider>
+
+            <mat-card-actions align="end">
+                <button mat-button (click)="syncMarketplace(market.id)" [disabled]="syncing">
+                    <mat-icon>sync</mat-icon>
+                    {{ syncing ? 'Syncing...' : 'Sync Now' }}
+                </button>
+                <button mat-stroked-button color="primary" [routerLink]="['/marketplaces', market.id]">
+                    <mat-icon>list</mat-icon>
+                    Manage
+                </button>
+            </mat-card-actions>
+        </mat-card>
+        } @empty {
+        <div class="empty-state">
+            <div class="empty-icon-wrapper">
+                <mat-icon>cloud_off</mat-icon>
+            </div>
+            <h2>No Connected Marketplaces</h2>
+            <p>Connect your Amazon or MercadoLibre seller accounts to synchronize inventory and orders.</p>
+            <button mat-flat-button color="primary" (click)="showAddDialog = true">
+                <mat-icon>add</mat-icon>
+                Add Your First Marketplace
+            </button>
+        </div>
+        }
+    </div>
+</div>
