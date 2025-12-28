@@ -12,6 +12,12 @@
 ## 🚀 Upcoming Phases
 
 - [ ] **Phase 8: Advanced Analytics**
-  - [ ] Sales performance dashboard
-  - [ ] Inventory forecasting
-  - [ ] Multi-channel reporting
+  - **Track 1: Data Aggregation**
+    - [ ] ETL pipeline to normalize sales data from all channels (Internal, Amazon, MercadoLibre).
+    - [ ] Profitability calculation (Revenue - COGS - Marketplace Fees - Shipping).
+  - **Track 2: Dashboard Visualization**
+    - [ ] "Command Center" dashboard with real-time sales velocity.
+    - [ ] Inventory forecasting widgets (Days of Supply, Reorder Recommendations).
+  - **Track 3: Reporting Engine**
+    - [ ] Exportable CSV/PDF reports (P&L, Tax Summary).
+    - [ ] Multi-channel performance comparison.
