@@ -16,13 +16,9 @@ import { MatIconModule } from '@angular/material/icon';
 export class Sidenav implements OnInit {
   isAdmin$!: Observable<boolean>;
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   ngOnInit(): void {
-    console.log('Sidenav: Initializing component');
     this.isAdmin$ = this.authService.isAdmin();
-    this.isAdmin$.subscribe(result => {
-      console.log('Sidenav: isAdmin$ result:', result);
-    });
   }
 }

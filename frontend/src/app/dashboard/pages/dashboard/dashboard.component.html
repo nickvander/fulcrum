@@ -1,0 +1,45 @@
+<div class="dashboard-container p-6 bg-gray-50 min-h-screen">
+    <div class="header mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Business Overview</h1>
+            <p class="text-gray-600">Real-time snapshots from across your operation.</p>
+        </div>
+        <button mat-icon-button color="primary" (click)="refresh()" matTooltip="Refresh Dashboard">
+            <mat-icon>refresh</mat-icon>
+        </button>
+    </div>
+
+    <ng-container *ngIf="stats$ | async as stats; else loading">
+        <div class="dashboard-grid mb-8">
+            <app-kpi-card title="Total Products" [value]="stats.totalProducts" icon="inventory_2" color="#3b82f6"
+                link="/products" tooltip="Total number of unique items in your catalog"></app-kpi-card>
+
+            <app-kpi-card title="Inventory Value"
+                [value]="(stats.totalInventoryValue | currency:'USD':'symbol':'1.0-0') ?? ''" icon="payments"
+                color="#10b981" link="/products"
+                tooltip="Estimated commercial value of all stock on hand (Cost × Quantity)"></app-kpi-card>
+
+            <app-kpi-card title="Inventory Availability" [value]="stats.stockHealthPercentage + '%'"
+                icon="health_and_safety" color="#8b5cf6" link="/products"
+                [status]="stats.stockHealthPercentage > 90 ? 'Excellent' : 'Action Needed'"
+                [statusColor]="stats.stockHealthPercentage > 90 ? '#10b981' : '#f59e0b'"
+                tooltip="Percentage of products with stock levels above the reorder threshold"></app-kpi-card>
+
+            <app-kpi-card title="Inbound Pipeline" [value]="stats.pendingOrdersCount" icon="shopping_cart"
+                color="#f59e0b" link="/suppliers" [status]="stats.totalSuppliers + ' Suppliers'" statusColor="#6b7280"
+                tooltip="Number of active Purchase Orders currently being processed or shipped"></app-kpi-card>
+        </div>
+
+        <div class="secondary-grid">
+            <div class="lg:col-span-3">
+                <app-low-stock-list [products]="stats.lowStockProducts"></app-low-stock-list>
+            </div>
+        </div>
+    </ng-container>
+
+    <ng-template #loading>
+        <div class="flex justify-center items-center h-64">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
+    </ng-template>
+</div>

@@ -20,7 +20,6 @@ import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor
   imports: [
     AppComponent,
     BrowserModule,
-    AppRoutingModule,
     BrowserAnimationsModule,
     HttpClientModule,
     CoreModule,
@@ -32,7 +31,8 @@ import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor
       registrationStrategy: 'registerWhenStable:30000'
     }),
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    AppRoutingModule
   ],
   providers: [
     provideBrowserGlobalErrorListeners(),
