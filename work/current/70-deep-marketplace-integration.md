@@ -12,36 +12,36 @@ This phase transitions from architectural stubs to live, production-ready market
 ## 📊 Tracks & Steps
 
 ### Track 1: Secure Credential Management
-- [ ] **Step 1: Encryption Layer**
+- [x] **Step 1: Encryption Layer**
     - Implement a wrapping service using `cryptography` for AES-256-GCM encryption of sensitive tokens.
     - Store encrypted credentials in a new `MarketplaceCredential` database table.
-- [ ] **Step 2: Credential Management API**
+- [x] **Step 2: Credential Management API**
     - Create endpoints for securely saving/updating credentials without exposing secrets in logs or responses.
 
 ### Track 2: Product Mapping & Catalog Sync
-- [ ] **Step 3: Identity Management Service**
+- [x] **Step 3: Identity Management Service**
     - Build a service to manage `MarketplaceListing` correlations.
     - Implement "Auto-Mapping" logic based on SKU matching.
-- [ ] **Step 4: Bulk Listing Import**
+- [x] **Step 4: Bulk Listing Import**
     - Implement a "Fetch Existing Listings" tool to import products already present on marketplaces into Fulcrum.
 
 ### Track 3: Live Amazon SP-API Integration
-- [ ] **Step 5: OAuth Flow**
+- [x] **Step 5: OAuth Flow**
     - Implement the full Amazon OAuth2 flow (LWA - Login with Amazon).
     - Automate token refresh cycles in the background.
-- [ ] **Step 6: Inventory & Price Feeds**
+- [x] **Step 6: Inventory & Price Feeds**
     - Implement `sync_inventory` using Amazon's Listings API.
     - Implement price updates and status monitoring.
 
 ### Track 4: Live MercadoLibre Integration
-- [ ] **Step 7: OAuth & Refresh**
+- [x] **Step 7: OAuth & Refresh**
     - Implement MercadoLibre OAuth flow.
     - Handle token expiration and persistent connection management.
-- [ ] **Step 8: Listing Operations**
+- [x] **Step 8: Listing Operations**
     - Implement publishing and inventory updates for ML.
 
 ### Track 5: Event-Driven Architecture
-- [ ] **Step 9: Webhook Integration**
+- [x] **Step 9: Webhook Integration**
     - Set up endpoints to receive notifications from Amazon and MercadoLibre.
     - Implement a dispatcher to trigger internal inventory adjustments on external sales.
 
