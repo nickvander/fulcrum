@@ -62,9 +62,9 @@
                 <div class="inventory-section">
                     <h3>Inventory Status</h3>
                     <div class="stock-badges">
-                        <span class="stock-badge">
-                            Stock: <strong>{{ product.inventory_items?.[0]?.quantity_on_hand || 0 }}</strong>
-                        </span>
+                        <strong class="stock-value"
+                            [class.in-stock]="(product.inventory_items?.[0]?.quantity || 0) > 0">{{
+                            product.inventory_items?.[0]?.quantity || 0 }}</strong>
                         <!-- Add more badges if we had reserved/incoming -->
                     </div>
                 </div>
