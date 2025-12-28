@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>Receive Items - PO #{{po.id}}</h2>
+<mat-dialog-content [formGroup]="receivingForm">
+    <table class="receiving-table">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Ordered</th>
+                <th>Received</th>
+                <th>To Receive</th>
+            </tr>
+        </thead>
+        <tbody formArrayName="items">
+            <tr *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i">
+                <td>{{ itemControl.get('product_id')?.value }}</td>
+                <td>{{ itemControl.get('quantity_ordered')?.value }}</td>
+                <td>{{ itemControl.get('quantity_received_so_far')?.value }}</td>
+                <td>
+                    <mat-form-field appearance="outline" style="width: 100px;">
+                        <input matInput type="number" formControlName="quantity_to_receive" min="0">
+                    </mat-form-field>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="receivingForm.invalid">Receive</button>
+</mat-dialog-actions>

@@ -121,9 +121,34 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_by_sku(self, db: Session, *, sku: str) -> Product | None:
         return db.query(Product).filter(Product.sku == sku).first()
 
+    def generate_unique_sku(self, db: Session, prefix: str = "PRD") -> str:
+        """Generate a unique SKU with format: PREFIX-YYYYMMDD-XXXX"""
+        import secrets
+        from datetime import datetime
+        
+        date_part = datetime.now().strftime("%Y%m%d")
+        
+        # Try up to 10 times to generate a unique SKU
+        for _ in range(10):
+            random_part = secrets.token_hex(2).upper()  # 4 hex characters
+            sku = f"{prefix}-{date_part}-{random_part}"
+            
+            if not self.get_by_sku(db, sku=sku):
+                return sku
+        
+        # Fallback with timestamp for uniqueness
+        import time
+        return f"{prefix}-{date_part}-{int(time.time()) % 10000:04d}"
+
     def create(self, db: Session, *, obj_in: ProductCreate) -> Product:
-        if self.get_by_sku(db, sku=obj_in.sku):
+        # Auto-generate SKU if not provided
+        if not obj_in.sku:
+            generated_sku = self.generate_unique_sku(db)
+            # Create a copy with the generated SKU
+            obj_in = ProductCreate(**{**obj_in.model_dump(), "sku": generated_sku})
+        elif self.get_by_sku(db, sku=obj_in.sku):
             raise HTTPException(status_code=409, detail="Product with this SKU already exists.")
+        
         return super().create(db, obj_in=obj_in)
 
     def get_similar(self, db: Session, *, embedding: list[float], limit: int = 10) -> list[Product]:

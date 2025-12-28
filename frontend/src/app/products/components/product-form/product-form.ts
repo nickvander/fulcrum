@@ -61,6 +61,7 @@ export class ProductForm implements OnInit {
   originalValues: any = {};
   originalCustomFieldValues: any = {};
   productVariants: ProductVariant[] = [];
+  returnToPO = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -91,6 +92,14 @@ export class ProductForm implements OnInit {
 
   ngOnInit(): void {
     console.log('ProductForm: ngOnInit started');
+
+    // Check if we're coming from creating a product for a PO
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['returnTo'] === 'po') {
+        this.returnToPO = true;
+      }
+    });
+
     // Check if product is passed via @Input (side panel mode)
     if (this.product) {
       console.log('ProductForm: Side panel mode');
@@ -99,6 +108,11 @@ export class ProductForm implements OnInit {
       console.log('ProductForm: Route mode');
       this.initializeRouteMode();
     }
+  }
+
+  returnToPurchaseOrder(): void {
+    // Navigate back to PO creation with saved state
+    this.router.navigate(['/suppliers/po/create']);
   }
 
   private initializeSidePanelMode(): void {

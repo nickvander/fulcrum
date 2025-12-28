@@ -1,0 +1,135 @@
+<div class="po-edit-container">
+    <div class="header">
+        <h1>{{ isEditMode ? 'Edit Purchase Order #' + poId : 'Create Purchase Order' }}</h1>
+        <button mat-raised-button color="accent" *ngIf="isEditMode" (click)="openReceivingDialog()">
+            Receive Items
+        </button>
+    </div>
+
+    <form [formGroup]="poForm" (ngSubmit)="onSubmit()" autocomplete="off">
+        <mat-card class="form-section">
+            <h3>Order Details</h3>
+            <div class="row">
+                <mat-form-field appearance="fill">
+                    <mat-label>Supplier</mat-label>
+                    <mat-select formControlName="supplier_id">
+                        <mat-option *ngFor="let s of suppliers" [value]="s.id">
+                            {{s.name}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Currency</mat-label>
+                    <input matInput formControlName="currency" autocomplete="off">
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Notes</mat-label>
+                    <textarea matInput formControlName="notes"></textarea>
+                </mat-form-field>
+            </div>
+        </mat-card>
+
+        <mat-card class="form-section">
+            <h3>Line Items</h3>
+            <div formArrayName="items">
+                <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
+
+                    <mat-form-field appearance="fill" class="product-field">
+                        <mat-label>Product</mat-label>
+                        <input matInput [formControl]="productSearchControls[i]" [matAutocomplete]="productAuto"
+                            placeholder="Type to search products..." autocomplete="off">
+                        <mat-autocomplete #productAuto="matAutocomplete" [displayWith]="displayProductFn"
+                            (optionSelected)="selectProduct($event.option.value, i)">
+                            <mat-option *ngFor="let product of (filteredProducts$[i] | async)" [value]="product">
+                                <div class="product-option">
+                                    <strong>{{ product.name }}</strong>
+                                    <span class="sku">SKU: {{ product.sku }}</span>
+                                    <span class="price">${{ product.cost_price | number:'1.2-2' }}</span>
+                                </div>
+                            </mat-option>
+                        </mat-autocomplete>
+                        <button mat-icon-button matSuffix type="button" (click)="openQuickAddProduct(i)"
+                            matTooltip="Create new product">
+                            <mat-icon>add_circle</mat-icon>
+                        </button>
+                        <mat-hint *ngIf="item.get('product_id')?.value">
+                            ID: {{ item.get('product_id')?.value }}
+                        </mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="qty-field">
+                        <mat-label>Qty</mat-label>
+                        <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="cost-field">
+                        <mat-label>Unit Cost</mat-label>
+                        <span matPrefix>$&nbsp;</span>
+                        <input matInput type="number" formControlName="unit_cost" min="0" step="0.01"
+                            autocomplete="off">
+                    </mat-form-field>
+
+                    <button mat-icon-button color="warn" type="button" (click)="removeItem(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </div>
+            </div>
+            <button mat-button type="button" (click)="addLineItem()">
+                <mat-icon>add</mat-icon> Add Item
+            </button>
+        </mat-card>
+
+        <!-- Additional Costs Section -->
+        <mat-card class="form-section" *ngIf="isEditMode || items.length > 0">
+            <h3>Shipping & Additional Costs</h3>
+            <p class="section-hint">Enter any extra costs beyond the product prices. These can be distributed across
+                your items.</p>
+            <div class="row costs-row">
+                <mat-form-field appearance="fill">
+                    <mat-label>Shipping / Freight</mat-label>
+                    <span matTextPrefix>$&nbsp;</span>
+                    <input matInput type="number" formControlName="shipping_cost" min="0" step="0.01"
+                        autocomplete="off">
+                    <mat-hint>Delivery and transport fees</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Customs / Import Duties</mat-label>
+                    <span matTextPrefix>$&nbsp;</span>
+                    <input matInput type="number" formControlName="import_cost" min="0" step="0.01" autocomplete="off">
+                    <mat-hint>Taxes on imported goods</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Other Fees</mat-label>
+                    <span matTextPrefix>$&nbsp;</span>
+                    <input matInput type="number" formControlName="other_costs" min="0" step="0.01" autocomplete="off">
+                    <mat-hint>Insurance, handling, etc.</mat-hint>
+                </mat-form-field>
+            </div>
+
+            <div class="cost-summary" *ngIf="calculateTotalAdditionalCosts() > 0">
+                <div class="summary-row">
+                    <span>Total Extra Costs:</span>
+                    <strong>${{ calculateTotalAdditionalCosts() | number:'1.2-2' }}</strong>
+                </div>
+                <div class="summary-row" *ngIf="items.length > 0">
+                    <span>Cost per unit (if distributed evenly):</span>
+                    <strong>${{ calculatePerUnitLandedCost() | number:'1.2-2' }}</strong>
+                </div>
+                <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()">
+                    <mat-icon>add_circle</mat-icon> Add to Unit Costs
+                </button>
+                <p class="apply-hint">This will add the per-unit cost to each line item's unit cost.</p>
+            </div>
+        </mat-card>
+
+        <div class="actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid">
+                {{ isEditMode ? 'Update' : 'Create' }} Order
+            </button>
+        </div>
+    </form>
+</div>

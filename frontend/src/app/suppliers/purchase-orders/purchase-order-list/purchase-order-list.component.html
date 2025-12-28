@@ -1,0 +1,55 @@
+<div class="po-list-container">
+    <div class="header">
+        <h1>Purchase Orders</h1>
+        <div class="actions">
+            <button mat-stroked-button (click)="createSupplier()" style="margin-right: 10px;">Create Supplier</button>
+            <button mat-raised-button color="primary" (click)="createPurchaseOrder()">Create Purchase Order</button>
+        </div>
+    </div>
+
+    <mat-card>
+        <table mat-table [dataSource]="purchaseOrders" class="mat-elevation-z0">
+
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+                <th mat-header-cell *matHeaderCellDef> ID </th>
+                <td mat-cell *matCellDef="let po"> #{{po.id}} </td>
+            </ng-container>
+
+            <!-- Supplier Column -->
+            <ng-container matColumnDef="supplier">
+                <th mat-header-cell *matHeaderCellDef> Supplier </th>
+                <td mat-cell *matCellDef="let po"> {{po.supplier_id}} </td> <!-- To enrich later -->
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef> Status </th>
+                <td mat-cell *matCellDef="let po"> {{po.status}} </td>
+            </ng-container>
+
+            <!-- Total Column -->
+            <ng-container matColumnDef="total">
+                <th mat-header-cell *matHeaderCellDef> Total </th>
+                <td mat-cell *matCellDef="let po"> {{po.total_amount | currency: po.currency}} </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="created_at">
+                <th mat-header-cell *matHeaderCellDef> Date </th>
+                <td mat-cell *matCellDef="let po"> {{po.created_at | date}} </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef> Actions </th>
+                <td mat-cell *matCellDef="let po">
+                    <button mat-button color="primary" (click)="viewDetail(po.id)">View</button>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+    </mat-card>
+</div>

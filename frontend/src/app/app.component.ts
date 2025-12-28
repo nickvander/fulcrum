@@ -19,11 +19,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     RouterModule,
     CoreModule,
     MatProgressSpinnerModule
-],
-  templateUrl: './app.html',
-  styleUrl: './app.scss',
+  ],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
 })
-export class App {
+export class AppComponent {
   isHandset$: Observable<boolean>;
   isLoginPage = false;
   loading$: Observable<boolean>;

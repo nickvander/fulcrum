@@ -1,0 +1,214 @@
+// Common form styles for Fulcrum application
+// Import this in component stylesheets: @use 'forms' as *;
+
+// Dialog styling
+.dialog-container {
+    mat-dialog-content {
+        padding-top: 16px !important;
+    }
+}
+
+// Form field alignment
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+
+    mat-form-field {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+.form-row-compact {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    mat-form-field {
+        flex: 1;
+    }
+}
+
+// Full width form field
+.full-width {
+    width: 100%;
+}
+
+// Currency prefix fix - ensure $ appears before input
+mat-form-field {
+    .mat-mdc-form-field-prefix {
+        margin-right: 4px;
+    }
+
+    // For outline appearance
+    &.mat-mdc-form-field-type-mat-input {
+        .mdc-text-field--outlined .mat-mdc-form-field-infix {
+            padding-left: 0;
+        }
+    }
+}
+
+// Card sections
+.form-section {
+    margin-bottom: 20px;
+    padding: 20px;
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #333;
+    }
+}
+
+// Action buttons
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+// Item rows (for line items, variants, etc.)
+.item-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #fafafa;
+    border-radius: 8px;
+
+    &:hover {
+        background: #f0f0f0;
+    }
+}
+
+// Cost summary boxes
+.cost-summary {
+    margin-top: 16px;
+    padding: 16px;
+    background: #e3f2fd;
+    border-radius: 8px;
+
+    p {
+        margin: 8px 0;
+    }
+}
+
+// AI-powered badge
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.75rem;
+    border-radius: 12px;
+
+    mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+    }
+}
+
+// Product option in autocomplete
+.product-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 4px 0;
+
+    .sku {
+        color: #666;
+        font-size: 0.85em;
+    }
+
+    .price {
+        margin-left: auto;
+        color: #2e7d32;
+        font-weight: 500;
+    }
+}
+
+// Quick action buttons (icon buttons in forms)
+.quick-action-btn {
+    color: #1976d2;
+
+    &:hover {
+        background: rgba(25, 118, 210, 0.08);
+    }
+
+    &.ai-action {
+        color: #7c4dff;
+
+        &:hover {
+            background: rgba(124, 77, 255, 0.08);
+        }
+    }
+}
+
+// Expandable sections
+.expandable-section {
+    margin-top: 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        background: #fafafa;
+        cursor: pointer;
+
+        &:hover {
+            background: #f0f0f0;
+        }
+
+        mat-icon {
+            margin-right: 8px;
+            transition: transform 0.2s;
+        }
+
+        &.expanded mat-icon {
+            transform: rotate(90deg);
+        }
+    }
+
+    .section-content {
+        padding: 16px;
+    }
+}
+
+// Page container
+.page-container {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+// Page header
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+    }
+}

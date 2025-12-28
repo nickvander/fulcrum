@@ -13,6 +13,10 @@ from .custom_field import ProductCustomField
 from .custom_field_template import CustomFieldTemplate
 from .product_template import ProductTemplate
 
+from .purchase_order import PurchaseOrder
+from .purchase_order_item import PurchaseOrderItem
+from .supplier_invoice import SupplierInvoice
+
 __all__ = [
     "User",
     "UserAuditLog",
@@ -32,4 +36,7 @@ __all__ = [
     "ProductCustomField",
     "CustomFieldTemplate",
     "ProductTemplate",
+    "PurchaseOrder",
+    "PurchaseOrderItem",
+    "SupplierInvoice",
 ]

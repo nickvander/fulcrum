@@ -5,8 +5,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideHttpClient, withInterceptors, HttpClientModule } from '@angular/common/http';
 
 
-import { AppRoutingModule } from './app-routing-module';
-import { App } from './app';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
 import { CoreModule } from './core/core-module';
 import { AuthModule } from './auth/auth-module';
 import { AuthInterceptor } from './auth/interceptors/auth-interceptor';
@@ -18,7 +18,7 @@ import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor
 
 @NgModule({
   imports: [
-    App,
+    AppComponent,
     BrowserModule,
     AppRoutingModule,
     BrowserAnimationsModule,
@@ -39,6 +39,6 @@ import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor
     provideAnimationsAsync(),
     provideHttpClient(withInterceptors([AuthInterceptor, LoadingInterceptor, HttpErrorInterceptor]))
   ],
-  bootstrap: [App]
+  bootstrap: [AppComponent]
 })
 export class AppModule { }

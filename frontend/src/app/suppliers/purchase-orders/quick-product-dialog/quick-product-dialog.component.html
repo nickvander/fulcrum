@@ -1,0 +1,68 @@
+<div mat-dialog-title class="dialog-header">
+    <h2>Quick Add Product</h2>
+    <span class="ai-badge" *ngIf="aiEnabled">
+        <mat-icon>auto_awesome</mat-icon> AI-Powered
+    </span>
+</div>
+
+<mat-dialog-content class="dialog-content">
+    <form [formGroup]="productForm">
+        <!-- AI Capture Option -->
+        <div class="ai-capture-section" *ngIf="aiEnabled">
+            <button mat-stroked-button type="button" class="ai-capture-btn" (click)="openCameraCapture()">
+                <mat-icon>photo_camera</mat-icon>
+                Scan Product with Camera
+            </button>
+            <span class="helper-text">Use AI to identify the product</span>
+        </div>
+
+        <mat-divider *ngIf="aiEnabled"></mat-divider>
+
+        <div class="form-fields">
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Product Name</mat-label>
+                <input matInput formControlName="name" placeholder="e.g., Widget A" autocomplete="off">
+            </mat-form-field>
+
+            <div class="sku-row">
+                <mat-form-field appearance="outline" class="sku-field">
+                    <mat-label>SKU</mat-label>
+                    <input matInput formControlName="sku" placeholder="Leave blank to auto-generate" autocomplete="off">
+                </mat-form-field>
+                <mat-checkbox formControlName="autoGenerateSku" color="primary">
+                    Auto-generate
+                </mat-checkbox>
+            </div>
+
+            <div class="price-row">
+                <mat-form-field appearance="outline">
+                    <mat-label>Cost Price</mat-label>
+                    <span matTextPrefix>$&nbsp;</span>
+                    <input matInput type="number" formControlName="cost_price" min="0" step="0.01">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Resale Price</mat-label>
+                    <span matTextPrefix>$&nbsp;</span>
+                    <input matInput type="number" formControlName="default_resale_price" min="0" step="0.01">
+                </mat-form-field>
+            </div>
+        </div>
+
+        <!-- Link to full product page for variants -->
+        <div class="variant-hint">
+            <mat-icon>info</mat-icon>
+            <span>Need to add variants (size, color, etc.)?
+                <a (click)="createAndEditFull()">Create and continue editing</a>
+            </span>
+        </div>
+    </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="productForm.invalid || isLoading">
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <span *ngIf="!isLoading">Create Product</span>
+    </button>
+</mat-dialog-actions>

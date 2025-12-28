@@ -1,11 +1,22 @@
 <div class="form-container">
+  <!-- Return to Purchase Order Banner -->
+  @if (returnToPO) {
+  <div class="return-banner">
+    <mat-icon>arrow_back</mat-icon>
+    <span>You're creating a product for your purchase order.</span>
+    <button mat-stroked-button (click)="returnToPurchaseOrder()">
+      Return to Purchase Order
+    </button>
+  </div>
+  }
+
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
     <div class="form-header">
       <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
       <div class="header-actions">
         <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
         <button type="submit" mat-raised-button color="primary"
-        [disabled]="!isDirty || productForm.invalid">Save</button>
+          [disabled]="!isDirty || productForm.invalid">Save</button>
       </div>
     </div>
 
@@ -95,26 +106,26 @@
                   (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
                   (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
                   (imageUpdated)="onImageUpdated($event)"
-                (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
+                  (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
               </mat-card-content>
             </mat-card>
 
             @if (customFields.length > 0) {
-              <mat-card>
-                <mat-card-header>
-                  <mat-card-title>Custom Fields</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  @for (field of customFields; track field) {
-                    <div>
-                      <mat-form-field>
-                        <mat-label>{{ field.name }}</mat-label>
-                        <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
-                      </mat-form-field>
-                    </div>
-                  }
-                </mat-card-content>
-              </mat-card>
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Custom Fields</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                @for (field of customFields; track field) {
+                <div>
+                  <mat-form-field>
+                    <mat-label>{{ field.name }}</mat-label>
+                    <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
+                  </mat-form-field>
+                </div>
+                }
+              </mat-card-content>
+            </mat-card>
             }
 
             <mat-card>
@@ -143,33 +154,33 @@
               <div class="listings-list">
                 <mat-list>
                   @for (listing of product?.marketplace_listings; track listing) {
-                    <mat-list-item class="listing-item">
-                      <mat-icon matListItemIcon>store</mat-icon>
-                      <h3 matListItemTitle class="listing-title">
-                        {{ getMarketplaceName(listing.marketplace_id) }}
-                        <span class="status-badge" [class.active]="listing.status === 'active'"
-                          [class.error]="listing.status === 'error'" [class.pending]="listing.status === 'pending'">{{
+                  <mat-list-item class="listing-item">
+                    <mat-icon matListItemIcon>store</mat-icon>
+                    <h3 matListItemTitle class="listing-title">
+                      {{ getMarketplaceName(listing.marketplace_id) }}
+                      <span class="status-badge" [class.active]="listing.status === 'active'"
+                        [class.error]="listing.status === 'error'" [class.pending]="listing.status === 'pending'">{{
                         listing.status | titlecase }}</span>
-                      </h3>
-                      <p matListItemLine>
-                        External ID: {{ listing.external_listing_id || 'N/A' }} |
-                        @if (listing.listing_url) {
-                          <a [href]="listing.listing_url" target="_blank"
-                          (click)="$event.stopPropagation()">View Listing</a>
-                        }
-                      </p>
-                      <button mat-icon-button matListItemMeta>
-                        <mat-icon>open_in_new</mat-icon>
-                      </button>
-                    </mat-list-item>
+                    </h3>
+                    <p matListItemLine>
+                      External ID: {{ listing.external_listing_id || 'N/A' }} |
+                      @if (listing.listing_url) {
+                      <a [href]="listing.listing_url" target="_blank" (click)="$event.stopPropagation()">View
+                        Listing</a>
+                      }
+                    </p>
+                    <button mat-icon-button matListItemMeta>
+                      <mat-icon>open_in_new</mat-icon>
+                    </button>
+                  </mat-list-item>
                   }
 
                   @if (!product?.marketplace_listings?.length) {
-                    <mat-list-item>
-                      <mat-icon matListItemIcon>info</mat-icon>
-                      <div matListItemTitle>No active listings</div>
-                      <div matListItemLine>This product is not listed on any marketplace yet.</div>
-                    </mat-list-item>
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>info</mat-icon>
+                    <div matListItemTitle>No active listings</div>
+                    <div matListItemLine>This product is not listed on any marketplace yet.</div>
+                  </mat-list-item>
                   }
                 </mat-list>
               </div>

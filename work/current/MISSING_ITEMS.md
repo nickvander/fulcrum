@@ -1,6 +1,8 @@
-# Missing Items
+# Missing Items - Deferred to Future
 
-## Todo
-- [x] Verify if `rules_vitest` is available and works with Angular v21 in Bazel. (Direct execution attempted and failed).
-- [x] Check for any breaking changes in Angular v21 that affect the application code. (Verified: 226 tests passed).
-- [~] **CRITICAL**: Resolve `sass` compatibility issue in Bazel sandbox (Deferred: Using `ng test` instead).
+## Deferred to Future Phases
+
+- [ ] **AI Invoice Processing** - See `work/future/ai-invoice-processing.md`
+- [ ] **Multi-Source Products** - `SupplierProduct` join table for products from multiple vendors
+- [ ] **Batch/Lot Tracking** - Foundation for tracking inventory by batch
+- [ ] **3-Way Matching** - PO vs Receipt vs Invoice reconciliation
