@@ -2,12 +2,13 @@
 
 ## 🚀 Phase 6: Marketplaces & Widgets
 
-- [ ] **Dashboard Setup**
-    - [ ] `DashboardModule` & `DashboardComponent`.
-    - [ ] Widget Infrastructure (Host, Registry).
-    - [ ] Basic KPIs (Sales, Orders, Stock).
+- [x] **Dashboard Setup**
+    - [x] `DashboardModule` & `DashboardComponent`.
+    - [x] Widget Infrastructure (Standalone components, grid layout).
+    - [x] Basic KPIs (Inventory Value, Stock Health, Inbound Pipeline).
 
 - [ ] **Marketplace Research**
-    - [ ] Amazon SP-API Plan.
-    - [ ] MercadoLibre Plan.
-    - [ ] `docs/guides/marketplace-setup.md` Draft.
+    - [x] Amazon SP-API Plan.
+    - [x] MercadoLibre Plan.
+    - [x] Research saved to `work/current/marketplace-research.md`.
+    - [ ] Implementation of models and OAuth flows.

@@ -28,6 +28,7 @@ Welcome to Fulcrum's documentation!
    guides/testing-and-ci.md
    guides/production-setup.md
    guides/bulk-import.md
+   guides/dashboard.md
 
 .. toctree::
    :maxdepth: 2
