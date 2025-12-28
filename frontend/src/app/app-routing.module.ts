@@ -5,6 +5,11 @@ import { AuthGuard } from './auth/guards/auth-guard';
 import { LoginGuard } from './auth/guards/login-guard';
 
 const routes: Routes = [
+  {
+    path: 'dashboard',
+    loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule),
+    canActivate: [AuthGuard]
+  },
   { path: 'login', component: Login, canActivate: [LoginGuard] },
   {
     path: 'forgot-password',
@@ -24,7 +29,7 @@ const routes: Routes = [
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]
   },
-  { path: '', redirectTo: '/products', pathMatch: 'full' },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   {
     path: 'ingest',
     loadComponent: () =>
