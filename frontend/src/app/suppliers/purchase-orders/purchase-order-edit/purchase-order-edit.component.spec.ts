@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('PurchaseOrderEditComponent', () => {
@@ -32,7 +33,8 @@ describe('PurchaseOrderEditComponent', () => {
         MatIconModule,
         NoopAnimationsModule,
         MatDialogModule,
-        MatSnackBarModule
+        MatSnackBarModule,
+        MatAutocompleteModule
       ],
       providers: [SuppliersService]
     })
