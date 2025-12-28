@@ -1,12 +1,10 @@
 # Progress Log
 
 ## Status
-- [x] **Phase 6**: Marketplaces & Widgets (Completed)
+- [/] **Phase 7**: Deep Marketplace Integration (Credentials & Models) (In Planning)
 
 ## Log
-- **2025-12-27**: Phase 6 Completion.
-    - **Marketplace Integration**: Established backend connector framework (Amazon SP-API, MercadoLibre stubs).
-    - **Frontend UI**: Built premium Marketplace List and Detail views with real-time sync health monitoring and navigation.
-    - **Navigation**: Wired up deep linking from Marketplace cards to channel-specific listings.
-    - **Feedback Loops**: Implemented "Coming Soon" notifications for future integration and configuration flows.
-    - **Stability**: Fixed module resolution errors, consolidated `AuthService`, and verified all tests passing.
+- **2025-12-27**: Phase 6 Completed.
+    - Architecture, Refined UI, and Connector framework pushed to main.
+- **2025-12-27**: Phase 7 Planning.
+    - Drafted `70-deep-marketplace-integration.md` with focus on security and live APIs.
