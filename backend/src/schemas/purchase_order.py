@@ -2,6 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from ..schemas.product import ProductImage
 
 class PurchaseOrderStatus(str, Enum):
     DRAFT = "draft"
@@ -15,7 +16,7 @@ class ProductRef(BaseModel):
     id: int
     name: str
     sku: str
-    images: Optional[List[dict]] = [] # Enrich with image data
+    images: Optional[List[ProductImage]] = [] # Enrich with image data
 
 class PurchaseOrderItemBase(BaseModel):
     product_id: int
