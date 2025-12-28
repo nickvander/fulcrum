@@ -116,6 +116,12 @@
                 &.success-text {
                     color: #2e7d32;
                 }
+
+                &.bonus-text {
+                    color: #ed6c02;
+                    /* Orange for Warning/Notice */
+                    font-weight: 700;
+                }
             }
 
             &.highlight .value {
@@ -133,6 +139,13 @@
 
             ::ng-deep .mat-mdc-text-field-wrapper {
                 background-color: #fff;
+            }
+
+            [matSuffix] {
+                font-size: 12px;
+                color: #757575;
+                align-self: center;
+                margin-left: 4px;
             }
         }
     }

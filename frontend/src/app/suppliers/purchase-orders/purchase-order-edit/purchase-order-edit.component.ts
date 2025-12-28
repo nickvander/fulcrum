@@ -25,6 +25,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
 export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   poForm: FormGroup;
   isEditMode = false;
+  isLocked = false;
   poId: number | null = null;
   suppliers: Supplier[] = [];
   invoices: SupplierInvoice[] = [];
@@ -111,6 +112,38 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         po.items.forEach(item => {
           this.addLineItem(item);
         });
+      }
+
+      // Lock if not in DRAFT status
+      this.checkLockStatus();
+    });
+  }
+
+  checkLockStatus(): void {
+    const status = this.poForm.get('status')?.value;
+    this.isLocked = status !== PurchaseOrderStatus.DRAFT;
+
+    if (this.isLocked) {
+      this.poForm.disable();
+    } else {
+      this.poForm.enable();
+    }
+  }
+
+  unlockOrder(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Unlock Order',
+        message: 'This order is finalized. Unlocking it allows editing but may cause data inconsistencies if already processed. Are you sure?',
+        confirmColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.isLocked = false;
+        this.poForm.enable();
+        this.snackBar.open('Order unlocked for editing', 'Close', { duration: 3000 });
       }
     });
   }

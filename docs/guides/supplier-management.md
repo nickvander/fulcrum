@@ -37,6 +37,12 @@ You can delete a Purchase Order only if:
 
 If you have already received items, the system will block deletion to preserver inventory integrity. To "cancel" such an order, you should manually adjust stock if needed and mark the PO as **Closed**.
 
+### Order Safety (Locking)
+To prevent accidental edits, Purchase Orders are automatically **Locked** when they move out of `Draft` status (e.g., to `Ordered` or `Received`).
+- **Read-Only**: All fields become read-only to ensure data integrity.
+- **Unlock to Edit**: If you must make changes, click the **"Unlock to Edit"** button. This requires confirmation and re-enables all fields.
+- **Best Practice**: Only unlock orders if absolutely necessary, as changing quantities on an active order can affect receiving logic.
+
 ### Cost Tracking
 - **Unit Cost**: The cost per item at the time of ordering.
 - **Additional Costs**:

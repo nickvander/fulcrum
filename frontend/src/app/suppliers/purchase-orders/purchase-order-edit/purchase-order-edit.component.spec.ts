@@ -9,6 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('PurchaseOrderEditComponent', () => {
@@ -27,7 +29,10 @@ describe('PurchaseOrderEditComponent', () => {
         MatCardModule,
         MatButtonModule,
         MatIconModule,
-        NoopAnimationsModule
+        MatIconModule,
+        NoopAnimationsModule,
+        MatDialogModule,
+        MatSnackBarModule
       ],
       providers: [SuppliersService]
     })

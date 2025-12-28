@@ -78,7 +78,8 @@ describe('ProductForm: Edge Cases', () => {
         activatedRouteMock = {
             snapshot: {
                 params: {}
-            }
+            },
+            queryParams: of({})
         } as any;
 
         await TestBed.configureTestingModule({

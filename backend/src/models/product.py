@@ -15,7 +15,9 @@ class Product(Base):
     supplier_sku = Column(String, nullable=True, index=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     default_resale_price = Column(Float)
-    cost_price = Column(Float)
+    default_resale_price = Column(Float)
+    cost_price = Column(Float) # Last Purchase Price
+    average_cost = Column(Float, default=0.0) # Weighted Average Cost
     properties = Column(String)  # Simple JSON as string for now
     embedding = Column(Vector(384)) # Example dimension
     manufacturer = Column(String, nullable=True)

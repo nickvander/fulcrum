@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from src.crud.crud_purchase_order import purchase_order as crud_purchase_order
+from src.crud.crud_product import product as crud_product
 from src.schemas.purchase_order import PurchaseOrderStatus
 
 class PurchaseOrderService:
@@ -64,6 +65,42 @@ class PurchaseOrderService:
             # Ideally validation checks delta vs ordered, but allow over-receiving for flexibility
             item.quantity_received = (item.quantity_received or 0) + qty
             db.add(item)
+
+            # --- Cost Update Logic (Dual Pricing) ---
+            # Fetch product explicitly to ensure session tracking
+            product = crud_product.get(db=db, id=pid)
+            if product:
+                # 1. Last Purchase Price (Current Replacement Cost)
+                product.cost_price = item.unit_cost
+                
+                # 2. Weighted Average Cost
+                # Get current total stock
+                # Note: This uses the loaded relationship. If inventory_items is stale, this calc might be slightly off
+                # but explicit refresh is expensive inside a loop. 
+                # Better: Use the service or query, but for now rely on relationship or explicit fallback.
+                current_stock_qty = sum(inv.quantity for inv in product.inventory_items) if product.inventory_items else 0
+                
+                # If this is the *first* receive, current_stock_qty might not include the *just received* amount yet
+                # because we updated inventory via service *after* this block in the original code? 
+                # Wait, inventory_service.adjust_stock is called AFTER this block.
+                # So current_stock_qty is "Quantity Before Receive".
+                
+                current_avg_cost = product.average_cost or 0.0
+                
+                if current_avg_cost == 0 and current_stock_qty > 0 and product.cost_price:
+                     current_avg_cost = product.cost_price
+
+                total_existing_value = current_stock_qty * current_avg_cost
+                new_received_value = qty * item.unit_cost
+                
+                total_new_qty = current_stock_qty + qty
+                
+                if total_new_qty > 0:
+                    new_average_cost = (total_existing_value + new_received_value) / total_new_qty
+                    product.average_cost = new_average_cost
+                
+                db.add(product)
+            # ----------------------------------------
             
             # Update Inventory
             inventory_service.adjust_stock(

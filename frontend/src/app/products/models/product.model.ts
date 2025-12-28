@@ -60,6 +60,7 @@ export interface Product {
   supplier_id?: number;
   default_resale_price: number;
   cost_price?: number;
+  average_cost?: number;
   properties?: any;
   images?: ProductImage[];
   inventory_items?: InventoryItem[];

@@ -89,7 +89,8 @@ describe('ProductForm: Image Management', () => {
         activatedRouteMock = {
             snapshot: {
                 params: {}
-            }
+            },
+            queryParams: of({})
         } as any;
 
         // Set up the initializer mock to return synchronous data for edit mode
