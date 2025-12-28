@@ -313,13 +313,22 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     }
 
     // If existing, update status
-    if (confirm('Are you sure you want to place this order? This will mark it as Ordered.')) {
-      this.suppliersService.updatePurchaseOrderStatus(this.poId, PurchaseOrderStatus.ORDERED).subscribe(() => {
-        this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
-        this.loadPurchaseOrder(this.poId!);
-        this.router.navigate(['/suppliers/po/list']);
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Place Order',
+        message: 'Are you sure you want to place this order? This will mark it as Ordered.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.suppliersService.updatePurchaseOrderStatus(this.poId!, PurchaseOrderStatus.ORDERED).subscribe(() => {
+          this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
+          this.loadPurchaseOrder(this.poId!);
+          this.router.navigate(['/suppliers/po/list']);
+        });
+      }
+    });
   }
 
   onSubmit(): void {

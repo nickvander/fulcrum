@@ -12,6 +12,8 @@ from src.crud.crud_supplier_invoice import supplier_invoice as crud_supplier_inv
 from src.schemas import purchase_order as po_schema
 from src.schemas import supplier_invoice as invoice_schema
 from src.services.purchase_order_service import purchase_order_service
+from src.api.dependencies import get_current_active_user
+from src.models.user import User
 
 router = APIRouter()
 
@@ -125,14 +127,16 @@ def receive_items(
     *,
     db: Session = Depends(get_db),
     id: int,
+
     received_items: List[dict],  # Ideally define a schema for this
+    current_user: User = Depends(get_current_active_user),
 ):
     """
     Receive items for a Purchase Order.
     Body: List of { "product_id": int, "quantity": int }
     """
     try:
-        po = purchase_order_service.receive_items(db=db, po_id=id, received_items=received_items)
+        po = purchase_order_service.receive_items(db=db, po_id=id, received_items=received_items, user=current_user)
         return po
     except HTTPException as e:
         raise e

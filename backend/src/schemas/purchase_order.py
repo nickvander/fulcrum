@@ -15,6 +15,7 @@ class ProductRef(BaseModel):
     id: int
     name: str
     sku: str
+    images: Optional[List[dict]] = [] # Enrich with image data
 
 class PurchaseOrderItemBase(BaseModel):
     product_id: int

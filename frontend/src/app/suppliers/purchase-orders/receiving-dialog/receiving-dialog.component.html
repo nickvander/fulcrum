@@ -3,7 +3,7 @@
     <table class="receiving-table">
         <thead>
             <tr>
-                <th>Product ID</th>
+                <th>Product</th>
                 <th>Ordered</th>
                 <th>Received</th>
                 <th>To Receive</th>
@@ -11,7 +11,19 @@
         </thead>
         <tbody formArrayName="items">
             <tr *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i">
-                <td>{{ itemControl.get('product_id')?.value }}</td>
+                <td class="product-cell">
+                    <div class="product-info">
+                        <img *ngIf="po.items[i].product?.images?.length"
+                            [src]="po.items[i].product!.images![0].url || po.items[i].product!.images![0]"
+                            class="product-thumb" alt="Product">
+                        <div class="product-details">
+                            <div class="product-name">{{ po.items[i].product?.name || ('Product #' +
+                                po.items[i].product_id) }}</div>
+                            <div class="product-sku" *ngIf="po.items[i].product?.sku">{{ po.items[i].product?.sku }}
+                            </div>
+                        </div>
+                    </div>
+                </td>
                 <td>{{ itemControl.get('quantity_ordered')?.value }}</td>
                 <td>{{ itemControl.get('quantity_received_so_far')?.value }}</td>
                 <td>
