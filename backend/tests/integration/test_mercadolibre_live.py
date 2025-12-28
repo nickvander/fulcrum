@@ -33,6 +33,8 @@ def _create_ml_test_user(token, site_id, country_id=None):
 def ml_access_token():
     token = os.environ.get("ML_ACCESS_TOKEN")
     if not token:
+        print("\n\n[!] SKIPPING LIVE TEST: 'ML_ACCESS_TOKEN' missing.")
+        print("    See 'work/current/63-marketplace-credential-setup-guide.md' for setup instructions.\n")
         pytest.skip("ML_ACCESS_TOKEN not set")
     return token
 

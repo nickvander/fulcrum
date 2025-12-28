@@ -40,3 +40,14 @@
     - Updated documentation for Testing & CI with live execution guide.
     - **Note**: Full test execution requires developer token injection.
     - Ready for Phase 8.
+
+- **2025-12-28**: Phase 8 Initialized.
+    - Added `AMAZON_SANDBOX` support to `AmazonConnector`.
+    - Created `tests/integration/test_amazon_live.py` structure.
+    - Implemented `sync_inventory`, `sync_price`, and `publish_listing` logic for SP-API.
+    - Status: Blocked on `AMAZON_CLIENT_ID` / `AMAZON_CLIENT_SECRET` for verification.
+    - Credential Setup Guide created: `work/current/63-marketplace-credential-setup-guide.md`
+
+- **2025-12-28**: Phase 9 Planned (Business Operations).
+    - Plan created: `work/current/64-business-operations-plan.md`.
+    - Focus: Cost/Expense tracking, Bundles, and 1P Storefront.
