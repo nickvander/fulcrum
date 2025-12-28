@@ -24,7 +24,9 @@ class Settings(BaseSettings):
     # Amazon SP-API
     AMAZON_CLIENT_ID: Optional[str] = None
     AMAZON_CLIENT_SECRET: Optional[str] = None
+    AMAZON_SELLER_ID: Optional[str] = "TEST_SELLER_ID"
     AMAZON_REDIRECT_URI: Optional[str] = "http://localhost:4200/marketplaces/amazon/callback"
+    AMAZON_SANDBOX: bool = False
 
     # MercadoLibre Mexico
     ML_CLIENT_ID: Optional[str] = None
