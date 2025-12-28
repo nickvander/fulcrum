@@ -37,16 +37,17 @@ We will split this phase into two parallel tracks:
 ## Detailed Tasks
 
 ### Track 1: Dashboard
--   [ ] Create `DashboardModule` (lazy-loaded at `/dashboard`).
--   [ ] Implement `DashboardComponent` with a 3-column / 4-row grid.
--   [ ] Create `Widget` interface and `WidgetHost` directive.
--   [ ] Build `KpiWidgetComponent`.
--   [ ] Build `RecentOrdersWidgetComponent`.
+-   [x] Create `DashboardModule` (lazy-loaded at `/dashboard`).
+-   [x] Implement `DashboardComponent` with a 3-column / 4-row grid.
+-   [x] Create `Widget` interface and `WidgetHost` directive.
+-   [x] Build `KpiWidgetComponent`.
+-   [x] Build `RecentOrdersWidgetComponent` (Consolidated into Low Stock/Purchasing metrics).
 
 ### Track 2: Marketplace Planning
--   [ ] Read Amazon SP-API docs (Developer Guide).
--   [ ] Read MercadoLibre API docs (Test Accounts).
--   [ ] Create `docs/guides/marketplace-setup.md`.
+-   [x] Read Amazon SP-API docs (Developer Guide).
+-   [x] Read MercadoLibre API docs (Test Accounts).
+-   [x] Create `work/current/marketplace-research.md`.
+-   [ ] Implement Marketplace models and credential management.
 
 ## Verification
 -   **Dashboard**:

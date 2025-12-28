@@ -168,9 +168,9 @@ improves initial application load times.
 
 - **`AuthModule` (`src/app/auth/`):**
   - **Purpose**: Handles all user authentication logic.
-  - **Key Components**: `LoginComponent`
-  - **Key Services**: `AuthService` (manages JWT tokens), `AuthGuard` (protects
-    routes), `AuthInterceptor` (attaches auth headers to API requests).
+  - **Key Components**: `LoginComponent`, `ForgotPasswordComponent`, `ResetPasswordComponent`.
+  - **Key Architecture**: Uses the centralized `AuthService` (from `CoreModule`) to manage JWT tokens and local storage state.
+  - **Security**: Includes `AuthGuard` (protects routes) and `AuthInterceptor` (attaches auth headers).
 
 - **`ProductsModule` (`src/app/products/`):**
   - **Purpose**: Manages the full CRUD lifecycle for products.
