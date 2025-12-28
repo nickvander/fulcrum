@@ -117,7 +117,7 @@
       @if (viewMode === 'grid' && products.length > 0) {
       <div class="product-grid">
         @for (product of products; track product) {
-        <mat-card class="product-card">
+        <mat-card class="product-card" (click)="openDetailsDialog(product)">
           <mat-checkbox class="product-checkbox" (change)="toggleProductSelection(product)"
             [checked]="isSelected(product)">
           </mat-checkbox>
@@ -136,7 +136,10 @@
           </mat-card-header>
           <mat-card-content class="card-content-wrapper">
             <div class="price-stock-info">
-              <p class="price">{{ product.default_resale_price | currency }}</p>
+              <div class="price-container">
+                <p class="price">{{ product.default_resale_price | currency }}</p>
+                <p class="cost" *ngIf="product.cost_price">Cost: {{ product.cost_price | currency }}</p>
+              </div>
               <p class="stock">Stock: {{ getCurrentStock(product) }}</p>
             </div>
             <div class="marketplace-info">
@@ -284,7 +287,8 @@
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openEditPanel(row)" class="product-row">
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDetailsDialog(row)"
+            class="product-row">
           </tr>
         </table>
       </div>

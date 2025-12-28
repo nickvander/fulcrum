@@ -1,0 +1,81 @@
+<div class="details-container">
+    <div class="header">
+        <h2 mat-dialog-title>{{ product.name }}</h2>
+        <button mat-icon-button (click)="onClose()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <mat-dialog-content>
+        <div class="content-grid">
+            <!-- Left: Image & Key Stats -->
+            <div class="sidebar">
+                <div class="image-wrapper">
+                    <img *ngIf="getPrimaryImage()" [src]="getImageUrl(getPrimaryImage())" alt="Product Image"
+                        class="main-image">
+                    <div *ngIf="!getPrimaryImage()" class="no-image">
+                        <mat-icon>image</mat-icon>
+                        <span>No Image</span>
+                    </div>
+                </div>
+
+                <div class="stats-card">
+                    <div class="stat-row">
+                        <span class="label">SKU</span>
+                        <span class="value">{{ product.sku }}</span>
+                    </div>
+                    <mat-divider></mat-divider>
+                    <div class="stat-row">
+                        <span class="label">Price</span>
+                        <span class="value price">{{ product.default_resale_price | currency }}</span>
+                    </div>
+                    <mat-divider></mat-divider>
+                    <div class="stat-row">
+                        <span class="label">Cost</span>
+                        <span class="value">{{ product.cost_price | currency }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Details & Status -->
+            <div class="main-info">
+                <div class="info-section">
+                    <h3>Description</h3>
+                    <p>{{ product.description || 'No description available.' }}</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Brand</span>
+                        <span class="value">{{ product.brand || '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Category</span>
+                        <span class="value">{{ product.category || '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Manufacturer</span>
+                        <span class="value">{{ product.manufacturer || '-' }}</span>
+                    </div>
+                </div>
+
+                <div class="inventory-section">
+                    <h3>Inventory Status</h3>
+                    <div class="stock-badges">
+                        <span class="stock-badge">
+                            Stock: <strong>{{ product.inventory_items?.[0]?.quantity_on_hand || 0 }}</strong>
+                        </span>
+                        <!-- Add more badges if we had reserved/incoming -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+        <button mat-button (click)="onClose()">Close</button>
+        <button mat-flat-button color="primary" (click)="onEdit()">
+            <mat-icon>edit</mat-icon> Edit Product
+        </button>
+    </mat-dialog-actions>
+</div>

@@ -36,7 +36,9 @@ import { ProductComparisonService } from '../../services/product-comparison.serv
 import { ProductComparisonComponent } from '../product-comparison/product-comparison';
 
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
+import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
+import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
 
 @Component({
   selector: 'app-product-list',
@@ -66,7 +68,9 @@ import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-
     MatSortModule,
     MatButtonToggleModule,
     MarketplaceStatusComponent,
-    AiSearchBar
+    MarketplaceStatusComponent,
+    AiSearchBar,
+    ProductDetailsDialogComponent
   ],
 })
 export class ProductList implements OnInit, OnDestroy {
@@ -439,6 +443,19 @@ export class ProductList implements OnInit, OnDestroy {
 
     // Set a data URI placeholder image if the image fails to load
     event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+  }
+
+  openDetailsDialog(product: Product): void {
+    const dialogRef = this.dialog.open(ProductDetailsDialogComponent, {
+      width: '800px',
+      data: product
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'edit') {
+        this.openEditPanel(product);
+      }
+    });
   }
 
   openEditPanel(product: Product): void {

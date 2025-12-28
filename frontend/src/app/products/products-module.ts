@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { ProductsRoutingModule } from './products-routing.module';
 import { ProductList } from './components/product-list/product-list';
 import { ProductForm } from './components/product-form/product-form';
+import { ProductDetailsDialogComponent } from './components/product-details-dialog/product-details-dialog.component';
 
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -31,6 +32,7 @@ const MATERIAL_MODULES = [
   imports: [
     ProductList,
     ProductForm,
+    ProductDetailsDialogComponent,
     CommonModule,
     ProductsRoutingModule,
     ReactiveFormsModule,

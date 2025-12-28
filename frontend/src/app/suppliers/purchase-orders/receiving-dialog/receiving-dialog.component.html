@@ -1,39 +1,58 @@
 <h2 mat-dialog-title>Receive Items - PO #{{po.id}}</h2>
-<mat-dialog-content [formGroup]="receivingForm">
-    <table class="receiving-table">
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>Ordered</th>
-                <th>Received</th>
-                <th>To Receive</th>
-            </tr>
-        </thead>
-        <tbody formArrayName="items">
-            <tr *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i">
-                <td class="product-cell">
-                    <div class="product-info">
+
+<mat-dialog-content class="receiving-content">
+    <div [formGroup]="receivingForm" class="receiving-grid">
+        <div formArrayName="items" class="items-container">
+            <div *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i" class="product-card">
+
+                <!-- Product Header / Image -->
+                <div class="card-header">
+                    <div class="image-wrapper">
                         <img *ngIf="po.items[i].product?.images?.length"
                             [src]="po.items[i].product!.images![0].url || po.items[i].product!.images![0]"
                             class="product-thumb" alt="Product">
-                        <div class="product-details">
-                            <div class="product-name">{{ po.items[i].product?.name || ('Product #' +
-                                po.items[i].product_id) }}</div>
-                            <div class="product-sku" *ngIf="po.items[i].product?.sku">{{ po.items[i].product?.sku }}
-                            </div>
+                        <div class="no-image" *ngIf="!po.items[i].product?.images?.length">
+                            <mat-icon>image</mat-icon>
                         </div>
                     </div>
-                </td>
-                <td>{{ itemControl.get('quantity_ordered')?.value }}</td>
-                <td>{{ itemControl.get('quantity_received_so_far')?.value }}</td>
-                <td>
-                    <mat-form-field appearance="outline" style="width: 100px;">
+                    <div class="header-details">
+                        <h3 class="product-name">{{ po.items[i].product?.name || ('Product #' + po.items[i].product_id)
+                            }}</h3>
+                        <span class="product-sku" *ngIf="po.items[i].product?.sku">SKU: {{ po.items[i].product?.sku
+                            }}</span>
+                    </div>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <!-- Stats: Ordered vs Received -->
+                <div class="card-stats">
+                    <div class="stat">
+                        <span class="label">Ordered</span>
+                        <span class="value">{{ itemControl.get('quantity_ordered')?.value }}</span>
+                    </div>
+                    <div class="stat">
+                        <span class="label">Received</span>
+                        <span class="value success-text">{{ itemControl.get('quantity_received_so_far')?.value }}</span>
+                    </div>
+                    <div class="stat highlight">
+                        <span class="label">Remaining</span>
+                        <span class="value">{{ (itemControl.get('quantity_ordered')?.value || 0) -
+                            (itemControl.get('quantity_received_so_far')?.value || 0) }}</span>
+                    </div>
+                </div>
+
+                <!-- Action Input -->
+                <div class="card-action">
+                    <mat-form-field appearance="outline" class="receive-input">
+                        <mat-label>Receive Now</mat-label>
                         <input matInput type="number" formControlName="quantity_to_receive" min="0">
+                        <span matSuffix>units</span>
                     </mat-form-field>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Cancel</button>
