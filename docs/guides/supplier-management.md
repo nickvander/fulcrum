@@ -117,5 +117,79 @@ When creating a PO, you can track extra costs beyond product prices:
 
 1. Enter your additional costs in the respective fields.
 2. The system calculates the **total extra costs** and **cost per unit**.
-3. Click **"Add to Unit Costs"** to distribute evenly across all line items.
-4. Each line item's unit cost is increased by the per-unit amount.
+3. Click **"Add to Unit Costs"** to open the Cost Allocation Preview.
+4. Review the itemized breakdown showing how costs will be distributed.
+5. Click **"Apply Costs"** to confirm.
+
+### Cost Breakdown Tracking
+
+The system tracks exactly where each dollar of your product cost came from:
+
+| Field | Description |
+|-------|-------------|
+| `base_cost` | Original supplier price per unit |
+| `shipping_allocated` | Freight portion added per unit |
+| `taxes_allocated` | Import duties added per unit |
+| `other_allocated` | Other fees added per unit |
+| `costs_applied_at` | When costs were allocated |
+
+This allows you to review cost history and understand true product costs.
+
+## Invoice Management
+
+You can attach supplier invoices (PDF or images) to Purchase Orders for record-keeping.
+
+### Uploading Invoices
+
+1. Navigate to a Purchase Order in "Ordered" or later status.
+2. In the Invoices section, click **"Upload Invoice"**.
+3. Select a PDF, JPG, or PNG file (max 10MB).
+4. Optionally enter the invoice number.
+5. The invoice is securely stored and linked to the PO.
+
+### Security
+
+- **File types**: Only PDF, PNG, JPG, JPEG allowed
+- **Size limit**: Maximum 10MB per file
+- **Secure naming**: Files are renamed to UUIDs to prevent path traversal attacks
+
+## Multi-Source Products
+
+Products can be sourced from multiple suppliers, each with different prices and SKUs.
+
+### Adding Additional Suppliers
+
+Use the `/supplier-products` API to manage product-supplier relationships:
+
+```bash
+# Add a product to a supplier
+POST /api/v1/supplier-products/
+{
+  "product_id": 1,
+  "supplier_id": 2,
+  "supplier_sku": "VENDOR-SKU-123",
+  "cost_price": 15.50,
+  "lead_time_days": 7
+}
+```
+
+### Setting Primary Supplier
+
+Mark one supplier as the primary source for a product:
+
+```bash
+POST /api/v1/supplier-products/{id}/set-primary
+```
+
+The primary supplier's price is used as the default when creating POs.
+
+### Viewing Product Sources
+
+```bash
+# Get all suppliers for a product
+GET /api/v1/supplier-products/by-product/{product_id}
+
+# Get all products from a supplier  
+GET /api/v1/supplier-products/by-supplier/{supplier_id}
+```
+

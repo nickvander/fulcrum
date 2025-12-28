@@ -1,0 +1,132 @@
+// Cost Allocation Dialog Styles
+
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    mat-icon {
+        color: var(--primary-color, #3f51b5);
+    }
+}
+
+mat-dialog-content {
+    min-width: 600px;
+    max-height: 70vh;
+}
+
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    gap: 1rem;
+
+    p {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.6);
+    }
+}
+
+.error-state {
+    mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+    }
+
+    p {
+        color: #d32f2f;
+    }
+}
+
+.preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cost-summary-cards {
+    display: flex;
+    gap: 1rem;
+
+    .cost-card {
+        flex: 1;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+
+        .label {
+            font-size: 0.75rem;
+            color: rgba(0, 0, 0, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 0.25rem 0;
+        }
+
+        .per-unit {
+            font-size: 0.85rem;
+            color: #4a5568;
+        }
+    }
+}
+
+.allocation-table {
+    width: 100%;
+
+    th.mat-header-cell {
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.87);
+    }
+
+    .add-cell {
+        color: #2e7d32;
+        font-weight: 500;
+    }
+
+    .new-cost-cell {
+        background: rgba(63, 81, 181, 0.08);
+
+        strong {
+            color: #3f51b5;
+        }
+    }
+}
+
+.total-summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(63, 81, 181, 0.05);
+    border-radius: 8px;
+    font-size: 0.95rem;
+
+    strong {
+        font-size: 1.25rem;
+        color: #3f51b5;
+    }
+}
+
+mat-dialog-actions {
+    padding: 1rem 1.5rem;
+
+    button {
+        mat-spinner {
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+    }
+}

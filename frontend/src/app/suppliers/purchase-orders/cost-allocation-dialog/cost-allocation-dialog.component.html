@@ -1,0 +1,111 @@
+<h2 mat-dialog-title>
+    <mat-icon>calculate</mat-icon>
+    Apply Additional Costs
+</h2>
+
+<mat-dialog-content>
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-state">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Calculating cost allocation...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ error }}</p>
+    </div>
+
+    <!-- Preview Content -->
+    <div *ngIf="preview && !loading" class="preview-content">
+        <!-- Summary Cards -->
+        <div class="cost-summary-cards">
+            <div class="cost-card">
+                <span class="label">Shipping/Freight</span>
+                <span class="value">${{ preview.total_shipping | number:'1.2-2' }}</span>
+                <span class="per-unit">= ${{ preview.per_unit_shipping | number:'1.2-2' }}/unit</span>
+            </div>
+            <div class="cost-card">
+                <span class="label">Taxes/Duties</span>
+                <span class="value">${{ preview.total_taxes | number:'1.2-2' }}</span>
+                <span class="per-unit">= ${{ preview.per_unit_taxes | number:'1.2-2' }}/unit</span>
+            </div>
+            <div class="cost-card">
+                <span class="label">Other Fees</span>
+                <span class="value">${{ preview.total_other | number:'1.2-2' }}</span>
+                <span class="per-unit">= ${{ preview.per_unit_other | number:'1.2-2' }}/unit</span>
+            </div>
+        </div>
+
+        <!-- Allocation Table -->
+        <table mat-table [dataSource]="preview.items" class="allocation-table">
+            <!-- Product Column -->
+            <ng-container matColumnDef="product">
+                <th mat-header-cell *matHeaderCellDef>Product</th>
+                <td mat-cell *matCellDef="let item">{{ item.product_name }}</td>
+            </ng-container>
+
+            <!-- Quantity Column -->
+            <ng-container matColumnDef="qty">
+                <th mat-header-cell *matHeaderCellDef>Qty</th>
+                <td mat-cell *matCellDef="let item">{{ item.quantity }}</td>
+            </ng-container>
+
+            <!-- Base Cost Column -->
+            <ng-container matColumnDef="base">
+                <th mat-header-cell *matHeaderCellDef>Base Cost</th>
+                <td mat-cell *matCellDef="let item">${{ item.base_cost | number:'1.2-2' }}</td>
+            </ng-container>
+
+            <!-- Shipping Column -->
+            <ng-container matColumnDef="shipping">
+                <th mat-header-cell *matHeaderCellDef>+ Shipping</th>
+                <td mat-cell *matCellDef="let item" class="add-cell">
+                    +${{ item.shipping_to_add | number:'1.2-2' }}
+                </td>
+            </ng-container>
+
+            <!-- Taxes Column -->
+            <ng-container matColumnDef="taxes">
+                <th mat-header-cell *matHeaderCellDef>+ Taxes</th>
+                <td mat-cell *matCellDef="let item" class="add-cell">
+                    +${{ item.taxes_to_add | number:'1.2-2' }}
+                </td>
+            </ng-container>
+
+            <!-- Other Column -->
+            <ng-container matColumnDef="other">
+                <th mat-header-cell *matHeaderCellDef>+ Other</th>
+                <td mat-cell *matCellDef="let item" class="add-cell">
+                    +${{ item.other_to_add | number:'1.2-2' }}
+                </td>
+            </ng-container>
+
+            <!-- New Cost Column -->
+            <ng-container matColumnDef="new_cost">
+                <th mat-header-cell *matHeaderCellDef>New Unit Cost</th>
+                <td mat-cell *matCellDef="let item" class="new-cost-cell">
+                    <strong>${{ item.new_unit_cost | number:'1.2-2' }}</strong>
+                </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <!-- Total Summary -->
+        <div class="total-summary">
+            <span>Total additional costs to distribute:</span>
+            <strong>${{ getTotalAdditional() | number:'1.2-2' }}</strong>
+            <span>across {{ preview.total_quantity }} units</span>
+        </div>
+    </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="applying">Cancel</button>
+    <button mat-raised-button color="primary" (click)="apply()" [disabled]="loading || applying || !preview">
+        <mat-spinner *ngIf="applying" diameter="20"></mat-spinner>
+        <span *ngIf="!applying">Apply Costs</span>
+    </button>
+</mat-dialog-actions>

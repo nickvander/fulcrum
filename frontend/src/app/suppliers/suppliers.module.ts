@@ -17,6 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
+import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
 
 import { SuppliersRoutingModule } from './suppliers-routing.module';
 import { SupplierDetailComponent } from './supplier-detail/supplier-detail.component';
@@ -29,7 +30,8 @@ import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edi
     PurchaseOrderListComponent,
     PurchaseOrderEditComponent,
     ReceivingDialogComponent,
-    QuickProductDialogComponent
+    QuickProductDialogComponent,
+    CostAllocationDialogComponent
   ],
   imports: [
     CommonModule,

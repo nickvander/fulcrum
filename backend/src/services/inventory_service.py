@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 
 from src.models.inventory import InventoryItem, InventoryAdjustment
-from src.schemas.inventory import StockAdjustment
 
 class InventoryService:
     def adjust_stock(

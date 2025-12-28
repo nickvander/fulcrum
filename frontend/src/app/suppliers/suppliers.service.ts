@@ -5,6 +5,16 @@ import { environment } from '../../environments/environment';
 import { Supplier, SupplierCreate } from '../shared/models/supplier.model';
 import { PurchaseOrder, PurchaseOrderCreate, PurchaseOrderStatus } from '../shared/models/purchase-order.model';
 
+export interface SupplierInvoice {
+  id: number;
+  po_id: number;
+  invoice_number: string | null;
+  invoice_date: string | null;
+  file_path: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -46,4 +56,27 @@ export class SuppliersService {
   receivePurchaseOrderItems(id: number, items: { product_id: number, quantity: number }[]): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/receive`, items);
   }
+
+  // --- Invoices ---
+  getInvoices(poId: number): Observable<SupplierInvoice[]> {
+    return this.http.get<SupplierInvoice[]>(`${this.apiUrl}/purchase-orders/${poId}/invoices`);
+  }
+
+  uploadInvoice(poId: number, file: File, invoiceNumber?: string): Observable<SupplierInvoice> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (invoiceNumber) {
+      formData.append('invoice_number', invoiceNumber);
+    }
+    return this.http.post<SupplierInvoice>(`${this.apiUrl}/purchase-orders/${poId}/invoices`, formData);
+  }
+
+  deleteInvoice(invoiceId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/purchase-orders/invoices/${invoiceId}`);
+  }
+
+  getInvoiceFileUrl(filePath: string): string {
+    return `${this.apiUrl.replace('/api/v1', '')}/${filePath}`;
+  }
 }
+

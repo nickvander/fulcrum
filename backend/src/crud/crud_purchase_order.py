@@ -1,4 +1,3 @@
-from typing import List
 from sqlalchemy.orm import Session
 from src.crud.base import CRUDBase
 from src.models.purchase_order import PurchaseOrder
