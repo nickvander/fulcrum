@@ -83,12 +83,12 @@
                         </mat-hint>
                     </mat-form-field>
 
-                    <button mat-icon-button color="warn" type="button" (click)="removeItem(i)">
+                    <button mat-icon-button color="warn" type="button" (click)="removeItem(i)" [disabled]="isLocked">
                         <mat-icon>delete</mat-icon>
                     </button>
                 </div>
             </div>
-            <button mat-button type="button" (click)="addLineItem()">
+            <button mat-button type="button" (click)="addLineItem()" [disabled]="isLocked">
                 <mat-icon>add</mat-icon> Add Item
             </button>
         </mat-card>
@@ -131,7 +131,8 @@
                     <span>Cost per unit (if distributed evenly):</span>
                     <strong>${{ calculatePerUnitLandedCost() | number:'1.2-2' }}</strong>
                 </div>
-                <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()">
+                <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()"
+                    [disabled]="isLocked">
                     <mat-icon>add_circle</mat-icon> Add to Unit Costs
                 </button>
                 <p class="apply-hint" *ngIf="poId">This will add the per-unit cost to each line item's unit cost.</p>
@@ -196,16 +197,24 @@
                     Draft</button>
             </div>
 
-            <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid">
+            <!-- Lock/Unlock Buttons -->
+            <button mat-stroked-button color="warn" type="button" *ngIf="isLocked" (click)="unlockOrder()">
+                <mat-icon>lock_open</mat-icon> Unlock to Edit
+            </button>
+
+            <!-- Save/Create Buttons (Hidden if Locked) -->
+            <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid" *ngIf="!isLocked">
                 {{ isEditMode ? 'Update' : 'Create' }} Order
             </button>
 
             <button mat-raised-button class="place-order-btn" type="button"
-                *ngIf="poForm.get('status')?.value === 'draft'" (click)="placeOrder()" [disabled]="poForm.invalid">
+                *ngIf="poForm.get('status')?.value === 'draft' && !isLocked" (click)="placeOrder()"
+                [disabled]="poForm.invalid">
                 Place Order
             </button>
 
-            <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId" (click)="deleteOrder()">
+            <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId && !isLocked"
+                (click)="deleteOrder()">
                 <mat-icon>delete</mat-icon> Delete Order
             </button>
         </div>

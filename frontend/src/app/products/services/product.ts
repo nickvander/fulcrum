@@ -320,6 +320,10 @@ export class ProductService {
     );
   }
 
+  getPurchaseHistory(productId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${productId}/purchase-history`);
+  }
+
   // Product Variants API methods
   getProductVariants(productId: number): Observable<ProductVariant[]> {
     return this.http.get<ProductVariant[]>(`${this.apiUrl}/${productId}/variants`);

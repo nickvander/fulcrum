@@ -34,6 +34,21 @@
         - **Receiving Dialog**: Redesigned with modern Card Grid layout, larger images, and clearer "Ordered vs Received" stats.
         - **Product List**: Added "Cost Price" to Grid View.
         - **Interaction**: Row click now opens "Read-Only Details" dialog; Edit is a deliberate secondary action.
+        - **Navigation**: Added "Return to PO" link in Product purchase history.
+    - **Safety**:
+        - **PO Locking**: Implemented Read-Only mode for non-Draft orders (Ordered/Received) to prevent accidental data corruption. Added "Unlock to Edit" workflow with confirmation.
+        - **Data Freshness**: Product Details dialog now explicitly fetches fresh data, ensuring Real-time Cost/Inventory accuracy.
+
+- **2025-12-28**:
+    - **Goal**: Final Polish & Release (Phase 5.10)
+    - **Status**: Completed
+    - **Notes**:
+        - Fixed Product Detail Dialog image visibility (path resolution + CSS).
+        - Implemented Purchase Order Locking (safety mechanism for non-draft POs).
+        - Fixed Backend `NameError` in receiving logic.
+        - Resolved `403` error in audit logs (strict superuser check).
+        - Fixed Frontend Test Mocks (`ActivatedRoute` params, `MatDialog`).
+        - Updated Documentation (`supplier-management.md`, `MISSING_ITEMS.md`).
 
 - **2025-12-27**: Completed Phase 5 - Supplier Order Management.
     - **Backend**:

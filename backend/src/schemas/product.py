@@ -45,6 +45,7 @@ class ProductBase(BaseModel):
     height: Optional[float] = None
     depth: Optional[float] = None
     weight: Optional[float] = None
+    average_cost: Optional[float] = None
 
 class ProductCreate(ProductBase):
     pass
@@ -55,6 +56,7 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
+    average_cost: Optional[float] = None
     properties: Optional[dict] = None
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
@@ -97,4 +99,15 @@ class PaginatedProducts(BaseModel):
     totalItems: int
     pageSize: int
     hasNextPage: bool
+    hasNextPage: bool
     hasPrevPage: bool
+
+class ProductPurchaseHistory(BaseModel):
+    po_id: int
+    date: datetime
+    supplier_name: str
+    quantity: float
+    unit_cost: float
+    status: str
+
+    model_config = ConfigDict(from_attributes=True)

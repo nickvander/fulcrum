@@ -52,6 +52,33 @@ export class ReceivingDialogComponent implements OnInit {
         });
     }
 
+    getImageUrl(product: any): string | null {
+        if (!product || !product.images || product.images.length === 0) return null;
+
+        // Find primary or first image
+        const imgObj = product.images.find((img: any) => img.is_primary) || product.images[0];
+        const path = typeof imgObj === 'string' ? imgObj : imgObj.image_path || imgObj.url;
+
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        if (path.startsWith('assets')) return path;
+
+        // Normalize path
+        let cleanPath = path.startsWith('/') ? path.substring(1) : path;
+
+        // If it's in uploads directory
+        if (cleanPath.startsWith('uploads')) {
+            return `/${cleanPath}`;
+        }
+
+        // If it looks like a filename, assume product_images
+        if (!cleanPath.includes('/')) {
+            return `/uploads/product_images/${cleanPath}`;
+        }
+
+        return path;
+    }
+
     onCancel(): void {
         this.dialogRef.close();
     }

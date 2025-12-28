@@ -8,10 +8,9 @@
                 <!-- Product Header / Image -->
                 <div class="card-header">
                     <div class="image-wrapper">
-                        <img *ngIf="po.items[i].product?.images?.length"
-                            [src]="po.items[i].product!.images![0].url || po.items[i].product!.images![0]"
+                        <img *ngIf="getImageUrl(po.items[i].product)" [src]="getImageUrl(po.items[i].product)"
                             class="product-thumb" alt="Product">
-                        <div class="no-image" *ngIf="!po.items[i].product?.images?.length">
+                        <div class="no-image" *ngIf="!getImageUrl(po.items[i].product)">
                             <mat-icon>image</mat-icon>
                         </div>
                     </div>
@@ -37,8 +36,18 @@
                     </div>
                     <div class="stat highlight">
                         <span class="label">Remaining</span>
-                        <span class="value">{{ (itemControl.get('quantity_ordered')?.value || 0) -
-                            (itemControl.get('quantity_received_so_far')?.value || 0) }}</span>
+                        <span class="value"
+                            *ngIf="(itemControl.get('quantity_ordered')?.value || 0) >= ((itemControl.get('quantity_received_so_far')?.value || 0) + (itemControl.get('quantity_to_receive')?.value || 0))">
+                            {{ (itemControl.get('quantity_ordered')?.value || 0) -
+                            ((itemControl.get('quantity_received_so_far')?.value || 0) +
+                            (itemControl.get('quantity_to_receive')?.value || 0)) }}
+                        </span>
+                        <span class="value bonus-text"
+                            *ngIf="((itemControl.get('quantity_received_so_far')?.value || 0) + (itemControl.get('quantity_to_receive')?.value || 0)) > (itemControl.get('quantity_ordered')?.value || 0)">
+                            +{{ ((itemControl.get('quantity_received_so_far')?.value || 0) +
+                            (itemControl.get('quantity_to_receive')?.value || 0)) -
+                            (itemControl.get('quantity_ordered')?.value || 0) }} Bonus
+                        </span>
                     </div>
                 </div>
 

@@ -34,6 +34,10 @@
                         <span class="label">Cost</span>
                         <span class="value">{{ product.cost_price | currency }}</span>
                     </div>
+                    <div class="stat-row secondary">
+                        <span class="label">Avg Cost</span>
+                        <span class="value">{{ (product.average_cost || 0) | currency }}</span>
+                    </div>
                 </div>
             </div>
 
@@ -67,6 +71,34 @@
                             product.inventory_items?.[0]?.quantity || 0 }}</strong>
                         <!-- Add more badges if we had reserved/incoming -->
                     </div>
+                </div>
+
+                <div class="history-section">
+                    <h3>Purchase History</h3>
+                    <div *ngIf="purchaseHistory.length === 0" class="no-history">
+                        <p>No purchase history found.</p>
+                    </div>
+                    <table class="history-table" *ngIf="purchaseHistory.length > 0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Supplier</th>
+                                <th class="numeric">Qty</th>
+                                <th class="numeric">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let record of purchaseHistory" (click)="onGoToPO(record.po_id)"
+                                class="clickable-row" title="View Purchase Order #{{record.po_id}}">
+                                <td class="date-col">
+                                    <span class="date-text">{{ record.date | date:'shortDate' }}</span>
+                                </td>
+                                <td>{{ record.supplier_name }}</td>
+                                <td class="numeric">{{ record.quantity }}</td>
+                                <td class="numeric">{{ record.unit_cost | currency }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

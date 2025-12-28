@@ -69,7 +69,7 @@ import { ProductDetailsDialogComponent } from '../product-details-dialog/product
     MarketplaceStatusComponent,
     MarketplaceStatusComponent,
     AiSearchBar,
-    ProductDetailsDialogComponent
+    AiSearchBar
   ],
 })
 export class ProductList implements OnInit, OnDestroy {

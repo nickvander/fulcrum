@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-import { map, shareReplay, filter } from 'rxjs/operators';
+import { map, shareReplay, filter, delay } from 'rxjs/operators';
+
 import { Router, NavigationEnd } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -36,6 +37,7 @@ export class AppComponent {
     this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(
         map(result => result.matches),
+        delay(0),
         shareReplay()
       );
 
@@ -45,6 +47,6 @@ export class AppComponent {
       this.isLoginPage = (event as NavigationEnd).url === '/login';
     });
 
-    this.loading$ = this.loadingService.loading$;
+    this.loading$ = this.loadingService.loading$.pipe(delay(0));
   }
 }

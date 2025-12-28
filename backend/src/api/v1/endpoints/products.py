@@ -14,6 +14,56 @@ from src.tasks import generate_product_embedding
 router = APIRouter()
 
 
+
+@router.get("/{product_id}/purchase-history", response_model=List[product_schema.ProductPurchaseHistory])
+def get_product_purchase_history(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get purchase history for a product.
+    """
+    from src.models.purchase_order_item import PurchaseOrderItem
+    from src.models.purchase_order import PurchaseOrder
+    from src.models.supplier import Supplier
+    from sqlalchemy import desc
+
+    product = crud_product.product.get(db, id=product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Query PurchaseOrderItems for this product, joined with PO and Supplier
+    query = (
+        db.query(
+            PurchaseOrderItem.quantity_ordered,
+            PurchaseOrderItem.unit_cost,
+            PurchaseOrderItem.quantity_received,
+            PurchaseOrder.id.label("po_id"),
+            PurchaseOrder.created_at.label("date"),
+            PurchaseOrder.status,
+            Supplier.name.label("supplier_name")
+        )
+        .join(PurchaseOrder, PurchaseOrderItem.po_id == PurchaseOrder.id)
+        .join(Supplier, PurchaseOrder.supplier_id == Supplier.id)
+        .filter(PurchaseOrderItem.product_id == product_id)
+        .order_by(desc(PurchaseOrder.created_at), desc(PurchaseOrder.id))
+    )
+    
+    results = query.all()
+    
+    return [
+        {
+            "po_id": row.po_id,
+            "date": row.date,
+            "supplier_name": row.supplier_name,
+            "quantity": row.quantity_ordered,
+            "unit_cost": row.unit_cost,
+            "status": row.status
+        }
+        for row in results
+    ]
+
+
 @router.get("", response_model=product_schema.PaginatedProducts)
 def read_products(
     db: Session = Depends(get_db),
@@ -299,6 +349,9 @@ def adjust_stock(
     return refreshed_product
 
 
+
+
+
 @router.post("/{product_id}/custom-fields")
 def save_product_custom_fields(
     product_id: int,
@@ -317,3 +370,20 @@ def save_product_custom_fields(
     )
     return {"message": "Custom fields saved successfully"}
 
+@router.get("/{product_id}/variants", response_model=List[product_schema.ProductVariant])
+def get_product_variants(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Get all variants for a product.
+    """
+    product = crud_product.product.get(db, id=product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # Since we don't have a specific CRUD for variants yet, we rely on relationship
+    # Ensure variants are loaded. The default get() might not join them.
+    # We can use the relationship if it's eagerly loaded or lazy loading (if session active).
+    # To be safe and efficient, we can check if they are loaded or query them directly.
+    return product.variants
