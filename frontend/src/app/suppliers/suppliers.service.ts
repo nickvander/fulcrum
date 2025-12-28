@@ -62,6 +62,21 @@ export class SuppliersService {
     return this.http.get<SupplierInvoice[]>(`${this.apiUrl}/purchase-orders/${poId}/invoices`);
   }
 
+  getCostAllocationPreview(poId: number, excludedItems: number[] = []): Observable<any> {
+    let params = new HttpParams();
+    excludedItems.forEach(id => {
+      params = params.append('excluded_items', id.toString());
+    });
+    return this.http.get(`${this.apiUrl}/purchase-orders/${poId}/costs/preview`, { params });
+  }
+
+  applyCostAllocation(poId: number, excludedItems: number[] = []): Observable<any> {
+    return this.http.post(`${this.apiUrl}/purchase-orders/${poId}/costs/apply`, {
+      confirm: true,
+      excluded_items: excludedItems
+    });
+  }
+
   uploadInvoice(poId: number, file: File, invoiceNumber?: string): Observable<SupplierInvoice> {
     const formData = new FormData();
     formData.append('file', file);

@@ -1,7 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { SuppliersService } from '../../suppliers.service';
 
 export interface CostAllocationPreviewItem {
     item_id: number;
@@ -42,13 +41,14 @@ export class CostAllocationDialogComponent implements OnInit {
     loading = true;
     applying = false;
     error = '';
+    excludedItems = new Set<number>();
 
-    displayedColumns = ['product', 'qty', 'base', 'shipping', 'taxes', 'other', 'new_cost'];
+    displayedColumns = ['select', 'product', 'qty', 'base', 'shipping', 'taxes', 'other', 'new_cost'];
 
     constructor(
         public dialogRef: MatDialogRef<CostAllocationDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: CostAllocationDialogData,
-        private http: HttpClient
+        private suppliersService: SuppliersService
     ) { }
 
     ngOnInit(): void {
@@ -59,18 +59,26 @@ export class CostAllocationDialogComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.http.get<CostAllocationPreview>(
-            `${environment.apiUrl}/purchase-orders/${this.data.poId}/costs/preview`
-        ).subscribe({
-            next: (preview) => {
-                this.preview = preview;
-                this.loading = false;
-            },
-            error: (err) => {
-                this.error = err.error?.detail || 'Failed to load cost preview';
-                this.loading = false;
-            }
-        });
+        this.suppliersService.getCostAllocationPreview(this.data.poId, Array.from(this.excludedItems))
+            .subscribe({
+                next: (preview: any) => {
+                    this.preview = preview as CostAllocationPreview;
+                    this.loading = false;
+                },
+                error: (err: any) => {
+                    this.error = err.error?.detail || 'Failed to load cost preview';
+                    this.loading = false;
+                }
+            });
+    }
+
+    toggleExclusion(itemId: number): void {
+        if (this.excludedItems.has(itemId)) {
+            this.excludedItems.delete(itemId);
+        } else {
+            this.excludedItems.add(itemId);
+        }
+        this.loadPreview();
     }
 
     getTotalAdditional(): number {
@@ -81,18 +89,16 @@ export class CostAllocationDialogComponent implements OnInit {
     apply(): void {
         this.applying = true;
 
-        this.http.post(
-            `${environment.apiUrl}/purchase-orders/${this.data.poId}/costs/apply`,
-            { confirm: true }
-        ).subscribe({
-            next: () => {
-                this.dialogRef.close(true);
-            },
-            error: (err) => {
-                this.error = err.error?.detail || 'Failed to apply costs';
-                this.applying = false;
-            }
-        });
+        this.suppliersService.applyCostAllocation(this.data.poId, Array.from(this.excludedItems))
+            .subscribe({
+                next: () => {
+                    this.dialogRef.close(true);
+                },
+                error: (err: any) => {
+                    this.error = err.error?.detail || 'Failed to apply costs';
+                    this.applying = false;
+                }
+            });
     }
 
     cancel(): void {
