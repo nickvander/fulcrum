@@ -4,6 +4,7 @@
 
 - [x] **Phase 5**: Supplier Order Management Complete (AI Invoice deferred)
 - [x] **Phase 5.5**: Additional Features (Cost Allocation, Invoices, Multi-Source)
+- [x] **Phase 5.6**: Safety & Polish (PO Deletion, Modern Receiving UI, Product Details)
 
 ## Log
 
@@ -26,6 +27,13 @@
         - **Included Cost Allocation Exclusions**: Users can opt-out specific items from cost distribution.
         - **Better Draft Management**: Clear Draft/Cancel actions, and auto-creation of Backend Drafts for advanced features (Uploads, Cost Dialog).
         - **Visual Polish**: Real-time allocation hints in table, Invoice layout fixes.
+    - **PO Deletion & Safety**:
+        - Implemented `DELETE /purchase-orders/{id}` with strict safety check: blocks deletion if *any* items have been received (prevents orphaned inventory).
+        - Added frontend "Delete Order" button with confirmation for Draft/Ordered POs.
+    - **Visual Overhauls**:
+        - **Receiving Dialog**: Redesigned with modern Card Grid layout, larger images, and clearer "Ordered vs Received" stats.
+        - **Product List**: Added "Cost Price" to Grid View.
+        - **Interaction**: Row click now opens "Read-Only Details" dialog; Edit is a deliberate secondary action.
 
 - **2025-12-27**: Completed Phase 5 - Supplier Order Management.
     - **Backend**:

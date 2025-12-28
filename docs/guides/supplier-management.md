@@ -27,7 +27,15 @@ Purchase Orders track the lifecycle of ordering stock from suppliers.
 2.  **Ordered**: PO has been sent to the supplier.
 3.  **Partially Received**: Some items have arrived, but not all.
 4.  **Completed**: All items have been received.
+4.  **Completed**: All items have been received.
 5.  **Closed**: PO is finalized and no further action is expected.
+
+### Deleting Purchase Orders
+You can delete a Purchase Order only if:
+- It is in **Draft** or **Ordered** status.
+- **No items have been received yet.**
+
+If you have already received items, the system will block deletion to preserver inventory integrity. To "cancel" such an order, you should manually adjust stock if needed and mark the PO as **Closed**.
 
 ### Cost Tracking
 - **Unit Cost**: The cost per item at the time of ordering.
@@ -49,8 +57,9 @@ When items arrive from a supplier, you can record the receipt against a Purchase
 1. Navigate to **Suppliers → Purchase Orders**.
 2. Click on a PO with status "Ordered" or "Partially Received".
 3. Click the **"Receive Items"** button.
-4. In the dialog, enter the quantity received for each line item.
-5. Click **"Receive"** to confirm.
+4. The **Receiving Dialog** will open, showing a card for each product with its image and status.
+5. Enter the `quantity_to_receive` for the relevant items.
+6. Click **"Receive"** to confirm.
 
 ### What Happens on Receive
 

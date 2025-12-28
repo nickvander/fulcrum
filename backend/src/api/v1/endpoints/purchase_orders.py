@@ -144,6 +144,35 @@ def receive_items(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.delete("/{id}", response_model=po_schema.PurchaseOrder)
+def delete_purchase_order(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+):
+    """
+    Delete a Purchase Order.
+    Safety: Cannot delete if any items have been received.
+    """
+    po = crud_purchase_order.purchase_order.get(db=db, id=id)
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+    
+    # Safety Check: Prevent deletion if any stock has been received
+    # This prevents orphaned inventory records ("ghost stock")
+    has_received_items = any((item.quantity_received or 0) > 0 for item in po.items)
+    
+    if has_received_items:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot delete Purchase Order because items have already been received. "
+                   "To reverse this, please manually adjust stock and mark the PO as Closed."
+        )
+
+    po = crud_purchase_order.purchase_order.remove(db=db, id=id)
+    return po
+
+
 @router.get("/{id}/costs/preview", response_model=CostAllocationPreview)
 def preview_cost_allocation(
     *,

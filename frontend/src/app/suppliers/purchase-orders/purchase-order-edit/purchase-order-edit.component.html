@@ -204,6 +204,10 @@
                 *ngIf="poForm.get('status')?.value === 'draft'" (click)="placeOrder()" [disabled]="poForm.invalid">
                 Place Order
             </button>
+
+            <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId" (click)="deleteOrder()">
+                <mat-icon>delete</mat-icon> Delete Order
+            </button>
         </div>
     </form>
 </div>

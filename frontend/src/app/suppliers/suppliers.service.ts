@@ -47,6 +47,10 @@ export class SuppliersService {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/`, po);
   }
 
+  deletePurchaseOrder(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/purchase-orders/${id}`);
+  }
+
   updatePurchaseOrderStatus(id: number, status: PurchaseOrderStatus): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/status`, null, {
       params: { status }
