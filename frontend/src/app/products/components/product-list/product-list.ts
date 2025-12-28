@@ -36,7 +36,6 @@ import { ProductComparisonService } from '../../services/product-comparison.serv
 import { ProductComparisonComponent } from '../product-comparison/product-comparison';
 
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
-import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
 

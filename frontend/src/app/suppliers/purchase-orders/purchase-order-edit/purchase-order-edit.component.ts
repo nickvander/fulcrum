@@ -302,283 +302,279 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     });
   }
 
-}
-    });
-  }
+  deleteOrder(): void {
+    if (!this.poId) return;
 
-deleteOrder(): void {
-  if(!this.poId) return;
-
-  const dialogRef = this.dialog.open(ConfirmationDialog, {
-    data: {
-      title: 'Delete Purchase Order',
-      message: 'Are you sure you want to delete this order? This action cannot be undone.',
-      confirmColor: 'warn'
-    }
-  });
-
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      this.suppliersService.deletePurchaseOrder(this.poId!).subscribe({
-        next: () => {
-          this.snackBar.open('Purchase Order deleted successfully', 'Close', { duration: 3000 });
-          this.router.navigate(['/suppliers/po/list']);
-        },
-        error: (err) => {
-          // Backend will send 400 if items are received
-          const msg = err.error?.detail || 'Failed to delete order';
-          this.snackBar.open(msg, 'Close', { duration: 5000 });
-        }
-      });
-    }
-  });
-}
-
-placeOrder(): void {
-  if(this.poForm.invalid && this.items.length === 0) return;
-
-  // If it's a new PO, create it with ORDERED status
-  if(!this.poId) {
-  this.poForm.patchValue({ status: PurchaseOrderStatus.ORDERED });
-  this.onSubmit();
-  return;
-}
-
-// If existing, update status
-const dialogRef = this.dialog.open(ConfirmationDialog, {
-  data: {
-    title: 'Place Order',
-    message: 'Are you sure you want to place this order? This will mark it as Ordered.'
-  }
-});
-
-dialogRef.afterClosed().subscribe(result => {
-  if (result) {
-    this.suppliersService.updatePurchaseOrderStatus(this.poId!, PurchaseOrderStatus.ORDERED).subscribe(() => {
-      this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
-      this.loadPurchaseOrder(this.poId!);
-      this.router.navigate(['/suppliers/po/list']);
-    });
-  }
-});
-  }
-
-onSubmit(): void {
-  if(this.poForm.invalid) return;
-
-  const formValue = this.poForm.value;
-
-  if(this.isEditMode && this.poId) {
-  this.suppliersService.updatePurchaseOrderStatus(this.poId, formValue.status).subscribe(() => {
-    this.router.navigate(['/suppliers/po/list']);
-  });
-} else {
-  const newPo: PurchaseOrderCreate = {
-    supplier_id: formValue.supplier_id,
-    status: formValue.status, // Uses form value which defaults to draft
-    currency: formValue.currency,
-    exchange_rate: 1.0,
-    notes: formValue.notes,
-    shipping_cost: formValue.shipping_cost,
-    tax_amount: formValue.import_cost,
-    other_costs: formValue.other_costs,
-    items: formValue.items.map((item: any) => ({
-      product_id: item.product_id,
-      quantity_ordered: item.quantity_ordered,
-      unit_cost: item.unit_cost
-    }))
-  };
-
-  this.suppliersService.createPurchaseOrder(newPo).subscribe(po => {
-    sessionStorage.removeItem('fulcrum_po_create_draft');
-    this.router.navigate(['/suppliers/po', po.id]);
-  });
-}
-  }
-
-openReceivingDialog(): void {
-  if(!this.poId) return;
-
-  this.suppliersService.getPurchaseOrder(this.poId).subscribe(po => {
-    const dialogRef = this.dialog.open(ReceivingDialogComponent, {
-      width: '800px',
-      data: { po: po }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Purchase Order',
+        message: 'Are you sure you want to delete this order? This action cannot be undone.',
+        confirmColor: 'warn'
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.loadPurchaseOrder(this.poId!);
-      }
-    });
-  });
-}
-
-// --- Draft Management ---
-
-loadDraft(): void {
-  const saved = sessionStorage.getItem('fulcrum_po_create_draft');
-  if(saved) {
-    try {
-      const data = JSON.parse(saved);
-
-      // Patch simple fields
-      this.poForm.patchValue({
-        supplier_id: data.supplier_id,
-        currency: data.currency,
-        notes: data.notes,
-        shipping_cost: data.shipping_cost,
-        import_cost: data.import_cost,
-        other_costs: data.other_costs
-      });
-
-      // Rebuild items array
-      this.items.clear();
-      this.productSearchControls = [];
-      this.filteredProducts$ = [];
-
-      if (data.items && Array.isArray(data.items)) {
-        data.items.forEach((item: any) => {
-          this.addLineItem(item);
+        this.suppliersService.deletePurchaseOrder(this.poId!).subscribe({
+          next: () => {
+            this.snackBar.open('Purchase Order deleted successfully', 'Close', { duration: 3000 });
+            this.router.navigate(['/suppliers/po/list']);
+          },
+          error: (err) => {
+            // Backend will send 400 if items are received
+            const msg = err.error?.detail || 'Failed to delete order';
+            this.snackBar.open(msg, 'Close', { duration: 5000 });
+          }
         });
       }
+    });
+  }
 
-      if (this.items.length === 0) {
+  placeOrder(): void {
+    if (this.poForm.invalid && this.items.length === 0) return;
+
+    // If it's a new PO, create it with ORDERED status
+    if (!this.poId) {
+      this.poForm.patchValue({ status: PurchaseOrderStatus.ORDERED });
+      this.onSubmit();
+      return;
+    }
+
+    // If existing, update status
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Place Order',
+        message: 'Are you sure you want to place this order? This will mark it as Ordered.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.suppliersService.updatePurchaseOrderStatus(this.poId!, PurchaseOrderStatus.ORDERED).subscribe(() => {
+          this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
+          this.loadPurchaseOrder(this.poId!);
+          this.router.navigate(['/suppliers/po/list']);
+        });
+      }
+    });
+  }
+
+  onSubmit(): void {
+    if (this.poForm.invalid) return;
+
+    const formValue = this.poForm.value;
+
+    if (this.isEditMode && this.poId) {
+      this.suppliersService.updatePurchaseOrderStatus(this.poId, formValue.status).subscribe(() => {
+        this.router.navigate(['/suppliers/po/list']);
+      });
+    } else {
+      const newPo: PurchaseOrderCreate = {
+        supplier_id: formValue.supplier_id,
+        status: formValue.status, // Uses form value which defaults to draft
+        currency: formValue.currency,
+        exchange_rate: 1.0,
+        notes: formValue.notes,
+        shipping_cost: formValue.shipping_cost,
+        tax_amount: formValue.import_cost,
+        other_costs: formValue.other_costs,
+        items: formValue.items.map((item: any) => ({
+          product_id: item.product_id,
+          quantity_ordered: item.quantity_ordered,
+          unit_cost: item.unit_cost
+        }))
+      };
+
+      this.suppliersService.createPurchaseOrder(newPo).subscribe(po => {
+        sessionStorage.removeItem('fulcrum_po_create_draft');
+        this.router.navigate(['/suppliers/po', po.id]);
+      });
+    }
+  }
+
+  openReceivingDialog(): void {
+    if (!this.poId) return;
+
+    this.suppliersService.getPurchaseOrder(this.poId).subscribe(po => {
+      const dialogRef = this.dialog.open(ReceivingDialogComponent, {
+        width: '800px',
+        data: { po: po }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.loadPurchaseOrder(this.poId!);
+        }
+      });
+    });
+  }
+
+  // --- Draft Management ---
+
+  loadDraft(): void {
+    const saved = sessionStorage.getItem('fulcrum_po_create_draft');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+
+        // Patch simple fields
+        this.poForm.patchValue({
+          supplier_id: data.supplier_id,
+          currency: data.currency,
+          notes: data.notes,
+          shipping_cost: data.shipping_cost,
+          import_cost: data.import_cost,
+          other_costs: data.other_costs
+        });
+
+        // Rebuild items array
+        this.items.clear();
+        this.productSearchControls = [];
+        this.filteredProducts$ = [];
+
+        if (data.items && Array.isArray(data.items)) {
+          data.items.forEach((item: any) => {
+            this.addLineItem(item);
+          });
+        }
+
+        if (this.items.length === 0) {
+          this.addLineItem();
+        }
+
+        this.snackBar.open('Restored draft from previous session', 'Close', { duration: 3000 });
+      } catch (e) {
+        console.error('Failed to parse draft', e);
         this.addLineItem();
       }
-
-      this.snackBar.open('Restored draft from previous session', 'Close', { duration: 3000 });
-    } catch (e) {
-      console.error('Failed to parse draft', e);
+    } else {
       this.addLineItem();
     }
-  } else {
-    this.addLineItem();
   }
-}
 
-clearDraft(): void {
-  const dialogRef = this.dialog.open(ConfirmationDialog, {
-    data: {
-      title: 'Clear Draft',
-      message: 'Are you sure you want to clear this draft? All entered data will be lost.'
-    }
-  });
+  clearDraft(): void {
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Clear Draft',
+        message: 'Are you sure you want to clear this draft? All entered data will be lost.'
+      }
+    });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      sessionStorage.removeItem('fulcrum_po_create_draft');
-      // Reset form
-      this.poForm.reset({
-        supplier_id: null,
-        status: 'draft',
-        currency: 'USD',
-        notes: '',
-        shipping_cost: 0,
-        import_cost: 0,
-        other_costs: 0
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        sessionStorage.removeItem('fulcrum_po_create_draft');
+        // Reset form
+        this.poForm.reset({
+          supplier_id: null,
+          status: 'draft',
+          currency: 'USD',
+          notes: '',
+          shipping_cost: 0,
+          import_cost: 0,
+          other_costs: 0
+        });
+        this.items.clear();
+        this.productSearchControls = [];
+        this.filteredProducts$ = [];
+        this.addLineItem(); // Add one empty row
+        this.snackBar.open('Draft cleared', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  cancel(): void {
+    if (this.poForm.dirty) {
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Unsaved Changes',
+          message: 'You have unsaved changes. Are you sure you want to leave?'
+        }
       });
-      this.items.clear();
-      this.productSearchControls = [];
-      this.filteredProducts$ = [];
-      this.addLineItem(); // Add one empty row
-      this.snackBar.open('Draft cleared', 'Close', { duration: 3000 });
-    }
-  });
-}
-
-cancel(): void {
-  if(this.poForm.dirty) {
-  const dialogRef = this.dialog.open(ConfirmationDialog, {
-    data: {
-      title: 'Unsaved Changes',
-      message: 'You have unsaved changes. Are you sure you want to leave?'
-    }
-  });
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.router.navigate(['/suppliers/po/list']);
+        }
+      });
+    } else {
       this.router.navigate(['/suppliers/po/list']);
     }
-  });
-} else {
-  this.router.navigate(['/suppliers/po/list']);
-}
   }
 
-// --- Invoice Management ---
+  // --- Invoice Management ---
 
-loadInvoices(): void {
-  if(!this.poId) return;
-  this.suppliersService.getInvoices(this.poId).subscribe(invoices => {
-    this.invoices = invoices;
-  });
-}
+  loadInvoices(): void {
+    if (!this.poId) return;
+    this.suppliersService.getInvoices(this.poId).subscribe(invoices => {
+      this.invoices = invoices;
+    });
+  }
 
-onFileSelected(event: any): void {
-  const file = event.target.files[0];
-  if(!file) return;
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  if(!this.poId) {
-  const dialogRef = this.dialog.open(ConfirmationDialog, {
-    data: {
-      title: 'Save Draft Required',
-      message: 'To upload an invoice, we need to save this order as a Draft first. Continue?'
-    }
-  });
+    if (!this.poId) {
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Save Draft Required',
+          message: 'To upload an invoice, we need to save this order as a Draft first. Continue?'
+        }
+      });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      // Must clone logic because event.target.files might be lost? 
-      // Actually it persists in closure but let's be safe
-      this.saveAsDraft(() => this.uploadFileInternal(file));
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          // Must clone logic because event.target.files might be lost? 
+          // Actually it persists in closure but let's be safe
+          this.saveAsDraft(() => this.uploadFileInternal(file));
+        } else {
+          // Reset file input
+          event.target.value = '';
+        }
+      });
+      return;
     } else {
-      // Reset file input
-      event.target.value = '';
+      this.uploadFileInternal(file);
     }
-  });
-  return;
-} else {
-  this.uploadFileInternal(file);
-}
   }
 
   private uploadFileInternal(file: File): void {
-  if(file.size > 10 * 1024 * 1024) {
-  this.snackBar.open('File too large. Max 10MB.', 'Close', { duration: 3000 });
-  return;
-}
-this.suppliersService.uploadInvoice(this.poId!, file).subscribe({
-  next: () => {
-    this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
-    this.loadInvoices();
-  },
-  error: (err) => {
-    console.error('Upload failed', err);
-    this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
-  }
-});
-  }
-
-deleteInvoice(id: number): void {
-  if(!this.poId) return;
-
-  const dialogRef = this.dialog.open(ConfirmationDialog, {
-    data: {
-      title: 'Delete Invoice',
-      message: 'Are you sure you want to delete this invoice?'
+    if (file.size > 10 * 1024 * 1024) {
+      this.snackBar.open('File too large. Max 10MB.', 'Close', { duration: 3000 });
+      return;
     }
-  });
-
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      this.suppliersService.deleteInvoice(id).subscribe(() => {
-        this.snackBar.open('Invoice deleted', 'Close', { duration: 3000 });
+    this.suppliersService.uploadInvoice(this.poId!, file).subscribe({
+      next: () => {
+        this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
         this.loadInvoices();
-      });
-    }
-  });
-}
+      },
+      error: (err) => {
+        console.error('Upload failed', err);
+        this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
+      }
+    });
+  }
 
-getInvoiceFileUrl(path: string): string {
-  return this.suppliersService.getInvoiceFileUrl(path);
-}
+  deleteInvoice(id: number): void {
+    if (!this.poId) return;
+
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Invoice',
+        message: 'Are you sure you want to delete this invoice?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.suppliersService.deleteInvoice(id).subscribe(() => {
+          this.snackBar.open('Invoice deleted', 'Close', { duration: 3000 });
+          this.loadInvoices();
+        });
+      }
+    });
+  }
+
+  getInvoiceFileUrl(path: string): string {
+    return this.suppliersService.getInvoiceFileUrl(path);
+  }
 }
