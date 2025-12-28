@@ -225,6 +225,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         const currentCost = item.get('unit_cost')?.value || 0;
         item.patchValue({ unit_cost: Number(currentCost) + perUnitCost });
       });
+      this.snackBar.open('Costs applied locally. Save order to see detailed preview.', 'Close', { duration: 3000 });
       return;
     }
 

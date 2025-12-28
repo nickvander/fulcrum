@@ -122,15 +122,17 @@
                 <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()">
                     <mat-icon>add_circle</mat-icon> Add to Unit Costs
                 </button>
-                <p class="apply-hint">This will add the per-unit cost to each line item's unit cost.</p>
+                <p class="apply-hint" *ngIf="poId">This will add the per-unit cost to each line item's unit cost.</p>
+                <p class="apply-hint" *ngIf="!poId">Costs will be distributed evenly. Save order to preview detailed
+                    allocation.</p>
             </div>
         </mat-card>
 
         <!-- Invoices Section -->
-        <mat-card class="form-section" *ngIf="isEditMode && poId">
+        <mat-card class="form-section">
             <div class="section-header">
                 <h3>Supplier Invoices</h3>
-                <div class="actions-right">
+                <div class="actions-right" *ngIf="poId">
                     <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
                         accept=".pdf,.jpg,.jpeg,.png">
                     <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
@@ -139,9 +141,10 @@
                 </div>
             </div>
 
-            <p class="section-hint" *ngIf="invoices.length === 0">No invoices attached.</p>
+            <p class="section-hint" *ngIf="!poId">Please save the order to upload invoices.</p>
+            <p class="section-hint" *ngIf="poId && invoices.length === 0">No invoices attached.</p>
 
-            <table mat-table [dataSource]="invoices" *ngIf="invoices.length > 0" class="invoice-table">
+            <table mat-table [dataSource]="invoices" *ngIf="poId && invoices.length > 0" class="invoice-table">
                 <!-- Date Column -->
                 <ng-container matColumnDef="date">
                     <th mat-header-cell *matHeaderCellDef> Date </th>
