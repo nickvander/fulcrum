@@ -266,45 +266,21 @@ def adjust_stock(
     """
     Adjust the stock level for a product.
     """
-    from src.models.inventory import InventoryItem, InventoryAdjustment
+    from src.services.inventory_service import inventory_service
     
     product = crud_product.product.get(db, id=product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # Create an inventory adjustment record for audit trail
-    inventory_adjustment = InventoryAdjustment(
+    # Use centralized service
+    inventory_service.adjust_stock(
+        db=db,
         product_id=product_id,
         adjustment=stock_adjustment.adjustment,
         reason=stock_adjustment.reason,
-        timestamp=datetime.utcnow(),
-        created_by=current_user.email if current_user.email else f"user_{current_user.id}"
+        location=getattr(stock_adjustment, 'location', 'default'),
+        user_id=current_user.email if current_user.email else f"user_{current_user.id}"
     )
-    db.add(inventory_adjustment)
-    
-    # Create the adjustment record first
-    db.add(inventory_adjustment)
-    
-    # Calculate the current total stock by summing all existing inventory items
-    # (not counting adjustment-only records)
-    existing_main_inventory = db.query(InventoryItem).filter(
-        InventoryItem.product_id == product_id,
-        InventoryItem.location == 'default'  # Only get main stock location items
-    ).first()
-    
-    current_stock = existing_main_inventory.quantity if existing_main_inventory else 0
-    new_stock = current_stock + stock_adjustment.adjustment
-    
-    # Update or create the main inventory item with the new total stock
-    if existing_main_inventory:
-        existing_main_inventory.quantity = new_stock
-    else:
-        main_inventory_item = InventoryItem(
-            product_id=product_id,
-            quantity=new_stock,
-            location='default'  # Main stock location
-        )
-        db.add(main_inventory_item)
     
     db.commit()
     

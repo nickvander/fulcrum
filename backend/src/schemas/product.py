@@ -35,7 +35,7 @@ class ProductImage(ProductImageBase):
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
-    sku: str
+    sku: Optional[str] = None  # Optional - auto-generated if not provided
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
     manufacturer: Optional[str] = None

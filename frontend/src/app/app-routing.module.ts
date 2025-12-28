@@ -33,6 +33,7 @@ const routes: Routes = [
       ),
   },
   { path: 'users', loadChildren: () => import('./users/users-module').then(m => m.UsersModule) },
+  { path: 'suppliers', loadChildren: () => import('./suppliers/suppliers.module').then(m => m.SuppliersModule), canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: '/products' } // Wildcard route
 ];

@@ -12,6 +12,7 @@ class Product(Base):
     name = Column(String, index=True)
     description = Column(String)
     sku = Column(String, unique=True, index=True)
+    supplier_sku = Column(String, nullable=True, index=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     default_resale_price = Column(Float)
     cost_price = Column(Float)
