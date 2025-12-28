@@ -7,8 +7,8 @@
     - [x] Widget Infrastructure (Standalone components, grid layout).
     - [x] Basic KPIs (Inventory Value, Stock Health, Inbound Pipeline).
 
-- [ ] **Marketplace Research**
-    - [x] Amazon SP-API Plan.
-    - [x] MercadoLibre Plan.
-    - [x] Research saved to `work/current/marketplace-research.md`.
-    - [ ] Implementation of models and OAuth flows.
+- [x] **Marketplace Integration**
+    - [x] Amazon SP-API & MercadoLibre Connector Framework.
+    - [x] Marketplace List & Detail UI.
+    - [x] Backend sync models and migrations.
+    - [x] Celery task framework for inventory.

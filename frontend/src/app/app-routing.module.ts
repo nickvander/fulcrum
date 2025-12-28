@@ -10,6 +10,11 @@ const routes: Routes = [
     loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'marketplaces',
+    loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule),
+    canActivate: [AuthGuard]
+  },
   { path: 'login', component: Login, canActivate: [LoginGuard] },
   {
     path: 'forgot-password',
@@ -39,6 +44,7 @@ const routes: Routes = [
   },
   { path: 'users', loadChildren: () => import('./users/users-module').then(m => m.UsersModule) },
   { path: 'suppliers', loadChildren: () => import('./suppliers/suppliers.module').then(m => m.SuppliersModule), canActivate: [AuthGuard] },
+  { path: 'marketplaces', loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule), canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: '/products' } // Wildcard route
 ];

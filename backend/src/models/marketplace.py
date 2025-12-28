@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, ForeignKey, TIMESTAMP, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 
 from .base import Base
 
@@ -32,6 +33,11 @@ class MarketplaceListing(Base):
     external_listing_id = Column(String)
     listing_url = Column(String)
     status = Column(String)
+    sync_status = Column(String, default="PENDING")
+    last_sync = Column(DateTime(timezone=True), onupdate=func.now())
+    marketplace_price = Column(Float, nullable=True)
+    error_message = Column(String, nullable=True)
+    metadata_json = Column(JSON, nullable=True) # Renamed to avoid reserved word 'metadata'
 
     product = relationship("Product", back_populates="marketplace_listings")
     marketplace = relationship("Marketplace")
