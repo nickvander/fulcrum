@@ -11,6 +11,11 @@ class PurchaseOrderStatus(str, Enum):
     CLOSED = "closed"
 
 # --- Purchase Order Item ---
+class ProductRef(BaseModel):
+    id: int
+    name: str
+    sku: str
+
 class PurchaseOrderItemBase(BaseModel):
     product_id: int
     quantity_ordered: float = 0.0
@@ -35,6 +40,7 @@ class PurchaseOrderItem(PurchaseOrderItemBase):
     taxes_allocated: float = 0.0
     other_allocated: float = 0.0
     costs_applied_at: Optional[datetime] = None
+    product: Optional[ProductRef] = None
     
     model_config = ConfigDict(from_attributes=True)
 
