@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
-from src.models.inventory import InventoryItem, InventoryAdjustment
+from src.models.inventory import InventoryItem
 from src.models.supplier import Supplier
 import pytest
 
@@ -37,9 +36,7 @@ def test_receive_items_workflow(client: TestClient, db: Session, test_product, t
             first_name="Admin",
             last_name="Debug"
         )
-        admin_user = user.create(db=db, obj_in=user_in)
-    else:
-        admin_user = existing_admin
+        user.create(db=db, obj_in=user_in)
 
     login_data = {
         "username": "debug_admin@test.com",

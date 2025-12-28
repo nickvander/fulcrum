@@ -3,8 +3,24 @@
 ## Status
 
 - [x] **Phase 5**: Supplier Order Management Complete (AI Invoice deferred)
+- [x] **Phase 5.5**: Additional Features (Cost Allocation, Invoices, Multi-Source)
 
 ## Log
+
+- **2025-12-27**: Phase 5.5 - Additional Supplier Features.
+    - **Cost Allocation Preview**:
+        - Added `base_cost`, `shipping_allocated`, `taxes_allocated`, `other_allocated` fields to PO items.
+        - Created `/costs/preview` and `/costs/apply` API endpoints.
+        - Built `CostAllocationDialogComponent` for reviewing cost breakdown before applying.
+    - **Invoice Management**:
+        - Created `SupplierInvoice` schemas and CRUD.
+        - Added secure file upload with type validation (PDF/PNG/JPG), size limits (10MB), UUID filenames.
+        - Added invoice upload/list/delete endpoints to PO API.
+    - **Multi-Source Products**:
+        - Created `SupplierProduct` model for products with multiple suppliers.
+        - Added fields: `supplier_sku`, `cost_price`, `is_primary`, `lead_time_days`.
+        - Created CRUD with `get_by_product()`, `get_by_supplier()`, `set_as_primary()`.
+        - Added full REST API at `/supplier-products`.
 
 - **2025-12-27**: Completed Phase 5 - Supplier Order Management.
     - **Backend**:
@@ -30,3 +46,4 @@
 
 - **Deferred**:
     - AI Invoice Processing (LLM integration pending)
+    - Dashboard Widgets (customizable analytics views)

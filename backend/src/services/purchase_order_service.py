@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from src.crud.crud_purchase_order import purchase_order as crud_purchase_order
-from src.schemas.purchase_order import PurchaseOrderStatus, PurchaseOrderUpdate
+from src.schemas.purchase_order import PurchaseOrderStatus
 
 class PurchaseOrderService:
     def transition_status(self, db: Session, po_id: int, new_status: PurchaseOrderStatus):
@@ -42,8 +42,6 @@ class PurchaseOrderService:
              raise HTTPException(status_code=400, detail="Cannot receive items for a Closed PO")
 
         updated_items_count = 0
-        fully_received_items_count = 0
-        total_items_count = len(po.items)
 
         # Map current items for easy lookup
         po_items_map = {item.product_id: item for item in po.items}

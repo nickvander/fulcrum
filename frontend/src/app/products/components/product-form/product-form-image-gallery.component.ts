@@ -23,7 +23,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
     CdkDropList,
     CdkDrag,
     CdkDragHandle
-],
+  ],
   template: `
     <div class="image-section">
       <div class="image-upload">
@@ -54,14 +54,14 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
         </div>
       }
     
-      @if (stagedImages.length > 0 && existingImages?.length) {
+      @if (stagedImages.length > 0 && existingImages.length) {
         <mat-divider></mat-divider>
       }
     
-      @if (existingImages?.length) {
+      @if (existingImages.length) {
         <p class="mat-body-strong">Current Images:</p>
       }
-      @if (existingImages?.length) {
+      @if (existingImages.length) {
         <div
           cdkDropList
           class="image-gallery"
@@ -91,7 +91,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
           }
         </div>
       }
-      @if (!existingImages?.length) {
+      @if (!existingImages.length) {
         <div class="no-images">
           @if (!stagedImages.length) {
             <p>No images uploaded for this product yet.</p>
@@ -114,14 +114,14 @@ export class ProductFormImageGalleryComponent implements OnInit {
   @Output() stagedImagePreviewsChange = new EventEmitter<string[]>();
   @Output() imagesToDelete = new EventEmitter<number[]>();
   @Output() primaryImageChange = new EventEmitter<number | null>();
-  @Output() imageUpdated = new EventEmitter<{imageId: number, field: 'title' | 'description', value: string}>();
+  @Output() imageUpdated = new EventEmitter<{ imageId: number, field: 'title' | 'description', value: string }>();
   @Output() existingImagesChange = new EventEmitter<ProductImage[]>();
 
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialog: MatDialog) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   getImageUrl(imagePath: string): string {
     return `/uploads/product_images/${imagePath}`;
@@ -144,9 +144,9 @@ export class ProductFormImageGalleryComponent implements OnInit {
         };
         reader.readAsDataURL(file);
       });
-      
+
       this.stagedImagesChange.emit(newStagedImages);
-      
+
       // Clear the input value to allow selecting the same file again
       input.value = '';
     }
@@ -155,17 +155,17 @@ export class ProductFormImageGalleryComponent implements OnInit {
   removeStagedImage(index: number): void {
     const newStagedImages = [...this.stagedImages];
     const newStagedImagePreviews = [...this.stagedImagePreviews];
-    
+
     newStagedImages.splice(index, 1);
     newStagedImagePreviews.splice(index, 1);
-    
+
     this.stagedImagesChange.emit(newStagedImages);
     this.stagedImagePreviewsChange.emit(newStagedImagePreviews);
   }
 
   openImageDialog(image: ProductImage): void {
     if (!this.productId) return;
-    
+
     const dialogRef = this.dialog.open(ImageDialogComponent, {
       width: '500px',
       data: { image: image, productId: this.productId }
@@ -174,15 +174,15 @@ export class ProductFormImageGalleryComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Emit event to parent component to update image details
-        this.imageUpdated.emit({ 
-          imageId: result.id, 
-          field: 'title', 
-          value: result.title 
+        this.imageUpdated.emit({
+          imageId: result.id,
+          field: 'title',
+          value: result.title
         });
-        this.imageUpdated.emit({ 
-          imageId: result.id, 
-          field: 'description', 
-          value: result.description 
+        this.imageUpdated.emit({
+          imageId: result.id,
+          field: 'description',
+          value: result.description
         });
       }
     });
@@ -209,20 +209,20 @@ export class ProductFormImageGalleryComponent implements OnInit {
     event.stopPropagation(); // Prevent opening the dialog when setting primary
     this.primaryImageChange.emit(imageId);
   }
-  
+
   onImageReorder(event: any): void {
     const prevIndex = this.existingImages.findIndex(img => img.id === event.item.data.id);
     const imageToMove = this.existingImages[prevIndex];
-    
+
     // Remove from old position and insert at new position
     const newImagesList = [...this.existingImages];
     newImagesList.splice(prevIndex, 1);
     newImagesList.splice(event.currentIndex, 0, imageToMove);
-    
+
     // Emit the reordered list
     this.existingImagesChange.emit(newImagesList);
   }
-  
+
   trackByFn(index: number, item: ProductImage): any {
     return item.id;
   }

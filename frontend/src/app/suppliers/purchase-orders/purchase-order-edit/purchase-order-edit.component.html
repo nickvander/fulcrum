@@ -126,6 +126,53 @@
             </div>
         </mat-card>
 
+        <!-- Invoices Section -->
+        <mat-card class="form-section" *ngIf="isEditMode && poId">
+            <div class="section-header">
+                <h3>Supplier Invoices</h3>
+                <div class="actions-right">
+                    <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
+                        accept=".pdf,.jpg,.jpeg,.png">
+                    <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
+                        <mat-icon>cloud_upload</mat-icon> Upload Invoice
+                    </button>
+                </div>
+            </div>
+
+            <p class="section-hint" *ngIf="invoices.length === 0">No invoices attached.</p>
+
+            <table mat-table [dataSource]="invoices" *ngIf="invoices.length > 0" class="invoice-table">
+                <!-- Date Column -->
+                <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef> Date </th>
+                    <td mat-cell *matCellDef="let invoice"> {{invoice.uploaded_at | date}} </td>
+                </ng-container>
+
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef> Filename </th>
+                    <td mat-cell *matCellDef="let invoice">
+                        <a [href]="getInvoiceFileUrl(invoice.file_path)" target="_blank" class="invoice-link">
+                            {{invoice.filename || 'Invoice'}}
+                        </a>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef> </th>
+                    <td mat-cell *matCellDef="let invoice">
+                        <button mat-icon-button color="warn" (click)="deleteInvoice(invoice.id)" type="button">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="['date', 'name', 'actions']"></tr>
+                <tr mat-row *matRowDef="let row; columns: ['date', 'name', 'actions'];"></tr>
+            </table>
+        </mat-card>
+
         <div class="actions">
             <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid">
                 {{ isEditMode ? 'Update' : 'Create' }} Order

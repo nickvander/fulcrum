@@ -2,7 +2,6 @@ import os
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
 from sqlalchemy.orm import Session
-from datetime import datetime
 
 from src.api import dependencies
 from src.api.dependencies import get_db, get_ai_service

@@ -29,6 +29,13 @@ class PurchaseOrderItem(PurchaseOrderItemBase):
     po_id: int
     quantity_received: float = 0.0
     
+    # Cost breakdown fields
+    base_cost: float = 0.0
+    shipping_allocated: float = 0.0
+    taxes_allocated: float = 0.0
+    other_allocated: float = 0.0
+    costs_applied_at: Optional[datetime] = None
+    
     model_config = ConfigDict(from_attributes=True)
 
 # --- Purchase Order ---

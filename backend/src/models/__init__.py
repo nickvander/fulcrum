@@ -16,6 +16,7 @@ from .product_template import ProductTemplate
 from .purchase_order import PurchaseOrder
 from .purchase_order_item import PurchaseOrderItem
 from .supplier_invoice import SupplierInvoice
+from .supplier_product import SupplierProduct
 
 __all__ = [
     "User",
@@ -39,4 +40,6 @@ __all__ = [
     "PurchaseOrder",
     "PurchaseOrderItem",
     "SupplierInvoice",
+    "SupplierProduct",
 ]
+

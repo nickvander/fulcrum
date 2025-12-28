@@ -11,9 +11,9 @@ from src.api.v1.endpoints import (
     product_templates,
     addresses,
     audit_logs,
-    audit_logs,
     bulk_users,
     purchase_orders,
+    supplier_products,
 )
 
 api_router = APIRouter()
@@ -29,3 +29,5 @@ api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
 api_router.include_router(custom_fields.router, prefix="/custom-fields", tags=["custom-fields"])
 api_router.include_router(product_templates.router, prefix="/product-templates", tags=["product-templates"])
 api_router.include_router(purchase_orders.router, prefix="/purchase-orders", tags=["purchase-orders"])
+api_router.include_router(supplier_products.router, prefix="/supplier-products", tags=["supplier-products"])
+

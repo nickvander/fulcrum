@@ -9,6 +9,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { ReceivingDialogComponent } from '../receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from '../quick-product-dialog/quick-product-dialog.component';
+import { CostAllocationDialogComponent } from '../cost-allocation-dialog/cost-allocation-dialog.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { SupplierInvoice } from '../../suppliers.service';
 import { Observable, Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, takeUntil, map, catchError } from 'rxjs/operators';
 
@@ -23,6 +26,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   isEditMode = false;
   poId: number | null = null;
   suppliers: Supplier[] = [];
+  invoices: SupplierInvoice[] = [];
   statusOptions = Object.values(PurchaseOrderStatus);
 
   // Product autocomplete
@@ -36,7 +40,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     private productService: ProductService,
     private route: ActivatedRoute,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {
     this.poForm = this.fb.group({
       supplier_id: [null, Validators.required],
@@ -58,6 +63,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       this.isEditMode = true;
       this.poId = +idParam;
       this.loadPurchaseOrder(this.poId);
+      this.loadInvoices();
     } else {
       this.addLineItem();
     }
@@ -211,12 +217,28 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   }
 
   applyLandedCostToItems(): void {
-    const perUnitCost = this.calculatePerUnitLandedCost();
-    if (perUnitCost === 0) return;
+    if (!this.isEditMode || !this.poId) {
+      // For new POs, apply locally (old behavior as fallback)
+      const perUnitCost = this.calculatePerUnitLandedCost();
+      if (perUnitCost === 0) return;
+      this.items.controls.forEach(item => {
+        const currentCost = item.get('unit_cost')?.value || 0;
+        item.patchValue({ unit_cost: Number(currentCost) + perUnitCost });
+      });
+      return;
+    }
 
-    this.items.controls.forEach(item => {
-      const currentCost = item.get('unit_cost')?.value || 0;
-      item.patchValue({ unit_cost: Number(currentCost) + perUnitCost });
+    // For existing POs, open the preview dialog
+    const dialogRef = this.dialog.open(CostAllocationDialogComponent, {
+      width: '800px',
+      data: { poId: this.poId }
+    });
+
+    dialogRef.afterClosed().subscribe(applied => {
+      if (applied) {
+        // Reload PO to get updated costs
+        this.loadPurchaseOrder(this.poId!);
+      }
     });
   }
 
@@ -267,5 +289,48 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  // --- Invoice Management ---
+
+  loadInvoices(): void {
+    if (!this.poId) return;
+    this.suppliersService.getInvoices(this.poId).subscribe(invoices => {
+      this.invoices = invoices;
+    });
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file && this.poId) {
+      if (file.size > 10 * 1024 * 1024) {
+        this.snackBar.open('File too large. Max 10MB.', 'Close', { duration: 3000 });
+        return;
+      }
+      this.suppliersService.uploadInvoice(this.poId, file).subscribe({
+        next: () => {
+          this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
+          this.loadInvoices();
+        },
+        error: (err) => {
+          console.error('Upload failed', err);
+          this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
+        }
+      });
+    }
+  }
+
+  deleteInvoice(id: number): void {
+    if (!this.poId) return;
+    if (confirm('Are you sure you want to delete this invoice?')) {
+      this.suppliersService.deleteInvoice(id).subscribe(() => {
+        this.snackBar.open('Invoice deleted', 'Close', { duration: 3000 });
+        this.loadInvoices();
+      });
+    }
+  }
+
+  getInvoiceFileUrl(path: string): string {
+    return this.suppliersService.getInvoiceFileUrl(path);
   }
 }
