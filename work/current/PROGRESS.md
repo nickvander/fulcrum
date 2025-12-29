@@ -122,3 +122,7 @@
         - Added `UserService` to Suppliers module to fix dependency injection.
         - Enhanced "Paid By" dropdown to correctly display user names.
         - Added safeguards for null values in cost tooltips.
+    - **Workflow Improvements**:
+        - Implemented **Auto-Save** mechanism for Cost Allocation dialog to ensure calculations use latest form values.
+        - Enhanced **Cost Preview** to accept temporary overrides, allowing users to preview "Add to Unit Cost" results without committing to the DB first.
+        - Verified all frontend tests pass with new mock configurations.

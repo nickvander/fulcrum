@@ -42,7 +42,7 @@ Go beyond simple "Price - Cost".
 ### Step 1: Inventory & Cost Engine
 - Update `Product` model for Bundle support (recursive relationship).
 - Build `Expense` model.
-- Implement "Landed Cost" distribution logic in `PurchaseOrder` service.
+- [x] Implement "Landed Cost" distribution logic in `PurchaseOrder` service.
 
 ### Step 1.5: Maintenance & Stability (User Feedback) - Dec 28
 - [x] **Filter Consolidation**: Streamlined Product List UI.

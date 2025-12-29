@@ -23,7 +23,7 @@
 
 ## Backlog
 - [ ] **Credentials**: Valid Amazon SP-API and MercadoLibre credentials for Live Testing (Blocked).
-- [ ] **Landed Cost Engine**: Logic to distribute PO shipping/tax costs to Product `average_cost`.
+- [x] **Landed Cost Engine**: Logic to distribute PO shipping/tax costs to Product `average_cost`. ✅
 - [x] **Expense Management**: Fixed URL bug, added expense types (one-time/recurring), custom categories, KPI widgets. ✅
 - [ ] **Marketing Calendar**: UI for scheduling and visualizing campaigns.
 
