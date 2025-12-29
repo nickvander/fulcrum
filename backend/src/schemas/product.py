@@ -31,6 +31,28 @@ class ProductImage(ProductImageBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# Schema for Bundle Components
+class BundleComponentBase(BaseModel):
+    component_id: int
+    quantity: int = 1
+
+class BundleComponentCreate(BundleComponentBase):
+    pass
+
+class BundleComponent(BundleComponentBase):
+    id: int
+    bundle_id: int
+    bundle_name: Optional[str] = None
+    bundle_image: Optional[str] = None
+    component_name: Optional[str] = None
+    component_image: Optional[str] = None
+    bundle_stock: Optional[int] = 0
+    component_stock: Optional[int] = 0
+    component_cost: Optional[float] = 0.0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # Schema for Products
 class ProductBase(BaseModel):
     name: str
@@ -46,9 +68,10 @@ class ProductBase(BaseModel):
     depth: Optional[float] = None
     weight: Optional[float] = None
     average_cost: Optional[float] = None
+    is_bundle: bool = False
 
 class ProductCreate(ProductBase):
-    pass
+    bundle_components: Optional[List[BundleComponentCreate]] = None
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
@@ -65,6 +88,8 @@ class ProductUpdate(BaseModel):
     height: Optional[float] = None
     depth: Optional[float] = None
     weight: Optional[float] = None
+    is_bundle: Optional[bool] = None
+    bundle_components: Optional[List[BundleComponentCreate]] = None
 
 
 
@@ -84,6 +109,8 @@ class Product(ProductBase):
     custom_fields: List[ProductCustomField] = []
     variants: List[ProductVariant] = []
     marketplace_listings: List[MarketplaceListing] = []
+    bundle_components: List[BundleComponent] = []
+    part_of_bundles: List[BundleComponent] = []
     created_at: datetime
     updated_at: datetime
 
@@ -98,7 +125,6 @@ class PaginatedProducts(BaseModel):
     totalPages: int
     totalItems: int
     pageSize: int
-    hasNextPage: bool
     hasNextPage: bool
     hasPrevPage: bool
 

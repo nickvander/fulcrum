@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, Output, EventEmitter, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ProductService } from '../../services/product';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
@@ -7,27 +7,27 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { SharedModule } from '../../../shared/shared-module';
 import { RouterModule } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatSidenav } from '@angular/material/sidenav';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatChipsModule } from '@angular/material/chips';
 import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialog } from '../stock-history-dialog/stock-history-dialog';
 import { BatchActionToolbarComponent } from '../batch-action-toolbar/batch-action-toolbar';
-import { ProductForm } from '../product-form/product-form';
 import { PaginationComponent } from '../pagination/pagination';
 import { ProductFiltersComponent } from '../product-filters/product-filters';
 import { BatchOperationsService } from '../../services/batch-operations.service';
@@ -38,12 +38,16 @@ import { ProductComparisonComponent } from '../product-comparison/product-compar
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.html',
   styleUrls: ['./product-list.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -54,27 +58,27 @@ import { ProductDetailsDialogComponent } from '../product-details-dialog/product
     MatCardModule,
     MatCheckboxModule,
     MatSidenavModule,
+    MatDialogModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatTooltipModule,
     MatMenuModule,
     MatDividerModule,
+    MatChipsModule,
     InfiniteScrollDirective,
     BatchActionToolbarComponent,
-    ProductForm,
     PaginationComponent,
-    ProductFiltersComponent,
     MatTableModule,
     MatSortModule,
     MatButtonToggleModule,
     MarketplaceStatusComponent,
-    MarketplaceStatusComponent,
     AiSearchBar,
-    AiSearchBar
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule
   ],
 })
 export class ProductList implements OnInit, OnDestroy {
-  @ViewChild('sidenav') sidenav!: MatSidenav;
-  @ViewChild('filterSidenav') filterSidenav!: MatSidenav;
   @ViewChild(MatSort) sort!: MatSort;
 
   products: Product[] = [];
@@ -87,30 +91,40 @@ export class ProductList implements OnInit, OnDestroy {
 
   // View/UI State
   viewMode: 'grid' | 'list' = 'grid';
+  activeProductType: 'all' | 'product' | 'bundle' = 'all';
 
   selectedProducts = new Set<number>(); // Store IDs of selected products
-  selectedProductForEdit: Product | null = null;
-  isEditing = false;
   currentPage: number = 1;
   pageSize: number = 10;
   isLoading: boolean = false;
+  isReloading: boolean = false;
   activeFilters: any = {};
-  showFilters: boolean = false; // Show/hide filter sidebar
   useInfiniteScroll: boolean = false; // Toggle between pagination and infinite scroll
   allProducts: Product[] = []; // For infinite scroll
   hasMoreProducts: boolean = true; // For infinite scroll
   private destroy$ = new Subject<void>();
+  private filterSubject = new Subject<void>();
 
   constructor(
     private productService: ProductService,
     private batchOperationsService: BatchOperationsService,
     private notificationService: NotificationService,
     private comparisonService: ProductComparisonService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    // Initial load
     this.loadProducts();
+
+    // Debounce filter updates
+    this.filterSubject.pipe(
+      debounceTime(400),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.loadProducts(1, this.pageSize);
+    });
   }
 
   ngOnDestroy(): void {
@@ -133,7 +147,12 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   loadProducts(page: number = 1, size: number = this.pageSize): void {
-    this.isLoading = true;
+    if (this.products.length > 0) {
+      this.isReloading = true;
+    } else {
+      this.isLoading = true;
+    }
+
     this.currentPage = page;
     this.pageSize = size;
 
@@ -143,9 +162,11 @@ export class ProductList implements OnInit, OnDestroy {
     }
 
     // Determine if we should use search or filtered endpoint
-    const searchActive = Object.keys(this.activeFilters).some(key =>
-      this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== ''
-    );
+    // Check if any filter OTHER than is_bundle is active OR if search query exists
+    const searchActive = Object.keys(this.activeFilters).some(key => {
+      if (key === 'is_bundle') return false;
+      return this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== '';
+    });
 
     if (this.useInfiniteScroll) {
       // For infinite scroll, we'll handle differently
@@ -163,11 +184,13 @@ export class ProductList implements OnInit, OnDestroy {
               }
               this.paginatedProducts = result;
               this.hasMoreProducts = result.currentPage < result.totalPages;
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             },
             error: (error) => {
               console.error('Error loading products with filters:', error);
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             }
           });
       } else {
@@ -184,11 +207,13 @@ export class ProductList implements OnInit, OnDestroy {
               }
               this.paginatedProducts = result;
               this.hasMoreProducts = result.currentPage < result.totalPages;
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             },
             error: (error) => {
               console.error('Error loading products:', error);
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             }
           });
       }
@@ -202,11 +227,13 @@ export class ProductList implements OnInit, OnDestroy {
             next: (result) => {
               this.paginatedProducts = result;
               this.products = result.data;
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             },
             error: (error) => {
               console.error('Error loading products with filters:', error);
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             }
           });
       } else {
@@ -216,11 +243,13 @@ export class ProductList implements OnInit, OnDestroy {
             next: (result) => {
               this.paginatedProducts = result;
               this.products = result.data;
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             },
             error: (error) => {
               console.error('Error loading products:', error);
-              this.isLoading = false;
+              this.isLoading = false; this.isReloading = false;
+              this.cdr.markForCheck();
             }
           });
       }
@@ -272,14 +301,13 @@ export class ProductList implements OnInit, OnDestroy {
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
-              // The productService.adjustStock already calls getProducts() which should update the observable
-              // but we'll make sure the UI refreshes by triggering change detection if needed
+              this.notificationService.showSuccess('Stock adjusted successfully');
+              this.loadProducts(this.currentPage, this.pageSize);
             },
             error: (error) => {
               console.error('Error adjusting stock:', error);
-              this.productService.getProducts()
-                .pipe(takeUntil(this.destroy$))
-                .subscribe(); // Ensure we refresh even on error
+              this.notificationService.showError('Error adjusting stock');
+              this.loadProducts(this.currentPage, this.pageSize); // Refresh anyway
             }
           });
       }
@@ -385,9 +413,6 @@ export class ProductList implements OnInit, OnDestroy {
     }
   }
 
-  onAddProduct(): void {
-    // This method is no longer used since routing handles adding
-  }
 
   getImageUrl(imagePath: string): string {
     // Backend serves images from the 'uploads/product_images' directory.
@@ -408,8 +433,39 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   getCurrentStock(product: Product): number {
-    // Calculate current quantity: look for inventory item with 'default' location (main stock) 
-    // or fall back to sum of all inventory items, or 0 if none exist
+    // If it's a bundle and has no physical items, calculate virtual stock
+    if (product.is_bundle) {
+      // Check if we have physical stock first (assembled kits)
+      let physicalStock = 0;
+      if (product.inventory_items && product.inventory_items.length > 0) {
+        const mainInventory = product.inventory_items.find(item => item.location === 'default');
+        if (mainInventory) physicalStock = mainInventory.quantity;
+        else physicalStock = product.inventory_items.reduce((acc, item) => acc + item.quantity, 0);
+      }
+
+      // Calculate virtual stock based on components
+      if (product.bundle_components && product.bundle_components.length > 0) {
+        const maxBundles = product.bundle_components.map(bc => {
+          const componentStock = bc.component_stock || 0;
+          const required = bc.quantity || 1;
+          return Math.floor(componentStock / required);
+        });
+        // Return min of all components + physical stock
+        // (Assuming physical stock is essentially "pre-assembled" and we can assemble more from components)
+        // For simple "virtual bundle" logic, stock IS the min of components.
+        // If we support "Assembled" inventory, it would be Physical + Virtual.
+        // Let's assume strict virtual for now unless physical exists.
+        const virtualStock = Math.min(...maxBundles);
+
+        // If we have physical stock, maybe we just show that? 
+        // Or usually, for Drop-Shipping/Virtual Bundling, stock is purely virtual.
+        // Let's sum them for "Total Available to Sell"
+        return physicalStock + virtualStock;
+      }
+      return physicalStock;
+    }
+
+    // Regular product logic
     if (product.inventory_items && product.inventory_items.length > 0) {
       const mainInventory = product.inventory_items.find(item => item.location === 'default');
       if (mainInventory) {
@@ -444,36 +500,59 @@ export class ProductList implements OnInit, OnDestroy {
     event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
   }
 
-  openDetailsDialog(product: Product): void {
+  openDetailsDialog(product: Product, mode: 'view' | 'edit' = 'view'): void {
     const dialogRef = this.dialog.open(ProductDetailsDialogComponent, {
-      width: '800px',
-      data: product
+      width: '1000px',
+      maxHeight: '90vh',
+      data: { product, mode }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result === 'edit') {
-        this.openEditPanel(product);
+      // If product was saved (result is true), we refresh the list
+      if (result) {
+        this.loadProducts(this.currentPage, this.pageSize);
       }
     });
   }
 
-  openEditPanel(product: Product): void {
-    this.selectedProductForEdit = product;
-    this.isEditing = true;
-    setTimeout(() => {  // Use setTimeout to ensure sidenav is rendered
-      this.sidenav?.open();
-    }, 0);
+  onAddProduct(): void {
+    const newProduct = {
+      id: 0,
+      name: '',
+      sku: '',
+      description: '',
+      default_resale_price: 0,
+      cost_price: 0,
+      images: [],
+      custom_fields: [],
+      is_bundle: false
+    } as Product;
+    this.openDetailsDialog(newProduct, 'edit');
   }
 
-  closeEditPanel(): void {
-    this.sidenav?.close();
-    this.selectedProductForEdit = null;
+  onAddBundle(): void {
+    const newBundle = {
+      id: 0,
+      name: 'New Bundle',
+      sku: '',
+      description: '',
+      default_resale_price: 0,
+      cost_price: 0,
+      images: [],
+      custom_fields: [],
+      is_bundle: true,
+      bundle_components: []
+    } as Product;
+    this.openDetailsDialog(newBundle, 'edit');
+  }
+
+  openEditPanel(product: Product): void {
+    this.openDetailsDialog(product, 'edit');
   }
 
   onProductSaved(): void {
     // Refresh the current page to ensure all changes are reflected
     this.loadProducts(this.currentPage, this.pageSize);
-    this.closeEditPanel();
   }
 
   onPageChange(page: number): void {
@@ -488,18 +567,6 @@ export class ProductList implements OnInit, OnDestroy {
     this.loadProducts(1, size); // Reset to first page when page size changes
   }
 
-  onFiltersChanged(filters: any): void {
-    this.activeFilters = filters;
-    this.loadProducts(1, this.pageSize); // Reset to first page when filters change
-  }
-
-  onFiltersCleared(): void {
-    this.activeFilters = {};
-  }
-
-  toggleFilters(): void {
-    this.showFilters = !this.showFilters;
-  }
 
   toggleInfiniteScroll(): void {
     this.useInfiniteScroll = !this.useInfiniteScroll;
@@ -583,38 +650,117 @@ export class ProductList implements OnInit, OnDestroy {
       });
   }
 
-  applyQuickFilter(filterType: string, value: any): void {
-    // Clear all other filters except the current one
+  onProductTypeChange(type: 'all' | 'product' | 'bundle'): void {
+    this.activeProductType = type;
+
+    // reset is_bundle filter
+    if (type === 'all') {
+      delete this.activeFilters.is_bundle;
+    } else if (type === 'product') {
+      this.activeFilters.is_bundle = false;
+    } else if (type === 'bundle') {
+      this.activeFilters.is_bundle = true;
+    }
+
+    this.loadProducts(1, this.pageSize);
+  }
+
+  getEffectiveCost(product: Product): number {
+    // If it's a bundle and has 0 cost, try to estimate from components
+    if (product.is_bundle && (!product.cost_price || product.cost_price === 0)) {
+      if (product.bundle_components && product.bundle_components.length > 0) {
+        return product.bundle_components.reduce((sum, bc) => {
+          const cost = bc.component_cost || 0;
+          return sum + (cost * bc.quantity);
+        }, 0);
+      }
+    }
+    return product.cost_price || 0;
+  }
+
+  getBundleAverageCost(product: Product): number {
+    if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+      return product.bundle_components.reduce((sum, bc) => {
+        // Use component_cost as proxy for average cost if specific average cost not available
+        // Ideally backend ensures component_cost is the average cost at read time
+        const cost = bc.component_cost || 0;
+        return sum + (cost * bc.quantity);
+      }, 0);
+    }
+    return product.average_cost || 0;
+  }
+
+  getAllocatedBundleNames(product: Product): string {
+    if (!product.part_of_bundles || product.part_of_bundles.length === 0) return '';
+    // Deduplicate bundle names
+    const names = Array.from(new Set(product.part_of_bundles.map(b => b.bundle_name).filter(n => n)));
+    return names.join(', ');
+  }
+
+  showAdvancedFilters = false;
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  // Unified filter change handler
+  applyFilter(type: string, value: any): void {
+    if (value === null || value === '' || value === undefined) {
+      delete this.activeFilters[type];
+    } else {
+      this.activeFilters[type] = value;
+    }
+    this.filterSubject.next();
+  }
+
+  resetFilters(): void {
     this.activeFilters = {};
+    this.currentSearchQuery = '';
+    this.activeProductType = 'all';
+    this.loadProducts(1, this.pageSize);
+  }
+
+  applyQuickFilter(filterType: string, value: any): void {
+    // Logic: Toggle filters. If selecting a range property (min/max), clear the opposing one.
+
+    // Helper to toggle a value: if exists and matches, remove it. Else set it.
+    const toggle = (key: string, val: any) => {
+      if (this.activeFilters[key] === val) {
+        delete this.activeFilters[key];
+      } else {
+        this.activeFilters[key] = val;
+      }
+    };
 
     switch (filterType) {
       case 'in_stock':
-        this.activeFilters.min_stock = 1;
+        delete this.activeFilters.max_stock; // Clear conflict
+        toggle('min_stock', 1);
         break;
       case 'out_of_stock':
-        this.activeFilters.max_stock = 0;
+        delete this.activeFilters.min_stock;
+        toggle('max_stock', 0);
         break;
       case 'low_stock':
-        this.activeFilters.max_stock = 10; // Assuming low stock is under 10
-        break;
-      case 'on_sale':
-        // This would be for products with special pricing
-        // For now, we can implement this if we add a 'on_sale' property to products
+        delete this.activeFilters.min_stock;
+        toggle('max_stock', 10);
         break;
       case 'expensive':
-        this.activeFilters.min_price = 500; // Products over $500
+        delete this.activeFilters.max_price;
+        toggle('min_price', 500);
         break;
       case 'cheap':
-        this.activeFilters.max_price = 50; // Products under $50
+        delete this.activeFilters.min_price;
+        toggle('max_price', 50);
         break;
       default:
-        // For specific categories or brands
         this.activeFilters[filterType] = value;
         break;
     }
 
     this.loadProducts(1, this.pageSize);
   }
+
 
   onWindowScroll(): void {
     if (this.useInfiniteScroll && this.hasMoreProducts && !this.isLoading) {
@@ -644,11 +790,11 @@ export class ProductList implements OnInit, OnDestroy {
             this.products = this.allProducts; // Update the displayed products
             this.paginatedProducts = result;
             this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false;
+            this.isLoading = false; this.isReloading = false;
           },
           error: (error) => {
             console.error('Error loading more products:', error);
-            this.isLoading = false;
+            this.isLoading = false; this.isReloading = false;
           }
         });
     } else {
@@ -661,11 +807,11 @@ export class ProductList implements OnInit, OnDestroy {
             this.products = this.allProducts; // Update the displayed products
             this.paginatedProducts = result;
             this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false;
+            this.isLoading = false; this.isReloading = false;
           },
           error: (error) => {
             console.error('Error loading more products:', error);
-            this.isLoading = false;
+            this.isLoading = false; this.isReloading = false;
           }
         });
     }

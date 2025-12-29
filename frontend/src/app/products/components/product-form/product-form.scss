@@ -1,12 +1,55 @@
-:host {
-  display: block;
-  padding: 24px;
-}
-
 .form-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px; // Reduced from 24
+  padding: 24px;
+  height: 100%;
+  box-sizing: border-box;
+
+  &.dialog-mode {
+    padding: 0 16px 16px 16px;
+    gap: 4px;
+    font-size: 12.5px;
+
+    .product-tabs {
+      margin-top: -16px;
+    }
+
+    mat-form-field {
+      margin-bottom: 2px;
+      font-size: 13.5px;
+
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+    }
+
+    h3 {
+      font-size: 0.8rem;
+      margin: 8px 0 4px 0;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      padding-top: 4px;
+    }
+
+    .bundle-management {
+      gap: 8px;
+    }
+  }
+}
+
+:host {
+  // Global typography reduction for high-density UI
+  font-size: 0.9rem;
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
 }
 
 .return-banner {
@@ -201,8 +244,8 @@ mat-form-field {
   }
 }
 
-/* Channels Tab */
-.channels-tab-content {
+/* Marketplaces Tab */
+.marketplaces-tab-content {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -250,7 +293,7 @@ mat-form-field {
   }
 }
 
-.channel-actions {
+.marketplace-actions {
   margin-top: 24px;
 
   h3 {
@@ -263,4 +306,183 @@ mat-form-field {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.bundle-toggle-container {
+  margin-bottom: 8px;
+}
+
+.bundle-card {
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    mat-icon {
+      color: #3f51b5;
+    }
+  }
+}
+
+.bundle-management {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .search-field {
+    font-size: 0.85rem;
+  }
+}
+
+.product-option {
+  height: 60px !important;
+
+  .option-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+
+    .option-thumb {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #f5f5f5;
+    }
+
+    .option-info {
+      display: flex;
+      flex-direction: column;
+
+      .p-name {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .p-sku {
+        font-size: 0.75rem;
+        color: #666;
+      }
+    }
+  }
+}
+
+.bundle-list-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fcfcfc;
+}
+
+.bundle-list {
+  padding: 0;
+}
+
+.bundle-item {
+  height: auto !important;
+  padding: 8px 12px !important;
+  border-bottom: 1px solid #efefef;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .item-layout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+
+    .item-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #ddd;
+    }
+
+    .item-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .comp-name {
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: #333;
+      }
+
+      .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: #666;
+
+        .qty-input {
+          width: 50px;
+          height: 28px;
+          padding: 0 8px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          text-align: center;
+
+          &:focus {
+            border-color: #3f51b5;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.1);
+          }
+        }
+      }
+    }
+
+    .remove-btn {
+      color: #999;
+
+      &:hover {
+        color: #f44336;
+      }
+    }
+  }
+}
+
+.empty-bundle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  color: #888;
+
+  mat-icon {
+    font-size: 32px;
+    height: 32px;
+    width: 32px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+/* Optimize spacing for other cards */
+mat-card-header {
+  padding: 12px 16px !important;
+
+  mat-card-title {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+  }
+}
+
+mat-card-content {
+  padding: 16px !important;
+}
+
+.mat-mdc-form-field-subscript-wrapper {
+  display: none; // Minimize extra whitespace below fields if not showing hints/errors
 }

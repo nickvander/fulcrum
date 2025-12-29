@@ -1,13 +1,22 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session, joinedload
 from src.crud.base import CRUDBase
-from src.models.product import Product
+from src.models.product import Product, BundleComponent
 from src.schemas.product import ProductCreate, ProductUpdate
-from typing import List
+from typing import List, Any
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get(self, db: Session, id: int) -> Product | None:
-        return db.query(self.model).options(joinedload(self.model.images)).filter(self.model.id == id).first()
+        return db.query(self.model).options(
+            joinedload(self.model.images),
+            joinedload(self.model.marketplace_listings),
+            joinedload(self.model.inventory_items),
+            joinedload(self.model.variants),
+            # Load bundle components and their nested component product + inventory
+            joinedload(self.model.bundle_components).joinedload(BundleComponent.component).joinedload(Product.inventory_items),
+            # Load bundles this product is part of + their inventory
+            joinedload(self.model.part_of_bundles).joinedload(BundleComponent.bundle).joinedload(Product.inventory_items)
+        ).filter(self.model.id == id).first()
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100, filters: dict = {}
@@ -69,7 +78,6 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         )
         
         # Apply filters if provided
-        # Apply filters if provided
         if filters:
             for field, value in filters.items():
                 if field == 'search_term':
@@ -87,14 +95,40 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
                     query = query.filter(self.model.default_resale_price <= value)
                 elif field == 'min_stock':
                      # optimized stock query needed
-                     pass
+                     from src.models.inventory import InventoryItem
+                     from sqlalchemy import func
+                     subquery = (
+                         db.query(InventoryItem.product_id)
+                         .group_by(InventoryItem.product_id)
+                         .having(func.sum(InventoryItem.quantity) >= value)
+                         .subquery()
+                     )
+                     query = query.filter(self.model.id.in_(subquery))
                 elif field == 'max_stock':
                      # optimized stock query needed
-                     pass
+                     from src.models.inventory import InventoryItem
+                     from sqlalchemy import func
+                     # This includes products with NO inventory items (count 0) if value >= 0
+                     # But solving "no inventory items" via having is tricky in one go
+                     # Simplified: products with inventory sum <= value
+                     
+                     # First, get products with inventory > value
+                     subquery_exceed = (
+                         db.query(InventoryItem.product_id)
+                         .group_by(InventoryItem.product_id)
+                         .having(func.sum(InventoryItem.quantity) > value)
+                         .subquery()
+                     )
+                     # Filter OUT those products
+                     query = query.filter(self.model.id.not_in(subquery_exceed))
+
                 elif field == 'category':
                     query = query.filter(self.model.category == value)
                 elif field == 'brand':
                     query = query.filter(self.model.brand == value)
+                elif field == 'is_bundle':
+                    if value is not None:
+                        query = query.filter(self.model.is_bundle == value)
                 elif isinstance(value, dict) and 'min' in value and 'max' in value:
                      if hasattr(self.model, field):
                         attr = getattr(self.model, field)
@@ -141,15 +175,45 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         return f"{prefix}-{date_part}-{int(time.time()) % 10000:04d}"
 
     def create(self, db: Session, *, obj_in: ProductCreate) -> Product:
+        obj_in_data = obj_in.model_dump(exclude={"bundle_components"})
+        bundle_components = obj_in.bundle_components
+
         # Auto-generate SKU if not provided
-        if not obj_in.sku:
-            generated_sku = self.generate_unique_sku(db)
-            # Create a copy with the generated SKU
-            obj_in = ProductCreate(**{**obj_in.model_dump(), "sku": generated_sku})
-        elif self.get_by_sku(db, sku=obj_in.sku):
+        if not obj_in_data.get("sku"):
+            obj_in_data["sku"] = self.generate_unique_sku(db)
+        elif self.get_by_sku(db, sku=obj_in_data["sku"]):
             raise HTTPException(status_code=409, detail="Product with this SKU already exists.")
         
-        return super().create(db, obj_in=obj_in)
+        db_obj = self.model(**obj_in_data)
+        db.add(db_obj)
+        db.flush() # Get the ID for the new product
+        
+        if bundle_components:
+            for bc in bundle_components:
+                db_bc = BundleComponent(bundle_id=db_obj.id, **bc.model_dump())
+                db.add(db_bc)
+        
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def update(
+        self, db: Session, *, db_obj: Product, obj_in: ProductUpdate | dict[str, Any]
+    ) -> Product:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.model_dump(exclude_unset=True, exclude={"bundle_components"})
+        
+        if not isinstance(obj_in, dict) and obj_in.bundle_components is not None:
+            # Clear existing bundle components
+            db.query(BundleComponent).filter(BundleComponent.bundle_id == db_obj.id).delete()
+            # Add new bundle components
+            for bc in obj_in.bundle_components:
+                db_bc = BundleComponent(bundle_id=db_obj.id, **bc.model_dump())
+                db.add(db_bc)
+        
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def get_similar(self, db: Session, *, embedding: list[float], limit: int = 10) -> list[Product]:
         """

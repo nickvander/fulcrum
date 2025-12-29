@@ -1,13 +1,12 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
-import { MatSidenav } from '@angular/material/sidenav';
+import { Component, OnInit } from '@angular/core';
 import { Product } from '../../models/product.model';
 import { ProductService } from '../../services/product';
 import { ProductList } from '../product-list/product-list';
-import { ProductForm } from '../product-form/product-form';
 
-import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
 
 @Component({
   selector: 'app-products',
@@ -15,61 +14,38 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./products.scss'],
   standalone: true,
   imports: [
-    MatSidenavModule,
     MatButtonModule,
     MatIconModule,
-    ProductList,
-    ProductForm
-]
+    MatDialogModule,
+    ProductList
+  ]
 })
 export class ProductsComponent implements OnInit {
-  @ViewChild('sidenav') sidenav!: MatSidenav;
-  
-  selectedProduct: Product | null = null;
-  isEditing = false;
-
-  constructor(private productService: ProductService) {}
+  constructor(
+    private productService: ProductService,
+    private dialog: MatDialog
+  ) { }
 
   ngOnInit(): void {
-    // Initialize the product list
-    this.productService.getProducts().subscribe();
   }
 
-  openEditPanel(product: Product): void {
-    this.selectedProduct = product;
-    this.isEditing = true;
-    setTimeout(() => {  // Use setTimeout to ensure sidenav is rendered
-      this.sidenav?.open();
-    }, 0);
-  }
-  
   openAddPanel(): void {
-    // For adding, we pass a minimal product object
-    this.selectedProduct = {
-      id: 0, // Will be ignored for new products
+    const newProduct = {
+      id: 0,
       name: '',
       sku: '',
       description: '',
       default_resale_price: 0,
       cost_price: 0,
       images: [],
-      custom_fields: []
+      custom_fields: [],
+      is_bundle: false
     } as Product;
-    this.isEditing = false;
-    setTimeout(() => {  // Use setTimeout to ensure sidenav is rendered
-      this.sidenav?.open();
-    }, 0);
-  }
 
-  closeEditPanel(): void {
-    this.sidenav?.close();
-    this.selectedProduct = null;
-    this.isEditing = false;
-  }
-
-  onProductSaved(): void {
-    // Refresh the product list after saving
-    this.productService.getProducts().subscribe();
-    this.closeEditPanel();
+    this.dialog.open(ProductDetailsDialogComponent, {
+      width: '1000px',
+      maxHeight: '90vh',
+      data: { product: newProduct, mode: 'edit' }
+    });
   }
 }

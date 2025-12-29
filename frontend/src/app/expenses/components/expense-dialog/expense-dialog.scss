@@ -1,0 +1,19 @@
+.expense-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 16px;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.row {
+    display: flex;
+    gap: 16px;
+
+    mat-form-field {
+        flex: 1;
+    }
+}

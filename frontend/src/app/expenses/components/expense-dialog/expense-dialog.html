@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>{{ data.expense ? 'Edit Expense' : 'Add New Expense' }}</h2>
+<mat-dialog-content>
+    <form [formGroup]="expenseForm" class="expense-form">
+        <mat-form-field class="full-width">
+            <mat-label>Description</mat-label>
+            <input matInput formControlName="description">
+        </mat-form-field>
+
+        <div class="row">
+            <mat-form-field>
+                <mat-label>Amount</mat-label>
+                <input matInput type="number" formControlName="amount">
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Currency</mat-label>
+                <mat-select formControlName="currency">
+                    @for (curr of currencies; track curr) {
+                    <mat-option [value]="curr">{{curr}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        </div>
+
+        <div class="row">
+            <mat-form-field>
+                <mat-label>Category</mat-label>
+                <mat-select formControlName="category">
+                    @for (cat of categories; track cat) {
+                    <mat-option [value]="cat">{{cat}}</mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="date">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+        </div>
+    </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" [disabled]="expenseForm.invalid" (click)="onSubmit()">Save</button>
+</mat-dialog-actions>

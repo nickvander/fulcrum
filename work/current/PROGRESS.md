@@ -48,6 +48,24 @@
     - Status: Blocked on `AMAZON_CLIENT_ID` / `AMAZON_CLIENT_SECRET` for verification.
     - Credential Setup Guide created: `work/current/63-marketplace-credential-setup-guide.md`
 
-- **2025-12-28**: Phase 9 Planned (Business Operations).
+- **2025-12-28**: Phase 9- **Phase 9: Business Operations Core** (In Progress)
+  - [x] Inventory & Cost Engine (Bundles, Expenses, Landed Costs)
+  - [ ] Supplier & Restock
+  - [ ] Marketing Operations
     - Plan created: `work/current/64-business-operations-plan.md`.
     - Focus: Cost/Expense tracking, Bundles, and 1P Storefront.
+
+- **2025-12-28**: Product Hub Maintenance & UI Polish
+    - **UI Consolidation**: Merged "All/Product/Bundle" filters into the main toolbar, removing the side panel.
+    - **Stability**: Fixed NG0956 error in Product List and added protections against form refreshes.
+    - **Bundles**: Implemented "Estimated Cost" display logic (sum of components) and exposed `component_cost` in API.
+    - **Backend**: Restarted service to apply schema changes for Bundle/Product logic.
+    - **Deferred**: Advanced filters and Dialog cost display logged in `MISSING_ITEMS.md`.
+
+- **2025-12-28**: Product Hub UI Polish (Continued)
+    - Fixed "Create Bundle" dialog prepopulation bug in `ProductForm` (side-panel mode now correctly hydrates components).
+    - **Filter UX Overhaul**:
+        - Added **debouncing** (400ms) to filter inputs to prevent excessive API calls.
+        - Replaced full-page loading spinner with a **non-blocking progress bar** overlay.
+        - Updated filter field styling: compact inputs, proper currency prefix spacing, flexible widths.
+    - **Inventory Details**: Clarified stock breakdown (Total Physical - Allocated = Available).

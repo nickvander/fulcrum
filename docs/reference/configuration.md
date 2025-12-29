@@ -60,3 +60,33 @@ initial administrative user.
 - **`FIRST_SUPERUSER_PASSWORD`**
   - **Description:** The password for the initial superuser account.
   - **Default:** `SecurePass123!`
+
+## Encryption & Security
+
+- **`ENCRYPTION_KEY`**
+  - **Description:** A 32-byte (256-bit) key used for encrypting sensitive data
+    like marketplace credentials. Generate with:
+    `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+  - **Required:** Yes (in production)
+
+## Amazon SP-API (Marketplace)
+
+These are optional and only required if integrating with Amazon.
+
+- **`AMAZON_CLIENT_ID`**
+  - **Description:** LWA Client ID from Amazon Seller Central Developer Console.
+
+- **`AMAZON_CLIENT_SECRET`**
+  - **Description:** LWA Client Secret.
+
+- **`AMAZON_REFRESH_TOKEN`**
+  - **Description:** Self-authorized refresh token for server-to-server access.
+
+## MercadoLibre (Marketplace)
+
+- **`ML_CLIENT_ID`**
+  - **Description:** App ID from MercadoLibre DevCenter.
+
+- **`ML_CLIENT_SECRET`**
+  - **Description:** Secret Key from MercadoLibre DevCenter.
+

@@ -15,11 +15,16 @@
   - **Track 1: Data Aggregation**
     - [ ] ETL pipeline to normalize sales data from all channels (Internal, Amazon, MercadoLibre).
     - [ ] Profitability calculation (Revenue - COGS - Marketplace Fees - Shipping).
-## High Priority (Phase 8 & 9)
+## High Priority (Deferred from Verified UI)
+- [x] **Advanced Filter UI**: Re-implemented with debouncing, compact inputs, and non-blocking reload progress bar. ✅
+- [x] **Bundle Details Cost**: Display estimated cost in `ProductDetailsDialog`. ✅
+- [x] **Avg Cost Logic**: Verified - average cost displays correctly. ✅
+- [x] **PO Navigation**: Clicking purchase orders in `ProductDetailsDialog` works. ✅
+
+## Backlog
 - [ ] **Credentials**: Valid Amazon SP-API and MercadoLibre credentials for Live Testing (Blocked).
 - [ ] **Landed Cost Engine**: Logic to distribute PO shipping/tax costs to Product `average_cost`.
-- [ ] **Inventory Bundles**: Database models and logic for "Virtual Products" (Kits/Sets).
-- [ ] **Expense Management**: Data models for non-COGS business expenses.
+- [ ] **Expense Management**: Has issues - needs debugging.
 - [ ] **Marketing Calendar**: UI for scheduling and visualizing campaigns.
 
 ## Medium Priority

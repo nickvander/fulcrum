@@ -14,6 +14,17 @@ Welcome to Fulcrum's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: User Guides
+   
+   user-guides/index.md
+   user-guides/products.md
+   user-guides/suppliers.md
+   user-guides/marketplaces.md
+   user-guides/expenses.md
+   user-guides/settings.md
+
+.. toctree::
+   :maxdepth: 2
    :caption: Getting Started
 
    getting-started/backend-setup.md
@@ -21,7 +32,7 @@ Welcome to Fulcrum's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Guides
+   :caption: Developer Guides
 
    guides/contributing.md
    guides/database-migrations.md
@@ -29,6 +40,12 @@ Welcome to Fulcrum's documentation!
    guides/production-setup.md
    guides/bulk-import.md
    guides/dashboard.md
+   guides/user-management.md
+   guides/supplier-management.md
+   guides/marketplace-integration.md
+   guides/marketplace-testing.md
+   guides/marketplace-credential-setup.md
+   guides/using-bazel.md
 
 .. toctree::
    :maxdepth: 2

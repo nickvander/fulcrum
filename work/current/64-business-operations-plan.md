@@ -44,6 +44,12 @@ Go beyond simple "Price - Cost".
 - Build `Expense` model.
 - Implement "Landed Cost" distribution logic in `PurchaseOrder` service.
 
+### Step 1.5: Maintenance & Stability (User Feedback) - Dec 28
+- [x] **Filter Consolidation**: Streamlined Product List UI.
+- [x] **Bundle Cost**: Implemented "Estimated Cost" display logic.
+- [x] **NG0956 Fix**: Resolved frontend tracking performance issue.
+- [x] **Advanced Filter UI**: Implemented with debouncing, compact styling, and non-blocking reload.
+
 ### Step 2: Supplier & Restock
 - Build UI for `SupplierProduct` mapping.
 - Implement "Days of Inventory" calculation.

@@ -36,20 +36,14 @@ describe.skip('ProductForm: Advanced Error Handling with Async Mock', () => {
     const mockProduct: Product = {
         id: 1,
         name: 'Test Product',
-        sku: 'T001',
-        description: '',
+        sku: 'TEST001',
+        description: 'Test Description',
         default_resale_price: 100,
         cost_price: 50,
-        manufacturer: 'Test Manufacturer',
-        brand: 'Test Brand',
-        category: 'Test Category',
-        width: 10,
-        height: 10,
-        depth: 10,
-        weight: 10,
-        images: [
-            { id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 1, title: '', description: '' }
-        ],
+        is_bundle: false,
+        images: [],
+        inventory_items: [],
+        inventory_adjustments: [],
         custom_fields: []
     };
 

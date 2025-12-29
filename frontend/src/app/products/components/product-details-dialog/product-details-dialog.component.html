@@ -1,12 +1,15 @@
 <div class="details-container">
-    <div class="header">
-        <h2 mat-dialog-title>{{ product.name }}</h2>
-        <button mat-icon-button (click)="onClose()">
+    <div class="header-container">
+        <h2 mat-dialog-title class="dialog-title">
+            {{ dialogTitle }}
+        </h2>
+        <button mat-icon-button (click)="onClose()" class="close-icon" title="Close">
             <mat-icon>close</mat-icon>
         </button>
     </div>
 
     <mat-dialog-content>
+        @if (!isEditMode) {
         <div class="content-grid">
             <!-- Left: Image & Key Stats -->
             <div class="sidebar">
@@ -32,82 +35,260 @@
                     <mat-divider></mat-divider>
                     <div class="stat-row">
                         <span class="label">Cost</span>
-                        <span class="value">{{ product.cost_price | currency }}</span>
+                        <span class="value">
+                            {{ product.is_bundle && getEffectiveCost() !== product.cost_price ? 'Est: ' : '' }}
+                            {{ getEffectiveCost() | currency }}
+                        </span>
                     </div>
                     <div class="stat-row secondary">
                         <span class="label">Avg Cost</span>
                         <span class="value">{{ (product.average_cost || 0) | currency }}</span>
                     </div>
+
+                    @if (product.is_bundle) {
+                    <mat-divider></mat-divider>
+                    <div class="bundle-status-stat">
+                        <mat-icon>inventory_2</mat-icon>
+                        <span>Product Bundle</span>
+                    </div>
+                    }
                 </div>
             </div>
 
             <!-- Right: Details & Status -->
             <div class="main-info">
-                <div class="info-section">
-                    <h3>Description</h3>
-                    <p>{{ product.description || 'No description available.' }}</p>
-                </div>
+                <div class="info-group">
+                    <div class="info-section">
+                        <h3>Description</h3>
+                        <p>{{ product.description || 'No description available.' }}</p>
+                    </div>
 
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="label">Brand</span>
-                        <span class="value">{{ product.brand || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Category</span>
-                        <span class="value">{{ product.category || '-' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="label">Manufacturer</span>
-                        <span class="value">{{ product.manufacturer || '-' }}</span>
-                    </div>
-                </div>
-
-                <div class="inventory-section">
-                    <h3>Inventory Status</h3>
-                    <div class="stock-badges">
-                        <strong class="stock-value"
-                            [class.in-stock]="(product.inventory_items?.[0]?.quantity || 0) > 0">{{
-                            product.inventory_items?.[0]?.quantity || 0 }}</strong>
-                        <!-- Add more badges if we had reserved/incoming -->
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Brand</span>
+                            <span class="value">{{ product.brand || '-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Category</span>
+                            <span class="value">{{ product.category || '-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Manufacturer</span>
+                            <span class="value">{{ product.manufacturer || '-' }}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="history-section">
-                    <h3>Purchase History</h3>
-                    <div *ngIf="purchaseHistory.length === 0" class="no-history">
-                        <p>No purchase history found.</p>
+                <div class="info-group alternate">
+                    @if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+                    <div class="bundle-components-section">
+                        <h3>Bundle Components</h3>
+                        <div class="bundle-components-list">
+                            @for (comp of product.bundle_components; track comp.id) {
+                            <div class="component-item" [title]="'View ' + (comp.component_name || 'Product')"
+                                (click)="onNavigateToProduct(comp.component_id)">
+                                <img [src]="getImageUrl(comp.component_image || '')" class="comp-thumb"
+                                    (error)="onImageError($event)">
+                                <div class="comp-info">
+                                    <span class="comp-name">{{ comp.component_name || 'Loading...' }}</span>
+                                    <span class="comp-qty">Qty: {{ comp.quantity }}</span>
+                                </div>
+                                <mat-icon class="arrow">chevron_right</mat-icon>
+                            </div>
+                            }
+                        </div>
                     </div>
-                    <table class="history-table" *ngIf="purchaseHistory.length > 0">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Supplier</th>
-                                <th class="numeric">Qty</th>
-                                <th class="numeric">Cost</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let record of purchaseHistory" (click)="onGoToPO(record.po_id)"
-                                class="clickable-row" title="View Purchase Order #{{record.po_id}}">
-                                <td class="date-col">
-                                    <span class="date-text">{{ record.date | date:'shortDate' }}</span>
-                                </td>
-                                <td>{{ record.supplier_name }}</td>
-                                <td class="numeric">{{ record.quantity }}</td>
-                                <td class="numeric">{{ record.unit_cost | currency }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    }
+
+                    @if (!product.is_bundle) {
+                    <div class="bundle-components-section part-of-bundles">
+                        <div class="section-header"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin: 0;">Part of Bundles</h3>
+                            <button mat-stroked-button color="primary" (click)="onCreateParentBundle()">
+                                <mat-icon>add_circle_outline</mat-icon> Create Bundle
+                            </button>
+                        </div>
+
+                        @if (product.part_of_bundles && product.part_of_bundles.length > 0) {
+                        <div class="bundle-components-list">
+                            @for (bundleComp of product.part_of_bundles; track $index) {
+                            <div class="component-item" [title]="'View Bundle ' + (bundleComp.bundle_name || 'Bundle')"
+                                (click)="onNavigateToProduct(bundleComp.bundle_id || 0)">
+                                <img [src]="getImageUrl(bundleComp.bundle_image || '')" class="comp-thumb"
+                                    (error)="onImageError($event)">
+                                <div class="comp-info">
+                                    <span class="comp-name">{{ bundleComp.bundle_name || 'Loading...' }}</span>
+                                    <span class="comp-qty">Contains {{ bundleComp.quantity }} of this</span>
+                                    <span class="bundle-stock-info"
+                                        style="font-size: 0.8rem; color: #666; display: block; margin-top: 2px;">
+                                        Bundle Stock: {{ bundleComp.bundle_stock || 0 }}
+                                    </span>
+                                </div>
+                                <mat-icon class="arrow">chevron_right</mat-icon>
+                            </div>
+                            }
+                        </div>
+                        } @else {
+                        <div class="no-bundles-msg" style="color: #666; font-size: 0.9rem; font-style: italic;">
+                            Not part of any bundles yet.
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+
+                <div class="info-group">
+                    <div class="inventory-section" [class.bundle-inventory]="product.is_bundle">
+                        <h3>Inventory Status</h3>
+                        <!-- Detailed Inventory Breakdown for Components -->
+                        @if (!product.is_bundle) {
+                        <div class="stock-breakdown-container">
+                            <div class="stock-item total">
+                                <span class="label">Total Physical</span>
+                                <strong class="stock-value">{{ getTotalPhysicalStock() }}</strong>
+                            </div>
+                            <div class="stock-operator minus">-</div>
+                            <div class="stock-item allocated" [class.active]="getAllocatedStock() > 0">
+                                <span class="label">Allocated to Bundles</span>
+                                <strong class="stock-value">{{ getAllocatedStock() }}</strong>
+                            </div>
+                            <div class="stock-operator equals">=</div>
+                            <div class="stock-item available">
+                                <span class="label">Available for Sale</span>
+                                <strong class="stock-value" [class.in-stock]="getAvailablePhysicalStock() > 0">
+                                    {{ getAvailablePhysicalStock() }}
+                                </strong>
+                            </div>
+                        </div>
+                        }
+
+                        <!-- Simplified Display for Bundles -->
+                        @if (product.is_bundle) {
+                        <div class="stock-badges">
+                            <div class="stock-main" title="Physical stock assembled/reserved">
+                                <span class="label">Physical Stock</span>
+                                <strong class="stock-value" [class.in-stock]="getAvailablePhysicalStock() > 0">
+                                    {{ getAvailablePhysicalStock() }}
+                                </strong>
+                            </div>
+                        </div>
+                        }
+
+                        <!-- Bundle Assembly UI -->
+                        @if (product.is_bundle) {
+                        <div class="bundle-assembly">
+                            @if (!isAssembling) {
+                            <button mat-stroked-button color="primary" class="full-width" (click)="startAssembly()">
+                                <mat-icon>archive</mat-icon> Reserve Bundle Stock
+                            </button>
+                            } @else {
+                            <div class="assembly-controls">
+                                <mat-form-field appearance="outline" class="qty-input" subscriptSizing="dynamic">
+                                    <mat-label>Qty</mat-label>
+                                    <input matInput type="number" [(ngModel)]="assembleQuantity" min="1">
+                                </mat-form-field>
+                                <button mat-icon-button color="primary" (click)="confirmAssembly()"
+                                    matTooltip="Confirm">
+                                    <mat-icon>check_circle</mat-icon>
+                                </button>
+                                <button mat-icon-button color="warn" (click)="cancelAssembly()" matTooltip="Cancel">
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+
+                    <div class="marketplaces-section">
+                        <h3>Marketplace Distribution</h3>
+                        <div class="marketplaces-list" *ngIf="product.marketplace_listings?.length">
+                            @for (listing of product.marketplace_listings; track $index) {
+                            <div class="marketplace-item">
+                                <div class="marketplace-header">
+                                    @if (getMarketplaceLogo(listing.marketplace_id)) {
+                                    <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo-small"
+                                        alt="logo">
+                                    } @else {
+                                    <mat-icon class="mp-icon">store</mat-icon>
+                                    }
+                                    <span class="mp-name">{{ getMarketplaceName(listing.marketplace_id) }}</span>
+                                    <div class="spacer"></div>
+                                    <span class="status-badge" [class.active]="listing.status === 'active'"
+                                        [class.pending]="listing.status === 'pending'"
+                                        [class.error]="listing.status === 'error'">
+                                        {{ listing.status | titlecase }}
+                                    </span>
+                                </div>
+                                <div class="mp-details">
+                                    <span class="label">SKU:</span>
+                                    <span class="value">{{ listing.external_listing_id || '-' }}</span>
+                                </div>
+                                <div class="mp-link" *ngIf="listing.listing_url">
+                                    <a [href]="listing.listing_url" target="_blank" class="view-link">
+                                        View on {{ getMarketplaceName(listing.marketplace_id) }}
+                                        <mat-icon>open_in_new</mat-icon>
+                                    </a>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                        <div class="no-marketplaces" *ngIf="!product.marketplace_listings?.length">
+                            <mat-icon>store</mat-icon>
+                            <p>Not listed on any marketplaces yet.</p>
+                        </div>
+                    </div>
+
+                    @if (purchaseHistory && purchaseHistory.length > 0) {
+                    <div class="history-section">
+                        <h3>Purchase History</h3>
+                        <div class="history-list">
+                            @for (item of purchaseHistory; track $index) {
+                            <div class="history-item" (click)="onGoToPO(item.po_id)">
+                                <div class="hist-main">
+                                    <span class="hist-date">{{ item.date | date:'shortDate' }}</span>
+                                    <span class="hist-po">PO #{{ item.po_id }}</span>
+                                    @if (item.status) {
+                                    <span class="hist-status-badge" [class.draft]="item.status === 'draft'">
+                                        {{ item.status | titlecase }}
+                                    </span>
+                                    }
+                                </div>
+                                <div class="hist-details">
+                                    <span class="hist-qty">Qty: {{ item.quantity }}</span>
+                                    <span class="hist-cost">{{ item.unit_cost | currency }}</span>
+                                </div>
+                                <mat-icon>chevron_right</mat-icon>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
                 </div>
             </div>
         </div>
+        } @else {
+        <div class="edit-mode-container">
+            <app-product-form #productForm [product]="product" [isDialogMode]="true" (productSaved)="onProductSaved()"
+                (formClosed)="onCancelEdit()">
+            </app-product-form>
+        </div>
+        }
     </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
+    <mat-dialog-actions align="end" class="dialog-actions">
+        @if (!isEditMode) {
         <button mat-button (click)="onClose()">Close</button>
-        <button mat-flat-button color="primary" (click)="onEdit()">
+        <button mat-raised-button color="primary" (click)="onEdit()">
             <mat-icon>edit</mat-icon> Edit Product
         </button>
+        } @else {
+        <button mat-button (click)="onCancelEdit()">Cancel</button>
+        <button mat-raised-button color="primary" (click)="saveProduct()" [disabled]="isFormInvalid">
+            <mat-icon>save</mat-icon>
+            <span>Save Changes</span>
+        </button>
+        }
     </mat-dialog-actions>
 </div>

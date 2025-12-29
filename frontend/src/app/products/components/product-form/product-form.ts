@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
 import { Product, ProductImage } from '../../models/product.model';
@@ -14,6 +14,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
@@ -32,6 +34,7 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -42,11 +45,14 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
     MatTooltipModule,
     ProductFormImageGalleryComponent,
     ProductVariantsComponent,
-    MatTabsModule
+    MatTabsModule,
+    MatSlideToggleModule,
+    MatAutocompleteModule
   ],
 })
 export class ProductForm implements OnInit {
   @Input() product?: Product | null;
+  @Input() isDialogMode: boolean = false;
   @Output() productSaved = new EventEmitter<void>();
   @Output() formClosed = new EventEmitter<void>();
 
@@ -61,6 +67,8 @@ export class ProductForm implements OnInit {
   originalValues: any = {};
   originalCustomFieldValues: any = {};
   productVariants: ProductVariant[] = [];
+  bundleComponents: any[] = [];
+  availableProducts: Product[] = [];
   returnToPO = false;
   private destroy$ = new Subject<void>();
 
@@ -87,6 +95,7 @@ export class ProductForm implements OnInit {
       height: [0, [Validators.min(0)]],
       depth: [0, [Validators.min(0)]],
       weight: [0, [Validators.min(0)]],
+      is_bundle: [false],
     });
   }
 
@@ -117,17 +126,18 @@ export class ProductForm implements OnInit {
 
   private initializeSidePanelMode(): void {
     console.log('ProductForm: initializeSidePanelMode');
-    // Side panel mode - use the passed product
-    this.isEditMode = true;
+    this.isEditMode = !!this.product!.id;
     this.productId = this.product!.id || null;
 
-    // Use forkJoin to load all necessary data in parallel
-    const product$ = this.productService.getProductById(this.product!.id!).pipe(
-      catchError(error => {
-        console.error('Error loading full product details:', error);
-        return of(this.product!); // Fallback to partial product
-      })
-    );
+    // If we have an ID, load full details. If not (e.g. creating a bundle from existing), allow using passed product as is.
+    const product$ = this.productId
+      ? this.productService.getProductById(this.productId).pipe(
+        catchError(error => {
+          console.error('Error loading full product details:', error);
+          return of(this.product!); // Fallback to partial product
+        })
+      )
+      : of(this.product!);
 
     const customFields$ = this.customFieldService.getCustomFields().pipe(
       catchError(error => {
@@ -151,33 +161,65 @@ export class ProductForm implements OnInit {
       variants: variants$
     }).pipe(
       takeUntil(this.destroy$)
-    ).subscribe(({ product, customFields, variants }) => {
-      console.log('ProductForm: Side panel data loaded');
-      // Handle Product Data
-      this.product = product;
-      this.productId = product.id || null;
+    ).subscribe({
+      next: ({ product, customFields, variants }) => {
+        console.log('ProductForm: Side panel data loaded');
+        // Handle Product Data
+        this.product = product;
+        this.productId = product.id || null;
 
-      if (product) {
-        this.productForm.patchValue(product);
+        if (product) {
+          this.productForm.patchValue(product);
 
-        if (this.isEditMode) {
-          this.originalValues = { ...product };
-          this.originalCustomFieldValues = {};
-          if (product.custom_fields) {
-            product.custom_fields.forEach(fieldValue => {
-              this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
+          if (this.isEditMode) {
+            this.originalValues = { ...product };
+            this.originalCustomFieldValues = {};
+            if (product.custom_fields) {
+              product.custom_fields.forEach(fieldValue => {
+                this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
+              });
+            }
+          }
+
+          // Handle Bundles - Logic copied from handleInitializationData
+          if (product.bundle_components) {
+            this.bundleComponents = product.bundle_components.map(bc => {
+              // If coming from backend, it might have nested component.
+              // If coming from onCreateParentBundle, it matches the structure directly but 'component' inner obj might be missing or different.
+              const component = (bc as any).component;
+              let stock = 0;
+              if (component && component.inventory_items) {
+                stock = component.inventory_items.reduce((acc: any, item: any) => acc + item.quantity, 0);
+              } else if ((bc as any).component_stock !== undefined) {
+                // Fallback if stock is pre-calculated or passed
+                stock = (bc as any).component_stock;
+              }
+
+              return {
+                ...bc,
+                component_name: component?.name || bc.component_name || 'Loading...',
+                component_image: component?.primary_image?.image_path || bc.component_image,
+                component_stock: stock,
+                component_cost: component?.cost_price || (bc as any).component_cost || 0
+              };
             });
+
+            // If creating a bundle, update the cost if needed
+            if (!this.isEditMode && product.is_bundle) {
+              this.updateSuggestedBundleCost();
+            }
           }
         }
-      }
 
-      // Handle Custom Fields
-      this.customFields = customFields;
-      this.addCustomFieldControls();
-      this.patchCustomFieldValues();
+        // Handle Custom Fields
+        this.customFields = customFields;
+        this.addCustomFieldControls();
+        this.patchCustomFieldValues();
 
-      // Handle Variants
-      this.productVariants = variants;
+        // Handle Variants
+        this.productVariants = variants;
+      },
+      error: (err) => console.error('Error initializing side panel', err)
     });
   }
 
@@ -234,6 +276,24 @@ export class ProductForm implements OnInit {
             this.originalCustomFieldValues[`custom_field_${fieldValue.custom_field_id}`] = fieldValue.value;
           });
         }
+      }
+
+      // Handle Bundles
+      if (data.product.bundle_components) {
+        this.bundleComponents = data.product.bundle_components.map(bc => {
+          const component = (bc as any).component;
+          let stock = 0;
+          if (component && component.inventory_items) {
+            stock = component.inventory_items.reduce((acc: any, item: any) => acc + item.quantity, 0);
+          }
+          return {
+            ...bc,
+            component_name: component?.name || bc.component_name || 'Loading...',
+            component_image: component?.primary_image?.image_path || bc.component_image,
+            component_stock: stock,
+            component_cost: component?.cost_price || 0
+          };
+        });
       }
     }
 
@@ -363,6 +423,11 @@ export class ProductForm implements OnInit {
       height: formValue.height,
       depth: formValue.depth,
       weight: formValue.weight,
+      is_bundle: formValue.is_bundle,
+      bundle_components: formValue.is_bundle ? this.bundleComponents.map(bc => ({
+        component_id: bc.component_id,
+        quantity: bc.quantity
+      })) : []
     };
 
     // Handle custom fields
@@ -575,6 +640,51 @@ export class ProductForm implements OnInit {
         });
       }
     }
+  }
+
+  onImageError(event: any): void {
+    event.target.src = 'assets/placeholder.jpg';
+  }
+
+  onAddBundleComponent(product: Product): void {
+    const existing = this.bundleComponents.find(c => c.component_id === product.id);
+    if (existing) {
+      existing.quantity++;
+    } else {
+      let stock = 0;
+      if (product.inventory_items) {
+        stock = product.inventory_items.reduce((acc, item) => acc + item.quantity, 0);
+      }
+
+      this.bundleComponents.push({
+        component_id: product.id,
+        component_name: product.name,
+        component_image: product.primary_image?.image_path || (product.images && product.images.length > 0 ? product.images[0].image_path : undefined),
+        quantity: 1,
+        component_stock: stock,
+        component_cost: product.cost_price || 0
+      });
+    }
+    this.updateSuggestedBundleCost();
+  }
+
+  onRemoveBundleComponent(index: number): void {
+    this.bundleComponents.splice(index, 1);
+    this.updateSuggestedBundleCost();
+  }
+
+  updateSuggestedBundleCost(): void {
+    if (this.productForm.get('is_bundle')?.value) {
+      const totalCost = this.bundleComponents.reduce((acc, c) => acc + ((c.component_cost || 0) * c.quantity), 0);
+      this.productForm.patchValue({ cost_price: totalCost });
+    }
+  }
+
+  searchProducts(query: string): void {
+    if (query.length < 2) return;
+    this.productService.searchProductsIsolated(query).subscribe(res => {
+      this.availableProducts = res.data.filter(p => p.id !== this.productId);
+    });
   }
 
   getMarketplaceName(id: number): string {

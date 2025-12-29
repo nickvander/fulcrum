@@ -43,6 +43,11 @@ const routes: Routes = [
       ),
   },
   { path: 'users', loadChildren: () => import('./users/users-module').then(m => m.UsersModule) },
+  {
+    path: 'expenses',
+    loadComponent: () => import('./expenses/components/expense-list/expense-list').then(m => m.ExpenseListComponent),
+    canActivate: [AuthGuard]
+  },
   { path: 'suppliers', loadChildren: () => import('./suppliers/suppliers.module').then(m => m.SuppliersModule), canActivate: [AuthGuard] },
   { path: 'marketplaces', loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule), canActivate: [AuthGuard] },
 

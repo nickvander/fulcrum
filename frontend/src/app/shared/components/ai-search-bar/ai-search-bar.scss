@@ -1,4 +1,13 @@
-.search-bar {
+.ai-search-container {
   width: 100%;
-  margin-bottom: 1.5rem;
+  max-width: 100%;
+}
+
+.search-field {
+  width: 100%;
+
+  // Remove bottom margin from form field wrapper to sit tighter with filters
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    margin-bottom: -1.25em;
+  }
 }
