@@ -96,15 +96,13 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     // Check for product_id query param for autofill
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
-      console.log('PurchaseOrderEdit: Query Params received', params);
       if (params['product_id'] && !this.isEditMode) {
-        console.log('PurchaseOrderEdit: Triggering autofill for product', params['product_id']);
         this.handleProductAutofill(+params['product_id']);
       }
     });
   }
 
-  handleProductAutofill(productId: number): void {
+  handleProductAutofill(productId: number, quantityToAdd: number = 1): void {
     console.log('handleProductAutofill started for', productId);
 
     // Fetch Product AND its Supplier options
@@ -113,9 +111,21 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       this.suppliersService.getSuppliersForProduct(productId)
     ).subscribe(([product, supplierProducts]) => {
       if (product) {
-        // Determine which supplier to use
+        // --- Bundle Handling ---
+        if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+          this.snackBar.open(`Unpacking bundle: ${product.name}...`, 'Close', { duration: 2000 });
+          product.bundle_components.forEach(component => {
+            // Recursively add each component
+            // Note: Component logic assumes component_id is a valid Product ID
+            this.handleProductAutofill(component.component_id, component.quantity * quantityToAdd);
+          });
+          return; // Stop here, do not add the bundle itself
+        }
+
+        // --- Standard Product Handling ---
         let selectedSupplierId = this.poForm.get('supplier_id')?.value;
         let selectedSupplierProduct: any = null;
+        let unitCost = 0;
 
         // If no supplier selected yet for the PO
         if (!selectedSupplierId) {
@@ -138,10 +148,10 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
                 selectedSupplierId = result.supplier_id;
                 selectedSupplierProduct = result;
                 this.poForm.patchValue({ supplier_id: selectedSupplierId });
-                this.finishAddingLineItem(product, 1, result.cost_price);
+                this.finishAddingLineItem(product, quantityToAdd, result.cost_price);
               } else {
                 // Cancelled or no selection, just add item with default cost
-                this.finishAddingLineItem(product);
+                this.finishAddingLineItem(product, quantityToAdd);
               }
             });
             return; // Exit here, finishAddingLineItem called in callback
@@ -150,6 +160,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             if (product.supplier_id) {
               selectedSupplierId = product.supplier_id;
               this.poForm.patchValue({ supplier_id: selectedSupplierId });
+              this.snackBar.open(`Used default supplier from product`, 'Close', { duration: 3000 });
             }
           }
         } else {
@@ -161,7 +172,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         }
 
         const cost = selectedSupplierProduct ? selectedSupplierProduct.cost_price : (product.cost_price || 0);
-        this.finishAddingLineItem(product, 1, cost);
+        this.finishAddingLineItem(product, quantityToAdd, cost);
       }
     });
   }
