@@ -1,18 +1,56 @@
-<h2 mat-dialog-title>{{ data.expense ? 'Edit Expense' : 'Add New Expense' }}</h2>
+<h2 mat-dialog-title>
+    <mat-icon>{{isEditMode ? 'edit' : 'add_circle'}}</mat-icon>
+    {{isEditMode ? 'Edit Expense' : 'Add Expense'}}
+</h2>
+
 <mat-dialog-content>
     <form [formGroup]="expenseForm" class="expense-form">
-        <mat-form-field class="full-width">
+        <!-- Expense Type Toggle -->
+        <div class="form-section">
+            <label class="section-label">Expense Type</label>
+            <mat-button-toggle-group formControlName="expense_type" class="type-toggle">
+                <mat-button-toggle value="one_time">
+                    <mat-icon>event</mat-icon> One-time
+                </mat-button-toggle>
+                <mat-button-toggle value="recurring">
+                    <mat-icon>repeat</mat-icon> Recurring
+                </mat-button-toggle>
+            </mat-button-toggle-group>
+        </div>
+
+        <!-- Recurrence Interval (shown only for recurring) -->
+        @if (isRecurring) {
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Recurrence Interval</mat-label>
+            <mat-select formControlName="recurrence_interval">
+                @for (interval of recurrenceIntervals; track interval.value) {
+                <mat-option [value]="interval.value">{{interval.label}}</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        }
+
+        <!-- Description -->
+        <mat-form-field appearance="outline" class="full-width">
             <mat-label>Description</mat-label>
-            <input matInput formControlName="description">
+            <input matInput formControlName="description" placeholder="What is this expense for?">
+            <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
+                Description is required
+            </mat-error>
         </mat-form-field>
 
-        <div class="row">
-            <mat-form-field>
+        <!-- Amount & Currency Row -->
+        <div class="form-row">
+            <mat-form-field appearance="outline" class="amount-field">
                 <mat-label>Amount</mat-label>
-                <input matInput type="number" formControlName="amount">
+                <span matTextPrefix>$&nbsp;</span>
+                <input matInput type="number" formControlName="amount" step="0.01">
+                <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
+                    Amount must be greater than 0
+                </mat-error>
             </mat-form-field>
 
-            <mat-form-field>
+            <mat-form-field appearance="outline" class="currency-field">
                 <mat-label>Currency</mat-label>
                 <mat-select formControlName="currency">
                     @for (curr of currencies; track curr) {
@@ -22,26 +60,62 @@
             </mat-form-field>
         </div>
 
-        <div class="row">
-            <mat-form-field>
-                <mat-label>Category</mat-label>
-                <mat-select formControlName="category">
-                    @for (cat of categories; track cat) {
-                    <mat-option [value]="cat">{{cat}}</mat-option>
+        <!-- Category -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Category</mat-label>
+            <mat-select formControlName="category" (selectionChange)="onCategoryChange($event.value)">
+                @for (cat of categories; track cat) {
+                <mat-option [value]="cat">{{cat}}</mat-option>
+                }
+                <mat-option value="__custom__">+ Add Custom Category</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <!-- Custom Category Input -->
+        @if (showCustomCategory) {
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Custom Category Name</mat-label>
+            <input matInput formControlName="customCategory" placeholder="Enter custom category">
+        </mat-form-field>
+        }
+
+        <!-- Date -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <!-- Payment Method & Reference Row -->
+        <div class="form-row">
+            <mat-form-field appearance="outline" class="flex-field">
+                <mat-label>Payment Method</mat-label>
+                <mat-select formControlName="payment_method">
+                    <mat-option [value]="null">Not specified</mat-option>
+                    @for (method of paymentMethods; track method.value) {
+                    <mat-option [value]="method.value">{{method.label}}</mat-option>
                     }
                 </mat-select>
             </mat-form-field>
 
-            <mat-form-field>
-                <mat-label>Date</mat-label>
-                <input matInput [matDatepicker]="picker" formControlName="date">
-                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-                <mat-datepicker #picker></mat-datepicker>
+            <mat-form-field appearance="outline" class="flex-field">
+                <mat-label>Reference #</mat-label>
+                <input matInput formControlName="reference_number" placeholder="Invoice/Receipt #">
             </mat-form-field>
         </div>
+
+        <!-- Notes -->
+        <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="notes" rows="3" placeholder="Additional details..."></textarea>
+        </mat-form-field>
     </form>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-raised-button color="primary" [disabled]="expenseForm.invalid" (click)="onSubmit()">Save</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!expenseForm.valid">
+        {{isEditMode ? 'Save Changes' : 'Add Expense'}}
+    </button>
 </mat-dialog-actions>

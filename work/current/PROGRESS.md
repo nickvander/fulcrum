@@ -50,7 +50,7 @@
 
 - **2025-12-28**: Phase 9- **Phase 9: Business Operations Core** (In Progress)
   - [x] Inventory & Cost Engine (Bundles, Expenses, Landed Costs)
-  - [ ] Supplier & Restock
+  - [/] Supplier & Restock (UI & Lists Improved)
   - [ ] Marketing Operations
     - Plan created: `work/current/64-business-operations-plan.md`.
     - Focus: Cost/Expense tracking, Bundles, and 1P Storefront.
@@ -69,3 +69,33 @@
         - Replaced full-page loading spinner with a **non-blocking progress bar** overlay.
         - Updated filter field styling: compact inputs, proper currency prefix spacing, flexible widths.
     - **Inventory Details**: Clarified stock breakdown (Total Physical - Allocated = Available).
+
+- **2025-12-28**: Expense Module Enhancement
+    - **Bug Fix**: Fixed double `/v1` URL bug in `expense.service.ts` (was causing 404 errors).
+    - **Backend Enhancements**:
+        - Extended `Expense` model with `expense_type`, `recurrence_interval`, `reference_number`, `payment_method`, `notes`, `is_custom_category`.
+        - Created Alembic migration `180734c2b528_add_expense_tracking_fields.py`.
+        - Added `/expenses/summary` and `/expenses/categories` endpoints.
+    - **Frontend UI Modernization**:
+        - Redesigned `expense-list` with KPI widgets (Total, Recurring, One-time, Entries).
+        - Enhanced `expense-dialog` with expense type toggle, custom categories, payment method.
+        - Modernized `purchase-order-list` with matching KPI widgets and improved styling.
+    - **Documentation**:
+        - Updated `docs/user-guides/expenses.md`.
+        - Created `docs/concepts/expense-model.md` with ERD diagram.
+
+- **2025-12-28**: Purchasing UI Refinements
+    - **Navigation**:
+        - Reordered "Purchasing" menu: Purchase Orders -> Expenses -> Suppliers.
+        - Fixed styling and alignment to match other nav items.
+    - **Purchase Orders**:
+        - Fixed date filter timezone issue (UTC vs Local).
+        - Added **Sorting** to all columns.
+        - Added **Supplier Filter** dropdown.
+        - Integrated "Deep Linking" from Supplier list (click PO count -> filtered PO list).
+    - **Suppliers**:
+        - Implemented `SupplierListComponent` with actual PO counts/values calculated via `forkJoin`.
+        - Added **Sorting** to supplier table.
+    - **Expenses**:
+        - Refactored to **client-side filtering** to eliminate page stutter on date changes.
+        - Added **Sorting** to expense table.
