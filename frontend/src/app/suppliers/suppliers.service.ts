@@ -70,11 +70,15 @@ export class SuppliersService {
     return this.http.get<SupplierInvoice[]>(`${this.apiUrl}/purchase-orders/${poId}/invoices`);
   }
 
-  getCostAllocationPreview(poId: number, excludedItems: number[] = []): Observable<any> {
+  getCostAllocationPreview(poId: number, excludedItems: number[] = [], overrides: any = {}): Observable<any> {
     let params = new HttpParams();
     excludedItems.forEach(id => {
       params = params.append('excluded_items', id.toString());
     });
+    if (overrides.shipping_cost !== undefined) params = params.append('shipping_cost', overrides.shipping_cost);
+    if (overrides.tax_amount !== undefined) params = params.append('tax_amount', overrides.tax_amount);
+    if (overrides.other_costs !== undefined) params = params.append('other_costs', overrides.other_costs);
+
     return this.http.get(`${this.apiUrl}/purchase-orders/${poId}/costs/preview`, { params });
   }
 

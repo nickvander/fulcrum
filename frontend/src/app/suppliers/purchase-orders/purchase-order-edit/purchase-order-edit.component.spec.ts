@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PurchaseOrderEditComponent } from './purchase-order-edit.component';
 import { SuppliersService } from '../../suppliers.service';
+import { UserService } from '../../../users/services/user.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -36,7 +37,7 @@ describe('PurchaseOrderEditComponent', () => {
         MatSnackBarModule,
         MatAutocompleteModule
       ],
-      providers: [SuppliersService]
+      providers: [SuppliersService, UserService]
     })
       .compileComponents();
 

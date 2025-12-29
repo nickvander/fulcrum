@@ -28,6 +28,7 @@ export interface CostAllocationPreview {
 
 export interface CostAllocationDialogData {
     poId: number;
+    overrides?: any;
 }
 
 @Component({
@@ -59,7 +60,7 @@ export class CostAllocationDialogComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.suppliersService.getCostAllocationPreview(this.data.poId, Array.from(this.excludedItems))
+        this.suppliersService.getCostAllocationPreview(this.data.poId, Array.from(this.excludedItems), this.data.overrides)
             .subscribe({
                 next: (preview: any) => {
                     this.preview = preview as CostAllocationPreview;

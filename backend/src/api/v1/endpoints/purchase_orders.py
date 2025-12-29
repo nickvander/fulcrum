@@ -1,7 +1,7 @@
 from typing import List, Any
 import os
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -190,7 +190,10 @@ def preview_cost_allocation(
     *,
     db: Session = Depends(get_db),
     id: int,
-    excluded_items: List[int] = [],  # Passed as query params: ?excluded_items=1&excluded_items=2
+    excluded_items: List[int] = Query([], alias="excluded_items"),  # Use Query for list
+    shipping_cost: float = None,
+    tax_amount: float = None,
+    other_costs: float = None,
 ):
     """
     Preview how additional costs (shipping, taxes, other) will be allocated
@@ -200,22 +203,27 @@ def preview_cost_allocation(
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     
+    # Use provided values or fallback to DB values
+    # Treating explicit 0 as override (check for None)
+    c_shipping = shipping_cost if shipping_cost is not None else (po.shipping_cost or 0)
+    c_tax = tax_amount if tax_amount is not None else (po.tax_amount or 0)
+    c_other = other_costs if other_costs is not None else (po.other_costs or 0)
+
     # Calculate total quantity across all items (excluding ignored ones)
     allocatable_items = [item for item in po.items if item.id not in excluded_items]
     total_qty = sum(item.quantity_ordered for item in allocatable_items)
     
     # Calculate per-unit costs (handled gracefully if no items)
     if total_qty > 0:
-        per_unit_shipping = (po.shipping_cost or 0) / total_qty
-        per_unit_taxes = (po.tax_amount or 0) / total_qty
-        per_unit_other = (po.other_costs or 0) / total_qty
+        per_unit_shipping = c_shipping / total_qty
+        per_unit_taxes = c_tax / total_qty
+        per_unit_other = c_other / total_qty
     else:
         per_unit_shipping = 0
         per_unit_taxes = 0
         per_unit_other = 0
     
     # Build preview for each item
-    preview_items = []
     preview_items = []
     for item in po.items:
         product_name = item.product.name if item.product else f"Product #{item.product_id}"
@@ -250,9 +258,9 @@ def preview_cost_allocation(
     
     return CostAllocationPreview(
         po_id=po.id,
-        total_shipping=po.shipping_cost or 0,
-        total_taxes=po.tax_amount or 0,
-        total_other=po.other_costs or 0,
+        total_shipping=c_shipping,
+        total_taxes=c_tax,
+        total_other=c_other,
         total_quantity=total_qty,
         per_unit_shipping=per_unit_shipping,
         per_unit_taxes=per_unit_taxes,

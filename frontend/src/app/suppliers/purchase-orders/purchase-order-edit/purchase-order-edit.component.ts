@@ -360,21 +360,20 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Auto-save changes before calculating costs to ensure backend has latest values
-    if (this.poForm.dirty) {
-      this.snackBar.open('Saving changes for calculation...', 'Close', { duration: 1500 });
-      this.updateOrder().subscribe(() => {
-        this.openCostAllocationDialog();
-      });
-    } else {
-      this.openCostAllocationDialog();
-    }
+    const formValue = this.poForm.value;
+    const overrides = {
+      shipping_cost: formValue.shipping_cost,
+      tax_amount: formValue.import_cost,
+      other_costs: formValue.other_costs
+    };
+
+    this.openCostAllocationDialog(overrides);
   }
 
-  openCostAllocationDialog(): void {
+  openCostAllocationDialog(overrides?: any): void {
     const dialogRef = this.dialog.open(CostAllocationDialogComponent, {
       width: '900px',
-      data: { poId: this.poId }
+      data: { poId: this.poId, overrides }
     });
 
     dialogRef.afterClosed().subscribe(applied => {
