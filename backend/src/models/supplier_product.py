@@ -39,3 +39,11 @@ class SupplierProduct(Base):
     # Relationships
     product = relationship("Product", backref="supplier_products")
     supplier = relationship("Supplier", backref="supplier_products")
+
+    @property
+    def product_name(self):
+        return self.product.name if self.product else None
+
+    @property
+    def supplier_name(self):
+        return self.supplier.name if self.supplier else None

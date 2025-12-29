@@ -38,6 +38,15 @@ The dashboard is built using a **Widget Architecture**:
 - Widgets are standalone Angular components for maximum modularity.
 - Data is fetched reactively via the `DashboardStatsService`.
 
+### Inventory Health Widget
+- **Purpose**: A dedicated "Act Now" list for inventory managers.
+- **Logic**: Flags items that are critical based on:
+    - **Low Quantity**: < Global Threshold (default 10) OR Per-Product Custom Threshold.
+    - **Low Days of Inventory**: < 30 Days (calculated based on sales velocity).
+- **Actions**:
+    - **Status Indicators**: Explicit text ("Low Quantity: 5 units" or "12 Days Left").
+    - **Fast Add**: "Add to Cart" button immediately adds the item to your active drafted Purchase Order (or creates a new one).
+
 ### DashboardStatsService
 - Consolidates data from `ProductService` and `SuppliersService`.
 - Implements `forkJoin` to fetch all necessary data in parallel.

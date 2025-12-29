@@ -18,6 +18,7 @@ from src.api.v1.endpoints import (
     webhooks,
     settings,
     expenses,
+    inventory_settings,
 )
 
 api_router = APIRouter()
@@ -31,6 +32,7 @@ api_router.include_router(marketplace.router, prefix="/marketplace", tags=["mark
 api_router.include_router(marketplace_credentials.router, prefix="/marketplace-credentials", tags=["marketplace-credentials"])
 api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
+api_router.include_router(inventory_settings.router, prefix="/inventory-settings", tags=["inventory-settings"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
 api_router.include_router(custom_fields.router, prefix="/custom-fields", tags=["custom-fields"])

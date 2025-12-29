@@ -79,6 +79,12 @@ export interface Product {
   is_bundle: boolean;
   bundle_components?: BundleComponent[];
   part_of_bundles?: BundleComponent[];
+  sales_velocity?: number;
+  days_of_inventory?: number;
+
+  low_inventory_threshold?: number;
+  low_stock_quantity_threshold?: number;
+  stock_quantity?: number; // Convenience field often used in UI
 }
 
 export interface BundleComponent {

@@ -176,9 +176,16 @@
           <!-- Stock Row -->
           <div class="stock-row">
             <span class="stock-label">Stock:</span>
-            <span class="stock-value" [class.low-stock]="getCurrentStock(product) <= 10"
+            <span class="stock-value"
+              [class.low-stock]="getCurrentStock(product) < (product.low_stock_quantity_threshold || 10) || (product.days_of_inventory !== undefined && product.days_of_inventory < (product.low_inventory_threshold || 30))"
               [class.out-of-stock]="getCurrentStock(product) === 0">
               {{ getCurrentStock(product) }}
+            </span>
+            <span *ngIf="product.days_of_inventory !== undefined && product.days_of_inventory < 999"
+              class="ml-2 text-xs"
+              [class.text-red-500]="product.days_of_inventory < (product.low_inventory_threshold || 30)"
+              matTooltip="Days of Inventory based on 30-day velocity">
+              ({{ product.days_of_inventory | number:'1.0-0' }}d)
             </span>
             <div *ngIf="!product.is_bundle && getAllocatedBundleNames(product)" class="allocated-badge-small"
               [matTooltip]="'Designated for: ' + getAllocatedBundleNames(product)">
@@ -317,10 +324,16 @@
       <ng-container matColumnDef="stock">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Stock </th>
         <td mat-cell *matCellDef="let element">
-          <span [class.low-stock]="getCurrentStock(element) <= 10"
+          <span
+            [class.low-stock]="getCurrentStock(element) < (element.low_stock_quantity_threshold || 10) || (element.days_of_inventory !== undefined && element.days_of_inventory < (element.low_inventory_threshold || 30))"
             [class.out-of-stock]="getCurrentStock(element) === 0">
             {{getCurrentStock(element)}}
           </span>
+          <div *ngIf="element.days_of_inventory !== undefined && element.days_of_inventory < 999"
+            class="text-xs text-gray-500 mt-1"
+            [class.text-red-500]="element.days_of_inventory < (element.low_inventory_threshold || 30)">
+            {{ element.days_of_inventory | number:'1.0-1' }} days
+          </div>
         </td>
       </ng-container>
       <!-- Marketplace Status Column -->

@@ -18,7 +18,20 @@ Suppliers are the external entities from whom you source products. The system al
 ### Product Integration
 Each product can be linked to a primary `Supplier`. You can also specify a **Supplier SKU** (`supplier_sku`), which is the unique identifier the supplier uses for that product (which may differ from your internal SKU).
 
-## Purchase Orders (POs)
+**Managing Supplier Products:**
+1. Navigate to a **Supplier Detail** page.
+2. Click the **Products** tab.
+3. View all products sourced from this supplier, including cost and lead times.
+4. Click on a **Product Name** to navigate to its full details page for editing.
+
+### Viewing Product Sources
+
+```bash
+# Get all suppliers for a product
+GET /api/v1/supplier-products/by-product/{product_id}
+# Get all products from a supplier  
+GET /api/v1/suppliers/{id}/products
+```
 
 Purchase Orders track the lifecycle of ordering stock from suppliers.
 

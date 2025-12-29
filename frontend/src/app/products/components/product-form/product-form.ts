@@ -95,6 +95,8 @@ export class ProductForm implements OnInit {
       height: [0, [Validators.min(0)]],
       depth: [0, [Validators.min(0)]],
       weight: [0, [Validators.min(0)]],
+      low_inventory_threshold: [null, [Validators.min(0)]],
+      low_stock_quantity_threshold: [null, [Validators.min(0)]],
       is_bundle: [false],
     });
   }
@@ -345,7 +347,7 @@ export class ProductForm implements OnInit {
       // Compare current form values with original values for standard fields
       const standardFields = [
         'name', 'sku', 'description', 'default_resale_price', 'cost_price',
-        'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight'
+        'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight', 'low_inventory_threshold', 'low_stock_quantity_threshold'
       ];
 
       for (const key of standardFields) {
@@ -423,6 +425,8 @@ export class ProductForm implements OnInit {
       height: formValue.height,
       depth: formValue.depth,
       weight: formValue.weight,
+      low_inventory_threshold: formValue.low_inventory_threshold,
+      low_stock_quantity_threshold: formValue.low_stock_quantity_threshold,
       is_bundle: formValue.is_bundle,
       bundle_components: formValue.is_bundle ? this.bundleComponents.map(bc => ({
         component_id: bc.component_id,

@@ -148,6 +148,20 @@
                 </mat-form-field>
 
                 <mat-form-field>
+                  <mat-label>Low Stock Threshold (Days)</mat-label>
+                  <input matInput formControlName="low_inventory_threshold" type="number" placeholder="Default: 30"
+                    min="0">
+                  <mat-hint>Override global setting (leave empty for default)</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field>
+                  <mat-label>Low Stock Quantity (Units)</mat-label>
+                  <input matInput formControlName="low_stock_quantity_threshold" type="number" placeholder="Default: 10"
+                    min="0">
+                  <mat-hint>Override global unit threshold (leave empty for default)</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field>
                   <mat-label>Cost Price</mat-label>
                   <input matInput formControlName="cost_price" type="number" placeholder="0.00">
                 </mat-form-field>

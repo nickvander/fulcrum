@@ -1,91 +1,105 @@
 <div class="supplier-detail-container">
-    <h1>{{ isEditMode ? 'Edit' : 'Create' }} Supplier</h1>
+    <div class="header-row">
+        <h1>{{ isEditMode ? 'Edit' : 'Create' }} Supplier</h1>
+    </div>
 
-    <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
-        <mat-card class="form-section">
-            <h3>Basic Info</h3>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Name</mat-label>
-                    <input matInput formControlName="name">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Contact Person</mat-label>
-                    <input matInput formControlName="contact_person">
-                </mat-form-field>
-            </div>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Email</mat-label>
-                    <input matInput formControlName="email">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Phone</mat-label>
-                    <input matInput formControlName="phone">
-                </mat-form-field>
-            </div>
-        </mat-card>
+    <mat-tab-group>
+        <mat-tab label="Details">
+            <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="tab-content">
+                <mat-card class="form-section">
+                    <h3>Basic Info</h3>
+                    <div class="row">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Name</mat-label>
+                            <input matInput formControlName="name">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Contact Person</mat-label>
+                            <input matInput formControlName="contact_person">
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Email</mat-label>
+                            <input matInput formControlName="email">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Phone</mat-label>
+                            <input matInput formControlName="phone">
+                        </mat-form-field>
+                    </div>
+                </mat-card>
 
-        <mat-card class="form-section">
-            <h3>Address</h3>
-            <div class="row">
-                <mat-form-field appearance="fill" class="full-width">
-                    <mat-label>Street</mat-label>
-                    <input matInput formControlName="address_street">
-                </mat-form-field>
-            </div>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>City</mat-label>
-                    <input matInput formControlName="address_city">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>State</mat-label>
-                    <input matInput formControlName="address_state">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Zip</mat-label>
-                    <input matInput formControlName="address_zip">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Country</mat-label>
-                    <input matInput formControlName="address_country">
-                </mat-form-field>
-            </div>
-        </mat-card>
+                <mat-card class="form-section">
+                    <h3>Address</h3>
+                    <div class="row">
+                        <mat-form-field appearance="fill" class="full-width">
+                            <mat-label>Street</mat-label>
+                            <input matInput formControlName="address_street">
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field appearance="fill">
+                            <mat-label>City</mat-label>
+                            <input matInput formControlName="address_city">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>State</mat-label>
+                            <input matInput formControlName="address_state">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Zip</mat-label>
+                            <input matInput formControlName="address_zip">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Country</mat-label>
+                            <input matInput formControlName="address_country">
+                        </mat-form-field>
+                    </div>
+                </mat-card>
 
-        <mat-card class="form-section">
-            <h3>Financials & Details</h3>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Tax ID</mat-label>
-                    <input matInput formControlName="tax_id">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Payment Terms</mat-label>
-                    <input matInput formControlName="payment_terms">
-                </mat-form-field>
-                <mat-form-field appearance="fill">
-                    <mat-label>Currency</mat-label>
-                    <input matInput formControlName="currency">
-                </mat-form-field>
-            </div>
-            <div class="row">
-                <mat-form-field appearance="fill" class="full-width">
-                    <mat-label>Website</mat-label>
-                    <input matInput formControlName="website">
-                </mat-form-field>
-            </div>
-            <div class="row">
-                <mat-form-field appearance="fill" class="full-width">
-                    <mat-label>Internal Notes</mat-label>
-                    <textarea matInput formControlName="internal_notes"></textarea>
-                </mat-form-field>
-            </div>
-        </mat-card>
+                <mat-card class="form-section">
+                    <h3>Financials & Details</h3>
+                    <div class="row">
+                        <mat-form-field appearance="fill">
+                            <mat-label>Tax ID</mat-label>
+                            <input matInput formControlName="tax_id">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Payment Terms</mat-label>
+                            <input matInput formControlName="payment_terms">
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>Currency</mat-label>
+                            <input matInput formControlName="currency">
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field appearance="fill" class="full-width">
+                            <mat-label>Website</mat-label>
+                            <input matInput formControlName="website">
+                        </mat-form-field>
+                    </div>
+                    <div class="row">
+                        <mat-form-field appearance="fill" class="full-width">
+                            <mat-label>Internal Notes</mat-label>
+                            <textarea matInput formControlName="internal_notes"></textarea>
+                        </mat-form-field>
+                    </div>
+                </mat-card>
 
-        <div class="actions">
-            <button mat-raised-button color="primary" type="submit" [disabled]="supplierForm.invalid">Save</button>
-        </div>
-    </form>
+                <div class="actions">
+                    <button mat-raised-button color="primary" type="submit"
+                        [disabled]="supplierForm.invalid">Save</button>
+                    <button mat-button type="button" routerLink="/suppliers/list">Cancel</button>
+                </div>
+            </form>
+        </mat-tab>
+
+        <mat-tab label="Products" *ngIf="isEditMode && supplierId">
+            <div class="tab-content">
+                <app-supplier-product-manager [supplierId]="supplierId"></app-supplier-product-manager>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
 </div>

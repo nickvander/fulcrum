@@ -83,6 +83,62 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
             db.commit()
             db.refresh(db_obj)
             
+    
+        # Check if we should update supplier details (Auto-Association & Lead Time)
+        self._update_supplier_products(db, db_obj)
+        
         return db_obj
+
+    def _update_supplier_products(self, db: Session, po: PurchaseOrder):
+        """
+        Auto-associates products with supplier and updates lead times/costs upon receipt.
+        """
+        # Only proceed if we have a valid received date or completed status implying receipt
+        # We rely on received_at being set for lead time, but we can do association on any update if we want.
+        # Let's restrict to when we have items and it's not Draft.
+        if not po.items or po.status == "draft":
+            return
+
+        # Calculate lead time if dates exist
+        lead_time_days = None
+        if po.ordered_at and po.received_at:
+            delta = po.received_at - po.ordered_at
+            # Ensure non-negative and at least 1 day if same day? 
+            # delta.days gives full days. If same day, 0.
+            lead_time_days = max(0, delta.days)
+
+        from src.crud.crud_supplier_product import supplier_product as crud_sp
+        from src.schemas.supplier_product import SupplierProductCreate
+
+        for item in po.items:
+            # Check for existing association
+            existing_sp = crud_sp.get_by_product_and_supplier(
+                db, product_id=item.product_id, supplier_id=po.supplier_id
+            )
+
+            if existing_sp:
+                # Update logic
+                update_data = {}
+                # Update cost if different (simple logic: assume latest PO is current cost)
+                if item.unit_cost > 0 and abs(existing_sp.cost_price - item.unit_cost) > 0.001:
+                    update_data["cost_price"] = item.unit_cost
+                
+                # Update lead time if calculated
+                if lead_time_days is not None:
+                     update_data["lead_time_days"] = lead_time_days
+                
+                if update_data:
+                    crud_sp.update(db, db_obj=existing_sp, obj_in=update_data)
+            else:
+                # Create new association
+                sp_in = SupplierProductCreate(
+                    product_id=item.product_id,
+                    supplier_id=po.supplier_id,
+                    cost_price=item.unit_cost,
+                    lead_time_days=lead_time_days if lead_time_days is not None else 0,
+                    is_primary=False,
+                    min_order_qty=1.0 # Default
+                )
+                crud_sp.create(db, obj_in=sp_in)
 
 purchase_order = CRUDPurchaseOrder(PurchaseOrder)

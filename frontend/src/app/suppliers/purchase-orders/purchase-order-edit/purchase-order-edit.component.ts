@@ -63,6 +63,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       payment_method: [null],
       paid_by_user_id: [null],
       custom_payer_name: [null], // Optional
+      ordered_at: [null],
+      received_at: [null],
       items: this.fb.array([])
     });
   }
@@ -88,6 +90,58 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     ).subscribe(val => {
       if (!this.isEditMode) {
         sessionStorage.setItem('fulcrum_po_create_draft', JSON.stringify(val));
+      }
+    });
+
+    // Check for product_id query param for autofill
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      console.log('PurchaseOrderEdit: Query Params received', params);
+      if (params['product_id'] && !this.isEditMode) {
+        console.log('PurchaseOrderEdit: Triggering autofill for product', params['product_id']);
+        this.handleProductAutofill(+params['product_id']);
+      }
+    });
+  }
+
+  handleProductAutofill(productId: number): void {
+    console.log('handleProductAutofill started for', productId);
+    // Ensure draft is loaded first if available
+    // (This is partially handled by ngOnInit order, but let's be robust)
+
+    this.productService.getProductById(productId).subscribe(product => {
+      if (product) {
+        // Pre-fill supplier if linked and no supplier selected yet
+        if (product.supplier_id && !this.poForm.get('supplier_id')?.value) {
+          this.poForm.patchValue({ supplier_id: product.supplier_id });
+        }
+
+        // If supplier is already selected and mismatch, warn user?
+        // For now, let's assume user knows what they are doing or they can mix suppliers in draft (though invalid for final PO)
+
+        // Add product line item
+        // Check if already added to avoid duplicates
+        const existing = this.items.controls.find(ctrl => ctrl.get('product_id')?.value === product.id);
+
+        if (existing) {
+          // If exists, maybe increment quantity?
+          const currentQty = existing.get('quantity_ordered')?.value || 0;
+          existing.patchValue({ quantity_ordered: currentQty + 1 });
+          this.snackBar.open(`Incremented quantity for ${product.name}`, 'Close', { duration: 3000 });
+        } else {
+          // Remove empty first item if it's the only one and has no product_id
+          const firstItem = this.items.at(0);
+          if (this.items.length === 1 && !firstItem.get('product_id')?.value) {
+            this.items.removeAt(0);
+          }
+
+          this.addLineItem({
+            product_id: product.id,
+            product_name: product.name,
+            quantity_ordered: 1,
+            unit_cost: product.cost_price || 0
+          });
+          this.snackBar.open(`Added ${product.name} to order`, 'Close', { duration: 3000 });
+        }
       }
     });
   }
@@ -122,7 +176,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         payment_status: po.payment_status || 'unpaid',
         payment_method: po.payment_method,
         paid_by_user_id: po.paid_by_user_id,
-        custom_payer_name: po.custom_payer_name
+        custom_payer_name: po.custom_payer_name,
+        ordered_at: po.ordered_at,
+        received_at: po.received_at
       });
 
       this.items.clear();
@@ -320,7 +376,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       payment_status: formValue.payment_status,
       payment_method: formValue.payment_method,
       paid_by_user_id: formValue.paid_by_user_id,
-      custom_payer_name: formValue.custom_payer_name
+      custom_payer_name: formValue.custom_payer_name,
+      ordered_at: formValue.ordered_at,
+      received_at: formValue.received_at
     };
 
     if (!newPo.supplier_id) {
@@ -399,6 +457,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       payment_method: formValue.payment_method,
       paid_by_user_id: formValue.paid_by_user_id,
       custom_payer_name: formValue.custom_payer_name,
+      ordered_at: formValue.ordered_at,
+      received_at: formValue.received_at,
       items: formValue.items.map((item: any) => ({
         product_id: item.product_id,
         quantity_ordered: item.quantity_ordered,
@@ -493,7 +553,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         payment_status: formValue.payment_status,
         payment_method: formValue.payment_method,
         paid_by_user_id: formValue.paid_by_user_id,
-        custom_payer_name: formValue.custom_payer_name
+        custom_payer_name: formValue.custom_payer_name,
+        ordered_at: formValue.ordered_at,
+        received_at: formValue.received_at
       };
 
       this.suppliersService.createPurchaseOrder(newPo).subscribe(po => {

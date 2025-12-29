@@ -7,6 +7,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { SupplierProductManagerComponent } from '../supplier-product-manager/supplier-product-manager.component';
 import { SuppliersService } from '../suppliers.service';
 
 describe('SupplierDetailComponent', () => {
@@ -23,7 +27,12 @@ describe('SupplierDetailComponent', () => {
         MatInputModule,
         MatCardModule,
         MatButtonModule,
-        NoopAnimationsModule
+        MatButtonModule,
+        NoopAnimationsModule,
+        MatTabsModule,
+        MatSnackBarModule,
+        MatDialogModule,
+        SupplierProductManagerComponent
       ],
       providers: [SuppliersService]
     })

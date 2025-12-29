@@ -30,6 +30,9 @@ import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edi
 import { KpiCardComponent } from '../dashboard/widgets/kpi-card/kpi-card.component';
 import { DateRangePresetsComponent } from '../shared/components/date-range-presets/date-range-presets.component';
 
+import { MatTabsModule } from '@angular/material/tabs';
+import { SupplierProductManagerComponent } from './supplier-product-manager/supplier-product-manager.component';
+
 @NgModule({
   declarations: [
     SupplierListComponent,
@@ -61,7 +64,9 @@ import { DateRangePresetsComponent } from '../shared/components/date-range-prese
     MatDividerModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
+    MatTabsModule,
     KpiCardComponent,
+    SupplierProductManagerComponent,
     DateRangePresetsComponent
   ],
   providers: [

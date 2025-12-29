@@ -119,6 +119,16 @@ def read_products(
         
     print(f"DEBUG: read_products filters={filters}, is_bundle={is_bundle}")
     products = crud_product.product.get_multi_paginated(db, skip=skip, limit=limit, filters=filters)
+    
+    # Calculate metrics for each product in the list
+    from src.services.inventory_service import inventory_service
+    for p in products["data"]:
+        p.sales_velocity = inventory_service.calculate_sales_velocity(db, p.id)
+        p.days_of_inventory = inventory_service.calculate_days_of_inventory(db, p.id)
+        p.low_inventory_threshold = inventory_service.get_effective_low_inventory_threshold(db, p.id)
+        p.low_stock_quantity_threshold = inventory_service.get_effective_low_stock_quantity_threshold(db, p.id)
+        p.stock_quantity = inventory_service.get_total_stock_quantity(db, p.id)
+        
     return products
 
 
@@ -181,6 +191,15 @@ def read_product(*, db: Session = Depends(get_db), product_id: int):
             status_code=404,
             detail="The product with this ID does not exist in the system.",
         )
+    
+    # Calculate metrics
+    from src.services.inventory_service import inventory_service
+    product.sales_velocity = inventory_service.calculate_sales_velocity(db, product_id)
+    product.days_of_inventory = inventory_service.calculate_days_of_inventory(db, product_id)
+    product.low_inventory_threshold = inventory_service.get_effective_low_inventory_threshold(db, product_id)
+    product.low_stock_quantity_threshold = inventory_service.get_effective_low_stock_quantity_threshold(db, product_id)
+    product.stock_quantity = inventory_service.get_total_stock_quantity(db, product_id)
+    
     return product
 
 
