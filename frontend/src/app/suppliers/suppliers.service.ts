@@ -42,6 +42,10 @@ export class SuppliersService {
     return this.http.get<import('../shared/models/supplier-product.model').SupplierProduct[]>(`${this.apiUrl}/suppliers/${supplierId}/products`);
   }
 
+  getSuppliersForProduct(productId: number): Observable<import('../shared/models/supplier-product.model').SupplierProduct[]> {
+    return this.http.get<import('../shared/models/supplier-product.model').SupplierProduct[]>(`${this.apiUrl}/supplier-products/by-product/${productId}`);
+  }
+
   // --- Purchase Orders ---
   getPurchaseOrders(skip: number = 0, limit: number = 100): Observable<PurchaseOrder[]> {
     let params = new HttpParams().set('skip', skip).set('limit', limit);
