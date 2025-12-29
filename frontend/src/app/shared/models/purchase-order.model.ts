@@ -45,6 +45,8 @@ export interface PurchaseOrder {
     payment_method?: string;
     custom_payer_name?: string;
     paid_by_user_id?: number;
+    ordered_at?: string;
+    received_at?: string;
 }
 
 export interface PurchaseOrderCreate {
@@ -61,4 +63,6 @@ export interface PurchaseOrderCreate {
     payment_method?: string;
     custom_payer_name?: string;
     paid_by_user_id?: number;
+    ordered_at?: string;
+    received_at?: string;
 }

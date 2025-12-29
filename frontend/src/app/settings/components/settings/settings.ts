@@ -23,10 +23,11 @@ import { CustomFieldList } from '../custom-field-list/custom-field-list';
     MatButtonModule,
     MatSelectModule,
     CustomFieldList
-],
+  ],
 })
 export class Settings implements OnInit {
   settingsForm: FormGroup;
+  storeSettingsForm: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -38,6 +39,11 @@ export class Settings implements OnInit {
       ai_api_key: ['', Validators.required],
       theme: ['light', Validators.required]
     });
+
+    this.storeSettingsForm = this.fb.group({
+      low_inventory_days_default: [30, [Validators.required, Validators.min(1)]],
+      low_stock_quantity_default: [10, [Validators.required, Validators.min(0)]]
+    });
   }
 
   ngOnInit(): void {
@@ -45,12 +51,27 @@ export class Settings implements OnInit {
     if (currentSettings) {
       this.settingsForm.patchValue(currentSettings);
     }
+
+    this.settingsService.storeSettings$.subscribe(storeSettings => {
+      if (storeSettings) {
+        this.storeSettingsForm.patchValue(storeSettings);
+      }
+    });
   }
 
   onSubmit(): void {
     if (this.settingsForm.valid) {
       this.settingsService.saveSettings(this.settingsForm.value);
-      this.notificationService.showSuccess('Settings saved successfully!');
+      this.notificationService.showSuccess('App Settings saved successfully!');
+    }
+  }
+
+  onStoreSettingsSubmit(): void {
+    if (this.storeSettingsForm.valid) {
+      this.settingsService.updateStoreSettings(this.storeSettingsForm.value).subscribe({
+        next: () => this.notificationService.showSuccess('Store Settings saved successfully!'),
+        error: (err) => this.notificationService.showError('Failed to save store settings')
+      });
     }
   }
 }

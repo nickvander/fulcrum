@@ -126,3 +126,16 @@
         - Implemented **Auto-Save** mechanism for Cost Allocation dialog to ensure calculations use latest form values.
         - Enhanced **Cost Preview** to accept temporary overrides, allowing users to preview "Add to Unit Cost" results without committing to the DB first.
         - Verified all frontend tests pass with new mock configurations.
+- **2025-12-29**: Supplier & Inventory Intelligence
+    - **Backend**:
+        - Implemented `SupplierProduct` API with computed `product_name` and eager loading.
+        - Added logic to seed `supplier_products` for testing.
+        - Implemented `Low Stock Quantity` logic (Global vs Per-Product override).
+    - **Frontend**:
+        - **Supplier Product Manager**: New "Products" tab in Supplier Detail. Supports click-through to Product Edit.
+        - **Inventory Health Widget**: New dashboard widget showing items low on stock (Quantity) or days of inventory.
+        - **Unified Navigation**: Widget "Add to Cart" now intelligently merges items into existing drafted Purchase Orders.
+        - **Settings**: Added interface for defining Global Low Stock Threshold.
+    - **Verification**:
+        - Confirmed autofill and merge logic for PO creation.
+        - Confirmed seamless navigation between Supplier and Product pages.

@@ -20,7 +20,11 @@ class CRUDSupplierProduct(CRUDBase[SupplierProduct, SupplierProductCreate, Suppl
     
     def get_by_supplier(self, db: Session, *, supplier_id: int) -> List[SupplierProduct]:
         """Get all products from a supplier."""
-        return db.query(self.model).filter(
+        from sqlalchemy.orm import joinedload
+        
+        return db.query(self.model).options(
+            joinedload(self.model.product)
+        ).filter(
             self.model.supplier_id == supplier_id
         ).order_by(self.model.is_primary.desc()).all()
     

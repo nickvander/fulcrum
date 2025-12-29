@@ -1,8 +1,10 @@
-from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from src.models.inventory import InventoryItem, InventoryAdjustment
+from src.models.order import SalesOrder, SalesOrderItem
 
 class InventoryService:
     def adjust_stock(
@@ -105,5 +107,77 @@ class InventoryService:
             reason="Bundle Assembly", 
             user_id=user_id
         )
+
+    def calculate_sales_velocity(self, db: Session, product_id: int, days: int = 30) -> float:
+        """
+        Calculates average daily sales over the last N days.
+        """
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Query sum of quantity for this product in completed/shipped orders
+        # We include COMPLETED, SHIPPED. If statuses differ, adjust here.
+        total_sold = db.query(func.sum(SalesOrderItem.quantity)).join(SalesOrder).filter(
+            SalesOrderItem.product_id == product_id,
+            SalesOrder.created_at >= cutoff_date,
+            SalesOrder.status.in_(["COMPLETED", "SHIPPED"]) 
+        ).scalar() or 0
+        
+        return float(total_sold) / float(days)
+
+    def calculate_days_of_inventory(self, db: Session, product_id: int) -> float:
+        """
+        Calculates estimated days of stock remaining based on sales velocity.
+        Returns 999.0 if velocity is 0 (infinite stock relative to sales).
+        """
+        # Get current stock (sum across all locations)
+        stock = db.query(func.sum(InventoryItem.quantity)).filter(
+            InventoryItem.product_id == product_id
+        ).scalar() or 0
+        
+        velocity = self.calculate_sales_velocity(db, product_id)
+        
+        if velocity <= 0:
+            return 999.0 
+            
+        return float(stock) / velocity
+
+    def get_effective_low_inventory_threshold(self, db: Session, product_id: int) -> int:
+        """
+        Returns the low inventory threshold (days) for a product.
+        Checks product specific override first, then falls back to global store setting.
+        """
+        from src.crud.crud_product_inventory_settings import product_inventory_settings as crud_pis
+        from src.crud.crud_store_settings import store_settings as crud_ss
+        
+        # 1. Check Product Specific
+        prod_settings = crud_pis.get_by_product(db, product_id=product_id)
+        if prod_settings and prod_settings.low_inventory_days_threshold is not None:
+             return prod_settings.low_inventory_days_threshold
+             
+        # 2. Check Global
+        store_settings = crud_ss.get_settings(db)
+        return store_settings.low_inventory_days_default
+
+    def get_effective_low_stock_quantity_threshold(self, db: Session, product_id: int) -> int:
+        """
+        Returns the low stock quantity threshold for a product.
+        Checks product specific override first, then falls back to global store setting.
+        """
+        from src.crud.crud_product_inventory_settings import product_inventory_settings as crud_pis
+        from src.crud.crud_store_settings import store_settings as crud_ss
+        
+        # 1. Check Product Specific
+        prod_settings = crud_pis.get_by_product(db, product_id=product_id)
+        if prod_settings and prod_settings.low_stock_quantity_threshold is not None:
+             return prod_settings.low_stock_quantity_threshold
+             
+        # 2. Check Global
+        store_settings = crud_ss.get_settings(db)
+        return store_settings.low_stock_quantity_default
+
+    def get_total_stock_quantity(self, db: Session, product_id: int) -> int:
+        from src.models.inventory import InventoryItem
+        total_quantity = db.query(func.sum(InventoryItem.quantity)).filter(InventoryItem.product_id == product_id).scalar()
+        return total_quantity or 0
 
 inventory_service = InventoryService()

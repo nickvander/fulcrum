@@ -4,6 +4,7 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { KpiCardComponent } from './widgets/kpi-card/kpi-card.component';
 import { LowStockListWidgetComponent } from './widgets/low-stock-list/low-stock-list.component';
+import { InventoryHealthWidgetComponent } from './widgets/inventory-health-widget/inventory-health-widget.component';
 import { SharedModule } from '../shared/shared-module';
 
 @NgModule({
@@ -14,6 +15,7 @@ import { SharedModule } from '../shared/shared-module';
         DashboardComponent,
         KpiCardComponent,
         LowStockListWidgetComponent,
+        InventoryHealthWidgetComponent,
         SharedModule
     ]
 })

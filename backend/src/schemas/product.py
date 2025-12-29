@@ -111,6 +111,14 @@ class Product(ProductBase):
     marketplace_listings: List[MarketplaceListing] = []
     bundle_components: List[BundleComponent] = []
     part_of_bundles: List[BundleComponent] = []
+    
+    sales_velocity: Optional[float] = None
+    days_of_inventory: Optional[float] = None
+    low_inventory_threshold: Optional[int] = None
+    low_inventory_threshold: Optional[int] = None
+    low_stock_quantity_threshold: Optional[int] = None
+    stock_quantity: Optional[int] = None
+    
     created_at: datetime
     updated_at: datetime
 

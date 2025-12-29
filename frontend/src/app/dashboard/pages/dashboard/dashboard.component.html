@@ -30,9 +30,12 @@
                 tooltip="Number of active Purchase Orders currently being processed or shipped"></app-kpi-card>
         </div>
 
-        <div class="secondary-grid">
+        <div class="secondary-grid grid grid-cols-1 lg:grid-cols-6 gap-6">
             <div class="lg:col-span-3">
                 <app-low-stock-list [products]="stats.lowStockProducts"></app-low-stock-list>
+            </div>
+            <div class="lg:col-span-3">
+                <app-inventory-health-widget></app-inventory-health-widget>
             </div>
         </div>
     </ng-container>

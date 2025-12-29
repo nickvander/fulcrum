@@ -18,6 +18,8 @@ from .purchase_order_item import PurchaseOrderItem
 from .supplier_invoice import SupplierInvoice
 from .supplier_product import SupplierProduct
 from .expense import Expense
+from .store_settings import StoreSettings
+from .product_inventory_settings import ProductInventorySettings
 
 __all__ = [
     "User",
@@ -46,5 +48,7 @@ __all__ = [
     "SupplierProduct",
     "Expense",
     "BundleComponent",
+    "StoreSettings",
+    "ProductInventorySettings",
 ]
 

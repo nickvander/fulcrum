@@ -40,6 +40,9 @@ class PurchaseOrder(Base):
 
     notes = Column(String, nullable=True)
 
+    ordered_at = Column(DateTime(timezone=True), nullable=True)
+    received_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

@@ -29,8 +29,17 @@ export class SuppliersService {
     return this.http.get<Supplier[]>(`${this.apiUrl}/suppliers/`, { params });
   }
 
+  getSupplier(id: number): Observable<Supplier> {
+    console.log(`[SuppliersService] Fetching supplier ${id} from ${this.apiUrl}/suppliers/${id}`);
+    return this.http.get<Supplier>(`${this.apiUrl}/suppliers/${id}`);
+  }
+
   createSupplier(supplier: SupplierCreate): Observable<Supplier> {
     return this.http.post<Supplier>(`${this.apiUrl}/suppliers/`, supplier);
+  }
+
+  getSupplierProducts(supplierId: number): Observable<import('../shared/models/supplier-product.model').SupplierProduct[]> {
+    return this.http.get<import('../shared/models/supplier-product.model').SupplierProduct[]>(`${this.apiUrl}/suppliers/${supplierId}/products`);
   }
 
   // --- Purchase Orders ---

@@ -51,8 +51,9 @@ Go beyond simple "Price - Cost".
 - [x] **Advanced Filter UI**: Implemented with debouncing, compact styling, and non-blocking reload.
 
 ### Step 2: Supplier & Restock
-- Build UI for `SupplierProduct` mapping.
-- Implement "Days of Inventory" calculation.
+- [x] Build UI for `SupplierProduct` mapping.
+- [x] Implement "Days of Inventory" calculation.
+- [x] Implement Inventory Health Dashboard Widget.
 
 ### Step 3: Marketing Operations
 - Build `Campaign` and `CampaignEvent` models.

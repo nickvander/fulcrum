@@ -30,10 +30,24 @@
                     <input matInput formControlName="currency" autocomplete="off">
                 </mat-form-field>
 
-                <mat-form-field appearance="fill">
-                    <mat-label>Notes</mat-label>
-                    <textarea matInput formControlName="notes"></textarea>
-                </mat-form-field>
+                <div class="row">
+                    <mat-form-field appearance="fill">
+                        <mat-label>Notes</mat-label>
+                        <textarea matInput formControlName="notes"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill">
+                        <mat-label>Ordered Date</mat-label>
+                        <input matInput [matDatepicker]="pickerOrdered" formControlName="ordered_at">
+                        <mat-datepicker-toggle matSuffix [for]="pickerOrdered"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerOrdered></mat-datepicker>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill">
+                        <mat-label>Received Date</mat-label>
+                        <input matInput [matDatepicker]="pickerReceived" formControlName="received_at">
+                        <mat-datepicker-toggle matSuffix [for]="pickerReceived"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerReceived></mat-datepicker>
+                    </mat-form-field>
+                </div>
             </div>
         </mat-card>
 

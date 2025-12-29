@@ -67,6 +67,9 @@ class PurchaseOrderBase(BaseModel):
     payment_method: Optional[str] = None
     custom_payer_name: Optional[str] = None
     paid_by_user_id: Optional[int] = None
+    
+    ordered_at: Optional[datetime] = None
+    received_at: Optional[datetime] = None
 
 class PurchaseOrderCreate(PurchaseOrderBase):
     items: Optional[List[PurchaseOrderItemCreate]] = []
@@ -83,6 +86,9 @@ class PurchaseOrderUpdate(BaseModel):
     payment_method: Optional[str] = None
     custom_payer_name: Optional[str] = None
     paid_by_user_id: Optional[int] = None
+    
+    ordered_at: Optional[datetime] = None
+    received_at: Optional[datetime] = None
 
 class PurchaseOrder(PurchaseOrderBase):
     id: int
@@ -90,6 +96,8 @@ class PurchaseOrder(PurchaseOrderBase):
     landed_cost: float
     created_at: datetime
     updated_at: datetime
+    ordered_at: Optional[datetime] = None
+    received_at: Optional[datetime] = None
     items: List[PurchaseOrderItem] = []
 
     model_config = ConfigDict(from_attributes=True)

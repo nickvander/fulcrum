@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { KpiCardComponent } from '../../widgets/kpi-card/kpi-card.component';
 import { LowStockListWidgetComponent } from '../../widgets/low-stock-list/low-stock-list.component';
+import { InventoryHealthWidgetComponent } from '../../widgets/inventory-health-widget/inventory-health-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 
@@ -23,6 +24,7 @@ import { RouterModule } from '@angular/router';
         MatProgressSpinnerModule,
         KpiCardComponent,
         LowStockListWidgetComponent,
+        InventoryHealthWidgetComponent,
         RouterModule
     ]
 })
