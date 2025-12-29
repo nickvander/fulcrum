@@ -20,6 +20,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
+import { UserService } from '../users/services/user.service';
 
 import { SuppliersRoutingModule } from './suppliers-routing.module';
 import { SupplierListComponent } from './supplier-list/supplier-list.component';
@@ -62,6 +63,9 @@ import { DateRangePresetsComponent } from '../shared/components/date-range-prese
     MatProgressBarModule,
     KpiCardComponent,
     DateRangePresetsComponent
+  ],
+  providers: [
+    UserService
   ]
 })
 export class SuppliersModule { }

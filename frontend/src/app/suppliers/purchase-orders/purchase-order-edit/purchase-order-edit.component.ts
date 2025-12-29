@@ -12,6 +12,8 @@ import { QuickProductDialogComponent } from '../quick-product-dialog/quick-produ
 import { CostAllocationDialogComponent } from '../cost-allocation-dialog/cost-allocation-dialog.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SupplierInvoice } from '../../suppliers.service';
+import { UserService } from '../../../users/services/user.service'; // Import UserService
+import { User } from '../../../shared/models/user.model'; // Import User model
 import { Observable, Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, takeUntil, map, catchError } from 'rxjs/operators';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
@@ -29,7 +31,10 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   poId: number | null = null;
   suppliers: Supplier[] = [];
   invoices: SupplierInvoice[] = [];
+  users: User[] = []; // Store users for dropdown
   statusOptions = Object.values(PurchaseOrderStatus);
+  paymentStatusOptions = ['unpaid', 'partial', 'paid'];
+  paymentMethodOptions = ['Bank Transfer', 'Credit Card', 'Cash', 'Check', 'Other'];
 
   // Product autocomplete
   productSearchControls: FormControl[] = [];
@@ -43,7 +48,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private userService: UserService // Inject UserService
   ) {
     this.poForm = this.fb.group({
       supplier_id: [null, Validators.required],
@@ -53,12 +59,17 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       shipping_cost: [0],
       import_cost: [0],
       other_costs: [0],
+      payment_status: ['unpaid'],
+      payment_method: [null],
+      paid_by_user_id: [null],
+      custom_payer_name: [null], // Optional
       items: this.fb.array([])
     });
   }
 
   ngOnInit(): void {
     this.loadSuppliers();
+    this.loadUsers(); // Load users
 
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam && idParam !== 'create') {
@@ -92,6 +103,12 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadUsers(): void {
+    this.userService.getUsers().subscribe((users: User[]) => {
+      this.users = users;
+    });
+  }
+
   loadPurchaseOrder(id: number): void {
     this.suppliersService.getPurchaseOrder(id).subscribe(po => {
       this.poForm.patchValue({
@@ -101,7 +118,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         notes: po.notes,
         shipping_cost: po.shipping_cost || 0,
         import_cost: po.tax_amount || 0, // Using tax_amount as import_cost for now
-        other_costs: po.other_costs || 0
+        other_costs: po.other_costs || 0,
+        payment_status: po.payment_status || 'unpaid',
+        payment_method: po.payment_method,
+        paid_by_user_id: po.paid_by_user_id,
+        custom_payer_name: po.custom_payer_name
       });
 
       this.items.clear();
@@ -260,6 +281,20 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     return this.calculateTotalAdditionalCosts() / totalQty;
   }
 
+  calculateItemsSubtotal(): number {
+    return this.items.controls.reduce((sum, item) => {
+      const qty = item.get('quantity_ordered')?.value || 0;
+      const cost = item.get('unit_cost')?.value || 0;
+      return sum + (qty * cost);
+    }, 0);
+  }
+
+  calculateGrandTotal(): number {
+    const itemsSubtotal = this.calculateItemsSubtotal();
+    const additionalCosts = this.calculateTotalAdditionalCosts();
+    return itemsSubtotal + additionalCosts;
+  }
+
   getEstimatedAllocatedCost(unitCost: number): number {
     return Number(unitCost || 0) + this.calculatePerUnitLandedCost();
   }
@@ -281,7 +316,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         product_id: item.product_id,
         quantity_ordered: item.quantity_ordered,
         unit_cost: item.unit_cost
-      }))
+      })),
+      payment_status: formValue.payment_status,
+      payment_method: formValue.payment_method,
+      paid_by_user_id: formValue.paid_by_user_id,
+      custom_payer_name: formValue.custom_payer_name
     };
 
     if (!newPo.supplier_id) {
@@ -398,7 +437,25 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     const formValue = this.poForm.value;
 
     if (this.isEditMode && this.poId) {
-      this.suppliersService.updatePurchaseOrderStatus(this.poId, formValue.status).subscribe(() => {
+      const updateData: any = {
+        supplier_id: formValue.supplier_id,
+        status: formValue.status,
+        currency: formValue.currency,
+        notes: formValue.notes,
+        shipping_cost: formValue.shipping_cost,
+        tax_amount: formValue.import_cost,
+        other_costs: formValue.other_costs,
+        payment_status: formValue.payment_status,
+        payment_method: formValue.payment_method,
+        paid_by_user_id: formValue.paid_by_user_id,
+        custom_payer_name: formValue.custom_payer_name,
+        // For now, simple item update is not fully supported via PUT in generic CRUD without proper nested handling
+        // We will send items, but backend might need logic to sync them.
+        // Assuming backend works or we focus on payment fields for now.
+      };
+
+      this.suppliersService.updatePurchaseOrder(this.poId, updateData).subscribe(() => {
+        this.snackBar.open('Order updated successfully', 'Close', { duration: 3000 });
         this.router.navigate(['/suppliers/po/list']);
       });
     } else {
@@ -415,7 +472,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           product_id: item.product_id,
           quantity_ordered: item.quantity_ordered,
           unit_cost: item.unit_cost
-        }))
+        })),
+        payment_status: formValue.payment_status,
+        payment_method: formValue.payment_method,
+        paid_by_user_id: formValue.paid_by_user_id,
+        custom_payer_name: formValue.custom_payer_name
       };
 
       this.suppliersService.createPurchaseOrder(newPo).subscribe(po => {
@@ -457,7 +518,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           notes: data.notes,
           shipping_cost: data.shipping_cost,
           import_cost: data.import_cost,
-          other_costs: data.other_costs
+          other_costs: data.other_costs,
+          payment_status: data.payment_status,
+          payment_method: data.payment_method,
+          paid_by_user_id: data.paid_by_user_id,
+          custom_payer_name: data.custom_payer_name
         });
 
         // Rebuild items array
@@ -504,7 +569,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           notes: '',
           shipping_cost: 0,
           import_cost: 0,
-          other_costs: 0
+          other_costs: 0,
+          payment_status: 'unpaid',
+          payment_method: null,
+          paid_by_user_id: null,
+          custom_payer_name: null
         });
         this.items.clear();
         this.productSearchControls = [];

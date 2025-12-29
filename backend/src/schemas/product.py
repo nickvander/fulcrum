@@ -134,6 +134,10 @@ class ProductPurchaseHistory(BaseModel):
     supplier_name: str
     quantity: float
     unit_cost: float
+    base_cost: Optional[float] = 0.0
+    shipping_allocated: Optional[float] = 0.0
+    taxes_allocated: Optional[float] = 0.0
+    other_allocated: Optional[float] = 0.0
     status: str
 
     model_config = ConfigDict(from_attributes=True)

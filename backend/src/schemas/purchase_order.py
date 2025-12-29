@@ -11,6 +11,11 @@ class PurchaseOrderStatus(str, Enum):
     COMPLETED = "completed"
     CLOSED = "closed"
 
+class PaymentStatus(str, Enum):
+    UNPAID = "unpaid"
+    PARTIAL = "partial"
+    PAID = "paid"
+
 # --- Purchase Order Item ---
 class ProductRef(BaseModel):
     id: int
@@ -58,6 +63,11 @@ class PurchaseOrderBase(BaseModel):
     tax_amount: Optional[float] = 0.0
     other_costs: Optional[float] = 0.0
 
+    payment_status: Optional[str] = PaymentStatus.UNPAID.value
+    payment_method: Optional[str] = None
+    custom_payer_name: Optional[str] = None
+    paid_by_user_id: Optional[int] = None
+
 class PurchaseOrderCreate(PurchaseOrderBase):
     items: Optional[List[PurchaseOrderItemCreate]] = []
 
@@ -68,6 +78,11 @@ class PurchaseOrderUpdate(BaseModel):
     tax_amount: Optional[float] = None
     other_costs: Optional[float] = None
     exchange_rate: Optional[float] = None
+    
+    payment_status: Optional[str] = None
+    payment_method: Optional[str] = None
+    custom_payer_name: Optional[str] = None
+    paid_by_user_id: Optional[int] = None
 
 class PurchaseOrder(PurchaseOrderBase):
     id: int

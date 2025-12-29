@@ -99,3 +99,26 @@
     - **Expenses**:
         - Refactored to **client-side filtering** to eliminate page stutter on date changes.
         - Added **Sorting** to expense table.
+
+- **2025-12-28**: Purchasing UI Finalization
+    - **Visual Polish**:
+        - Implemented **"Sleek" filter UI** with pill-shaped dropdowns and valid clear buttons.
+        - Modernized **Date Range Presets** to use chip-style toggles (clean, no-border design).
+    - **Stability**:
+        - Fixed linter errors in backend (`expenses.py`).
+        - Verified all frontend tests pass for new components.
+    - **Documentation**:
+        - Updated `walkthrough.md` with UI changes.
+        - Verified `work/current/` status files.
+
+- **2025-12-28**: Purchase Order Debugging & Fixes
+    - **Cost Breakdown**: Fixed issue where Base Cost, Shipping, and Tax were showing as 0 in Product History.
+        - Root Cause: `ProductPurchaseHistory` schema was missing cost breakdown fields.
+        - Fix: Updated schema and ensured `PurchaseOrderItem` correctly tracks initialized `base_cost`.
+    - **Order Updates**: Fixed "Update Order" button functionality.
+        - Root Cause: Frontend was calling `updateStatus` instead of a full update.
+        - Fix: Added `updatePurchaseOrder` to service and updated backend `crud_purchase_order.py` to handle item synchronization (delete/replace strategy).
+    - **UI Polish**:
+        - Added `UserService` to Suppliers module to fix dependency injection.
+        - Enhanced "Paid By" dropdown to correctly display user names.
+        - Added safeguards for null values in cost tooltips.

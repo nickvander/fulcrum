@@ -39,6 +39,12 @@ export interface PurchaseOrder {
     notes?: string;
     created_at: string;
     items: PurchaseOrderItem[];
+
+    // Payment Info
+    payment_status?: string;
+    payment_method?: string;
+    custom_payer_name?: string;
+    paid_by_user_id?: number;
 }
 
 export interface PurchaseOrderCreate {
@@ -51,4 +57,8 @@ export interface PurchaseOrderCreate {
     tax_amount?: number;
     other_costs?: number;
     items: Partial<PurchaseOrderItem>[];
+    payment_status?: string;
+    payment_method?: string;
+    custom_payer_name?: string;
+    paid_by_user_id?: number;
 }

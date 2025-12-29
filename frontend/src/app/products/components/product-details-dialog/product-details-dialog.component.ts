@@ -10,6 +10,7 @@ import { ProductService } from '../../services/product';
 import { ProductForm } from '../product-form/product-form';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
     selector: 'app-product-details-dialog',
@@ -24,7 +25,9 @@ import { MatInputModule } from '@angular/material/input';
         MatDividerModule,
         ProductForm,
         FormsModule,
-        MatInputModule
+        FormsModule,
+        MatInputModule,
+        MatTooltipModule
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {
