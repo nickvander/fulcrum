@@ -131,7 +131,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           // Remove empty first item if it's the only one and has no product_id
           const firstItem = this.items.at(0);
           if (this.items.length === 1 && !firstItem.get('product_id')?.value) {
-            this.items.removeAt(0);
+            this.removeItem(0);
           }
 
           this.addLineItem({
