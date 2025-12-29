@@ -64,51 +64,66 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
             flex-wrap: wrap;
         }
 
-        /* Modernize Toggle Group */
         mat-button-toggle-group {
-            height: 36px;
+            height: 32px; /* Slightly smaller for sleekness */
             border: none;
-            gap: 8px; /* Space between pills */
+            gap: 8px;
             background: transparent;
+            align-items: center;
         }
 
         mat-button-toggle {
-            font-size: 0.8rem;
-            border-radius: 999px !important; /* Pill shape */
-            border: 1px solid #E0E0E0;
-            background: white;
-            color: #616161;
+            font-size: 0.85rem;
+            border-radius: 8px !important; /* Soft rect/pill */
+            border: none;
+            background-color: #f5f5f5; /* Light gray default */
+            color: #424242; /* Dark gray text */
             transition: all 0.2s ease;
+            line-height: 32px;
+            padding: 0 12px;
             
+            /* Remove default indicator if present in Mat3 */
+            ::ng-deep .mat-button-toggle-label-content {
+                line-height: 32px;
+                padding: 0;
+            }
+
             &.mat-button-toggle-checked {
-                background-color: #3f51b5 !important; /* Primary (Indigo) */
+                background-color: #263238 !important; /* Dark Blue-Grey (Sleek) */
                 color: white !important;
-                border-color: #3f51b5 !important;
                 font-weight: 500;
-                box-shadow: 0 2px 4px rgba(63, 81, 181, 0.3);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             }
 
             &:hover:not(.mat-button-toggle-checked) {
-                background-color: #F5F5F5;
-                border-color: #BDBDBD;
+                background-color: #e0e0e0;
             }
+        }
+
+        /* Hide the checkmark icon if Material adds one */
+        ::ng-deep mat-button-toggle .mat-pseudo-checkbox {
+            display: none !important;
         }
 
         .custom-range {
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-left: 8px;
         }
 
         .date-field {
-            width: 140px;
+            width: 130px;
         }
 
-        /* Adjust date field to match sleek pill style is handled by global .sleek-date-field if we add it, 
-           or we can assume standard outline. Let's keep specific width. */
+        /* Override date field wrapper to be cleaner if needed */
+        ::ng-deep .custom-range .mat-mdc-text-field-wrapper {
+             background-color: white;
+             border-radius: 8px;
+        }
 
         .range-separator {
-            color: #666;
+            color: #757575;
             font-size: 0.9rem;
             font-weight: 500;
         }
@@ -117,10 +132,10 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
             .date-range-container {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 12px;
             }
-            mat-button-toggle-group {
-                flex-wrap: wrap;
-                height: auto;
+            .custom-range {
+                 margin-left: 0;
             }
         }
     `]
