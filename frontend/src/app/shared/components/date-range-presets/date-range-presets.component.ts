@@ -64,12 +64,34 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
             flex-wrap: wrap;
         }
 
+        /* Modernize Toggle Group */
         mat-button-toggle-group {
             height: 36px;
+            border: none;
+            gap: 8px; /* Space between pills */
+            background: transparent;
         }
 
         mat-button-toggle {
             font-size: 0.8rem;
+            border-radius: 999px !important; /* Pill shape */
+            border: 1px solid #E0E0E0;
+            background: white;
+            color: #616161;
+            transition: all 0.2s ease;
+            
+            &.mat-button-toggle-checked {
+                background-color: #3f51b5 !important; /* Primary (Indigo) */
+                color: white !important;
+                border-color: #3f51b5 !important;
+                font-weight: 500;
+                box-shadow: 0 2px 4px rgba(63, 81, 181, 0.3);
+            }
+
+            &:hover:not(.mat-button-toggle-checked) {
+                background-color: #F5F5F5;
+                border-color: #BDBDBD;
+            }
         }
 
         .custom-range {
@@ -82,15 +104,23 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
             width: 140px;
         }
 
+        /* Adjust date field to match sleek pill style is handled by global .sleek-date-field if we add it, 
+           or we can assume standard outline. Let's keep specific width. */
+
         .range-separator {
             color: #666;
             font-size: 0.9rem;
+            font-weight: 500;
         }
 
         @media (max-width: 768px) {
             .date-range-container {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+            mat-button-toggle-group {
+                flex-wrap: wrap;
+                height: auto;
             }
         }
     `]
