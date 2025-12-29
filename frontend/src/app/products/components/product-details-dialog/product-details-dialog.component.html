@@ -257,7 +257,15 @@
                                 </div>
                                 <div class="hist-details">
                                     <span class="hist-qty">Qty: {{ item.quantity }}</span>
-                                    <span class="hist-cost">{{ item.unit_cost | currency }}</span>
+                                    <span class="hist-cost"
+                                        [matTooltip]="'Base: ' + ((item.base_cost || 0) | currency) + ' | Ship: ' + ((item.shipping_allocated || 0) | currency) + ' | Tax: ' + ((item.taxes_allocated || 0) | currency)">
+                                        {{ item.unit_cost | currency }}
+                                        <mat-icon
+                                            *ngIf="(item.shipping_allocated || 0) > 0 || (item.taxes_allocated || 0) > 0"
+                                            style="font-size: 14px; width: 14px; height: 14px; vertical-align: middle; margin-left: 4px; color: #999;">
+                                            info
+                                        </mat-icon>
+                                    </span>
                                 </div>
                                 <mat-icon>chevron_right</mat-icon>
                             </div>

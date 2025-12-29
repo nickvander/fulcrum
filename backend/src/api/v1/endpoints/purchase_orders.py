@@ -61,6 +61,11 @@ def create_purchase_order(
     Create a new Purchase Order.
     """
     po = crud_purchase_order.purchase_order.create_with_items(db=db, obj_in=po_in)
+    
+    # Calculate landed costs if any are present
+    if po.shipping_cost or po.tax_amount or po.other_costs:
+        po = purchase_order_service.calculate_landed_costs(db=db, po_id=po.id)
+        
     return po
 
 @router.get("/", response_model=List[po_schema.PurchaseOrder])
@@ -102,6 +107,13 @@ def update_purchase_order(
     if not po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
     po = crud_purchase_order.purchase_order.update(db=db, db_obj=po, obj_in=po_in)
+    
+    # Recalculate landed costs if cost fields were modified
+    if (po_in.shipping_cost is not None or 
+        po_in.tax_amount is not None or 
+        po_in.other_costs is not None):
+        po = purchase_order_service.calculate_landed_costs(db=db, po_id=po.id)
+        
     return po
 
 @router.post("/{id}/status", response_model=po_schema.PurchaseOrder)

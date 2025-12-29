@@ -37,6 +37,10 @@ def get_product_purchase_history(
         db.query(
             PurchaseOrderItem.quantity_ordered,
             PurchaseOrderItem.unit_cost,
+            PurchaseOrderItem.base_cost,
+            PurchaseOrderItem.shipping_allocated,
+            PurchaseOrderItem.taxes_allocated,
+            PurchaseOrderItem.other_allocated,
             PurchaseOrderItem.quantity_received,
             PurchaseOrder.id.label("po_id"),
             PurchaseOrder.created_at.label("date"),
@@ -58,6 +62,10 @@ def get_product_purchase_history(
             "supplier_name": row.supplier_name,
             "quantity": row.quantity_ordered,
             "unit_cost": row.unit_cost,
+            "base_cost": row.base_cost,
+            "shipping_allocated": row.shipping_allocated,
+            "taxes_allocated": row.taxes_allocated,
+            "other_allocated": row.other_allocated,
             "status": row.status
         }
         for row in results

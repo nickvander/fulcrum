@@ -57,6 +57,10 @@ export class SuppliersService {
     });
   }
 
+  updatePurchaseOrder(id: number, po: Partial<PurchaseOrderCreate>): Observable<PurchaseOrder> {
+    return this.http.put<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}`, po);
+  }
+
   receivePurchaseOrderItems(id: number, items: { product_id: number, quantity: number }[]): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/receive`, items);
   }

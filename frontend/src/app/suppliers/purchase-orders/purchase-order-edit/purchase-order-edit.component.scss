@@ -169,6 +169,28 @@
     }
 }
 
+.grand-total-display {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    .label {
+        font-size: 1.1em;
+        color: #555;
+        font-weight: 500;
+    }
+
+    .amount {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #2e7d32;
+    }
+}
+
 .section-hint {
     color: #666;
     font-style: italic;

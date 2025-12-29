@@ -154,7 +154,13 @@ class PurchaseOrderService:
             raise HTTPException(status_code=404, detail="Purchase Order not found")
         
         # Calculate total subtotal (quantity ordered * base cost)
-        subtotal = sum(item.quantity_ordered * item.base_cost for item in po.items)
+        # Handle case where base_cost might be 0 (legacy data)
+        subtotal = 0.0
+        for item in po.items:
+             if item.base_cost == 0 and item.unit_cost > 0:
+                 item.base_cost = item.unit_cost # Initialize base cost from unit cost
+             subtotal += item.quantity_ordered * item.base_cost
+
         if subtotal == 0:
             return po
         

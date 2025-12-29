@@ -141,6 +141,50 @@
             </div>
         </mat-card>
 
+        <!-- Payment Information -->
+        <mat-card class="form-section">
+            <h3>Payment Information</h3>
+            <div class="row">
+                <mat-form-field appearance="fill">
+                    <mat-label>Payment Status</mat-label>
+                    <mat-select formControlName="payment_status">
+                        <mat-option *ngFor="let status of paymentStatusOptions" [value]="status">
+                            {{status | titlecase}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Payment Method</mat-label>
+                    <mat-select formControlName="payment_method">
+                        <mat-option [value]="null">None</mat-option>
+                        <mat-option *ngFor="let method of paymentMethodOptions" [value]="method">
+                            {{method}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div class="row">
+                <mat-form-field appearance="fill">
+                    <mat-label>Paid By (User)</mat-label>
+                    <mat-select formControlName="paid_by_user_id">
+                        <mat-option [value]="null">Select User</mat-option>
+                        <mat-option *ngFor="let user of users" [value]="user.id">
+                            {{ (user.first_name && user.last_name) ? (user.first_name + ' ' + user.last_name) :
+                            user.email }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="fill">
+                    <mat-label>Custom Payer Name</mat-label>
+                    <input matInput formControlName="custom_payer_name" placeholder="e.g. External Partner">
+                    <mat-hint>If paid by someone outside the system</mat-hint>
+                </mat-form-field>
+            </div>
+        </mat-card>
+
         <!-- Invoices Section -->
         <mat-card class="form-section">
             <div class="section-header invoice-header">
@@ -190,11 +234,16 @@
         </mat-card>
 
         <div class="actions">
-            <!-- Left aligned actions -->
             <div class="actions-left">
                 <button mat-button type="button" (click)="cancel()">Cancel</button>
                 <button mat-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">Clear
                     Draft</button>
+            </div>
+
+            <!-- Grand Total Display -->
+            <div class="grand-total-display">
+                <span class="label">Total Order Value:</span>
+                <span class="amount">{{ calculateGrandTotal() | currency: poForm.get('currency')?.value }}</span>
             </div>
 
             <!-- Lock/Unlock Buttons -->
