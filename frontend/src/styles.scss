@@ -36,26 +36,40 @@ body {
 .sleek-select {
     .mat-mdc-text-field-wrapper {
         border-radius: 999px !important;
+        background-color: transparent !important; // Ensure clean background
     }
+
+    // Lighter, thinner borders
+    $sleek-border-color: #E0E0E0; // Gray 300 - Clean and subtle
+    $sleek-border-hover: #BDBDBD; // Gray 400
 
     .mdc-notched-outline__leading {
         border-radius: 999px 0 0 999px !important;
-        border-left: 1px solid rgba(0, 0, 0, 0.12);
-        border-top: 1px solid rgba(0, 0, 0, 0.12);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        border-left: 1px solid $sleek-border-color !important;
+        border-top: 1px solid $sleek-border-color !important;
+        border-bottom: 1px solid $sleek-border-color !important;
         width: 16px !important;
     }
 
     .mdc-notched-outline__trailing {
         border-radius: 0 999px 999px 0 !important;
-        border-right: 1px solid rgba(0, 0, 0, 0.12);
-        border-top: 1px solid rgba(0, 0, 0, 0.12);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        border-right: 1px solid $sleek-border-color !important;
+        border-top: 1px solid $sleek-border-color !important;
+        border-bottom: 1px solid $sleek-border-color !important;
     }
 
-    // Hide default border lines to replace with our own if needed, 
-    // or just let the border-radius do the work on the standard outline elements.
-    // The above is improving the existing outline.
+    // Middle notch (top/bottom)
+    .mdc-notched-outline__notch {
+        border-top: 1px solid $sleek-border-color !important;
+        border-bottom: 1px solid $sleek-border-color !important;
+    }
+
+    // Hover state
+    &:hover .mdc-notched-outline__leading,
+    &:hover .mdc-notched-outline__trailing,
+    &:hover .mdc-notched-outline__notch {
+        border-color: $sleek-border-hover !important;
+    }
 
     .mat-mdc-form-field-icon-suffix {
         display: flex;

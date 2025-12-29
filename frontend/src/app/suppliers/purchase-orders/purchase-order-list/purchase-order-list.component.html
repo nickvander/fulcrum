@@ -43,7 +43,7 @@
 
                 <div class="filter-divider"></div>
 
-                <mat-form-field appearance="outline" class="filter-field">
+                <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
                     <mat-label>Supplier</mat-label>
                     <mat-select [ngModel]="selectedSupplierId" (selectionChange)="onSupplierFilterChange($event.value)">
                         <mat-option [value]="null">All Suppliers</mat-option>
@@ -51,9 +51,14 @@
                             {{supplier.name}}
                         </mat-option>
                     </mat-select>
+                    <button *ngIf="selectedSupplierId" mat-icon-button matSuffix
+                        (click)="onSupplierFilterChange(null); $event.stopPropagation()">
+                        <mat-icon
+                            style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
+                    </button>
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" class="filter-field">
+                <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
                     <mat-label>Status</mat-label>
                     <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onFilterChange()">
                         <mat-option value="">All Statuses</mat-option>
@@ -61,6 +66,11 @@
                             {{status | titlecase}}
                         </mat-option>
                     </mat-select>
+                    <button *ngIf="selectedStatus" mat-icon-button matSuffix
+                        (click)="selectedStatus=''; onFilterChange(); $event.stopPropagation()">
+                        <mat-icon
+                            style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
+                    </button>
                 </mat-form-field>
             </div>
         </mat-card-content>
