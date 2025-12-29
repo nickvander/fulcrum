@@ -360,7 +360,18 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // For existing POs, open the preview dialog
+    // Auto-save changes before calculating costs to ensure backend has latest values
+    if (this.poForm.dirty) {
+      this.snackBar.open('Saving changes for calculation...', 'Close', { duration: 1500 });
+      this.updateOrder().subscribe(() => {
+        this.openCostAllocationDialog();
+      });
+    } else {
+      this.openCostAllocationDialog();
+    }
+  }
+
+  openCostAllocationDialog(): void {
     const dialogRef = this.dialog.open(CostAllocationDialogComponent, {
       width: '900px',
       data: { poId: this.poId }
@@ -372,6 +383,30 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         this.loadPurchaseOrder(this.poId!);
       }
     });
+  }
+
+  updateOrder(): Observable<any> {
+    if (!this.poId) return of(null);
+    const formValue = this.poForm.value;
+    const updateData: any = {
+      supplier_id: formValue.supplier_id,
+      status: formValue.status,
+      currency: formValue.currency,
+      notes: formValue.notes,
+      shipping_cost: formValue.shipping_cost,
+      tax_amount: formValue.import_cost,
+      other_costs: formValue.other_costs,
+      payment_status: formValue.payment_status,
+      payment_method: formValue.payment_method,
+      paid_by_user_id: formValue.paid_by_user_id,
+      custom_payer_name: formValue.custom_payer_name,
+      items: formValue.items.map((item: any) => ({
+        product_id: item.product_id,
+        quantity_ordered: item.quantity_ordered,
+        unit_cost: item.unit_cost
+      }))
+    };
+    return this.suppliersService.updatePurchaseOrder(this.poId, updateData);
   }
 
   deleteOrder(): void {
@@ -437,24 +472,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     const formValue = this.poForm.value;
 
     if (this.isEditMode && this.poId) {
-      const updateData: any = {
-        supplier_id: formValue.supplier_id,
-        status: formValue.status,
-        currency: formValue.currency,
-        notes: formValue.notes,
-        shipping_cost: formValue.shipping_cost,
-        tax_amount: formValue.import_cost,
-        other_costs: formValue.other_costs,
-        payment_status: formValue.payment_status,
-        payment_method: formValue.payment_method,
-        paid_by_user_id: formValue.paid_by_user_id,
-        custom_payer_name: formValue.custom_payer_name,
-        // For now, simple item update is not fully supported via PUT in generic CRUD without proper nested handling
-        // We will send items, but backend might need logic to sync them.
-        // Assuming backend works or we focus on payment fields for now.
-      };
-
-      this.suppliersService.updatePurchaseOrder(this.poId, updateData).subscribe(() => {
+      this.updateOrder().subscribe(() => {
         this.snackBar.open('Order updated successfully', 'Close', { duration: 3000 });
         this.router.navigate(['/suppliers/po/list']);
       });
