@@ -5,13 +5,19 @@ inbound inventory through Purchase Orders (POs).
 
 ## Accessing Suppliers
 
-Click **Suppliers** in the left sidebar.
+Click **Purchasing > Suppliers** in the left sidebar.
 
 ## Managing Suppliers
 
+### Supplier List Features
+
+- **Sorting**: Click column headers (Supplier, Contact, Orders, Total Value) to sort the list.
+- **KPIs**: View total number of suppliers at a glance.
+- **Deep Linking**: Click the "X POs" button in the **Orders** column to view all purchase orders for that specific supplier.
+
 ### Adding a Supplier
 
-1. Click **+ Supplier**.
+1. Click **+ Add Supplier**.
 2. Fill in the supplier details:
    - **Name**: Company or contact name.
    - **Contact Email**: For communication.
@@ -22,7 +28,7 @@ Click **Suppliers** in the left sidebar.
 
 ### Supplier Details
 
-Click on a supplier to view:
+Click on a supplier row or "Edit" button to view:
 
 - Contact information.
 - Associated products (if linked).
@@ -32,10 +38,24 @@ Click on a supplier to view:
 
 Purchase Orders track your inbound inventory from suppliers.
 
+### Accessing Purchase Orders
+
+Click **Purchasing > Purchase Orders** in the left sidebar.
+
+### Purchase Order List Features
+
+The PO list is designed for efficiency:
+
+- **Sorting**: Click any column header (PO #, Supplier, Status, Total, Date) to sort.
+- **Supplier Filter**: Use the "Supplier" dropdown to filter orders by a specific vendor.
+- **Status Filter**: Filter by Draft, Ordered, Received, etc.
+- **Date Range**: Use the presets (Today, This Week, Month to Date) to focus on recent activity.
+- **KPI Summary**: View Total Orders, Pending count, Total Value, and Received Value at the top.
+
 ### Creating a Purchase Order
 
-1. From the Suppliers list, click on a supplier, then **+ New PO**.
-2. Or navigate directly to **Purchase Orders** and click **+ New PO**.
+1. From the **Purchase Orders** screen, click **+ Create PO**.
+2. Or from the **Suppliers** list, click **+ Add PO**.
 3. Select the **Supplier** (if not pre-selected).
 4. Add **Line Items**:
    - Search for products or add new ones.

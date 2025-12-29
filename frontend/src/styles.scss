@@ -31,3 +31,34 @@ body {
         margin-left: auto !important;
     }
 }
+
+// Sleek Select Style (Pill shape)
+.sleek-select {
+    .mat-mdc-text-field-wrapper {
+        border-radius: 999px !important;
+    }
+
+    .mdc-notched-outline__leading {
+        border-radius: 999px 0 0 999px !important;
+        border-left: 1px solid rgba(0, 0, 0, 0.12);
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        width: 16px !important;
+    }
+
+    .mdc-notched-outline__trailing {
+        border-radius: 0 999px 999px 0 !important;
+        border-right: 1px solid rgba(0, 0, 0, 0.12);
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    // Hide default border lines to replace with our own if needed, 
+    // or just let the border-radius do the work on the standard outline elements.
+    // The above is improving the existing outline.
+
+    .mat-mdc-form-field-icon-suffix {
+        display: flex;
+        align-items: center;
+    }
+}

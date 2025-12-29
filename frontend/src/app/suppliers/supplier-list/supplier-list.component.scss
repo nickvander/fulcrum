@@ -3,7 +3,7 @@
     height: 100%;
 }
 
-.po-list-container {
+.supplier-list-container {
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -12,7 +12,6 @@
     margin: 0 auto;
 }
 
-// Header
 .header {
     display: flex;
     justify-content: space-between;
@@ -33,63 +32,17 @@
         color: #333;
     }
 
-    .po-count {
+    .supplier-count {
         color: #666;
         font-size: 0.9rem;
     }
 }
 
-.actions {
-    display: flex;
-    gap: 12px;
-}
-
-// KPI Row
-.kpi-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-
-    @media (max-width: 992px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 576px) {
-        grid-template-columns: 1fr;
-    }
-}
-
-// Filters
-.filter-card {
-    mat-card-content {
-        padding: 16px;
-    }
-}
-
-.filters-row {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.filter-field {
-    width: 180px;
-}
-
-.filter-divider {
-    width: 1px;
-    height: 36px;
-    background-color: #e0e0e0;
-    margin: 0 8px;
-}
-
-// Table
 .table-card {
     overflow: hidden;
 }
 
-.po-table {
+.supplier-table {
     width: 100%;
 
     th.mat-header-cell {
@@ -105,7 +58,7 @@
     }
 }
 
-.po-row {
+.supplier-row {
     cursor: pointer;
     transition: background-color 0.2s ease;
 
@@ -114,24 +67,26 @@
     }
 }
 
-.po-id {
+.supplier-name {
     font-weight: 600;
     color: #1976d2;
 }
 
-.status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 0.8rem;
-    font-weight: 500;
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .email {
+        font-size: 0.85rem;
+        color: #666;
+    }
 }
 
 .amount-cell {
     font-weight: 600;
 }
 
-// Empty State
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -160,7 +115,6 @@
     }
 }
 
-// Loading State
 .loading-state {
     display: flex;
     flex-direction: column;
@@ -174,17 +128,5 @@
 
     p {
         color: #666;
-    }
-}
-
-// Responsive
-@media (max-width: 768px) {
-    .po-list-container {
-        padding: 16px;
-    }
-
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
     }
 }

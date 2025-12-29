@@ -1,19 +1,100 @@
+h2[mat-dialog-title] {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 1.25rem;
+    font-weight: 500;
+
+    mat-icon {
+        color: #1976d2;
+    }
+}
+
+mat-dialog-content {
+    padding: 24px !important;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
 .expense-form {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding-top: 16px;
+}
+
+.form-section {
+    margin-bottom: 8px;
+
+    .section-label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #666;
+        margin-bottom: 8px;
+    }
+}
+
+.type-toggle {
+    width: 100%;
+
+    mat-button-toggle {
+        flex: 1;
+
+        mat-icon {
+            margin-right: 6px;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+        }
+    }
+
+    .mat-button-toggle-checked {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
 }
 
 .full-width {
     width: 100%;
 }
 
-.row {
+.form-row {
     display: flex;
     gap: 16px;
+}
 
-    mat-form-field {
+.amount-field {
+    flex: 2;
+}
+
+.currency-field {
+    flex: 1;
+    min-width: 100px;
+}
+
+.flex-field {
+    flex: 1;
+}
+
+mat-dialog-actions {
+    padding: 16px 24px !important;
+    border-top: 1px solid #e0e0e0;
+    margin: 0 !important;
+}
+
+// Responsive
+@media (max-width: 480px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .amount-field,
+    .currency-field,
+    .flex-field {
         flex: 1;
     }
 }

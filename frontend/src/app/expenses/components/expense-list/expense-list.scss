@@ -1,45 +1,258 @@
+:host {
+    display: block;
+    height: 100%;
+}
+
 .expense-container {
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
 }
 
+.reloading-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+}
+
+// Header
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .header-left {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+    }
 
     h1 {
         margin: 0;
-        font-size: 24px;
+        font-size: 1.75rem;
         font-weight: 500;
+        color: #333;
+    }
+
+    .expense-count {
+        color: #666;
+        font-size: 0.9rem;
     }
 }
 
-.full-width {
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+// KPI Row
+.kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    @media (max-width: 992px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// Filters
+.filter-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.filters-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-field {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+}
+
+.filter-divider {
+    width: 1px;
+    height: 36px;
+    background-color: #e0e0e0;
+    margin: 0 8px;
+}
+
+// Table
+.table-card {
+    overflow: hidden;
+}
+
+.expense-table {
     width: 100%;
+
+    th.mat-header-cell {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    td.mat-cell {
+        padding: 16px 12px;
+    }
 }
 
+.expense-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #f5f5f5;
+    }
+}
+
+// Description Cell
+.description-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .description-text {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .reference-badge {
+        font-size: 0.75rem;
+        color: #888;
+        font-style: italic;
+    }
+}
+
+// Category Badge
 .category-badge {
+    display: inline-block;
     padding: 4px 12px;
-    border-radius: 12px;
-    background-color: #f0f0f0;
-    font-size: 12px;
-    color: #666;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
-.no-data {
+// Type Badge
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    background-color: #e3f2fd;
+    color: #1565c0;
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    &.recurring {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+}
+
+// Amount Cell
+.amount-cell {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #d32f2f;
+}
+
+// Empty State
+.empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px;
-    color: #888;
-    gap: 12px;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+
+    .empty-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: #ccc;
+        margin-bottom: 16px;
+    }
+
+    h3 {
+        margin: 0 0 8px;
+        font-size: 1.25rem;
+        color: #555;
+    }
+
+    p {
+        margin: 0 0 20px;
+        color: #888;
+    }
+}
+
+// Loading State
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px;
+
+    mat-progress-bar {
+        width: 200px;
+        margin-bottom: 16px;
+    }
+
+    p {
+        color: #666;
+    }
+}
+
+// Action Menu
+.delete-action {
+    color: #d32f2f;
 
     mat-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
+        color: inherit;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .expense-container {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filters-row {
+        flex-direction: column;
+
+        .filter-field {
+            max-width: 100%;
+            width: 100%;
+        }
     }
 }

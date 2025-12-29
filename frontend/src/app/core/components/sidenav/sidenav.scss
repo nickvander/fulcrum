@@ -1,3 +1,67 @@
 .active-link {
   background-color: rgba(0, 0, 0, 0.1);
 }
+
+// Expansion panel styling for nav - match mat-list-item exactly
+.nav-expansion {
+  background: transparent !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+
+  &::ng-deep {
+    .mat-expansion-panel-header {
+      padding: 0 16px;
+      height: 48px;
+      background: transparent !important;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.04) !important;
+      }
+
+      .mat-content {
+        align-items: center;
+        overflow: visible;
+      }
+    }
+
+    .mat-expansion-panel-body {
+      padding: 0;
+    }
+
+    .mat-expansion-indicator {
+      margin-left: 8px;
+    }
+  }
+}
+
+// Match the nav panel title to mat-list-item styling
+.nav-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: rgba(0, 0, 0, 0.87);
+
+  mat-icon {
+    color: rgba(0, 0, 0, 0.54);
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+    margin: 0;
+  }
+
+  span {
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.nested-nav {
+  padding: 0 !important;
+
+  a.mat-mdc-list-item {
+    padding-left: 56px !important; // Indent nested items
+  }
+}

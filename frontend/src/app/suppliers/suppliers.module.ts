@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,17 +16,22 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
 
 import { SuppliersRoutingModule } from './suppliers-routing.module';
+import { SupplierListComponent } from './supplier-list/supplier-list.component';
 import { SupplierDetailComponent } from './supplier-detail/supplier-detail.component';
 import { PurchaseOrderListComponent } from './purchase-orders/purchase-order-list/purchase-order-list.component';
 import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edit/purchase-order-edit.component';
+import { KpiCardComponent } from '../dashboard/widgets/kpi-card/kpi-card.component';
+import { DateRangePresetsComponent } from '../shared/components/date-range-presets/date-range-presets.component';
 
 @NgModule({
   declarations: [
+    SupplierListComponent,
     SupplierDetailComponent,
     PurchaseOrderListComponent,
     PurchaseOrderEditComponent,
@@ -36,8 +42,10 @@ import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edi
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     SuppliersRoutingModule,
     MatTableModule,
+    MatSortModule,
     MatButtonModule,
     MatInputModule,
     MatIconModule,
@@ -50,7 +58,10 @@ import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edi
     MatTooltipModule,
     MatCheckboxModule,
     MatDividerModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatProgressBarModule,
+    KpiCardComponent,
+    DateRangePresetsComponent
   ]
 })
 export class SuppliersModule { }
