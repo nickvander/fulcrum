@@ -33,6 +33,26 @@ GET /api/v1/supplier-products/by-product/{product_id}
 GET /api/v1/suppliers/{id}/products
 ```
 
+## Smart Purchase Order Creation
+
+When adding products to a Purchase Order (e.g., from the Inventory Health Widget), the system provides intelligent automation:
+
+### Automatic Supplier Selection
+- **Single Supplier**: If a product is sourced from only one supplier, that supplier is automatically selected for the PO and the cost is pre-filled.
+- **Multiple Suppliers**: A dialog prompts you to choose which supplier to use, showing cost, lead time, and SKU for each option.
+- **Fallback**: If no supplier-product associations exist, the product's default supplier is used.
+
+### Bundle Unpacking
+When adding a **bundle** product to a PO:
+- The system **automatically unpacks** the bundle into its individual components.
+- Each component is added as a separate line item with the correct quantity.
+- Supplier selection logic applies to each component individually.
+- The bundle itself is NOT added to the PO (since you order the components, not assembled bundles).
+
+**Example**: Adding "Starter Kit" bundle (contains 2x Widget A, 1x Widget B) results in two line items: Widget A (qty 2) and Widget B (qty 1).
+
+## Purchase Order Lifecycle
+
 Purchase Orders track the lifecycle of ordering stock from suppliers.
 
 ### Lifecycle Statuses

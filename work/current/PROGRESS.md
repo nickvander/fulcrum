@@ -141,3 +141,5 @@
         - Confirmed seamless navigation between Supplier and Product pages.
         - **Bugfix**: Resolved issue where Inventory Widget's "Add to Cart" failed to populate product name (fixed FormArray/FormControl desync).
         - **Enhancement**: Implemented smart supplier selection in PO autofill (Auto-select if unique, Prompt if multiple).
+        - **Enhancement**: Implemented smart bundle unpacking for POs (adds components instead of bundle).
+
