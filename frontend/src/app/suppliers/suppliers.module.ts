@@ -20,7 +20,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
+import { SupplierSelectionDialogComponent } from './purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component';
 import { UserService } from '../users/services/user.service';
+import { MatListModule } from '@angular/material/list';
 
 import { SuppliersRoutingModule } from './suppliers-routing.module';
 import { SupplierListComponent } from './supplier-list/supplier-list.component';
@@ -41,7 +43,8 @@ import { SupplierProductManagerComponent } from './supplier-product-manager/supp
     PurchaseOrderEditComponent,
     ReceivingDialogComponent,
     QuickProductDialogComponent,
-    CostAllocationDialogComponent
+    CostAllocationDialogComponent,
+    SupplierSelectionDialogComponent
   ],
   imports: [
     CommonModule,
@@ -61,6 +64,7 @@ import { SupplierProductManagerComponent } from './supplier-product-manager/supp
     MatAutocompleteModule,
     MatTooltipModule,
     MatCheckboxModule,
+    MatListModule,
     MatDividerModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,

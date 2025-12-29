@@ -14,9 +14,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { SupplierInvoice } from '../../suppliers.service';
 import { UserService } from '../../../users/services/user.service'; // Import UserService
 import { User } from '../../../shared/models/user.model'; // Import User model
-import { Observable, Subject, of } from 'rxjs';
+import { Observable, Subject, of, zip } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, takeUntil, map, catchError } from 'rxjs/operators';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/supplier-selection-dialog.component';
 
 @Component({
   selector: 'app-purchase-order-edit',
@@ -105,45 +106,90 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
   handleProductAutofill(productId: number): void {
     console.log('handleProductAutofill started for', productId);
-    // Ensure draft is loaded first if available
-    // (This is partially handled by ngOnInit order, but let's be robust)
 
-    this.productService.getProductById(productId).subscribe(product => {
+    // Fetch Product AND its Supplier options
+    zip(
+      this.productService.getProductById(productId),
+      this.suppliersService.getSuppliersForProduct(productId)
+    ).subscribe(([product, supplierProducts]) => {
       if (product) {
-        // Pre-fill supplier if linked and no supplier selected yet
-        if (product.supplier_id && !this.poForm.get('supplier_id')?.value) {
-          this.poForm.patchValue({ supplier_id: product.supplier_id });
-        }
+        // Determine which supplier to use
+        let selectedSupplierId = this.poForm.get('supplier_id')?.value;
+        let selectedSupplierProduct: any = null;
 
-        // If supplier is already selected and mismatch, warn user?
-        // For now, let's assume user knows what they are doing or they can mix suppliers in draft (though invalid for final PO)
+        // If no supplier selected yet for the PO
+        if (!selectedSupplierId) {
+          if (supplierProducts.length === 1) {
+            // Only 1 supplier source -> Auto select
+            selectedSupplierId = supplierProducts[0].supplier_id;
+            selectedSupplierProduct = supplierProducts[0];
+            this.poForm.patchValue({ supplier_id: selectedSupplierId });
+            this.snackBar.open(`Auto-selected supplier: ${supplierProducts[0].supplier_name}`, 'Close', { duration: 3000 });
+          } else if (supplierProducts.length > 1) {
+            // Multiple sources -> Ask user
+            const dialogRef = this.dialog.open(SupplierSelectionDialogComponent, {
+              width: '500px',
+              data: { productName: product.name, suppliers: supplierProducts }
+            });
 
-        // Add product line item
-        // Check if already added to avoid duplicates
-        const existing = this.items.controls.find(ctrl => ctrl.get('product_id')?.value === product.id);
-
-        if (existing) {
-          // If exists, maybe increment quantity?
-          const currentQty = existing.get('quantity_ordered')?.value || 0;
-          existing.patchValue({ quantity_ordered: currentQty + 1 });
-          this.snackBar.open(`Incremented quantity for ${product.name}`, 'Close', { duration: 3000 });
-        } else {
-          // Remove empty first item if it's the only one and has no product_id
-          const firstItem = this.items.at(0);
-          if (this.items.length === 1 && !firstItem.get('product_id')?.value) {
-            this.removeItem(0);
+            dialogRef.afterClosed().subscribe(result => {
+              if (result) {
+                // User picked one
+                selectedSupplierId = result.supplier_id;
+                selectedSupplierProduct = result;
+                this.poForm.patchValue({ supplier_id: selectedSupplierId });
+                this.finishAddingLineItem(product, 1, result.cost_price);
+              } else {
+                // Cancelled or no selection, just add item with default cost
+                this.finishAddingLineItem(product);
+              }
+            });
+            return; // Exit here, finishAddingLineItem called in callback
+          } else {
+            // No supplier products found. Fallback to product.supplier_id
+            if (product.supplier_id) {
+              selectedSupplierId = product.supplier_id;
+              this.poForm.patchValue({ supplier_id: selectedSupplierId });
+            }
           }
-
-          this.addLineItem({
-            product_id: product.id,
-            product_name: product.name,
-            quantity_ordered: 1,
-            unit_cost: product.cost_price || 0
-          });
-          this.snackBar.open(`Added ${product.name} to order`, 'Close', { duration: 3000 });
+        } else {
+          // Supplier ALREADY selected for PO. Check if this product is from them.
+          const match = supplierProducts.find(sp => sp.supplier_id === selectedSupplierId);
+          if (match) {
+            selectedSupplierProduct = match;
+          }
         }
+
+        const cost = selectedSupplierProduct ? selectedSupplierProduct.cost_price : (product.cost_price || 0);
+        this.finishAddingLineItem(product, 1, cost);
       }
     });
+  }
+
+  finishAddingLineItem(product: Product, quantity: number = 1, unitCost: number = 0): void {
+    // Check if already added to avoid duplicates
+    const existing = this.items.controls.find(ctrl => ctrl.get('product_id')?.value === product.id);
+
+    if (existing) {
+      const currentQty = existing.get('quantity_ordered')?.value || 0;
+      existing.patchValue({ quantity_ordered: currentQty + quantity });
+      // Also update cost if it was 0? No, keep existing price if set.
+      this.snackBar.open(`Incremented quantity for ${product.name}`, 'Close', { duration: 3000 });
+    } else {
+      // Remove empty first item if it's the only one and has no product_id
+      const firstItem = this.items.at(0);
+      if (this.items.length === 1 && !firstItem.get('product_id')?.value) {
+        this.removeItem(0);
+      }
+
+      this.addLineItem({
+        product_id: product.id,
+        product_name: product.name,
+        quantity_ordered: quantity,
+        unit_cost: unitCost || product.cost_price || 0
+      });
+      this.snackBar.open(`Added ${product.name} to order`, 'Close', { duration: 3000 });
+    }
   }
 
   ngOnDestroy(): void {
