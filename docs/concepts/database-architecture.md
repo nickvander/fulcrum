@@ -264,6 +264,109 @@ erDiagram
     marketplaces ||--o{ marketplace_credentials : requires
 ```
 
+### Bundle / Kitting Schema
+
+Bundles are virtual products composed of other products. This enables
+kit-building and combo-pack functionality.
+
+```mermaid
+erDiagram
+    products {
+        int id PK
+        string name
+        string sku UK
+        bool is_bundle
+        float cost_price
+        float average_cost
+    }
+
+    bundle_components {
+        int id PK
+        int bundle_id FK
+        int component_id FK
+        int quantity
+        int allocated_quantity
+    }
+
+    products ||--o{ bundle_components : "is composed of (as bundle)"
+    products ||--o{ bundle_components : "is part of (as component)"
+```
+
+**Key Concepts**:
+- `is_bundle`: Flag on products table indicating if product is a bundle.
+- `bundle_components`: Junction table linking bundle products to their
+  components.
+- `quantity`: How many of the component are in one bundle unit.
+- `allocated_quantity`: Stock reserved for pre-built kits.
+
+### Purchase Order Schema
+
+Purchase Orders track inbound inventory from suppliers with full line item
+details and cost tracking.
+
+```mermaid
+erDiagram
+    purchase_orders {
+        int id PK
+        int supplier_id FK
+        string po_number UK
+        string status
+        date order_date
+        date expected_delivery_date
+        float subtotal
+        float tax_amount
+        float shipping_cost
+        float total_amount
+        text notes
+    }
+
+    purchase_order_items {
+        int id PK
+        int purchase_order_id FK
+        int product_id FK
+        int quantity
+        float unit_cost
+        float line_total
+    }
+
+    suppliers {
+        int id PK
+        string name
+        string email
+        int lead_time_days
+    }
+
+    suppliers ||--o{ purchase_orders : receives
+    purchase_orders ||--o{ purchase_order_items : contains
+    products ||--o{ purchase_order_items : ordered_in
+```
+
+**Key Concepts**:
+- `status`: Draft, Ordered, Received.
+- `unit_cost`: Cost per item on this PO (may differ from product's
+  `cost_price`).
+- When PO is received, inventory is adjusted and `average_cost` is
+  recalculated.
+
+### Expense Tracking Schema
+
+Operating expenses for profitability analysis beyond COGS.
+
+```mermaid
+erDiagram
+    expenses {
+        int id PK
+        string description
+        float amount
+        string category
+        date expense_date
+        bool is_recurring
+        string recurrence_period
+    }
+```
+
+**Categories**: Advertising, Software, Shipping, Labor, Other.
+
 ## Key Relationships
 
 ### One-to-Many Relationships

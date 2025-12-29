@@ -1,0 +1,45 @@
+.expense-container {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+    }
+}
+
+.full-width {
+    width: 100%;
+}
+
+.category-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    background-color: #f0f0f0;
+    font-size: 12px;
+    color: #666;
+}
+
+.no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px;
+    color: #888;
+    gap: 12px;
+
+    mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+    }
+}

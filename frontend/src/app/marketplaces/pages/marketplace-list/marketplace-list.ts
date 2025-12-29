@@ -58,4 +58,11 @@ export class MarketplaceListComponent implements OnInit {
       }
     });
   }
+
+  getMarketplaceLogo(name: string): string {
+    const n = name.toLowerCase();
+    if (n.includes('amazon')) return 'images/marketplaces/amazon.png';
+    if (n.includes('mercado')) return 'images/marketplaces/mercadolibre.png';
+    return 'images/marketplaces/default.png';
+  }
 }

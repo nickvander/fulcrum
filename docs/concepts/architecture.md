@@ -208,6 +208,8 @@ graph TD
         F["ProductsModule"]:::feature_module
         G["SettingsModule"]:::feature_module
         H["UsersModule"]:::feature_module
+        J["MarketplacesModule"]:::feature_module
+        K["SuppliersModule"]:::feature_module
         I["AuthGuard"]:::auth_guard
     end
 
@@ -218,11 +220,16 @@ graph TD
     B -- "Lazy Loads" --> F
     B -- "Lazy Loads" --> G
     B -- "Lazy Loads" --> H
+    B -- "Lazy Loads" --> J
+    B -- "Lazy Loads" --> K
 
     F -- "Imports" --> D
     G -- "Imports" --> D
     H -- "Imports" --> D
+    J -- "Imports" --> D
+    K -- "Imports" --> D
 
     E -- "Provides" --> I
     B -- "Uses Guard" --> I
 ```
+

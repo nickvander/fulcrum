@@ -41,17 +41,15 @@ describe.skip('ProductForm: Edit Mode', () => {
     const mockProduct: Product = {
         id: 1,
         name: 'Test Product',
-        sku: 'T001',
-        description: '',
+        sku: 'TEST001',
+        description: 'Test Description',
         default_resale_price: 100,
         cost_price: 50,
-        manufacturer: 'Test Manufacturer',
-        brand: 'Test Brand',
-        category: 'Test Category',
-        width: 10,
-        height: 10,
-        depth: 10,
-        weight: 10,
+        is_bundle: false,
+        images: [],
+        inventory_items: [],
+        inventory_adjustments: [],
+        custom_fields: []
     };
 
     beforeEach(async () => {
@@ -137,20 +135,20 @@ describe.skip('ProductForm: Edit Mode', () => {
             schemas: [NO_ERRORS_SCHEMA]
         })
             .overrideComponent(ProductForm, {
-            set: {
-                imports: [
-                    CommonModule,
-                    ReactiveFormsModule,
-                    MatFormFieldModule,
-                    MatInputModule,
-                    MatCardModule,
-                    MatButtonModule,
-                    MatIconModule,
-                    MatListModule
-                ],
-                schemas: [NO_ERRORS_SCHEMA]
-            }
-        })
+                set: {
+                    imports: [
+                        CommonModule,
+                        ReactiveFormsModule,
+                        MatFormFieldModule,
+                        MatInputModule,
+                        MatCardModule,
+                        MatButtonModule,
+                        MatIconModule,
+                        MatListModule
+                    ],
+                    schemas: [NO_ERRORS_SCHEMA]
+                }
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ProductForm);

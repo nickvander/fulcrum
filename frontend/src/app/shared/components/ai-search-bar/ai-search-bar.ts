@@ -11,7 +11,6 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-ai-search-bar',
   templateUrl: './ai-search-bar.html',
-  styleUrl: './ai-search-bar.scss',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -19,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatButtonModule,
     MatIconModule
-],
+  ],
 })
 export class AiSearchBar implements OnInit, OnDestroy {
   @Output() searchQuery = new EventEmitter<string>();

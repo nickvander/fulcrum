@@ -32,6 +32,40 @@
   }
 }
 
+.stock {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0; // Removed margin since it's in a flex container now
+  font-style: italic;
+}
+
+.stock-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.allocated-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #bbdefb;
+  cursor: help;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .close-button {
   margin-left: auto;
 }
@@ -84,6 +118,7 @@
 }
 
 .container {
+  position: relative;
   padding: 16px;
   max-width: 1200px;
   margin: 0 auto;
@@ -116,11 +151,106 @@
 
 .search-container {
   margin-bottom: 24px;
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Ensure proper spacing when batch toolbar is visible */
 app-batch-action-toolbar+.search-container {
   margin-top: 16px;
+}
+
+.filters-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.active-filter-btn {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-color: #1976d2;
+}
+
+.filter-count-badge {
+  background: #d32f2f;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: top;
+  margin-left: 4px;
+}
+
+.advanced-filter-panel {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  animation: slideDown 0.2s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reloading-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  border-radius: 4px 4px 0 0;
+}
+
+.filter-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-field {
+  // Allow growing but constrained
+  flex: 1 1 140px !important;
+  max-width: 180px;
+  font-size: 13px;
+
+  ::ng-deep .mat-mdc-form-field-text-prefix {
+    // Add space from left edge
+    padding-left: 8px;
+    padding-right: 4px;
+    color: #777;
+  }
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .product-grid {
@@ -133,6 +263,9 @@ app-batch-action-toolbar+.search-container {
 .product-card {
   position: relative;
   transition: all 0.2s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   &:hover {
     transform: translateY(-4px);
@@ -169,9 +302,36 @@ app-batch-action-toolbar+.search-container {
   }
 }
 
+.bundle-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(63, 81, 181, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+}
+
 .product-image {
   height: 200px;
   object-fit: contain;
+  width: 100%;
+  margin-top: 16px;
 }
 
 .no-image-placeholder {
@@ -181,11 +341,15 @@ app-batch-action-toolbar+.search-container {
   justify-content: center;
   background-color: #f5f5f5;
   color: #9e9e9e;
+  margin-top: 16px;
 }
 
 .card-content-wrapper {
   position: relative;
   padding: 16px !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .price-stock-info {
@@ -202,14 +366,15 @@ app-batch-action-toolbar+.search-container {
 }
 
 .marketplace-info {
-  margin-top: 8px;
+  margin-top: auto;
+  /* Push to bottom */
   padding-top: 8px;
   border-top: 1px solid #eee;
   min-height: 24px;
   display: flex;
   align-items: center;
 
-  .no-channels {
+  .no-marketplaces {
     display: flex;
     align-items: center;
     color: #9e9e9e;
@@ -224,18 +389,68 @@ app-batch-action-toolbar+.search-container {
   }
 }
 
-.price {
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #1976d2;
-  margin: 8px 0;
+.price-row {
+  margin-bottom: 4px;
 }
 
-.stock {
+.stock-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
   font-size: 0.9rem;
   color: #666;
-  margin: 4px 0;
-  font-style: italic;
+}
+
+.stock-label {
+  font-weight: 500;
+}
+
+.cost-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed #eee;
+}
+
+.cost-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.cost-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.cost-separator {
+  color: #ddd;
+}
+
+.allocated-badge-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.7rem;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid #bbdefb;
+  cursor: help;
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+  }
 }
 
 .empty-state {
@@ -280,35 +495,34 @@ app-batch-action-toolbar+.search-container {
 
 .infinite-scroll-trigger {
   height: 20px;
-  /* Small invisible element to detect scroll position */
 }
 
 .quick-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 16px 0;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  margin-top: 8px;
 
-  .quick-filter-btn {
-    text-transform: none;
-    font-size: 0.85rem;
-    padding: 6px 12px;
+  mat-chip-listbox {
+    flex: 1;
+  }
 
-    .mat-icon {
-      font-size: 18px;
-      height: 18px;
-      width: 18px;
-      margin-right: 4px;
-    }
+  .search-actions {
+    margin-left: auto;
   }
 }
 
 // Responsive adjustments
 @media (max-width: 768px) {
   .quick-filters {
-    justify-content: center;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .search-actions {
+      margin-left: 0;
+      margin-top: 8px;
+    }
   }
 }
 
@@ -405,6 +619,12 @@ app-batch-action-toolbar+.search-container {
   flex-direction: column;
   padding: 8px 0;
 
+  .name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .product-name {
     font-weight: 500;
     color: #333;
@@ -414,6 +634,40 @@ app-batch-action-toolbar+.search-container {
     font-size: 0.8rem;
     color: #757575;
   }
+}
+
+.table-bundle-badge {
+  background-color: #e8eaf6;
+  color: #3f51b5;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Fix conflict: Menu button was Top-Right, Cost was overlapping.
+   The Card Content is relative. Action Menu is absolute top-right.
+   Price/Cost container is in flow.
+*/
+.action-menu {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  width: 32px;
+  /* Smaller touch target slightly */
+  height: 32px;
+
+  mat-icon {
+    font-size: 20px;
+    /* Smaller icon */
+  }
+}
+
+/* Move card content down slightly so top-right isn't crowded if content is wide */
+.card-content-wrapper {
+  padding-top: 12px !important;
 }
 
 .low-stock {

@@ -1,6 +1,6 @@
 import os
 from typing import List, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response, Body
 from sqlalchemy.orm import Session
 
 from src.api import dependencies
@@ -71,6 +71,11 @@ def read_products(
     limit: int = 100,
     sku: str = None,
     q: str = None,
+    is_bundle: bool = None,
+    min_stock: int = None,
+    max_stock: int = None,
+    min_price: float = None,
+    max_price: float = None,
 ):
     """
     Retrieve products.
@@ -93,7 +98,18 @@ def read_products(
     filters = {}
     if q:
         filters['search_term'] = q
+    if is_bundle is not None:
+        filters['is_bundle'] = is_bundle
+    if min_stock is not None:
+        filters['min_stock'] = min_stock
+    if max_stock is not None:
+        filters['max_stock'] = max_stock
+    if min_price is not None:
+        filters['min_price'] = min_price
+    if max_price is not None:
+        filters['max_price'] = max_price
         
+    print(f"DEBUG: read_products filters={filters}, is_bundle={is_bundle}")
     products = crud_product.product.get_multi_paginated(db, skip=skip, limit=limit, filters=filters)
     return products
 
@@ -305,6 +321,42 @@ def search_products(
     return products
 
 
+@router.post("/{product_id}/assemble", response_model=product_schema.Product)
+def assemble_bundle(
+    product_id: int,
+    quantity: int = Body(..., embed=True),
+    current_user: User = Depends(dependencies.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Assemble a bundle (kit) from its components.
+    """
+    from src.services.inventory_service import inventory_service
+    
+    try:
+        inventory_service.assemble_bundle(
+            db=db,
+            bundle_id=product_id,
+            quantity=quantity,
+            user_id=current_user.email if current_user.email else f"user_{current_user.id}"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    db.commit()
+    
+    # Refresh product data
+    from sqlalchemy.orm import joinedload
+    from src.models.product import Product
+    
+    refreshed_product = db.query(Product)\
+        .options(joinedload(Product.inventory_items))\
+        .options(joinedload(Product.inventory_adjustments))\
+        .filter(Product.id == product_id).first()
+        
+    return refreshed_product
+
+
 @router.post("/{product_id}/adjust-stock", response_model=product_schema.Product)
 def adjust_stock(
     product_id: int,
@@ -387,3 +439,4 @@ def get_product_variants(
     # We can use the relationship if it's eagerly loaded or lazy loading (if session active).
     # To be safe and efficient, we can check if they are loaded or query them directly.
     return product.variants
+

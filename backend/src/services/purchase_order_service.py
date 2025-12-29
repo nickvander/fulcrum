@@ -3,6 +3,8 @@ from fastapi import HTTPException
 from src.crud.crud_purchase_order import purchase_order as crud_purchase_order
 from src.crud.crud_product import product as crud_product
 from src.schemas.purchase_order import PurchaseOrderStatus
+from src.models.inventory import InventoryItem
+from sqlalchemy.sql import func
 
 class PurchaseOrderService:
     def transition_status(self, db: Session, po_id: int, new_status: PurchaseOrderStatus):
@@ -70,25 +72,26 @@ class PurchaseOrderService:
             # Fetch product explicitly to ensure session tracking
             product = crud_product.get(db=db, id=pid)
             if product:
-                # 1. Last Purchase Price (Current Replacement Cost)
+                current_qty_log = sum(inv.quantity for inv in product.inventory_items) if product.inventory_items else 0
+                print(f"[PO Receive] Product {pid}: Current Stock {current_qty_log}, Old Avg {product.average_cost}, New Unit Cost {item.unit_cost}")
+
+                # Explicitly query current total stock (before this receipt is processed by inventory service)
+                current_stock_qty = db.query(func.sum(InventoryItem.quantity)).filter(InventoryItem.product_id == pid).scalar() or 0
+                
+                print(f"[PO Receive] Product {pid}: Db Stock {current_stock_qty}, Old Avg {product.average_cost}, New Unit Cost {item.unit_cost}")
+
+                # 1. Capture old cost for fallback
+                old_cost_price = product.cost_price
+
+                # 2. Update Cost Price (Last Purchase Price)
                 product.cost_price = item.unit_cost
                 
-                # 2. Weighted Average Cost
-                # Get current total stock
-                # Note: This uses the loaded relationship. If inventory_items is stale, this calc might be slightly off
-                # but explicit refresh is expensive inside a loop. 
-                # Better: Use the service or query, but for now rely on relationship or explicit fallback.
-                current_stock_qty = sum(inv.quantity for inv in product.inventory_items) if product.inventory_items else 0
-                
-                # If this is the *first* receive, current_stock_qty might not include the *just received* amount yet
-                # because we updated inventory via service *after* this block in the original code? 
-                # Wait, inventory_service.adjust_stock is called AFTER this block.
-                # So current_stock_qty is "Quantity Before Receive".
-                
+                # 3. Weighted Average Cost
                 current_avg_cost = product.average_cost or 0.0
                 
-                if current_avg_cost == 0 and current_stock_qty > 0 and product.cost_price:
-                     current_avg_cost = product.cost_price
+                # If avg cost is missing but we have stock, try to estimate from old cost
+                if current_avg_cost == 0 and current_stock_qty > 0 and old_cost_price:
+                     current_avg_cost = old_cost_price
 
                 total_existing_value = current_stock_qty * current_avg_cost
                 new_received_value = qty * item.unit_cost
@@ -97,7 +100,7 @@ class PurchaseOrderService:
                 
                 if total_new_qty > 0:
                     new_average_cost = (total_existing_value + new_received_value) / total_new_qty
-                    product.average_cost = new_average_cost
+                    product.average_cost = round(new_average_cost, 4)
                 
                 db.add(product)
             # ----------------------------------------
@@ -139,6 +142,42 @@ class PurchaseOrderService:
         if new_status != po.status:
              crud_purchase_order.update(db=db, db_obj=po, obj_in={"status": new_status})
         
+        return po
+
+    def calculate_landed_costs(self, db: Session, po_id: int):
+        """
+        Distribute PO-level shipping, tax, and other costs across individual items
+        based on their contribution to the total value.
+        """
+        po = crud_purchase_order.get(db=db, id=po_id)
+        if not po:
+            raise HTTPException(status_code=404, detail="Purchase Order not found")
+        
+        # Calculate total subtotal (quantity ordered * base cost)
+        subtotal = sum(item.quantity_ordered * item.base_cost for item in po.items)
+        if subtotal == 0:
+            return po
+        
+        total_shipping = po.shipping_cost or 0.0
+        total_tax = po.tax_amount or 0.0
+        total_other = po.other_costs or 0.0
+        
+        for item in po.items:
+            item_share = (item.quantity_ordered * item.base_cost) / subtotal
+            
+            # Allocation per unit
+            item.shipping_allocated = (total_shipping * item_share) / item.quantity_ordered if item.quantity_ordered > 0 else 0
+            item.taxes_allocated = (total_tax * item_share) / item.quantity_ordered if item.quantity_ordered > 0 else 0
+            item.other_allocated = (total_other * item_share) / item.quantity_ordered if item.quantity_ordered > 0 else 0
+            
+            # Update total unit cost
+            item.unit_cost = item.base_cost + item.shipping_allocated + item.taxes_allocated + item.other_allocated
+            item.costs_applied_at = func.now()
+            
+            db.add(item)
+        
+        db.commit()
+        db.refresh(po)
         return po
 
 purchase_order_service = PurchaseOrderService()

@@ -1,12 +1,15 @@
-<mat-form-field class="search-bar" appearance="outline">
-  <mat-label>Semantic Search</mat-label>
-  <input matInput [formControl]="searchControl" placeholder="e.g., 'red t-shirts for summer'">
-  <button mat-icon-button matSuffix (click)="startVoiceSearch()" aria-label="Search by voice">
-    <mat-icon>mic</mat-icon>
-  </button>
-  @if (searchControl.value) {
-    <button mat-icon-button matSuffix (click)="clearSearch()" aria-label="Clear search">
+<div class="ai-search-container">
+  <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+    <mat-icon matPrefix class="search-icon">search_spark</mat-icon>
+    <input matInput [formControl]="searchControl" placeholder="Ask AI to find products...">
+    @if (searchControl.value) {
+    <button mat-icon-button matSuffix (click)="clearSearch()" type="button" aria-label="Clear">
       <mat-icon>close</mat-icon>
     </button>
-  }
-</mat-form-field>
+    }
+    <button mat-icon-button matSuffix (click)="startVoiceSearch()" type="button" class="voice-btn"
+      aria-label="Voice Search">
+      <mat-icon>mic</mat-icon>
+    </button>
+  </mat-form-field>
+</div>

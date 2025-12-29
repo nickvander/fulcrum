@@ -107,6 +107,18 @@ export class ProductService {
     return this.getProducts(page, pageSize, { q: query });
   }
 
+  // Isolated search that doesn't update the global products state
+  searchProductsIsolated(query: string, page: number = 1, pageSize: number = 10): Observable<PaginatedProducts> {
+    let params = new HttpParams()
+      .set('skip', (page - 1) * pageSize)
+      .set('limit', pageSize)
+      .set('q', query);
+
+    return this.http.get<PaginatedProducts>(this.apiUrl, { params }).pipe(
+      map(response => this.transformToPaginated(response, page, pageSize))
+    );
+  }
+
   searchProductsBySku(sku: string, page: number = 1, pageSize: number = 10): Observable<PaginatedProducts> {
     let params = new HttpParams()
       .set('sku', sku)
@@ -317,6 +329,20 @@ export class ProductService {
       body: { ids }
     }).pipe(
       tap(() => this.notificationService.showSuccess('Selected products deleted successfully!'))
+    );
+  }
+
+  assembleBundle(productId: number, quantity: number): Observable<Product> {
+    return this.http.post<Product>(`${this.apiUrl}/${productId}/assemble`, { quantity }).pipe(
+      tap(() => this.notificationService.showSuccess('Bundle assembled successfully!')),
+      tap((updatedProduct: Product) => {
+        const current = this._products.getValue();
+        const updated = current.map(p => p.id === productId ? {
+          ...updatedProduct,
+          primary_image: updatedProduct.images?.find(img => img.is_primary) ?? updatedProduct.images?.[0]
+        } : p);
+        this._products.next(updated);
+      })
     );
   }
 

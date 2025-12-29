@@ -1,7 +1,8 @@
 <div class="filter-sidebar">
   <div class="filter-header">
 
-    <button mat-icon-button (click)="onClearFilters()" class="clear-button" matTooltip="Clear all filters">
+    <button mat-icon-button (click)="onClearFilters()" type="button" class="clear-button"
+      matTooltip="Clear all filters">
       <mat-icon>clear</mat-icon>
     </button>
   </div>
@@ -13,7 +14,7 @@
       <mat-select [(value)]="category" (selectionChange)="onFiltersChange()">
         <mat-option value="">All Categories</mat-option>
         @for (cat of categories; track cat) {
-          <mat-option [value]="cat">{{ cat }}</mat-option>
+        <mat-option [value]="cat">{{ cat }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -26,7 +27,7 @@
       <mat-select [(value)]="brand" (selectionChange)="onFiltersChange()">
         <mat-option value="">All Brands</mat-option>
         @for (brandOption of brands; track brandOption) {
-          <mat-option [value]="brandOption">{{ brandOption }}</mat-option>
+        <mat-option [value]="brandOption">{{ brandOption }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
@@ -37,22 +38,12 @@
     <div class="price-range">
       <mat-form-field class="price-input">
         <mat-label>Min</mat-label>
-        <input
-          matInput
-          type="number"
-          [(ngModel)]="minPrice"
-          (input)="onFiltersChange()"
-          placeholder="0">
+        <input matInput type="number" [(ngModel)]="minPrice" (input)="onFiltersChange()" placeholder="0">
       </mat-form-field>
       <span class="range-separator">to</span>
       <mat-form-field class="price-input">
         <mat-label>Max</mat-label>
-        <input
-          matInput
-          type="number"
-          [(ngModel)]="maxPrice"
-          (input)="onFiltersChange()"
-          placeholder="1000">
+        <input matInput type="number" [(ngModel)]="maxPrice" (input)="onFiltersChange()" placeholder="1000">
       </mat-form-field>
     </div>
   </div>
@@ -62,43 +53,39 @@
     <div class="stock-range">
       <mat-form-field class="stock-input">
         <mat-label>Min</mat-label>
-        <input
-          matInput
-          type="number"
-          [(ngModel)]="minStock"
-          (input)="onFiltersChange()"
-          placeholder="0">
+        <input matInput type="number" [(ngModel)]="minStock" (input)="onFiltersChange()" placeholder="0">
       </mat-form-field>
       <span class="range-separator">to</span>
       <mat-form-field class="stock-input">
         <mat-label>Max</mat-label>
-        <input
-          matInput
-          type="number"
-          [(ngModel)]="maxStock"
-          (input)="onFiltersChange()"
-          placeholder="1000">
+        <input matInput type="number" [(ngModel)]="maxStock" (input)="onFiltersChange()" placeholder="1000">
       </mat-form-field>
     </div>
   </div>
 
   <div class="filter-section">
-    <h4>Availability</h4>
-    <mat-checkbox
-      [checked]="inStockOnly"
-      (change)="inStockOnly = $event.checked; onFiltersChange()">
-      In Stock Only
-    </mat-checkbox>
+    <h4>Product Type</h4>
+    <mat-form-field class="full-width">
+      <mat-label>Type</mat-label>
+      <mat-select [(ngModel)]="productType" (selectionChange)="onFiltersChange()">
+        <mat-option value="all">All Types</mat-option>
+        <mat-option value="product">Products Only</mat-option>
+        <mat-option value="bundle">Bundles Only</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="filter-group" style="margin-top: 8px;">
+      <mat-checkbox [(ngModel)]="inStockOnly" (change)="onFiltersChange()">
+        In Stock Only
+      </mat-checkbox>
+    </div>
   </div>
 
   <div class="filter-section">
     <h4>Search</h4>
     <mat-form-field class="full-width">
       <mat-label>Search products...</mat-label>
-      <input
-        matInput
-        [(ngModel)]="searchQuery"
-        (input)="onFiltersChange()"
+      <input matInput [(ngModel)]="searchQuery" (input)="onFiltersChange()"
         placeholder="Search by name, SKU, or description">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>

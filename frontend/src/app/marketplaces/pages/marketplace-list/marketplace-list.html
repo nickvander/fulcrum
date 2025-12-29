@@ -50,13 +50,15 @@
         @for (market of marketplaces$ | async; track market.id) {
         <mat-card class="channel-card">
             <div class="card-glow" [ngClass]="market.name.toLowerCase()"></div>
-            <mat-card-header>
-                <div mat-card-avatar class="channel-avatar" [ngClass]="market.name.toLowerCase()">
-                    <mat-icon>{{ market.name.toLowerCase() === 'amazon' ? 'store' : 'language' }}</mat-icon>
+            <div class="card-header-overlay">
+                <div class="logo-container">
+                    <img [src]="getMarketplaceLogo(market.name)" [alt]="market.name" class="mp-logo-img">
                 </div>
-                <mat-card-title>{{ market.name }}</mat-card-title>
-                <mat-card-subtitle>Active Connection • ID: {{ market.id }}</mat-card-subtitle>
-            </mat-card-header>
+                <div class="header-info">
+                    <mat-card-title>{{ market.name }}</mat-card-title>
+                    <mat-card-subtitle>Active Connection • ID: {{ market.id }}</mat-card-subtitle>
+                </div>
+            </div>
 
             <mat-card-content>
                 <div class="status-indicator">

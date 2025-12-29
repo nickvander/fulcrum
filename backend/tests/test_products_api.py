@@ -68,6 +68,30 @@ def test_search_products(client: TestClient, db: Session, test_product: Product)
     assert test_product.name in [p["name"] for p in data]
 
 @pytest.mark.db
+def test_search_products_stock_filter(client: TestClient, db: Session, test_product: Product):
+    """
+    Test filtering products by stock level.
+    """
+    # Create inventory for the test product
+    from src.models.inventory import InventoryItem
+    inventory = InventoryItem(product_id=test_product.id, quantity=10, location="default")
+    db.add(inventory)
+    db.commit()
+
+    # Test min_stock matches
+    response = client.get("/api/v1/products/?min_stock=5")
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert len(data) >= 1
+    assert test_product.id in [p["id"] for p in data]
+
+    # Test min_stock filters out
+    response = client.get("/api/v1/products/?min_stock=15")
+    assert response.status_code == 200
+    data = response.json().get("data", [])
+    assert test_product.id not in [p["id"] for p in data]
+
+@pytest.mark.db
 def test_update_product(client: TestClient, test_product: Product):
     """
     Test updating a product successfully and that the embedding task is called.

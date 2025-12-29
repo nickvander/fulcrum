@@ -12,8 +12,8 @@ describe('ProductService', () => {
     let notificationServiceMock: MockedObject<NotificationService>;
 
     const mockProducts: Product[] = [
-        { id: 1, name: 'Product 1', sku: 'P001', description: '', default_resale_price: 10, images: [{ id: 1, product_id: 1, image_path: 'path/to/image1.jpg', is_primary: 1 }] },
-        { id: 2, name: 'Product 2', sku: 'P002', description: '', default_resale_price: 20, images: [] },
+        { id: 1, name: 'Product 1', sku: 'P001', description: '', default_resale_price: 10, is_bundle: false, images: [{ id: 1, product_id: 1, image_path: 'path/to/image1.jpg', is_primary: 1 }] },
+        { id: 2, name: 'Product 2', sku: 'P002', description: '', default_resale_price: 20, is_bundle: false, images: [] },
     ];
 
     beforeEach(() => {

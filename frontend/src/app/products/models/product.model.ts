@@ -76,4 +76,21 @@ export interface Product {
   custom_fields?: ProductCustomField[];
   variants?: ProductVariant[];
   marketplace_listings?: MarketplaceListing[];
+  is_bundle: boolean;
+  bundle_components?: BundleComponent[];
+  part_of_bundles?: BundleComponent[];
+}
+
+export interface BundleComponent {
+  id?: number;
+  bundle_id?: number;
+  component_id: number;
+  quantity: number;
+  component_name?: string;
+  component_image?: string;
+  bundle_name?: string;
+  bundle_image?: string;
+  bundle_stock?: number;
+  component_stock?: number;
+  component_cost?: number;
 }

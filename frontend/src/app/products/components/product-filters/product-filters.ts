@@ -21,7 +21,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     FormsModule,
     MatSliderModule,
     MatCheckboxModule
-],
+  ],
   templateUrl: './product-filters.html',
   styleUrls: ['./product-filters.scss']
 })
@@ -38,6 +38,7 @@ export class ProductFiltersComponent implements OnInit {
   maxStock: number | null = null;
   searchQuery: string = '';
   inStockOnly: boolean = false;
+  productType: 'all' | 'product' | 'bundle' = 'all';
 
   categories: string[] = ['Electronics', 'Clothing', 'Home & Kitchen', 'Books', 'Toys', 'Sports']; // Example categories
   brands: string[] = ['Brand A', 'Brand B', 'Brand C', 'Generic']; // Example brands
@@ -48,7 +49,7 @@ export class ProductFiltersComponent implements OnInit {
 
   onFiltersChange(): void {
     const filters: any = {};
-    
+
     if (this.category) filters.category = this.category;
     if (this.brand) filters.brand = this.brand;
     if (this.minPrice !== null) filters.min_price = this.minPrice;
@@ -58,6 +59,13 @@ export class ProductFiltersComponent implements OnInit {
     if (this.searchQuery) filters.search_term = this.searchQuery;
     if (this.inStockOnly) filters.in_stock_only = this.inStockOnly;
 
+    if (this.productType === 'product') {
+      filters.is_bundle = false;
+    } else if (this.productType === 'bundle') {
+      filters.is_bundle = true;
+    }
+
+    console.log('Filters changed:', filters);
     this.filtersChanged.emit(filters);
   }
 
@@ -70,7 +78,8 @@ export class ProductFiltersComponent implements OnInit {
     this.maxStock = null;
     this.searchQuery = '';
     this.inStockOnly = false;
-    
+    this.productType = 'all';
+
     this.filtersCleared.emit();
     this.onFiltersChange();
   }

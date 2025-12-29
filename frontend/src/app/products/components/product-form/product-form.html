@@ -1,4 +1,4 @@
-<div class="form-container">
+<div class="form-container" [class.dialog-mode]="isDialogMode">
   <!-- Return to Purchase Order Banner -->
   @if (returnToPO) {
   <div class="return-banner">
@@ -11,6 +11,7 @@
   }
 
   <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+    @if (!isDialogMode) {
     <div class="form-header">
       <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
       <div class="header-actions">
@@ -19,6 +20,7 @@
           [disabled]="!isDirty || productForm.invalid">Save</button>
       </div>
     </div>
+    }
 
     <mat-tab-group animationDuration="0ms" class="product-tabs">
       <!-- Tab 1: Product Details -->
@@ -45,6 +47,93 @@
                   <mat-label>Description</mat-label>
                   <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
                 </mat-form-field>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="bundle-card">
+              <mat-card-header>
+                <div class="header-content">
+                  <mat-icon>inventory_2</mat-icon>
+                  <mat-card-title>Bundle Components</mat-card-title>
+                </div>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="bundle-toggle-container">
+                  @if (isEditMode && !product?.is_bundle) {
+                  <div class="bundle-conversion-notice">
+                    <mat-icon class="notice-icon">info</mat-icon>
+                    <span class="notice-text">To create a bundle containing this product, use the <strong>"Create Parent
+                        Bundle"</strong> action in the product menu.</span>
+                  </div>
+                  } @else {
+                  <mat-slide-toggle formControlName="is_bundle" color="primary">
+                    Combine products into a single bundle
+                  </mat-slide-toggle>
+                  }
+                </div>
+
+                @if (productForm.get('is_bundle')?.value) {
+                <div class="bundle-management" [@fadeIn]>
+                  <mat-form-field class="full-width search-field" appearance="outline">
+                    <mat-label>Search products to add</mat-label>
+                    <input type="text" #componentInput matInput [matAutocomplete]="auto"
+                      (input)="searchProducts(componentInput.value)" placeholder="Search by name or SKU...">
+                    <mat-icon matSuffix>search</mat-icon>
+                    <mat-autocomplete #auto="matAutocomplete"
+                      (optionSelected)="onAddBundleComponent($event.option.value); componentInput.value = ''"
+                      class="product-autocomplete">
+                      @for (p of availableProducts; track p.id) {
+                      <mat-option [value]="p" class="product-option">
+                        <div class="option-content">
+                          <img
+                            [src]="getImageUrl(p.primary_image?.image_path || (p.images && p.images.length > 0 ? p.images[0].image_path : ''))"
+                            class="option-thumb" (error)="onImageError($event)">
+                          <div class="option-info">
+                            <span class="p-name">{{p.name}}</span>
+                            <span class="p-sku">{{p.sku}}</span>
+                          </div>
+                        </div>
+                      </mat-option>
+                      }
+                    </mat-autocomplete>
+                  </mat-form-field>
+
+                  <div class="bundle-list-container">
+                    <mat-list class="bundle-list">
+                      @for (comp of bundleComponents; track $index) {
+                      <mat-list-item class="bundle-item">
+                        <div class="item-layout">
+                          <img [src]="getImageUrl(comp.component_image || '')" class="item-thumb"
+                            (error)="onImageError($event)">
+                          <div class="item-details">
+                            <span class="comp-name">{{comp.component_name}}</span>
+                            <span class="comp-stock" [class.low-stock]="(comp.component_stock || 0) < 10"
+                              style="font-size: 0.8rem; color: #666; display: block; margin-top: 2px;">
+                              Available: {{comp.component_stock || 0}}
+                            </span>
+                            <div class="qty-control">
+                              <label>Qty:</label>
+                              <input type="number" [(ngModel)]="comp.quantity" [ngModelOptions]="{standalone: true}"
+                                class="qty-input">
+                            </div>
+                          </div>
+                          <button type="button" mat-icon-button (click)="onRemoveBundleComponent($index)"
+                            class="remove-btn" matTooltip="Remove from bundle">
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </div>
+                      </mat-list-item>
+                      }
+                      @if (bundleComponents.length === 0) {
+                      <div class="empty-bundle">
+                        <mat-icon>info_outline</mat-icon>
+                        <p>No components added to this bundle yet.</p>
+                      </div>
+                      }
+                    </mat-list>
+                  </div>
+                </div>
+                }
               </mat-card-content>
             </mat-card>
 
@@ -142,9 +231,9 @@
         </div>
       </mat-tab>
 
-      <!-- Tab 2: Channels -->
-      <mat-tab label="Channels">
-        <div class="channels-tab-content">
+      <!-- Tab 2: Marketplaces -->
+      <mat-tab label="Marketplaces">
+        <div class="marketplaces-tab-content">
           <mat-card>
             <mat-card-header>
               <mat-card-title>Active Listings</mat-card-title>
@@ -185,8 +274,8 @@
                 </mat-list>
               </div>
 
-              <div class="channel-actions">
-                <h3>Available Channels</h3>
+              <div class="marketplace-actions">
+                <h3>Available Marketplaces</h3>
                 <div class="action-buttons">
                   <button mat-stroked-button>
                     <mat-icon>add</mat-icon> Publish to Amazon
