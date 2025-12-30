@@ -8,6 +8,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { DateRangeService, DateRangePreset, DateRange } from '../../services/date-range.service';
 
@@ -23,18 +24,20 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
         MatNativeDateModule,
         MatInputModule,
         MatIconModule,
-        MatButtonModule
+        MatButtonModule,
+        MatTooltipModule
     ],
     template: `
         <div class="date-range-container">
             <mat-button-toggle-group [value]="selectedPreset" (change)="onPresetChange($event.value)">
-                <mat-button-toggle value="day">Today</mat-button-toggle>
-                <mat-button-toggle value="week">Week</mat-button-toggle>
-                <mat-button-toggle value="month">Month</mat-button-toggle>
-                <mat-button-toggle value="3months">3 Mo</mat-button-toggle>
-                <mat-button-toggle value="6months">6 Mo</mat-button-toggle>
-                <mat-button-toggle value="year">Year</mat-button-toggle>
-                <mat-button-toggle value="custom">Custom</mat-button-toggle>
+                <mat-button-toggle *ngIf="showAllOption" value="all" matTooltip="Show all records without date filter">All</mat-button-toggle>
+                <mat-button-toggle value="day" [matTooltip]="getTooltip('day')">Today</mat-button-toggle>
+                <mat-button-toggle value="week" [matTooltip]="getTooltip('week')">Week</mat-button-toggle>
+                <mat-button-toggle value="month" [matTooltip]="getTooltip('month')">Month</mat-button-toggle>
+                <mat-button-toggle value="3months" [matTooltip]="getTooltip('3months')">3 Mo</mat-button-toggle>
+                <mat-button-toggle value="6months" [matTooltip]="getTooltip('6months')">6 Mo</mat-button-toggle>
+                <mat-button-toggle value="year" [matTooltip]="getTooltip('year')">Year</mat-button-toggle>
+                <mat-button-toggle value="custom" matTooltip="Pick a custom date range">Custom</mat-button-toggle>
             </mat-button-toggle-group>
 
             @if (selectedPreset === 'custom') {
@@ -142,9 +145,11 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
 })
 export class DateRangePresetsComponent implements OnInit, OnDestroy {
     @Input() useGlobalService = true;  // If true, syncs with global DateRangeService
-    @Output() rangeChange = new EventEmitter<DateRange>();
+    @Input() showAllOption = false;    // If true, shows "All" as first option
+    @Input() defaultPreset: DateRangePreset | 'all' = 'week';
+    @Output() rangeChange = new EventEmitter<DateRange | null>();
 
-    selectedPreset: DateRangePreset = 'week';
+    selectedPreset: DateRangePreset | 'all' = 'week';
     customStart: Date = new Date();
     customEnd: Date = new Date();
 
@@ -153,6 +158,13 @@ export class DateRangePresetsComponent implements OnInit, OnDestroy {
     constructor(private dateRangeService: DateRangeService) { }
 
     ngOnInit(): void {
+        // Set default preset
+        if (this.showAllOption && this.defaultPreset === 'all') {
+            this.selectedPreset = 'all';
+        } else {
+            this.selectedPreset = this.defaultPreset as DateRangePreset;
+        }
+
         if (this.useGlobalService) {
             // Subscribe to global date range
             this.dateRangeService.dateRange$
@@ -170,14 +182,17 @@ export class DateRangePresetsComponent implements OnInit, OnDestroy {
         this.destroy$.complete();
     }
 
-    onPresetChange(preset: DateRangePreset): void {
+    onPresetChange(preset: DateRangePreset | 'all'): void {
         this.selectedPreset = preset;
 
-        if (preset !== 'custom') {
+        if (preset === 'all') {
+            // Emit null to indicate no date filter
+            this.rangeChange.emit(null);
+        } else if (preset !== 'custom') {
             if (this.useGlobalService) {
-                this.dateRangeService.setPreset(preset);
+                this.dateRangeService.setPreset(preset as DateRangePreset);
             }
-            const range = this.dateRangeService.getDateRangeFromPreset(preset);
+            const range = this.dateRangeService.getDateRangeFromPreset(preset as DateRangePreset);
             this.rangeChange.emit(range);
         }
     }
@@ -193,5 +208,9 @@ export class DateRangePresetsComponent implements OnInit, OnDestroy {
                 endDate: this.customEnd
             });
         }
+    }
+
+    getTooltip(preset: DateRangePreset): string {
+        return this.dateRangeService.getRangeDescription(preset);
     }
 }

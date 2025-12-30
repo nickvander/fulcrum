@@ -44,6 +44,13 @@ class Product(Base):
             return None
         return next((img for img in self.images if img.is_primary), self.images[0])
     
+    @property
+    def image_url(self):
+        """Returns the primary image URL for use in marketing schemas."""
+        if self.primary_image:
+            return self.primary_image.image_path
+        return None
+    
     # Bundle relationship
     bundle_components = relationship(
         "BundleComponent", 

@@ -293,6 +293,7 @@ erDiagram
 ```
 
 **Key Concepts**:
+
 - `is_bundle`: Flag on products table indicating if product is a bundle.
 - `bundle_components`: Junction table linking bundle products to their
   components.
@@ -342,11 +343,59 @@ erDiagram
 ```
 
 **Key Concepts**:
+
 - `status`: Draft, Ordered, Received.
 - `unit_cost`: Cost per item on this PO (may differ from product's
   `cost_price`).
-- When PO is received, inventory is adjusted and `average_cost` is
-  recalculated.
+- When PO is received, inventory is adjusted and `average_cost` is recalculated.
+
+### Marketing Operations Schema
+
+Manages multi-channel campaigns, events, and performance tracking.
+
+```mermaid
+erDiagram
+    Campaign {
+        int id PK
+        string name
+        string description
+        float budget
+        datetime start_date
+        datetime end_date
+        string status
+    }
+
+    CampaignEvent {
+        int id PK
+        int campaign_id FK
+        int connector_id FK
+        string name
+        string channel_type
+        string content_body
+        string content_image_url
+        datetime scheduled_at
+        string status
+    }
+
+    MarketingConnector {
+        int id PK
+        string name
+        string connector_type
+        string config
+        bool is_active
+    }
+
+    Audiences {
+        int id PK
+        string name
+        string description
+        string rules
+    }
+
+    Campaign ||--o{ CampaignEvent : contains
+    MarketingConnector ||--o{ CampaignEvent : publishes
+    Campaign ||--o{ CampaignAnalytics : tracks
+```
 
 ### Expense Tracking Schema
 

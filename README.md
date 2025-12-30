@@ -112,8 +112,9 @@ bazel mod graph
 ```
 
 **Note:** Bazel runs alongside Docker Compose. You can use either build system
-based on your needs. See [docs/guides/using-bazel.md](docs/guides/using-bazel.md)
-for comprehensive documentation including Docker integration.
+based on your needs. See
+[docs/guides/using-bazel.md](docs/guides/using-bazel.md) for comprehensive
+documentation including Docker integration.
 
 For detailed setup instructions, please see the
 **[Getting Started](docs/getting-started/backend-setup.md)** guide.

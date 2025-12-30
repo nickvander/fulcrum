@@ -82,7 +82,8 @@ bazel query //...
 
 ## Docker Integration
 
-Bazel can build Docker containers using `rules_oci`, providing better caching and reproducibility than traditional Dockerfiles.
+Bazel can build Docker containers using `rules_oci`, providing better caching
+and reproducibility than traditional Dockerfiles.
 
 ### Building Container Images
 
@@ -117,8 +118,9 @@ docker compose -f docker-compose.bazel.yml up
 
 ### Local Development (Recommended)
 
-For local development, use the traditional docker-compose for backend and `ng serve`
-for frontend. This gives you the best experience with hot reloading and API proxy:
+For local development, use the traditional docker-compose for backend and
+`ng serve` for frontend. This gives you the best experience with hot reloading
+and API proxy:
 
 ```bash
 # 1. Start backend services
@@ -132,6 +134,7 @@ cd frontend && pnpm ng serve
 ```
 
 This gives you:
+
 - **Frontend**: http://localhost:4200 (with hot reload + API proxy)
 - **Backend API**: http://localhost:8000
 
@@ -146,21 +149,21 @@ bazel run //frontend/image:frontend_tarball
 # The image is: fulcrum/frontend:latest (~55MB nginx-alpine)
 ```
 
-> [!WARNING]
-> **Frontend Container Networking Limitation**: The Bazel-built frontend container
-> uses nginx to proxy `/api/` requests to the backend. However, when running from
-> `docker-compose.bazel.yml` while the backend runs from `docker-compose.yml`,
-> they are on different Docker networks and cannot communicate. For local
-> development, use `ng serve` which has a working API proxy. The Bazel frontend
-> container is designed for production deployments where networking is configured
-> at the infrastructure level.
+> [!WARNING] **Frontend Container Networking Limitation**: The Bazel-built
+> frontend container uses nginx to proxy `/api/` requests to the backend.
+> However, when running from `docker-compose.bazel.yml` while the backend runs
+> from `docker-compose.yml`, they are on different Docker networks and cannot
+> communicate. For local development, use `ng serve` which has a working API
+> proxy. The Bazel frontend container is designed for production deployments
+> where networking is configured at the infrastructure level.
 
-> [!WARNING]
-> **Frontend Tests Blocked**: `bazel test //frontend:test` is currently incompatible with the Angular Builder's virtual filesystem and sandbox requirements. The target is marked as `manual` and should be skipped in favor of running `ng test` locally until this is resolved (Deferred).
+> [!WARNING] **Frontend Tests Blocked**: `bazel test //frontend:test` is
+> currently incompatible with the Angular Builder's virtual filesystem and
+> sandbox requirements. The target is marked as `manual` and should be skipped
+> in favor of running `ng test` locally until this is resolved (Deferred).
 
-> [!NOTE]
-> The Bazel backend container has a `py_binary` runfiles issue. Use traditional
-> Docker for backend until this is resolved with `rules_pex`.
+> [!NOTE] The Bazel backend container has a `py_binary` runfiles issue. Use
+> traditional Docker for backend until this is resolved with `rules_pex`.
 
 ### Container Build Configuration
 
@@ -228,10 +231,9 @@ oci_load(
 ### Benefits of Bazel Docker Builds
 
 - **Better Caching**: Layer changes are detected more accurately
-- **Reproducible**: Same inputs always produce identical images  
+- **Reproducible**: Same inputs always produce identical images
 - **Faster Rebuilds**: Only changed layers are rebuilt
 - **Integrated**: Uses the same dependency graph as code builds
-
 
 ## Build Configuration
 
@@ -356,14 +358,14 @@ bazel test //backend/tests:all_backend_tests
 
 ### When to Use Which?
 
-| Use Docker Compose When...            | Use Bazel When...                   |
-| ------------------------------------- | ----------------------------------- |
-| Running full development environment  | Building specific components        |
-| Need database and Redis               | Running unit tests                  |
-| Debugging integration issues          | Checking build performance          |
-| Local development with hot reload     | Verifying dependency changes        |
-| E2E testing                           | CI/CD builds                        |
-| First time setup                      | Incremental builds after code edits |
+| Use Docker Compose When...           | Use Bazel When...                   |
+| ------------------------------------ | ----------------------------------- |
+| Running full development environment | Building specific components        |
+| Need database and Redis              | Running unit tests                  |
+| Debugging integration issues         | Checking build performance          |
+| Local development with hot reload    | Verifying dependency changes        |
+| E2E testing                          | CI/CD builds                        |
+| First time setup                     | Incremental builds after code edits |
 
 ## Troubleshooting
 

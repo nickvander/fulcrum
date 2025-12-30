@@ -114,14 +114,16 @@
   attempting to manually create enum types that were already being handled by
   SQLAlchemy, causing conflicts during test execution.
 - **Solution:**
-  1.  **Removed Manual Enum Creation:** Eliminated the manual `CREATE TYPE` statements
-      from the migration file, allowing SQLAlchemy to handle enum type creation
-      automatically.
-  2.  **Verified Migration Execution:** Confirmed that the alembic upgrade process
-      was correctly creating all database tables including the `product_custom_fields`
-      table that was causing the "relation does not exist" errors.
+  1.  **Removed Manual Enum Creation:** Eliminated the manual `CREATE TYPE`
+      statements from the migration file, allowing SQLAlchemy to handle enum
+      type creation automatically.
+  2.  **Verified Migration Execution:** Confirmed that the alembic upgrade
+      process was correctly creating all database tables including the
+      `product_custom_fields` table that was causing the "relation does not
+      exist" errors.
 - **Outcome:** All backend tests are now passing (21/21), resolving the primary
   blocker for continuing feature development.
+
 # Progress Log
 
 ## Session: User List UI/UX Polish (Phases 2-4)
@@ -130,15 +132,21 @@
 
 ### Summary of Work Completed
 
-Implemented major UI/UX improvements to the user list component, focusing on better visual organization, enhanced tooltips, and force password change indicators.
+Implemented major UI/UX improvements to the user list component, focusing on
+better visual organization, enhanced tooltips, and force password change
+indicators.
 
 ### Phase 2: Table Organization
 
 **Column Reordering:**
-- Changed order from: `avatar | employee_id | first_name | last_name | email | user_type | is_active | actions`
-- To: `avatar | first_name | last_name | user_type | is_active | email | employee_id | actions`
+
+- Changed order from:
+  `avatar | employee_id | first_name | last_name | email | user_type | is_active | actions`
+- To:
+  `avatar | first_name | last_name | user_type | is_active | email | employee_id | actions`
 
 **Rationale:**
+
 - Name fields together for easier scanning
 - Role and status visible earlier
 - Less critical info (email, employee_id) moved right
@@ -147,7 +155,9 @@ Implemented major UI/UX improvements to the user list component, focusing on bet
 ### Phase 3: Tooltips & Column Spacing
 
 **Enhancements:**
-1. Added employee ID tooltip - shows "Employee ID: XXX" or "Customer (no employee ID)"
+
+1. Added employee ID tooltip - shows "Employee ID: XXX" or "Customer (no
+   employee ID)"
 2. Display "—" for empty employee IDs instead of blank
 3. Fixed text overflow with ellipsis
 4. Increased actions column from 180px to 200px
@@ -156,6 +166,7 @@ Implemented major UI/UX improvements to the user list component, focusing on bet
 7. Made name/email columns flexible within limits
 
 **CSS Improvements:**
+
 - `text-overflow: ellipsis` prevents text spilling into adjacent columns
 - Column width constraints ensure proper spacing
 - Action buttons properly spaced with 2px margins
@@ -163,12 +174,14 @@ Implemented major UI/UX improvements to the user list component, focusing on bet
 ### Phase 4: Force Password Change Indicator
 
 **New Feature:**
+
 - Added orange/amber warning badge for `force_password_change=true`
 - Badge displays "Password Reset Required" with lock_reset icon
 - Tooltip: "User must change password on next login"
 - Badges stack vertically in a flex container
 
 **Visual Design:**
+
 - Green (#e8f5e8) - Active users
 - Red (#ffebee) - Inactive users
 - Orange (#fff3e0) - Password reset required
@@ -177,16 +190,18 @@ Implemented major UI/UX improvements to the user list component, focusing on bet
 ### Test Users Created
 
 Created 5 test users to demonstrate improvements:
+
 1. `admin@example.com` - admin user
 2. `john.employee@example.com` - has force_password_change badge
-3. `jane.employee-with-very-long-email-address@company-domain.com` - tests ellipsis
+3. `jane.employee-with-very-long-email-address@company-domain.com` - tests
+   ellipsis
 4. `bob.customer@example.com` - customer (no employee ID)
 5. `inactive.user@example.com` - inactive status
 
 ### Commits Made
 
 1. `52e6583` - ui: Improve user list table organization
-2. `7a50f23` - ui: Add tooltips and fix column spacing  
+2. `7a50f23` - ui: Add tooltips and fix column spacing
 3. `0f07909` - ui: Add force password change indicator badge
 
 ### Testing Results
@@ -206,14 +221,15 @@ Created 5 test users to demonstrate improvements:
 ### Remaining Work
 
 **Phase 5: Responsive Design** (Optional)
+
 - Hide less critical columns on small screens
 - Mobile-friendly table layout
 - Stack action buttons on mobile
 
 **Phase 6: Documentation** (To be completed)
+
 - Update walkthrough with screenshots
 - Final commit
-
 
 ## Session: Force Password Change Backend Tests
 
@@ -221,7 +237,9 @@ Created 5 test users to demonstrate improvements:
 
 ### Summary of Work Completed
 
-Implemented comprehensive backend test coverage for the `force_password_change` feature. This feature was previously implemented but had no tests, creating a gap in test coverage.
+Implemented comprehensive backend test coverage for the `force_password_change`
+feature. This feature was previously implemented but had no tests, creating a
+gap in test coverage.
 
 ### Tests Created
 
@@ -267,7 +285,8 @@ Implemented comprehensive backend test coverage for the `force_password_change` 
 8 passed, 1 warning in 0.55s
 ```
 
-All tests pass successfully. The warning is a deprecation notice in the argon2 library (non-blocking).
+All tests pass successfully. The warning is a deprecation notice in the argon2
+library (non-blocking).
 
 ### Feature Behavior Verified
 
@@ -291,31 +310,36 @@ All tests pass successfully. The warning is a deprecation notice in the argon2 l
 - Update MISSING_ITEMS.md to reflect completed work
 - Update walkthrough with Phase 3 completion
 
-
 ## Session: Frontend Bulk Import Dialog Test Improvements
 
 **Date:** 2025-11-30
 
 ### Summary of Work Completed
 
-Attempted to fix the disabled `UserBulkImportDialogComponent` test suite that was causing 120s timeouts in CI/CD. While the tests remain disabled, significant architectural improvements were made that enhance code quality and testability.
+Attempted to fix the disabled `UserBulkImportDialogComponent` test suite that
+was causing 120s timeouts in CI/CD. While the tests remain disabled, significant
+architectural improvements were made that enhance code quality and testability.
 
 ### Improvements Made
 
 **1. Created BulkImportService**
+
 - Extracted all bulk import logic from the component into a dedicated service
-- Service handles: file validation, CSV processing, template generation, result formatting
+- Service handles: file validation, CSV processing, template generation, result
+  formatting
 - Comprehensive unit tests created (100% passing)
 - File: `frontend/src/app/users/services/bulk-import.service.ts`
 - Tests: `frontend/src/app/users/services/bulk-import.service.spec.ts`
 
 **2. Refactored Component Architecture**
+
 - Updated `UserBulkImportDialogComponent` to use `BulkImportService`
 - Component now focuses on presentation logic and user interactions
 - Business logic properly separated into service layer
 - Follows Angular best practices for separation of concerns
 
 **3. Enhanced Component Tests**
+
 - Rewrote tests to mock `BulkImportService` instead of `UserService`
 - Added `NO_ERRORS_SCHEMA` to prevent Material component rendering
 - Created comprehensive test cases for all component methods
@@ -324,6 +348,7 @@ Attempted to fix the disabled `UserBulkImportDialogComponent` test suite that wa
 ### Test Timeout Investigation
 
 **Attempted Fixes (all failed to resolve timeout):**
+
 1. ✅ Service layer extraction with mocks
 2. ✅ NO_ERRORS_SCHEMA to skip Material components
 3. ✅ Removing `fixture.detectChanges()` from setup
@@ -331,7 +356,10 @@ Attempted to fix the disabled `UserBulkImportDialogComponent` test suite that wa
 5. ✅ async/await with fixture.whenStable() (previous attempt)
 6. ✅ takeUntil pattern (previous attempt)
 
-**Conclusion:** The timeout issue persists despite all recommended fixes. The problem appears to be deeper than Material component initialization - possibly related to the test framework or Angular's TestBed interaction with this specific component template.
+**Conclusion:** The timeout issue persists despite all recommended fixes. The
+problem appears to be deeper than Material component initialization - possibly
+related to the test framework or Angular's TestBed interaction with this
+specific component template.
 
 ### Current Status
 
@@ -344,6 +372,7 @@ Attempted to fix the disabled `UserBulkImportDialogComponent` test suite that wa
 ### Benefits of Refactor
 
 Even though component tests are still disabled, the refactor provides:
+
 - **Testable Business Logic:** Service tests cover all logic comprehensively
 - **Better Maintainability:** Clear separation of concerns
 - **Easier Debugging:** Service can be tested in isolation
@@ -357,34 +386,43 @@ Even though component tests are still disabled, the refactor provides:
 - Consider future investigation into TestBed/Angular testing environment issues
 - Component functionality is verified to work in production
 
-
 ## Session: Backend User Management Test Analysis
 
 **Date:** 2025-11-30
 
 ### Summary of Work Completed
 
-Analyzed existing backend test coverage for the user management system as part of a comprehensive testing improvement initiative. The goal was to run all existing tests, identify any failures, and document current coverage before implementing any missing tests.
+Analyzed existing backend test coverage for the user management system as part
+of a comprehensive testing improvement initiative. The goal was to run all
+existing tests, identify any failures, and document current coverage before
+implementing any missing tests.
 
 ### Key Findings
 
 **Test Execution Results:**
+
 - **Total Tests Run:** 50 tests across 4 test files
 - **Test Status:** ✅ **ALL PASSED** (100% pass rate)
 - **Execution Time:** 4.80 seconds
 - **Issues Found:** None (only 1 minor deprecation warning in argon2 library)
 
 **Test Files Analyzed:**
+
 1. `tests/test_user_endpoints.py` - 18 tests covering API endpoints
-2. `tests/test_users_comprehensive.py` - 14 tests covering comprehensive scenarios
-3. `tests/test_security.py` - 14 tests covering security (JWT, RBAC, injection prevention)
+2. `tests/test_users_comprehensive.py` - 14 tests covering comprehensive
+   scenarios
+3. `tests/test_security.py` - 14 tests covering security (JWT, RBAC, injection
+   prevention)
 4. `tests/test_bulk_users.py` - 4 tests covering bulk user import
 
 **Coverage Areas Confirmed:**
-- ✅ User CRUD operations (create, read, update, delete, deactivate, permanent deletion)
+
+- ✅ User CRUD operations (create, read, update, delete, deactivate, permanent
+  deletion)
 - ✅ Role-based access control (admin, employee, customer)
 - ✅ Authentication and JWT token management
-- ✅ Password management (validation, reset, admin reset, weak password rejection)
+- ✅ Password management (validation, reset, admin reset, weak password
+  rejection)
 - ✅ Address management for users
 - ✅ Bulk user import from CSV
 - ✅ Security (SQL injection, privilege escalation, concurrent sessions)
@@ -394,7 +432,11 @@ Analyzed existing backend test coverage for the user management system as part o
 
 ### Conclusions
 
-The existing backend test suite is comprehensive and all tests pass successfully. **Phase 2 (Fix Backend Tests) can be skipped** since no failing tests were found. Will proceed directly to Phase 3 to identify any missing test coverage, particularly for:
+The existing backend test suite is comprehensive and all tests pass
+successfully. **Phase 2 (Fix Backend Tests) can be skipped** since no failing
+tests were found. Will proceed directly to Phase 3 to identify any missing test
+coverage, particularly for:
+
 - Force password change on first login (may already be covered)
 - Edge cases (concurrency, special characters, transaction rollbacks)
 
@@ -404,7 +446,6 @@ The existing backend test suite is comprehensive and all tests pass successfully
 - Commit Phase 1 completion
 - Move to Phase 3 to identify and implement any missing tests
 - Then address frontend test issues (disabled bulk import dialog tests)
-
 
 ## Session: Fix Stock Adjustment Authentication
 
@@ -1211,31 +1252,44 @@ addressed circular dependencies, missing imports, and configuration issues.
 
 ### Summary of Work Completed
 
-Successfully stabilized the backend test suite, resolving persistent hanging issues and test failures. Upgraded password hashing to Argon2id for better security and Docker compatibility, and fixed critical test isolation issues.
+Successfully stabilized the backend test suite, resolving persistent hanging
+issues and test failures. Upgraded password hashing to Argon2id for better
+security and Docker compatibility, and fixed critical test isolation issues.
 
 ### Key Changes Implemented
 
 - **Security Upgrade (Argon2):**
   - Replaced `bcrypt` with `argon2-cffi` for password hashing.
-  - Configured Argon2id with tuned parameters (8 MiB memory, 1 thread, 1 iteration) to ensure stability in the Docker test environment while maintaining strong security.
+  - Configured Argon2id with tuned parameters (8 MiB memory, 1 thread, 1
+    iteration) to ensure stability in the Docker test environment while
+    maintaining strong security.
   - Updated `requirements.txt` and `requirements-test.txt`.
 
 - **Test Isolation Fix:**
-  - Identified and fixed a critical issue where API requests in tests were not using the test fixture's database session due to a dependency override mismatch.
+  - Identified and fixed a critical issue where API requests in tests were not
+    using the test fixture's database session due to a dependency override
+    mismatch.
   - Updated `conftest.py` to correctly override `src.api.dependencies.get_db`.
-  - Added `TESTING=1` environment variable to `docker-compose.test.yml` and updated `main.py` to skip default superuser creation during tests, preventing "user already exists" errors.
+  - Added `TESTING=1` environment variable to `docker-compose.test.yml` and
+    updated `main.py` to skip default superuser creation during tests,
+    preventing "user already exists" errors.
 
 - **Schema Validation Fix:**
-  - Updated `UserUpdate` schema to make the `email` field optional, allowing for partial updates and resolving 422 validation errors in `test_update_user`.
+  - Updated `UserUpdate` schema to make the `email` field optional, allowing for
+    partial updates and resolving 422 validation errors in `test_update_user`.
 
 - **CI/CD Configuration:**
-  - Updated `.github/workflows/backend-01-db-tests.yml` to include `tests/test_users_management.py` in the test execution list, ensuring these critical integration tests run in CI.
+  - Updated `.github/workflows/backend-01-db-tests.yml` to include
+    `tests/test_users_management.py` in the test execution list, ensuring these
+    critical integration tests run in CI.
 
 ### Validation
 
-- **Backend Tests:** All 12 tests in `tests/test_users_management.py` are now passing reliably.
+- **Backend Tests:** All 12 tests in `tests/test_users_management.py` are now
+  passing reliably.
 - **Frontend Tests:** Verified that all 119 frontend tests are passing.
-- **CI Workflow:** Verified that the CI workflow uses `docker-compose.test.yml`, ensuring it will pick up the environment configuration and dependency changes.
+- **CI Workflow:** Verified that the CI workflow uses `docker-compose.test.yml`,
+  ensuring it will pick up the environment configuration and dependency changes.
 
 ### Remaining Work
 
@@ -1632,38 +1686,50 @@ implementation now complete, it's essential to:
 
 ### Summary of Work Completed
 
-Implemented a "Force Password Change" feature that requires users to change their password on first login or after an admin reset. This enhances system security by ensuring users set their own private passwords.
+Implemented a "Force Password Change" feature that requires users to change
+their password on first login or after an admin reset. This enhances system
+security by ensuring users set their own private passwords.
 
 ### Key Changes Implemented
 
 - **Backend:**
   - Added `force_password_change` boolean column to the `User` model.
   - Updated `User`, `UserCreate`, and `UserUpdate` Pydantic schemas.
-  - Modified `create_user` endpoint to default `force_password_change=True` for admin-created users.
-  - Added new `POST /api/v1/users/change-password` endpoint to handle password changes and clear the flag.
-  - Updated `CRUDUser.create` to correctly persist the `force_password_change` flag.
+  - Modified `create_user` endpoint to default `force_password_change=True` for
+    admin-created users.
+  - Added new `POST /api/v1/users/change-password` endpoint to handle password
+    changes and clear the flag.
+  - Updated `CRUDUser.create` to correctly persist the `force_password_change`
+    flag.
 
 - **Frontend:**
   - Updated `User` model interface.
-  - Created `ForcePasswordChangeComponent` with form validation and password strength checks.
+  - Created `ForcePasswordChangeComponent` with form validation and password
+    strength checks.
   - Added `changePassword` method to `UserService`.
-  - Updated `AuthService` to check for the flag on login and redirect users to the change password page.
-  - Updated `UserForm` (admin side) to allow toggling the `Force Password Change` setting.
+  - Updated `AuthService` to check for the flag on login and redirect users to
+    the change password page.
+  - Updated `UserForm` (admin side) to allow toggling the
+    `Force Password Change` setting.
   - Added routing for `/users/force-password-change`.
 
 ### Validation
 
 - **Backend Verification:**
-  - Verified via `curl` that creating a user with `force_password_change=True` correctly saves the state to the database.
+  - Verified via `curl` that creating a user with `force_password_change=True`
+    correctly saves the state to the database.
   - Verified that the flag is returned in the API response.
-  - Verified that the `change-password` endpoint successfully updates the password and clears the flag.
+  - Verified that the `change-password` endpoint successfully updates the
+    password and clears the flag.
 
 - **Frontend Verification:**
   - Verified the admin UI shows the toggle.
   - Verified the redirection logic in `AuthService`.
 
 ### Documentation
-- Created `docs/guides/user-management.md` detailing the new feature and general user management workflows.
+
+- Created `docs/guides/user-management.md` detailing the new feature and general
+  user management workflows.
 
 ## Session: Fix Hanging Frontend Tests
 
@@ -1671,13 +1737,22 @@ Implemented a "Force Password Change" feature that requires users to change thei
 
 ### Summary of Work Completed
 
-Resolved CI/CD pipeline failure caused by the `user-bulk-import-dialog.spec.js` test suite timing out after 120+ seconds. The fix involved temporarily disabling the problematic test suite and adding proper subscription cleanup to the component.
+Resolved CI/CD pipeline failure caused by the `user-bulk-import-dialog.spec.js`
+test suite timing out after 120+ seconds. The fix involved temporarily disabling
+the problematic test suite and adding proper subscription cleanup to the
+component.
 
 ### Issues Identified and Resolved
 
 - **Frontend Test Timeout:**
-  - **Problem:** The `UserBulkImportDialogComponent` test suite caused the entire test runner to hang for 120+ seconds in CI/CD, preventing the pipeline from completing.
-  - **Root Cause:** The component's template contains Material components (MatTabs, MatTable with dataSource) that create uncompleted observables during initialization in the test environment. The timeout occurred in the `beforeEach` block during `fixture.detectChanges()`, not in any specific test.
+  - **Problem:** The `UserBulkImportDialogComponent` test suite caused the
+    entire test runner to hang for 120+ seconds in CI/CD, preventing the
+    pipeline from completing.
+  - **Root Cause:** The component's template contains Material components
+    (MatTabs, MatTable with dataSource) that create uncompleted observables
+    during initialization in the test environment. The timeout occurred in the
+    `beforeEach` block during `fixture.detectChanges()`, not in any specific
+    test.
   - **Attempted Fixes (all failed):**
     1. fakeAsync/tick pattern
     2. async/await with fixture.whenStable()
@@ -1685,26 +1760,36 @@ Resolved CI/CD pipeline failure caused by the `user-bulk-import-dialog.spec.js` 
     4. afterEach fixture.destroy()
     5. Simplified test (no async assertions)
     6. Disabling individual test with xit()
-  - **Solution:** Temporarily disabled the entire test suite with `xdescribe` to prevent CI/CD failures. Added comprehensive documentation in the test file explaining all attempted fixes and the root cause.
+  - **Solution:** Temporarily disabled the entire test suite with `xdescribe` to
+    prevent CI/CD failures. Added comprehensive documentation in the test file
+    explaining all attempted fixes and the root cause.
 
 - **Component Subscription Cleanup:**
-  - **Enhancement:** Added proper subscription cleanup to the component using `OnDestroy` and `takeUntil` pattern as a best practice, preventing potential memory leaks in production.
+  - **Enhancement:** Added proper subscription cleanup to the component using
+    `OnDestroy` and `takeUntil` pattern as a best practice, preventing potential
+    memory leaks in production.
 
 ### Files Changed
 
-- `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts` - Disabled test suite with detailed documentation
-- `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.ts` - Added proper subscription cleanup with OnDestroy
-- `work/future/fix-user-bulk-import-dialog-tests.md` - Created comprehensive document explaining the issue and multiple approaches to properly fix it in the future
+- `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts` -
+  Disabled test suite with detailed documentation
+- `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.ts` -
+  Added proper subscription cleanup with OnDestroy
+- `work/future/fix-user-bulk-import-dialog-tests.md` - Created comprehensive
+  document explaining the issue and multiple approaches to properly fix it in
+  the future
 
 ### Validation
 
-- All frontend tests now pass successfully: 43/43 test files, 241 tests passed, 0 failed
+- All frontend tests now pass successfully: 43/43 test files, 241 tests passed,
+  0 failed
 - Test execution time: ~31 seconds (previously timed out after 120 seconds)
 - Component functionality verified to work correctly in production
 
 ### Documentation
 
-- Created `work/future/fix-user-bulk-import-dialog-tests.md` with detailed explanation of:
+- Created `work/future/fix-user-bulk-import-dialog-tests.md` with detailed
+  explanation of:
   - Root cause analysis
   - All attempted fixes and why they failed
   - Multiple solution approaches with pros/cons
@@ -1713,7 +1798,11 @@ Resolved CI/CD pipeline failure caused by the `user-bulk-import-dialog.spec.js` 
 
 ### Notes
 
-This is the same pattern seen in ProductForm tests documented earlier in this log. Complex Material component templates with data-bound elements create async operations that don't properly complete in the test environment. The recommended long-term solution is to refactor the component with a service layer for better testability and separation of concerns.
+This is the same pattern seen in ProductForm tests documented earlier in this
+log. Complex Material component templates with data-bound elements create async
+operations that don't properly complete in the test environment. The recommended
+long-term solution is to refactor the component with a service layer for better
+testability and separation of concerns.
 
 ## Session: Product Creation Fix & Email Service Implementation
 
@@ -1721,22 +1810,31 @@ This is the same pattern seen in ProductForm tests documented earlier in this lo
 
 ### Summary of Work Completed
 
-Addressed critical product creation bug and implemented the foundation for the password reset email service.
+Addressed critical product creation bug and implemented the foundation for the
+password reset email service.
 
 ### 1. Product Creation Bug Fix ✅
 
-**Issue:** 
-- Product creation failed with validation errors (`created_at` string/datetime mismatch).
-- Image upload failed silently or caused 500 errors due to Redis connection issues.
+**Issue:**
+
+- Product creation failed with validation errors (`created_at` string/datetime
+  mismatch).
+- Image upload failed silently or caused 500 errors due to Redis connection
+  issues.
 - `/app/uploads/product_images` directory was missing in the backend container.
 
 **Fixes Applied:**
-- **Database Model:** Added missing `created_at` and `updated_at` columns to `Product` model.
-- **Schema:** Updated Pydantic schema to handle datetime serialization correctly (Pydantic v2 `json_encoders` deprecation workaround).
-- **Resiliency:** Wrapped Celery embedding generation task in `try-except` block to prevent blocking product creation when Redis is unavailable.
+
+- **Database Model:** Added missing `created_at` and `updated_at` columns to
+  `Product` model.
+- **Schema:** Updated Pydantic schema to handle datetime serialization correctly
+  (Pydantic v2 `json_encoders` deprecation workaround).
+- **Resiliency:** Wrapped Celery embedding generation task in `try-except` block
+  to prevent blocking product creation when Redis is unavailable.
 - **Infrastructure:** Ensured uploads directory exists in the container.
 
-**Result:** 
+**Result:**
+
 - Product creation now works reliably.
 - Images can be uploaded during creation.
 - System is resilient to Redis/Celery failures.
@@ -1746,6 +1844,7 @@ Addressed critical product creation bug and implemented the foundation for the p
 **Objective:** Implement backend email service for password reset functionality.
 
 **Implementation:**
+
 - Created `EmailService` class with provider-agnostic design.
 - Implemented `ConsoleEmailProvider` for development (logs emails to console).
 - Prepared `ResendEmailProvider` stub for future production use.
@@ -1753,12 +1852,17 @@ Addressed critical product creation bug and implemented the foundation for the p
 - Created HTML and text email templates.
 
 **Benefits:**
-- Fully testable password reset flow in development without external dependencies.
-- Easy switch to production email provider (Resend/AWS SES) via environment variables.
+
+- Fully testable password reset flow in development without external
+  dependencies.
+- Easy switch to production email provider (Resend/AWS SES) via environment
+  variables.
 - Professional email templates ready for use.
 
 **Verification:**
-- Verified via API call that password reset emails are logged to the backend console with correct reset tokens.
+
+- Verified via API call that password reset emails are logged to the backend
+  console with correct reset tokens.
 
 ## Session: Frontend Password Reset UI Implementation
 
@@ -1766,7 +1870,8 @@ Addressed critical product creation bug and implemented the foundation for the p
 
 ### Summary of Work Completed
 
-Implemented the complete frontend user interface for the password reset flow, connecting it to the backend API.
+Implemented the complete frontend user interface for the password reset flow,
+connecting it to the backend API.
 
 ### Key Changes Implemented
 
@@ -1775,12 +1880,16 @@ Implemented the complete frontend user interface for the password reset flow, co
     - Added `resetPassword(token: string, newPassword: string)` method.
 
 2.  **New Components:**
-    - **ForgotPasswordComponent:** Standalone component for requesting a reset link.
-    - **ResetPasswordComponent:** Standalone component for setting a new password.
-    - Both components feature form validation, error handling, and loading states.
+    - **ForgotPasswordComponent:** Standalone component for requesting a reset
+      link.
+    - **ResetPasswordComponent:** Standalone component for setting a new
+      password.
+    - Both components feature form validation, error handling, and loading
+      states.
 
 3.  **Routing:**
-    - Added `/forgot-password` and `/reset-password` routes to `AppRoutingModule`.
+    - Added `/forgot-password` and `/reset-password` routes to
+      `AppRoutingModule`.
 
 4.  **Testing:**
     - Created comprehensive unit tests for both new components.
@@ -1789,7 +1898,8 @@ Implemented the complete frontend user interface for the password reset flow, co
 ### Verification Results
 
 - **Automated Tests:** All 273 frontend tests passed.
-- **Manual Verification:** Confirmed the flow works from UI -> Backend -> Email Log -> UI -> Reset.
+- **Manual Verification:** Confirmed the flow works from UI -> Backend -> Email
+  Log -> UI -> Reset.
 
 ### Next Steps
 
@@ -1801,11 +1911,14 @@ Implemented the complete frontend user interface for the password reset flow, co
 
 ### Summary of Work Completed
 
-Completed the final phases of the User Management Overhaul, focusing on security hardening, responsive design, and documentation. This session finalized the user management system for production readiness.
+Completed the final phases of the User Management Overhaul, focusing on security
+hardening, responsive design, and documentation. This session finalized the user
+management system for production readiness.
 
 ### Security Hardening
 
-- **Rate Limiting:** Implemented `slowapi` with Redis to rate limit sensitive endpoints:
+- **Rate Limiting:** Implemented `slowapi` with Redis to rate limit sensitive
+  endpoints:
   - Login: 5 requests/minute
   - Password Reset Request: 3 requests/minute
   - Password Reset: 5 requests/minute
@@ -1825,14 +1938,17 @@ Completed the final phases of the User Management Overhaul, focusing on security
 
 ### Documentation
 
-- **Production Setup:** Updated `docs/guides/production-setup.md` with rate limiting and security header configuration.
-- **Walkthrough:** Created `work/current/walkthrough.md` summarizing the overhaul and verification results.
+- **Production Setup:** Updated `docs/guides/production-setup.md` with rate
+  limiting and security header configuration.
+- **Walkthrough:** Created `work/current/walkthrough.md` summarizing the
+  overhaul and verification results.
 
 ### Testing & Verification
 
 - **Backend:**
   - User management tests passed (100% coverage for user flows).
-  - Rate limiting verified manually (tests disabled in CI to prevent false positives).
+  - Rate limiting verified manually (tests disabled in CI to prevent false
+    positives).
   - Note: Minor unrelated failures in product stock tests (flaky).
 - **Frontend:**
   - All 273 tests passed.
@@ -1848,15 +1964,21 @@ Completed the final phases of the User Management Overhaul, focusing on security
 **Date:** 2025-12-01
 
 ### Issue
+
 - User reported `500 Internal Server Error` when accessing `/api/v1/products`.
-- Logs revealed `sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column products.created_at does not exist`.
+- Logs revealed
+  `sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column products.created_at does not exist`.
 
 ### Resolution
-- Identified that the database schema was out of sync with the code (missing `created_at` and `updated_at` columns on `products` table).
-- Checked Alembic status and found a pending migration `ddad7ea14dc0` (Add created_at and updated_at to products).
+
+- Identified that the database schema was out of sync with the code (missing
+  `created_at` and `updated_at` columns on `products` table).
+- Checked Alembic status and found a pending migration `ddad7ea14dc0` (Add
+  created_at and updated_at to products).
 - Applied the migration using `alembic upgrade head`.
 
 ### Verification
+
 - Confirmed with user that the products list now loads correctly.
 
 ## Session: Full Audit Logs View Implementation
@@ -1864,24 +1986,29 @@ Completed the final phases of the User Management Overhaul, focusing on security
 **Date:** 2025-12-01
 
 ### Summary
-Implemented a comprehensive Audit Logs View for administrators, enabling tracking and filtering of user actions and system events.
+
+Implemented a comprehensive Audit Logs View for administrators, enabling
+tracking and filtering of user actions and system events.
 
 ### Changes
+
 - **Backend:**
   - Enhanced `UserAuditLog` CRUD with date range filtering.
   - Added `GET /api/v1/audit-logs` endpoint (Superuser only).
   - Added `get_current_active_superuser` dependency.
 - **Frontend:**
   - Created `AuditLogService` for API integration.
-  - Created `AuditLogsComponent` with Material table, pagination, and filters (User, Action, Date).
+  - Created `AuditLogsComponent` with Material table, pagination, and filters
+    (User, Action, Date).
   - Added "Audit Logs" link to Admin Sidenav.
 - **Testing:**
   - Backend API tests passed (covering permissions and filters).
   - Frontend unit tests passed.
 
 ### Verification
-- Verified end-to-end flow: Admin can view and filter logs; non-admins are restricted.
 
+- Verified end-to-end flow: Admin can view and filter logs; non-admins are
+  restricted.
 
 ## Session: E2E Testing Implementation & CI Integration
 
@@ -1889,92 +2016,138 @@ Implemented a comprehensive Audit Logs View for administrators, enabling trackin
 
 ### Summary of Work Completed
 
-Successfully implemented a comprehensive End-to-End (E2E) testing suite using Playwright, fixed critical backend bugs discovered during testing, and integrated E2E tests into the CI/CD pipeline.
+Successfully implemented a comprehensive End-to-End (E2E) testing suite using
+Playwright, fixed critical backend bugs discovered during testing, and
+integrated E2E tests into the CI/CD pipeline.
 
 ### Key Achievements
 
 1.  **E2E Testing Framework Setup:**
-    -   Installed and configured Playwright.
-    -   Implemented global authentication setup (`auth.setup.ts`) to optimize test execution speed.
-    -   Configured tests to run against local development environment.
+    - Installed and configured Playwright.
+    - Implemented global authentication setup (`auth.setup.ts`) to optimize test
+      execution speed.
+    - Configured tests to run against local development environment.
 
 2.  **Test Implementation:**
-    -   **Admin Audit Logs:** Verified navigation, visibility, and filtering functionality.
-    -   **User Management:** Verified user creation, search/pagination, and permanent deletion workflows.
-    -   **Robustness:** Implemented smart waits (e.g., `waitForResponse`) to handle asynchronous operations and prevent flakiness.
+    - **Admin Audit Logs:** Verified navigation, visibility, and filtering
+      functionality.
+    - **User Management:** Verified user creation, search/pagination, and
+      permanent deletion workflows.
+    - **Robustness:** Implemented smart waits (e.g., `waitForResponse`) to
+      handle asynchronous operations and prevent flakiness.
 
 3.  **Critical Bug Fixes:**
-    -   **Backend Data Persistence:** Fixed a bug in `create_user` endpoint where the database transaction was not committed when `force_password_change` logic applied.
-    -   **API Schema:** Updated `UserAuditLog` schema to allow optional `user_id` for system actions (e.g., permanent deletion).
-    -   **Frontend Accessibility:** Added `aria-label` attributes to user list action buttons to improve accessibility and testability.
-    -   **Confirmation Dialog:** Updated confirmation dialog to support dynamic button text ("Delete Permanently").
+    - **Backend Data Persistence:** Fixed a bug in `create_user` endpoint where
+      the database transaction was not committed when `force_password_change`
+      logic applied.
+    - **API Schema:** Updated `UserAuditLog` schema to allow optional `user_id`
+      for system actions (e.g., permanent deletion).
+    - **Frontend Accessibility:** Added `aria-label` attributes to user list
+      action buttons to improve accessibility and testability.
+    - **Confirmation Dialog:** Updated confirmation dialog to support dynamic
+      button text ("Delete Permanently").
 
 4.  **CI/CD Integration:**
-    -   Created `.github/workflows/e2e-tests.yml` to automate E2E testing.
-    -   Workflow spins up the full stack (Docker Compose + Frontend) and runs tests on every push/PR.
+    - Created `.github/workflows/e2e-tests.yml` to automate E2E testing.
+    - Workflow spins up the full stack (Docker Compose + Frontend) and runs
+      tests on every push/PR.
 
 5.  **Documentation:**
-    -   Updated `docs/guides/testing-and-ci.md` with E2E testing instructions and CI workflow details.
-    -   Updated `walkthrough.md` with verification results.
+    - Updated `docs/guides/testing-and-ci.md` with E2E testing instructions and
+      CI workflow details.
+    - Updated `walkthrough.md` with verification results.
 
 ### Verification
 
--   ✅ All E2E tests passed locally (4/4 tests).
--   ✅ Backend unit tests passed.
--   ✅ Frontend unit tests passed.
+- ✅ All E2E tests passed locally (4/4 tests).
+- ✅ Backend unit tests passed.
+- ✅ Frontend unit tests passed.
 
 ### Next Steps
 
--   Monitor the first CI run on GitHub to ensure the new workflow passes in the remote environment.
+- Monitor the first CI run on GitHub to ensure the new workflow passes in the
+  remote environment.
+
 # Progress Log
 
 ## 2025-12-03
 
 ### Completed
+
 - **Inventory Feature Tests:**
-    - Debugged backend inventory query logic (fixed `test_products_stock_adjustment.py` to use correct product ID).
-    - Fixed stock adjustment calculation logic (verified `adjust_stock` endpoint).
-    - Fixed existing backend test assertions.
-    - Added edge case tests for zero and large value adjustments.
-    - Implemented `StockAdjustmentDialog` tests (`stock-adjustment-dialog.spec.ts`) covering confirmation workflow.
-    - Implemented `StockHistoryDialog` tests (`stock-history-dialog.spec.ts`).
-    - Implemented Product Card stock display tests (`product-list.spec.ts`).
+  - Debugged backend inventory query logic (fixed
+    `test_products_stock_adjustment.py` to use correct product ID).
+  - Fixed stock adjustment calculation logic (verified `adjust_stock` endpoint).
+  - Fixed existing backend test assertions.
+  - Added edge case tests for zero and large value adjustments.
+  - Implemented `StockAdjustmentDialog` tests
+    (`stock-adjustment-dialog.spec.ts`) covering confirmation workflow.
+  - Implemented `StockHistoryDialog` tests (`stock-history-dialog.spec.ts`).
+  - Implemented Product Card stock display tests (`product-list.spec.ts`).
 - **Product Form Stability:**
-    - Analyzed timeout issues in `product-form-edit.spec.ts` and `product-form-error-handling.spec.ts`.
-    - Identified root cause: `ProductFormInitializerServiceMock` was returning incorrect data (`isEditMode: false`), causing component initialization failure and subsequent errors/hangs.
-    - Fixed `product-form-edit.spec.ts` by injecting `ProductFormInitializerService` and spying on `initializeForm` to return correct edit mode data.
-    - Fixed `product-form-error-handling.spec.ts` by applying the same fix and resolving syntax errors (`await` without `async`).
-    - Verified initialization logic passes (though test runner environment exhibits instability/hangs).
+  - Analyzed timeout issues in `product-form-edit.spec.ts` and
+    `product-form-error-handling.spec.ts`.
+  - Identified root cause: `ProductFormInitializerServiceMock` was returning
+    incorrect data (`isEditMode: false`), causing component initialization
+    failure and subsequent errors/hangs.
+  - Fixed `product-form-edit.spec.ts` by injecting
+    `ProductFormInitializerService` and spying on `initializeForm` to return
+    correct edit mode data.
+  - Fixed `product-form-error-handling.spec.ts` by applying the same fix and
+    resolving syntax errors (`await` without `async`).
+  - Verified initialization logic passes (though test runner environment
+    exhibits instability/hangs).
 - **Deferred Testing:**
-    - Implemented `AccountManagementComponent` tests (`account-management.spec.ts`).
-    - Implemented `PasswordResetDialogComponent` tests (`password-reset-dialog.spec.ts`).
-    - Verified `UserFormComponent` tests (`user-form.spec.ts`) pass.
-    - Implemented backend edge case tests (`test_edge_cases.py`) for special characters and transaction rollback.
+  - Implemented `AccountManagementComponent` tests
+    (`account-management.spec.ts`).
+  - Implemented `PasswordResetDialogComponent` tests
+    (`password-reset-dialog.spec.ts`).
+  - Verified `UserFormComponent` tests (`user-form.spec.ts`) pass.
+  - Implemented backend edge case tests (`test_edge_cases.py`) for special
+    characters and transaction rollback.
 
 ### Next Steps
+
 - **Verification:**
-    - Perform final manual verification if needed.
-    - Merge changes.
+  - Perform final manual verification if needed.
+  - Merge changes.
 
 ### 2025-12-03: Unified Testing Plan Execution - Backend Edge Cases & Frontend Regression Fixes
 
 **Status:** In Progress
 
 **Accomplishments:**
+
 - **Backend Edge Case Tests:**
-    - Implemented `backend/tests/test_edge_cases.py` covering special characters in SKUs and transaction rollbacks.
-    - Verified system robustness against invalid inputs and database errors.
+  - Implemented `backend/tests/test_edge_cases.py` covering special characters
+    in SKUs and transaction rollbacks.
+  - Verified system robustness against invalid inputs and database errors.
 - **Frontend Regression Fixing (Test Hangs):**
-    - **`account-management.spec.ts`:** Fixed hang by removing `MatSnackBarModule` from component imports in test and adding subscription cleanup (`takeUntil`).
-    - **`password-reset-dialog.spec.ts`:** Fixed hang by removing `MatDialogModule` from component imports in test, adding `CUSTOM_ELEMENTS_SCHEMA`, and adding subscription cleanup.
-    - **`product-form-edit.spec.ts`:** Fixed persistent hang by overriding the `ProductForm` component to exclude child components (`ProductFormImageGalleryComponent`, `ProductVariantsComponent`) and using `NO_ERRORS_SCHEMA`. This isolated the test from child component initialization issues.
-    - **`product-list.spec.ts`:** Temporarily disabled (`xdescribe`) due to persistent hang. However, significantly improved the test structure with mocks for `NotificationService`, `BatchOperationsService`, `ProductComparisonService`, and stubs for all child components. Added subscription cleanup to `ProductList` component.
+  - **`account-management.spec.ts`:** Fixed hang by removing `MatSnackBarModule`
+    from component imports in test and adding subscription cleanup
+    (`takeUntil`).
+  - **`password-reset-dialog.spec.ts`:** Fixed hang by removing
+    `MatDialogModule` from component imports in test, adding
+    `CUSTOM_ELEMENTS_SCHEMA`, and adding subscription cleanup.
+  - **`product-form-edit.spec.ts`:** Fixed persistent hang by overriding the
+    `ProductForm` component to exclude child components
+    (`ProductFormImageGalleryComponent`, `ProductVariantsComponent`) and using
+    `NO_ERRORS_SCHEMA`. This isolated the test from child component
+    initialization issues.
+  - **`product-list.spec.ts`:** Temporarily disabled (`xdescribe`) due to
+    persistent hang. However, significantly improved the test structure with
+    mocks for `NotificationService`, `BatchOperationsService`,
+    `ProductComparisonService`, and stubs for all child components. Added
+    subscription cleanup to `ProductList` component.
 - **Documentation:**
-    - Updated `docs/guides/testing-and-ci.md` with frontend testing best practices.
-    - Updated `work/current/unified-testing-plan.md` and `MISSING_ITEMS.md`.
+  - Updated `docs/guides/testing-and-ci.md` with frontend testing best
+    practices.
+  - Updated `work/current/unified-testing-plan.md` and `MISSING_ITEMS.md`.
 
 **Next Steps:**
-- Investigate root cause of `product-list.spec.ts` hang (likely deep dependency or `StockHistoryDialog` interaction).
+
+- Investigate root cause of `product-list.spec.ts` hang (likely deep dependency
+  or `StockHistoryDialog` interaction).
 - Continue with remaining items in `MISSING_ITEMS.md`.
 
 ## 2025-12-05
@@ -1984,18 +2157,19 @@ Successfully implemented a comprehensive End-to-End (E2E) testing suite using Pl
 **Status:** Completed
 
 **Accomplishments:**
--   **Audit Log Consolidation:** Removed redundant `/admin/audit-logs` route and
-    component. Audit logs are now accessed exclusively via `/users/audit-logs`.
--   **JIT Compilation Fix:** Changed `main.ts` to use `platformBrowserDynamic`
-    instead of `platformBrowser` to enable JIT compilation for dev server.
--   **Missing Method Fix:** Implemented `isAdmin()` method in `AuthService`.
--   **Circular Dependency Fix:** Refactored `AuthInterceptor` to read JWT
-    directly from localStorage.
--   **Safety Net:** Added global error handler to `main.ts` to surface runtime
-    errors on screen.
+
+- **Audit Log Consolidation:** Removed redundant `/admin/audit-logs` route and
+  component. Audit logs are now accessed exclusively via `/users/audit-logs`.
+- **JIT Compilation Fix:** Changed `main.ts` to use `platformBrowserDynamic`
+  instead of `platformBrowser` to enable JIT compilation for dev server.
+- **Missing Method Fix:** Implemented `isAdmin()` method in `AuthService`.
+- **Circular Dependency Fix:** Refactored `AuthInterceptor` to read JWT directly
+  from localStorage.
+- **Safety Net:** Added global error handler to `main.ts` to surface runtime
+  errors on screen.
 
 **Verification:**
--   ✅ Dev server starts successfully
--   ✅ Login page loads correctly
--   ✅ Audit logs accessible via Users section
 
+- ✅ Dev server starts successfully
+- ✅ Login page loads correctly
+- ✅ Audit logs accessible via Users section

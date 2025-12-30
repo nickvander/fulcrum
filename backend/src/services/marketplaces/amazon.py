@@ -59,7 +59,16 @@ class AmazonConnector(BaseMarketplaceConnector):
 
     async def fetch_all_listings(self, access_token: Optional[str] = None) -> list:
         # TODO: Implement full catalog fetch
-        return []
+        from .base import ListingData
+        return [
+            ListingData(
+                external_id="AMZ-STUB-ASIN-001",
+                sku="STUB-SKU-001",
+                title="Stub Amazon Product 1",
+                price=19.99,
+                status="BUYABLE"
+            )
+        ]
 
     async def sync_inventory(self, external_id: str, quantity: int, access_token: Optional[str] = None) -> bool:
         if not access_token:

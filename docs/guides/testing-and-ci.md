@@ -47,7 +47,9 @@ the testing process.
 
 ## Frontend (Angular)
 
-The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v21 stable support) to execute its unit tests. The configuration is managed by the Angular CLI and `vitest.config.ts`.
+The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v21
+stable support) to execute its unit tests. The configuration is managed by the
+Angular CLI and `vitest.config.ts`.
 
 - **Run the frontend test suite:**
   ```bash
@@ -56,18 +58,36 @@ The frontend application uses **[Vitest](https://vitest.dev/)** (via Angular v21
 
 ### Frontend Testing Best Practices
 
-To ensure test stability and prevent hangs (especially in CI environments), follow these guidelines:
+To ensure test stability and prevent hangs (especially in CI environments),
+follow these guidelines:
 
-1.  **Manage Subscriptions:** Always unsubscribe from Observables. Use the `takeUntil(this.destroy$)` pattern in components and ensure `ngOnDestroy` is called. In tests, avoid leaving open subscriptions.
-2.  **Mock Services:** Mock all dependent services using `jasmine.createSpyObj`. Avoid using real services that make HTTP calls or have complex initialization logic.
-3.  **Mock Initialization Logic:** For components that initialize data in `ngOnInit` (like `ProductForm`), mock the initialization service (e.g., `ProductFormInitializerService`) to return controlled test data immediately.
-4.  **Avoid `fixture.whenStable()`:** In some test environments, `await fixture.whenStable()` can hang indefinitely if there are pending macro-tasks (like `setInterval` or open subscriptions). Use `fakeAsync` and `tick()` if you need to control time, or rely on `fixture.detectChanges()` for synchronous updates.
-5.  **Isolate Tests:** If a test suite hangs, use `fit` to isolate specific tests and identify the culprit. Stub out child components using `TestBed.overrideComponent` to isolate the component under test.
-6.  **Standalone Components:** When testing standalone components that import complex child components, use `TestBed.overrideComponent` to remove those imports and add `NO_ERRORS_SCHEMA`. This prevents child component initialization from interfering with the unit test.
+1.  **Manage Subscriptions:** Always unsubscribe from Observables. Use the
+    `takeUntil(this.destroy$)` pattern in components and ensure `ngOnDestroy` is
+    called. In tests, avoid leaving open subscriptions.
+2.  **Mock Services:** Mock all dependent services using `jasmine.createSpyObj`.
+    Avoid using real services that make HTTP calls or have complex
+    initialization logic.
+3.  **Mock Initialization Logic:** For components that initialize data in
+    `ngOnInit` (like `ProductForm`), mock the initialization service (e.g.,
+    `ProductFormInitializerService`) to return controlled test data immediately.
+4.  **Avoid `fixture.whenStable()`:** In some test environments,
+    `await fixture.whenStable()` can hang indefinitely if there are pending
+    macro-tasks (like `setInterval` or open subscriptions). Use `fakeAsync` and
+    `tick()` if you need to control time, or rely on `fixture.detectChanges()`
+    for synchronous updates.
+5.  **Isolate Tests:** If a test suite hangs, use `fit` to isolate specific
+    tests and identify the culprit. Stub out child components using
+    `TestBed.overrideComponent` to isolate the component under test.
+6.  **Standalone Components:** When testing standalone components that import
+    complex child components, use `TestBed.overrideComponent` to remove those
+    imports and add `NO_ERRORS_SCHEMA`. This prevents child component
+    initialization from interfering with the unit test.
 
 ## End-to-End (E2E) Testing
 
-The project uses **[Playwright](https://playwright.dev/)** for End-to-End testing. These tests simulate real user interactions across the full stack (Frontend + Backend + Database).
+The project uses **[Playwright](https://playwright.dev/)** for End-to-End
+testing. These tests simulate real user interactions across the full stack
+(Frontend + Backend + Database).
 
 - **Configuration:** `playwright.config.ts`
 - **Test Directory:** `e2e/`
@@ -99,13 +119,14 @@ code changes. Workflows are triggered on every `push` and `pull_request` to the
 
 ### Local Quality Assurance with Git Hooks
 
-In addition to the CI pipeline, this project uses git hooks to enforce code quality
-before commits and pushes:
+In addition to the CI pipeline, this project uses git hooks to enforce code
+quality before commits and pushes:
 
 - **pre-commit hook:** Runs fast backend tests and linter to catch issues early
   in the development process.
-- **pre-push hook:** Runs the full CI test suite (backend, frontend, and linting)
-  to ensure all code passes comprehensive tests before being pushed to the repository.
+- **pre-push hook:** Runs the full CI test suite (backend, frontend, and
+  linting) to ensure all code passes comprehensive tests before being pushed to
+  the repository.
 
 ### 1. Linting (`ci-lint.yml`)
 
@@ -143,17 +164,19 @@ before commits and pushes:
 - **Trigger:** Runs on `push` and `pull_request` to the `main` branch.
 - **Purpose:** Validates critical user flows across the full stack.
 - **Process:**
-    - Sets up Node.js and Python.
-    - Starts the full backend stack (DB, Redis, API) using Docker Compose.
-    - Starts the frontend application.
-    - Executes Playwright tests (`npm run test:e2e`).
-    - Uploads test reports as artifacts.
+  - Sets up Node.js and Python.
+  - Starts the full backend stack (DB, Redis, API) using Docker Compose.
+  - Starts the frontend application.
+  - Executes Playwright tests (`npm run test:e2e`).
+  - Uploads test reports as artifacts.
 
 ### 6. Live Integration Tests (MercadoLibre)
 
-- **Purpose:** Verifies the full sync lifecycle with MercadoLibre using live API calls and generated test users.
+- **Purpose:** Verifies the full sync lifecycle with MercadoLibre using live API
+  calls and generated test users.
 - **Location:** `backend/tests/integration/test_mercadolibre_live.py`
-- **Prerequisites:** Requires a valid `ML_ACCESS_TOKEN` from a real developer account.
+- **Prerequisites:** Requires a valid `ML_ACCESS_TOKEN` from a real developer
+  account.
 - **Running Locally:**
   ```bash
   docker compose exec -e ML_ACCESS_TOKEN="YOUR_TOKEN" backend pytest -m integration_ml tests/integration/test_mercadolibre_live.py

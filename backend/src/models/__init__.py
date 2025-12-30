@@ -21,6 +21,19 @@ from .expense import Expense
 from .store_settings import StoreSettings
 from .product_inventory_settings import ProductInventorySettings
 
+from .marketing import (
+    MarketingConnector,
+    Campaign,
+    CampaignEvent,
+    CampaignAnalytics,
+    EventAnalytics,
+    Audience,
+    AudienceMember,
+    MarketingChannelType,
+    CampaignStatus,
+    ConnectorType,
+)
+
 __all__ = [
     "User",
     "UserAuditLog",
@@ -50,5 +63,15 @@ __all__ = [
     "BundleComponent",
     "StoreSettings",
     "ProductInventorySettings",
+    # Marketing
+    "MarketingConnector",
+    "Campaign",
+    "CampaignEvent",
+    "CampaignAnalytics",
+    "EventAnalytics",
+    "Audience",
+    "AudienceMember",
+    "MarketingChannelType",
+    "CampaignStatus",
+    "ConnectorType",
 ]
-

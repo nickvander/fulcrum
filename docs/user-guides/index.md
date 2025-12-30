@@ -6,9 +6,9 @@ section of the application.
 
 > **📖 Documentation Structure**
 >
-> - **User Guides** (this section): How to *use* the platform as an operator or
+> - **User Guides** (this section): How to _use_ the platform as an operator or
 >   merchant. Feature walkthroughs, UI explanations, and workflows.
-> - **Developer Guides** (`/guides`): How to *develop* on the platform.
+> - **Developer Guides** (`/guides`): How to _develop_ on the platform.
 >   Technical setup, API integrations, testing, and contribution guidelines.
 
 ## Overview
@@ -28,14 +28,15 @@ business. It helps you:
 The application is organized into the following primary sections, accessible
 from the left sidebar:
 
-| Tab             | Description                                              |
-| --------------- | -------------------------------------------------------- |
-| **Dashboard**   | High-level overview of sales, inventory health, and KPIs |
-| **Products**    | Full product catalog management (CRUD, bundles, images)  |
-| **Suppliers**   | Manage suppliers and create Purchase Orders              |
-| **Marketplaces**| Connect and manage Amazon, MercadoLibre accounts         |
-| **Expenses**    | Track operating expenses for profitability analysis      |
-| **Settings**    | Application and marketplace API configuration            |
+| Tab              | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| **Dashboard**    | High-level overview of sales, inventory health, and KPIs |
+| **Products**     | Full product catalog management (CRUD, bundles, images)  |
+| **Suppliers**    | Manage suppliers and create Purchase Orders              |
+| **Marketplaces** | Connect and manage Amazon, MercadoLibre accounts         |
+| **Marketing**    | Multi-channel campaigns, social scheduling, and calendar |
+| **Expenses**     | Track operating expenses for profitability analysis      |
+| **Settings**     | Application and marketplace API configuration            |
 
 ## Getting Started
 
@@ -51,6 +52,7 @@ from the left sidebar:
 - [Products](products.md)
 - [Suppliers & Purchase Orders](suppliers.md)
 - [Marketplaces](marketplaces.md)
+- [Marketing](marketing.md)
 - [Expenses](expenses.md)
 - [Settings](settings.md)
 

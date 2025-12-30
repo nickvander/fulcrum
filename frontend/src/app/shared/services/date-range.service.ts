@@ -65,22 +65,28 @@ export class DateRangeService {
 
         switch (preset) {
             case 'day':
-                // Today only
+                // Today (start of day to end of day)
+                startDate.setHours(0, 0, 0, 0);
                 break;
             case 'week':
-                startDate.setDate(startDate.getDate() - 7);
+                // Last 7 Days
+                startDate.setDate(now.getDate() - 7);
                 break;
             case 'month':
-                startDate.setMonth(startDate.getMonth() - 1);
+                // Last 30 Days
+                startDate.setMonth(now.getMonth() - 1);
                 break;
             case '3months':
-                startDate.setMonth(startDate.getMonth() - 3);
+                // Last 90 Days
+                startDate.setMonth(now.getMonth() - 3);
                 break;
             case '6months':
-                startDate.setMonth(startDate.getMonth() - 6);
+                // Last 180 Days
+                startDate.setMonth(now.getMonth() - 6);
                 break;
             case 'year':
-                startDate.setFullYear(startDate.getFullYear() - 1);
+                // Last 365 Days
+                startDate.setFullYear(now.getFullYear() - 1);
                 break;
             case 'custom':
                 // Custom range, use current values
@@ -88,6 +94,20 @@ export class DateRangeService {
         }
 
         return { preset, startDate, endDate };
+    }
+
+    /** Returns a human-readable range for a preset (e.g., "Oct 29 - Dec 29") */
+    getRangeDescription(preset: DateRangePreset): string {
+        const range = this.getDateRangeFromPreset(preset);
+        const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+
+        if (preset === 'day') {
+            return `Today (${range.startDate.toLocaleDateString(undefined, options)})`;
+        }
+
+        const startStr = range.startDate.toLocaleDateString(undefined, options);
+        const endStr = range.endDate.toLocaleDateString(undefined, options);
+        return `${startStr} - ${endStr}`;
     }
 
     /** Format date as YYYY-MM-DD for API calls */

@@ -36,6 +36,10 @@
     <mat-icon matListItemIcon>storefront</mat-icon>
     <span matListItemTitle>Marketplaces</span>
   </a>
+  <a mat-list-item routerLink="/marketing" routerLinkActive="active-link">
+    <mat-icon matListItemIcon>campaign</mat-icon>
+    <span matListItemTitle>Marketing</span>
+  </a>
   @if (isAdmin$ | async) {
   <a mat-list-item routerLink="/users" routerLinkActive="active-link">
     <mat-icon matListItemIcon>people</mat-icon>

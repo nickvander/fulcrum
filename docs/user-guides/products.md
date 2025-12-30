@@ -27,11 +27,11 @@ Click the **Filters** button to expand the advanced filter panel:
 
 | Filter       | Description                                     |
 | ------------ | ----------------------------------------------- |
-| Product Type | Filter by All, Products Only, or Bundles Only  |
-| Min Price    | Show products priced at or above this value    |
-| Max Price    | Show products priced at or below this value    |
-| Min Stock    | Show products with stock at or above this level|
-| Max Stock    | Show products with stock at or below this level|
+| Product Type | Filter by All, Products Only, or Bundles Only   |
+| Min Price    | Show products priced at or above this value     |
+| Max Price    | Show products priced at or below this value     |
+| Min Stock    | Show products with stock at or above this level |
+| Max Stock    | Show products with stock at or below this level |
 
 > **Tip**: Filters are **debounced** — the list only refreshes after you stop
 > typing for 400ms, preventing excessive loading.
