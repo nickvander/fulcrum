@@ -1,15 +1,21 @@
 @use 'styles/forms';
 @use 'theme/variables';
+@use 'theme/mixins';
 
 html,
 body {
     height: 100%;
 }
 
+// Global Body Styles
 body {
     margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; // Flat modern grey
+    color: #1f2937;
+    height: 100vh;
 }
+
 
 // Global override for marketplace dialog buttons
 .marketplace-option.mdc-button {
@@ -100,5 +106,213 @@ body {
 
     .mat-mdc-dialog-actions {
         padding: 16px 24px !important;
+    }
+}
+
+// Global Semantic Chip Styles
+// Used for "In Stock", "Out of Stock", etc. across the app
+// We target the internal MDC elements to ensure color application overrides defaults
+
+// Global Semantic Chip Styles
+// "Modern, Bold, Young" Design - Refined V3
+@mixin app-chip-color($bg-color, $text-color, $selected-bg, $selected-text) {
+    // UNSELECTED STATE (The "Filter" Look)
+    // Lighter, smaller, less intrusive but visible
+    --mdc-chip-elevated-container-color: #f9fafb !important; // Gray 50 (Very light)
+    --mdc-chip-container-color: #f9fafb !important;
+    --mdc-chip-label-text-color: #9ca3af !important; // Gray 400 (Light text)
+    --mdc-chip-with-icon-icon-color: #9ca3af !important;
+
+    border-radius: 99px !important;
+
+    .mdc-evolution-chip__action {
+        // Unselected internals
+        background-color: #f9fafb !important;
+        color: #9ca3af !important;
+
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+
+        font-weight: 500 !important;
+        font-size: 11px !important; // Even smaller/discreet
+        letter-spacing: 0.3px;
+
+        &::before {
+            background-color: transparent !important;
+        }
+
+        &:hover {
+            // Subtle hover for unselected
+            background-color: #f3f4f6 !important;
+            color: #6b7280 !important;
+        }
+    }
+
+    // Border radius internal fix
+    .mdc-evolution-chip__cell--primary,
+    .mdc-evolution-chip__action--primary,
+    .mat-mdc-chip-action-label {
+        border-radius: 99px !important;
+    }
+
+    // SELECTED STATE - "Pop"
+    &.mat-mdc-chip-selected,
+    &.mat-mdc-chip-highlighted {
+        --mdc-chip-elevated-container-color: #{$selected-bg} !important;
+        --mdc-chip-container-color: #{$selected-bg} !important;
+        --mdc-chip-label-text-color: #{$selected-text} !important;
+        --mdc-chip-with-icon-icon-color: #{$selected-text} !important;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+
+        .mdc-evolution-chip__action {
+            background-color: #{$selected-bg} !important;
+            color: #{$selected-text} !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+
+            font-weight: 700 !important;
+            font-size: 13px !important; // Pop size
+        }
+
+        .mdc-evolution-chip__checkmark {
+            color: #{$selected-text} !important;
+
+            svg {
+                color: #{$selected-text} !important;
+
+                path {
+                    stroke: #{$selected-text} !important;
+                    stroke-width: 3px;
+                }
+            }
+        }
+    }
+}
+
+// Vibrant / "Young" Palette
+// Less "Office Pastel", more "App Pop"
+
+.app-chip-success {
+    @include app-chip-color(#d1fae5, #065f46, #10b981, #ffffff);
+}
+
+.app-chip-error {
+    @include app-chip-color(#ffe4e6, #881337, #f43f5e, #ffffff);
+}
+
+.app-chip-warning {
+    @include app-chip-color(#fef3c7, #78350f, #f59e0b, #ffffff);
+}
+
+// GLOBAL PAGINATOR OVERRIDES
+// Goals: Compact, Lighter, Sleek Select look-alike
+.mat-mdc-paginator {
+    background: transparent !important;
+    font-size: 12px !important; // Smaller base font
+
+    .mat-mdc-paginator-container {
+        padding: 0 !important;
+        min-height: 40px !important; // Tighter height
+        justify-content: flex-end; // Standardize to right
+    }
+
+    .mat-mdc-paginator-page-size {
+        margin-right: 12px !important;
+        align-items: center !important;
+    }
+
+    .mat-mdc-paginator-page-size-label {
+        font-size: 12px !important;
+        color: #6b7280 !important; // Lighter text
+        margin-right: 8px !important;
+    }
+
+    // The Select Dropdown - mimic "sleek-select"
+    .mat-mdc-form-field {
+        width: 70px !important;
+
+        .mat-mdc-text-field-wrapper {
+            padding: 0 8px !important;
+            height: 32px !important; // Small height
+            border-radius: 6px !important; // Slightly rounded
+            border: 1px solid #e5e7eb !important; // Light border
+            background-color: white !important;
+        }
+
+        // FIX: Remove default infix padding/height issues
+        .mat-mdc-form-field-infix {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            min-height: 32px !important;
+            height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            border-top: 0 !important;
+            width: auto !important;
+        }
+
+        // Hide the underline/ripple of standard Material form field
+        .mdc-line-ripple {
+            display: none !important;
+        }
+
+        // Hide notched outline if using outline variant
+        .mdc-notched-outline {
+            display: none !important;
+        }
+
+        .mat-mdc-select-trigger {
+            height: 32px !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .mat-mdc-select-value {
+            font-size: 12px !important;
+            color: #374151 !important; // gray-700
+            font-weight: 500;
+            // Ensure text is vertically centered
+            display: flex;
+            align-items: center;
+        }
+
+        .mat-mdc-select-arrow {
+            color: #9ca3af !important; // gray-400
+        }
+    }
+
+    // Range Label (1 - 10 of 100)
+    .mat-mdc-paginator-range-label {
+        font-size: 12px !important;
+        color: #6b7280 !important;
+        margin: 0 12px !important;
+    }
+
+    // Navigation Buttons (< >)
+    .mat-mdc-paginator-navigation-previous,
+    .mat-mdc-paginator-navigation-next,
+    .mat-mdc-paginator-navigation-first,
+    .mat-mdc-paginator-navigation-last {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 0 !important;
+        color: #6b7280 !important;
+
+        mat-icon {
+            font-size: 20px !important;
+            width: 20px !important;
+            height: 20px !important;
+        }
+
+        &[disabled] {
+            opacity: 0.3;
+        }
+
+        &:hover:not([disabled]) {
+            background-color: #f3f4f6 !important;
+            border-radius: 4px;
+        }
     }
 }

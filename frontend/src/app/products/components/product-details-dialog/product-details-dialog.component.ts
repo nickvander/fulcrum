@@ -1,6 +1,6 @@
 import { Component, Inject, ViewChild, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,9 +25,9 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         MatDividerModule,
         ProductForm,
         FormsModule,
-        FormsModule,
         MatInputModule,
-        MatTooltipModule
+        MatTooltipModule,
+        RouterLink
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {
@@ -241,5 +241,10 @@ export class ProductDetailsDialogComponent implements OnInit {
 
     onImageError(event: any): void {
         event.target.src = 'assets/placeholder.jpg';
+    }
+
+    navigateToQuickPost(postId: number): void {
+        this.dialogRef.close();
+        this.router.navigate(['/marketing'], { queryParams: { tab: 'quick-posts', highlight: postId } });
     }
 }

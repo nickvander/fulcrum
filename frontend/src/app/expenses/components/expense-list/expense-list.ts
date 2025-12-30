@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,9 +15,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'; // Added Paginator
 import { Subject, takeUntil } from 'rxjs';
 import { ExpenseService, ExpenseFilters } from '../../services/expense.service';
-import { Expense, ExpenseSummary } from '../../../models/expense.model';
+import { Expense, ExpenseSummary } from '../../models/expense.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ExpenseDialogComponent } from '../expense-dialog/expense-dialog';
 import { KpiCardComponent } from '../../../dashboard/widgets/kpi-card/kpi-card.component';
@@ -28,8 +29,6 @@ import { DateRangeService, DateRange } from '../../../shared/services/date-range
     selector: 'app-expense-list',
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
         CommonModule,
         FormsModule,
         MatTableModule,
@@ -45,16 +44,18 @@ import { DateRangeService, DateRange } from '../../../shared/services/date-range
         MatChipsModule,
         MatTooltipModule,
         MatMenuModule,
+        MatPaginatorModule,
         KpiCardComponent,
         DateRangePresetsComponent
     ],
     templateUrl: './expense-list.html',
     styleUrl: './expense-list.scss'
 })
-export class ExpenseListComponent implements OnInit, OnDestroy {
+export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
     allExpenses: Expense[] = [];  // All expenses loaded once
     dataSource = new MatTableDataSource<Expense>([]);
     @ViewChild(MatSort) sort!: MatSort;
+    @ViewChild(MatPaginator) paginator!: MatPaginator; // Added ViewChild
 
     expenses: Expense[] = [];      // Filtered expenses for display
     summary: ExpenseSummary | null = null;
@@ -97,6 +98,11 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
                 this.endDate = range.endDate;
                 this.applyFilters();  // No API call, just filter
             });
+    }
+
+    ngAfterViewInit() {
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
     }
 
     ngOnDestroy(): void {
@@ -156,6 +162,7 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
         this.expenses = filtered;
         this.dataSource.data = filtered;
         this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator; // Re-link paginator
     }
 
     /** Calculate summary from filtered expenses */
@@ -193,9 +200,9 @@ export class ExpenseListComponent implements OnInit, OnDestroy {
         this.applyFilters();  // Client-side filter only
     }
 
-    onDateRangeChange(range: DateRange): void {
-        this.startDate = range.startDate;
-        this.endDate = range.endDate;
+    onDateRangeChange(range: DateRange | null): void {
+        this.startDate = range?.startDate || null;
+        this.endDate = range?.endDate || null;
         this.onFilterChange();
     }
 

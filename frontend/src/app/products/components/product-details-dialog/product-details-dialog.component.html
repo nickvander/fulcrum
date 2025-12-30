@@ -80,7 +80,8 @@
                 </div>
 
                 <div class="info-group alternate">
-                    @if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+                    @if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0)
+                    {
                     <div class="bundle-components-section">
                         <h3>Bundle Components</h3>
                         <div class="bundle-components-list">
@@ -213,7 +214,8 @@
                                     } @else {
                                     <mat-icon class="mp-icon">store</mat-icon>
                                     }
-                                    <span class="mp-name">{{ getMarketplaceName(listing.marketplace_id) }}</span>
+                                    <span class="mp-name">{{ getMarketplaceName(listing.marketplace_id)
+                                        }}</span>
                                     <div class="spacer"></div>
                                     <span class="status-badge" [class.active]="listing.status === 'active'"
                                         [class.pending]="listing.status === 'pending'"
@@ -238,6 +240,61 @@
                             <mat-icon>store</mat-icon>
                             <p>Not listed on any marketplaces yet.</p>
                         </div>
+                    </div>
+
+                    <div class="marketing-section">
+                        @if ((product.active_campaigns && product.active_campaigns.length > 0) || (product.quick_posts
+                        && product.quick_posts.length > 0)) {
+
+                        @if (product.active_campaigns && product.active_campaigns.length > 0) {
+                        <h3>Active Campaigns</h3>
+                        <div class="campaigns-list">
+                            @for (campaign of product.active_campaigns; track campaign.id) {
+                            <div class="campaign-card">
+                                <div class="campaign-header">
+                                    <span class="campaign-name">{{ campaign.name }}</span>
+                                    <span class="campaign-status active">Active</span>
+                                </div>
+                                <div class="campaign-dates">
+                                    {{ campaign.start_date | date }} - {{ campaign.end_date | date }}
+                                </div>
+                                @if (campaign.is_smart_boost) {
+                                <div class="smart-boost-badge">
+                                    <mat-icon>auto_awesome</mat-icon> Smart Boost
+                                </div>
+                                }
+                            </div>
+                            }
+                        </div>
+                        }
+
+                        @if (product.quick_posts && product.quick_posts.length > 0) {
+                        <h3
+                            [style.marginTop.px]="(product.active_campaigns && product.active_campaigns.length) ? 24 : 0">
+                            Quick Posts</h3>
+                        <div class="quick-posts-list">
+                            @for (post of product.quick_posts; track post.id) {
+                            <a class="quick-post-item" (click)="navigateToQuickPost(post.id)">
+                                <mat-icon class="channel-icon">
+                                    {{ post.channel_type === 'email' ? 'email' : 'share' }}
+                                </mat-icon>
+                                <span class="post-name">{{ post.name }}</span>
+                                <span class="post-status" [class.published]="post.status === 'published'">
+                                    {{ post.status }}
+                                </span>
+                                <mat-icon class="link-indicator">open_in_new</mat-icon>
+                            </a>
+                            }
+                        </div>
+                        }
+
+                        } @else {
+                        <h3 style="color: #999; margin-bottom: 12px;">Marketing</h3>
+                        <div class="empty-state">
+                            <mat-icon>campaign</mat-icon>
+                            <p>No active campaigns or quick posts.</p>
+                        </div>
+                        }
                     </div>
 
                     @if (purchaseHistory && purchaseHistory.length > 0) {
@@ -275,8 +332,7 @@
                     }
                 </div>
             </div>
-        </div>
-        } @else {
+        </div> } @else {
         <div class="edit-mode-container">
             <app-product-form #productForm [product]="product" [isDialogMode]="true" (productSaved)="onProductSaved()"
                 (formClosed)="onCancelEdit()">

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';  // Added AfterViewInit
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { SuppliersService } from '../../suppliers.service';
@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator'; // Added Paginator
 import { MatSort } from '@angular/material/sort';
 import { ViewChild } from '@angular/core';
 
@@ -22,10 +23,11 @@ interface POSummary {
   styleUrls: ['./purchase-order-list.component.scss'],
   standalone: false
 })
-export class PurchaseOrderListComponent implements OnInit, OnDestroy {
+export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewInit {
   // Data Source for MatTable with sorting
   dataSource = new MatTableDataSource<PurchaseOrder>([]);
   @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator; // Added Paginator ViewChild
 
   purchaseOrders: PurchaseOrder[] = [];
   filteredOrders: PurchaseOrder[] = [];
@@ -89,6 +91,11 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  ngAfterViewInit() {
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
   }
 
   loadData(): void {
@@ -159,6 +166,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy {
     this.filteredOrders = filtered;
     this.dataSource.data = filtered;
     this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;  // Ensure paginator is linked
 
     // Custom sorting for nested/calculated properties
     this.dataSource.sortingDataAccessor = (item, property) => {
@@ -193,9 +201,9 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  onDateRangeChange(range: DateRange): void {
-    this.startDate = range.startDate;
-    this.endDate = range.endDate;
+  onDateRangeChange(range: DateRange | null): void {
+    this.startDate = range?.startDate || null;
+    this.endDate = range?.endDate || null;
     this.applyFilters();
   }
 

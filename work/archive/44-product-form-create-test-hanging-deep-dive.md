@@ -164,6 +164,7 @@ complex initialization logic from the component's lifecycle.
 
 4.  **Simplify the Component's `ngOnInit`:**
     - The `ProductFormComponent`'s `ngOnInit` will become trivial:
+
       ```typescript
       ngOnInit(): void {
         this.initializer.getInitializationData(this.route).pipe(

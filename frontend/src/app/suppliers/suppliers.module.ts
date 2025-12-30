@@ -17,6 +17,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatPaginatorModule } from '@angular/material/paginator'; // Added correct import statement
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
@@ -71,7 +72,8 @@ import { SupplierProductManagerComponent } from './supplier-product-manager/supp
     MatTabsModule,
     KpiCardComponent,
     SupplierProductManagerComponent,
-    DateRangePresetsComponent
+    DateRangePresetsComponent,
+    MatPaginatorModule
   ],
   providers: [
     UserService

@@ -11,7 +11,8 @@ Click **Products** in the left sidebar. You'll see the main product list view.
 ## Product List View
 
 The product list displays all your items in either **Grid** or **List** mode
-(toggle in the top-right).
+(toggle in the top-right). The list is paginated; use the controls at the bottom
+of the page to navigate through your inventory.
 
 ### Quick Filters
 

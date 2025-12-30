@@ -85,6 +85,22 @@ export interface Product {
   low_inventory_threshold?: number;
   low_stock_quantity_threshold?: number;
   stock_quantity?: number; // Convenience field often used in UI
+  active_campaign_count?: number;
+  active_campaigns?: Array<{
+    id: number;
+    name: string;
+    start_date: string;
+    end_date: string;
+    is_smart_boost: boolean;
+  }>;
+  quick_posts?: Array<{
+    id: number;
+    name: string;
+    status: string;
+    scheduled_at: string;
+    published_at: string;
+    channel_type: string;
+  }>;
 }
 
 export interface BundleComponent {

@@ -1,20 +1,30 @@
-<mat-toolbar color="primary">
-  <button
-    type="button"
-    aria-label="Toggle sidenav"
-    mat-icon-button
-    (click)="drawer.toggle()">
+<mat-toolbar class="app-header">
+  <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
     <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
   </button>
-  <span>Fulcrum</span>
+  <span class="logo">Fulcrum</span>
   <span class="spacer"></span>
-  <button mat-icon-button [matMenuTriggerFor]="menu" class="user-button" aria-label="User icon">
-    <mat-icon>account_circle</mat-icon>
-  </button>
-  <mat-menu #menu="matMenu">
-    <button mat-menu-item (click)="logout()">
-      <mat-icon>exit_to_app</mat-icon>
-      <span>Logout</span>
+
+  <div class="user-menu-container" *ngIf="user$ | async as user">
+    <button mat-button [matMenuTriggerFor]="menu" class="user-button" aria-label="User menu">
+      <span class="user-initials">{{ getUserInitials(user) }}</span>
+      <mat-icon>expand_more</mat-icon>
+    </button>
+  </div>
+
+  <mat-menu #menu="matMenu" class="user-profile-menu">
+    <button mat-menu-item routerLink="/users/profile">
+      <mat-icon>person</mat-icon>
+      <span>Profile</span>
+    </button>
+    <button mat-menu-item routerLink="/settings">
+      <mat-icon>settings</mat-icon>
+      <span>Settings</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()" class="logout-item">
+      <mat-icon color="warn">exit_to_app</mat-icon>
+      <span class="warn-text">Logout</span>
     </button>
   </mat-menu>
 </mat-toolbar>

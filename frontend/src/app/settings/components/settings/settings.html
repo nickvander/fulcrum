@@ -1,137 +1,129 @@
 <div class="container">
   <h1>Settings</h1>
-  <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>AI Configuration</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="fill">
-          <mat-label>AI Provider</mat-label>
-          <mat-select formControlName="ai_provider">
-            <mat-option value="openai">OpenAI</mat-option>
-            <mat-option value="google">Google Gemini</mat-option>
-            <mat-option value="anthropic">Anthropic Claude</mat-option>
-          </mat-select>
-        </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>AI API Key</mat-label>
-          <input matInput formControlName="ai_api_key" type="password" placeholder="Enter your API key">
-        </mat-form-field>
-      </mat-card-content>
-    </mat-card>
+  <div class="settings-grid">
+    <!-- Left Column: App & Theme -->
+    <div class="settings-column">
+      <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon mat-card-avatar>tune</mat-icon>
+            <mat-card-title>Application Details</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>AI Provider</mat-label>
+              <mat-select formControlName="ai_provider">
+                <mat-option value="openai">OpenAI</mat-option>
+                <mat-option value="google">Google Gemini</mat-option>
+                <mat-option value="anthropic">Anthropic Claude</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Theme Settings</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="fill">
-          <mat-label>Theme</mat-label>
-          <mat-select formControlName="theme">
-            <mat-option value="light">Light</mat-option>
-            <mat-option value="dark">Dark</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-card-content>
-    </mat-card>
+            <!-- Reverting input for API key correctly -->
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>AI API Key</mat-label>
+              <input matInput formControlName="ai_api_key" type="password" placeholder="Enter API Key">
+            </mat-form-field>
 
-    <div class="actions">
-      <button type="submit" mat-raised-button color="primary" [disabled]="!settingsForm.valid">Save App
-        Settings</button>
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>Theme</mat-label>
+              <mat-select formControlName="theme">
+                <mat-option value="light">Light</mat-option>
+                <mat-option value="dark">Dark</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button type="submit" mat-flat-button color="primary" [disabled]="!settingsForm.valid">Save App
+              Settings</button>
+          </mat-card-actions>
+        </mat-card>
+      </form>
     </div>
-  </form>
 
-  <form [formGroup]="storeSettingsForm" (ngSubmit)="onStoreSettingsSubmit()" style="margin-top: 24px;">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Inventory Configuration (Global Store Settings)</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="fill">
-          <mat-label>Default Low Inventory Threshold (Days)</mat-label>
-          <input matInput type="number" formControlName="low_inventory_days_default" min="1">
-          <mat-hint>Products with less than this many days of stock will be flagged.</mat-hint>
-        </mat-form-field>
+    <!-- Right Column: Inventory & Email -->
+    <div class="settings-column">
+      <form [formGroup]="storeSettingsForm" (ngSubmit)="onStoreSettingsSubmit()">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon mat-card-avatar>inventory_2</mat-icon>
+            <mat-card-title>Inventory Rules</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="sleek-select">
+                <mat-label>Low Stock Days</mat-label>
+                <input matInput type="number" formControlName="low_inventory_days_default" min="1">
+              </mat-form-field>
 
-        <mat-form-field appearance="fill" style="margin-left: 16px;">
-          <mat-label>Default Low Stock Quantity (Units)</mat-label>
-          <input matInput type="number" formControlName="low_stock_quantity_default" min="0">
-          <mat-hint>Products with fewer units than this will be flagged.</mat-hint>
-        </mat-form-field>
-      </mat-card-content>
-      <mat-card-actions align="end">
-        <button type="submit" mat-raised-button color="primary" [disabled]="!storeSettingsForm.valid">Save Store
-          Settings</button>
-      </mat-card-actions>
-    </mat-card>
-  </form>
+              <mat-form-field appearance="outline" class="sleek-select">
+                <mat-label>Low Quantity</mat-label>
+                <input matInput type="number" formControlName="low_stock_quantity_default" min="0">
+              </mat-form-field>
+            </div>
+            <p class="text-muted text-xs">Global thresholds for flagging inventory levels.</p>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button type="submit" mat-flat-button color="primary" [disabled]="!storeSettingsForm.valid">Save
+              Rules</button>
+          </mat-card-actions>
+        </mat-card>
+      </form>
 
-  <!-- SMTP Email Settings -->
-  <form [formGroup]="smtpForm" (ngSubmit)="onSmtpSubmit()" style="margin-top: 24px;">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Email Settings (Store-Level)</mat-card-title>
-        <mat-card-subtitle>Configure SMTP for sending marketing emails</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <mat-form-field appearance="fill">
-          <mat-label>Email Provider</mat-label>
-          <mat-select formControlName="provider" (selectionChange)="onProviderChange($event.value)">
-            <mat-option value="gmail">Gmail</mat-option>
-            <mat-option value="outlook">Outlook / Office 365</mat-option>
-            <mat-option value="yahoo">Yahoo Mail</mat-option>
-            <mat-option value="custom">Custom SMTP Server</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <!-- SMTP Email Settings -->
+      <form [formGroup]="smtpForm" (ngSubmit)="onSmtpSubmit()">
+        <mat-card>
+          <mat-card-header>
+            <mat-icon mat-card-avatar>email</mat-icon>
+            <mat-card-title>Email Configuration</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>Provider</mat-label>
+              <mat-select formControlName="provider" (selectionChange)="onProviderChange($event.value)">
+                <mat-option value="gmail">Gmail</mat-option>
+                <mat-option value="outlook">Outlook</mat-option>
+                <mat-option value="yahoo">Yahoo</mat-option>
+                <mat-option value="custom">Custom SMTP</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-        <div *ngIf="smtpForm.get('provider')?.value === 'custom'" class="custom-smtp-fields">
-          <mat-form-field appearance="fill">
-            <mat-label>SMTP Host</mat-label>
-            <input matInput formControlName="host" placeholder="smtp.example.com">
-          </mat-form-field>
+            <div *ngIf="smtpForm.get('provider')?.value === 'custom'" class="custom-smtp-fields">
+              <mat-form-field appearance="outline" class="sleek-select">
+                <mat-label>Host</mat-label>
+                <input matInput formControlName="host">
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="sleek-select">
+                <mat-label>Port</mat-label>
+                <input matInput type="number" formControlName="port">
+              </mat-form-field>
+            </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Port</mat-label>
-            <input matInput type="number" formControlName="port" placeholder="587">
-          </mat-form-field>
-        </div>
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="username" type="email">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Email Address</mat-label>
-          <input matInput formControlName="username" type="email" placeholder="you@example.com">
-        </mat-form-field>
+            <mat-form-field appearance="outline" class="sleek-select">
+              <mat-label>Password</mat-label>
+              <input matInput formControlName="password" type="password">
+            </mat-form-field>
 
-        <mat-form-field appearance="fill">
-          <mat-label>Password</mat-label>
-          <input matInput formControlName="password" type="password" placeholder="••••••••">
-          <mat-hint *ngIf="smtpForm.get('provider')?.value === 'gmail'">
-            Use an Password from Google Account → Security
-          </mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-          <mat-label>From Name (Optional)</mat-label>
-          <input matInput formControlName="from_name" placeholder="My Store">
-        </mat-form-field>
-
-        <div class="smtp-status" *ngIf="smtpConfigured">
-          <mat-icon color="primary">check_circle</mat-icon>
-          <span>Email configured</span>
-        </div>
-      </mat-card-content>
-      <mat-card-actions align="end">
-        <button type="button" mat-stroked-button (click)="testSmtp()" [disabled]="testingSmtp">
-          <mat-icon *ngIf="!testingSmtp">sync</mat-icon>
-          {{ testingSmtp ? 'Testing...' : 'Test Connection' }}
-        </button>
-        <button type="submit" mat-raised-button color="primary" [disabled]="!smtpForm.valid || savingSmtp">
-          {{ savingSmtp ? 'Saving...' : 'Save Email Settings' }}
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </form>
-
-  <app-custom-field-list></app-custom-field-list>
+            <div class="smtp-status" *ngIf="smtpConfigured">
+              <mat-icon>check_circle</mat-icon> Connected
+            </div>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button type="button" mat-stroked-button (click)="testSmtp()" [disabled]="testingSmtp">
+              {{ testingSmtp ? 'Testing...' : 'Test' }}
+            </button>
+            <button type="submit" mat-flat-button color="primary" [disabled]="!smtpForm.valid || savingSmtp">
+              {{ savingSmtp ? 'Saving...' : 'Save' }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </form>
+    </div>
+  </div>
 </div>

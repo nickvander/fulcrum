@@ -10,19 +10,23 @@ import { MarketplaceListing } from '../../../products/models/product.model';
   imports: [MatTooltipModule, MatIconModule],
   template: `
     @if (listings && listings.length > 0) {
-      <div class="status-container">
+      <div class="status-container" [class.simple-container]="simple">
         @for (listing of listings; track listing.id) {
           <div class="marketplace-badge"
+            [class.simple-badge]="simple"
+            [class.badge-amz]="getFallbackLabel(listing.marketplace_id) === 'AMZ'"
             [matTooltip]="getTooltip(listing)"
             [class.status-active]="listing.status === 'active'"
             [class.status-error]="listing.status === 'error'"
             [class.status-pending]="listing.status === 'pending'">
             @if (getMarketplaceLogo(listing.marketplace_id)) {
-                <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo" alt="logo">
+                <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo" [class.simple-logo]="simple" alt="logo">
             } @else {
-                <span class="marketplace-icon">{{ getMarketplaceIcon(listing.marketplace_id) }}</span>
+                <span class="marketplace-icon">{{ getFallbackLabel(listing.marketplace_id) }}</span>
             }
-            <span class="status-dot"></span>
+            @if (!simple) {
+                <span class="status-dot"></span>
+            }
           </div>
         }
       </div>
@@ -35,6 +39,9 @@ import { MarketplaceListing } from '../../../products/models/product.model';
     .status-container {
       display: flex;
       gap: 4px;
+    }
+    .status-container.simple-container {
+        gap: 6px;
     }
     .marketplace-badge {
       display: flex;
@@ -50,16 +57,41 @@ import { MarketplaceListing } from '../../../products/models/product.model';
       overflow: hidden;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
+    .marketplace-badge.simple-badge {
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        overflow: visible;
+    }
+    
     .mp-logo {
       width: 20px;
       height: 20px;
       object-fit: contain;
     }
+    .mp-logo.simple-logo {
+        width: 16px;
+        height: 16px;
+        opacity: 0.8;
+    }
+    
     .marketplace-icon {
       font-size: 10px;
-      font-weight: bold;
+      font-weight: 800;
       color: #555;
+      letter-spacing: -0.5px;
     }
+
+    // Specific badge colors
+    // Specific badge colors
+    &.badge-amz {
+        background-color: #FF9900 !important; // Amazon Orange
+        border-color: #FF9900 !important;
+        .marketplace-icon { color: white !important; }
+    }
+    
     .status-dot {
       position: absolute;
       bottom: 0px;
@@ -75,6 +107,12 @@ import { MarketplaceListing } from '../../../products/models/product.model';
       background-color: #e8f5e9;
       .status-dot { background-color: #4caf50; }
     }
+    // Simple active - just basic opacity/filter if needed, or rely on tooltips
+    .simple-badge.status-active {
+        background-color: transparent;
+        // Maybe a subtle glow or just clean icon
+    }
+
     .status-error {
       border-color: #ef9a9a;
       background-color: #ffebee;
@@ -93,6 +131,7 @@ import { MarketplaceListing } from '../../../products/models/product.model';
 })
 export class MarketplaceStatusComponent {
   @Input() listings: MarketplaceListing[] = [];
+  @Input() simple = false;
 
   getMarketplaceIcon(id: number): string {
     // Simple mapping for now
@@ -107,9 +146,20 @@ export class MarketplaceStatusComponent {
 
   getMarketplaceLogo(id: number): string | null {
     switch (id) {
-      case 1: return 'assets/images/marketplaces/amazon.png';
+      // User requested "AMZ" badge instead of logo for better visibility
+      case 1: return null;
       case 4: return 'assets/images/marketplaces/mercadolibre.png';
       default: return null;
+    }
+  }
+
+  getFallbackLabel(id: number): string {
+    switch (id) {
+      case 1: return 'AMZ';
+      case 2: return 'eBay';
+      case 3: return 'Shp';
+      case 4: return 'ML';
+      default: return 'Mk';
     }
   }
 

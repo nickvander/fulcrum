@@ -77,6 +77,25 @@ bazel run //frontend/image:frontend_tarball
 See **[Building with Bazel](./using-bazel.md)** for comprehensive documentation
 including Docker integration and troubleshooting.
 
+## Database Management Tools
+
+For local development, we provide several scripts to help manage your database state. These are located in the `scripts/` directory.
+
+### `scripts/reset_db.sh`
+**WARNING: DATA LOSS.** This script completely drops the database, recreates it, and runs all migrations. Use this when you need a fresh start or if your migration history is corrupted.
+
+### `scripts/seed_full.py`
+This script populates the database with sample data, including:
+- Products (reusing existing ones or creating new)
+- Marketplaces and Listings
+- Marketing Campaigns and Quick Posts
+
+Usage:
+```bash
+npm run db:reset  # Wipes DB and runs migrations
+npm run db:seed   # Seeds data
+```
+
 ## Contributing to the Documentation
 
 ### Tech Stack

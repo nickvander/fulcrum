@@ -16,8 +16,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 
+import { TranslocoRootModule } from './transloco-root.module';
+
 @NgModule({
   imports: [
+    TranslocoRootModule,
     AppComponent,
     BrowserModule,
     BrowserAnimationsModule,
