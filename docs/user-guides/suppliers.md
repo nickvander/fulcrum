@@ -11,9 +11,11 @@ Click **Purchasing > Suppliers** in the left sidebar.
 
 ### Supplier List Features
 
-- **Sorting**: Click column headers (Supplier, Contact, Orders, Total Value) to sort the list.
+- **Sorting**: Click column headers (Supplier, Contact, Orders, Total Value) to
+  sort the list.
 - **KPIs**: View total number of suppliers at a glance.
-- **Deep Linking**: Click the "X POs" button in the **Orders** column to view all purchase orders for that specific supplier.
+- **Deep Linking**: Click the "X POs" button in the **Orders** column to view
+  all purchase orders for that specific supplier.
 
 ### Adding a Supplier
 
@@ -46,11 +48,15 @@ Click **Purchasing > Purchase Orders** in the left sidebar.
 
 The PO list is designed for efficiency:
 
-- **Sorting**: Click any column header (PO #, Supplier, Status, Total, Date) to sort.
-- **Supplier Filter**: Use the "Supplier" dropdown to filter orders by a specific vendor.
+- **Sorting**: Click any column header (PO #, Supplier, Status, Total, Date) to
+  sort.
+- **Supplier Filter**: Use the "Supplier" dropdown to filter orders by a
+  specific vendor.
 - **Status Filter**: Filter by Draft, Ordered, Received, etc.
-- **Date Range**: Use the presets (Today, This Week, Month to Date) to focus on recent activity.
-- **KPI Summary**: View Total Orders, Pending count, Total Value, and Received Value at the top.
+- **Date Range**: Use the presets (Today, This Week, Month to Date) to focus on
+  recent activity.
+- **KPI Summary**: View Total Orders, Pending count, Total Value, and Received
+  Value at the top.
 
 ### Creating a Purchase Order
 
@@ -66,11 +72,11 @@ The PO list is designed for efficiency:
 
 ### PO Statuses
 
-| Status   | Description                                       |
-| -------- | ------------------------------------------------- |
-| Draft    | PO is being prepared, not yet sent to supplier.   |
-| Ordered  | PO has been sent/submitted to the supplier.       |
-| Received | Goods have arrived and inventory has been updated.|
+| Status   | Description                                        |
+| -------- | -------------------------------------------------- |
+| Draft    | PO is being prepared, not yet sent to supplier.    |
+| Ordered  | PO has been sent/submitted to the supplier.        |
+| Received | Goods have arrived and inventory has been updated. |
 
 ### Receiving Inventory
 

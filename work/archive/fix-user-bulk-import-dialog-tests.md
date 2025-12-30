@@ -8,13 +8,22 @@
 
 ## Problem Summary
 
-The `UserBulkImportDialogComponent` test suite is currently disabled with `xdescribe` because it causes the entire test runner to hang for 120+ seconds in CI/CD. This is a critical test gap that needs to be properly fixed.
+The `UserBulkImportDialogComponent` test suite is currently disabled with
+`xdescribe` because it causes the entire test runner to hang for 120+ seconds in
+CI/CD. This is a critical test gap that needs to be properly fixed.
 
 ## Root Cause
 
-The component's template contains Material components (MatTabs, MatTable with dataSource binding) that create uncompleted observables during initialization in the test environment. The timeout occurs in the `beforeEach` block during `fixture.detectChanges()`, before any individual tests run.
+The component's template contains Material components (MatTabs, MatTable with
+dataSource binding) that create uncompleted observables during initialization in
+the test environment. The timeout occurs in the `beforeEach` block during
+`fixture.detectChanges()`, before any individual tests run.
 
-This is the same pattern seen in ProductForm tests (documented in `work/PROGRESS.md`). Complex Material component templates with data-bound elements create async operations that don't properly complete in the test environment, causing the test runner to wait indefinitely for Zone.js to stabilize.
+This is the same pattern seen in ProductForm tests (documented in
+`work/PROGRESS.md`). Complex Material component templates with data-bound
+elements create async operations that don't properly complete in the test
+environment, causing the test runner to wait indefinitely for Zone.js to
+stabilize.
 
 ## Failed Approaches
 
@@ -29,62 +38,70 @@ The following fixes were all attempted but failed to resolve the timeout:
 
 ## Proper Solution Approaches
 
-To properly fix this issue (not just disable the tests), consider the following approaches:
+To properly fix this issue (not just disable the tests), consider the following
+approaches:
 
 ### 1. Mock Material Components
 
-**Approach:** Replace the complex Material components with simple mocks in the test environment.
+**Approach:** Replace the complex Material components with simple mocks in the
+test environment.
 
 **Implementation:**
+
 ```typescript
 // Create mock components
 @Component({
-  selector: 'mat-tab-group',
-  template: '<ng-content></ng-content>',
-  standalone: true
+  selector: "mat-tab-group",
+  template: "<ng-content></ng-content>",
+  standalone: true,
 })
 class MockMatTabGroup {}
 
 @Component({
-  selector: 'mat-tab',
-  template: '<ng-content></ng-content>',
+  selector: "mat-tab",
+  template: "<ng-content></ng-content>",
   standalone: true,
-  inputs: ['label']
+  inputs: ["label"],
 })
 class MockMatTab {}
 
 // Use in test configuration
 TestBed.configureTestingModule({
   imports: [UserBulkImportDialogComponent],
-  providers: [/* ... */]
-})
-.overrideComponent(UserBulkImportDialogComponent, {
+  providers: [
+    /* ... */
+  ],
+}).overrideComponent(UserBulkImportDialogComponent, {
   remove: { imports: [MatTabsModule, MatTableModule] },
-  add: { imports: [MockMatTabGroup, MockMatTab, /* ... */] }
+  add: { imports: [MockMatTabGroup, MockMatTab /* ... */] },
 });
 ```
 
 **Pros:**
+
 - Eliminates the source of uncompleted observables
 - Tests run quickly without Material component overhead
 - Component logic is still tested
 
 **Cons:**
+
 - Doesn't test actual Material component integration
 - Requires maintaining mock components
 - Template changes may require mock updates
 
 ### 2. Refactor Component to Separate Data from Presentation
 
-**Approach:** Extract the data/logic layer from the presentation layer, test them separately.
+**Approach:** Extract the data/logic layer from the presentation layer, test
+them separately.
 
 **Implementation:**
+
 ```typescript
 // Create a service to handle bulk import logic
 @Injectable()
 export class BulkImportService {
   constructor(private userService: UserService) {}
-  
+
   processFile(file: File): Observable<ImportResult> {
     return this.userService.bulkImportUsers(file);
   }
@@ -96,9 +113,10 @@ export class UserBulkImportDialogComponent {
     private bulkImportService: BulkImportService,
     // ...
   ) {}
-  
+
   upload(): void {
-    this.bulkImportService.processFile(this.selectedFile)
+    this.bulkImportService
+      .processFile(this.selectedFile)
       .pipe(takeUntil(this.destroy$))
       .subscribe(/* ... */);
   }
@@ -106,40 +124,49 @@ export class UserBulkImportDialogComponent {
 ```
 
 Then create separate test files:
+
 - `bulk-import.service.spec.ts` - Test the logic without UI
 - `user-bulk-import-dialog.spec.ts` - Light integration test with mocked service
 
 **Pros:**
+
 - Better separation of concerns
 - Logic tests run fast and reliably
 - Follows Angular best practices
 - Easier to maintain and extend
 
 **Cons:**
+
 - Requires refactoring the component
 - More files to maintain
 
 ### 3. Use NO_ERRORS_SCHEMA and Shallow Testing
 
-**Approach:** Test the component in isolation without rendering child components.
+**Approach:** Test the component in isolation without rendering child
+components.
 
 **Implementation:**
+
 ```typescript
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { NO_ERRORS_SCHEMA } from "@angular/core";
 
 TestBed.configureTestingModule({
   imports: [UserBulkImportDialogComponent],
   schemas: [NO_ERRORS_SCHEMA],
-  providers: [/* ... */]
+  providers: [
+    /* ... */
+  ],
 });
 ```
 
 **Pros:**
+
 - Quick fix, minimal code changes
 - Component logic is still tested
 - No Material component rendering issues
 
 **Cons:**
+
 - Doesn't test template integration
 - Can hide real template errors
 - Not recommended for components with complex templates
@@ -148,25 +175,27 @@ TestBed.configureTestingModule({
 
 **Approach:** Configure Web Test Runner to wait longer and retry failed tests.
 
-**Implementation:**
-In `web-test-runner.config.mjs`:
+**Implementation:** In `web-test-runner.config.mjs`:
+
 ```javascript
 export default {
   testsFinishTimeout: 300000, // 5 minutes
   testFramework: {
     config: {
       timeout: 60000, // 1 minute per test
-      retries: 2
-    }
-  }
+      retries: 2,
+    },
+  },
 };
 ```
 
 **Pros:**
+
 - No code changes needed
 - May work if issue is just slow initialization
 
 **Cons:**
+
 - Doesn't fix the root cause
 - Slow CI/CD pipelines
 - May still fail intermittently
@@ -176,13 +205,15 @@ export default {
 
 **Use Approach #2 (Refactor with Service Layer)** for the following reasons:
 
-1. **Long-term maintainability**: Better architecture that's easier to test and extend
+1. **Long-term maintainability**: Better architecture that's easier to test and
+   extend
 2. **Comprehensive testing**: Can test logic thoroughly in fast unit tests
 3. **Best practices**: Aligns with Angular's recommended patterns
 4. **Reusability**: Service can be used by other components if needed
 5. **Performance**: Fast, reliable tests without timeout issues
 
-Combine with Approach #1 (Mock Material Components) for the presentation layer tests to ensure the UI integration works without timeout issues.
+Combine with Approach #1 (Mock Material Components) for the presentation layer
+tests to ensure the UI integration works without timeout issues.
 
 ## Implementation Steps
 
@@ -235,6 +266,9 @@ Combine with Approach #1 (Mock Material Components) for the presentation layer t
 
 ## References
 
-- Current disabled tests: `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts`
-- Component source: `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.ts`
-- Similar pattern documentation: `work/PROGRESS.md` (search for "ProductForm test hanging")
+- Current disabled tests:
+  `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts`
+- Component source:
+  `frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.ts`
+- Similar pattern documentation: `work/PROGRESS.md` (search for "ProductForm
+  test hanging")

@@ -1,54 +1,75 @@
 # Audit Logs View Implementation
 
 ## Overview
-Implemented a full Audit Logs View for administrators to track user actions and system events. This includes a backend API with filtering capabilities and a frontend UI with a searchable, paginated table.
+
+Implemented a full Audit Logs View for administrators to track user actions and
+system events. This includes a backend API with filtering capabilities and a
+frontend UI with a searchable, paginated table.
 
 ## Changes
 
 ### Backend
+
 - **Model**: Verified `UserAuditLog` model structure.
-- **CRUD**: Updated `CRUDUserAuditLog` to support `start_date` and `end_date` filtering.
-- **API**: Created `GET /api/v1/audit-logs` endpoint, accessible only to superusers.
-    - Supports pagination (`skip`, `limit`).
-    - Supports filtering by `user_id`, `action`, `start_date`, `end_date`.
+- **CRUD**: Updated `CRUDUserAuditLog` to support `start_date` and `end_date`
+  filtering.
+- **API**: Created `GET /api/v1/audit-logs` endpoint, accessible only to
+  superusers.
+  - Supports pagination (`skip`, `limit`).
+  - Supports filtering by `user_id`, `action`, `start_date`, `end_date`.
 - **Dependencies**: Added `get_current_active_superuser` dependency.
-- **Tests**: Added `tests/test_audit_logs_api.py` covering superuser access, filtering, and permission checks.
+- **Tests**: Added `tests/test_audit_logs_api.py` covering superuser access,
+  filtering, and permission checks.
 
 ### Frontend
-- **Service**: Created `AuditLogService` to fetch logs from the API with filter parameters.
-- **Component**: Created `AuditLogsComponent` (`admin/audit-logs`) displaying logs in a Material table.
-    - Columns: ID, Action, User, Performed By, Details, Date.
-    - Filters: Action, User ID, Date Range.
-    - Pagination: Integrated `mat-paginator`.
+
+- **Service**: Created `AuditLogService` to fetch logs from the API with filter
+  parameters.
+- **Component**: Created `AuditLogsComponent` (`admin/audit-logs`) displaying
+  logs in a Material table.
+  - Columns: ID, Action, User, Performed By, Details, Date.
+  - Filters: Action, User ID, Date Range.
+  - Pagination: Integrated `mat-paginator`.
 - **Routing**: Added `/admin/audit-logs` route guarded by `AuthGuard`.
-- **Navigation**: Added "Audit Logs" link to the Sidenav, visible only to admins.
+- **Navigation**: Added "Audit Logs" link to the Sidenav, visible only to
+  admins.
 
 ## Verification Results
 
 ### Automated Tests
+
 - **Backend**: `tests/test_audit_logs_api.py` passed.
-    - Verified superuser access returns logs.
-    - Verified normal user access is forbidden (403).
-    - Verified filtering by action and date works correctly.
-- **Frontend**: `audit-log.service.spec.ts` and `audit-logs.component.spec.ts` passed.
+  - Verified superuser access returns logs.
+  - Verified normal user access is forbidden (403).
+  - Verified filtering by action and date works correctly.
+- **Frontend**: `audit-log.service.spec.ts` and `audit-logs.component.spec.ts`
+  passed.
 
 ### Manual Verification Steps
+
 1.  Log in as an Admin.
 2.  Open the Sidenav and click "Audit Logs".
 3.  Verify the table loads with audit log data.
 4.  Enter an action (e.g., "update") and press Enter. Verify the list filters.
 5.  Select a date range. Verify the list filters.
-6.  Log in as a non-admin user. Try to access `/admin/audit-logs`. Verify access is denied (or redirected).
+6.  Log in as a non-admin user. Try to access `/admin/audit-logs`. Verify access
+    is denied (or redirected).
 
 ## E2E Testing Implementation
-We have successfully implemented a comprehensive End-to-End (E2E) testing suite using Playwright.
+
+We have successfully implemented a comprehensive End-to-End (E2E) testing suite
+using Playwright.
 
 ### Setup
+
 - **Framework**: Playwright
-- **Configuration**: `playwright.config.ts` configured for `http://localhost:4200`
-- **Authentication**: Global setup in `e2e/auth.setup.ts` using `admin@example.com`
+- **Configuration**: `playwright.config.ts` configured for
+  `http://localhost:4200`
+- **Authentication**: Global setup in `e2e/auth.setup.ts` using
+  `admin@example.com`
 
 ### Tests Implemented
+
 1.  **Admin Audit Logs** (`e2e/admin-audit-logs.spec.ts`):
     - Verifies navigation to Audit Logs.
     - Tests filtering by Action (e.g., "LOGIN").
@@ -58,33 +79,44 @@ We have successfully implemented a comprehensive End-to-End (E2E) testing suite 
     - Tests permanently deleting the user.
 
 ### Verification Results
+
 - **Pass Rate**: 100% (4/4 tests passed)
 - **Fixes Applied**:
-    - Resolved backend `ResponseValidationError` by making `user_id` optional in `UserAuditLog` schema.
-    - Fixed `create_user` endpoint to ensure database commit.
-    - Improved frontend accessibility (`aria-label` on buttons).
-    - Updated confirmation dialog to support dynamic button text.
+  - Resolved backend `ResponseValidationError` by making `user_id` optional in
+    `UserAuditLog` schema.
+  - Fixed `create_user` endpoint to ensure database commit.
+  - Improved frontend accessibility (`aria-label` on buttons).
+  - Updated confirmation dialog to support dynamic button text.
 
-> [!IMPORTANT]
-> **Frontend Restart Required**: The frontend application must be restarted to pick up the latest HTML changes (specifically for the "Delete Permanently" button text). The E2E tests expect the updated text.
+> [!IMPORTANT] **Frontend Restart Required**: The frontend application must be
+> restarted to pick up the latest HTML changes (specifically for the "Delete
+> Permanently" button text). The E2E tests expect the updated text.
 
 ## User Management Overhaul Wrap-up
 
 ### UI/UX Improvements
-- **Table Organization**: Reordered columns for better readability (Name/Role/Status first).
+
+- **Table Organization**: Reordered columns for better readability
+  (Name/Role/Status first).
 - **Tooltips**: Added tooltips for employee IDs and user types.
-- **Visual Indicators**: Added "Force Password Change" badge for users who need to reset their password.
+- **Visual Indicators**: Added "Force Password Change" badge for users who need
+  to reset their password.
 - **Responsive Design**:
-    - Implemented mobile-friendly layout for the user list.
-    - Hides less critical columns (Employee ID, Email) on smaller screens.
-    - Uses a `MatMenu` for actions on mobile devices to save space.
+  - Implemented mobile-friendly layout for the user list.
+  - Hides less critical columns (Employee ID, Email) on smaller screens.
+  - Uses a `MatMenu` for actions on mobile devices to save space.
 
 ### Backend Testing
-- **Force Password Change**: Added comprehensive test coverage for the force password change feature (8 tests).
+
+- **Force Password Change**: Added comprehensive test coverage for the force
+  password change feature (8 tests).
 - **Overall Coverage**: Backend user management tests are now at 100% pass rate.
 
 ### Verification
-- **Frontend Tests**: Verified that `user-list.spec.ts` passes with the new responsive design changes.
+
+- **Frontend Tests**: Verified that `user-list.spec.ts` passes with the new
+  responsive design changes.
 - **Manual Verification**:
-    - Checked desktop view: Actions appear as individual buttons.
-    - Checked mobile view (simulated): Actions appear as a "More" menu, and columns are hidden appropriately.
+  - Checked desktop view: Actions appear as individual buttons.
+  - Checked mobile view (simulated): Actions appear as a "More" menu, and
+    columns are hidden appropriately.

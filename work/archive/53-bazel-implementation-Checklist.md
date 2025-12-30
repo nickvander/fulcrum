@@ -1,6 +1,7 @@
 # Missing Items for Bazel Implementation
 
 ## Phase 1: Foundation ✅ COMPLETE
+
 - [x] Install Bazel and dependencies
 - [x] Create .bazelversion, .bazelrc, .bazelignore
 - [x] Create MODULE.bazel with Bzlmod configuration
@@ -10,6 +11,7 @@
 - [x] Configure rules_pkg for packaging
 
 ## Phase 2: Backend Python ✅ COMPLETE
+
 - [x] Generate requirements_lock.txt with pip-compile
 - [x] Create backend/BUILD.bazel
 - [x] Create backend/src/BUILD.bazel with py_library and py_binary
@@ -17,6 +19,7 @@
 - [x] Build //backend/src:celery_worker successfully
 
 ## Phase 3: Backend Testing ✅ COMPLETE
+
 - [x] Create backend/tests/BUILD.bazel
 - [x] Configure py_test rules for 9 test modules
 - [x] Successfully run test_fast_dummy
@@ -26,6 +29,7 @@
 - [x] Make all backend tests pass with Bazel
 
 ## Phase 4: Frontend Dependencies ✅ COMPLETE
+
 - [x] Install pnpm
 - [x] Generate frontend/pnpm-lock.yaml
 - [x] Configure npm extension in MODULE.bazel
@@ -33,6 +37,7 @@
 - [x] Verify dependency resolution
 
 ## Phase 5: Frontend Build ✅ COMPLETE
+
 - [x] Research Angular + aspect_rules_js integration
 - [x] Create ts_project rules for TypeScript compilation
 - [x] Configure Angular build target
@@ -42,16 +47,19 @@
 - [x] Build PWA successfully
 
 ## Phase 6: Frontend Testing ⏸️ DEFERRED
+
 - [x] Create test rules for spec files (`frontend/BUILD.bazel`)
 - [x] Resolve "phantom dependency" graph for Bazel sandbox (~50 packages)
 - [~] Fix "Web Test Runner is not installed" error in Angular Builder
-  - **Deferred**: Angular's builder is experimental; see `work/future/bazel-frontend-testing.md`
+  - **Deferred**: Angular's builder is experimental; see
+    `work/future/bazel-frontend-testing.md`
   - **Workaround**: Use `pnpm ng test` locally (144 tests pass)
 - [~] Make all frontend tests pass with Bazel (using local workaround)
 
 ## Phase 7: Docker Integration ✅ COMPLETE
 
 ### Backend Container ⏸️ DEFERRED (Runfiles Issue)
+
 - [x] Add OCI base image pulls to MODULE.bazel (python:3.11-slim)
 - [x] Create backend/image/BUILD.bazel
 - [x] Configure pkg_tar for backend application
@@ -61,9 +69,11 @@
 - [x] Verify backend container loads into Docker
 - [x] Add visibility to py_binary targets
 - [x] Run bazel mod tidy
-- [~] Container runtime works (py_binary runfiles issue - use traditional Docker for now)
+- [~] Container runtime works (py_binary runfiles issue - use traditional Docker
+  for now)
 
 ### Frontend Container ✅ COMPLETE (with limitations)
+
 - [x] Create frontend/image/BUILD.bazel
 - [x] Configure default.conf (nginx)
 - [x] Package Angular build output
@@ -73,12 +83,14 @@
 - [~] Docker network limitation when running hybrid (documented)
 
 ### Test Containers ✅ COMPLETE
+
 - [x] Configure PostgreSQL test container with pgvector
 - [x] Configure Redis test container
 - [x] Wire test containers to py_test rules
 - [x] Verify all backend tests pass with containers
 
 ### Docker Compose Integration ✅ COMPLETE
+
 - [x] Create docker-compose.bazel.yml example
 - [x] Document how to use Bazel vs traditional docker-compose
 - [x] Maintain backward compatibility
@@ -87,6 +99,7 @@
 ## Phase 8: CI/CD Integration 🚧 IN PROGRESS
 
 ### GitHub Actions Updates
+
 - [x] Create .github/workflows/bazel-ci.yml for Bazel builds
   - [x] Install Bazel using setup-bazel action
   - [x] Configure caching (disk, repository, bazelisk)
@@ -96,6 +109,7 @@
 - [ ] Create .github/workflows/bazel-build.yml for general builds
 
 ### Performance Optimization
+
 - [ ] Research remote caching options (GitHub cache, Bazel Remote Cache)
 - [ ] Configure remote cache in .bazelrc
 - [ ] Add `build:ci` configuration
@@ -105,12 +119,14 @@
 ## Phase 9: Documentation ✅ COMPLETE
 
 ### README.md
+
 - [x] Add Bazel installation instructions
 - [x] Add "Building with Bazel" section
 - [x] Update Quick Start to include Bazel commands
 - [~] Add performance comparison table (deferred - need benchmarks)
 
 ### CONTRIBUTING.md / docs/guides/contributing.md
+
 - [x] Add Bazel development workflow guide
 - [x] Link to comprehensive using-bazel.md guide
 - [~] Document how to add new dependencies (covered in using-bazel.md)
@@ -119,18 +135,22 @@
 - [~] Explain when to use Bazel vs Docker Compose (covered in using-bazel.md)
 
 ### /docs Directory
+
 - [x] Create docs/guides/using-bazel.md (396 lines, comprehensive)
 - [~] Update architecture documentation (deferred)
 - [~] Add Mermaid diagram showing Bazel + Docker flow (deferred)
-- [~] Create troubleshooting guide for common Bazel issues (covered in using-bazel.md)
+- [~] Create troubleshooting guide for common Bazel issues (covered in
+  using-bazel.md)
 - [~] Document remote caching setup (deferred)
 
 ### Quick Reference
+
 - [x] Create BAZEL_QUICKSTART.md
 
 ## Phase 10: Verification & Validation ✅ COMPLETE
 
 ### Build Verification
+
 - [x] `bazel build //...` completes successfully
 - [x] Backend binary runs correctly
 - [x] Celery worker runs correctly
@@ -138,12 +158,14 @@
 - [x] Frontend builds correctly for production (verified via bazel build)
 
 ### Test Verification
+
 - [x] All backend unit tests pass
 - [x] All backend integration tests pass (via existing workflows)
 - [x] All frontend unit tests pass (via npm test)
 - [x] E2E tests pass with Bazel-built images (via hybrid workflow validation)
 
 ### Container Verification
+
 - [x] Backend Docker image builds (traditional Dockerfile used)
 - [x] Backend container loads into Docker
 - [x] Backend container starts successfully and serves requests
@@ -152,12 +174,15 @@
 - [x] All containers work together in docker-compose
 
 ### CI/CD Verification
+
 - [x] Backend tests workflow passes
 - [x] Frontend tests workflow passes
 - [x] E2E tests workflow passes
-- [x] Build times meet 30% improvement goal (Clean build 55s vs minutes previously)
+- [x] Build times meet 30% improvement goal (Clean build 55s vs minutes
+      previously)
 
 ### Performance Benchmarks
+
 - [x] Measure clean build time (~55s)
 - [ ] Measure incremental build time
 - [ ] Measure test execution time
@@ -166,7 +191,8 @@
 
 ## Blockers / Open Questions
 
-1. ~~**Angular Build Strategy**~~: ✅ Decided to use Angular CLI via Bazel (simpler)
+1. ~~**Angular Build Strategy**~~: ✅ Decided to use Angular CLI via Bazel
+   (simpler)
 
 2. ~~**Test Container Management**~~: ✅ Solved with testcontainers
 
@@ -175,11 +201,14 @@
    - Bazel Remote Cache (better performance, more setup)
    - Cloud provider (GCS, S3)
 
-4. **Development Workflow**: Should Bazel replace docker-compose for local dev, or complement it?
+4. **Development Workflow**: Should Bazel replace docker-compose for local dev,
+   or complement it?
 
 5. ~~**Frontend Testing in Bazel**~~: ⏸️ Deferred
-   - Angular's Web Test Runner builder is experimental and incompatible with Bazel sandbox
-   - See `work/future/bazel-frontend-testing.md` for options (Jest migration, wait for maturity)
+   - Angular's Web Test Runner builder is experimental and incompatible with
+     Bazel sandbox
+   - See `work/future/bazel-frontend-testing.md` for options (Jest migration,
+     wait for maturity)
    - **Workaround**: Use `pnpm ng test` for local testing
 
 ## Success Metrics

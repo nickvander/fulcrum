@@ -20,9 +20,10 @@ itself.
 4.  **Make your changes.** Please adhere to the coding style and conventions
     used throughout the project.
 5.  **Run local quality checks** using the git hooks that will also run in CI:
-    - The **pre-commit** hook runs fast backend tests and linter on your changes.
-    - The **pre-push** hook runs the full CI test suite (backend, frontend, and linting)
-      to ensure comprehensive coverage before pushing code.
+    - The **pre-commit** hook runs fast backend tests and linter on your
+      changes.
+    - The **pre-push** hook runs the full CI test suite (backend, frontend, and
+      linting) to ensure comprehensive coverage before pushing code.
 6.  **Commit your changes** with a clear and descriptive commit message. We
     follow the [Conventional Commits](https://www.conventionalcommits.org/)
     specification.

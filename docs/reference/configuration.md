@@ -89,4 +89,3 @@ These are optional and only required if integrating with Amazon.
 
 - **`ML_CLIENT_SECRET`**
   - **Description:** Secret Key from MercadoLibre DevCenter.
-

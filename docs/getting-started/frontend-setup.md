@@ -27,22 +27,48 @@ sudo apt-get update && sudo apt-get install -y nodejs npm
     npm install
     ```
 
-    > [!NOTE]
-    > **Bazel & pnpm Strictness**: This project uses Bazel with `rules_js` and `pnpm`, which enforces strict dependency rules. The Angular CLI relies on several dependencies that are not always explicitly declared in its own `package.json` (phantom dependencies). We have added these to `devDependencies` in `frontend/package.json` to ensure the build works in strict environments.
+    > [!NOTE] **Bazel & pnpm Strictness**: This project uses Bazel with
+    > `rules_js` and `pnpm`, which enforces strict dependency rules. The Angular
+    > CLI relies on several dependencies that are not always explicitly declared
+    > in its own `package.json` (phantom dependencies). We have added these to
+    > `devDependencies` in `frontend/package.json` to ensure the build works in
+    > strict environments.
     >
-    > If you are setting up the environment from scratch and encounter `MODULE_NOT_FOUND` errors, you may need to explicitly install these dependencies.
+    > If you are setting up the environment from scratch and encounter
+    > `MODULE_NOT_FOUND` errors, you may need to explicitly install these
+    > dependencies.
     >
-    > **Required Phantom Dependencies:**
-    > `picocolors`, `nanoid`, `postcss-media-query-parser`, `css-select`, `css-what`, `domhandler`, `htmlparser2`, `boolbase`, `domutils`, `nth-check`, `domelementtype`, `entities`, `@jridgewell/sourcemap-codec`, `mrmime`, `@ampproject/remapping`, `@jridgewell/trace-mapping`, `@jridgewell/resolve-uri`, `@babel/core`, `@babel/generator`, `@babel/traverse`, `@babel/types`, `@babel/parser`, `@babel/template`, `@babel/code-frame`, `@babel/helpers`, `to-fast-properties`, `@babel/helper-string-parser`, `@babel/helper-validator-identifier`, `@babel/helper-compilation-targets`, `@babel/helper-module-transforms`, `@jridgewell/remapping`, `convert-source-map`, `gensync`, `json5`, `semver`, `debug`, `@babel/helper-annotate-as-pure`, `@babel/helper-plugin-utils`, `@babel/helper-split-export-declaration`, `@babel/helper-create-class-features-plugin`, `fast-glob`, `glob-parent`, `is-glob`, `merge2`, `micromatch`, `@nodelib/fs.stat`, `@nodelib/fs.walk`, `is-extglob`, `fill-range`, `to-regex-range`, `is-number`, `@nodelib/fs.scandir`, `run-parallel`, `queue-microtask`, `fastq`, `reusify`, `@web/test-runner`, `globby` (v11), `portfinder`, `nanocolors`, `playwright`, `@web/test-runner-playwright`
+    > **Required Phantom Dependencies:** `picocolors`, `nanoid`,
+    > `postcss-media-query-parser`, `css-select`, `css-what`, `domhandler`,
+    > `htmlparser2`, `boolbase`, `domutils`, `nth-check`, `domelementtype`,
+    > `entities`, `@jridgewell/sourcemap-codec`, `mrmime`,
+    > `@ampproject/remapping`, `@jridgewell/trace-mapping`,
+    > `@jridgewell/resolve-uri`, `@babel/core`, `@babel/generator`,
+    > `@babel/traverse`, `@babel/types`, `@babel/parser`, `@babel/template`,
+    > `@babel/code-frame`, `@babel/helpers`, `to-fast-properties`,
+    > `@babel/helper-string-parser`, `@babel/helper-validator-identifier`,
+    > `@babel/helper-compilation-targets`, `@babel/helper-module-transforms`,
+    > `@jridgewell/remapping`, `convert-source-map`, `gensync`, `json5`,
+    > `semver`, `debug`, `@babel/helper-annotate-as-pure`,
+    > `@babel/helper-plugin-utils`, `@babel/helper-split-export-declaration`,
+    > `@babel/helper-create-class-features-plugin`, `fast-glob`, `glob-parent`,
+    > `is-glob`, `merge2`, `micromatch`, `@nodelib/fs.stat`, `@nodelib/fs.walk`,
+    > `is-extglob`, `fill-range`, `to-regex-range`, `is-number`,
+    > `@nodelib/fs.scandir`, `run-parallel`, `queue-microtask`, `fastq`,
+    > `reusify`, `@web/test-runner`, `globby` (v11), `portfinder`, `nanocolors`,
+    > `playwright`, `@web/test-runner-playwright`
     >
     > **Install Command:**
+    >
     > ```bash
     > pnpm add -D picocolors nanoid postcss-media-query-parser css-select css-what domhandler htmlparser2 boolbase domutils nth-check domelementtype entities @jridgewell/sourcemap-codec mrmime @ampproject/remapping @jridgewell/trace-mapping @jridgewell/resolve-uri @babel/core @babel/generator @babel/traverse @babel/types @babel/parser @babel/template @babel/code-frame @babel/helpers to-fast-properties @babel/helper-string-parser @babel/helper-validator-identifier @babel/helper-compilation-targets @babel/helper-module-transforms @jridgewell/remapping convert-source-map gensync json5 semver debug @babel/helper-annotate-as-pure @babel/helper-plugin-utils @babel/helper-split-export-declaration @babel/helper-create-class-features-plugin fast-glob glob-parent is-glob merge2 micromatch @nodelib/fs.stat @nodelib/fs.walk is-extglob fill-range to-regex-range is-number @nodelib/fs.scandir run-parallel queue-microtask fastq reusify @web/test-runner globby@^11 portfinder nanocolors playwright @web/test-runner-playwright
     > ```
     >
-    > **Note on Bazel Testing:**
-    > Currently, strict Bazel integration (`bazel test //frontend:test`) is deferred due to sandbox incompatibilities with the Angular Builder.
-    > Tests should be run locally using the stable Vitest runner:
+    > **Note on Bazel Testing:** Currently, strict Bazel integration
+    > (`bazel test //frontend:test`) is deferred due to sandbox
+    > incompatibilities with the Angular Builder. Tests should be run locally
+    > using the stable Vitest runner:
+    >
     > ```bash
     > pnpm ng test
     > ```
@@ -89,5 +115,5 @@ All scripts should be run from the `frontend` directory.
 - **`npm start`**: Runs the local development server.
 - **`npm run build`**: Compiles and builds the application for production. The
   output is placed in the `frontend/dist/` directory.
-- **`npm test`**: Runs the unit test suite using Vitest (via Angular CLI). See the
-  [Testing & CI Guide](../guides/testing-and-ci.md) for more details.
+- **`npm test`**: Runs the unit test suite using Vitest (via Angular CLI). See
+  the [Testing & CI Guide](../guides/testing-and-ci.md) for more details.

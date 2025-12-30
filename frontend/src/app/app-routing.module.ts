@@ -49,6 +49,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   { path: 'suppliers', loadChildren: () => import('./suppliers/suppliers.module').then(m => m.SuppliersModule), canActivate: [AuthGuard] },
+  {
+    path: 'marketing',
+    loadChildren: () => import('./marketing/marketing.routes').then(m => m.MARKETING_ROUTES),
+    canActivate: [AuthGuard]
+  },
   { path: 'marketplaces', loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule), canActivate: [AuthGuard] },
 
   { path: '**', redirectTo: '/products' } // Wildcard route

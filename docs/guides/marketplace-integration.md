@@ -7,14 +7,14 @@ marketplaces (Amazon SP-API and MercadoLibre) for Fulcrum.
 
 ## Supported Marketplaces
 
-| Marketplace   | Region     | Site ID | Auth URL                                           |
-| ------------- | ---------- | ------- | -------------------------------------------------- |
-| Amazon        | US         | ATVPDKIKX0DER | `https://sellercentral.amazon.com`          |
-| Amazon        | Mexico     | A1AM78C64UM0Y8 | `https://sellercentral.amazon.com.mx`       |
-| MercadoLibre  | Mexico     | MLM     | `https://auth.mercadolibre.com.mx`                 |
-| MercadoLibre  | Argentina  | MLA     | `https://auth.mercadolibre.com.ar`                 |
-| MercadoLibre  | Brazil     | MLB     | `https://auth.mercadolivre.com.br`                 |
-| MercadoLibre  | Colombia   | MCO     | `https://auth.mercadolibre.com.co`                 |
+| Marketplace  | Region    | Site ID        | Auth URL                              |
+| ------------ | --------- | -------------- | ------------------------------------- |
+| Amazon       | US        | ATVPDKIKX0DER  | `https://sellercentral.amazon.com`    |
+| Amazon       | Mexico    | A1AM78C64UM0Y8 | `https://sellercentral.amazon.com.mx` |
+| MercadoLibre | Mexico    | MLM            | `https://auth.mercadolibre.com.mx`    |
+| MercadoLibre | Argentina | MLA            | `https://auth.mercadolibre.com.ar`    |
+| MercadoLibre | Brazil    | MLB            | `https://auth.mercadolivre.com.br`    |
+| MercadoLibre | Colombia  | MCO            | `https://auth.mercadolibre.com.co`    |
 
 ---
 
@@ -22,8 +22,7 @@ marketplaces (Amazon SP-API and MercadoLibre) for Fulcrum.
 
 ### 2025 Updates
 
-> [!IMPORTANT]
-> **Key Changes in 2025:**
+> [!IMPORTANT] **Key Changes in 2025:**
 >
 > - **No AWS IAM Required**: Since October 2023, SP-API no longer requires AWS
 >   IAM or Signature Version 4. Authentication is now purely OAuth 2.0 (LWA).
@@ -57,23 +56,27 @@ marketplaces (Amazon SP-API and MercadoLibre) for Fulcrum.
 3. Fill in the required fields:
    - **App Name**: e.g., "Fulcrum Inventory Manager"
    - **API Type**: Selling Partner API
-   - **OAuth Redirect URI**: `http://localhost:4200/marketplaces/amazon/callback`
-     (or your production URL)
+   - **OAuth Redirect URI**:
+     `http://localhost:4200/marketplaces/amazon/callback` (or your production
+     URL)
 4. After submission, you'll receive:
    - **Client ID** (LWA Client Identifier)
    - **Client Secret** (LWA Client Secret)
 
 ### Step 3: Configure Fulcrum
 
-You have two options to configure your credentials: user-specific via the Settings UI (recommended) or globally via `.env` variables.
+You have two options to configure your credentials: user-specific via the
+Settings UI (recommended) or globally via `.env` variables.
 
 #### Option A: Settings UI (Recommended)
+
 1. Go to **Marketplaces > Add Marketplace Account**.
 2. Select **Amazon**.
 3. Enter your **Client ID** and **Client Secret**.
 4. Click **Save & Connect**.
 
 #### Option B: Global Configuration (Alternative)
+
 For single-tenant deployments, you can set defaults in your `.env` file:
 
 ```bash
@@ -108,8 +111,7 @@ Amazon provides a **Sandbox environment** for testing:
 
 ### 2025 Updates
 
-> [!IMPORTANT]
-> **Key Changes in 2025:**
+> [!IMPORTANT] **Key Changes in 2025:**
 >
 > - **Authenticated Search Required**: Starting April 2025, the `/search`
 >   endpoint requires authenticated user authorization. Anonymous product
@@ -136,7 +138,8 @@ Amazon provides a **Sandbox environment** for testing:
 4. Fill in the required fields:
    - **Application Name**: e.g., "Fulcrum Integration"
    - **Short Description**: Brief description of your integration.
-   - **Redirect URI**: `http://localhost:4200/marketplaces/mercadolibre/callback`
+   - **Redirect URI**:
+     `http://localhost:4200/marketplaces/mercadolibre/callback`
 5. After creation, you'll receive:
    - **App ID** (Client ID)
    - **Secret Key** (Client Secret)
@@ -147,12 +150,14 @@ Amazon provides a **Sandbox environment** for testing:
 ### Step 2: Configure Fulcrum
 
 #### Option A: Settings UI (Recommended)
+
 1. Go to **Marketplaces > Add Marketplace Account**.
 2. Select **MercadoLibre**.
 3. Enter your **App ID** and **Secret Key**.
 4. Click **Save & Connect**.
 
 #### Option B: Global Configuration (Alternative)
+
 For single-tenant deployments, set defaults in your `.env` file:
 
 ```bash
@@ -276,8 +281,8 @@ GET /api/v1/webhooks/events
 
 ### Amazon: "Invalid grant" error
 
-- The authorization code expires in 5 minutes. Ensure your callback processes
-  it immediately.
+- The authorization code expires in 5 minutes. Ensure your callback processes it
+  immediately.
 - Verify your redirect URI matches exactly (including trailing slashes).
 
 ### MercadoLibre: "Invalid client" error

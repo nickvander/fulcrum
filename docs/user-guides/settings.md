@@ -51,8 +51,10 @@ Update your personal profile:
 
 Configure global defaults for inventory alerts:
 
-- **Low Stock Threshold**: The default quantity below which a product is considered "Low Stock" (e.g., 10 units).
-  - *Note*: This can be overridden on a per-product basis in the Product Edit page.
+- **Low Stock Threshold**: The default quantity below which a product is
+  considered "Low Stock" (e.g., 10 units).
+  - _Note_: This can be overridden on a per-product basis in the Product Edit
+    page.
 
 ### Appearance (Future)
 

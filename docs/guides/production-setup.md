@@ -27,8 +27,10 @@ machine and then either reboot or run `sysctl vm.overcommit_memory=1`.
 
 To enable rate limiting, you must configure the following environment variables:
 
-- `RATE_LIMIT_REDIS_URL`: The URL of the Redis instance used for rate limiting (e.g., `redis://redis:6379/0`). If not provided, it defaults to `REDIS_URL`.
-- `RATE_LIMIT_DEFAULT`: The default rate limit for endpoints (default: `100/minute`).
+- `RATE_LIMIT_REDIS_URL`: The URL of the Redis instance used for rate limiting
+  (e.g., `redis://redis:6379/0`). If not provided, it defaults to `REDIS_URL`.
+- `RATE_LIMIT_DEFAULT`: The default rate limit for endpoints (default:
+  `100/minute`).
 
 ### Security Headers
 

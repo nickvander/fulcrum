@@ -40,7 +40,6 @@ body {
     }
 
     // Lighter, thinner borders
-    // Lighter, thinner borders
     $sleek-border-color: var(--border-color); // Gray 300 - Clean and subtle
     $sleek-border-hover: var(--border-hover); // Gray 400
 
@@ -75,5 +74,31 @@ body {
     .mat-mdc-form-field-icon-suffix {
         display: flex;
         align-items: center;
+    }
+}
+
+// Dialog styling - rounded corners and proper overflow
+.mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+        border-radius: 16px !important;
+        overflow: hidden;
+    }
+}
+
+// Marketing Dialog Panel - Full width headers
+.marketing-dialog-panel {
+    .mat-mdc-dialog-container .mdc-dialog__surface {
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    .mat-mdc-dialog-content {
+        padding: 24px !important;
+        margin: 0 !important;
+    }
+
+    .mat-mdc-dialog-actions {
+        padding: 16px 24px !important;
     }
 }

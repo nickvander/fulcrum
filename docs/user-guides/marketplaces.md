@@ -14,10 +14,10 @@ The main view shows all connected marketplace accounts with their sync status.
 
 ### Supported Platforms
 
-| Platform      | Region              | Features                          |
-| ------------- | ------------------- | --------------------------------- |
-| Amazon        | North America (NA)  | Inventory sync, pricing, orders   |
-| MercadoLibre  | Mexico (MLM)        | Listings, orders, fulfillment     |
+| Platform     | Region             | Features                        |
+| ------------ | ------------------ | ------------------------------- |
+| Amazon       | North America (NA) | Inventory sync, pricing, orders |
+| MercadoLibre | Mexico (MLM)       | Listings, orders, fulfillment   |
 
 ## Connecting a Marketplace
 
@@ -33,7 +33,8 @@ platform's **App Credentials**:
    - **Client Secret**
 4. Save.
 
-> See the [Marketplace Credential Setup Guide](../guides/marketplace-credential-setup.md)
+> See the
+> [Marketplace Credential Setup Guide](../guides/marketplace-credential-setup.md)
 > for detailed instructions on obtaining these credentials.
 
 ### Step 2: Connect Your Account

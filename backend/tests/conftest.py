@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 import os
+os.environ["TESTING"] = "True"
 from pathlib import Path
 import shutil
 

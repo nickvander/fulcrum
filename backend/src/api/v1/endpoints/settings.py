@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from src.api import dependencies
 from src.api.dependencies import get_db
 from src.models.user import User
+from src.schemas.store_settings import SMTPConfigCreate
 
 router = APIRouter()
 
@@ -152,3 +153,122 @@ async def test_marketplace_connection(
         return {"success": False, "error": "Client ID not set"}
     
     return {"success": True, "message": "Credentials configured"}
+
+
+# =============================================================================
+# SMTP / Email Settings (Store-Level)
+# =============================================================================
+
+@router.get("/smtp")
+def get_smtp_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Get store-level SMTP email settings.
+    Password is never returned.
+    """
+    from src.crud.crud_store_settings import store_settings as crud_ss
+    
+    settings = crud_ss.get_settings(db)
+    smtp_config = settings.settings.get("smtp", {})
+    
+    return {
+        "provider": smtp_config.get("provider", "custom"),
+        "host": smtp_config.get("host", ""),
+        "port": smtp_config.get("port", 587),
+        "username": smtp_config.get("username", ""),
+        "from_email": smtp_config.get("from_email", ""),
+        "from_name": smtp_config.get("from_name", ""),
+        "use_tls": smtp_config.get("use_tls", True),
+        "use_ssl": smtp_config.get("use_ssl", False),
+        "is_configured": bool(smtp_config.get("username") and settings.smtp_password_encrypted),
+    }
+
+
+@router.post("/smtp")
+def save_smtp_settings(
+    data: SMTPConfigCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Save store-level SMTP settings.
+    Password is encrypted before storage.
+    """
+    from src.crud.crud_store_settings import store_settings as crud_ss
+    from src.core.encryption import encryption_service
+    from src.services.marketing.smtp import EMAIL_PROVIDER_PRESETS
+    
+    settings = crud_ss.get_settings(db)
+    
+    # Get preset config if provider specified
+    preset = EMAIL_PROVIDER_PRESETS.get(data.provider, {})
+    
+    # Build SMTP config
+    smtp_config = {
+        "provider": data.provider,
+        "host": data.host or preset.get("host", ""),
+        "port": data.port or preset.get("port", 587),
+        "username": data.username,
+        "from_email": data.from_email or data.username,
+        "from_name": data.from_name or "",
+        "use_tls": data.use_tls if data.host else preset.get("use_tls", True),
+        "use_ssl": data.use_ssl if data.host else preset.get("use_ssl", False),
+    }
+    
+    # Update settings JSON
+    current_settings = settings.settings or {}
+    current_settings["smtp"] = smtp_config
+    settings.settings = current_settings
+    
+    # Encrypt and store password if provided
+    if data.password:
+        settings.smtp_password_encrypted = encryption_service.encrypt(data.password)
+    
+    db.commit()
+    db.refresh(settings)
+    
+    return {"status": "success", "message": "SMTP settings saved"}
+
+
+@router.post("/smtp/test")
+async def test_smtp_connection(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Test SMTP connection with saved credentials.
+    """
+    from src.crud.crud_store_settings import store_settings as crud_ss
+    from src.core.encryption import encryption_service
+    
+    settings = crud_ss.get_settings(db)
+    smtp_config = settings.settings.get("smtp", {})
+    
+    if not smtp_config.get("username") or not settings.smtp_password_encrypted:
+        return {"success": False, "error": "SMTP not configured"}
+    
+    try:
+        # Build config for connector
+        config = {
+            **smtp_config,
+            "password": encryption_service.decrypt(settings.smtp_password_encrypted),
+        }
+        
+        # Try to validate (import here to avoid circular imports)
+        from src.services.marketing import get_connector, CONNECTOR_REGISTRY
+        
+        if "smtp" not in CONNECTOR_REGISTRY:
+            return {"success": False, "error": "SMTP connector not available (install aiosmtplib)"}
+        
+        connector = get_connector("smtp", config)
+        is_valid = await connector.validate_credentials()
+        
+        if is_valid:
+            return {"success": True, "message": "SMTP connection successful"}
+        else:
+            return {"success": False, "error": "Failed to connect to SMTP server"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
