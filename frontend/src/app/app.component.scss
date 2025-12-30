@@ -1,0 +1,11 @@
+// Ensure sidenav container is transparent so body gradient shows
+.sidenav-container,
+.mat-drawer-container,
+.mat-drawer-content {
+    background-color: transparent !important;
+}
+
+// Ensure main content doesn't block it either
+.main-content {
+    background: transparent;
+}

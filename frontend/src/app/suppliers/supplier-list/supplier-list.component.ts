@@ -1,5 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -21,12 +22,11 @@ interface SupplierSummary {
     styleUrls: ['./supplier-list.component.scss'],
     standalone: false
 })
-export class SupplierListComponent implements OnInit {
+export class SupplierListComponent implements OnInit, AfterViewInit {
     dataSource = new MatTableDataSource<SupplierSummary>([]);
 
-    @ViewChild(MatSort) set sort(sort: MatSort) {
-        this.dataSource.sort = sort;
-    }
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+    @ViewChild(MatSort) sort!: MatSort; // Changed to simple property since we use AfterViewInit
 
     suppliers: SupplierSummary[] = [];
     displayedColumns: string[] = ['name', 'contact', 'po_count', 'total_value', 'actions'];
@@ -46,6 +46,11 @@ export class SupplierListComponent implements OnInit {
             }
         };
         this.loadData();
+    }
+
+    ngAfterViewInit() {
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
     }
 
     loadData(): void {
@@ -78,8 +83,11 @@ export class SupplierListComponent implements OnInit {
                     };
                 });
                 this.dataSource.data = this.suppliers;
-                this.dataSource.data = this.suppliers;
-                // sort is set by ViewChild setter
+                // Re-link paginator/sort if needed, but AfterViewInit handles it usually. 
+                // However, explicit re-link if data loads after view init is safe.
+                if (this.paginator) this.dataSource.paginator = this.paginator;
+                if (this.sort) this.dataSource.sort = this.sort;
+
                 this.isLoading = false;
             },
             error: () => {

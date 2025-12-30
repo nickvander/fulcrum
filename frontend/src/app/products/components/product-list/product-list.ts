@@ -38,9 +38,11 @@ import { ProductComparisonComponent } from '../product-comparison/product-compar
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
+
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-product-list',
@@ -75,7 +77,8 @@ import { MatInputModule } from '@angular/material/input';
     AiSearchBar,
     MatFormFieldModule,
     MatSelectModule,
-    MatInputModule
+    MatInputModule,
+    MatPaginatorModule // Added standard paginator
   ],
 })
 export class ProductList implements OnInit, OnDestroy {
@@ -90,7 +93,7 @@ export class ProductList implements OnInit, OnDestroy {
   displayedColumns: string[] = ['select', 'image', 'name', 'sku', 'cost_price', 'price', 'stock', 'marketplaces', 'actions'];
 
   // View/UI State
-  viewMode: 'grid' | 'list' = 'grid';
+  viewMode: 'list' | 'grid' = 'list';
   activeProductType: 'all' | 'product' | 'bundle' = 'all';
 
   selectedProducts = new Set<number>(); // Store IDs of selected products
@@ -99,9 +102,12 @@ export class ProductList implements OnInit, OnDestroy {
   isLoading: boolean = false;
   isReloading: boolean = false;
   activeFilters: any = {};
-  useInfiniteScroll: boolean = false; // Toggle between pagination and infinite scroll
-  allProducts: Product[] = []; // For infinite scroll
-  hasMoreProducts: boolean = true; // For infinite scroll
+
+  // Restoring Infinite Scroll Support
+  useInfiniteScroll: boolean = false;
+  allProducts: Product[] = [];
+  hasMoreProducts: boolean = true;
+
   private destroy$ = new Subject<void>();
   private filterSubject = new Subject<void>();
 
@@ -161,7 +167,6 @@ export class ProductList implements OnInit, OnDestroy {
       this.allProducts = [];
     }
 
-    // Determine if we should use search or filtered endpoint
     // Check if any filter OTHER than is_bundle is active OR if search query exists
     const searchActive = Object.keys(this.activeFilters).some(key => {
       if (key === 'is_bundle') return false;
@@ -169,7 +174,7 @@ export class ProductList implements OnInit, OnDestroy {
     });
 
     if (this.useInfiniteScroll) {
-      // For infinite scroll, we'll handle differently
+      // Infinite Scroll Logic
       if (searchActive) {
         this.productService.searchProductsAdvanced(this.activeFilters, page, size)
           .pipe(takeUntil(this.destroy$))
@@ -185,10 +190,11 @@ export class ProductList implements OnInit, OnDestroy {
               this.paginatedProducts = result;
               this.hasMoreProducts = result.currentPage < result.totalPages;
               this.isLoading = false; this.isReloading = false;
+              this.updateDataSource();
               this.cdr.markForCheck();
             },
             error: (error) => {
-              console.error('Error loading products with filters:', error);
+              console.error('Error loading products (Search + Infinite):', error);
               this.isLoading = false; this.isReloading = false;
               this.cdr.markForCheck();
             }
@@ -208,19 +214,19 @@ export class ProductList implements OnInit, OnDestroy {
               this.paginatedProducts = result;
               this.hasMoreProducts = result.currentPage < result.totalPages;
               this.isLoading = false; this.isReloading = false;
+              this.updateDataSource();
               this.cdr.markForCheck();
             },
             error: (error) => {
-              console.error('Error loading products:', error);
+              console.error('Error loading products (Infinite):', error);
               this.isLoading = false; this.isReloading = false;
               this.cdr.markForCheck();
             }
           });
       }
     } else {
-      // For regular pagination
+      // Standard Pagination Logic
       if (searchActive) {
-        // Use the advanced search endpoint with filters
         this.productService.searchProductsAdvanced(this.activeFilters, page, size)
           .pipe(takeUntil(this.destroy$))
           .subscribe({
@@ -228,10 +234,11 @@ export class ProductList implements OnInit, OnDestroy {
               this.paginatedProducts = result;
               this.products = result.data;
               this.isLoading = false; this.isReloading = false;
+              this.updateDataSource();
               this.cdr.markForCheck();
             },
             error: (error) => {
-              console.error('Error loading products with filters:', error);
+              console.error('Error loading products (Search + Pagination):', error);
               this.isLoading = false; this.isReloading = false;
               this.cdr.markForCheck();
             }
@@ -244,10 +251,11 @@ export class ProductList implements OnInit, OnDestroy {
               this.paginatedProducts = result;
               this.products = result.data;
               this.isLoading = false; this.isReloading = false;
+              this.updateDataSource();
               this.cdr.markForCheck();
             },
             error: (error) => {
-              console.error('Error loading products:', error);
+              console.error('Error loading products (Pagination):', error);
               this.isLoading = false; this.isReloading = false;
               this.cdr.markForCheck();
             }
@@ -555,6 +563,14 @@ export class ProductList implements OnInit, OnDestroy {
     this.loadProducts(this.currentPage, this.pageSize);
   }
 
+  // Standard MatPaginator Event Handler
+  handlePageEvent(e: PageEvent): void {
+    this.pageSize = e.pageSize;
+    this.currentPage = e.pageIndex + 1; // Paginator is 0-indexed, API is 1-indexed
+    this.loadProducts(this.currentPage, this.pageSize);
+  }
+
+  // Legacy/Custom pagination glue (can be removed if app-pagination is removed)
   onPageChange(page: number): void {
     if (this.paginatedProducts) {
       if (page >= 1 && page <= this.paginatedProducts.totalPages && page !== this.currentPage) {
@@ -564,8 +580,9 @@ export class ProductList implements OnInit, OnDestroy {
   }
 
   onPageSizeChange(size: number): void {
-    this.loadProducts(1, size); // Reset to first page when page size changes
+    this.loadProducts(1, size);
   }
+
 
 
   toggleInfiniteScroll(): void {
@@ -579,188 +596,6 @@ export class ProductList implements OnInit, OnDestroy {
       this.loadProducts(1, this.pageSize);
     }
   }
-
-  onBatchPriceUpdate(event: { productIds: number[], price: number }): void {
-    // Get the selected product IDs if not provided in the event
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-
-    // In a real implementation, you would open a dialog to get the price adjustment
-    // For now, let's just use a default value as an example
-    const priceAdjustment = 10; // Example value - in reality you'd get this from a dialog
-    const adjustmentType: 'set' | 'increase' = 'set'; // Example type
-
-    this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-          this.deselectAll(); // Clear selection after operation
-        },
-        error: (error) => {
-          console.error('Error updating product prices:', error);
-          this.notificationService.showError('Error updating product prices');
-        }
-      });
-  }
-
-  onBatchCategoryUpdate(event: { productIds: number[], category: string }): void {
-    // Get the selected product IDs if not provided in the event
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-
-    // In a real implementation, you would open a dialog to select the category
-    // For now, let's just use a default value as an example
-    const category = 'Electronics'; // Example value - in reality you'd get this from a dialog
-
-    this.batchOperationsService.batchUpdateCategories(productIds, category)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-          this.deselectAll(); // Clear selection after operation
-        },
-        error: (error) => {
-          console.error('Error updating product categories:', error);
-          this.notificationService.showError('Error updating product categories');
-        }
-      });
-  }
-
-  onBatchCustomFieldUpdate(event: { productIds: number[], updates: { [key: string]: any } }): void {
-    // Get the selected product IDs if not provided in the event
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-
-    // In a real implementation, you would open a dialog to specify custom field updates
-    // For now, let's just use a default value as an example
-    const updates = { warranty_period: '12 months' }; // Example value - in reality you'd get this from a dialog
-
-    this.batchOperationsService.batchUpdateCustomFields(productIds, updates)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize); // Refresh the product list
-          this.deselectAll(); // Clear selection after operation
-        },
-        error: (error) => {
-          console.error('Error updating custom fields:', error);
-          this.notificationService.showError('Error updating custom fields');
-        }
-      });
-  }
-
-  onProductTypeChange(type: 'all' | 'product' | 'bundle'): void {
-    this.activeProductType = type;
-
-    // reset is_bundle filter
-    if (type === 'all') {
-      delete this.activeFilters.is_bundle;
-    } else if (type === 'product') {
-      this.activeFilters.is_bundle = false;
-    } else if (type === 'bundle') {
-      this.activeFilters.is_bundle = true;
-    }
-
-    this.loadProducts(1, this.pageSize);
-  }
-
-  getEffectiveCost(product: Product): number {
-    // If it's a bundle and has 0 cost, try to estimate from components
-    if (product.is_bundle && (!product.cost_price || product.cost_price === 0)) {
-      if (product.bundle_components && product.bundle_components.length > 0) {
-        return product.bundle_components.reduce((sum, bc) => {
-          const cost = bc.component_cost || 0;
-          return sum + (cost * bc.quantity);
-        }, 0);
-      }
-    }
-    return product.cost_price || 0;
-  }
-
-  getBundleAverageCost(product: Product): number {
-    if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
-      return product.bundle_components.reduce((sum, bc) => {
-        // Use component_cost as proxy for average cost if specific average cost not available
-        // Ideally backend ensures component_cost is the average cost at read time
-        const cost = bc.component_cost || 0;
-        return sum + (cost * bc.quantity);
-      }, 0);
-    }
-    return product.average_cost || 0;
-  }
-
-  getAllocatedBundleNames(product: Product): string {
-    if (!product.part_of_bundles || product.part_of_bundles.length === 0) return '';
-    // Deduplicate bundle names
-    const names = Array.from(new Set(product.part_of_bundles.map(b => b.bundle_name).filter(n => n)));
-    return names.join(', ');
-  }
-
-  showAdvancedFilters = false;
-
-  toggleAdvancedFilters(): void {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
-
-  // Unified filter change handler
-  applyFilter(type: string, value: any): void {
-    if (value === null || value === '' || value === undefined) {
-      delete this.activeFilters[type];
-    } else {
-      this.activeFilters[type] = value;
-    }
-    this.filterSubject.next();
-  }
-
-  resetFilters(): void {
-    this.activeFilters = {};
-    this.currentSearchQuery = '';
-    this.activeProductType = 'all';
-    this.loadProducts(1, this.pageSize);
-  }
-
-  applyQuickFilter(filterType: string, value: any): void {
-    // Logic: Toggle filters. If selecting a range property (min/max), clear the opposing one.
-
-    // Helper to toggle a value: if exists and matches, remove it. Else set it.
-    const toggle = (key: string, val: any) => {
-      if (this.activeFilters[key] === val) {
-        delete this.activeFilters[key];
-      } else {
-        this.activeFilters[key] = val;
-      }
-    };
-
-    switch (filterType) {
-      case 'in_stock':
-        delete this.activeFilters.max_stock; // Clear conflict
-        toggle('min_stock', 1);
-        break;
-      case 'out_of_stock':
-        delete this.activeFilters.min_stock;
-        toggle('max_stock', 0);
-        break;
-      case 'low_stock':
-        delete this.activeFilters.min_stock;
-        toggle('max_stock', 10);
-        break;
-      case 'expensive':
-        delete this.activeFilters.max_price;
-        toggle('min_price', 500);
-        break;
-      case 'cheap':
-        delete this.activeFilters.min_price;
-        toggle('max_price', 50);
-        break;
-      default:
-        this.activeFilters[filterType] = value;
-        break;
-    }
-
-    this.loadProducts(1, this.pageSize);
-  }
-
 
   onWindowScroll(): void {
     if (this.useInfiniteScroll && this.hasMoreProducts && !this.isLoading) {
@@ -791,6 +626,7 @@ export class ProductList implements OnInit, OnDestroy {
             this.paginatedProducts = result;
             this.hasMoreProducts = result.currentPage < result.totalPages;
             this.isLoading = false; this.isReloading = false;
+            this.updateDataSource();
           },
           error: (error) => {
             console.error('Error loading more products:', error);
@@ -802,12 +638,12 @@ export class ProductList implements OnInit, OnDestroy {
         .pipe(takeUntil(this.destroy$))
         .subscribe({
           next: (result) => {
-            // Append new products to existing products
             this.allProducts = [...this.allProducts, ...result.data];
-            this.products = this.allProducts; // Update the displayed products
+            this.products = this.allProducts;
             this.paginatedProducts = result;
             this.hasMoreProducts = result.currentPage < result.totalPages;
             this.isLoading = false; this.isReloading = false;
+            this.updateDataSource();
           },
           error: (error) => {
             console.error('Error loading more products:', error);
@@ -815,5 +651,162 @@ export class ProductList implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  onBatchPriceUpdate(event: { productIds: number[], price: number }): void {
+    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+    const priceAdjustment = 10;
+    const adjustmentType: 'set' | 'increase' = 'set';
+
+    this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize);
+          this.deselectAll();
+        },
+        error: (error) => {
+          this.notificationService.showError('Error updating product prices');
+        }
+      });
+  }
+
+  onBatchCategoryUpdate(event: { productIds: number[], category: string }): void {
+    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+    const category = 'Electronics';
+
+    this.batchOperationsService.batchUpdateCategories(productIds, category)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize);
+          this.deselectAll();
+        },
+        error: (error) => {
+          this.notificationService.showError('Error updating product categories');
+        }
+      });
+  }
+
+  onBatchCustomFieldUpdate(event: { productIds: number[], updates: { [key: string]: any } }): void {
+    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+    const updates = { warranty_period: '12 months' };
+
+    this.batchOperationsService.batchUpdateCustomFields(productIds, updates)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.loadProducts(this.currentPage, this.pageSize);
+          this.deselectAll();
+        },
+        error: (error) => {
+          this.notificationService.showError('Error updating custom fields');
+        }
+      });
+  }
+
+  onProductTypeChange(type: 'all' | 'product' | 'bundle'): void {
+    this.activeProductType = type;
+
+    if (type === 'all') {
+      delete this.activeFilters.is_bundle;
+    } else if (type === 'product') {
+      this.activeFilters.is_bundle = false;
+    } else if (type === 'bundle') {
+      this.activeFilters.is_bundle = true;
+    }
+
+    this.loadProducts(1, this.pageSize);
+  }
+
+  getEffectiveCost(product: Product): number {
+    if (product.is_bundle && (!product.cost_price || product.cost_price === 0)) {
+      if (product.bundle_components && product.bundle_components.length > 0) {
+        return product.bundle_components.reduce((sum, bc) => {
+          const cost = bc.component_cost || 0;
+          return sum + (cost * bc.quantity);
+        }, 0);
+      }
+    }
+    return product.cost_price || 0;
+  }
+
+  getBundleAverageCost(product: Product): number {
+    if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+      return product.bundle_components.reduce((sum, bc) => {
+        const cost = bc.component_cost || 0;
+        return sum + (cost * bc.quantity);
+      }, 0);
+    }
+    return product.average_cost || 0;
+  }
+
+  getAllocatedBundleNames(product: Product): string {
+    if (!product.part_of_bundles || product.part_of_bundles.length === 0) return '';
+    const names = Array.from(new Set(product.part_of_bundles.map(b => b.bundle_name).filter(n => n)));
+    return names.join(', ');
+  }
+
+  showAdvancedFilters = false;
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  applyFilter(type: string, value: any): void {
+    if (value === null || value === '' || value === undefined) {
+      delete this.activeFilters[type];
+    } else {
+      this.activeFilters[type] = value;
+    }
+    this.filterSubject.next();
+  }
+
+  resetFilters(): void {
+    this.activeFilters = {};
+    this.currentSearchQuery = '';
+    this.activeProductType = 'all';
+    this.loadProducts(1, this.pageSize);
+  }
+
+  applyQuickFilter(filterType: string, value: any): void {
+    const toggle = (key: string, val: any) => {
+      if (this.activeFilters[key] === val) {
+        delete this.activeFilters[key];
+      } else {
+        this.activeFilters[key] = val;
+      }
+    };
+
+    switch (filterType) {
+      case 'in_stock':
+        delete this.activeFilters.max_stock;
+        toggle('min_stock', 1);
+        break;
+      case 'out_of_stock':
+        delete this.activeFilters.min_stock;
+        toggle('max_stock', 0);
+        break;
+      case 'low_stock':
+        delete this.activeFilters.min_stock;
+        toggle('max_stock', 10);
+        break;
+      case 'expensive':
+        delete this.activeFilters.max_price;
+        toggle('min_price', 500);
+        break;
+      case 'cheap':
+        delete this.activeFilters.min_price;
+        toggle('max_price', 50);
+        break;
+      default:
+        this.activeFilters[filterType] = value;
+        break;
+    }
+
+    this.loadProducts(1, this.pageSize);
   }
 }

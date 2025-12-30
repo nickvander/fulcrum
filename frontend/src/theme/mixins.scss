@@ -1,0 +1,138 @@
+@use 'variables';
+
+// Breakpoints
+$mobile-max: 767px;
+$tablet-min: 768px;
+$tablet-max: 1023px;
+$desktop-min: 1024px;
+
+// Card Styles
+@mixin card-style {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    overflow: hidden;
+
+    &:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+}
+
+// KPI / Gradient Card
+@mixin kpi-card($gradient) {
+    @include card-style;
+    background: $gradient;
+    color: white;
+    border: none;
+
+    .kpi-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+
+    .kpi-label {
+        opacity: 0.9;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+// Status Badges (Pill shape)
+@mixin status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: normal;
+    white-space: nowrap; // Prevent wrapping on small screens
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@mixin status-active {
+    @include status-badge;
+    background-color: var(--success-bg);
+    color: #2E7D32; // Hardcoded Accessible Green
+    border: 1px solid transparent;
+}
+
+@mixin status-inactive {
+    @include status-badge;
+    background-color: var(--bg-app);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+@mixin status-warning {
+    @include status-badge;
+    background-color: var(--warning-bg);
+    color: #E65100; // Hardcoded Accessible Orange
+}
+
+@mixin status-error {
+    @include status-badge;
+    background-color: var(--error-bg);
+    color: #C62828; // Hardcoded Accessible Red
+}
+
+// Filter Toolbar - Optimized for spacing
+@mixin filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-app);
+    border-radius: var(--border-radius);
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+
+    @media (max-width: $tablet-max) {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+}
+
+// Touch Targets (Tablet/Mobile)
+@mixin touch-target {
+    @media (max-width: $tablet-max) {
+        min-height: 48px; // 48px is safer standard than 44px
+        min-width: 48px;
+        padding: 12px;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+// Sleek Scrollbar
+@mixin sleek-scrollbar {
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.25);
+        }
+    }
+}

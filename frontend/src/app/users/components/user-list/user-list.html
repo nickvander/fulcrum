@@ -19,7 +19,7 @@
 
   <!-- Filters -->
   <div class="filters">
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="sleek-select">
       <mat-label>User Type</mat-label>
       <mat-select [(value)]="user_type_filter" (selectionChange)="onFilterChange()">
         <mat-option value="">All Types</mat-option>
@@ -29,7 +29,7 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="sleek-select">
       <mat-label>Status</mat-label>
       <mat-select [(value)]="is_active_filter" (selectionChange)="onFilterChange()">
         <mat-option value="">All Statuses</mat-option>
@@ -38,16 +38,19 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="sleek-select">
       <mat-label>Search</mat-label>
       <input matInput [(ngModel)]="search_filter" (keyup.enter)="onFilterChange()" placeholder="Search users...">
+      <button mat-icon-button matSuffix (click)="onFilterChange()" *ngIf="search_filter" matTooltip="Search">
+        <mat-icon>search</mat-icon>
+      </button>
     </mat-form-field>
 
     <button mat-button (click)="clearFilters()">Clear Filters</button>
   </div>
 
   @if (isLoading) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
   }
   <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
     <!-- Avatar Column -->
@@ -55,13 +58,13 @@
       <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
       <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
         @if (row.avatar) {
-          <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
-            (error)="avatarError($event)">
+        <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
+          (error)="avatarError($event)">
         }
         @if (!row.avatar) {
-          <div class="avatar-placeholder">
-            <mat-icon>person</mat-icon>
-          </div>
+        <div class="avatar-placeholder">
+          <mat-icon>person</mat-icon>
+        </div>
         }
       </mat-cell>
     </ng-container>
@@ -119,11 +122,10 @@
 
           <!-- Force Password Change Badge -->
           @if (row.force_password_change) {
-            <span class="status-badge status-warning"
-              matTooltip="User must change password on next login">
-              <mat-icon class="status-icon">lock_reset</mat-icon>
-              <span class="status-label">Password Reset Required</span>
-            </span>
+          <span class="status-badge status-warning" matTooltip="User must change password on next login">
+            <mat-icon class="status-icon">lock_reset</mat-icon>
+            <span class="status-label">Password Reset Required</span>
+          </span>
           }
         </div>
       </mat-cell>

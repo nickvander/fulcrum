@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 from ..schemas.custom_field import ProductCustomField
@@ -118,6 +118,11 @@ class Product(ProductBase):
     low_inventory_threshold: Optional[int] = None
     low_stock_quantity_threshold: Optional[int] = None
     stock_quantity: Optional[int] = None
+    active_campaign_count: int = 0
+    
+    # Marketing data
+    active_campaigns: List[Dict[str, Any]] = []
+    quick_posts: List[Dict[str, Any]] = []
     
     created_at: datetime
     updated_at: datetime

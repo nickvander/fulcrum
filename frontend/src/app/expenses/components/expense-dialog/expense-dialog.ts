@@ -10,7 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { Expense } from '../../../models/expense.model';
+import { Expense } from '../../models/expense.model';
 
 @Component({
     selector: 'app-expense-dialog',

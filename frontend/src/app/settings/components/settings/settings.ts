@@ -27,8 +27,7 @@ import { environment } from '../../../../environments/environment';
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatIconModule,
-    CustomFieldList
+    MatIconModule
   ],
 })
 export class Settings implements OnInit {

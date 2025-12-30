@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Expense, ExpenseCreate, ExpenseUpdate, ExpenseSummary } from '../../models/expense.model';
+import { Expense, ExpenseSummary, ExpenseCreate, ExpenseUpdate } from '../models/expense.model';
 import { environment } from '../../../environments/environment';
 
 export interface ExpenseFilters {

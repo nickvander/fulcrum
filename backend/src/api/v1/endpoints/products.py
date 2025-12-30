@@ -122,12 +122,26 @@ def read_products(
     
     # Calculate metrics for each product in the list
     from src.services.inventory_service import inventory_service
+    from src.models.marketing import Campaign, CampaignStatus
+    
+    # Pre-fetch active campaign counts in a single query if possible, or per product
+    # For simplicity in this iteration, we'll do it per product (consider optimizing if slow)
     for p in products["data"]:
         p.sales_velocity = inventory_service.calculate_sales_velocity(db, p.id)
         p.days_of_inventory = inventory_service.calculate_days_of_inventory(db, p.id)
         p.low_inventory_threshold = inventory_service.get_effective_low_inventory_threshold(db, p.id)
         p.low_stock_quantity_threshold = inventory_service.get_effective_low_stock_quantity_threshold(db, p.id)
         p.stock_quantity = inventory_service.get_total_stock_quantity(db, p.id)
+        
+        # Count active campaigns
+        active_campaigns = (
+            db.query(Campaign)
+            .join(Campaign.products)
+            .filter(Campaign.products.any(id=p.id))
+            .filter(Campaign.status == CampaignStatus.ACTIVE.value)
+            .count()
+        )
+        p.active_campaign_count = active_campaigns
         
     return products
 
@@ -196,9 +210,40 @@ def read_product(*, db: Session = Depends(get_db), product_id: int):
     from src.services.inventory_service import inventory_service
     product.sales_velocity = inventory_service.calculate_sales_velocity(db, product_id)
     product.days_of_inventory = inventory_service.calculate_days_of_inventory(db, product_id)
-    product.low_inventory_threshold = inventory_service.get_effective_low_inventory_threshold(db, product_id)
     product.low_stock_quantity_threshold = inventory_service.get_effective_low_stock_quantity_threshold(db, product_id)
     product.stock_quantity = inventory_service.get_total_stock_quantity(db, product_id)
+    
+    # Fetch active campaigns
+    from src.models.marketing import Campaign, CampaignStatus
+    active_campaigns = (
+        db.query(Campaign)
+        .join(Campaign.products)
+        .filter(Campaign.products.any(id=product.id))
+        .filter(Campaign.status == CampaignStatus.ACTIVE.value)
+        .all()
+    )
+    
+    product.active_campaigns = [
+        {"id": c.id, "name": c.name, "start_date": c.start_date, "end_date": c.end_date, "is_smart_boost": c.is_smart_boost}
+        for c in active_campaigns
+    ]
+    product.active_campaign_count = len(active_campaigns)
+
+    # Fetch quick posts
+    from src.models.marketing import CampaignEvent
+    quick_posts = (
+        db.query(CampaignEvent)
+        .join(CampaignEvent.products)
+        .filter(CampaignEvent.products.any(id=product.id))
+        .filter(CampaignEvent.campaign_id.is_(None))
+        .order_by(CampaignEvent.created_at.desc())
+        .limit(5)
+        .all()
+    )
+    product.quick_posts = [
+        {"id": e.id, "name": e.name, "status": e.status, "scheduled_at": e.scheduled_at, "published_at": e.published_at, "channel_type": e.channel_type}
+        for e in quick_posts
+    ]
     
     return product
 

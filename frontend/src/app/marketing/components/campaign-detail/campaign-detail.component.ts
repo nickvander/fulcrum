@@ -97,7 +97,7 @@ import { ProductDetailsDialogComponent } from '../../../products/components/prod
               <mat-card-title>Linked Products</mat-card-title>
             </mat-card-header>
             <mat-card-content>
-              <div class="product-list" *ngIf="campaign.products?.length; else noProducts">
+              <div class="product-list" *ngIf="campaign.products && campaign.products.length; else noProducts">
                 <div *ngFor="let product of campaign.products" 
                    (click)="openProductDialog(product)"
                    class="product-item clickable">

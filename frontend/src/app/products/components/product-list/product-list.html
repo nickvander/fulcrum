@@ -1,123 +1,111 @@
 <div class="container">
   <mat-progress-bar *ngIf="isReloading" mode="indeterminate" class="reloading-progress"></mat-progress-bar>
   <div class="header">
-    <h1>Products</h1>
+    <h1>Products
+      <span class="product-count-badge" *ngIf="paginatedProducts?.totalItems">
+        {{ paginatedProducts?.totalItems }} Items
+      </span>
+    </h1>
     <div class="header-actions">
-      <div class="filter-group">
+      <!-- Search & Filter Combined Group -->
+      <div class="search-filter-group">
+        <mat-form-field appearance="outline" class="sleek-select search-field-compact" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput (ngModelChange)="onSearchQuery($event)" [(ngModel)]="activeFilters.q" placeholder="Search...">
+        </mat-form-field>
+
+        <button mat-icon-button (click)="toggleAdvancedFilters()"
+          [class.active-filter-btn]="showAdvancedFilters || (activeFilters | json) != '{}'" matTooltip="Filter">
+          <mat-icon>filter_list</mat-icon>
+        </button>
       </div>
 
-      <mat-divider vertical style="height: 24px; margin: 0 12px; align-self: center;" *ngIf="false"></mat-divider>
-
-      <mat-button-toggle-group [(ngModel)]="viewMode" (change)="setViewMode($event.value)" aria-label="View Mode"
-        class="view-toggle">
-        <mat-button-toggle value="grid" matTooltip="Grid View">
-          <mat-icon>grid_view</mat-icon>
-        </mat-button-toggle>
-        <mat-button-toggle value="list" matTooltip="List View">
-          <mat-icon>view_list</mat-icon>
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-
-      <mat-divider vertical style="height: 24px; margin: 0 12px; align-self: center;"></mat-divider>
-
-      <button mat-raised-button [color]="useInfiniteScroll ? 'accent' : 'primary'" (click)="toggleInfiniteScroll()"
-        type="button" matTooltip="Toggle between pagination and infinite scroll">
-        @if (!useInfiniteScroll) {
-        <mat-icon>autorenew</mat-icon>
-        }
-        @if (useInfiniteScroll) {
-        <mat-icon>sync_disabled</mat-icon>
-        }
-        <span>{{ useInfiniteScroll ? 'Infinite' : 'Paginated' }}</span>
+      <!-- Settings Menu (Infinite Scroll) -->
+      <button mat-icon-button [matMenuTriggerFor]="viewMenu" class="settings-btn" matTooltip="View Settings">
+        <mat-icon>settings</mat-icon>
       </button>
-      <button mat-raised-button color="primary" (click)="onAddProduct()" type="button">
+
+      <mat-menu #viewMenu="matMenu">
+        <button mat-menu-item (click)="toggleInfiniteScroll()">
+          <mat-icon>{{ useInfiniteScroll ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+          <span>Infinite Scroll</span>
+        </button>
+      </mat-menu>
+
+      <mat-divider vertical style="height: 24px; margin: 0 4px;"></mat-divider>
+
+      <!-- Action Buttons -->
+      <button mat-mini-fab color="primary" (click)="onAddProduct()" matTooltip="Add Product">
         <mat-icon>add</mat-icon>
-        <span>Product</span>
       </button>
-      <button mat-raised-button color="accent" (click)="onAddBundle()" type="button">
+      <button mat-mini-fab color="accent" (click)="onAddBundle()" matTooltip="Create Bundle">
         <mat-icon>inventory_2</mat-icon>
-        <span>Bundle</span>
       </button>
-      <button mat-raised-button color="primary" routerLink="/ingest" class="scan-button" type="button">
+      <button mat-mini-fab color="primary" routerLink="/ingest" matTooltip="Scan Product">
         <mat-icon>qr_code_scanner</mat-icon>
-        <span>Scan</span>
       </button>
     </div>
   </div>
 
-  <!-- Batch action toolbar - shown when at least one product is selected -->
-  @if (getSelectedCount() > 0) {
-  <app-batch-action-toolbar [selectedCount]="getSelectedCount()" (deleteSelected)="deleteSelected()"
-    (selectAll)="selectAll()" (deselectAll)="deselectAll()" (closeToolbar)="deselectAll()"
-    (batchPriceUpdate)="onBatchPriceUpdate($event)" (batchCategoryUpdate)="onBatchCategoryUpdate($event)"
-    (batchCustomFieldUpdate)="onBatchCustomFieldUpdate($event)">
-  </app-batch-action-toolbar>
-  }
+  <!-- Advanced Filter Panel (Collapsible) -->
+  <div class="advanced-filter-panel" *ngIf="showAdvancedFilters">
+    <!-- ... existing filter fields same as before ... -->
+    <div class="filter-row">
+      <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+        <mat-label>Product Type</mat-label>
+        <mat-select [(ngModel)]="activeProductType" (selectionChange)="onProductTypeChange($event.value)">
+          <mat-option value="all">All Items</mat-option>
+          <mat-option value="product">Products Only</mat-option>
+          <mat-option value="bundle">Bundles Only</mat-option>
+        </mat-select>
+      </mat-form-field>
 
-  <div class="search-container">
-    <app-ai-search-bar (searchQuery)="onSearchQuery($any($event))"></app-ai-search-bar>
+      <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+        <mat-label>Min Price</mat-label>
+        <input matInput type="number" [(ngModel)]="activeFilters.min_price"
+          (ngModelChange)="applyFilter('min_price', activeFilters.min_price)" placeholder="0.00">
+        <span matPrefix>$&nbsp;</span>
+      </mat-form-field>
 
-    <div class="filters-toolbar">
-      <!-- Quick Chips (Preserved but integrated) -->
-      <mat-chip-listbox aria-label="Quick Filters" multiple="true" class="quick-chips">
-        <mat-chip-option (click)="applyQuickFilter('in_stock', null)" [selected]="activeFilters.min_stock === 1"
-          color="primary">In Stock</mat-chip-option>
-        <mat-chip-option (click)="applyQuickFilter('out_of_stock', null)" [selected]="activeFilters.max_stock === 0"
-          color="warn">Out of Stock</mat-chip-option>
-        <mat-chip-option (click)="applyQuickFilter('low_stock', null)" [selected]="activeFilters.max_stock === 10"
-          color="accent">Low Stock</mat-chip-option>
-      </mat-chip-listbox>
+      <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+        <mat-label>Max Price</mat-label>
+        <input matInput type="number" [(ngModel)]="activeFilters.max_price"
+          (ngModelChange)="applyFilter('max_price', activeFilters.max_price)" placeholder="1000.00">
+        <span matPrefix>$&nbsp;</span>
+      </mat-form-field>
 
-      <div class="toolbar-spacer"></div>
+      <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+        <mat-label>Min Stock</mat-label>
+        <input matInput type="number" [(ngModel)]="activeFilters.min_stock"
+          (ngModelChange)="applyFilter('min_stock', activeFilters.min_stock)">
+      </mat-form-field>
 
-      <button mat-stroked-button (click)="toggleAdvancedFilters()"
-        [class.active-filter-btn]="showAdvancedFilters || (activeFilters | json) != '{}'">
-        <mat-icon>filter_list</mat-icon> Filters
-        <span *ngIf="(activeFilters | json) != '{}'" class="filter-count-badge">!</span>
-      </button>
+      <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+        <mat-label>Max Stock</mat-label>
+        <input matInput type="number" [(ngModel)]="activeFilters.max_stock"
+          (ngModelChange)="applyFilter('max_stock', activeFilters.max_stock)">
+      </mat-form-field>
     </div>
+    <div class="filter-actions">
+      <button mat-button color="warn" (click)="resetFilters()">Reset All</button>
+    </div>
+  </div>
 
-    <!-- Advanced Filter Panel -->
-    <div class="advanced-filter-panel" *ngIf="showAdvancedFilters">
-      <div class="filter-row">
-        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
-          <mat-label>Product Type</mat-label>
-          <mat-select [(ngModel)]="activeProductType" (selectionChange)="onProductTypeChange($event.value)">
-            <mat-option value="all">All Items</mat-option>
-            <mat-option value="product">Products Only</mat-option>
-            <mat-option value="bundle">Bundles Only</mat-option>
-          </mat-select>
-        </mat-form-field>
+  <div class="quick-filters-bar">
+    <mat-chip-listbox aria-label="Quick Filters" multiple="true" class="quick-chips">
+      <mat-chip-option (click)="applyQuickFilter('in_stock', null)" [selected]="activeFilters.min_stock === 1"
+        class="app-chip-success">In Stock</mat-chip-option>
+      <mat-chip-option (click)="applyQuickFilter('out_of_stock', null)" [selected]="activeFilters.max_stock === 0"
+        class="app-chip-error">Out of Stock</mat-chip-option>
+      <mat-chip-option (click)="applyQuickFilter('low_stock', null)" [selected]="activeFilters.max_stock === 10"
+        class="app-chip-warning">Low Stock</mat-chip-option>
+    </mat-chip-listbox>
 
-        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
-          <mat-label>Min Price</mat-label>
-          <input matInput type="number" [(ngModel)]="activeFilters.min_price"
-            (ngModelChange)="applyFilter('min_price', activeFilters.min_price)" placeholder="0.00">
-          <span matPrefix>$&nbsp;</span>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
-          <mat-label>Max Price</mat-label>
-          <input matInput type="number" [(ngModel)]="activeFilters.max_price"
-            (ngModelChange)="applyFilter('max_price', activeFilters.max_price)" placeholder="1000.00">
-          <span matPrefix>$&nbsp;</span>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
-          <mat-label>Min Stock</mat-label>
-          <input matInput type="number" [(ngModel)]="activeFilters.min_stock"
-            (ngModelChange)="applyFilter('min_stock', activeFilters.min_stock)">
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="filter-field" subscriptSizing="dynamic">
-          <mat-label>Max Stock</mat-label>
-          <input matInput type="number" [(ngModel)]="activeFilters.max_stock"
-            (ngModelChange)="applyFilter('max_stock', activeFilters.max_stock)">
-        </mat-form-field>
-      </div>
-      <div class="filter-actions">
-        <button mat-button color="warn" (click)="resetFilters()">Reset All</button>
-      </div>
+    <div class="view-controls-container">
+      <mat-button-toggle-group [(ngModel)]="viewMode" aria-label="View Mode" class="compact-toggle tiny-toggle">
+        <mat-button-toggle value="list" matTooltip="List View"><mat-icon>view_list</mat-icon></mat-button-toggle>
+        <mat-button-toggle value="grid" matTooltip="Grid View"><mat-icon>grid_view</mat-icon></mat-button-toggle>
+      </mat-button-toggle-group>
     </div>
   </div>
 
@@ -145,113 +133,98 @@
   <div class="product-grid">
     @for (product of products; track product.id) {
     <mat-card class="product-card" (click)="openDetailsDialog(product)">
-      <mat-checkbox class="product-checkbox" (change)="toggleProductSelection(product)" [checked]="isSelected(product)">
+      <!-- Checkbox (Stop propagation fixed) -->
+      <mat-checkbox class="product-checkbox" (change)="toggleProductSelection(product)"
+        (click)="$event.stopPropagation()" [checked]="isSelected(product)">
       </mat-checkbox>
+
+      <!-- Image -->
       @if (getPrimaryImage(product) !== 'placeholder.jpg') {
       <img mat-card-image [src]="getImageUrl(getPrimaryImage(product))" [alt]="product.name" class="product-image"
         (error)="onImageError($event)">
       } @else {
       <div class="no-image-placeholder">
-        <mat-icon>image</mat-icon>
-        <span>No Image</span>
+        <mat-icon>image_not_supported</mat-icon>
       </div>
       }
+
+      <!-- Bundle Badge -->
       @if (product.is_bundle) {
-      <div class="bundle-badge" matTooltip="This is a product bundle">
-        <mat-icon>inventory_2</mat-icon>
-        <span>Bundle</span>
+      <div class="bundle-badge">
+        <mat-icon>inventory_2</mat-icon> Bundle
       </div>
       }
+
+      <!-- Marketing Badge -->
+      @if (product.active_campaign_count && product.active_campaign_count > 0) {
+      <div class="marketing-badge" [matTooltip]="product.active_campaign_count + ' Active Campaigns'">
+        <mat-icon>campaign</mat-icon>
+      </div>
+      }
+
+      <!-- Header -->
       <mat-card-header>
         <mat-card-title>{{ product.name }}</mat-card-title>
         <mat-card-subtitle>{{ product.sku }}</mat-card-subtitle>
       </mat-card-header>
-      <mat-card-content class="card-content-wrapper">
-        <div class="price-stock-info">
-          <!-- Price Row (Prominent) -->
-          <div class="price-row">
-            <span class="price">{{ product.default_resale_price | currency }}</span>
-          </div>
 
-          <!-- Stock Row -->
-          <div class="stock-row">
-            <span class="stock-label">Stock:</span>
-            <span class="stock-value"
-              [class.low-stock]="getCurrentStock(product) < (product.low_stock_quantity_threshold || 10) || (product.days_of_inventory !== undefined && product.days_of_inventory < (product.low_inventory_threshold || 30))"
-              [class.out-of-stock]="getCurrentStock(product) === 0">
-              {{ getCurrentStock(product) }}
-            </span>
-            <span *ngIf="product.days_of_inventory !== undefined && product.days_of_inventory < 999"
-              class="ml-2 text-xs"
-              [class.text-red-500]="product.days_of_inventory < (product.low_inventory_threshold || 30)"
-              matTooltip="Days of Inventory based on 30-day velocity">
-              ({{ product.days_of_inventory | number:'1.0-0' }}d)
-            </span>
-            <div *ngIf="!product.is_bundle && getAllocatedBundleNames(product)" class="allocated-badge-small"
-              [matTooltip]="'Designated for: ' + getAllocatedBundleNames(product)">
-              <mat-icon>link</mat-icon> In Bundles
-            </div>
-          </div>
+      <p class="product-description">{{ product.description }}</p>
 
-          <!-- Cost/Avg Row (Subtle, at bottom) -->
-          <div class="cost-row">
-            <span class="cost-item" *ngIf="getEffectiveCost(product) > 0"
-              [matTooltip]="product.is_bundle ? 'Estimated Cost from Components' : 'Last Purchase Price'">
-              <span class="cost-label">{{ product.is_bundle ? 'Est:' : 'Last:' }}</span>
-              {{ getEffectiveCost(product) | currency }}
-            </span>
-            <span class="cost-separator"
-              *ngIf="getEffectiveCost(product) > 0 && (product.average_cost || (product.is_bundle && getBundleAverageCost(product) > 0))">|</span>
-            <span class="cost-item"
-              *ngIf="product.average_cost || (product.is_bundle && getBundleAverageCost(product) > 0)"
-              matTooltip="Weighted Average Cost">
-              <span class="cost-label">Avg:</span>
-              {{ (product.is_bundle ? getBundleAverageCost(product) : product.average_cost) | currency }}
-            </span>
+      <mat-card-content>
+        <!-- Bundle Contents -->
+        @if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+        <div class="bundle-items-preview">
+          <div class="bundle-header">Includes:</div>
+          @for (comp of product.bundle_components.slice(0, 3); track comp.id) {
+          <div class="bundle-item-row">
+            <span>{{ comp.quantity }}x {{ comp.component_name || 'Item' }}</span>
           </div>
-        </div>
-        <div class="marketplace-info">
-          @if (product.marketplace_listings?.length) {
-          <app-marketplace-status [listings]="product.marketplace_listings || []"></app-marketplace-status>
           }
-          @if (!product.marketplace_listings?.length) {
+          @if (product.bundle_components.length > 3) {
+          <div class="more-items">+ {{ product.bundle_components.length - 3 }} more</div>
+          }
+        </div>
+        }
+
+        <div style="flex: 1"></div>
+
+        <!-- Marketplaces -->
+        <div class="marketplace-icons">
+          @if (product.marketplace_listings && product.marketplace_listings.length > 0) {
+          <app-marketplace-status [listings]="product.marketplace_listings" [simple]="true"></app-marketplace-status>
+          } @else {
           <div class="no-marketplaces">
-            <mat-icon>link_off</mat-icon> <span>No Marketplaces</span>
+            <mat-icon>link_off</mat-icon> <span>Unlisted</span>
           </div>
           }
         </div>
-        <!-- Three-dot menu for actions -->
-        <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu" matTooltip="More options"
-          (click)="$event.stopPropagation()">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-        <!-- Menu for product actions -->
-        <mat-menu #productMenu="matMenu">
-          <button mat-menu-item (click)="openEditPanel(product)">
-            <mat-icon>edit</mat-icon>
-            <span>Edit</span>
-          </button>
-          <button mat-menu-item (click)="openStockAdjustmentDialog(product)">
-            <mat-icon>trending_up</mat-icon>
-            <span>Adjust Stock</span>
-          </button>
-          @if (product.inventory_adjustments && product.inventory_adjustments.length > 0) {
-          <button mat-menu-item (click)="showStockHistory(product)">
-            <mat-icon>history</mat-icon>
-            <span>Stock History</span>
-          </button>
-          }
-          <button mat-menu-item (click)="toggleProductComparison(product)">
-            <mat-icon>{{ isProductInComparison(product) ? 'remove_circle' : 'add_circle' }}</mat-icon>
-            <span>{{ isProductInComparison(product) ? 'Remove from comparison' : 'Add to comparison' }}</span>
-          </button>
-          <mat-divider></mat-divider>
-          <button mat-menu-item color="warn" (click)="deleteProduct(product.id)">
-            <mat-icon>delete</mat-icon>
-            <span>Delete</span>
-          </button>
-        </mat-menu>
+
+        <!-- Metrics -->
+        <div class="product-metrics">
+          <div class="price">{{ product.default_resale_price | currency }}</div>
+          <div class="stock" [class.low-stock]="(product.stock_quantity || 0) <= 10">
+            {{ product.stock_quantity }} in stock
+          </div>
+        </div>
       </mat-card-content>
+
+      <!-- Action Menu (Restored) -->
+      <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu" matTooltip="More options"
+        (click)="$event.stopPropagation()">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+
+      <mat-menu #productMenu="matMenu">
+        <button mat-menu-item (click)="openEditPanel(product)">
+          <mat-icon>edit</mat-icon><span>Edit</span>
+        </button>
+        <button mat-menu-item (click)="openStockAdjustmentDialog(product)">
+          <mat-icon>trending_up</mat-icon><span>Adjust Stock</span>
+        </button>
+        <button mat-menu-item (click)="deleteProduct(product.id)">
+          <mat-icon>delete</mat-icon><span>Delete</span>
+        </button>
+      </mat-menu>
     </mat-card>
     }
   </div>
@@ -259,7 +232,7 @@
 
   <!-- List View (Table) -->
   @if (viewMode === 'list' && products.length > 0) {
-  <div class="product-table-container mat-elevation-z8">
+  <div class="product-table-container">
     <table mat-table [dataSource]="dataSource" matSort>
       <!-- Checkbox Column -->
       <ng-container matColumnDef="select">
@@ -287,14 +260,14 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
         <td mat-cell *matCellDef="let element">
           <div class="product-name-cell">
-            <div class="name-row">
-              <span class="product-name">{{element.name}}</span>
-              <span *ngIf="element.is_bundle" class="table-bundle-badge">Bundle</span>
-            </div>
+            <span class="product-name">{{element.name}}</span>
             @if (element.brand) {
             <span class="product-brand">{{element.brand}}</span>
             }
           </div>
+          @if (element.is_bundle) {
+          <span class="table-bundle-badge">Bundle</span>
+          }
         </td>
       </ng-container>
       <!-- SKU Column -->
@@ -379,17 +352,15 @@
   </div>
   }
 
-  <!-- Show pagination controls only if not using infinite scroll -->
-  @if (!useInfiniteScroll && paginatedProducts && paginatedProducts.totalPages > 1) {
-  <app-pagination [currentPage]="paginatedProducts.currentPage" [totalPages]="paginatedProducts.totalPages"
-    [totalItems]="paginatedProducts.totalItems" [pageSize]="paginatedProducts.pageSize"
-    [hasNextPage]="paginatedProducts.currentPage < paginatedProducts.totalPages"
-    [hasPrevPage]="paginatedProducts.currentPage > 1" (pageChange)="onPageChange($event)"
-    (pageSizeChange)="onPageSizeChange($event)">
-  </app-pagination>
+  @if (!useInfiniteScroll && paginatedProducts && paginatedProducts.totalPages >= 1) {
+  <!-- Standard Material Paginator -->
+  <mat-paginator [length]="paginatedProducts.totalItems" [pageSize]="paginatedProducts.pageSize"
+    [pageIndex]="paginatedProducts.currentPage - 1" [pageSizeOptions]="[5, 10, 25, 50, 100]"
+    (page)="handlePageEvent($event)" showFirstLastButtons aria-label="Select page">
+  </mat-paginator>
   }
 
-  <!-- Infinite scroll loading indicator -->
+  <!-- Loading spinner for infinite scroll -->
   @if (useInfiniteScroll && isLoading && products.length > 0) {
   <div class="loading-state">
     <mat-spinner diameter="30"></mat-spinner>

@@ -1,128 +1,18 @@
+@use '../../../../theme/mixins' as m;
+@use '../../../../theme/variables' as v;
+
 :host {
   display: block;
   height: 100%;
   padding: 24px;
 }
 
-.sidenav-container {
-  height: calc(100vh - 64px); // Account for top app bar height
-  min-height: 500px;
-}
-
-.filter-sidenav {
-  width: 300px;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-
-  @media (max-width: 768px) {
-    width: 280px;
-  }
-}
-
-.filter-sidenav-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 16px 16px;
-  border-bottom: 1px solid #e0e0e0;
-
-  h3 {
-    margin: 0;
-    font-size: 1.3rem;
-    color: #333;
-  }
-}
-
-.stock {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0; // Removed margin since it's in a flex container now
-  font-style: italic;
-}
-
-.stock-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.allocated-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  padding: 2px 8px;
-  border-radius: 12px;
-  border: 1px solid #bbdefb;
-  cursor: help;
-
-  mat-icon {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-  }
-}
-
-.close-button {
-  margin-left: auto;
-}
-
-.filter-sidenav {
-  width: 320px;
-  padding: 0;
-  box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
-
-  @media (max-width: 768px) {
-    width: 280px;
-  }
-}
-
-.edit-sidenav {
-  width: 500px;
-  min-width: 300px;
-  max-width: 80vw;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.sidenav-content {
-  padding: 16px;
-  height: 100%;
+.container {
   display: flex;
   flex-direction: column;
-}
-
-.sidenav-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.sidenav-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.close-button {
-  margin-left: auto;
-}
-
-.sidenav-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 0;
-}
-
-.container {
-  position: relative;
-  padding: 16px;
-  max-width: 1200px;
+  height: 100%;
+  max-width: 1600px;
   margin: 0 auto;
-  min-height: calc(100vh - 100px); // Account for header and provide minimum height
 }
 
 .header {
@@ -132,397 +22,554 @@
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-main);
+
+    .product-count-badge {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      letter-spacing: 0.3px;
+    }
+  }
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
 
 .header-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  height: 48px; // Fixed height for alignment
 }
 
-.scan-button {
-  flex-shrink: 0;
-}
-
-.search-container {
-  margin-bottom: 24px;
-  background: #f5f5f5;
-  padding: 16px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Ensure proper spacing when batch toolbar is visible */
-app-batch-action-toolbar+.search-container {
-  margin-top: 16px;
-}
-
-.filters-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-
-.toolbar-spacer {
-  flex: 1;
-}
-
-.active-filter-btn {
-  background-color: #e3f2fd;
-  color: #1565c0;
-  border-color: #1976d2;
-}
-
-.filter-count-badge {
-  background: #d32f2f;
-  color: white;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  vertical-align: top;
-  margin-left: 4px;
-}
-
-.advanced-filter-panel {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
-  animation: slideDown 0.2s ease-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.reloading-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 10;
-  border-radius: 4px 4px 0 0;
-}
-
-.filter-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.filter-field {
-  // Allow growing but constrained
-  flex: 1 1 140px !important;
-  max-width: 180px;
-  font-size: 13px;
-
-  ::ng-deep .mat-mdc-form-field-text-prefix {
-    // Add space from left edge
-    padding-left: 8px;
-    padding-right: 4px;
-    color: #777;
-  }
-}
-
-.filter-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-  margin-top: 16px;
-}
-
-.product-card {
-  position: relative;
-  transition: all 0.2s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
-  }
-}
-
-.product-checkbox {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-
-  // Style the checkbox to have a circular background like the original
-  ::ng-deep .mat-mdc-checkbox .mdc-checkbox__background {
-    border-radius: 50% !important;
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    border: 1px solid #ccc !important;
-  }
-
-  ::ng-deep .mat-mdc-checkbox.mat-accent .mdc-checkbox__background {
-    background-color: #1976d2 !important;
-    border-color: #1976d2 !important;
-  }
-
-  ::ng-deep .mat-mdc-checkbox.mat-accent .mdc-checkbox__checkmark {
-    color: white !important;
-  }
-
-  // Reduce ripple effect shadow to prevent sticking
-  ::ng-deep .mat-mdc-checkbox .mdc-checkbox__ripple::before,
-  ::ng-deep .mat-mdc-checkbox .mdc-checkbox__ripple::after {
-    border-radius: 50% !important;
-  }
-}
-
-.bundle-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(63, 81, 181, 0.9);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: bold;
+.search-filter-group {
   display: flex;
   align-items: center;
   gap: 4px;
-  z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  height: 100%;
 
-  mat-icon {
+  .search-field-compact {
+    width: 280px;
     font-size: 14px;
-    width: 14px;
-    height: 14px;
+
+    // Remove bottom spacing for alignment
+    margin-bottom: 0;
+
+    // Force center alignment of input within 
+    .mat-mdc-text-field-wrapper {
+      background: white !important;
+      border-radius: 8px;
+      padding-top: 0;
+      padding-bottom: 0;
+      height: 40px; // Match button height
+      display: flex;
+      align-items: center;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      min-height: 40px;
+    }
   }
 }
 
-.product-image {
-  height: 200px;
-  object-fit: contain;
-  width: 100%;
-  margin-top: 16px;
-}
-
-.no-image-placeholder {
-  height: 200px;
+// Quick Chips & View Toggle Bar
+// Moved toggle here, so ensure this bar has enough spacing below it
+// Quick Chips & View Toggle Bar
+.quick-filters-bar {
+  // reduced margin since toggle floats "above" list now
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  color: #9e9e9e;
-  margin-top: 16px;
+  position: relative; // Context for absolute toggle
+  z-index: 50;
+  min-height: 40px; // Ensure height for chips
 }
 
-.card-content-wrapper {
-  position: relative;
-  padding: 16px !important;
+.quick-chips {
+  flex: 1; // Take up space
+
+  // Global chip styles (.app-chip-*) handle colors now.
+  // Just ensuring spacing here.
+  mat-chip-option {
+    transition: all 0.2s;
+  }
+}
+
+// View Toggle & Actions
+.view-controls-container {
+  position: absolute;
+  right: 0;
+  bottom: -16px; // Adjusted slightly up to split spacing
+  z-index: 60;
+}
+
+.compact-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: white;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); // Nicer shadow
+
+  &.tiny-toggle {
+    mat-button-toggle {
+      min-width: 36px;
+      height: 32px; // Fixed height
+
+      // Target the internal Material button element aggressively
+      ::ng-deep .mat-button-toggle-button {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+
+        // Fix for the pseudo-checkbox taking up layout space
+        .mat-button-toggle-checkbox-wrapper {
+          display: none !important;
+        }
+      }
+
+      button {
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        line-height: 0 !important;
+        background: transparent;
+
+        .mat-button-toggle-label-content {
+          line-height: 0 !important;
+          padding: 0 !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 1;
+        margin: 0;
+        display: block;
+      }
+    }
+  }
+
+  mat-button-toggle {
+    // General styles
+    background: white;
+
+    &.mat-button-toggle-checked {
+      background-color: #e3f2fd;
+      color: var(--primary-color) !important;
+      border-left: 1px solid var(--border-color);
+      z-index: 1; // Ensure border is visible
+
+      mat-icon {
+        color: var(--primary-color);
+      }
+    }
+  }
+}
+
+.settings-btn {
+  color: var(--text-secondary);
+}
+
+.quick-chips {
+
+  // Global chip styles (.app-chip-*) handle colors now.
+  // Just ensuring spacing here.
+  mat-chip-option {
+    transition: all 0.2s;
+  }
+}
+
+
+
+// Search & Filters
+.search-container {
+  margin-bottom: 16px;
+}
+
+.filters-toolbar {
+  @include m.filter-toolbar;
+  margin-top: 16px;
+  // Standard style (white background, shadow) provided by mixin
+}
+
+// Filter Sidenav Styles (Legacy support)
+.filter-sidenav {
+  width: 320px;
+  border-left: 1px solid var(--border-color);
+}
+
+// Data Handling (Table & Grid)
+.product-table-container {
+  @include m.card-style;
+  overflow: hidden; // Ensure radius clips content
   flex: 1;
   display: flex;
   flex-direction: column;
-}
+  margin-top: 4px; // Tiny buffer
 
-.price-stock-info {
-  margin-bottom: 8px;
-}
+  // High density table styles
+  table {
+    width: 100%;
 
-.action-menu {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
-  width: 36px;
-  height: 36px;
-}
+    th.mat-header-cell {
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      height: 48px;
+      background: var(--bg-app);
+      border-bottom: 1px solid var(--border-color);
+    }
 
-.marketplace-info {
-  margin-top: auto;
-  /* Push to bottom */
-  padding-top: 8px;
-  border-top: 1px solid #eee;
-  min-height: 24px;
-  display: flex;
-  align-items: center;
+    td.mat-cell {
+      padding: 0 16px;
+      font-size: 14px;
+      color: var(--text-main);
+      height: 64px; // Consistent row height
+      border-bottom: 1px solid var(--border-color);
+    }
 
-  .no-marketplaces {
-    display: flex;
-    align-items: center;
-    color: #9e9e9e;
-    font-size: 0.8rem;
-
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
+    tr.mat-row:hover {
+      background-color: var(--bg-hover) !important;
+      cursor: pointer;
     }
   }
 }
 
-.price-row {
-  margin-bottom: 4px;
+// Column Specifics
+.mat-column-select {
+  width: 48px;
+  padding-right: 0 !important;
 }
 
-.stock-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-  color: #666;
+.mat-column-image {
+  width: 72px;
+  padding-right: 16px !important;
 }
 
-.stock-label {
-  font-weight: 500;
+.table-thumbnail {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  background: white;
 }
 
-.cost-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 4px;
-  padding-top: 8px;
-  border-top: 1px dashed #eee;
-}
-
-.cost-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.cost-label {
-  font-size: 0.75rem;
-  color: #aaa;
-  text-transform: uppercase;
-}
-
-.cost-separator {
-  color: #ddd;
-}
-
-.allocated-badge-small {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-size: 0.7rem;
-  background-color: #e3f2fd;
-  color: #1565c0;
-  padding: 1px 6px;
-  border-radius: 10px;
-  border: 1px solid #bbdefb;
-  cursor: help;
-
-  mat-icon {
-    font-size: 12px;
-    width: 12px;
-    height: 12px;
-  }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-}
-
-.empty-state-icon {
-  font-size: 4rem;
-  height: 4rem !important;
-  width: 4rem !important;
-  color: #9e9e9e;
-}
-
-.empty-state h2 {
-  color: #616161;
-  margin-top: 16px;
-}
-
-.empty-state p {
-  color: #757575;
-  margin-bottom: 24px;
-}
-
-.loading-state {
+.product-name-cell {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  min-height: 200px;
 
-  .mat-mdc-progress-spinner {
-    margin-bottom: 16px;
+  .product-name {
+    font-weight: 500;
+    color: var(--text-main);
   }
 
-  p {
-    margin: 0;
-    color: #666;
+  .product-brand {
+    font-size: 12px;
+    color: var(--text-secondary);
   }
 }
 
-.infinite-scroll-trigger {
-  height: 20px;
+.table-bundle-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--accent-light);
+  color: var(--accent-dark);
+  border-radius: 4px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
-.quick-filters {
+// Stock & Price Styles
+.low-stock {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.out-of-stock {
+  color: var(--error-color);
+  font-weight: 700;
+}
+
+// Grid View Styles (for Mobile preference)
+// Grid View Styles
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+  padding-bottom: 24px;
+}
+
+.product-card {
+  @include m.card-style;
+  height: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-top: 8px;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 
-  mat-chip-listbox {
-    flex: 1;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+
+    .product-checkbox,
+    .action-menu {
+      opacity: 1;
+    }
   }
 
-  .search-actions {
-    margin-left: auto;
+  // Hover Actions (Checkbox & Menu)
+  .product-checkbox {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    opacity: 0; // Hidden by default
+    transition: opacity 0.2s;
+    background: white; // Add background to make it pop against ANY image
+    border-radius: 4px;
+
+    &.mat-mdc-checkbox-checked {
+      opacity: 1;
+
+      // Override internal Material styles for better contrast
+      // Using ::ng-deep to penetrate ViewEncapsulation for this specific component instance
+      ::ng-deep .mdc-checkbox__background {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+      }
+
+      ::ng-deep .mdc-checkbox__checkmark {
+        color: white !important; // Ensure checkmark is white
+      }
+    }
+  }
+
+  .action-menu {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    opacity: 0; // Hidden by default
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s, background 0.2s;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    &:hover {
+      background: white;
+    }
+  }
+
+  .product-image {
+    height: 200px;
+    width: 100%;
+    object-fit: contain;
+    padding: 24px;
+    background: #fff; // White background for transparent images
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .no-image-placeholder {
+    height: 200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-app);
+    color: var(--text-hint);
+    border-bottom: 1px solid var(--border-color);
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+  }
+
+  // Bundle Badge - Reduced Size
+  .bundle-badge {
+    position: absolute;
+    top: 170px; // Just above content
+    left: 12px;
+    background: var(--accent-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    mat-icon {
+      font-size: 12px; // Smaller icon
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  mat-card-header {
+    padding: 12px 16px 4px;
+
+    mat-card-title {
+      font-size: 15px; // Reduced slightly for density
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    mat-card-subtitle {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  }
+
+  .product-description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 16px 12px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; // Limit to 2 lines
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 36px; // Fixed height for alignment
+  }
+
+  mat-card-content {
+    padding: 0 16px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: space-between;
+
+    // Bundle Items List
+    .bundle-items-preview {
+      margin-top: 8px;
+      background: var(--bg-app);
+      border-radius: 6px;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+
+      .bundle-header {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .bundle-item-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-main);
+        margin-bottom: 2px;
+
+        span:last-child {
+          font-family: monospace;
+          color: var(--text-secondary);
+        }
+      }
+
+      .more-items {
+        font-size: 11px;
+        color: var(--primary-color);
+        margin-top: 2px;
+        font-style: italic;
+      }
+    }
+
+    // Marketplaces Row
+    .marketplace-icons {
+      display: flex;
+      gap: 8px; // Increased spacing
+      margin-top: 8px;
+
+      .no-marketplaces {
+        font-size: 11px;
+        color: var(--text-hint);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+
+      img {
+        width: 16px;
+        height: 16px;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
   }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .quick-filters {
-    flex-direction: column;
-    align-items: flex-start;
+// Responsive Design
+@media (max-width: 1024px) {
 
-    .search-actions {
-      margin-left: 0;
-      margin-top: 8px;
-    }
+  // Hide less critical columns on tablet
+  .mat-column-sku,
+  .mat-column-marketplaces {
+    display: none;
   }
 }
 
@@ -533,179 +580,109 @@ app-batch-action-toolbar+.search-container {
   }
 
   .header-actions {
-    justify-content: center;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    width: 100%;
+    justify-content: flex-start;
   }
 
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+  // On mobile, grid view might be better, or simplified list
+  .mat-column-image,
+  .mat-column-cost_price,
+  .mat-column-actions {
+    display: none; // Hide on very small screens for list view
   }
-}
 
-/* View Toggle */
-.view-toggle {
-  margin-right: 8px;
-  height: 40px;
-  /* Match height of standard mat-stroked-button */
-  align-items: center;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  /* Standard border color */
-
-  mat-button-toggle {
-    height: 100%;
-    line-height: normal;
-
-    button {
-      height: 100%;
-      padding: 0 12px;
-      /* Comfortable padding */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    mat-icon {
-      margin: 0;
-      font-size: 20px;
-      height: 20px;
-      width: 20px;
-      color: #666;
-    }
-
-    &.mat-button-toggle-checked {
-      background-color: #e3f2fd;
-      /* Light blue background for active state */
-
-      mat-icon {
-        color: #1976d2;
-        /* Primary color for active icon */
-      }
-    }
+  .product-table-container {
+    border-radius: 0;
+    margin: 0 -16px; // Full width
+    width: calc(100% + 32px);
   }
 }
 
-/* Table View */
-.product-table-container {
-  margin-top: 16px;
-  overflow-x: auto;
-  border-radius: 4px;
-  background: white;
-}
-
-.product-table {
-  width: 100%;
-
-  th.mat-header-cell {
-    font-weight: bold;
-    color: #555;
-    font-size: 0.9rem;
-  }
-}
-
-.table-thumbnail {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin: 4px;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-  border: 1px solid #eee;
-}
-
-.product-name-cell {
+// Loading & Empty States
+.loading-state {
   display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
   flex-direction: column;
-  padding: 8px 0;
-
-  .name-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .product-name {
-    font-weight: 500;
-    color: #333;
-  }
-
-  .product-brand {
-    font-size: 0.8rem;
-    color: #757575;
-  }
+  gap: 16px;
+  color: var(--text-secondary);
 }
 
-.table-bundle-badge {
-  background-color: #e8eaf6;
-  color: #3f51b5;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-/* Fix conflict: Menu button was Top-Right, Cost was overlapping.
-   The Card Content is relative. Action Menu is absolute top-right.
-   Price/Cost container is in flow.
-*/
-.action-menu {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  z-index: 5;
-  width: 32px;
-  /* Smaller touch target slightly */
-  height: 32px;
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
 
   mat-icon {
-    font-size: 20px;
-    /* Smaller icon */
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--text-hint);
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    color: var(--text-main);
+    font-weight: 500;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
   }
 }
-
-/* Move card content down slightly so top-right isn't crowded if content is wide */
-.card-content-wrapper {
-  padding-top: 12px !important;
+// FIXES FOR GRID VIEW
+mat-card-header {
+    padding: 12px 16px 4px !important;
 }
 
-.low-stock {
-  color: #ff9800;
-  font-weight: bold;
+.product-description {
+     font-size: 13px;
+     color: var(--text-secondary);
+     margin: 0 16px 12px;
+     line-height: 1.4;
+     display: -webkit-box;
+     -webkit-line-clamp: 2; // Limit to 2 lines
+     -webkit-box-orient: vertical;
+     overflow: hidden;
+     height: 36px; // Fixed height for alignment
 }
 
-.out-of-stock {
-  color: #f44336;
-  font-weight: bold;
+.marketplace-icons {
+    margin-top: auto; 
+    margin-bottom: 4px;
+    display: flex;
+    gap: 8px;
+    position: relative;
+    z-index: 20; // Ensure they are clickable and visible above any absolutely positioned elements
 }
 
-.product-row {
-  cursor: pointer;
-
-  &:hover {
-    background-color: #f5f5f5;
-  }
-}
-
-/* Column widths */
-.mat-column-select {
-  width: 60px;
-  padding-right: 8px !important;
-}
-
-.mat-column-image {
-  width: 80px;
-  padding-right: 16px !important;
-}
-
-.mat-column-actions {
-  width: 60px;
-  text-align: right;
-
-  .mat-icon-button {
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
-  }
+// Marketing Badge
+.marketing-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF9800, #F57C00); // Orange for marketing
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+    
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+    
+    &:hover {
+        transform: scale(1.1);
+    }
 }

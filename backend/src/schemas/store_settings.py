@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Dict, Any, Optional
 
 class SMTPConfigBase(BaseModel):
@@ -24,6 +24,16 @@ class StoreSettingsBase(BaseModel):
     settings: Dict[str, Any] = {}
     low_inventory_days_default: int = 30
     low_stock_quantity_default: int = 10
+    
+    @field_validator('low_inventory_days_default', 'low_stock_quantity_default', mode='before')
+    @classmethod
+    def set_defaults_if_none(cls, v: Any, info: Any) -> Any:
+        if v is None:
+             if info.field_name == 'low_inventory_days_default':
+                 return 30
+             if info.field_name == 'low_stock_quantity_default':
+                 return 10
+        return v
 
 class StoreSettingsCreate(StoreSettingsBase):
     pass

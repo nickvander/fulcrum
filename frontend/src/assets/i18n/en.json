@@ -1,0 +1,19 @@
+{
+    "welcome": "Welcome to Fulcrum",
+    "common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "search": "Search..."
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "products": "Products",
+        "suppliers": "Suppliers",
+        "marketing": "Marketing",
+        "users": "Users",
+        "settings": "Settings"
+    }
+}
