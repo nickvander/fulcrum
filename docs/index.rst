@@ -45,6 +45,8 @@ Welcome to Fulcrum's documentation!
    guides/marketplace-integration.md
    guides/marketplace-testing.md
    guides/marketplace-credential-setup.md
+   guides/google-sheets-integration.md
+   guides/data-backup-strategy.md
    guides/using-bazel.md
 
 .. toctree::

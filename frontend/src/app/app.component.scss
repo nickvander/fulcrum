@@ -1,11 +1,29 @@
 // Ensure sidenav container is transparent so body gradient shows
-.sidenav-container,
-.mat-drawer-container,
+.sidenav-container {
+    background-color: transparent !important;
+    height: 100vh; // Fill screen
+    display: flex;
+    flex-direction: column;
+}
+
 .mat-drawer-content {
     background-color: transparent !important;
+    display: flex;
+    flex-direction: column;
+}
+
+// Side nav width constraint
+.sidenav {
+    width: 260px;
+}
+
+.mat-drawer-content {
+    background: transparent;
 }
 
 // Ensure main content doesn't block it either
 .main-content {
     background: transparent;
+    flex: 1;
+    overflow-y: auto; // Content scrolls, header stays fixed if we wanted (optional)
 }

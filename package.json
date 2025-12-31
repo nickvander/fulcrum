@@ -20,7 +20,6 @@
     "db:reset": "./scripts/reset_db.sh",
     "db:seed": "cat scripts/seed_full.py | docker compose exec -T backend python",
     "docs:build": "uv venv ./.venv --seed && uv pip install -r docs/requirements.txt --python ./.venv/bin/python && ./.venv/bin/sphinx-build -E docs/ docs/_build/html",
-    "docs:build": "uv venv ./.venv --seed && uv pip install -r docs/requirements.txt --python ./.venv/bin/python && ./.venv/bin/sphinx-build -E docs/ docs/_build/html",
     "docs:serve": "# Make sure you have uv installed (see docs/getting-started/backend-setup.md)\n    uv venv ./.venv --seed && uv pip install -r docs/requirements.txt --python ./.venv/bin/python && ./.venv/bin/sphinx-autobuild -E docs/ docs/_build/html --port 8001 --open-browser"
   },
   "keywords": [],

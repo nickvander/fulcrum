@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 import { MatCardModule } from '@angular/material/card';
@@ -9,10 +9,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTabsModule } from '@angular/material/tabs';
 import { SettingsService } from '../../../core/services/settings.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CustomFieldList } from '../custom-field-list/custom-field-list';
 import { environment } from '../../../../environments/environment';
+import { IntegrationsService, ApiKeyInfo, ApiKeyCreateResponse } from '../../services/integrations.service';
 
 @Component({
   selector: 'app-settings',
@@ -22,12 +25,15 @@ import { environment } from '../../../../environments/environment';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatSelectModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule,
+    MatTabsModule,
   ],
 })
 export class Settings implements OnInit {
@@ -39,13 +45,21 @@ export class Settings implements OnInit {
   testingSmtp = false;
   savingSmtp = false;
 
+  // API Keys
+  apiKeys: ApiKeyInfo[] = [];
+  loadingKeys = false;
+  creatingKey = false;
+  newKeyName = '';
+  newKeyResult: ApiKeyCreateResponse | null = null;
+
   private readonly apiUrl = environment.apiUrl;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
     private settingsService: SettingsService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private integrationsService: IntegrationsService
   ) {
     this.settingsForm = this.fb.group({
       ai_provider: ['', Validators.required],
@@ -82,6 +96,9 @@ export class Settings implements OnInit {
 
     // Load SMTP settings
     this.loadSmtpSettings();
+
+    // Load API Keys
+    this.loadApiKeys();
   }
 
   onSubmit(): void {
@@ -165,5 +182,115 @@ export class Settings implements OnInit {
       }
     });
   }
-}
 
+  // ===============================
+  // API Keys Methods
+  // ===============================
+
+  loadApiKeys(): void {
+    this.loadingKeys = true;
+    this.integrationsService.getApiKeys().subscribe({
+      next: (keys) => {
+        this.apiKeys = keys;
+        this.loadingKeys = false;
+      },
+      error: (err) => {
+        console.error('Failed to load API keys', err);
+        this.loadingKeys = false;
+      }
+    });
+  }
+
+  createApiKey(): void {
+    if (!this.newKeyName) return;
+
+    this.creatingKey = true;
+    this.integrationsService.createApiKey(this.newKeyName).subscribe({
+      next: (result) => {
+        this.newKeyResult = result;
+        this.creatingKey = false;
+        this.newKeyName = '';
+        this.loadApiKeys(); // Refresh list
+      },
+      error: (err) => {
+        console.error('Failed to create API key', err);
+        this.notificationService.showError('Failed to create API key');
+        this.creatingKey = false;
+      }
+    });
+  }
+
+  revokeKey(keyId: number): void {
+    if (!confirm('Are you sure you want to revoke this API key? This cannot be undone.')) {
+      return;
+    }
+
+    this.integrationsService.revokeApiKey(keyId).subscribe({
+      next: () => {
+        this.notificationService.showSuccess('API key revoked');
+        this.loadApiKeys();
+      },
+      error: (err) => {
+        this.notificationService.showError('Failed to revoke API key');
+      }
+    });
+  }
+
+  dismissKeyResult(): void {
+    this.newKeyResult = null;
+  }
+
+  // ===============================
+  // API Key Visibility & Deletion
+  // ===============================
+  showRevokedKeys = false;
+
+  getVisibleKeys(): ApiKeyInfo[] {
+    if (this.showRevokedKeys) {
+      return this.apiKeys;
+    }
+    return this.apiKeys.filter(k => k.is_active);
+  }
+
+  hasRevokedKeys(): boolean {
+    return this.apiKeys.some(k => !k.is_active);
+  }
+
+  getRevokedCount(): number {
+    return this.apiKeys.filter(k => !k.is_active).length;
+  }
+
+  deleteRevokedKey(keyId: number): void {
+    if (!confirm('Permanently delete this revoked key from history?')) {
+      return;
+    }
+    // For now, just remove from local list (backend can add permanent delete endpoint later)
+    this.apiKeys = this.apiKeys.filter(k => k.id !== keyId);
+    this.notificationService.showSuccess('Key removed from list');
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.notificationService.showSuccess('Copied to clipboard!');
+    });
+  }
+
+  // ===============================
+  // Data Export Methods
+  // ===============================
+
+  exportData(entity: string, format: 'csv' | 'json'): void {
+    const filename = `${entity.replace('-', '_')}_export.${format}`;
+
+    this.integrationsService.exportEntity(entity, format).subscribe({
+      next: (blob) => {
+        this.integrationsService.downloadBlob(blob, filename);
+        this.notificationService.showSuccess(`${entity.replace('-', ' ')} exported successfully!`);
+      },
+      error: (err) => {
+        console.error('Export failed', err);
+        this.notificationService.showError('Export failed. Please try again.');
+      }
+    });
+  }
+}

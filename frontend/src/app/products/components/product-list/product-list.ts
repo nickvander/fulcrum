@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Output, EventEmitter, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Output, EventEmitter, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ProductService } from '../../services/product';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
@@ -27,16 +27,14 @@ import { InfiniteScrollDirective } from '../../directives/infinite-scroll.direct
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialog } from '../stock-history-dialog/stock-history-dialog';
-import { BatchActionToolbarComponent } from '../batch-action-toolbar/batch-action-toolbar';
-import { PaginationComponent } from '../pagination/pagination';
 import { ProductFiltersComponent } from '../product-filters/product-filters';
 import { BatchOperationsService } from '../../services/batch-operations.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductComparisonService } from '../../services/product-comparison.service';
 import { ProductComparisonComponent } from '../product-comparison/product-comparison';
+import { ScreenService } from '../../../core/services/screen.service';
 
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
-import { AiSearchBar } from '../../../shared/components/ai-search-bar/ai-search-bar';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -68,21 +66,20 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     MatDividerModule,
     MatChipsModule,
     InfiniteScrollDirective,
-    BatchActionToolbarComponent,
-    PaginationComponent,
+    MatChipsModule,
+    InfiniteScrollDirective,
     MatTableModule,
     MatSortModule,
     MatButtonToggleModule,
     MarketplaceStatusComponent,
-    AiSearchBar,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
     MatPaginatorModule // Added standard paginator
   ],
 })
-export class ProductList implements OnInit, OnDestroy {
-  @ViewChild(MatSort) sort!: MatSort;
+export class ProductList implements OnInit, OnDestroy, AfterViewInit {
+  // @ViewChild(MatSort) handled via setter below
 
   products: Product[] = [];
   paginatedProducts: PaginatedProducts | null = null;
@@ -110,6 +107,7 @@ export class ProductList implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private filterSubject = new Subject<void>();
+  private userOverrodeViewMode = false; // Track if user manually changed view
 
   constructor(
     private productService: ProductService,
@@ -117,7 +115,8 @@ export class ProductList implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private comparisonService: ProductComparisonService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private screenService: ScreenService
   ) { }
 
   ngOnInit(): void {
@@ -131,6 +130,50 @@ export class ProductList implements OnInit, OnDestroy {
     ).subscribe(() => {
       this.loadProducts(1, this.pageSize);
     });
+
+    // Auto-switch to grid view on mobile (unless user overrode)
+    this.screenService.isMobile$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isMobile => {
+      if (!this.userOverrodeViewMode) {
+        this.viewMode = isMobile ? 'grid' : 'list';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // sort property to store the MatSort instance
+  sort: MatSort | null = null;
+
+  @ViewChild(MatSort) set matSort(ms: MatSort) {
+    this.sort = ms;
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+
+      // Custom sorting accessor
+      this.dataSource.sortingDataAccessor = (item: Product, property: string) => {
+        switch (property) {
+          case 'price':
+            return item.default_resale_price || 0;
+          case 'cost_price':
+            return item.cost_price || 0;
+          case 'stock':
+            return this.getCurrentStock(item);
+          case 'name':
+            return item.name?.toLowerCase() || '';
+          case 'sku':
+            return item.sku?.toLowerCase() || '';
+          default:
+            return (item as any)[property];
+        }
+      };
+    }
+  }
+
+  // ngAfterViewInit is no longer strictly needed for sort if we use the setter, 
+  // but we keep the method signature to satisfy the interface if we keep the implements.
+  ngAfterViewInit(): void {
+    // Paginator logic if separate
   }
 
   ngOnDestroy(): void {
@@ -413,6 +456,7 @@ export class ProductList implements OnInit, OnDestroy {
 
   setViewMode(mode: 'grid' | 'list'): void {
     this.viewMode = mode;
+    this.userOverrodeViewMode = true; // User manually changed, don't auto-switch
     // If switching to list, ensure data source is updated and sorted
     if (mode === 'list') {
       setTimeout(() => {

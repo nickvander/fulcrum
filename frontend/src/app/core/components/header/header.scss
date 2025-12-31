@@ -6,6 +6,11 @@
   z-index: 1000;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); // Subtle shadow
+
+  // Completely hide header on desktop since sidebar covers navigation
+  @media (min-width: 769px) {
+    display: none;
+  }
 }
 
 .app-header {
@@ -17,12 +22,26 @@
   align-items: center;
 }
 
+// Mobile Toggle Button
+.sidenav-toggle {
+  display: block; // Show by default (mobile)
+
+  @media (min-width: 769px) {
+    display: none; // Hide on desktop (sidenav is permanent)
+  }
+}
+
 .logo {
   font-weight: 700;
   font-size: 20px;
   letter-spacing: -0.5px;
   margin-left: 8px;
   color: var(--primary-color);
+
+  // Hide on desktop since sidenav has logo
+  @media (min-width: 769px) {
+    display: none;
+  }
 }
 
 .spacer {

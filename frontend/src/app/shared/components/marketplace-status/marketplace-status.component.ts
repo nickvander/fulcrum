@@ -84,10 +84,10 @@ import { MarketplaceListing } from '../../../products/models/product.model';
       letter-spacing: -0.5px;
     }
 
-    // Specific badge colors
-    // Specific badge colors
+    /* Specific badge colors */
+    /* Specific badge colors */
     &.badge-amz {
-        background-color: #FF9900 !important; // Amazon Orange
+        background-color: #FF9900 !important; /* Amazon Orange */
         border-color: #FF9900 !important;
         .marketplace-icon { color: white !important; }
     }
@@ -107,10 +107,10 @@ import { MarketplaceListing } from '../../../products/models/product.model';
       background-color: #e8f5e9;
       .status-dot { background-color: #4caf50; }
     }
-    // Simple active - just basic opacity/filter if needed, or rely on tooltips
+    /* Simple active - just basic opacity/filter if needed, or rely on tooltips */
     .simple-badge.status-active {
         background-color: transparent;
-        // Maybe a subtle glow or just clean icon
+        /* Maybe a subtle glow or just clean icon */
     }
 
     .status-error {

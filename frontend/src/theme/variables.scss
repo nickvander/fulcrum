@@ -67,3 +67,23 @@
     --gradient-success: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);
     --gradient-warn: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
 }
+
+/* Override browser autofill background color (Firefox yellow, Chrome blue) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+}
+
+/* Firefox autofill override */
+input:-moz-autofill,
+input:-moz-autofill:hover,
+input:-moz-autofill:focus {
+    background-color: white !important;
+    color: var(--text-main) !important;
+}
