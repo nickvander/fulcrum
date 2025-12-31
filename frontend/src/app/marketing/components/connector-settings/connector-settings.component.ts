@@ -466,7 +466,8 @@ export class ConnectorSettingsComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private marketingService: MarketingService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     this.emailForm = this.fb.group({
       provider: ['gmail', Validators.required],

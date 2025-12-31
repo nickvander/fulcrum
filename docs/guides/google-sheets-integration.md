@@ -104,6 +104,8 @@ directly in the API URL.
 | 🔄 Pull Products  | Fetches all products and creates/updates the "Products" sheet  |
 | 📦 Pull Inventory | Fetches stock levels into the "Inventory" sheet                |
 | 🏭 Pull Suppliers | Fetches suppliers into the "Suppliers" sheet                   |
+| 📜 Pull Purchase Orders | Fetches POs into "Purchase Orders" sheet                   |
+| 💸 Pull Expenses    | Fetches expenses into "Expenses" sheet                       |
 
 Each pull operation:
 
