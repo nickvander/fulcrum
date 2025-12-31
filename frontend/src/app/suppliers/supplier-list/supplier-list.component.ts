@@ -36,11 +36,16 @@ export class SupplierListComponent implements OnInit, AfterViewInit {
     suppliers: SupplierSummary[] = [];
     displayedColumns: string[] = ['name', 'contact', 'po_count', 'total_value', 'actions'];
     isLoading = false;
+    showDashboard = false;
 
     constructor(
         private suppliersService: SuppliersService,
         private router: Router
     ) { }
+
+    toggleDashboard(): void {
+        this.showDashboard = !this.showDashboard;
+    }
 
     ngOnInit(): void {
         this.dataSource.sortingDataAccessor = (item, property) => {

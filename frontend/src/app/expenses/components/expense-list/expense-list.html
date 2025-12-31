@@ -20,18 +20,18 @@
 
     <!-- KPI Cards Row -->
     <div class="kpi-row">
-        <app-kpi-card title="Total Expenses" [value]="'$' + getTotalExpenses()" icon="account_balance_wallet"
+        <app-stat-card title="Total Expenses" [value]="'$' + getTotalExpenses()" icon="account_balance_wallet"
             color="#e91e63" link="/expenses" tooltip="Total expenses for selected period">
-        </app-kpi-card>
-        <app-kpi-card title="Recurring" [value]="'$' + getRecurringTotal()" icon="repeat" color="#9c27b0"
+        </app-stat-card>
+        <app-stat-card title="Recurring" [value]="'$' + getRecurringTotal()" icon="repeat" color="#9c27b0"
             link="/expenses" tooltip="Monthly/recurring expenses">
-        </app-kpi-card>
-        <app-kpi-card title="One-time" [value]="'$' + getOneTimeTotal()" icon="event" color="#3f51b5" link="/expenses"
+        </app-stat-card>
+        <app-stat-card title="One-time" [value]="'$' + getOneTimeTotal()" icon="event" color="#3f51b5" link="/expenses"
             tooltip="One-time expenses">
-        </app-kpi-card>
-        <app-kpi-card title="Entries" [value]="summary?.count || 0" icon="receipt_long" color="#009688" link="/expenses"
-            tooltip="Number of expense entries">
-        </app-kpi-card>
+        </app-stat-card>
+        <app-stat-card title="Entries" [value]="summary?.count || 0" icon="receipt_long" color="#009688"
+            link="/expenses" tooltip="Number of expense entries">
+        </app-stat-card>
     </div>
 
     <!-- Filters -->

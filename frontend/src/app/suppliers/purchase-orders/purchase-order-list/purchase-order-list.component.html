@@ -19,18 +19,18 @@
 
     <!-- KPI Cards Row -->
     <div class="kpi-row">
-        <app-kpi-card title="Total Orders" [value]="summary.total_orders" icon="receipt_long" color="#3f51b5"
+        <app-stat-card title="Total Orders" [value]="summary.total_orders" icon="receipt_long" color="#3f51b5"
             link="/suppliers/po" tooltip="Total purchase orders">
-        </app-kpi-card>
-        <app-kpi-card title="Pending" [value]="summary.pending_count" icon="pending_actions" color="#ff9800"
+        </app-stat-card>
+        <app-stat-card title="Pending" [value]="summary.pending_count" icon="pending_actions" color="#ff9800"
             link="/suppliers/po" tooltip="Draft or submitted POs awaiting action">
-        </app-kpi-card>
-        <app-kpi-card title="Total Value" [value]="'$' + getTotalValueFormatted()" icon="attach_money" color="#009688"
+        </app-stat-card>
+        <app-stat-card title="Total Value" [value]="'$' + getTotalValueFormatted()" icon="attach_money" color="#009688"
             link="/suppliers/po" tooltip="Total value of all purchase orders">
-        </app-kpi-card>
-        <app-kpi-card title="Received" [value]="'$' + getReceivedValueFormatted()" icon="check_circle" color="#4caf50"
+        </app-stat-card>
+        <app-stat-card title="Received" [value]="'$' + getReceivedValueFormatted()" icon="check_circle" color="#4caf50"
             link="/suppliers/po" tooltip="Value of received purchase orders">
-        </app-kpi-card>
+        </app-stat-card>
     </div>
 
     <!-- Filters -->

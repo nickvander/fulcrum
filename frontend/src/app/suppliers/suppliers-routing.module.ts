@@ -7,6 +7,7 @@ import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edi
 
 const routes: Routes = [
   // Supplier routes
+  { path: 'dashboard', loadComponent: () => import('./pages/supplier-dashboard/supplier-dashboard.component').then(m => m.SupplierDashboardComponent) },
   { path: '', component: SupplierListComponent },  // Supplier list
   { path: 'id/new', component: SupplierDetailComponent },
   { path: 'id/:id', component: SupplierDetailComponent },

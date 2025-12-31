@@ -125,7 +125,7 @@
                 <input matInput [(ngModel)]="newKeyName" placeholder="e.g., Google Sheets">
               </mat-form-field>
               <button mat-stroked-button color="primary" (click)="createApiKey()"
-                [disabled]="!newKeyName?.trim() || creatingKey">
+                [disabled]="!(newKeyName || '').trim() || creatingKey">
                 <mat-icon>add</mat-icon> Generate
               </button>
             </div>

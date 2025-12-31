@@ -19,40 +19,151 @@ import { RouterModule } from '@angular/router';
     RouterModule
   ],
   template: `
-    <mat-card class="h-full shadow-sm rounded-xl border-none overflow-hidden">
-      <mat-card-header class="pb-2">
-        <mat-card-title class="flex justify-between items-center w-full">
-          <span class="text-lg font-bold">Critical Low Stock</span>
-          <button mat-button color="primary" routerLink="/products">View All</button>
-        </mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div *ngIf="products.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-400">
-          <mat-icon class="text-48 mb-2">check_circle_outline</mat-icon>
+    <div class="widget-container">
+      <div class="widget-header">
+        <h3>Critical Low Stock</h3>
+        <a mat-button color="primary" routerLink="/products" [queryParams]="{max_stock: 10}">View All</a>
+      </div>
+      
+      <div class="widget-content">
+        <div *ngIf="products.length === 0" class="empty-state">
+          <mat-icon class="success-icon">check_circle</mat-icon>
           <p>All stock levels healthy</p>
         </div>
         
-        <mat-list *ngIf="products.length > 0">
-          <mat-list-item *ngFor="let product of products" class="hover:bg-gray-50 transition-colors">
-            <mat-icon matListItemIcon class="text-red-500">error_outline</mat-icon>
-            <div matListItemTitle class="font-medium">{{ product.name }}</div>
-            <div matListItemLine class="text-xs text-gray-500">SKU: {{ product.sku }}</div>
-            <div matListItemMeta class="text-red-600 font-bold">
-              {{ getTotalStock(product) }} units
-            </div>
-          </mat-list-item>
-        </mat-list>
-      </mat-card-content>
-    </mat-card>
+        <mat-nav-list *ngIf="products.length > 0" class="dense-list">
+          <a mat-list-item *ngFor="let product of products" 
+             [routerLink]="['/products']" 
+             [queryParams]="{open_sku: product.sku}"
+             class="list-item">
+            <span matListItemIcon class="icon-badge error">
+              <mat-icon>error_outline</mat-icon>
+            </span>
+            <span matListItemTitle class="item-name">{{ product.name }}</span>
+            <span matListItemLine class="item-meta">
+              <span>SKU: {{ product.sku }}</span>
+              <span class="stock-badge" [class.critical]="getTotalStock(product) === 0">
+                {{ getTotalStock(product) }} units
+              </span>
+            </span>
+          </a>
+        </mat-nav-list>
+      </div>
+    </div>
   `,
   styles: [`
     :host { display: block; height: 100%; }
-    .text-48 { font-size: 48px; width: 48px; height: 48px; }
-    .text-red-500 { color: #ef4444; }
-    .text-red-600 { color: #dc2626; }
-    .hover\:bg-gray-50:hover { background-color: #f9fafb; }
-    .transition-colors { transition: background-color 0.2s ease; }
-    .text-lg { font-size: 1.125rem; }
+
+    .widget-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .widget-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-app);
+    }
+
+    .widget-header h3 {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .widget-content {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        color: var(--text-hint);
+    }
+
+    .success-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: var(--success-color);
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-size: 0.85rem;
+    }
+
+    .dense-list {
+        padding-top: 0;
+    }
+
+    .list-item {
+        border-bottom: 1px solid var(--border-color);
+        height: auto !important;
+        min-height: 48px;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    .icon-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+    }
+
+    .icon-badge.error {
+        background: var(--error-bg);
+        color: var(--error-color);
+    }
+
+    .icon-badge mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+
+    .item-name {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: var(--text-main);
+    }
+
+    .item-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.7rem;
+        color: var(--text-secondary);
+    }
+
+    .stock-badge {
+        font-weight: 600;
+        color: var(--warning-color);
+    }
+
+    .stock-badge.critical {
+        color: var(--error-color);
+    }
   `]
 })
 export class LowStockListWidgetComponent {
