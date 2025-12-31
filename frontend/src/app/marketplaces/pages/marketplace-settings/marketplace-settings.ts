@@ -59,7 +59,6 @@ export class MarketplaceSettingsComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         private http: HttpClient,
-        private http: HttpClient,
         private snackBar: MatSnackBar,
         private dialog: MatDialog
     ) { }
@@ -140,21 +139,19 @@ export class MarketplaceSettingsComponent implements OnInit {
     }
 
     deleteAccount(accountId: number): void {
-        deleteAccount(accountId: number): void {
-            const dialogRef = this.dialog.open(ConfirmationDialog, {
-                data: {
-                    title: 'Remove Account',
-                    message: 'Are you sure you want to remove this account?'
-                } as ConfirmationDialogData
-            });
+        const dialogRef = this.dialog.open(ConfirmationDialog, {
+            data: {
+                title: 'Remove Account',
+                message: 'Are you sure you want to remove this account?'
+            } as ConfirmationDialogData
+        });
 
-            dialogRef.afterClosed().subscribe(confirmed => {
-                if (confirmed) {
-                    // TODO: Implement delete API
-                    this.snackBar.open('Account removed.', 'Close', { duration: 3000 });
-                    this.accounts = this.accounts.filter(a => a.id !== accountId);
-                }
-            });
-        }
+        dialogRef.afterClosed().subscribe(confirmed => {
+            if (confirmed) {
+                // TODO: Implement delete API
+                this.snackBar.open('Account removed.', 'Close', { duration: 3000 });
+                this.accounts = this.accounts.filter(a => a.id !== accountId);
+            }
+        });
     }
 }
