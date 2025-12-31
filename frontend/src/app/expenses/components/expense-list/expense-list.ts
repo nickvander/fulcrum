@@ -24,6 +24,7 @@ import { ExpenseDialogComponent } from '../expense-dialog/expense-dialog';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
     selector: 'app-expense-list',
@@ -268,18 +269,27 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     onDeleteExpense(id: number): void {
-        if (confirm('Are you sure you want to delete this expense?')) {
-            this.expenseService.deleteExpense(id).subscribe({
-                next: () => {
-                    this.notificationService.showSuccess('Expense deleted');
-                    this.loadAllExpenses();
-                },
-                error: (error) => {
-                    console.error('Error deleting expense:', error);
-                    this.notificationService.showError('Error deleting expense');
-                }
-            });
-        }
+        const dialogRef = this.dialog.open(ConfirmationDialog, {
+            data: {
+                title: 'Delete Expense',
+                message: 'Are you sure you want to delete this expense?'
+            } as ConfirmationDialogData
+        });
+
+        dialogRef.afterClosed().subscribe(confirmed => {
+            if (confirmed) {
+                this.expenseService.deleteExpense(id).subscribe({
+                    next: () => {
+                        this.notificationService.showSuccess('Expense deleted');
+                        this.loadAllExpenses();
+                    },
+                    error: (error) => {
+                        console.error('Error deleting expense:', error);
+                        this.notificationService.showError('Error deleting expense');
+                    }
+                });
+            }
+        });
     }
 
     getTypeIcon(type: string): string {

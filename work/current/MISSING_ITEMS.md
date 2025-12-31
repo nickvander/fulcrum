@@ -1,21 +1,11 @@
-# Missing Items & Roadmap
+# Missing Items & Known Issues
 
-## ✅ Completed Phases
+## High Priority
 
-- **Phase 9: Business Operations Core** - Complete
-  - Inventory & Cost Engine (Bundles, Expenses, Landed Costs)
-  - Supplier & Restock Intelligence
-  - Marketing Operations (Backend & Frontend)
+- [ ] (Phase 8) Marketplace Integration (Amazon SP-API)
+- [ ] (Phase 9) AI Content Generation
 
-## 🚀 Current Phase
+## Backlog
 
-- [/] **Phase 10: Frontend Evolution Sprint** (Planning)
-  - Branding & Logo refresh
-  - UX Standardization
-  - Data Export & Google Sheets integration
-  - High-value UX features (Reorder Workflow, Catalog Import)
-  - i18n Foundation
-
-## 📋 Future Phases
-
-- [ ] **Phase 11**: AI Feature Integration (deferred)
+- [ ] Frontend: Add skeletal loading states
+- [ ] Backend: Improve test coverage for edge cases

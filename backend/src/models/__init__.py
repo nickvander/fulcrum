@@ -21,6 +21,7 @@ from .expense import Expense
 from .store_settings import StoreSettings
 from .product_inventory_settings import ProductInventorySettings
 from .api_key import ApiKey
+from .pending_sync import SyncBatch, PendingSyncChange, EntityChangeLog
 
 from .marketing import (
     MarketingConnector,
@@ -76,4 +77,8 @@ __all__ = [
     "CampaignStatus",
     "ConnectorType",
     "ApiKey",
+    # Sync & Change Logging
+    "SyncBatch",
+    "PendingSyncChange",
+    "EntityChangeLog",
 ]

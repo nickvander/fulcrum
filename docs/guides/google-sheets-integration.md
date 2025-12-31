@@ -113,11 +113,26 @@ Each pull operation:
 
 ### Pushing Changes (Sheets → Fulcrum)
 
+> [!IMPORTANT]
+> Changes pushed from Google Sheets are **staged for review** — they are NOT
+> applied immediately. You must approve them in the Fulcrum app.
+
 1. Make edits in the **Products** sheet (e.g., update cost price or resale
    price)
 2. Click **⚙️ Fulcrum > ⬆️ Push Changes to Fulcrum**
-3. The script sends your changes to the Fulcrum API
-4. A notification confirms how many records were updated
+3. A confirmation dialog shows how many changes will be submitted
+4. Click **Yes** to submit the changes for review
+5. A success dialog directs you to approve changes in Fulcrum
+
+**Approving Changes in Fulcrum:**
+
+1. Go to **Settings > Integrations** in Fulcrum
+2. Look for the **Pending Sync Changes** section
+3. A badge shows the number of pending changes
+4. Click **Review** to open the approval dialog
+5. Review each change with the "Old Value → New Value" diff
+6. Select changes to approve or reject
+7. Click **Approve Selected** or **Reject Selected**
 
 **Currently supported push fields:**
 
@@ -128,17 +143,40 @@ Each pull operation:
 > [!NOTE] Stock quantity sync is logged but requires the full inventory
 > adjustment workflow on the backend. This is a planned enhancement.
 
+## Change Audit Trail
+
+All changes to products — whether from Sheets imports or direct edits in
+Fulcrum — are logged with source attribution.
+
+**View the Change Log:**
+
+1. Go to **Settings > Integrations** in Fulcrum
+2. Click **View Log** in the Change Log section
+3. Filter by source: `Sheets Import`, `Direct Edit`, or `API`
+
+Each log entry shows:
+
+- Entity and field changed
+- Old value → New value
+- Source (how the change was made)
+- Who made the change
+- When it was changed
+
 ## API Endpoints Reference
 
 The Apps Script uses these Fulcrum API endpoints:
 
-| Endpoint                                | Method | Purpose                              |
-| --------------------------------------- | ------ | ------------------------------------ |
-| `/api/v1/integrations/sheets/sync-pull` | POST   | Pull data from Fulcrum               |
-| `/api/v1/integrations/sheets/sync-push` | POST   | Push changes to Fulcrum              |
-| `/api/v1/integrations/export/products`  | GET    | Export products (CSV/JSON)           |
-| `/api/v1/integrations/export/inventory` | GET    | Export inventory levels              |
-| `/api/v1/integrations/export/suppliers` | GET    | Export suppliers                     |
+| Endpoint                                 | Method | Purpose                              |
+| ---------------------------------------- | ------ | ------------------------------------ |
+| `/api/v1/integrations/sheets/sync-pull`  | POST   | Pull data from Fulcrum               |
+| `/api/v1/integrations/sheets/sync-push`  | POST   | Stage changes for review             |
+| `/api/v1/integrations/sync/pending`      | GET    | List pending change batches          |
+| `/api/v1/integrations/sync/pending/count`| GET    | Get pending change count             |
+| `/api/v1/integrations/sync/approve`      | POST   | Approve or reject pending changes    |
+| `/api/v1/integrations/change-logs`       | GET    | View change audit trail              |
+| `/api/v1/integrations/export/products`   | GET    | Export products (CSV/JSON)           |
+| `/api/v1/integrations/export/inventory`  | GET    | Export inventory levels              |
+| `/api/v1/integrations/export/suppliers`  | GET    | Export suppliers                     |
 
 ### Sync Pull Request
 

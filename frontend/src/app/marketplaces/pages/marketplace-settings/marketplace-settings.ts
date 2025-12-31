@@ -8,8 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 interface Account {
     id: number;
@@ -29,7 +31,9 @@ interface Account {
         MatIconModule,
         MatFormFieldModule,
         MatInputModule,
-        MatSnackBarModule
+        MatInputModule,
+        MatSnackBarModule,
+        MatDialogModule
     ],
     templateUrl: './marketplace-settings.html',
     styleUrl: './marketplace-settings.scss',
@@ -55,7 +59,9 @@ export class MarketplaceSettingsComponent implements OnInit {
         private route: ActivatedRoute,
         private router: Router,
         private http: HttpClient,
-        private snackBar: MatSnackBar
+        private http: HttpClient,
+        private snackBar: MatSnackBar,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit(): void {
@@ -134,10 +140,21 @@ export class MarketplaceSettingsComponent implements OnInit {
     }
 
     deleteAccount(accountId: number): void {
-        if (confirm('Are you sure you want to remove this account?')) {
-            // TODO: Implement delete API
-            this.snackBar.open('Account removed.', 'Close', { duration: 3000 });
-            this.accounts = this.accounts.filter(a => a.id !== accountId);
+        deleteAccount(accountId: number): void {
+            const dialogRef = this.dialog.open(ConfirmationDialog, {
+                data: {
+                    title: 'Remove Account',
+                    message: 'Are you sure you want to remove this account?'
+                } as ConfirmationDialogData
+            });
+
+            dialogRef.afterClosed().subscribe(confirmed => {
+                if (confirmed) {
+                    // TODO: Implement delete API
+                    this.snackBar.open('Account removed.', 'Close', { duration: 3000 });
+                    this.accounts = this.accounts.filter(a => a.id !== accountId);
+                }
+            });
         }
     }
 }

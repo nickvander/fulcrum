@@ -416,6 +416,75 @@ erDiagram
 
 **Categories**: Advertising, Software, Shipping, Labor, Other.
 
+### Sync and Audit Trail Schema
+
+Tracks external sync operations and provides a complete audit trail for all
+entity changes with source attribution.
+
+```mermaid
+erDiagram
+    sync_batches {
+        int id PK
+        string source
+        string status
+        int total_changes
+        int approved_count
+        int rejected_count
+        datetime expires_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    pending_sync_changes {
+        int id PK
+        int batch_id FK
+        string entity_type
+        int entity_id
+        string entity_name
+        string entity_sku
+        string field
+        string old_value
+        string new_value
+        string status
+        datetime created_at
+    }
+
+    entity_change_logs {
+        int id PK
+        string entity_type
+        int entity_id
+        string entity_name
+        string field
+        string old_value
+        string new_value
+        string source
+        int source_batch_id FK
+        int changed_by_id FK
+        string ip_address
+        datetime changed_at
+    }
+
+    sync_batches ||--o{ pending_sync_changes : contains
+    sync_batches ||--o{ entity_change_logs : references
+    users ||--o{ entity_change_logs : made
+```
+
+**Key Concepts**:
+
+- **SyncBatch**: Groups import operations from Google Sheets or other sources.
+  - `source`: Origin of changes (google_sheets, csv_import, etc.)
+  - `status`: pending, partially_applied, completed
+  - `expires_at`: Auto-cleanup for old batches (30 days)
+
+- **PendingSyncChange**: Temporary staging for changes awaiting approval.
+  - Deleted after batch is fully processed
+  - Records entity info for display without product lookup
+
+- **EntityChangeLog**: Permanent audit trail for ALL changes.
+  - `source`: sheets_import, direct_edit, api
+  - Retained indefinitely for compliance/auditing
+  - Tracks who made the change and from where
+
 ## Key Relationships
 
 ### One-to-Many Relationships

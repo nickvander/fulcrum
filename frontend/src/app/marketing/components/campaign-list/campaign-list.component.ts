@@ -22,6 +22,7 @@ import { DateRange } from '../../../shared/services/date-range.service';
 
 import { QuickPostDialogComponent } from '../quick-post-dialog/quick-post-dialog.component';
 import { QuickPostDetailDialogComponent } from '../quick-post-detail-dialog/quick-post-detail-dialog.component';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-campaign-list',
@@ -230,19 +231,28 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   }
 
   deleteQuickPost(post: CampaignEvent): void {
-    if (confirm('Delete this quick post?')) {
-      this.marketingService.deleteEvent(post.id).subscribe({
-        next: () => {
-          this.quickPosts = this.quickPosts.filter(p => p.id !== post.id);
-          this.applyFilter();
-          this.snackBar.open('Quick post deleted', 'Close', { duration: 2000 });
-        },
-        error: (err) => {
-          console.error('Failed to delete quick post', err);
-          this.snackBar.open('Failed to delete', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Quick Post',
+        message: 'Delete this quick post?'
+      } as ConfirmationDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.marketingService.deleteEvent(post.id).subscribe({
+          next: () => {
+            this.quickPosts = this.quickPosts.filter(p => p.id !== post.id);
+            this.applyFilter();
+            this.snackBar.open('Quick post deleted', 'Close', { duration: 2000 });
+          },
+          error: (err) => {
+            console.error('Failed to delete quick post', err);
+            this.snackBar.open('Failed to delete', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
   getChannelIcon(channel: string): string {
@@ -268,19 +278,28 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   }
 
   deleteCampaign(campaign: CampaignSummary): void {
-    if (confirm(`Delete campaign "${campaign.name}"?`)) {
-      this.marketingService.deleteCampaign(campaign.id).subscribe({
-        next: () => {
-          this.campaigns = this.campaigns.filter(c => c.id !== campaign.id);
-          this.applyFilter();
-          this.snackBar.open('Campaign deleted', 'Close', { duration: 2000 });
-        },
-        error: (err) => {
-          console.error('Failed to delete campaign', err);
-          this.snackBar.open('Failed to delete campaign', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Campaign',
+        message: `Delete campaign "${campaign.name}"?`
+      } as ConfirmationDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.marketingService.deleteCampaign(campaign.id).subscribe({
+          next: () => {
+            this.campaigns = this.campaigns.filter(c => c.id !== campaign.id);
+            this.applyFilter();
+            this.snackBar.open('Campaign deleted', 'Close', { duration: 2000 });
+          },
+          error: (err) => {
+            console.error('Failed to delete campaign', err);
+            this.snackBar.open('Failed to delete campaign', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 }
 
