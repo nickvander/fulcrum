@@ -1,97 +1,115 @@
-<div class="supplier-list-container">
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <h1>Suppliers</h1>
-            <span class="supplier-count" *ngIf="suppliers.length > 0">
-                {{suppliers.length}} supplier{{suppliers.length !== 1 ? 's' : ''}}
-            </span>
-        </div>
-        <div class="actions">
-            <button mat-raised-button color="primary" (click)="createSupplier()">
-                <mat-icon>add</mat-icon> Add Supplier
-            </button>
-        </div>
-    </div>
+<div class="supplier-list-wrapper h-full flex flex-col relative overflow-hidden">
+    <!-- Top Dashboard Expansion Panel -->
 
-    <!-- Table Card -->
-    <mat-card class="table-card">
-        <ng-container *ngIf="isLoading; else tableContent">
-            <div class="loading-state">
-                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                <p>Loading suppliers...</p>
+
+    <div class="supplier-list-container flex-1 overflow-auto p-4 min-h-0">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>Suppliers</h1>
+                <span class="supplier-count" *ngIf="suppliers.length > 0">
+                    {{suppliers.length}} supplier{{suppliers.length !== 1 ? 's' : ''}}
+                </span>
             </div>
-        </ng-container>
+            <div class="actions">
+                <!-- Search placeholder if needed or just align buttons -->
+                <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
+                    matTooltip="Toggle Dashboard" class="action-btn" style="margin-right: 12px;">
+                    <mat-icon>analytics</mat-icon>
+                </button>
+                <button mat-mini-fab color="primary" (click)="createSupplier()" matTooltip="Add Supplier"
+                    class="action-btn">
+                    <mat-icon>add</mat-icon>
+                </button>
+            </div>
+        </div>
 
-        <ng-template #tableContent>
-            <ng-container *ngIf="dataSource.data.length === 0; else showTable">
-                <div class="empty-state">
-                    <mat-icon class="empty-icon">business</mat-icon>
-                    <h3>No suppliers yet</h3>
-                    <p>Add your first supplier to start creating purchase orders.</p>
-                    <button mat-raised-button color="primary" (click)="createSupplier()">
-                        <mat-icon>add</mat-icon> Add Your First Supplier
-                    </button>
+        <!-- Dashboard Expansion Panel -->
+        <div class="dashboard-panel relative z-10 bg-white transition-all duration-300 ease-in-out mb-4 overflow-hidden rounded-lg"
+            [style.max-height]="showDashboard ? '500px' : '0'" [style.opacity]="showDashboard ? '1' : '0'"
+            [style.margin-bottom]="showDashboard ? '16px' : '0'" [style.padding]="showDashboard ? '0' : '0'">
+            <app-supplier-dashboard></app-supplier-dashboard>
+        </div>
+
+        <!-- Table Card -->
+        <mat-card class="table-card">
+            <ng-container *ngIf="isLoading; else tableContent">
+                <div class="loading-state">
+                    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                    <p>Loading suppliers...</p>
                 </div>
             </ng-container>
 
-            <ng-template #showTable>
-                <table mat-table [dataSource]="dataSource" matSort class="supplier-table">
-                    <!-- Name Column -->
-                    <ng-container matColumnDef="name">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Supplier</th>
-                        <td mat-cell *matCellDef="let supplier">
-                            <span class="supplier-name">{{supplier.name}}</span>
-                        </td>
-                    </ng-container>
+            <ng-template #tableContent>
+                <ng-container *ngIf="dataSource.data.length === 0; else showTable">
+                    <div class="empty-state">
+                        <mat-icon class="empty-icon">business</mat-icon>
+                        <h3>No suppliers yet</h3>
+                        <p>Add your first supplier to start creating purchase orders.</p>
+                        <button mat-raised-button color="primary" (click)="createSupplier()">
+                            <mat-icon>add</mat-icon> Add Your First Supplier
+                        </button>
+                    </div>
+                </ng-container>
 
-                    <!-- Contact Column -->
-                    <ng-container matColumnDef="contact">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Contact</th>
-                        <td mat-cell *matCellDef="let supplier">
-                            <div class="contact-info">
-                                <span *ngIf="supplier.contact_name">{{supplier.contact_name}}</span>
-                                <span class="email" *ngIf="supplier.email">{{supplier.email}}</span>
-                            </div>
-                        </td>
-                    </ng-container>
+                <ng-template #showTable>
+                    <table mat-table [dataSource]="dataSource" matSort class="supplier-table">
+                        <!-- Name Column -->
+                        <ng-container matColumnDef="name">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Supplier</th>
+                            <td mat-cell *matCellDef="let supplier">
+                                <span class="supplier-name">{{supplier.name}}</span>
+                            </td>
+                        </ng-container>
 
-                    <!-- PO Count Column -->
-                    <ng-container matColumnDef="po_count">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Orders</th>
-                        <td mat-cell *matCellDef="let supplier">
-                            <button mat-button color="primary"
-                                (click)="viewPurchaseOrders(supplier.id); $event.stopPropagation()">
-                                {{supplier.po_count}} POs
-                            </button>
-                        </td>
-                    </ng-container>
+                        <!-- Contact Column -->
+                        <ng-container matColumnDef="contact">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Contact</th>
+                            <td mat-cell *matCellDef="let supplier">
+                                <div class="contact-info">
+                                    <span *ngIf="supplier.contact_name">{{supplier.contact_name}}</span>
+                                    <span class="email" *ngIf="supplier.email">{{supplier.email}}</span>
+                                </div>
+                            </td>
+                        </ng-container>
 
-                    <!-- Total Value Column -->
-                    <ng-container matColumnDef="total_value">
-                        <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Value</th>
-                        <td mat-cell *matCellDef="let supplier" class="amount-cell">
-                            {{supplier.total_po_value | currency}}
-                        </td>
-                    </ng-container>
+                        <!-- PO Count Column -->
+                        <ng-container matColumnDef="po_count">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Orders</th>
+                            <td mat-cell *matCellDef="let supplier">
+                                <button mat-button color="primary"
+                                    (click)="viewPurchaseOrders(supplier.id); $event.stopPropagation()">
+                                    {{supplier.po_count}} POs
+                                </button>
+                            </td>
+                        </ng-container>
 
-                    <!-- Actions Column -->
-                    <ng-container matColumnDef="actions">
-                        <th mat-header-cell *matHeaderCellDef></th>
-                        <td mat-cell *matCellDef="let supplier">
-                            <button mat-button color="primary" (click)="viewSupplier(supplier.id)">
-                                <mat-icon>edit</mat-icon> Edit
-                            </button>
-                        </td>
-                    </ng-container>
+                        <!-- Total Value Column -->
+                        <ng-container matColumnDef="total_value">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Total Value</th>
+                            <td mat-cell *matCellDef="let supplier" class="amount-cell">
+                                {{supplier.total_po_value | currency}}
+                            </td>
+                        </ng-container>
 
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="supplier-row"
-                        (click)="viewSupplier(row.id)"></tr>
-                </table>
-                <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"
-                    aria-label="Select page of suppliers"></mat-paginator>
+                        <!-- Actions Column -->
+                        <ng-container matColumnDef="actions">
+                            <th mat-header-cell *matHeaderCellDef></th>
+                            <td mat-cell *matCellDef="let supplier">
+                                <button mat-button color="primary" (click)="viewSupplier(supplier.id)">
+                                    <mat-icon>edit</mat-icon> Edit
+                                </button>
+                            </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="supplier-row"
+                            (click)="viewSupplier(row.id)"></tr>
+                    </table>
+                    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"
+                        aria-label="Select page of suppliers"></mat-paginator>
+                </ng-template>
             </ng-template>
-        </ng-template>
-    </mat-card>
+        </mat-card>
+    </div>
 </div>

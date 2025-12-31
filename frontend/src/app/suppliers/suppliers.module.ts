@@ -18,6 +18,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatPaginatorModule } from '@angular/material/paginator'; // Added correct import statement
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { SupplierDashboardComponent } from './pages/supplier-dashboard/supplier-dashboard.component';
 import { ReceivingDialogComponent } from './purchase-orders/receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from './purchase-orders/quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component';
@@ -30,7 +32,7 @@ import { SupplierListComponent } from './supplier-list/supplier-list.component';
 import { SupplierDetailComponent } from './supplier-detail/supplier-detail.component';
 import { PurchaseOrderListComponent } from './purchase-orders/purchase-order-list/purchase-order-list.component';
 import { PurchaseOrderEditComponent } from './purchase-orders/purchase-order-edit/purchase-order-edit.component';
-import { KpiCardComponent } from '../dashboard/widgets/kpi-card/kpi-card.component';
+import { StatCardComponent } from '../dashboard/widgets/stat-card/stat-card.component';
 import { DateRangePresetsComponent } from '../shared/components/date-range-presets/date-range-presets.component';
 
 import { MatTabsModule } from '@angular/material/tabs';
@@ -70,10 +72,12 @@ import { SupplierProductManagerComponent } from './supplier-product-manager/supp
     MatProgressSpinnerModule,
     MatProgressBarModule,
     MatTabsModule,
-    KpiCardComponent,
+    StatCardComponent,
     SupplierProductManagerComponent,
     DateRangePresetsComponent,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatSidenavModule,
+    SupplierDashboardComponent
   ],
   providers: [
     UserService

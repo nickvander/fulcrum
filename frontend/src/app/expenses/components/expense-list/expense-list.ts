@@ -21,7 +21,7 @@ import { ExpenseService, ExpenseFilters } from '../../services/expense.service';
 import { Expense, ExpenseSummary } from '../../models/expense.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ExpenseDialogComponent } from '../expense-dialog/expense-dialog';
-import { KpiCardComponent } from '../../../dashboard/widgets/kpi-card/kpi-card.component';
+import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 
@@ -45,7 +45,7 @@ import { DateRangeService, DateRange } from '../../../shared/services/date-range
         MatTooltipModule,
         MatMenuModule,
         MatPaginatorModule,
-        KpiCardComponent,
+        StatCardComponent,
         DateRangePresetsComponent
     ],
     templateUrl: './expense-list.html',

@@ -20,6 +20,10 @@ export interface Supplier {
     // Details
     website?: string;
     internal_notes?: string;
+
+    // Aggregated Stats
+    po_count?: number;
+    total_po_value?: number;
 }
 
 export interface SupplierCreate {

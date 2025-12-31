@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { SharedModule } from '../../../shared/shared-module';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
@@ -24,6 +24,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
+import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component'; // Managed import
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialog } from '../stock-history-dialog/stock-history-dialog';
@@ -75,7 +76,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
-    MatPaginatorModule // Added standard paginator
+    MatPaginatorModule,
+    ProductDashboardComponent
   ],
 })
 export class ProductList implements OnInit, OnDestroy, AfterViewInit {
@@ -84,6 +86,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   products: Product[] = [];
   paginatedProducts: PaginatedProducts | null = null;
   currentSearchQuery: string = '';
+
+  showDashboard = false; // Drawer state
 
   // Table View Data Source
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
@@ -108,6 +112,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
   private filterSubject = new Subject<void>();
   private userOverrodeViewMode = false; // Track if user manually changed view
+  private pendingOpenSku: string | null = null; // SKU to auto-open dialog for
 
   constructor(
     private productService: ProductService,
@@ -116,10 +121,22 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     private comparisonService: ProductComparisonService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
-    private screenService: ScreenService
+    private screenService: ScreenService,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit(): void {
+    // Check for open_sku query param to auto-open product dialog
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['open_sku']) {
+        this.pendingOpenSku = params['open_sku'];
+        // Set search filter to SKU so the product appears in results
+        this.activeFilters.q = this.pendingOpenSku;
+        // Reload products with the SKU filter
+        this.loadProducts(1, this.pageSize);
+      }
+    });
+
     // Initial load
     this.loadProducts();
 
@@ -452,6 +469,23 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     if (this.sort) {
       this.dataSource.sort = this.sort;
     }
+
+    // Auto-open product dialog if navigated with open_sku param
+    this.tryOpenPendingProduct();
+  }
+
+  private tryOpenPendingProduct(): void {
+    if (this.pendingOpenSku && this.products.length > 0) {
+      const targetProduct = this.products.find(p => p.sku === this.pendingOpenSku);
+      if (targetProduct) {
+        // Clear pending SKU before opening dialog to prevent re-opening
+        this.pendingOpenSku = null;
+        // Use setTimeout to ensure DOM is updated first
+        setTimeout(() => {
+          this.openDetailsDialog(targetProduct, 'view');
+        }, 100);
+      }
+    }
   }
 
   setViewMode(mode: 'grid' | 'list'): void {
@@ -639,6 +673,10 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
       // Reset to regular pagination
       this.loadProducts(1, this.pageSize);
     }
+  }
+
+  toggleDashboard(): void {
+    this.showDashboard = !this.showDashboard;
   }
 
   onWindowScroll(): void {

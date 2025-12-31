@@ -59,10 +59,10 @@
             <!-- Description (collapsible if long) -->
             <div class="section description-section">
                 <p class="description"
-                    [class.truncated]="!showFullDescription && (product.description?.length || 0) > 150">
+                    [class.truncated]="!showFullDescription && ((product.description || '').length) > 150">
                     {{ product.description || 'No description available.' }}
                 </p>
-                @if ((product.description?.length || 0) > 150) {
+                @if (((product.description || '').length) > 150) {
                 <button mat-button class="expand-btn" (click)="showFullDescription = !showFullDescription">
                     {{ showFullDescription ? 'Show less' : 'Show more' }}
                 </button>
@@ -218,7 +218,7 @@
             }
 
             <!-- Purchase History (expandable) -->
-            @if (purchaseHistory?.length) {
+            @if (purchaseHistory.length) {
             <div class="section">
                 <div class="section-header clickable" (click)="showHistory = !showHistory">
                     <h3>Purchase History</h3>
