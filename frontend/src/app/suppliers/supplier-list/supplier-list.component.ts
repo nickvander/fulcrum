@@ -26,7 +26,12 @@ export class SupplierListComponent implements OnInit, AfterViewInit {
     dataSource = new MatTableDataSource<SupplierSummary>([]);
 
     @ViewChild(MatPaginator) paginator!: MatPaginator;
-    @ViewChild(MatSort) sort!: MatSort; // Changed to simple property since we use AfterViewInit
+    // Use setter since table is inside *ngIf
+    @ViewChild(MatSort) set matSort(sort: MatSort) {
+        if (sort) {
+            this.dataSource.sort = sort;
+        }
+    }
 
     suppliers: SupplierSummary[] = [];
     displayedColumns: string[] = ['name', 'contact', 'po_count', 'total_value', 'actions'];
@@ -50,7 +55,6 @@ export class SupplierListComponent implements OnInit, AfterViewInit {
 
     ngAfterViewInit() {
         this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
     }
 
     loadData(): void {
@@ -86,7 +90,6 @@ export class SupplierListComponent implements OnInit, AfterViewInit {
                 // Re-link paginator/sort if needed, but AfterViewInit handles it usually. 
                 // However, explicit re-link if data loads after view init is safe.
                 if (this.paginator) this.dataSource.paginator = this.paginator;
-                if (this.sort) this.dataSource.sort = this.sort;
 
                 this.isLoading = false;
             },

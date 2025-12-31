@@ -13,6 +13,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'; // Added Paginator
+import { MatSort, MatSortModule } from '@angular/material/sort';
 
 import { MarketingService, CampaignSummary, CampaignEvent } from '../../services/marketing.service';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
@@ -40,6 +41,7 @@ import { QuickPostDetailDialogComponent } from '../quick-post-detail-dialog/quic
     MatTooltipModule,
     MatProgressBarModule,
     MatPaginatorModule,
+    MatSortModule,
     DateRangePresetsComponent,
     StatusFilterComponent
   ],
@@ -58,6 +60,9 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   displayedColumns = ['name', 'status', 'dates', 'events', 'products', 'actions'];
 
   @ViewChild('campaignPaginator') campaignPaginator!: MatPaginator;
+  @ViewChild(MatSort) set matSort(sort: MatSort) {
+    this.filteredCampaigns.sort = sort;
+  }
   @ViewChild('quickPostPaginator') quickPostPaginator!: MatPaginator;
 
   statusOptions: StatusFilterOption[] = [
