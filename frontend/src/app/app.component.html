@@ -1,25 +1,23 @@
 @if (loading$ | async) {
-  <div class="loading-overlay">
-    <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
-  </div>
+<div class="loading-overlay">
+  <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
+</div>
 }
 
 @if (!isLoginPage) {
-  <mat-sidenav-container class="sidenav-container">
-    <mat-sidenav #drawer class="sidenav" fixedInViewport
-      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-      [mode]="(isHandset$ | async) ? 'over' : 'side'"
-      [opened]="(isHandset$ | async) === false">
-      <app-sidenav></app-sidenav>
-    </mat-sidenav>
-    <mat-sidenav-content>
-      <app-header [drawer]="drawer"></app-header>
-      <main class="main-content">
-        <router-outlet></router-outlet>
-      </main>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav" fixedInViewport [attr.role]="(isMobile$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isMobile$ | async) ? 'over' : 'side'" [opened]="(isMobile$ | async) === false"
+    [class.mobile-sidenav]="(isMobile$ | async)">
+    <app-sidenav></app-sidenav>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <app-header [drawer]="drawer"></app-header>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
 } @else {
-  <router-outlet></router-outlet>
+<router-outlet></router-outlet>
 }
-

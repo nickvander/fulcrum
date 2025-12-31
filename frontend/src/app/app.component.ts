@@ -9,6 +9,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core-module';
 import { LoadingService } from './core/services/loading.service';
+import { ScreenService } from './core/services/screen.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
@@ -25,21 +26,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  isHandset$: Observable<boolean>;
+  isMobile$: Observable<boolean>;
   isLoginPage = false;
   loading$: Observable<boolean>;
 
   constructor(
-    private breakpointObserver: BreakpointObserver,
     private router: Router,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
+    private screenService: ScreenService
   ) {
-    this.isHandset$ = this.breakpointObserver.observe(Breakpoints.Handset)
-      .pipe(
-        map(result => result.matches),
-        delay(0),
-        shareReplay()
-      );
+    this.isMobile$ = this.screenService.isMobile$;
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)

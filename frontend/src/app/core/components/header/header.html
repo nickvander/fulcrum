@@ -1,30 +1,9 @@
 <mat-toolbar class="app-header">
-  <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()">
+  <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()" class="sidenav-toggle">
     <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
   </button>
   <span class="logo">Fulcrum</span>
   <span class="spacer"></span>
 
-  <div class="user-menu-container" *ngIf="user$ | async as user">
-    <button mat-button [matMenuTriggerFor]="menu" class="user-button" aria-label="User menu">
-      <span class="user-initials">{{ getUserInitials(user) }}</span>
-      <mat-icon>expand_more</mat-icon>
-    </button>
-  </div>
-
-  <mat-menu #menu="matMenu" class="user-profile-menu">
-    <button mat-menu-item routerLink="/users/profile">
-      <mat-icon>person</mat-icon>
-      <span>Profile</span>
-    </button>
-    <button mat-menu-item routerLink="/settings">
-      <mat-icon>settings</mat-icon>
-      <span>Settings</span>
-    </button>
-    <mat-divider></mat-divider>
-    <button mat-menu-item (click)="logout()" class="logout-item">
-      <mat-icon color="warn">exit_to_app</mat-icon>
-      <span class="warn-text">Logout</span>
-    </button>
-  </mat-menu>
+  <!-- User Menu removed - moved to Sidenav Footer for cleaner UI -->
 </mat-toolbar>

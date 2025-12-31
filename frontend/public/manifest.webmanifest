@@ -1,9 +1,12 @@
 {
-  "name": "frontend",
-  "short_name": "frontend",
+  "name": "Fulcrum",
+  "short_name": "Fulcrum",
+  "description": "Your AI-Powered Commerce Hub",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
+  "theme_color": "#2E3A59",
+  "background_color": "#F4F6F8",
   "icons": [
     {
       "src": "icons/icon-72x72.png",

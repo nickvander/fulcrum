@@ -20,6 +20,7 @@ from .supplier_product import SupplierProduct
 from .expense import Expense
 from .store_settings import StoreSettings
 from .product_inventory_settings import ProductInventorySettings
+from .api_key import ApiKey
 
 from .marketing import (
     MarketingConnector,
@@ -74,4 +75,5 @@ __all__ = [
     "MarketingChannelType",
     "CampaignStatus",
     "ConnectorType",
+    "ApiKey",
 ]

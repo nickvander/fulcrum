@@ -1,6 +1,6 @@
 import { Component, Inject, ViewChild, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,8 +26,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         ProductForm,
         FormsModule,
         MatInputModule,
-        MatTooltipModule,
-        RouterLink
+        MatInputModule,
+        MatTooltipModule
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {
@@ -39,6 +39,13 @@ export class ProductDetailsDialogComponent implements OnInit {
     isAssembling = false;
     assembleQuantity = 1;
     hasChanges = false;
+
+    // New view state properties
+    showFullDescription = false;
+    showMarketplaces = false;
+    showMarketing = false;
+    isMobile = false;
+    isTablet = false;
 
     constructor(
         public dialogRef: MatDialogRef<ProductDetailsDialogComponent>,
@@ -68,6 +75,9 @@ export class ProductDetailsDialogComponent implements OnInit {
         }
     }
 
+    // Navigation stack for back functionality
+    navigationStack: number[] = [];
+
     refreshProductData(id?: number) {
         const productId = id || this.product?.id;
         if (!productId) return;
@@ -78,8 +88,19 @@ export class ProductDetailsDialogComponent implements OnInit {
     }
 
     onNavigateToProduct(productId: number): void {
+        if (this.product?.id && this.product.id !== productId) {
+            this.navigationStack.push(this.product.id);
+        }
         this.refreshProductData(productId);
         this.loadHistory(productId);
+    }
+
+    onNavigateBack(): void {
+        const previousId = this.navigationStack.pop();
+        if (previousId) {
+            this.refreshProductData(previousId);
+            this.loadHistory(previousId);
+        }
     }
 
     onClose(): void {
