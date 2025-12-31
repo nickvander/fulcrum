@@ -26,6 +26,7 @@ from src.api import dependencies
 
 from src.models.user import User
 from src.models.api_key import ApiKey
+from src.models.pending_sync import SyncBatch, PendingSyncChange, EntityChangeLog
 
 router = APIRouter()
 
@@ -43,7 +44,7 @@ class ExportRequest(BaseModel):
 
 class SheetsSyncPullRequest(BaseModel):
     """Request from Google Sheets to pull data from Fulcrum."""
-    entity: Literal["products", "inventory", "suppliers"]
+    entity: Literal["products", "inventory", "suppliers", "purchase-orders", "expenses"]
     last_sync_timestamp: Optional[datetime] = None
 
 
@@ -57,14 +58,85 @@ class SheetsSyncPullResponse(BaseModel):
 class SheetsSyncPushRequest(BaseModel):
     """Request from Google Sheets to push changes to Fulcrum."""
     entity: Literal["products", "inventory"]
-    changes: List[dict]  # Each dict has: id, field, old_value, new_value
+    changes: List[dict]  # Each dict has: id, field, new_value
 
 
 class SheetsSyncPushResponse(BaseModel):
-    """Response for Sheets push operation."""
+    """Response for Sheets push operation - changes staged for approval."""
     success: bool
-    updated_count: int
+    batch_id: int  # ID of the created SyncBatch for tracking
+    staged_count: int  # Number of changes staged
+    message: str  # User-friendly message
     errors: List[str] = []
+
+
+# --- Pending Sync Review Schemas ---
+
+class PendingChangeInfo(BaseModel):
+    """Individual pending change for preview."""
+    id: int
+    entity_id: int
+    entity_name: Optional[str]
+    entity_sku: Optional[str]
+    field: str
+    old_value: Optional[str]
+    new_value: Optional[str]
+    status: str
+
+
+class PendingBatchInfo(BaseModel):
+    """Batch of pending changes."""
+    id: int
+    source: str
+    status: str
+    total_changes: int
+    approved_count: int
+    rejected_count: int
+    created_at: datetime
+    changes: List[PendingChangeInfo]
+
+
+class PendingBatchListResponse(BaseModel):
+    """Response for listing pending batches."""
+    batches: List[PendingBatchInfo]
+    total_pending: int
+
+
+class SyncApproveRequest(BaseModel):
+    """Request to approve/reject specific changes."""
+    batch_id: int
+    change_ids: List[int]  # IDs of PendingSyncChange to approve
+    action: Literal["approve", "reject"]
+
+
+class SyncApproveResponse(BaseModel):
+    """Response after approving/rejecting changes."""
+    success: bool
+    applied_count: int
+    message: str
+    errors: List[str] = []
+
+
+# --- Entity Change Log Schemas ---
+
+class ChangeLogEntry(BaseModel):
+    """Entry in the entity change log."""
+    id: int
+    entity_type: str
+    entity_id: int
+    entity_name: Optional[str]
+    field: str
+    old_value: Optional[str]
+    new_value: Optional[str]
+    source: str
+    changed_by_email: Optional[str]
+    changed_at: datetime
+
+
+class ChangeLogResponse(BaseModel):
+    """Response for change log queries."""
+    entries: List[ChangeLogEntry]
+    total: int
 
 
 # =============================================================================
@@ -363,7 +435,7 @@ async def export_campaigns(
 async def sheets_sync_pull(
     request: SheetsSyncPullRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_user),
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """
     Pull data from Fulcrum to Google Sheets.
@@ -402,6 +474,33 @@ async def sheets_sync_pull(
             {"id": s.id, "name": s.name, "email": s.email or "", "phone": s.phone or ""}
             for s in suppliers
         ]
+    elif request.entity == "purchase-orders":
+        from src.models.purchase_order import PurchaseOrder
+        orders = db.query(PurchaseOrder).limit(1000).all()
+        data = [
+            {
+                "id": po.id,
+                "po_number": f"PO-{po.id}",
+                "supplier_id": po.supplier_id,
+                "status": po.status,
+                "total_amount": float(po.total_amount) if po.total_amount else 0,
+                "date": str(po.ordered_at.date()) if po.ordered_at else str(po.created_at.date()),
+            }
+            for po in orders
+        ]
+    elif request.entity == "expenses":
+        from src.models.expense import Expense
+        expenses = db.query(Expense).limit(1000).all()
+        data = [
+            {
+                "id": e.id,
+                "description": e.description,
+                "amount": float(e.amount) if e.amount else 0,
+                "category": e.category,
+                "date": str(e.date) if e.date else "",
+            }
+            for e in expenses
+        ]
     else:
         raise HTTPException(status_code=400, detail=f"Unknown entity: {request.entity}")
     
@@ -411,23 +510,34 @@ async def sheets_sync_pull(
         total_records=len(data)
     )
 
-
 @router.post("/sheets/sync-push", response_model=SheetsSyncPushResponse)
 async def sheets_sync_push(
     request: SheetsSyncPushRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_user),
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """
     Push changes from Google Sheets back to Fulcrum.
     
+    IMPORTANT: Changes are STAGED for review, not applied immediately.
+    The user must approve changes in the Fulcrum app before they take effect.
+    
     Called by the Apps Script add-on when user edits data in Sheets.
-    Currently supports updating: stock quantity, cost_price, resale_price.
     """
-    updated_count = 0
     errors = []
+    staged_count = 0
     
     allowed_fields = {"stock", "cost_price", "resale_price", "name"}
+    
+    # Create a new SyncBatch to group these changes
+    batch = SyncBatch(
+        user_id=current_user.id,
+        source="google_sheets",
+        status="pending",
+        total_changes=0,  # Will update after processing
+    )
+    db.add(batch)
+    db.flush()  # Get batch ID
     
     for change in request.changes:
         try:
@@ -448,29 +558,288 @@ async def sheets_sync_push(
                 errors.append(f"Product {product_id} not found")
                 continue
             
-            # Apply the update
-            if field == "stock":
-                # Stock updates are more complex - need to adjust inventory
-                # For now, we'll store this as a note. Full implementation
-                # would use inventory adjustment logic.
-                errors.append(f"Stock sync for product {product_id} recorded (full implementation pending)")
-            elif field == "cost_price":
-                crud_product.update(db, db_obj=product, obj_in={"cost_price": float(new_value)})
-                updated_count += 1
+            # Get current value for preview
+            if field == "cost_price":
+                old_value = str(product.cost_price) if product.cost_price else "0"
             elif field == "resale_price":
-                crud_product.update(db, db_obj=product, obj_in={"default_resale_price": float(new_value)})
-                updated_count += 1
+                old_value = str(product.default_resale_price) if product.default_resale_price else "0"
             elif field == "name":
-                crud_product.update(db, db_obj=product, obj_in={"name": str(new_value)})
-                updated_count += 1
+                old_value = product.name or ""
+            elif field == "stock":
+                old_value = str(sum(i.quantity for i in product.inventory_items) if product.inventory_items else 0)
+            else:
+                old_value = None
+            
+            # CHECK: If value hasn't changed, skip it
+            # Normalize to strings for comparison
+            normalized_new = str(new_value).strip() if new_value is not None else ""
+            normalized_old = str(old_value).strip() if old_value is not None else ""
+            
+            # Floating point comparison for prices
+            if field in ["cost_price", "resale_price"]:
+                try:
+                    float_new = float(normalized_new)
+                    float_old = float(normalized_old) if normalized_old else 0.0
+                    if abs(float_new - float_old) < 0.001:
+                        continue
+                except ValueError:
+                    # Parse error, fallback to string compare
+                    if normalized_new == normalized_old:
+                        continue
+            else:
+                if normalized_new == normalized_old:
+                    continue
+
+            
+            # Create pending change record
+            pending_change = PendingSyncChange(
+                batch_id=batch.id,
+                entity=request.entity,
+                entity_id=product_id,
+                entity_name=product.name,
+                entity_sku=product.sku,
+                field=field,
+                old_value=old_value,
+                new_value=str(new_value),
+                status="pending",
+            )
+            db.add(pending_change)
+            staged_count += 1
                 
         except Exception as e:
             errors.append(f"Error processing change: {str(e)}")
     
+    # Update batch with total count
+    batch.total_changes = staged_count
+    db.commit()
+    
     return SheetsSyncPushResponse(
-        success=len(errors) == 0,
-        updated_count=updated_count,
+        success=staged_count > 0,
+        batch_id=batch.id,
+        staged_count=staged_count,
+        message=f"{staged_count} changes staged for review. Open Fulcrum → Settings → Integrations & Data to approve.",
         errors=errors
+    )
+
+
+@router.get("/sync/pending", response_model=PendingBatchListResponse)
+async def list_pending_sync(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
+):
+    """
+    List all pending sync batches with their changes for review.
+    """
+    batches = db.query(SyncBatch).filter(
+        SyncBatch.status == "pending"
+    ).order_by(SyncBatch.created_at.desc()).all()
+    
+    batch_list = []
+    total_pending = 0
+    
+    for batch in batches:
+        changes = db.query(PendingSyncChange).filter(
+            PendingSyncChange.batch_id == batch.id,
+            PendingSyncChange.status == "pending"
+        ).all()
+        
+        batch_info = PendingBatchInfo(
+            id=batch.id,
+            source=batch.source,
+            status=batch.status,
+            total_changes=batch.total_changes,
+            approved_count=batch.approved_count,
+            rejected_count=batch.rejected_count,
+            created_at=batch.created_at,
+            changes=[
+                PendingChangeInfo(
+                    id=c.id,
+                    entity_id=c.entity_id,
+                    entity_name=c.entity_name,
+                    entity_sku=c.entity_sku,
+                    field=c.field,
+                    old_value=c.old_value,
+                    new_value=c.new_value,
+                    status=c.status,
+                )
+                for c in changes
+            ]
+        )
+        batch_list.append(batch_info)
+        total_pending += len(changes)
+    
+    return PendingBatchListResponse(
+        batches=batch_list,
+        total_pending=total_pending
+    )
+
+
+@router.get("/sync/pending/count")
+async def get_pending_count(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
+):
+    """Get count of pending changes and batches (for badge display)."""
+    change_count = db.query(PendingSyncChange).filter(
+        PendingSyncChange.status == "pending"
+    ).count()
+    
+    batch_count = db.query(SyncBatch).filter(
+        SyncBatch.status == "pending"
+    ).count()
+    
+    return {"count": change_count, "batch_count": batch_count}
+
+
+@router.post("/sync/approve", response_model=SyncApproveResponse)
+async def approve_sync_changes(
+    request: SyncApproveRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
+):
+    """
+    Approve or reject specific pending sync changes.
+    
+    When approved, changes are applied to the database and logged to EntityChangeLog.
+    """
+    errors = []
+    applied_count = 0
+    
+    batch = db.query(SyncBatch).filter(SyncBatch.id == request.batch_id).first()
+    if not batch:
+        raise HTTPException(status_code=404, detail="Batch not found")
+    
+    for change_id in request.change_ids:
+        change = db.query(PendingSyncChange).filter(
+            PendingSyncChange.id == change_id,
+            PendingSyncChange.batch_id == request.batch_id
+        ).first()
+        
+        if not change:
+            errors.append(f"Change {change_id} not found in batch")
+            continue
+        
+        if request.action == "approve":
+            # Apply the change
+            try:
+                product = crud_product.get(db, id=change.entity_id)
+                if not product:
+                    errors.append(f"Product {change.entity_id} not found")
+                    continue
+                
+                # Apply update based on field
+                if change.field == "cost_price":
+                    crud_product.update(db, db_obj=product, obj_in={"cost_price": float(change.new_value)})
+                elif change.field == "resale_price":
+                    crud_product.update(db, db_obj=product, obj_in={"default_resale_price": float(change.new_value)})
+                elif change.field == "name":
+                    crud_product.update(db, db_obj=product, obj_in={"name": change.new_value})
+                elif change.field == "stock":
+                    # Stock changes are complex - for now, log but don't apply
+                    errors.append(f"Stock sync for {change.entity_name} requires manual adjustment")
+                    continue
+                
+                # Log the change with source attribution
+                log_entry = EntityChangeLog(
+                    entity_type="product",
+                    entity_id=change.entity_id,
+                    entity_name=change.entity_name,
+                    field=change.field,
+                    old_value=change.old_value,
+                    new_value=change.new_value,
+                    source="sheets_import",
+                    source_batch_id=batch.id,
+                    changed_by_id=current_user.id,
+                )
+                db.add(log_entry)
+                
+                change.status = "approved"
+                batch.approved_count += 1
+                applied_count += 1
+                
+            except Exception as e:
+                errors.append(f"Error applying change {change_id}: {str(e)}")
+                
+        elif request.action == "reject":
+            change.status = "rejected"
+            batch.rejected_count += 1
+    
+    # Update batch status
+    pending_count = db.query(PendingSyncChange).filter(
+        PendingSyncChange.batch_id == batch.id,
+        PendingSyncChange.status == "pending"
+    ).count()
+    
+    if pending_count == 0:
+        if batch.rejected_count == batch.total_changes:
+            batch.status = "rejected"
+        elif batch.approved_count == batch.total_changes:
+            batch.status = "approved"
+        else:
+            batch.status = "partial"
+        batch.reviewed_at = datetime.utcnow()
+        batch.reviewed_by_id = current_user.id
+        
+        # Clean up pending changes after batch is fully processed
+        db.query(PendingSyncChange).filter(
+            PendingSyncChange.batch_id == batch.id
+        ).delete()
+    
+    db.commit()
+    
+    action_label = "approved" if request.action == "approve" else "rejected"
+    return SyncApproveResponse(
+        success=len(errors) == 0,
+        applied_count=applied_count if request.action == "approve" else len(request.change_ids) - len(errors),
+        message=f"{applied_count} changes {action_label}." if request.action == "approve" else f"{len(request.change_ids)} changes rejected.",
+        errors=errors
+    )
+
+
+@router.get("/change-logs", response_model=ChangeLogResponse)
+async def list_change_logs(
+    entity_type: Optional[str] = Query(None),
+    entity_id: Optional[int] = Query(None),
+    source: Optional[str] = Query(None),
+    limit: int = Query(50, le=200),
+    offset: int = Query(0),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
+):
+    """
+    List entity change logs with optional filters.
+    
+    Use this to see the audit trail of all changes, including source attribution.
+    """
+    query = db.query(EntityChangeLog)
+    
+    if entity_type:
+        query = query.filter(EntityChangeLog.entity_type == entity_type)
+    if entity_id:
+        query = query.filter(EntityChangeLog.entity_id == entity_id)
+    if source:
+        query = query.filter(EntityChangeLog.source == source)
+    
+    total = query.count()
+    entries = query.order_by(EntityChangeLog.changed_at.desc()).offset(offset).limit(limit).all()
+    
+    return ChangeLogResponse(
+        entries=[
+            ChangeLogEntry(
+                id=e.id,
+                entity_type=e.entity_type,
+                entity_id=e.entity_id,
+                entity_name=e.entity_name,
+                field=e.field,
+                old_value=e.old_value,
+                new_value=e.new_value,
+                source=e.source,
+                changed_by_email=e.changed_by.email if e.changed_by else None,
+                changed_at=e.changed_at,
+            )
+            for e in entries
+        ],
+        total=total
     )
 
 

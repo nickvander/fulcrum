@@ -8,19 +8,14 @@
  * 1. Open your Google Sheet
  * 2. Go to Extensions > Apps Script
  * 3. Delete any existing code and paste this entire file
- * 4. Update FULCRUM_API_URL and FULCRUM_API_KEY below
- * 5. Save and refresh your Sheet
- * 6. Use the "Fulcrum" menu that appears
+ * 4. Save and refresh your Sheet
+ * 5. Use "⚙️ Fulcrum > 🔧 Setup Connection" to connect
  */
 
 // =============================================================================
 // CONFIGURATION
 // =============================================================================
 
-/**
- * Get configuration from Script Properties (secure storage).
- * Users set these via the setup dialog.
- */
 function getConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
@@ -29,26 +24,74 @@ function getConfig() {
     SHEETS: {
       PRODUCTS: 'Products',
       INVENTORY: 'Inventory',
-      SUPPLIERS: 'Suppliers'
+      SUPPLIERS: 'Suppliers',
+      POS: 'Purchase Orders',
+      EXPENSES: 'Expenses'
+    },
+    COLORS: {
+      PRIMARY: '#1a73e8', // Fulcrum Blue
+      HEADER_TEXT: '#ffffff',
+      BANDING_1: '#ffffff',
+      BANDING_2: '#f8f9fa'
     }
   };
+}
+
+// =============================================================================
+// LOGGING SYSTEM
+// =============================================================================
+
+/**
+ * Appends a message to the persistent log.
+ */
+function logInfo(message) {
+  const timestamp = new Date().toLocaleTimeString();
+  const entry = `[${timestamp}] ${message}`;
+  Logger.log(entry); // Keep native logging too
+  
+  try {
+    const props = PropertiesService.getScriptProperties();
+    let logs = props.getProperty('SYNC_LOGS') || '';
+    
+    // Append new line
+    logs = entry + '\n' + logs;
+    
+    // Truncate to last ~2000 chars to avoid property limits
+    if (logs.length > 2000) {
+      logs = logs.substring(0, 2000);
+      logs = logs.substring(0, logs.lastIndexOf('\n')); // Clean cut
+    }
+    
+    props.setProperty('SYNC_LOGS', logs);
+  } catch (e) {
+    console.error('Logging failed', e);
+  }
+}
+
+function clearLogs() {
+  PropertiesService.getScriptProperties().deleteProperty('SYNC_LOGS');
+}
+
+function getLogHistory() {
+  return PropertiesService.getScriptProperties().getProperty('SYNC_LOGS') || 'No logs yet.';
 }
 
 // =============================================================================
 // MENU & UI
 // =============================================================================
 
-/**
- * Creates the custom menu when the spreadsheet opens.
- */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('⚙️ Fulcrum')
     .addItem('🔧 Setup Connection', 'showSetupDialog')
     .addSeparator()
-    .addItem('🔄 Pull Products', 'pullProducts')
-    .addItem('📦 Pull Inventory', 'pullInventory')
+    .addItem('🔄 Pull All Data', 'pullAll')
+    .addSeparator()
+    .addItem('📦 Pull Products', 'pullProducts')
+    .addItem('📊 Pull Inventory', 'pullInventory')
     .addItem('🏭 Pull Suppliers', 'pullSuppliers')
+    .addItem('📜 Pull Purchase Orders', 'pullPurchaseOrders')
+    .addItem('💸 Pull Expenses', 'pullExpenses')
     .addSeparator()
     .addItem('⬆️ Push Changes to Fulcrum', 'pushChanges')
     .addSeparator()
@@ -62,29 +105,30 @@ function onOpen() {
 function showSetupDialog() {
   const html = HtmlService.createHtmlOutput(`
     <style>
-      body { font-family: Arial, sans-serif; padding: 20px; }
-      h3 { margin-top: 0; color: #2E3A59; }
-      label { display: block; margin-top: 15px; font-weight: bold; }
-      input { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
-      button { margin-top: 20px; padding: 10px 20px; background: #00BFA5; color: white; border: none; border-radius: 4px; cursor: pointer; }
-      button:hover { background: #008E7B; }
-      .help { font-size: 12px; color: #666; margin-top: 5px; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 16px; overflow: hidden; font-size: 13px; color: #3c4043; margin: 0; }
+      h3 { margin: 0 0 16px 0; color: #1a73e8; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+      label { display: block; margin-top: 12px; font-weight: 500; font-size: 12px; color: #5f6368; }
+      input { width: 100%; padding: 8px 10px; margin-top: 4px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
+      input:focus { border-color: #1a73e8; outline: 2px solid rgba(26,115,232,0.2); }
+      .actions { margin-top: 24px; display: flex; justify-content: flex-end; }
+      button { padding: 8px 20px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 13px; transition: background 0.2s; }
+      button:hover { background: #1557b0; box-shadow: 0 1px 2px rgba(60,64,67,0.3); }
+      .help { font-size: 11px; color: #80868b; margin-top: 4px; }
     </style>
-    <h3>🔧 Fulcrum Connection Setup</h3>
-    <p>Enter your Fulcrum API details below. You can generate an API key from <strong>Settings > Integrations</strong> in Fulcrum.</p>
+    <h3>🔧 Fulcrum Connection</h3>
     
     <label>API URL</label>
-    <input type="text" id="apiUrl" placeholder="http://localhost:8000/api/v1">
-    <div class="help">Your Fulcrum backend URL (no trailing slash)</div>
+    <input type="text" id="apiUrl" placeholder="https://.../api/v1">
+    <div class="help">e.g. ngrok URL ending in /api/v1</div>
     
     <label>API Key</label>
     <input type="password" id="apiKey" placeholder="Paste your API key here">
-    <div class="help">Generate this from Fulcrum Settings > Integrations > API Keys</div>
     
-    <button onclick="saveConfig()">Save & Connect</button>
+    <div class="actions">
+      <button onclick="saveConfig()">Save & Connect</button>
+    </div>
     
     <script>
-      // Load existing values
       google.script.run.withSuccessHandler(function(config) {
         document.getElementById('apiUrl').value = config.url || '';
         document.getElementById('apiKey').value = config.key ? '********' : '';
@@ -98,21 +142,45 @@ function showSetupDialog() {
           return;
         }
         google.script.run.withSuccessHandler(function() {
-          alert('Connection saved! You can now use the Fulcrum menu.');
           google.script.host.close();
         }).saveApiConfig(url, key);
       }
     </script>
   `)
-    .setWidth(450)
-    .setHeight(350);
+    .setWidth(380)
+    .setHeight(300);
   
   SpreadsheetApp.getUi().showModalDialog(html, 'Fulcrum Setup');
 }
 
 /**
- * Get existing config for the setup dialog.
+ * Shows a custom styled alert dialog.
  */
+function showCustomAlert(title, message, type = 'success') {
+  const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : 'ℹ️');
+  const color = type === 'success' ? '#1a73e8' : (type === 'error' ? '#d93025' : '#1a73e8');
+  
+  const html = HtmlService.createHtmlOutput(`
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; text-align: center; color: #3c4043; margin: 0; overflow: hidden; }
+      .icon { font-size: 36px; margin-bottom: 16px; }
+      h3 { margin: 0 0 12px 0; color: ${color}; font-size: 18px; }
+      p { margin: 0 0 24px 0; font-size: 14px; line-height: 1.5; color: #5f6368; white-space: pre-wrap; }
+      button { padding: 8px 24px; background: ${color}; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 13px; }
+      button:hover { opacity: 0.9; }
+      .secondary { background: #f1f3f4; color: #3c4043; margin-right: 8px; }
+    </style>
+    <div class="icon">${icon}</div>
+    <h3>${title}</h3>
+    <p>${message}</p>
+    <button onclick="google.script.host.close()">Close</button>
+  `)
+    .setWidth(400)
+    .setHeight(260); 
+    
+  SpreadsheetApp.getUi().showModalDialog(html, 'Fulcrum');
+}
+
 function getExistingConfig() {
   const props = PropertiesService.getScriptProperties();
   return {
@@ -121,199 +189,226 @@ function getExistingConfig() {
   };
 }
 
-/**
- * Save API configuration securely.
- */
 function saveApiConfig(url, key) {
   const props = PropertiesService.getScriptProperties();
   props.setProperty('FULCRUM_API_URL', url);
   props.setProperty('FULCRUM_API_KEY', key);
-}
-
-/**
- * Shows a toast notification.
- */
-function showToast(message, title = 'Fulcrum') {
-  SpreadsheetApp.getActiveSpreadsheet().toast(message, title, 5);
+  logInfo('Configuration saved.');
 }
 
 // =============================================================================
-// PULL OPERATIONS (Fulcrum -> Sheets)
+// PULL OPERATIONS
 // =============================================================================
 
-/**
- * Pull products from Fulcrum and populate the Products sheet.
- */
-function pullProducts() {
+function pullAll() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Starting full sync...', '🔄 Syncing', 60);
+  logInfo('--- Starting Full Sync ---');
+  
   try {
-    showToast('Fetching products from Fulcrum...', '🔄 Syncing');
+    pullProducts(true);
+    pullInventory(true);
+    pullSuppliers(true);
+    pullPurchaseOrders(true);
+    pullExpenses(true);
     
-    const response = fetchFromFulcrum('/integrations/sheets/sync-pull', 'POST', {
-      entity: 'products'
-    });
+    // Cleanup default "Sheet1" if it exists and is empty
+    cleanupDefaultSheet();
     
-    if (!response.data || response.data.length === 0) {
-      showToast('No products found in Fulcrum', '⚠️ Warning');
-      return;
+    logInfo('Full Sync completed successfully.');
+    showCustomAlert('Sync Complete', 'All data has been successfully pulled from Fulcrum!', 'success');
+  } catch (error) {
+    logInfo('Full Sync FAILED: ' + error.message);
+    showCustomAlert('Sync Failed', error.message, 'error');
+  }
+}
+
+function pullProducts(silent = false) {
+  _genericPull('products', 'Products', 
+    ['ID', 'SKU', 'Name', 'Cost Price', 'Resale Price', 'Stock'], 
+    p => [p.id, p.sku, p.name, p.cost_price, p.resale_price, p.stock],
+    silent);
+}
+
+function pullInventory(silent = false) {
+  _genericPull('inventory', 'Inventory', 
+    ['Product ID', 'SKU', 'Name', 'Stock Quantity'], 
+    p => [p.product_id, p.sku, p.name, p.stock],
+    silent);
+}
+
+function pullSuppliers(silent = false) {
+  _genericPull('suppliers', 'Suppliers', 
+    ['ID', 'Name', 'Email', 'Phone'], 
+    s => [s.id, s.name, s.email, s.phone],
+    silent);
+}
+
+function pullPurchaseOrders(silent = false) {
+  _genericPull('purchase-orders', 'Purchase Orders', 
+    ['ID', 'PO #', 'Supplier ID', 'Status', 'Total', 'Date'],
+    po => [po.id, po.po_number, po.supplier_id, po.status, po.total_amount, po.date],
+    silent);
+}
+
+function pullExpenses(silent = false) {
+  _genericPull('expenses', 'Expenses', 
+    ['ID', 'Description', 'Amount', 'Category', 'Date'],
+    e => [e.id, e.description, e.amount, e.category, e.date],
+    silent);
+}
+
+/**
+ * Generic helper for pull operations.
+ */
+function _genericPull(entity, sheetNameKey, headers, rowMapper, silent = false) {
+  try {
+    const config = getConfig();
+    const sheetName = config.SHEETS[sheetNameKey.toUpperCase()] || sheetNameKey;
+    
+    if (!silent) {
+      SpreadsheetApp.getActiveSpreadsheet().toast(`Fetching ${entity}...`, '🔄 Syncing');
+    }
+    logInfo(`Pulling ${entity}...`);
+    
+    const response = fetchFromFulcrum('/integrations/sheets/sync-pull', 'POST', { entity: entity });
+    
+    const sheet = getOrCreateSheet(sheetName);
+    
+    if (sheet.getFilter()) {
+      sheet.getFilter().remove();
     }
     
-    const config = getConfig();
-    const sheet = getOrCreateSheet(config.SHEETS.PRODUCTS);
     sheet.clear();
     
-    // Headers
-    const headers = ['ID', 'SKU', 'Name', 'Cost Price', 'Resale Price', 'Stock'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    // Apply Formatting
+    formatSheet(sheet, headers);
     
-    // Data rows
-    const rows = response.data.map(p => [
-      p.id, p.sku, p.name, p.cost_price, p.resale_price, p.stock
-    ]);
+    const rowCount = response.data ? response.data.length : 0;
     
-    if (rows.length > 0) {
+    if (rowCount > 0) {
+      const rows = response.data.map(rowMapper);
       sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+      
+      const range = sheet.getRange(1, 1, rows.length + 1, headers.length);
+      range.createFilter();
+      
+      try {
+        range.applyRowBanding(SpreadsheetApp.BandingTheme.LIGHT_GREY);
+      } catch (e) { }
     }
     
-    // Format
     sheet.autoResizeColumns(1, headers.length);
-    
-    showToast(`Pulled ${response.total_records} products successfully!`, '✅ Done');
+    logInfo(`Fetched ${rowCount} ${entity} records.`);
     
   } catch (error) {
-    showToast(`Error: ${error.message}`, '❌ Error');
-    Logger.log('Pull Products Error: ' + error);
+    if (!silent) {
+      showCustomAlert('Sync Error', `Failed to pull ${entity}:\n${error.message}`, 'error');
+    }
+    logInfo(`Error pulling ${entity}: ${error.message}`);
+    Logger.log(`Pull ${entity} Error: ` + error);
+    throw error;
   }
 }
 
 /**
- * Pull inventory levels from Fulcrum.
+ * Format a sheet with standard Fulcrum styling.
  */
-function pullInventory() {
-  try {
-    showToast('Fetching inventory from Fulcrum...', '🔄 Syncing');
-    
-    const response = fetchFromFulcrum('/integrations/sheets/sync-pull', 'POST', {
-      entity: 'inventory'
-    });
-    
-    const config = getConfig();
-    const sheet = getOrCreateSheet(config.SHEETS.INVENTORY);
-    sheet.clear();
-    
-    const headers = ['Product ID', 'SKU', 'Name', 'Stock Quantity'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    
-    const rows = response.data.map(p => [p.product_id, p.sku, p.name, p.stock]);
-    
-    if (rows.length > 0) {
-      sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-    }
-    
-    sheet.autoResizeColumns(1, headers.length);
-    showToast(`Pulled inventory for ${response.total_records} products!`, '✅ Done');
-    
-  } catch (error) {
-    showToast(`Error: ${error.message}`, '❌ Error');
-    Logger.log('Pull Inventory Error: ' + error);
-  }
+function formatSheet(sheet, headers) {
+  const config = getConfig();
+  
+  sheet.setTabColor(config.COLORS.PRIMARY);
+  
+  const headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setValues([headers]);
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground(config.COLORS.PRIMARY);
+  headerRange.setFontColor(config.COLORS.HEADER_TEXT);
+  headerRange.setHorizontalAlignment('center');
+  
+  sheet.setFrozenRows(1);
 }
 
-/**
- * Pull suppliers from Fulcrum.
- */
-function pullSuppliers() {
-  try {
-    showToast('Fetching suppliers from Fulcrum...', '🔄 Syncing');
-    
-    const response = fetchFromFulcrum('/integrations/sheets/sync-pull', 'POST', {
-      entity: 'suppliers'
-    });
-    
-    const config = getConfig();
-    const sheet = getOrCreateSheet(config.SHEETS.SUPPLIERS);
-    sheet.clear();
-    
-    const headers = ['ID', 'Name', 'Email', 'Phone'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
-    
-    const rows = response.data.map(s => [s.id, s.name, s.email, s.phone]);
-    
-    if (rows.length > 0) {
-      sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+function cleanupDefaultSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet1 = ss.getSheetByName('Sheet1');
+  if (sheet1) {
+    if (ss.getSheets().length > 1 && sheet1.getLastRow() === 0 && sheet1.getLastColumn() === 0) {
+      ss.deleteSheet(sheet1);
     }
-    
-    sheet.autoResizeColumns(1, headers.length);
-    showToast(`Pulled ${response.total_records} suppliers!`, '✅ Done');
-    
-  } catch (error) {
-    showToast(`Error: ${error.message}`, '❌ Error');
-    Logger.log('Pull Suppliers Error: ' + error);
   }
 }
 
 // =============================================================================
-// PUSH OPERATIONS (Sheets -> Fulcrum)
+// PUSH OPERATIONS
 // =============================================================================
 
-/**
- * Push local changes back to Fulcrum.
- * Currently tracks changes to the Products sheet.
- */
 function pushChanges() {
   try {
-    showToast('Preparing to push changes...', '⬆️ Pushing');
-    
     const config = getConfig();
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.SHEETS.PRODUCTS);
+    
     if (!sheet) {
-      showToast('Products sheet not found. Pull products first.', '⚠️ Warning');
+      showCustomAlert('Warning', 'Products sheet not found. Pull products first.', 'info');
       return;
     }
     
-    // Get data (skip header row)
     const data = sheet.getDataRange().getValues();
-    if (data.length <= 1) {
-      showToast('No data to push', 'ℹ️ Info');
-      return;
-    }
+    if (data.length <= 1) return;
     
-    const headers = data[0];
     const changes = [];
     
-    // For now, we'll push all rows as potential changes
-    // A more sophisticated approach would track actual edits
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       const id = row[0];
+      if (!id) continue;
+      
       const costPrice = row[3];
       const resalePrice = row[4];
+      const name = row[2];
       
-      // Push cost price change
-      if (costPrice !== '') {
-        changes.push({
-          id: id,
-          field: 'cost_price',
-          new_value: costPrice
-        });
-      }
-      
-      // Push resale price change  
-      if (resalePrice !== '') {
-        changes.push({
-          id: id,
-          field: 'resale_price',
-          new_value: resalePrice
-        });
-      }
+      if (costPrice !== '') changes.push({ id: id, field: 'cost_price', new_value: costPrice });
+      if (resalePrice !== '') changes.push({ id: id, field: 'resale_price', new_value: resalePrice });
+      if (name !== '') changes.push({ id: id, field: 'name', new_value: name });
     }
     
     if (changes.length === 0) {
-      showToast('No changes detected to push', 'ℹ️ Info');
+      showCustomAlert('No Changes', 'No data found to push.', 'info');
       return;
     }
+    
+    const html = HtmlService.createHtmlOutput(`
+      <style>
+        body { font-family: -apple-system, sans-serif; padding: 15px; text-align: center; margin: 0; overflow: hidden; }
+        p { color: #555; }
+        .buttons { margin-top: 20px; }
+        button { padding: 8px 20px; margin: 0 5px; border-radius: 4px; cursor: pointer; border: none; }
+        .confirm { background: #1a73e8; color: white; }
+        .cancel { background: #f1f3f4; color: #333; }
+      </style>
+      <h3>⬆️ Push Changes</h3>
+      <p>Changes will be validated. Only edited values will be staged for approval.</p>
+      <div class="buttons">
+        <button class="cancel" onclick="google.script.host.close()">Cancel</button>
+        <button class="confirm" onclick="confirm()">Continue</button>
+      </div>
+      <script>
+        function confirm() {
+          google.script.run.withSuccessHandler(function() { google.script.host.close(); }).doPush(${JSON.stringify(changes)});
+        }
+      </script>
+    `).setWidth(380).setHeight(220);
+    SpreadsheetApp.getUi().showModalDialog(html, 'Confirm Push');
+    
+  } catch (error) {
+    showCustomAlert('Error', error.message, 'error');
+  }
+}
+
+function doPush(changes) {
+  try {
+    SpreadsheetApp.getActiveSpreadsheet().toast('Sending data...', '⬆️ Pushing');
+    logInfo(`Pushing ${changes.length} potential changes...`);
     
     const response = fetchFromFulcrum('/integrations/sheets/sync-push', 'POST', {
       entity: 'products',
@@ -321,15 +416,19 @@ function pushChanges() {
     });
     
     if (response.success) {
-      showToast(`Updated ${response.updated_count} records in Fulcrum!`, '✅ Done');
+      logInfo(`Push successful: ${response.message}`);
+      showCustomAlert('Success', `${response.message}`, 'success');
     } else {
-      showToast(`Partial success: ${response.updated_count} updated, ${response.errors.length} errors`, '⚠️ Warning');
-      Logger.log('Push Errors: ' + JSON.stringify(response.errors));
+      logInfo(`Push issues: ${response.errors.length} errors.`);
+      if (response.staged_count === 0 && response.errors.length === 0) {
+        showCustomAlert('Up to Date', 'No actual changes detected.\nValues match the database.', 'info');
+      } else {
+        showCustomAlert('Issues Found', `Errors: ${response.errors.length}\n${response.errors.slice(0, 3).join('\n')}`, 'error');
+      }
     }
-    
   } catch (error) {
-    showToast(`Error: ${error.message}`, '❌ Error');
-    Logger.log('Push Changes Error: ' + error);
+    logInfo('Push Failed: ' + error.message);
+    showCustomAlert('Push Failed', error.message, 'error');
   }
 }
 
@@ -337,88 +436,47 @@ function pushChanges() {
 // HELPER FUNCTIONS
 // =============================================================================
 
-/**
- * Make an authenticated request to the Fulcrum API.
- */
 function fetchFromFulcrum(endpoint, method = 'GET', payload = null) {
   const config = getConfig();
-  
-  if (!config.FULCRUM_API_KEY) {
-    throw new Error('API key not configured. Use "Setup Connection" from the Fulcrum menu.');
-  }
+  if (!config.FULCRUM_API_KEY) throw new Error('API key missing. Run Setup Connection.');
   
   const url = config.FULCRUM_API_URL + endpoint;
-  
   const options = {
     method: method,
-    headers: {
-      'X-API-Key': config.FULCRUM_API_KEY,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'X-API-Key': config.FULCRUM_API_KEY, 'Content-Type': 'application/json' },
     muteHttpExceptions: true
   };
   
-  if (payload) {
-    options.payload = JSON.stringify(payload);
-  }
+  if (payload) options.payload = JSON.stringify(payload);
   
   const response = UrlFetchApp.fetch(url, options);
   const code = response.getResponseCode();
   
-  if (code >= 400) {
-    throw new Error(`API Error ${code}: ${response.getContentText()}`);
-  }
+  if (code >= 400) throw new Error(`API Error ${code}: ${response.getContentText()}`);
   
   return JSON.parse(response.getContentText());
 }
 
-/**
- * Get or create a sheet with the given name.
- */
 function getOrCreateSheet(name) {
-  const config = getConfig();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(config.SHEETS[name] || name);
-  
-  if (!sheet) {
-    sheet = ss.insertSheet(config.SHEETS[name] || name);
-  }
-  
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) sheet = ss.insertSheet(name);
   return sheet;
 }
 
-/**
- * Show configuration dialog for API settings.
- */
-function showConfigDialog() {
-  const html = HtmlService.createHtmlOutput(`
-    <h3>Fulcrum Configuration</h3>
-    <p>To configure your API connection:</p>
-    <ol>
-      <li>Open the Apps Script editor (Extensions > Apps Script)</li>
-      <li>Update the CONFIG object at the top of Code.gs</li>
-      <li>Set your FULCRUM_API_URL and FULCRUM_API_KEY</li>
-      <li>Save and refresh</li>
-    </ol>
-    <p><strong>Current API URL:</strong> ${CONFIG.FULCRUM_API_URL}</p>
-  `)
-    .setWidth(400)
-    .setHeight(250);
-  
-  SpreadsheetApp.getUi().showModalDialog(html, 'Fulcrum Settings');
-}
-
-/**
- * Show sync log.
- */
 function showSyncLog() {
-  const logs = Logger.getLog();
+  const logs = getLogHistory();
   const html = HtmlService.createHtmlOutput(`
-    <h3>Sync Log</h3>
-    <pre style="font-size: 11px; max-height: 300px; overflow: auto;">${logs || 'No logs yet.'}</pre>
+    <div style="font-family: monospace; font-size: 11px; white-space: pre-wrap; color: #333;">${logs}</div>
+    <div style="margin-top: 12px; text-align: right;">
+        <button onclick="clearLogs()" style="padding: 4px 8px; cursor: pointer;">Clear Log</button>
+    </div>
+    <script>
+      function clearLogs() {
+        google.script.run.withSuccessHandler(function() { google.script.host.close(); }).clearLogs();
+      }
+    </script>
   `)
-    .setWidth(500)
-    .setHeight(350);
-  
-  SpreadsheetApp.getUi().showModalDialog(html, 'Sync Log');
+    .setWidth(500).setHeight(300);
+  SpreadsheetApp.getUi().showModalDialog(html, 'Sync Log History');
 }

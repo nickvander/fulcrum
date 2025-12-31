@@ -147,6 +147,52 @@
             </div>
           </div>
         </div>
+
+        <!-- Pending Sync Changes -->
+        <div class="settings-section">
+          <h2 class="section-title">Pending Sync Changes</h2>
+          <p class="section-desc">Review changes from Google Sheets or other external sources before applying.</p>
+          <div class="settings-card">
+            <div class="pending-sync-row">
+              <div class="pending-info">
+                <mat-icon>sync_alt</mat-icon>
+                <span class="pending-label">Changes awaiting approval</span>
+                <span class="pending-badge">
+                  {{ pendingBatchCount }} {{ pendingBatchCount === 1 ? 'Operation' : 'Operations' }}
+                  ({{ pendingSyncCount }} changes)
+                </span>
+                }
+              </div>
+              @if (pendingSyncCount > 0) {
+              <button mat-flat-button color="primary" (click)="openPendingSyncDialog()">
+                <mat-icon>rate_review</mat-icon>
+                Review
+              </button>
+              } @else {
+              <span class="empty-hint">No pending changes</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Change Log -->
+        <div class="settings-section">
+          <h2 class="section-title">Change Log</h2>
+          <p class="section-desc">View history of all data changes, including whether they came from Sheets or direct
+            edits.</p>
+          <div class="settings-card">
+            <div class="change-log-row">
+              <div class="log-info">
+                <mat-icon>history</mat-icon>
+                <span>Entity change audit trail</span>
+              </div>
+              <button mat-stroked-button (click)="openChangeLogDialog()">
+                <mat-icon>visibility</mat-icon>
+                View Log
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </mat-tab>
 

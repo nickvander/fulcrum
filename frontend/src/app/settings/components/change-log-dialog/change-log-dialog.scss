@@ -1,0 +1,217 @@
+.change-log-dialog {
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: var(--primary-dark, #2E3A59);
+
+        mat-icon {
+            color: var(--accent, #00BFA5);
+        }
+    }
+
+    mat-dialog-content {
+        max-height: 70vh;
+        padding: 16px 24px;
+    }
+
+    .filters-row {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+
+        .filter-field {
+            width: 200px;
+        }
+    }
+
+    .loading-state,
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px;
+        text-align: center;
+
+        mat-icon {
+            font-size: 48px;
+            width: 48px;
+            height: 48px;
+            color: #bbb;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            margin: 0 0 8px;
+            color: var(--primary-dark, #2E3A59);
+        }
+
+        p {
+            margin: 0;
+            color: #666;
+        }
+    }
+
+    .log-table {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table-header,
+    .table-row {
+        display: grid;
+        grid-template-columns: 100px 2fr 1fr 2fr 100px 150px;
+        gap: 12px;
+        padding: 12px 16px;
+        align-items: center;
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-weight: 600;
+        color: #666;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table-row {
+        border-top: 1px solid #f0f0f0;
+        font-size: 13px;
+
+        &:hover {
+            background: #fafafa;
+        }
+    }
+
+    .col-date {
+        color: #666;
+    }
+
+    .col-entity {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .entity-name {
+            font-weight: 500;
+            color: var(--primary-dark, #2E3A59);
+        }
+
+        .entity-type {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+        }
+    }
+
+    .col-field {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #666;
+
+        mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .col-change {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .old-val {
+            color: #d32f2f;
+            text-decoration: line-through;
+        }
+
+        .arrow {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+            color: #888;
+        }
+
+        .new-val {
+            color: #2e7d32;
+            font-weight: 500;
+        }
+    }
+
+    .col-source {
+        .source-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+
+            &.badge-sheets {
+                background: #e3f2fd;
+                color: #1976d2;
+            }
+
+            &.badge-direct {
+                background: #e8f5e9;
+                color: #2e7d32;
+            }
+
+            &.badge-api {
+                background: #fff3e0;
+                color: #e65100;
+            }
+        }
+    }
+
+    .col-user {
+        color: #666;
+        font-size: 12px;
+    }
+
+    mat-paginator {
+        margin-top: 16px;
+    }
+
+    mat-dialog-actions {
+        padding: 12px 24px;
+        border-top: 1px solid #e0e0e0;
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 900px) {
+    .change-log-dialog {
+        .table-header {
+            display: none;
+        }
+
+        .table-row {
+            grid-template-columns: 1fr;
+            gap: 4px;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+
+            .col-date {
+                font-size: 11px;
+            }
+
+            .col-entity {
+                flex-direction: row;
+                gap: 8px;
+                align-items: baseline;
+            }
+
+            .col-source {
+                margin-top: 8px;
+            }
+        }
+    }
+}

@@ -179,6 +179,7 @@ def update_product(
     db: Session = Depends(get_db),
     product_id: int,
     product_in: product_schema.ProductUpdate,
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Update a product.
@@ -189,7 +190,39 @@ def update_product(
             status_code=404,
             detail="The product with this ID does not exist in the system.",
         )
+    
+    # Capture old values for change logging
+    old_values = {
+        'name': product.name,
+        'cost_price': product.cost_price,
+        'default_resale_price': product.default_resale_price,
+        'sku': product.sku,
+        'description': product.description,
+        'category': product.category,
+        'brand': product.brand,
+        'weight': product.weight,
+        'dimensions': product.dimensions,
+    }
+    
+    # Get new values from update payload
+    update_data = product_in.model_dump(exclude_unset=True, exclude={'bundle_components'})
+    
+    # Perform the update
     product = crud_product.product.update(db, db_obj=product, obj_in=product_in)
+    
+    # Log changes with source='direct_edit'
+    from src.services.change_log import log_product_changes
+    log_product_changes(
+        db,
+        product_id=product_id,
+        product_name=product.name,
+        old_values=old_values,
+        new_values=update_data,
+        source="direct_edit",
+        changed_by_id=current_user.id,
+    )
+    db.commit()
+    
     generate_product_embedding.delay(product.id)
     return product
 

@@ -99,5 +99,96 @@ export class IntegrationsService {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     }
+
+    // ==========================================================================
+    // Pending Sync Operations
+    // ==========================================================================
+
+    getPendingSyncCount(): Observable<{ count: number; batch_count: number }> {
+        return this.http.get<{ count: number; batch_count: number }>(`${this.apiUrl}/sync/pending/count`);
+    }
+
+    getPendingBatches(): Observable<PendingBatchListResponse> {
+        return this.http.get<PendingBatchListResponse>(`${this.apiUrl}/sync/pending`);
+    }
+
+    approveSyncChanges(batchId: number, changeIds: number[]): Observable<SyncApproveResponse> {
+        return this.http.post<SyncApproveResponse>(`${this.apiUrl}/sync/approve`, {
+            batch_id: batchId,
+            change_ids: changeIds,
+            action: 'approve'
+        });
+    }
+
+    rejectSyncChanges(batchId: number, changeIds: number[]): Observable<SyncApproveResponse> {
+        return this.http.post<SyncApproveResponse>(`${this.apiUrl}/sync/approve`, {
+            batch_id: batchId,
+            change_ids: changeIds,
+            action: 'reject'
+        });
+    }
+
+    // ==========================================================================
+    // Change Logs
+    // ==========================================================================
+
+    getChangeLogs(params: { entity_type?: string; entity_id?: number; source?: string; limit?: number; offset?: number } = {}): Observable<ChangeLogResponse> {
+        return this.http.get<ChangeLogResponse>(`${this.apiUrl}/change-logs`, { params: params as any });
+    }
 }
 
+// ==========================================================================
+// Additional Interfaces
+// ==========================================================================
+
+export interface PendingChangeInfo {
+    id: number;
+    entity_id: number;
+    entity_name: string | null;
+    entity_sku: string | null;
+    field: string;
+    old_value: string | null;
+    new_value: string | null;
+    status: string;
+}
+
+export interface PendingBatchInfo {
+    id: number;
+    source: string;
+    status: string;
+    total_changes: number;
+    approved_count: number;
+    rejected_count: number;
+    created_at: string;
+    changes: PendingChangeInfo[];
+}
+
+export interface PendingBatchListResponse {
+    batches: PendingBatchInfo[];
+    total_pending: number;
+}
+
+export interface SyncApproveResponse {
+    success: boolean;
+    applied_count: number;
+    message: string;
+    errors: string[];
+}
+
+export interface ChangeLogEntry {
+    id: number;
+    entity_type: string;
+    entity_id: number;
+    entity_name: string | null;
+    field: string;
+    old_value: string | null;
+    new_value: string | null;
+    source: string;
+    changed_by_email: string | null;
+    changed_at: string;
+}
+
+export interface ChangeLogResponse {
+    entries: ChangeLogEntry[];
+    total: number;
+}

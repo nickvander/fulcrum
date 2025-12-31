@@ -386,6 +386,66 @@
   }
 }
 
+// Pending Sync Section
+.pending-sync-row,
+.change-log-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+
+  .pending-info,
+  .log-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      color: var(--accent-color, #00BFA5);
+    }
+
+    .pending-label {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+  }
+
+  .pending-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 12px;
+    background: #ff5252;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .empty-hint {
+    color: var(--text-hint);
+    font-size: 13px;
+  }
+
+  button {
+    mat-icon {
+      margin-right: 4px;
+    }
+  }
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
 // Coming Soon Placeholder
 .coming-soon {
   display: flex;

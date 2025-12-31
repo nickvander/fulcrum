@@ -11,11 +11,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SettingsService } from '../../../core/services/settings.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { CustomFieldList } from '../custom-field-list/custom-field-list';
 import { environment } from '../../../../environments/environment';
 import { IntegrationsService, ApiKeyInfo, ApiKeyCreateResponse } from '../../services/integrations.service';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-settings',
@@ -34,6 +36,7 @@ import { IntegrationsService, ApiKeyInfo, ApiKeyCreateResponse } from '../../ser
     MatIconModule,
     MatTooltipModule,
     MatTabsModule,
+    MatDialogModule,
   ],
 })
 export class Settings implements OnInit {
@@ -52,6 +55,10 @@ export class Settings implements OnInit {
   newKeyName = '';
   newKeyResult: ApiKeyCreateResponse | null = null;
 
+  // Pending Sync
+  pendingSyncCount = 0;
+  pendingBatchCount = 0;
+
   private readonly apiUrl = environment.apiUrl;
 
   constructor(
@@ -59,7 +66,8 @@ export class Settings implements OnInit {
     private http: HttpClient,
     private settingsService: SettingsService,
     private notificationService: NotificationService,
-    private integrationsService: IntegrationsService
+    private integrationsService: IntegrationsService,
+    private dialog: MatDialog
   ) {
     this.settingsForm = this.fb.group({
       ai_provider: ['', Validators.required],
@@ -99,6 +107,9 @@ export class Settings implements OnInit {
 
     // Load API Keys
     this.loadApiKeys();
+
+    // Load pending sync count
+    this.loadPendingSyncCount();
   }
 
   onSubmit(): void {
@@ -221,18 +232,25 @@ export class Settings implements OnInit {
   }
 
   revokeKey(keyId: number): void {
-    if (!confirm('Are you sure you want to revoke this API key? This cannot be undone.')) {
-      return;
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Revoke API Key',
+        message: 'Are you sure you want to revoke this API key? This cannot be undone.'
+      } as ConfirmationDialogData
+    });
 
-    this.integrationsService.revokeApiKey(keyId).subscribe({
-      next: () => {
-        this.notificationService.showSuccess('API key revoked');
-        this.loadApiKeys();
-      },
-      error: (err) => {
-        this.notificationService.showError('Failed to revoke API key');
-      }
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.integrationsService.revokeApiKey(keyId).subscribe({
+        next: () => {
+          this.notificationService.showSuccess('API key revoked');
+          this.loadApiKeys();
+        },
+        error: (err) => {
+          this.notificationService.showError('Failed to revoke API key');
+        }
+      });
     });
   }
 
@@ -261,12 +279,20 @@ export class Settings implements OnInit {
   }
 
   deleteRevokedKey(keyId: number): void {
-    if (!confirm('Permanently delete this revoked key from history?')) {
-      return;
-    }
-    // For now, just remove from local list (backend can add permanent delete endpoint later)
-    this.apiKeys = this.apiKeys.filter(k => k.id !== keyId);
-    this.notificationService.showSuccess('Key removed from list');
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Revoked Key',
+        message: 'Permanently delete this revoked key from history?'
+      } as ConfirmationDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) return;
+
+      // For now, just remove from local list (backend can add permanent delete endpoint later)
+      this.apiKeys = this.apiKeys.filter(k => k.id !== keyId);
+      this.notificationService.showSuccess('Key removed from list');
+    });
   }
 
   copyToClipboard(text: string): void {
@@ -291,6 +317,49 @@ export class Settings implements OnInit {
         console.error('Export failed', err);
         this.notificationService.showError('Export failed. Please try again.');
       }
+    });
+  }
+
+  // ===============================
+  // Pending Sync Methods
+  // ===============================
+
+  loadPendingSyncCount(): void {
+    this.integrationsService.getPendingSyncCount().subscribe({
+      next: (response) => {
+        this.pendingSyncCount = response.count;
+        this.pendingBatchCount = response.batch_count;
+      },
+      error: (err) => {
+        console.error('Failed to load pending sync count', err);
+      }
+    });
+  }
+
+  openPendingSyncDialog(): void {
+    import('../pending-sync-dialog/pending-sync-dialog').then(m => {
+      const dialogRef = this.dialog.open(m.PendingSyncDialog, {
+        width: '90vw',
+        maxWidth: '900px',
+        maxHeight: '90vh',
+        panelClass: 'pending-sync-dialog'
+      });
+
+      dialogRef.afterClosed().subscribe(() => {
+        // Refresh count after dialog closes
+        this.loadPendingSyncCount();
+      });
+    });
+  }
+
+  openChangeLogDialog(): void {
+    import('../change-log-dialog/change-log-dialog').then(m => {
+      this.dialog.open(m.ChangeLogDialog, {
+        width: '90vw',
+        maxWidth: '1000px',
+        maxHeight: '90vh',
+        panelClass: 'change-log-dialog'
+      });
     });
   }
 }

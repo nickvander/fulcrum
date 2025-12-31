@@ -20,6 +20,7 @@ import {
   ConnectorCreate,
   EMAIL_PROVIDER_PRESETS
 } from '../../services/marketing.service';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-connector-settings',
@@ -652,17 +653,26 @@ export class ConnectorSettingsComponent implements OnInit {
   }
 
   deleteConnector(connector: MarketingConnector): void {
-    if (confirm(`Delete "${connector.name}"?`)) {
-      this.marketingService.deleteConnector(connector.id).subscribe({
-        next: () => {
-          this.connectors = this.connectors.filter(c => c.id !== connector.id);
-          this.snackBar.open('Connector deleted', 'Close', { duration: 2000 });
-        },
-        error: (err) => {
-          console.error('Failed to delete connector', err);
-          this.snackBar.open('Failed to delete connector', 'Close', { duration: 3000 });
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Delete Connector',
+        message: `Delete "${connector.name}"?`
+      } as ConfirmationDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.marketingService.deleteConnector(connector.id).subscribe({
+          next: () => {
+            this.connectors = this.connectors.filter(c => c.id !== connector.id);
+            this.snackBar.open('Connector deleted', 'Close', { duration: 2000 });
+          },
+          error: (err) => {
+            console.error('Failed to delete connector', err);
+            this.snackBar.open('Failed to delete connector', 'Close', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 }
