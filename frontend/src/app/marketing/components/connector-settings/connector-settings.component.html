@@ -1,0 +1,219 @@
+<div class="connector-settings-container">
+    <div class="page-header">
+        <div class="header-content">
+            <button mat-icon-button routerLink="/marketing">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+            <div>
+                <h1>Marketing Connectors</h1>
+                <p class="subtitle">Connect your email, social, and ad platforms</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connector Categories -->
+    <div class="connector-categories">
+        <!-- Email Connectors -->
+        <mat-card class="category-card">
+            <mat-card-header>
+                <mat-icon mat-card-avatar>email</mat-icon>
+                <mat-card-title>Email Marketing</mat-card-title>
+                <mat-card-subtitle>Send newsletters and promotional emails</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="provider-grid">
+                    <div class="provider-option" *ngFor="let provider of emailProviders"
+                        (click)="openEmailSetup(provider.key)">
+                        <div class="provider-icon" [ngClass]="provider.key">
+                            <mat-icon>{{ provider.icon }}</mat-icon>
+                        </div>
+                        <span>{{ provider.name }}</span>
+                        <mat-chip *ngIf="hasConnector('smtp', provider.key)" color="primary" selected>
+                            Connected
+                        </mat-chip>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Social Connectors -->
+        <mat-card class="category-card">
+            <mat-card-header>
+                <mat-icon mat-card-avatar>share</mat-icon>
+                <mat-card-title>Social Media</mat-card-title>
+                <mat-card-subtitle>Post to Instagram, Facebook, TikTok, and more</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="provider-grid">
+                    <div class="provider-option" *ngFor="let provider of socialProviders"
+                        (click)="openSocialSetup(provider.key)">
+                        <div class="provider-icon" [ngClass]="provider.key">
+                            <mat-icon>{{ provider.icon }}</mat-icon>
+                        </div>
+                        <span>{{ provider.name }}</span>
+                        <mat-chip *ngIf="hasConnector(provider.key)" color="primary" selected>
+                            Connected
+                        </mat-chip>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Ad Connectors -->
+        <mat-card class="category-card">
+            <mat-card-header>
+                <mat-icon mat-card-avatar>trending_up</mat-icon>
+                <mat-card-title>Paid Advertising</mat-card-title>
+                <mat-card-subtitle>Connect Google Ads, Meta Ads, and more</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+                <div class="provider-grid">
+                    <div class="provider-option coming-soon" *ngFor="let provider of adProviders">
+                        <div class="provider-icon" [ngClass]="provider.key">
+                            <mat-icon>{{ provider.icon }}</mat-icon>
+                        </div>
+                        <span>{{ provider.name }}</span>
+                        <mat-chip>Coming Soon</mat-chip>
+                    </div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Active Connectors -->
+    <mat-card class="active-connectors-card" *ngIf="connectors.length > 0">
+        <mat-card-header>
+            <mat-card-title>Active Connectors</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <div class="connector-list">
+                <div class="connector-item" *ngFor="let connector of connectors">
+                    <div class="connector-info">
+                        <mat-icon>{{ getConnectorIcon(connector.connector_type) }}</mat-icon>
+                        <div>
+                            <strong>{{ connector.name }}</strong>
+                            <small>{{ connector.connector_type | titlecase }} • {{ connector.channel_type | titlecase
+                                }}</small>
+                        </div>
+                    </div>
+                    <div class="connector-actions">
+                        <mat-slide-toggle [checked]="connector.is_active"
+                            (change)="toggleConnector(connector, $event.checked)">
+                        </mat-slide-toggle>
+                        <button mat-icon-button (click)="testConnector(connector)"
+                            [disabled]="testing === connector.id">
+                            <mat-spinner diameter="20" *ngIf="testing === connector.id"></mat-spinner>
+                            <mat-icon *ngIf="testing !== connector.id">sync</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteConnector(connector)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Email Setup Dialog -->
+    <div class="setup-overlay" *ngIf="showEmailSetup" (click)="closeEmailSetup()">
+        <mat-card class="setup-dialog" (click)="$event.stopPropagation()">
+            <mat-card-header>
+                <mat-card-title>Set Up Email Marketing</mat-card-title>
+                <button mat-icon-button (click)="closeEmailSetup()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </mat-card-header>
+            <mat-card-content>
+                <form [formGroup]="emailForm">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Email Provider</mat-label>
+                        <mat-select formControlName="provider" (selectionChange)="onProviderChange($event.value)">
+                            <mat-option value="gmail">Gmail</mat-option>
+                            <mat-option value="outlook">Outlook</mat-option>
+                            <mat-option value="yahoo">Yahoo</mat-option>
+                            <mat-option value="custom">Custom SMTP</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <p class="help-text" *ngIf="selectedProvider?.help_text">
+                        {{ selectedProvider.help_text }}
+                    </p>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Connection Name</mat-label>
+                        <input matInput formControlName="name" placeholder="e.g., My Gmail">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Email Address</mat-label>
+                        <input matInput formControlName="username" type="email" placeholder="you@gmail.com">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>App Password</mat-label>
+                        <input matInput formControlName="password" type="password" placeholder="••••••••">
+                        <mat-hint>Use an app-specific password, not your regular password</mat-hint>
+                    </mat-form-field>
+
+                    <!-- Custom SMTP fields -->
+                    <div *ngIf="selectedProviderKey === 'custom'" class="custom-smtp-fields">
+                        <mat-form-field appearance="outline">
+                            <mat-label>SMTP Host</mat-label>
+                            <input matInput formControlName="host" placeholder="smtp.example.com">
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Port</mat-label>
+                            <input matInput formControlName="port" type="number" placeholder="587">
+                        </mat-form-field>
+                    </div>
+                </form>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-stroked-button (click)="closeEmailSetup()">Cancel</button>
+                <button mat-raised-button color="primary" (click)="saveEmailConnector()"
+                    [disabled]="emailForm.invalid || saving">
+                    <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+                    <span *ngIf="!saving">Connect</span>
+                </button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+
+    <!-- Social Setup Dialog -->
+    <div class="setup-overlay" *ngIf="showSocialSetup" (click)="closeSocialSetup()">
+        <mat-card class="setup-dialog" (click)="$event.stopPropagation()">
+            <mat-card-header>
+                <mat-card-title>Set Up {{ selectedProviderKey | titlecase }}</mat-card-title>
+                <button mat-icon-button (click)="closeSocialSetup()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </mat-card-header>
+            <mat-card-content>
+                <p class="help-text">
+                    Enter your access token or API key to connect your account.
+                </p>
+
+                <form [formGroup]="socialForm">
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Connection Name</mat-label>
+                        <input matInput formControlName="name" placeholder="e.g., Brand Instagram">
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Access Token / API Key</mat-label>
+                        <input matInput formControlName="api_key" type="password" placeholder="••••••••">
+                    </mat-form-field>
+                </form>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-stroked-button (click)="closeSocialSetup()">Cancel</button>
+                <button mat-raised-button color="primary" (click)="saveSocialConnector()"
+                    [disabled]="socialForm.invalid || saving">
+                    <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+                    <span *ngIf="!saving">Connect</span>
+                </button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>

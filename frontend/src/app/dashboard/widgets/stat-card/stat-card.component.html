@@ -1,0 +1,8 @@
+<div class="stat-card" [class.gradient-primary]="colorType === 'primary'"
+    [class.gradient-accent]="colorType === 'accent'" [class.gradient-success]="colorType === 'success'"
+    [class.gradient-warn]="colorType === 'warn'" [class.gradient-error]="colorType === 'error'" [routerLink]="link"
+    [matTooltip]="tooltip || ''">
+    <div class="kpi-value">{{ value }}</div>
+    <div class="kpi-label">{{ title }}</div>
+    <mat-icon class="kpi-icon">{{ icon }}</mat-icon>
+</div>

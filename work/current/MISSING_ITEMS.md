@@ -1,12 +1,7 @@
-# Missing Items & Known Issues
+# Missing Items
 
-## High Priority
-
-- [/] Frontend Cleanup & Standardization (Active)
-- [ ] (Phase 8) Marketplace Integration (Amazon SP-API)
-- [ ] (Phase 9) AI Content Generation
-
-## Backlog
-
-- [ ] Frontend: Add skeletal loading states
-- [ ] Backend: Improve test coverage for edge cases
+- Remaining components with inline templates/styles:
+    - inventory-health-widget
+    - campaign-wizard
+    - And others identified in initial scan.
+- Full coverage report.
