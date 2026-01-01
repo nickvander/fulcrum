@@ -1,0 +1,111 @@
+.status-container {
+    display: flex;
+    gap: 4px;
+}
+
+.status-container.simple-container {
+    gap: 6px;
+}
+
+.marketplace-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background-color: white;
+    position: relative;
+    cursor: help;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.marketplace-badge.simple-badge {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.mp-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.mp-logo.simple-logo {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+}
+
+.marketplace-icon {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+/* Specific badge colors */
+.marketplace-badge.badge-amz {
+    background-color: #FF9900 !important;
+    /* Amazon Orange */
+    border-color: #FF9900 !important;
+
+    .marketplace-icon {
+        color: white !important;
+    }
+}
+
+.status-dot {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #9e9e9e;
+    /* Default */
+    border: 1.5px solid white;
+}
+
+.status-active {
+    border-color: #a5d6a7;
+    background-color: #e8f5e9;
+
+    .status-dot {
+        background-color: #4caf50;
+    }
+}
+
+/* Simple active - just basic opacity/filter if needed, or rely on tooltips */
+.simple-badge.status-active {
+    background-color: transparent;
+    /* Maybe a subtle glow or just clean icon */
+}
+
+.status-error {
+    border-color: #ef9a9a;
+    background-color: #ffebee;
+
+    .status-dot {
+        background-color: #f44336;
+    }
+}
+
+.status-pending {
+    border-color: #ffcc80;
+    background-color: #fff3e0;
+
+    .status-dot {
+        background-color: #ff9800;
+    }
+}
+
+.no-listings {
+    color: #ccc;
+    font-size: 0.8rem;
+}

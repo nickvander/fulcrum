@@ -1,0 +1,38 @@
+<div class="product-dashboard px-4 pt-2 relative z-10">
+    <ng-container *ngIf="stats$ | async as stats">
+        <!-- KPI Cards Row - Marketing Style -->
+        <div class="kpi-cards">
+            <app-stat-card title="Products" [value]="stats.totalProducts" icon="inventory_2" colorType="primary"
+                link="/products">
+            </app-stat-card>
+
+            <app-stat-card title="Inventory Value"
+                [value]="(stats.totalInventoryValue | currency:'USD':'symbol':'1.0-0') ?? ''" icon="payments"
+                colorType="success" link="/products">
+            </app-stat-card>
+
+            <app-stat-card title="Low Stock" [value]="stats.lowStockCount" icon="warning" colorType="warn"
+                link="/products">
+            </app-stat-card>
+
+            <app-stat-card title="Stock Health" [value]="stats.stockHealthPercentage + '%'" icon="health_and_safety"
+                colorType="accent" link="/products">
+            </app-stat-card>
+        </div>
+
+        <div class="widgets-row">
+            <app-inventory-health-widget class="widget-lg" title="Low Stock Alerts" [products]="stats.lowStockProducts">
+            </app-inventory-health-widget>
+
+            <div class="placeholder-widget">
+                <div class="text-center">
+                    <div class="placeholder-icon">
+                        <mat-icon>bar_chart</mat-icon>
+                    </div>
+                    <p class="placeholder-title">Category Breakdown</p>
+                    <p class="placeholder-subtitle">Coming Soon</p>
+                </div>
+            </div>
+        </div>
+    </ng-container>
+</div>

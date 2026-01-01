@@ -1,0 +1,31 @@
+<div class="date-range-container">
+    <mat-button-toggle-group [value]="selectedPreset" (change)="onPresetChange($event.value)">
+        <mat-button-toggle *ngIf="showAllOption" value="all"
+            matTooltip="Show all records without date filter">All</mat-button-toggle>
+        <mat-button-toggle value="day" [matTooltip]="getTooltip('day')">Today</mat-button-toggle>
+        <mat-button-toggle value="week" [matTooltip]="getTooltip('week')">Week</mat-button-toggle>
+        <mat-button-toggle value="month" [matTooltip]="getTooltip('month')">Month</mat-button-toggle>
+        <mat-button-toggle value="3months" [matTooltip]="getTooltip('3months')">3 Mo</mat-button-toggle>
+        <mat-button-toggle value="6months" [matTooltip]="getTooltip('6months')">6 Mo</mat-button-toggle>
+        <mat-button-toggle value="year" [matTooltip]="getTooltip('year')">Year</mat-button-toggle>
+        <mat-button-toggle value="custom" matTooltip="Pick a custom date range">Custom</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    @if (selectedPreset === 'custom') {
+    <div class="custom-range">
+        <mat-form-field appearance="outline" class="date-field">
+            <mat-label>Start</mat-label>
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="customStart" (dateChange)="onCustomChange()">
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+        <span class="range-separator">to</span>
+        <mat-form-field appearance="outline" class="date-field">
+            <mat-label>End</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="customEnd" (dateChange)="onCustomChange()">
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+    </div>
+    }
+</div>
