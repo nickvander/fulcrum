@@ -1,0 +1,181 @@
+    .campaign-detail-container {
+        padding: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header-title h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .status-chip {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .status-chip.draft {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .status-chip.active {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .spacer {
+        flex: 1;
+    }
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #eee;
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-item .label {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .stat-item .value {
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .event-card {
+        padding: 16px;
+    }
+
+    .event-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .event-info {
+        flex: 1;
+    }
+
+    .event-info h4 {
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .secondary-text {
+        margin: 0;
+        color: #666;
+        font-size: 12px;
+    }
+
+    .event-img {
+        max-height: 100px;
+        margin-top: 8px;
+        border-radius: 4px;
+    }
+
+    .event-content {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #eee;
+    }
+
+    .product-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px;
+        border-radius: 8px;
+        text-decoration: none;
+        color: inherit;
+        background: #f9f9f9;
+        transition: background 0.2s;
+    }
+
+    .product-item:hover {
+        background: #eee;
+    }
+
+    .product-item.clickable {
+        cursor: pointer;
+    }
+
+    .product-item img {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+
+    .product-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-name {
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .product-sku {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .mb-4 {
+        margin-bottom: 24px;
+    }
+
+    .mb-2 {
+        margin-bottom: 12px;
+    }
+
+    .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 48px;
+    }
