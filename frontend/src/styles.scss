@@ -459,6 +459,45 @@ body {
                 color: var(--text-secondary) !important;
             }
         }
+
+        // Navigation buttons (first, prev, next, last)
+        .mat-mdc-paginator-navigation-first,
+        .mat-mdc-paginator-navigation-previous,
+        .mat-mdc-paginator-navigation-next,
+        .mat-mdc-paginator-navigation-last {
+            color: var(--text-main) !important;
+
+            .mat-mdc-button-persistent-ripple,
+            .mat-mdc-icon-button {
+                color: var(--text-main) !important;
+            }
+
+            mat-icon,
+            svg {
+                color: var(--text-main) !important;
+                fill: var(--text-main) !important;
+            }
+
+            &:disabled {
+                color: var(--text-secondary) !important;
+
+                mat-icon,
+                svg {
+                    color: var(--text-secondary) !important;
+                    fill: var(--text-secondary) !important;
+                }
+            }
+        }
+
+        // Page size label
+        .mat-mdc-paginator-page-size-label {
+            color: var(--text-secondary) !important;
+        }
+
+        // Range label ("1-25 of 100")
+        .mat-mdc-paginator-range-label {
+            color: var(--text-main) !important;
+        }
     }
 
     // Checkboxes

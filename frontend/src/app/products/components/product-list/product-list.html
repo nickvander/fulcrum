@@ -1,8 +1,13 @@
 <div class="product-list-wrapper h-full flex flex-col relative overflow-hidden">
   <!-- Top Dashboard Expansion Panel -->
 
+  <!-- Floating Infinite Scroll Toggle -->
+  <button mat-mini-fab class="infinite-scroll-fab" [class.active]="useInfiniteScroll" (click)="toggleInfiniteScroll()"
+    [matTooltip]="useInfiniteScroll ? 'Switch to Pagination' : 'Enable Infinite Scroll'">
+    <mat-icon>{{ useInfiniteScroll ? 'view_list' : 'all_inclusive' }}</mat-icon>
+  </button>
 
-  <div class="container flex-1 overflow-auto p-4 min-h-0">
+  <div #scrollContainer class="container flex-1 overflow-auto p-4 min-h-0" (scroll)="onContainerScroll($event)">
     <mat-progress-bar *ngIf="isReloading" mode="indeterminate"
       class="reloading-progress sticky top-0 z-50"></mat-progress-bar>
     <div class="header">
@@ -25,18 +30,6 @@
             <mat-icon>filter_list</mat-icon>
           </button>
         </div>
-
-        <!-- Settings Menu (Infinite Scroll) -->
-        <button mat-icon-button [matMenuTriggerFor]="viewMenu" class="settings-btn" matTooltip="View Settings">
-          <mat-icon>settings</mat-icon>
-        </button>
-
-        <mat-menu #viewMenu="matMenu">
-          <button mat-menu-item (click)="toggleInfiniteScroll()">
-            <mat-icon>{{ useInfiniteScroll ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
-            <span>Infinite Scroll</span>
-          </button>
-        </mat-menu>
 
         <mat-divider vertical style="height: 24px; margin: 0 4px;"></mat-divider>
 
@@ -370,12 +363,27 @@
     </div>
     }
 
-    @if (!useInfiniteScroll && paginatedProducts && paginatedProducts.totalPages >= 1) {
-    <!-- Standard Material Paginator -->
-    <mat-paginator [length]="paginatedProducts.totalItems" [pageSize]="paginatedProducts.pageSize"
-      [pageIndex]="paginatedProducts.currentPage - 1" [pageSizeOptions]="[5, 10, 25, 50, 100]"
-      (page)="handlePageEvent($event)" showFirstLastButtons aria-label="Select page">
-    </mat-paginator>
+    <!-- Pagination Area -->
+    <div class="pagination-area" *ngIf="!useInfiniteScroll">
+      @if (paginatedProducts && paginatedProducts.totalPages >= 1) {
+      <!-- Standard Material Paginator -->
+      <mat-paginator [length]="paginatedProducts.totalItems" [pageSize]="paginatedProducts.pageSize"
+        [pageIndex]="paginatedProducts.currentPage - 1" [pageSizeOptions]="[10, 25, 50, 100]"
+        (page)="handlePageEvent($event)" showFirstLastButtons aria-label="Select page">
+      </mat-paginator>
+      }
+    </div>
+
+    <!-- Infinite Scroll Status Bar -->
+    @if (useInfiniteScroll) {
+    <div class="infinite-scroll-status">
+      <span class="status-text">
+        Showing {{ products.length }} of {{ paginatedProducts?.totalItems || 0 }} products
+      </span>
+      @if (hasMoreProducts && !isLoading) {
+      <span class="hint-text">Scroll for more</span>
+      }
+    </div>
     }
 
     <!-- Loading spinner for infinite scroll -->
@@ -388,8 +396,7 @@
 
     <!-- Infinite scroll trigger -->
     @if (useInfiniteScroll) {
-    <div appInfiniteScroll (scrolled)="onWindowScroll()" class="infinite-scroll-trigger">
-    </div>
+    <div class="infinite-scroll-trigger"></div>
     }
   </div>
 </div>

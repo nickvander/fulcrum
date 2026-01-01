@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, Output, EventEmitter, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Output, EventEmitter, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, ElementRef, HostListener } from '@angular/core';
 import { ProductService } from '../../services/product';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
@@ -23,7 +23,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
-import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component'; // Managed import
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
@@ -66,12 +67,10 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     MatMenuModule,
     MatDividerModule,
     MatChipsModule,
-    InfiniteScrollDirective,
-    MatChipsModule,
-    InfiniteScrollDirective,
     MatTableModule,
     MatSortModule,
     MatButtonToggleModule,
+    MatSlideToggleModule,
     MarketplaceStatusComponent,
     MatFormFieldModule,
     MatSelectModule,
@@ -81,6 +80,12 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
   ],
 })
 export class ProductList implements OnInit, OnDestroy, AfterViewInit {
+  // HostListener for window scroll - primary scroll detection
+  @HostListener('window:scroll')
+  onWindowScrollEvent(): void {
+    this.handleWindowScroll();
+  }
+
   // @ViewChild(MatSort) handled via setter below
 
   products: Product[] = [];
@@ -99,7 +104,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
   selectedProducts = new Set<number>(); // Store IDs of selected products
   currentPage: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 25;
   isLoading: boolean = false;
   isReloading: boolean = false;
   activeFilters: any = {};
@@ -108,6 +113,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   useInfiniteScroll: boolean = false;
   allProducts: Product[] = [];
   hasMoreProducts: boolean = true;
+
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLElement>;
 
   private destroy$ = new Subject<void>();
   private filterSubject = new Subject<void>();
@@ -190,7 +197,48 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   // ngAfterViewInit is no longer strictly needed for sort if we use the setter, 
   // but we keep the method signature to satisfy the interface if we keep the implements.
   ngAfterViewInit(): void {
-    // Paginator logic if separate
+    // Set up native scroll listener for infinite scroll
+    if (this.scrollContainer?.nativeElement) {
+      this.scrollContainer.nativeElement.addEventListener('scroll', this.handleScroll.bind(this));
+    }
+
+    // Add document-level scroll listener with capture phase for nested scroll containers
+    document.addEventListener('scroll', (event) => {
+      this.handleScrollFromDocument(event);
+    }, true); // true = capture phase
+  }
+
+  private handleScrollFromDocument(event: Event): void {
+    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    if (!target || target === document.documentElement) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = target;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+    if (distanceFromBottom <= 200) {
+      this.checkAndLoadMore();
+    }
+  }
+
+  private handleScroll(): void {
+    const el = this.scrollContainer?.nativeElement;
+    if (!el) return;
+
+    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+    // Load more when within 200px of bottom
+    if (distanceFromBottom <= 200) {
+      this.checkAndLoadMore();
+    }
   }
 
   ngOnDestroy(): void {
@@ -664,15 +712,19 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
 
   toggleInfiniteScroll(): void {
+    // Flip the value since we're using (click)
     this.useInfiniteScroll = !this.useInfiniteScroll;
 
     if (this.useInfiniteScroll) {
-      // Initialize for infinite scroll
+      // Initialize for infinite scroll - reset to first page
+      this.allProducts = [];
+      this.hasMoreProducts = true;
       this.loadProducts(1, this.pageSize);
     } else {
       // Reset to regular pagination
       this.loadProducts(1, this.pageSize);
     }
+    this.cdr.markForCheck();
   }
 
   toggleDashboard(): void {
@@ -680,17 +732,58 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onWindowScroll(): void {
-    if (this.useInfiniteScroll && this.hasMoreProducts && !this.isLoading) {
-      // Load next page
-      const nextPage = this.paginatedProducts ? this.paginatedProducts.currentPage + 1 : 2;
-      if (nextPage <= (this.paginatedProducts?.totalPages || 1)) {
-        this.loadMoreProducts(nextPage, this.pageSize);
-      }
+    this.checkAndLoadMore();
+  }
+
+  private handleWindowScroll(): void {
+    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+      console.log('[InfiniteScroll] Window scroll blocked:', {
+        useInfiniteScroll: this.useInfiniteScroll,
+        hasMoreProducts: this.hasMoreProducts,
+        isLoading: this.isLoading
+      });
+      return;
+    }
+
+    const pos = window.innerHeight + window.scrollY;
+    const max = document.documentElement.scrollHeight;
+    const distanceFromBottom = max - pos;
+
+    // Load more when within 200px of bottom
+    if (distanceFromBottom <= 200) {
+      this.checkAndLoadMore();
+    }
+  }
+
+  onContainerScroll(event: Event): void {
+    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+      return;
+    }
+
+    const container = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+
+    // Load more when within 200px of bottom
+    if (distanceFromBottom <= 200) {
+      this.checkAndLoadMore();
+    }
+  }
+
+  private checkAndLoadMore(): void {
+    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+      return;
+    }
+    // Load next page
+    const nextPage = this.paginatedProducts ? this.paginatedProducts.currentPage + 1 : 2;
+    if (nextPage <= (this.paginatedProducts?.totalPages || 1)) {
+      this.loadMoreProducts(nextPage, this.pageSize);
     }
   }
 
   private loadMoreProducts(page: number, size: number): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
 
     // For infinite scroll, we'll need to get more products and append them
     const searchActive = Object.keys(this.activeFilters).some(key =>
@@ -709,10 +802,12 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
             this.hasMoreProducts = result.currentPage < result.totalPages;
             this.isLoading = false; this.isReloading = false;
             this.updateDataSource();
+            this.cdr.markForCheck();
           },
           error: (error) => {
             console.error('Error loading more products:', error);
             this.isLoading = false; this.isReloading = false;
+            this.cdr.markForCheck();
           }
         });
     } else {
@@ -726,10 +821,12 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
             this.hasMoreProducts = result.currentPage < result.totalPages;
             this.isLoading = false; this.isReloading = false;
             this.updateDataSource();
+            this.cdr.markForCheck();
           },
           error: (error) => {
             console.error('Error loading more products:', error);
             this.isLoading = false; this.isReloading = false;
+            this.cdr.markForCheck();
           }
         });
     }

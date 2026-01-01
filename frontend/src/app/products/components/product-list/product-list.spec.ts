@@ -6,7 +6,6 @@ import { BatchActionToolbarComponent } from '../batch-action-toolbar/batch-actio
 import { Directive } from '@angular/core';
 import { PaginationComponent } from '../pagination/pagination';
 import { ProductFiltersComponent } from '../product-filters/product-filters';
-import { InfiniteScrollDirective } from '../../directives/infinite-scroll.directive';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -218,7 +217,7 @@ describe.skip('ProductList', () => {
                         BatchActionToolbarComponent,
                         PaginationComponent,
                         ProductFiltersComponent,
-                        InfiniteScrollDirective,
+                        InfiniteScrollStubDirective,
                         MatButtonModule,
                         MatIconModule,
                         MatCardModule,
