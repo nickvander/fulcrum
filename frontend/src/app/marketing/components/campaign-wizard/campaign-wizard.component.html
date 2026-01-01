@@ -1,0 +1,244 @@
+<div class="wizard-container">
+    <div class="wizard-header">
+        <button mat-icon-button routerLink="/marketing">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1>{{ isEditMode ? 'Edit Campaign' : 'Create Campaign' }}</h1>
+    </div>
+
+    <mat-stepper #stepper linear class="campaign-stepper">
+        <!-- Step 1: Campaign Details -->
+        <mat-step [stepControl]="campaignForm">
+            <ng-template matStepLabel>Campaign Details</ng-template>
+            <form [formGroup]="campaignForm" class="step-content">
+                <mat-card class="form-card">
+                    <mat-card-content>
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Campaign Name</mat-label>
+                            <input matInput formControlName="name" placeholder="e.g., Summer Sale 2024">
+                            <mat-error *ngIf="campaignForm.get('name')?.hasError('required')">
+                                Name is required
+                            </mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Description</mat-label>
+                            <textarea matInput formControlName="description" rows="3"
+                                placeholder="Describe the purpose and goals of this campaign"></textarea>
+                        </mat-form-field>
+
+                        <div class="date-range">
+                            <mat-form-field appearance="outline">
+                                <mat-label>Start Date</mat-label>
+                                <input matInput [matDatepicker]="startPicker" formControlName="start_date">
+                                <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+                                <mat-datepicker #startPicker></mat-datepicker>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>End Date</mat-label>
+                                <input matInput [matDatepicker]="endPicker" formControlName="end_date">
+                                <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+                                <mat-datepicker #endPicker></mat-datepicker>
+                            </mat-form-field>
+                        </div>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Budget (Optional)</mat-label>
+                            <span matPrefix>$ </span>
+                            <input matInput type="number" formControlName="budget" placeholder="0.00">
+                        </mat-form-field>
+                    </mat-card-content>
+                </mat-card>
+
+                <div class="step-actions">
+                    <button mat-stroked-button routerLink="/marketing">Cancel</button>
+                    <button mat-raised-button color="primary" matStepperNext [disabled]="campaignForm.invalid">
+                        Next
+                        <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                </div>
+            </form>
+        </mat-step>
+
+        <!-- Step 2: Product Linking -->
+        <mat-step>
+            <ng-template matStepLabel>Link Products</ng-template>
+            <div class="step-content">
+                <mat-card class="form-card">
+                    <mat-card-content>
+                        <h3>Select Products</h3>
+                        <p class="help-text">Link products to this campaign to easily create content.</p>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Search Products</mat-label>
+                            <mat-chip-grid #chipGrid aria-label="Product selection">
+                                <mat-chip-row *ngFor="let product of selectedProducts"
+                                    (removed)="removeProduct(product)">
+                                    {{product.name}}
+                                    <button matChipRemove [attr.aria-label]="'remove ' + product.name">
+                                        <mat-icon>cancel</mat-icon>
+                                    </button>
+                                </mat-chip-row>
+                            </mat-chip-grid>
+                            <input placeholder="Search products..." #productInput [formControl]="productSearchCtrl"
+                                [matChipInputFor]="chipGrid" [matAutocomplete]="auto">
+                            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="productSelected($event)">
+                                <mat-option *ngFor="let product of filteredProducts$ | async" [value]="product">
+                                    <img [src]="product.primary_image?.image_path || ''" class="option-img"
+                                        onerror="this.style.display='none'">
+                                    <span>{{product.name}}</span>
+                                </mat-option>
+                            </mat-autocomplete>
+                        </mat-form-field>
+                    </mat-card-content>
+                </mat-card>
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-raised-button color="primary" matStepperNext>
+                        Next
+                        <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-step>
+
+        <!-- Step 2: Channel Selection -->
+        <mat-step>
+            <ng-template matStepLabel>Choose Channels</ng-template>
+            <div class="step-content">
+                <mat-card class="form-card">
+                    <mat-card-content>
+                        <h3>Select Marketing Channels</h3>
+                        <p class="help-text">Choose the channels you want to use for this campaign</p>
+
+                        <div class="channel-grid">
+                            <mat-card class="channel-card" [class.selected]="selectedChannels.includes('email')"
+                                (click)="toggleChannel('email')">
+                                <mat-icon>email</mat-icon>
+                                <span>Email</span>
+                                <small>Send newsletters & promos</small>
+                            </mat-card>
+
+                            <mat-card class="channel-card" [class.selected]="selectedChannels.includes('social')"
+                                (click)="toggleChannel('social')">
+                                <mat-icon>share</mat-icon>
+                                <span>Social Media</span>
+                                <small>Post to Instagram, Facebook, etc.</small>
+                            </mat-card>
+
+                            <mat-card class="channel-card" [class.selected]="selectedChannels.includes('paid_ad')"
+                                (click)="toggleChannel('paid_ad')">
+                                <mat-icon>trending_up</mat-icon>
+                                <span>Paid Ads</span>
+                                <small>Google Ads, Meta Ads</small>
+                            </mat-card>
+                        </div>
+
+                        <div class="connector-info" *ngIf="selectedChannels.length > 0">
+                            <h4>Connected Platforms</h4>
+                            <p *ngIf="connectors.length === 0" class="no-connectors">
+                                No connectors configured yet.
+                                <a routerLink="/marketing/connectors">Set up connectors</a>
+                            </p>
+                            <div class="connector-list" *ngIf="connectors.length > 0">
+                                <mat-chip *ngFor="let connector of getConnectorsForChannels()" color="primary">
+                                    {{ connector.name }}
+                                </mat-chip>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-raised-button color="primary" matStepperNext [disabled]="selectedChannels.length === 0">
+                        Next
+                        <mat-icon>arrow_forward</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </mat-step>
+
+        <!-- Step 3: Create Events -->
+        <mat-step>
+            <ng-template matStepLabel>Schedule Events</ng-template>
+            <div class="step-content">
+                <mat-card class="form-card">
+                    <mat-card-content>
+                        <div class="events-header">
+                            <h3>Campaign Events</h3>
+                            <button mat-stroked-button (click)="addEvent()">
+                                <mat-icon>add</mat-icon>
+                                Add Event
+                            </button>
+                        </div>
+
+                        <div class="events-list" *ngIf="events.length > 0">
+                            <mat-card class="event-card" *ngFor="let event of events; let i = index">
+                                <div class="event-header">
+                                    <div class="event-info">
+                                        <mat-icon>{{ getChannelIcon(event.channel_type) }}</mat-icon>
+                                        <span class="event-name">{{ event.name || 'Untitled Event' }}</span>
+                                    </div>
+                                    <button mat-icon-button (click)="removeEvent(i)">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                </div>
+                                <div class="event-form">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>Event Name</mat-label>
+                                        <input matInput [(ngModel)]="event.name" placeholder="e.g., Launch Email">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Channel</mat-label>
+                                        <mat-select [(ngModel)]="event.channel_type">
+                                            <mat-option *ngFor="let ch of selectedChannels" [value]="ch">
+                                                {{ ch | titlecase }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>Scheduled Time</mat-label>
+                                        <input matInput type="datetime-local" [(ngModel)]="event.scheduled_at">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="full-width"
+                                        *ngIf="isChannelType(event, 'email')">
+                                        <mat-label>Subject Line</mat-label>
+                                        <input matInput [(ngModel)]="event.content_subject">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>Content</mat-label>
+                                        <textarea matInput [(ngModel)]="event.content_body" rows="3"></textarea>
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>Image URL</mat-label>
+                                        <input matInput [(ngModel)]="event.content_image_url">
+                                    </mat-form-field>
+                                </div>
+                            </mat-card>
+                        </div>
+
+                        <div class="empty-events" *ngIf="events.length === 0">
+                            <mat-icon>event</mat-icon>
+                            <p>No events yet. Add events to schedule your campaign activities.</p>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+                <div class="step-actions">
+                    <button mat-stroked-button matStepperPrevious>Back</button>
+                    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="saving">
+                        <mat-spinner diameter="20" *ngIf="saving"></mat-spinner>
+                        <span *ngIf="!saving">{{ isEditMode ? 'Update Campaign' : 'Create Campaign' }}</span>
+                    </button>
+                </div>
+            </div>
+        </mat-step>
+    </mat-stepper>
+</div>
