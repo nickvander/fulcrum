@@ -71,13 +71,13 @@
   </div>
 
   <!-- Bottom User Section -->
-  <div class="sidenav-footer">
+  <div class="sidenav-footer" *ngIf="currentUser$ | async as user">
     <div class="user-card">
       <div class="user-profile">
-        <div class="avatar-circle">NV</div>
+        <div class="avatar-circle">{{ getUserInitials(user) }}</div>
         <div class="user-info">
-          <span class="name">Nick Vander</span>
-          <span class="role">Admin</span>
+          <span class="name">{{ getUserDisplayName(user) }}</span>
+          <span class="role">{{ getUserRole(user) }}</span>
         </div>
       </div>
       <button mat-icon-button class="logout-btn" matTooltip="Sign Out" (click)="logout()">

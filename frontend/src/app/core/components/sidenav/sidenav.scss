@@ -5,6 +5,7 @@
   height: 100%;
   background: var(--bg-header); // Use header variable, usually white in light, dark in dark
   border-right: 1px solid var(--border-color); // Use explicit border instead of shadow for cleaner dark mode
+  overflow-x: hidden; // Prevent horizontal scrollbar
 }
 
 .sidenav-wrapper {
