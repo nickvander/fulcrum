@@ -24,7 +24,6 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
     RouterLink,
     MatDialogModule
   ],
-  ],
   templateUrl: './product-templates.html',
   styleUrls: ['./product-templates.scss']
 })

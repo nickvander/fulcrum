@@ -6,19 +6,24 @@
         <!-- Header -->
         <div class="header">
             <div class="header-left">
-                <h1>Suppliers</h1>
-                <span class="supplier-count" *ngIf="suppliers.length > 0">
-                    {{suppliers.length}} supplier{{suppliers.length !== 1 ? 's' : ''}}
-                </span>
+                <h1>
+                    <span>Suppliers</span>
+                    <span class="supplier-count" *ngIf="suppliers.length > 0">
+                        {{suppliers.length}}
+                    </span>
+                </h1>
             </div>
             <div class="actions">
-                <!-- Search placeholder if needed or just align buttons -->
+                <!-- Search placeholder or standardized filters -->
+
+                <!-- Dashboard Toggle -->
                 <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
-                    matTooltip="Toggle Dashboard" class="action-btn" style="margin-right: 12px;">
+                    matTooltip="Analytics">
                     <mat-icon>analytics</mat-icon>
                 </button>
-                <button mat-mini-fab color="primary" (click)="createSupplier()" matTooltip="Add Supplier"
-                    class="action-btn">
+
+                <!-- Add Supplier -->
+                <button mat-mini-fab color="primary" (click)="createSupplier()" matTooltip="Add Supplier">
                     <mat-icon>add</mat-icon>
                 </button>
             </div>
@@ -77,7 +82,7 @@
                         <ng-container matColumnDef="po_count">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header>Orders</th>
                             <td mat-cell *matCellDef="let supplier">
-                                <button mat-button color="primary"
+                                <button mat-stroked-button color="primary"
                                     (click)="viewPurchaseOrders(supplier.id); $event.stopPropagation()">
                                     {{supplier.po_count}} POs
                                 </button>
@@ -96,7 +101,7 @@
                         <ng-container matColumnDef="actions">
                             <th mat-header-cell *matHeaderCellDef></th>
                             <td mat-cell *matCellDef="let supplier">
-                                <button mat-button color="primary" (click)="viewSupplier(supplier.id)">
+                                <button mat-stroked-button color="primary" (click)="viewSupplier(supplier.id)">
                                     <mat-icon>edit</mat-icon> Edit
                                 </button>
                             </td>

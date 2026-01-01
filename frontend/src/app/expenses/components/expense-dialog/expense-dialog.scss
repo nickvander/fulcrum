@@ -4,12 +4,14 @@ h2[mat-dialog-title] {
     gap: 12px;
     margin: 0;
     padding: 16px 24px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-color);
     font-size: 1.25rem;
     font-weight: 500;
+    color: var(--text-main);
+    background: var(--bg-card);
 
     mat-icon {
-        color: #1976d2;
+        color: var(--primary-color);
     }
 }
 
@@ -17,6 +19,8 @@ mat-dialog-content {
     padding: 24px !important;
     max-height: 70vh;
     overflow-y: auto;
+    background: var(--bg-card);
+    color: var(--text-main);
 }
 
 .expense-form {
@@ -32,7 +36,7 @@ mat-dialog-content {
         display: block;
         font-size: 0.85rem;
         font-weight: 500;
-        color: #666;
+        color: var(--text-secondary);
         margin-bottom: 8px;
     }
 }
@@ -52,8 +56,8 @@ mat-dialog-content {
     }
 
     .mat-button-toggle-checked {
-        background-color: #e3f2fd;
-        color: #1565c0;
+        background-color: var(--info-bg);
+        color: var(--primary-color);
     }
 }
 
@@ -81,8 +85,9 @@ mat-dialog-content {
 
 mat-dialog-actions {
     padding: 16px 24px !important;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-color);
     margin: 0 !important;
+    background: var(--bg-card);
 }
 
 // Responsive

@@ -1,20 +1,52 @@
 <div class="login-container">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Login</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="fill">
-          <mat-label>Email</mat-label>
-          <input matInput formControlName="email" type="email" placeholder="Enter your email">
-        </mat-form-field>
-        <mat-form-field appearance="fill">
-          <mat-label>Password</mat-label>
-          <input matInput formControlName="password" type="password" placeholder="Enter your password">
-        </mat-form-field>
-        <button mat-raised-button color="primary" type="submit" [disabled]="!loginForm.valid">Login</button>
-      </form>
-    </mat-card-content>
-  </mat-card>
+  <div class="login-card-wrapper">
+    <!-- Branding Section -->
+    <div class="branding-header">
+      <div class="logo-icon">
+        <img src="assets/logo-source.png" alt="Fulcrum Logo" style="width: 32px; height: 32px;">
+      </div>
+      <h1>Fulcrum</h1>
+      <p>Management Console</p>
+    </div>
+
+    <!-- Login Card -->
+    <mat-card class="login-card">
+      <mat-card-content>
+        <div class="welcome-text">
+          <h2>Welcome back</h2>
+          <p>Please sign in to continue</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="sleek-auth-field">
+            <mat-label>Email Address</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="name@company.com" autocomplete="email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="sleek-auth-field">
+            <mat-label>Password</mat-label>
+            <input matInput formControlName="password" type="password" placeholder="••••••••"
+              autocomplete="current-password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+          </mat-form-field>
+
+          <div class="forgot-password">
+            <a routerLink="/forgot-password">Forgot password?</a>
+          </div>
+
+          <button mat-flat-button color="primary" class="login-btn" type="submit" [disabled]="!loginForm.valid">
+            Sign In
+          </button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="login-footer">
+      <p>&copy; 2025 Fulcrum Inc.</p>
+    </div>
+  </div>
 </div>

@@ -68,6 +68,62 @@
     --gradient-warn: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
 }
 
+/* Dark Theme Overrides */
+.dark-theme {
+    /* Branding Colors - Adjusted for Dark Mode */
+    --primary-color: #8fa3d6;
+    /* Lighter Blue for contrast against dark bg */
+    --primary-light: #a3b4db;
+    --primary-dark: #121826;
+    /* Darker Slate for backgrounds */
+
+    --accent-color: #00DBBD;
+    /* brighter teal */
+    --accent-light: #80ffe6;
+    --accent-dark: #008f7a;
+
+    /* Status Colors - Slightly more vibrant for dark mode */
+    --success-color: #81c784;
+    --success-bg: rgba(129, 199, 132, 0.1);
+    --warning-color: #ffb74d;
+    --warning-bg: rgba(255, 183, 77, 0.1);
+    --error-color: #e57373;
+    --error-bg: rgba(229, 115, 115, 0.1);
+    --info-color: #64b5f6;
+    --info-bg: rgba(100, 181, 246, 0.1);
+
+    /* Backgrounds */
+    --bg-app: #0f172a;
+    /* Slate 900 - Deep Blue/Black */
+    --bg-card: #1e293b;
+    /* Slate 800 */
+    --bg-hover: #334155;
+    /* Slate 700 */
+    --bg-header: #1e293b;
+    /* Slate 800 */
+
+    /* Text */
+    --text-main: #f1f5f9;
+    /* Slate 100 */
+    --text-secondary: #cbd5e1;
+    /* Slate 300 */
+    --text-hint: #64748b;
+    /* Slate 500 */
+    --text-on-primary: #0f172a;
+    /* Slate 900 */
+
+    /* Borders */
+    --border-color: #334155;
+    /* Slate 700 */
+    --border-hover: #475569;
+    /* Slate 600 */
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
 /* Override browser autofill background color (Firefox yellow, Chrome blue) */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -86,4 +142,19 @@ input:-moz-autofill:hover,
 input:-moz-autofill:focus {
     background-color: white !important;
     color: var(--text-main) !important;
+}
+
+/* Dark Mode autofill overrides */
+.dark-theme {
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        -webkit-text-fill-color: var(--text-main) !important;
+    }
 }

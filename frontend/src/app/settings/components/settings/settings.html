@@ -21,7 +21,7 @@
         <div class="settings-section">
           <h2 class="section-title">Appearance</h2>
           <div class="settings-card">
-            <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
+            <form [formGroup]="settingsForm">
               <mat-form-field appearance="outline" class="sleek-field">
                 <mat-label>Theme</mat-label>
                 <mat-select formControlName="theme">
@@ -29,11 +29,8 @@
                   <mat-option value="dark">Dark Mode</mat-option>
                 </mat-select>
               </mat-form-field>
-              <div class="form-actions">
-                <button mat-flat-button color="primary" type="submit" [disabled]="!settingsForm.valid">
-                  Save Changes
-                </button>
-              </div>
+              <p class="section-desc" style="margin-top: 8px; margin-bottom: 0;">Theme changes are saved automatically.
+              </p>
             </form>
           </div>
         </div>

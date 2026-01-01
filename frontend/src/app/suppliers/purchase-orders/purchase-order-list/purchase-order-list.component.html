@@ -8,11 +8,11 @@
             </span>
         </div>
         <div class="actions">
-            <button mat-stroked-button (click)="createSupplier()">
-                <mat-icon>business</mat-icon> New Supplier
+            <button mat-mini-fab color="primary" (click)="createPurchaseOrder()" matTooltip="Create PO">
+                <mat-icon>add</mat-icon>
             </button>
-            <button mat-raised-button color="primary" (click)="createPurchaseOrder()">
-                <mat-icon>add</mat-icon> Create PO
+            <button mat-mini-fab color="accent" (click)="createSupplier()" matTooltip="New Supplier">
+                <mat-icon>business</mat-icon>
             </button>
         </div>
     </div>
@@ -146,7 +146,7 @@
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef></th>
                         <td mat-cell *matCellDef="let po">
-                            <button mat-button color="primary" (click)="viewDetail(po.id)">
+                            <button mat-stroked-button color="primary" (click)="viewDetail(po.id)">
                                 <mat-icon>visibility</mat-icon> View
                             </button>
                         </td>

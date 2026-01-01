@@ -65,6 +65,7 @@
         span {
           font-weight: 500;
           font-size: 14px;
+          color: var(--text-main);
         }
       }
     }
@@ -127,8 +128,20 @@
 
   ::ng-deep {
     .mat-mdc-text-field-wrapper {
-      background: white;
+      background: var(--bg-card) !important;
       border-radius: 8px;
+    }
+
+    // Ensure input and select text are correct
+    input,
+    .mat-mdc-select-value {
+      color: var(--text-main) !important;
+    }
+
+    // Fix labels
+    .mat-mdc-floating-label,
+    .mdc-floating-label {
+      color: var(--text-secondary) !important;
     }
 
     .mat-mdc-form-field-subscript-wrapper {
@@ -177,7 +190,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--bg-card); // Use card background
   padding: 12px 16px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -278,13 +291,13 @@
   padding: 16px;
   background: var(--success-bg);
   border-radius: 8px;
-  border: 1px solid #C8E6C9;
+  border: 1px solid var(--border-color);
 
   .success-banner {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #2E7D32;
+    color: var(--success-color);
     margin-bottom: 8px;
 
     mat-icon {
@@ -302,16 +315,18 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: white;
+    background: var(--bg-card);
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 12px;
+    border: 1px solid var(--border-color);
 
     code {
       flex: 1;
       font-family: monospace;
       font-size: 13px;
       word-break: break-all;
+      color: var(--text-main);
     }
   }
 }
@@ -322,7 +337,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #2E7D32;
+  color: var(--success-color);
   margin-bottom: 16px;
 
   mat-icon {
@@ -344,7 +359,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: white;
+  background: var(--bg-card);
   border-radius: 8px;
   border: 1px solid var(--border-color);
 
@@ -408,6 +423,10 @@
       font-weight: 500;
       color: var(--text-main);
     }
+
+    span {
+      color: var(--text-main); // Ensure all spans are visible
+    }
   }
 
   .pending-badge {
@@ -455,16 +474,17 @@
   background: repeating-linear-gradient(45deg,
       var(--bg-app),
       var(--bg-app) 10px,
-      white 10px,
-      white 20px);
+      var(--bg-hover) 10px,
+      var(--bg-hover) 20px); // Use variable instead of white
 
   .coming-soon-content {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: white;
+    background: var(--bg-card); // Use variable instead of white
     padding: 12px 24px;
     border-radius: 20px;
+    border: 1px solid var(--border-color);
     color: var(--text-secondary);
     font-weight: 500;
 

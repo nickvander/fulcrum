@@ -121,6 +121,7 @@ interface CalendarDay {
       padding: 24px;
       max-width: 1200px;
       margin: 0 auto;
+      color: var(--text-main);
     }
 
     .calendar-header {
@@ -136,6 +137,16 @@ interface CalendarDay {
       gap: 12px;
     }
 
+    .header-left h1 {
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .header-left button mat-icon,
+    .header-center button mat-icon {
+      color: var(--text-main);
+    }
+
     .header-center {
       min-width: 250px;
       justify-content: center;
@@ -146,42 +157,51 @@ interface CalendarDay {
       font-weight: 500;
       min-width: 150px;
       text-align: center;
+      color: var(--text-main);
+    }
+
+    /* Today button - blend with dark theme */
+    .header-right button[mat-stroked-button] {
+      color: var(--text-main);
+      border-color: var(--border-color);
     }
 
     .calendar-card {
       border-radius: 12px;
       overflow: hidden;
-      padding: 0; 
+      padding: 0;
+      background: var(--bg-card);
     }
 
     .weekday-header {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      background: #f5f5f5;
-      border-bottom: 1px solid #e0e0e0;
+      background: var(--bg-app);
+      border-bottom: 1px solid var(--border-color);
     }
 
     .weekday {
       padding: 12px;
       text-align: center;
       font-weight: 600;
-      color: #666;
+      color: var(--text-secondary);
     }
 
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      /* Force equal row heights or auto */
+      background: var(--bg-card);
     }
 
     .calendar-day {
       min-height: 120px;
       padding: 8px;
-      border-right: 1px solid #e0e0e0;
-      border-bottom: 1px solid #e0e0e0;
+      border-right: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
       gap: 4px;
+      background: var(--bg-card);
     }
 
     .calendar-day:nth-child(7n) {
@@ -189,16 +209,20 @@ interface CalendarDay {
     }
 
     .calendar-day.other-month {
-      background: #fafafa;
-      color: #bbb;
+      background: var(--bg-app);
+      color: var(--text-hint);
+    }
+
+    .calendar-day.other-month .day-number {
+      color: var(--text-hint);
     }
 
     .calendar-day.today {
-      background: #e3f2fd;
+      background: var(--primary-bg);
     }
 
     .calendar-day.today .day-number {
-      background: #1976d2;
+      background: var(--primary-color);
       color: white;
       border-radius: 50%;
       width: 24px;
@@ -212,6 +236,7 @@ interface CalendarDay {
       font-weight: 500;
       margin-bottom: 4px;
       align-self: flex-start;
+      color: var(--text-main);
     }
 
     .day-events {
@@ -251,8 +276,9 @@ interface CalendarDay {
       align-items: center;
       gap: 4px;
       overflow: hidden;
-      background: white;
-      border: 1px solid #ddd;
+      background: var(--bg-app);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
     }
     
     .event-chip:active {
@@ -263,6 +289,7 @@ interface CalendarDay {
       font-size: 14px;
       width: 14px;
       height: 14px;
+      color: var(--text-secondary);
     }
 
     .event-name {
@@ -282,6 +309,7 @@ interface CalendarDay {
       gap: 24px;
       justify-content: center;
       margin-top: 16px;
+      color: var(--text-main);
     }
 
     .legend-item {

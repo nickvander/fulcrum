@@ -75,6 +75,14 @@ export class Settings implements OnInit {
       theme: ['light', Validators.required]
     });
 
+    // Auto-save theme on change
+    this.settingsForm.get('theme')?.valueChanges.subscribe(value => {
+      // Merge current form values to ensure we don't lose other settings if we were to only save the theme
+      const updatedSettings = { ...this.settingsService.loadSettings(), theme: value };
+      this.settingsService.saveSettings(updatedSettings as any);
+      this.notificationService.showSuccess(`Theme updated to ${value} mode`);
+    });
+
     this.storeSettingsForm = this.fb.group({
       low_inventory_days_default: [30, [Validators.required, Validators.min(1)]],
       low_stock_quantity_default: [10, [Validators.required, Validators.min(0)]]

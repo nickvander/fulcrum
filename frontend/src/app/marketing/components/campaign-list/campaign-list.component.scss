@@ -131,6 +131,17 @@
     @include m.status-error;
 }
 
+// Override badges for dark mode readability if mixed in transparently
+// Ensure text is readable
+.status-badge,
+.status-draft,
+.status-scheduled,
+.status-active,
+.status-completed,
+.status-paused {
+    font-weight: 600;
+}
+
 .no-date {
     color: var(--text-hint);
     font-style: italic;
@@ -234,7 +245,8 @@
     align-items: flex-start;
     gap: 12px;
     padding: 12px;
-    background: var(--bg-app);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: background 0.2s, transform 0.1s;
 }
@@ -296,12 +308,30 @@
 
 .post-name {
     font-weight: 500;
+    color: var(--text-main);
 }
 
 .post-status {
     font-size: 11px;
     height: 20px;
     min-height: 20px;
+
+    // Ensure chips use proper contrasting text
+    &.status-draft {
+        background-color: var(--bg-hover) !important;
+        color: var(--text-main) !important;
+    }
+
+    &.status-scheduled {
+        background-color: var(--warning-bg) !important;
+        color: var(--warning-color) !important;
+    }
+
+    &.status-active,
+    &.status-published {
+        background-color: var(--success-bg) !important;
+        color: var(--success-color) !important;
+    }
 }
 
 .post-body {

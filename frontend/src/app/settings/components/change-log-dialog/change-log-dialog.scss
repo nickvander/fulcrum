@@ -4,16 +4,17 @@
         align-items: center;
         gap: 8px;
         margin: 0;
-        color: var(--primary-dark, #2E3A59);
+        color: var(--text-main);
 
         mat-icon {
-            color: var(--accent, #00BFA5);
+            color: var(--accent-color);
         }
     }
 
     mat-dialog-content {
         max-height: 70vh;
         padding: 16px 24px;
+        background: var(--bg-card);
     }
 
     .filters-row {
@@ -38,25 +39,26 @@
             font-size: 48px;
             width: 48px;
             height: 48px;
-            color: #bbb;
+            color: var(--text-hint);
             margin-bottom: 16px;
         }
 
         h3 {
             margin: 0 0 8px;
-            color: var(--primary-dark, #2E3A59);
+            color: var(--text-main);
         }
 
         p {
             margin: 0;
-            color: #666;
+            color: var(--text-secondary);
         }
     }
 
     .log-table {
-        border: 1px solid #e0e0e0;
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         overflow: hidden;
+        background: var(--bg-card);
     }
 
     .table-header,
@@ -69,25 +71,27 @@
     }
 
     .table-header {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: var(--bg-app);
         font-weight: 600;
-        color: #666;
+        color: var(--text-secondary);
         font-size: 12px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
     .table-row {
-        border-top: 1px solid #f0f0f0;
+        border-top: 1px solid var(--border-color);
         font-size: 13px;
+        background: var(--bg-card);
+        color: var(--text-main);
 
         &:hover {
-            background: #fafafa;
+            background: var(--bg-hover);
         }
     }
 
     .col-date {
-        color: #666;
+        color: var(--text-secondary);
     }
 
     .col-entity {
@@ -97,12 +101,12 @@
 
         .entity-name {
             font-weight: 500;
-            color: var(--primary-dark, #2E3A59);
+            color: var(--text-main);
         }
 
         .entity-type {
             font-size: 11px;
-            color: #888;
+            color: var(--text-secondary);
             text-transform: uppercase;
         }
     }
@@ -111,7 +115,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        color: #666;
+        color: var(--text-secondary);
 
         mat-icon {
             font-size: 16px;
@@ -126,7 +130,7 @@
         gap: 6px;
 
         .old-val {
-            color: #d32f2f;
+            color: var(--error-color);
             text-decoration: line-through;
         }
 
@@ -134,11 +138,11 @@
             font-size: 14px;
             width: 14px;
             height: 14px;
-            color: #888;
+            color: var(--text-secondary);
         }
 
         .new-val {
-            color: #2e7d32;
+            color: var(--success-color);
             font-weight: 500;
         }
     }
@@ -153,24 +157,24 @@
             text-transform: uppercase;
 
             &.badge-sheets {
-                background: #e3f2fd;
-                color: #1976d2;
+                background: var(--info-bg);
+                color: var(--info-color);
             }
 
             &.badge-direct {
-                background: #e8f5e9;
-                color: #2e7d32;
+                background: var(--success-bg);
+                color: var(--success-color);
             }
 
             &.badge-api {
-                background: #fff3e0;
-                color: #e65100;
+                background: var(--warning-bg);
+                color: var(--warning-color);
             }
         }
     }
 
     .col-user {
-        color: #666;
+        color: var(--text-secondary);
         font-size: 12px;
     }
 
@@ -180,7 +184,8 @@
 
     mat-dialog-actions {
         padding: 12px 24px;
-        border-top: 1px solid #e0e0e0;
+        border-top: 1px solid var(--border-color);
+        background: var(--bg-card);
     }
 }
 
@@ -195,7 +200,7 @@
             grid-template-columns: 1fr;
             gap: 4px;
             padding: 16px;
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             margin-bottom: 8px;
 
