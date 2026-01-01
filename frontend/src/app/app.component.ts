@@ -10,6 +10,7 @@ import { RouterModule } from '@angular/router';
 import { CoreModule } from './core/core-module';
 import { LoadingService } from './core/services/loading.service';
 import { ScreenService } from './core/services/screen.service';
+import { SettingsService } from './core/services/settings.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
@@ -33,7 +34,8 @@ export class AppComponent {
   constructor(
     private router: Router,
     private loadingService: LoadingService,
-    private screenService: ScreenService
+    private screenService: ScreenService,
+    private settingsService: SettingsService // Injected settings service
   ) {
     this.isMobile$ = this.screenService.isMobile$;
 
@@ -44,5 +46,14 @@ export class AppComponent {
     });
 
     this.loading$ = this.loadingService.loading$.pipe(delay(0));
+
+    // Subscribe to theme changes
+    this.settingsService.settings$.subscribe(settings => {
+      if (settings?.theme === 'dark') {
+        document.body.classList.add('dark-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
+      }
+    });
   }
 }

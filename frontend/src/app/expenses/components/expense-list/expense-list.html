@@ -3,17 +3,19 @@
     <!-- Header -->
     <div class="header">
         <div class="header-left">
-            <h1>Business Expenses</h1>
-            <span class="expense-count" *ngIf="expenses.length > 0">
-                {{expenses.length}} expense{{expenses.length !== 1 ? 's' : ''}}
-            </span>
+            <h1>
+                <span>Business Expenses</span>
+                <span class="expense-count" *ngIf="expenses.length > 0">
+                    {{expenses.length}}
+                </span>
+            </h1>
         </div>
         <div class="header-actions">
-            <button mat-stroked-button (click)="onCreateSupplier()">
-                <mat-icon>business</mat-icon> New Supplier
+            <button mat-mini-fab color="primary" (click)="onAddExpense()" matTooltip="Add Expense">
+                <mat-icon>add</mat-icon>
             </button>
-            <button mat-raised-button color="primary" (click)="onAddExpense()">
-                <mat-icon>add</mat-icon> Add Expense
+            <button mat-mini-fab color="accent" (click)="onCreateSupplier()" matTooltip="New Supplier">
+                <mat-icon>business</mat-icon>
             </button>
         </div>
     </div>

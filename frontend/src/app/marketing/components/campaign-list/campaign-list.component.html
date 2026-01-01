@@ -7,23 +7,23 @@
         </div>
         <div class="actions-section">
             <!-- Calendar Toggle -->
-            <a mat-icon-button color="accent" routerLink="/marketing/calendar" matTooltip="Calendar View">
+            <a mat-mini-fab color="accent" routerLink="/marketing/calendar" matTooltip="Calendar View">
                 <mat-icon>calendar_month</mat-icon>
             </a>
 
             <!-- Connectors -->
-            <a mat-stroked-button routerLink="/marketing/connectors">
-                <mat-icon>settings_input_component</mat-icon> Connectors
+            <a mat-mini-fab color="primary" routerLink="/marketing/connectors" matTooltip="Connectors">
+                <mat-icon>settings_input_component</mat-icon>
             </a>
 
             <!-- Quick Post -->
-            <button mat-stroked-button color="primary" (click)="openQuickPostDialog()">
-                <mat-icon>bolt</mat-icon> Quick Post
+            <button mat-mini-fab color="warn" (click)="openQuickPostDialog()" matTooltip="Quick Post">
+                <mat-icon>bolt</mat-icon>
             </button>
 
             <!-- New Campaign -->
-            <a mat-flat-button color="primary" routerLink="/marketing/new">
-                <mat-icon>add</mat-icon> New Campaign
+            <a mat-mini-fab color="primary" routerLink="/marketing/new" matTooltip="New Campaign">
+                <mat-icon>add</mat-icon>
             </a>
         </div>
     </div>

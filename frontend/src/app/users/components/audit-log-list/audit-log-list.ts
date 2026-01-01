@@ -6,6 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatIconModule } from '@angular/material/icon';
 import { AuditLogService } from '../../services/audit-log.service';
 import { UserAuditLog } from '../../models/audit-log.model';
 import { UserService } from '../../services/user.service';
@@ -30,6 +32,8 @@ import { catchError } from 'rxjs/operators';
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatTooltipModule,
+    MatIconModule
   ],
 })
 export class AuditLogList implements OnInit {
@@ -136,5 +140,14 @@ export class AuditLogList implements OnInit {
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
+
+    // Custom sorting accessor for enhanced fields
+    this.dataSource.sortingDataAccessor = (item: any, property: string) => {
+      switch (property) {
+        case 'user': return item.user_email;
+        case 'actor': return item.actor_email;
+        default: return item[property];
+      }
+    };
   }
 }

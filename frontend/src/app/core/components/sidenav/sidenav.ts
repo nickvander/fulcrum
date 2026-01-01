@@ -23,4 +23,8 @@ export class Sidenav implements OnInit {
   ngOnInit(): void {
     this.isAdmin$ = this.authService.isAdmin();
   }
+
+  logout(): void {
+    this.authService.logout();
+  }
 }

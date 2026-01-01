@@ -11,9 +11,836 @@ body {
 body {
     margin: 0;
     font-family: 'Inter', sans-serif;
-    background-color: #f3f4f6; // Flat modern grey
-    color: #1f2937;
+    background-color: var(--bg-app);
+    color: var(--text-main);
     height: 100vh;
+}
+
+// Dark Mode Material Overrides
+.dark-theme {
+
+    // Dropdowns & Selects & Dialogs
+    .mat-mdc-select-panel,
+    .mat-mdc-autocomplete-panel,
+    .mat-mdc-menu-panel,
+    .mat-datepicker-content,
+    .mat-calendar {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    // Dialog Surface - comprehensive coverage
+    .mat-mdc-dialog-container,
+    .mat-mdc-dialog-container .mdc-dialog__surface,
+    .mat-mdc-dialog-surface,
+    .cdk-overlay-pane .mat-mdc-dialog-container,
+    mat-dialog-container {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    // Dialog Content
+    .mat-mdc-dialog-content,
+    .mat-dialog-content,
+    [mat-dialog-content] {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    // Dialog Actions
+    .mat-mdc-dialog-actions,
+    .mat-dialog-actions,
+    [mat-dialog-actions] {
+        background-color: var(--bg-card) !important;
+    }
+
+    // Dialog Title
+    .mat-mdc-dialog-title,
+    .mat-dialog-title,
+    [mat-dialog-title] {
+        color: var(--text-main) !important;
+        background-color: var(--bg-card) !important;
+    }
+
+    // Mat Cards in dialogs
+    .mat-mdc-dialog-container mat-card,
+    .mat-mdc-dialog-container .mat-mdc-card,
+    mat-dialog-container mat-card {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border-color) !important;
+    }
+
+    // Mat Card Headers and Titles
+    .mat-mdc-card-header,
+    .mat-mdc-card-title,
+    mat-card-title {
+        color: var(--text-main) !important;
+    }
+
+    .mat-mdc-card-subtitle,
+    mat-card-subtitle {
+        color: var(--text-secondary) !important;
+    }
+
+    // Form fields inside dialogs
+    .mat-mdc-dialog-container .mat-mdc-form-field,
+    mat-dialog-container .mat-mdc-form-field {
+        .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+            background-color: var(--bg-app) !important;
+        }
+
+        .mat-mdc-form-field-focus-overlay {
+            background-color: transparent !important;
+        }
+    }
+
+    // Checkbox and Radio labels
+    .mat-mdc-checkbox .mdc-form-field label,
+    .mat-mdc-radio-button .mdc-form-field label {
+        color: var(--text-main) !important;
+    }
+
+    // Calendar & Datepicker Popup - comprehensive dark mode
+    .mat-datepicker-content,
+    .mat-datepicker-content .mat-calendar {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    .mat-calendar {
+        background-color: var(--bg-card) !important;
+    }
+
+    .mat-calendar-body-label,
+    .mat-calendar-body-cell-content {
+        color: var(--text-main) !important;
+    }
+
+    .mat-calendar-table-header th {
+        color: var(--text-secondary) !important;
+    }
+
+    .mat-calendar-arrow {
+        fill: var(--text-secondary) !important;
+    }
+
+    .mat-date-range-input-separator {
+        color: var(--text-secondary) !important;
+    }
+
+    // Calendar period button (month/year)
+    .mat-calendar-period-button {
+        color: var(--text-main) !important;
+    }
+
+    // Previous/Next Buttons in Calendar
+    .mat-calendar-previous-button,
+    .mat-calendar-next-button {
+        color: var(--text-main) !important;
+    }
+
+    // Datepicker toggle icon
+    .mat-datepicker-toggle-default-icon {
+        color: var(--text-secondary) !important;
+    }
+
+    // Textarea resize handle (stretch icon)
+    textarea {
+        resize: vertical;
+
+        &::-webkit-resizer {
+            background-color: var(--bg-card);
+        }
+    }
+
+    // CDK textarea autosize stretch indicator
+    .cdk-textarea-autosize-measuring-host {
+        color: var(--text-secondary) !important;
+    }
+
+    // "Add Item" placeholder text in autocomplete/inputs
+    .mat-mdc-form-field-label,
+    [matAutocomplete]~.mat-mdc-floating-label {
+        color: var(--text-secondary) !important;
+    }
+
+    // Button icons and stroked buttons
+    .mat-mdc-button mat-icon,
+    button mat-icon,
+    .mat-mdc-icon-button mat-icon {
+        color: inherit;
+    }
+
+    // Top suppliers / Widget icons
+    .widget-icon,
+    .suppliers-widget mat-icon,
+    mat-card-header mat-icon {
+        color: var(--text-secondary) !important;
+    }
+
+    // Custom Selection Color
+    ::selection {
+        background-color: var(--accent-color) !important;
+        color: white !important;
+    }
+
+    .mat-mdc-option {
+        color: var(--text-main) !important;
+
+        // Ensure text remains visible on hover/focus
+        &:hover:not(.mdc-list-item--disabled),
+        &.mdc-list-item--selected,
+        &:focus,
+        &.mat-mdc-option-active {
+            background-color: var(--bg-hover) !important;
+            color: var(--text-main) !important;
+
+            .mdc-list-item__primary-text {
+                color: var(--text-main) !important;
+            }
+        }
+
+        // Specific selected state color
+        &.mdc-list-item--selected {
+            color: var(--accent-light) !important;
+
+            .mdc-list-item__primary-text {
+                color: var(--accent-light) !important;
+            }
+        }
+    }
+
+    // Tables - comprehensive dark mode
+    .mat-mdc-table,
+    mat-table {
+        background-color: var(--bg-card) !important;
+    }
+
+    .mdc-data-table__table {
+        background-color: var(--bg-card) !important;
+    }
+
+    .mat-mdc-header-row,
+    .mdc-data-table__header-row {
+        background-color: var(--bg-app) !important;
+    }
+
+    .mat-mdc-header-cell,
+    .mdc-data-table__header-cell {
+        background-color: var(--bg-app) !important;
+        color: var(--text-secondary) !important;
+        border-bottom-color: var(--border-color) !important;
+    }
+
+    .mat-mdc-row,
+    .mdc-data-table__row {
+        background-color: var(--bg-card) !important;
+
+        &:hover {
+            background-color: var(--bg-hover) !important;
+        }
+    }
+
+    .mat-mdc-cell,
+    .mdc-data-table__cell {
+        color: var(--text-main) !important;
+        border-bottom-color: var(--border-color) !important;
+    }
+
+    // Product info in table cells
+    .product-info {
+        .product-id {
+            color: var(--text-main) !important;
+        }
+
+        .external-id {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    // Sync status in tables
+    .sync-status {
+        color: var(--text-main) !important;
+
+        .success {
+            color: var(--success-color) !important;
+        }
+
+        .warning {
+            color: var(--warning-color) !important;
+        }
+    }
+
+    // Price values
+    .price-value {
+        color: var(--text-main) !important;
+    }
+
+    // Sort Header Arrow
+    .mat-sort-header-arrow {
+        color: var(--text-secondary) !important;
+    }
+
+    // Mat Card - remove border/shadow for filter cards in dark mode
+    mat-card.filter-card,
+    .filter-card {
+        box-shadow: none !important;
+        border: none !important;
+        background: var(--bg-app) !important;
+    }
+
+    // All mat-cards should have dark backgrounds
+    mat-card,
+    .mat-mdc-card {
+        background-color: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    // Form sections (mat-cards used as form sections)
+    .form-section {
+        background: var(--bg-card) !important;
+        color: var(--text-main) !important;
+
+        h3 {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    .mat-mdc-header-cell {
+        color: var(--text-secondary) !important;
+    }
+
+    .mat-mdc-cell {
+        color: var(--text-main) !important;
+        border-bottom-color: var(--border-color) !important;
+
+        // Target description columns specifically if they use p or span
+        p,
+        span,
+        div {
+            color: var(--text-main) !important;
+        }
+    }
+
+    // Inputs
+    .mat-mdc-form-field-input-control {
+        color: var(--text-main) !important;
+        caret-color: var(--accent-color) !important;
+    }
+
+    // Browser autofill background - dark mode (comprehensive)
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        -webkit-text-fill-color: var(--text-main) !important;
+        background-color: var(--bg-card) !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+        caret-color: var(--text-main) !important;
+    }
+
+    // Outlined form fields with autofill
+    .mdc-text-field--outlined input:-webkit-autofill,
+    .mat-mdc-form-field-type-mat-input input:-webkit-autofill,
+    .mat-form-field-appearance-outline input:-webkit-autofill {
+        -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+        -webkit-text-fill-color: var(--text-main) !important;
+    }
+
+    // Outlined form field styling
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled) {
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: var(--border-color) !important;
+        }
+    }
+
+    .mdc-text-field--outlined:not(.mdc-text-field--disabled):not(.mdc-text-field--focused) {
+        .mdc-text-field__input {
+            background-color: var(--bg-card) !important;
+        }
+    }
+
+    // Mat List containers (marketplace channel listings)
+    mat-list,
+    mat-nav-list,
+    mat-selection-list,
+    .mat-mdc-list {
+        background-color: var(--bg-card) !important;
+    }
+
+    // Filled Form Fields - comprehensive dark mode styling
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) {
+        background-color: var(--bg-app) !important;
+
+        .mdc-text-field__input {
+            color: var(--text-main) !important;
+        }
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-floating-label,
+    .mdc-floating-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) .mdc-line-ripple::before {
+        border-bottom-color: var(--border-color) !important;
+    }
+
+    .mat-mdc-form-field-focus-overlay {
+        background-color: transparent !important;
+    }
+
+    // Page headers/titles
+    .header-row h1,
+    .page-header h1,
+    .header h1 {
+        color: var(--text-main) !important;
+    }
+
+    // Info icons that are black
+    .listing-item mat-icon,
+    .marketplace-actions mat-icon,
+    .info-icon {
+        color: var(--text-secondary) !important;
+    }
+
+    // Expansion panels (for available marketplaces)
+    .mat-expansion-panel {
+        background: var(--bg-card) !important;
+        color: var(--text-main) !important;
+    }
+
+    .mat-expansion-panel-header-title,
+    .mat-expansion-panel-header-description {
+        color: var(--text-main) !important;
+    }
+
+    // Expansion panel content
+    .mat-expansion-panel-body {
+        color: var(--text-main) !important;
+    }
+
+    // Slide toggle labels
+    .mat-mdc-slide-toggle .mdc-form-field label,
+    .mat-slide-toggle-content {
+        color: var(--text-main) !important;
+    }
+
+    // Links in general
+    a:not([mat-button]):not([mat-raised-button]):not([mat-flat-button]):not([mat-stroked-button]):not([mat-icon-button]) {
+        color: var(--primary-color);
+
+        &:hover {
+            color: var(--accent-color);
+        }
+    }
+
+    // Paginator
+    .mat-mdc-paginator {
+        background-color: transparent !important;
+        color: var(--text-secondary) !important;
+
+        .mat-mdc-select-value {
+            color: var(--text-main) !important;
+        }
+
+        // Fix for dropdown background in paginator
+        .mat-mdc-select-trigger {
+            .mat-mdc-select-arrow {
+                color: var(--text-secondary) !important;
+            }
+        }
+    }
+
+    // Checkboxes
+    .mat-mdc-checkbox {
+        .mdc-checkbox__background {
+            border-color: var(--text-secondary) !important;
+        }
+
+        &.mat-mdc-checkbox-checked .mdc-checkbox__background {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+
+        .mdc-checkbox__checkmark {
+            color: var(--bg-card) !important;
+        }
+    }
+
+    // Icons should generally be text-main unless specified
+    mat-icon {
+        color: var(--text-secondary);
+    }
+
+    // Tab Labels - Fix tab names not showing in dark mode
+    .mat-mdc-tab:not(.mat-mdc-tab-disabled) .mdc-tab__text-label,
+    .mat-mdc-tab-link:not(.mat-mdc-tab-disabled) .mdc-tab__text-label {
+        color: var(--text-secondary) !important;
+    }
+
+    .mat-mdc-tab:not(.mat-mdc-tab-disabled).mdc-tab--active .mdc-tab__text-label,
+    .mat-mdc-tab-link:not(.mat-mdc-tab-disabled).mdc-tab--active .mdc-tab__text-label {
+        color: var(--primary-color) !important;
+    }
+
+    .mat-mdc-tab-header {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    // All buttons - comprehensive dark mode styling
+    .mat-mdc-button:not([color]),
+    button.mat-mdc-button:not([color]) {
+        color: var(--text-secondary) !important;
+    }
+
+    // Dialog Buttons
+    .mat-mdc-dialog-actions button,
+    mat-dialog-actions button {
+        &.mat-mdc-button:not([color]) {
+            color: var(--text-secondary) !important;
+        }
+
+        &.mat-mdc-button[color="primary"],
+        &.mat-mdc-raised-button[color="primary"],
+        &.mat-mdc-flat-button[color="primary"] {
+            color: white !important;
+        }
+    }
+
+    // Mat Menu (hamburger menus) - comprehensive dark mode
+    .mat-mdc-menu-panel,
+    .mat-menu-panel {
+        background-color: var(--bg-card) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .mat-mdc-menu-content,
+    .mat-menu-content {
+        background-color: var(--bg-card) !important;
+    }
+
+    .mat-mdc-menu-item,
+    .mat-menu-item {
+        color: var(--text-main) !important;
+
+        &:hover:not([disabled]) {
+            background-color: var(--bg-hover) !important;
+        }
+
+        mat-icon {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    // Logo containers - transparent background for marketplace logos
+    .logo-container,
+    .mp-logo-container,
+    .header-logo {
+        background: transparent !important;
+    }
+
+    // Slide toggle labels
+    .mat-mdc-slide-toggle-label,
+    .mdc-switch__label,
+    mat-slide-toggle span {
+        color: var(--text-main) !important;
+    }
+
+    // Primary color icon buttons (sync/refresh)
+    .mat-mdc-icon-button.mat-primary mat-icon,
+    button.mat-primary mat-icon {
+        color: var(--primary-color) !important;
+    }
+
+    // Mat Chips - comprehensive dark mode
+    .mat-mdc-chip,
+    .mat-mdc-standard-chip {
+        background-color: var(--bg-hover) !important;
+        color: var(--text-main) !important;
+
+        .mdc-evolution-chip__text-label {
+            color: inherit !important;
+        }
+    }
+
+    // Listing status chips - specific styling
+    .listing-status-chip {
+
+        &.active,
+        &.ACTIVE {
+            background-color: var(--success-bg) !important;
+            color: var(--success-color) !important;
+
+            .mdc-evolution-chip__text-label {
+                color: var(--success-color) !important;
+            }
+        }
+
+        &.inactive,
+        &.INACTIVE {
+            background-color: var(--bg-hover) !important;
+            color: var(--text-secondary) !important;
+
+            .mdc-evolution-chip__text-label {
+                color: var(--text-secondary) !important;
+            }
+        }
+
+        &.pending,
+        &.PENDING {
+            background-color: var(--warning-bg) !important;
+            color: var(--warning-color) !important;
+
+            .mdc-evolution-chip__text-label {
+                color: var(--warning-color) !important;
+            }
+        }
+
+        &.error,
+        &.ERROR {
+            background-color: var(--error-bg) !important;
+            color: var(--error-color) !important;
+
+            .mdc-evolution-chip__text-label {
+                color: var(--error-color) !important;
+            }
+        }
+    }
+
+    // Stock status chips (product list)
+    .stock-status-chip,
+    .mat-mdc-chip.in-stock,
+    .mat-mdc-chip.low-stock,
+    .mat-mdc-chip.out-of-stock {
+        .mdc-evolution-chip__text-label {
+            color: inherit !important;
+        }
+    }
+
+    .mat-mdc-chip.in-stock,
+    .in-stock-chip {
+        background-color: var(--success-bg) !important;
+        color: var(--success-color) !important;
+    }
+
+    .mat-mdc-chip.low-stock,
+    .low-stock-chip {
+        background-color: var(--warning-bg) !important;
+        color: var(--warning-color) !important;
+    }
+
+    .mat-mdc-chip.out-of-stock,
+    .out-of-stock-chip {
+        background-color: var(--error-bg) !important;
+        color: var(--error-color) !important;
+    }
+
+    // Widget/List item text - ensure proper contrast
+    mat-list-item,
+    .mat-mdc-list-item {
+        color: var(--text-main) !important;
+
+        .mat-mdc-list-item-title,
+        .mdc-list-item__primary-text {
+            color: var(--text-main) !important;
+        }
+
+        .mat-mdc-list-item-line,
+        .mdc-list-item__secondary-text {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    // Section headers and page titles
+    .section-header h2,
+    .section-header h3,
+    .detail-header h1 {
+        color: var(--text-main) !important;
+    }
+
+    // CDK overlay panels (menus, dialogs, selects)
+    .cdk-overlay-pane .mat-mdc-menu-panel {
+        background-color: var(--bg-card) !important;
+    }
+
+    // Ensure mat-nav-list items are visible
+    .mat-mdc-nav-list .mat-mdc-list-item {
+        color: var(--text-main) !important;
+    }
+
+    // Chips (Semantic) - Override manual light colors with transparent/border approach or dark variables
+    // This targets the specific semantic classes .app-chip-success etc
+    .app-chip-success {
+        --mdc-chip-elevated-container-color: rgba(16, 185, 129, 0.2) !important;
+        --mdc-chip-label-text-color: #34d399 !important;
+    }
+
+    .app-chip-error {
+        --mdc-chip-elevated-container-color: rgba(244, 63, 94, 0.2) !important;
+        --mdc-chip-label-text-color: #fb7185 !important;
+    }
+
+    .app-chip-warning {
+        --mdc-chip-elevated-container-color: rgba(245, 158, 11, 0.2) !important;
+        --mdc-chip-label-text-color: #fbbf24 !important;
+    }
+
+    // General Buttons (Stroked/Flat)
+    .mat-mdc-outlined-button {
+        border-color: var(--border-color) !important;
+        color: var(--text-main) !important;
+
+        &:not(:disabled) mat-icon {
+            color: var(--text-main) !important;
+        }
+    }
+
+    // Number Input Spinners (Custom styling since filter doesn't work well)
+    input[type=number] {
+
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            opacity: 1;
+            filter: invert(0.8) brightness(1.2);
+        }
+    }
+
+    // Form Field Hints (e.g., "Days of stock remaining...")
+    .mat-mdc-form-field-hint,
+    .mat-mdc-form-field-subscript-wrapper,
+    .mat-hint,
+    mat-hint {
+        color: var(--text-secondary) !important;
+    }
+
+    // Form Field Labels
+    .mat-mdc-floating-label,
+    .mdc-floating-label,
+    .mat-mdc-form-field-label {
+        color: var(--text-secondary) !important;
+    }
+
+    // Form Field Wrappers (Background)
+    .mat-mdc-text-field-wrapper {
+        background: var(--bg-card) !important;
+    }
+
+    // Form Field Outlines - Make borders nearly invisible in dark mode
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+        border-color: transparent !important;
+    }
+
+    // Only show border on focus
+    .mdc-text-field--focused {
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+            border-color: var(--primary-color) !important;
+        }
+    }
+
+    // Button Toggle Groups (Grid/List view toggles)
+    .mat-button-toggle-group {
+        border: 1px solid var(--border-color) !important;
+        background: var(--bg-card) !important;
+
+        .mat-button-toggle {
+            background: transparent !important;
+            color: var(--text-secondary) !important;
+
+            .mat-button-toggle-button {
+                color: var(--text-secondary) !important;
+            }
+
+            &.mat-button-toggle-checked {
+                background: var(--bg-hover) !important;
+                color: var(--text-main) !important;
+
+                .mat-button-toggle-button {
+                    color: var(--text-main) !important;
+                }
+            }
+
+            &:hover:not(.mat-button-toggle-disabled) {
+                background: var(--bg-hover) !important;
+            }
+        }
+    }
+
+    // Select Arrow
+    .mat-mdc-select-arrow {
+        color: var(--text-secondary) !important;
+    }
+
+    // Select Value Text (dropdown display value like "All Items")
+    .mat-mdc-select-value,
+    .mat-mdc-select-value-text,
+    .mat-mdc-select-value-text span {
+        color: var(--text-main) !important;
+    }
+
+    // Input Prefixes and Suffixes (e.g. $ symbol)
+    .mat-mdc-form-field-icon-prefix,
+    .mat-mdc-form-field-icon-suffix,
+    [matPrefix],
+    [matSuffix] {
+        color: var(--text-secondary) !important;
+        padding-left: 8px !important; // Push prefix into the field
+
+        mat-icon {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    // Text prefix (like $ symbol)
+    .mat-mdc-form-field-text-prefix,
+    .mat-mdc-form-field-text-suffix {
+        color: var(--text-secondary) !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    // Filter Dropdowns (General Panel Override Enhancement)
+    .mat-mdc-select-panel {
+        background-color: var(--bg-card) !important;
+
+        .mat-mdc-option {
+            color: var(--text-main) !important;
+
+            .mdc-list-item__primary-text {
+                color: var(--text-main) !important;
+            }
+        }
+    }
+
+    // Marketplace logo containers - scoped to marketplace pages only
+    .marketplace-container,
+    .marketplace-grid,
+    .channel-card {
+
+        .logo-container,
+        .mp-logo-img {
+            background: var(--bg-hover) !important;
+        }
+    }
+
+    .marketplace-logo,
+    .marketplace-icon {
+        background: var(--bg-card) !important;
+    }
 }
 
 
@@ -42,7 +869,7 @@ body {
 .sleek-select {
     .mat-mdc-text-field-wrapper {
         border-radius: 999px !important;
-        background-color: transparent !important; // Ensure clean background
+        background-color: var(--bg-card) !important; // Use variable
     }
 
     // Lighter, thinner borders
@@ -80,6 +907,39 @@ body {
     .mat-mdc-form-field-icon-suffix {
         display: flex;
         align-items: center;
+
+        mat-icon {
+            color: var(--text-secondary);
+        }
+    }
+
+    input {
+        color: var(--text-main) !important;
+        background: transparent !important;
+
+        &::placeholder {
+            color: var(--text-hint) !important;
+        }
+    }
+}
+
+// Sleek Select Dark Mode - Remove borders completely
+.dark-theme .sleek-select {
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__trailing,
+    .mdc-notched-outline__notch {
+        border: none !important;
+    }
+
+    &:hover,
+    &:focus-within {
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__trailing,
+        .mdc-notched-outline__notch {
+            border: none !important;
+        }
     }
 }
 
@@ -225,7 +1085,7 @@ body {
 
     .mat-mdc-paginator-page-size-label {
         font-size: 12px !important;
-        color: #6b7280 !important; // Lighter text
+        color: var(--text-secondary) !important; // Use variable
         margin-right: 8px !important;
     }
 
@@ -237,8 +1097,8 @@ body {
             padding: 0 8px !important;
             height: 32px !important; // Small height
             border-radius: 6px !important; // Slightly rounded
-            border: 1px solid #e5e7eb !important; // Light border
-            background-color: white !important;
+            border: 1px solid var(--border-color) !important; // Use variable
+            background-color: var(--bg-card) !important; // Use variable
         }
 
         // FIX: Remove default infix padding/height issues
@@ -271,7 +1131,7 @@ body {
 
         .mat-mdc-select-value {
             font-size: 12px !important;
-            color: #374151 !important; // gray-700
+            color: var(--text-main) !important; // Use variable
             font-weight: 500;
             // Ensure text is vertically centered
             display: flex;
@@ -279,14 +1139,14 @@ body {
         }
 
         .mat-mdc-select-arrow {
-            color: #9ca3af !important; // gray-400
+            color: var(--text-secondary) !important; // Use variable
         }
     }
 
     // Range Label (1 - 10 of 100)
     .mat-mdc-paginator-range-label {
         font-size: 12px !important;
-        color: #6b7280 !important;
+        color: var(--text-secondary) !important;
         margin: 0 12px !important;
     }
 
@@ -298,7 +1158,7 @@ body {
         width: 32px !important;
         height: 32px !important;
         padding: 0 !important;
-        color: #6b7280 !important;
+        color: var(--text-secondary) !important;
 
         mat-icon {
             font-size: 20px !important;
@@ -311,7 +1171,7 @@ body {
         }
 
         &:hover:not([disabled]) {
-            background-color: #f3f4f6 !important;
+            background-color: var(--bg-hover) !important;
             border-radius: 4px;
         }
     }

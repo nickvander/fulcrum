@@ -1,6 +1,8 @@
 .user-form {
   min-width: 400px;
   width: 100%;
+  background: var(--bg-card);
+  color: var(--text-main);
 
   .form-row {
     display: flex;
@@ -24,24 +26,24 @@
       font-size: 14px;
 
       .password-strength-weak {
-        color: #f44336;
+        color: var(--error-color);
         font-weight: bold;
       }
 
       .password-strength-medium {
-        color: #ff9800;
+        color: var(--warning-color);
         font-weight: bold;
       }
 
       .password-strength-strong {
-        color: #4caf50;
+        color: var(--success-color);
         font-weight: bold;
       }
     }
 
     .password-strength-bar {
       height: 8px;
-      background-color: #e0e0e0;
+      background-color: var(--bg-app);
       border-radius: 4px;
       overflow: hidden;
 
@@ -51,15 +53,15 @@
         transition: width 0.3s ease, background-color 0.3s ease;
 
         &.password-strength-weak {
-          background-color: #f44336;
+          background-color: var(--error-color);
         }
 
         &.password-strength-medium {
-          background-color: #ff9800;
+          background-color: var(--warning-color);
         }
 
         &.password-strength-strong {
-          background-color: #4caf50;
+          background-color: var(--success-color);
         }
       }
     }
@@ -68,4 +70,5 @@
 
 mat-dialog-actions {
   padding: 20px;
+  background: var(--bg-card);
 }

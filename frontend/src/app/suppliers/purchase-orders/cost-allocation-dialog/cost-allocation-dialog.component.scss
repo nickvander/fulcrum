@@ -4,15 +4,18 @@ h2[mat-dialog-title] {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: var(--text-main);
 
     mat-icon {
-        color: var(--primary-color, #3f51b5);
+        color: var(--primary-color);
     }
 }
 
 mat-dialog-content {
     min-width: 600px;
     max-height: 70vh;
+    background: var(--bg-card);
+    color: var(--text-main);
 }
 
 .loading-state,
@@ -25,7 +28,7 @@ mat-dialog-content {
 
     p {
         margin: 0;
-        color: rgba(0, 0, 0, 0.6);
+        color: var(--text-secondary);
     }
 }
 
@@ -37,7 +40,7 @@ mat-dialog-content {
     }
 
     p {
-        color: #d32f2f;
+        color: var(--error-color);
     }
 }
 
@@ -53,17 +56,18 @@ mat-dialog-content {
 
     .cost-card {
         flex: 1;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        background: var(--bg-app);
         border-radius: 8px;
         padding: 1rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
+        border: 1px solid var(--border-color);
 
         .label {
             font-size: 0.75rem;
-            color: rgba(0, 0, 0, 0.6);
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -71,13 +75,13 @@ mat-dialog-content {
         .value {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #1a1a2e;
+            color: var(--text-main);
             margin: 0.25rem 0;
         }
 
         .per-unit {
             font-size: 0.85rem;
-            color: #4a5568;
+            color: var(--text-secondary);
         }
     }
 }
@@ -87,19 +91,19 @@ mat-dialog-content {
 
     th.mat-header-cell {
         font-weight: 600;
-        color: rgba(0, 0, 0, 0.87);
+        color: var(--text-main);
     }
 
     .add-cell {
-        color: #2e7d32;
+        color: var(--success-color);
         font-weight: 500;
     }
 
     .new-cost-cell {
-        background: rgba(63, 81, 181, 0.08);
+        background: var(--info-bg);
 
         strong {
-            color: #3f51b5;
+            color: var(--primary-color);
         }
     }
 }
@@ -110,18 +114,20 @@ mat-dialog-content {
     justify-content: center;
     gap: 0.5rem;
     padding: 1rem;
-    background: rgba(63, 81, 181, 0.05);
+    background: var(--info-bg);
     border-radius: 8px;
     font-size: 0.95rem;
+    color: var(--text-main);
 
     strong {
         font-size: 1.25rem;
-        color: #3f51b5;
+        color: var(--primary-color);
     }
 }
 
 mat-dialog-actions {
     padding: 1rem 1.5rem;
+    background: var(--bg-card);
 
     button {
         mat-spinner {

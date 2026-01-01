@@ -73,12 +73,14 @@
   <!-- Bottom User Section -->
   <div class="sidenav-footer">
     <div class="user-card">
-      <div class="avatar-circle">NV</div>
-      <div class="user-info">
-        <span class="name">Nick Vander</span>
-        <span class="role">Admin</span>
+      <div class="user-profile">
+        <div class="avatar-circle">NV</div>
+        <div class="user-info">
+          <span class="name">Nick Vander</span>
+          <span class="role">Admin</span>
+        </div>
       </div>
-      <button mat-icon-button class="logout-mini" matTooltip="Logout">
+      <button mat-icon-button class="logout-btn" matTooltip="Sign Out" (click)="logout()">
         <mat-icon>logout</mat-icon>
       </button>
     </div>

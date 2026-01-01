@@ -3,8 +3,8 @@
 :host {
   display: block;
   height: 100%;
-  background: white;
-  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.08); // Subtle border replacement
+  background: var(--bg-header); // Use header variable, usually white in light, dark in dark
+  border-right: 1px solid var(--border-color); // Use explicit border instead of shadow for cleaner dark mode
 }
 
 .sidenav-wrapper {
@@ -12,6 +12,9 @@
   flex-direction: column;
   height: 100%;
   width: 260px; // Fixed width
+  overflow-x: hidden;
+  background: var(--bg-header); // Redundant but safe
+  box-sizing: border-box; // Ensure padding implies border-box
 }
 
 /* ===== Header ===== */
@@ -19,23 +22,28 @@
   padding: 24px 24px 16px;
   display: flex;
   align-items: center;
+  background: transparent; // Ensure no background box
+  border: none; // Ensure no border
 
   .logo-container {
     display: flex;
     align-items: center;
     gap: 12px;
+    background: transparent; // No box around logo
+    border: none;
+    box-shadow: none;
 
     .logo-icon {
       font-size: 28px;
       width: 28px;
       height: 28px;
-      color: #2E3A59; // Accent color
+      color: var(--primary-color);
     }
 
     .logo-text {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #1a1a1a;
+      color: var(--text-main);
       letter-spacing: -0.5px;
     }
   }
@@ -45,6 +53,7 @@
 .nav-scroll-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; // Prevent horizontal scrollbar
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -54,7 +63,7 @@
 .group-title {
   font-size: 0.75rem;
   text-transform: uppercase;
-  color: #999;
+  color: var(--text-hint);
   font-weight: 600;
   margin: 0 0 8px 12px;
   letter-spacing: 0.5px;
@@ -73,33 +82,38 @@
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: #555;
+  color: var(--text-secondary);
   text-decoration: none;
   transition: all 0.2s;
   font-weight: 500;
   font-size: 0.95rem;
 
   mat-icon {
-    color: #888;
+    color: var(--text-secondary);
     transition: color 0.2s;
+    opacity: 0.8;
   }
 
   &:hover {
-    background: #F8FAFB;
-    color: #333;
+    background: var(--bg-hover);
+    color: var(--text-main);
 
     mat-icon {
-      color: #555;
+      color: var(--text-main);
     }
   }
 
   &.active {
-    background: #EEF2F7; // Light accent bg
-    color: #2E3A59; // Accent color
+    background: var(--bg-layout); // Use a layout bg or light accent
+    color: var(--primary-color);
 
     mat-icon {
-      color: #2E3A59;
+      color: var(--primary-color);
     }
+
+    // In Dark Mode, we might want a slightly distinct active state
+    // but variables should handle this if configured well. 
+    // Fallback logic could go here if needed.
   }
 }
 
@@ -120,7 +134,7 @@
     font-family: inherit;
 
     &:hover {
-      background: #F8FAFB !important;
+      background: var(--bg-hover) !important;
     }
 
     &.mat-expanded {
@@ -131,16 +145,23 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      color: #555;
+      color: var(--text-secondary);
       font-weight: 500;
       margin: 0;
       font-size: 0.95rem;
 
       mat-icon {
-        color: #888;
+        color: var(--text-secondary);
         margin-right: 0;
+        opacity: 0.8;
       }
     }
+  }
+
+  // Expansion indicator (arrow) styling
+  ::ng-deep .mat-expansion-indicator::after {
+    color: var(--text-secondary) !important;
+    border-color: var(--text-secondary) !important;
   }
 }
 
@@ -150,83 +171,106 @@
   gap: 2px;
   padding-left: 12px;
   margin-top: 2px;
-  border-left: 1px solid #eee;
+  border-left: 1px solid var(--border-color);
   margin-left: 23px; // Align with icon center
 }
 
 .sub-nav-item {
   padding: 8px 12px;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary);
   text-decoration: none;
   border-radius: 6px;
   transition: all 0.2s;
 
   &:hover {
-    color: #333;
-    background: #F8FAFB;
+    color: var(--text-main);
+    background: var(--bg-hover);
   }
 
   &.active {
-    color: #2E3A59;
+    color: var(--primary-color);
     font-weight: 500;
-    background: #EEF2F7;
+    background: var(--bg-layout); // Or subtle primary bg
   }
 }
 
 /* ===== Footer ===== */
 .sidenav-footer {
   padding: 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-color);
 
   .user-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px;
-    border-radius: 8px;
-    transition: background 0.2s;
+    justify-content: space-between; // Space out profile and action
+    padding: 4px;
+    border-radius: 12px;
 
-    // &:hover { background: #F8FAFB; } // Optional hover effect for whole card
-
-    .avatar-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #2E3A59;
-      color: white;
+    .user-profile {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
+      gap: 12px;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+      flex: 1; // Take available space
+      cursor: default;
 
-    .user-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      // Optional: slight hover effect on the bio part
+      // &:hover { background: #f8fafc; }
 
-      .name {
-        font-size: 0.9rem;
+      .avatar-circle {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2E3A59 0%, #1C2336 100%); // Gradient background
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
         font-weight: 600;
-        color: #333;
+        box-shadow: 0 2px 4px rgba(46, 58, 89, 0.2);
       }
 
-      .role {
-        font-size: 0.75rem;
-        color: #888;
+      .user-info {
+        display: flex;
+        flex-direction: column;
+
+        .name {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: var(--text-main);
+        }
+
+        .role {
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          font-weight: 500;
+        }
       }
     }
 
-    .logout-mini {
+    .logout-btn {
       width: 32px;
       height: 32px;
-      color: #ccc;
+      color: #94a3b8; // Slate 400
+      border-radius: 50%; // Circular
+
+      transition: all 0.2s ease;
+      background: transparent;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
 
       &:hover {
-        color: #C62828;
-        background: #FFEBEE;
+        color: #ef4444; // Red 500
+        background: #fee2e2; // Red 100
+        transform: translateY(-1px); // Subtle lift
       }
     }
   }

@@ -2,17 +2,14 @@
   <div class="header">
     <h1>Users</h1>
     <div class="header-actions">
-      <button mat-raised-button color="primary" (click)="addNewUser()">
+      <button mat-mini-fab color="primary" (click)="addNewUser()" matTooltip="New User">
         <mat-icon>add</mat-icon>
-        New User
       </button>
-      <button mat-raised-button color="accent" (click)="openImportDialog()">
+      <button mat-mini-fab color="accent" (click)="openImportDialog()" matTooltip="Import Users">
         <mat-icon>upload_file</mat-icon>
-        Import Users
       </button>
-      <button mat-raised-button (click)="viewAuditLogs()">
+      <button mat-mini-fab color="basic" (click)="viewAuditLogs()" matTooltip="View Audit Logs">
         <mat-icon>receipt</mat-icon>
-        View Audit Logs
       </button>
     </div>
   </div>
@@ -40,13 +37,18 @@
 
     <mat-form-field appearance="outline" class="sleek-select">
       <mat-label>Search</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
       <input matInput [(ngModel)]="search_filter" (keyup.enter)="onFilterChange()" placeholder="Search users...">
-      <button mat-icon-button matSuffix (click)="onFilterChange()" *ngIf="search_filter" matTooltip="Search">
-        <mat-icon>search</mat-icon>
+      <button mat-icon-button matSuffix (click)="search_filter=''; onFilterChange()" *ngIf="search_filter"
+        matTooltip="Clear Search">
+        <mat-icon>close</mat-icon>
       </button>
     </mat-form-field>
 
-    <button mat-button (click)="clearFilters()">Clear Filters</button>
+    <button mat-button color="warn" (click)="clearFilters()"
+      *ngIf="user_type_filter || is_active_filter || search_filter">
+      Reset Filters
+    </button>
   </div>
 
   @if (isLoading) {

@@ -1,10 +1,12 @@
 .form-container {
   display: flex;
   flex-direction: column;
-  gap: 16px; // Reduced from 24
+  gap: 16px;
   padding: 24px;
   height: 100%;
   box-sizing: border-box;
+  background: var(--bg-app);
+  color: var(--text-main);
 
   &.dialog-mode {
     padding: 0 16px 16px 16px;
@@ -28,7 +30,7 @@
       font-size: 0.8rem;
       margin: 8px 0 4px 0;
       font-weight: 600;
-      color: #555;
+      color: var(--text-secondary);
     }
 
     .mat-mdc-tab-body-wrapper {
@@ -57,13 +59,13 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  border: 1px solid #ffcc80;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-color);
   border-radius: 8px;
-  color: #e65100;
+  color: var(--warning-color);
 
   mat-icon {
-    color: #f57c00;
+    color: var(--warning-color);
   }
 
   span {
@@ -72,8 +74,8 @@
   }
 
   button {
-    border-color: #f57c00;
-    color: #f57c00;
+    border-color: var(--warning-color);
+    color: var(--warning-color);
   }
 }
 
@@ -85,6 +87,7 @@
 
   h1 {
     margin: 0;
+    color: var(--text-main);
   }
 
   .header-actions {
@@ -232,7 +235,7 @@ mat-form-field {
 .no-images {
   text-align: center;
   padding: 24px;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 /* Tab Overrides */
@@ -252,13 +255,14 @@ mat-form-field {
 }
 
 .listings-list {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .listing-item {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
 
   &:last-child {
     border-bottom: none;
@@ -271,6 +275,17 @@ mat-form-field {
   gap: 12px;
   font-weight: 500;
   margin: 0;
+  color: var(--text-main);
+}
+
+// View listing link
+.listing-item a,
+.view-listing-link {
+  color: var(--primary-color) !important;
+
+  &:hover {
+    color: var(--accent-color) !important;
+  }
 }
 
 .status-badge {
@@ -278,18 +293,18 @@ mat-form-field {
   padding: 2px 8px;
   border-radius: 12px;
   color: white;
-  background-color: #9e9e9e;
+  background-color: var(--text-hint);
 
   &.active {
-    background-color: #4caf50;
+    background-color: var(--success-color);
   }
 
   &.error {
-    background-color: #f44336;
+    background-color: var(--error-color);
   }
 
   &.pending {
-    background-color: #ff9800;
+    background-color: var(--warning-color);
   }
 }
 
@@ -298,7 +313,7 @@ mat-form-field {
 
   h3 {
     margin-bottom: 16px;
-    color: #555;
+    color: var(--text-secondary);
   }
 }
 
@@ -310,6 +325,12 @@ mat-form-field {
 
 .bundle-toggle-container {
   margin-bottom: 8px;
+  color: var(--text-main);
+
+  // Slide toggle label
+  .mat-mdc-slide-toggle .mdc-form-field label {
+    color: var(--text-main);
+  }
 }
 
 .bundle-card {
@@ -319,7 +340,7 @@ mat-form-field {
     gap: 8px;
 
     mat-icon {
-      color: #3f51b5;
+      color: var(--primary-color);
     }
   }
 }
@@ -348,7 +369,7 @@ mat-form-field {
       height: 40px;
       object-fit: cover;
       border-radius: 4px;
-      background: #f5f5f5;
+      background: var(--bg-app);
     }
 
     .option-info {
@@ -358,21 +379,22 @@ mat-form-field {
       .p-name {
         font-weight: 500;
         font-size: 0.9rem;
+        color: var(--text-main);
       }
 
       .p-sku {
         font-size: 0.75rem;
-        color: #666;
+        color: var(--text-secondary);
       }
     }
   }
 }
 
 .bundle-list-container {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   overflow: hidden;
-  background: #fcfcfc;
+  background: var(--bg-card);
 }
 
 .bundle-list {
@@ -382,7 +404,8 @@ mat-form-field {
 .bundle-item {
   height: auto !important;
   padding: 8px 12px !important;
-  border-bottom: 1px solid #efefef;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
 
   &:last-child {
     border-bottom: none;
@@ -399,7 +422,7 @@ mat-form-field {
       height: 48px;
       object-fit: cover;
       border-radius: 6px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
     }
 
     .item-details {
@@ -411,7 +434,7 @@ mat-form-field {
       .comp-name {
         font-weight: 500;
         font-size: 0.85rem;
-        color: #333;
+        color: var(--text-main);
       }
 
       .qty-control {
@@ -419,31 +442,33 @@ mat-form-field {
         align-items: center;
         gap: 8px;
         font-size: 0.8rem;
-        color: #666;
+        color: var(--text-secondary);
 
         .qty-input {
           width: 50px;
           height: 28px;
           padding: 0 8px;
-          border: 1px solid #ccc;
+          border: 1px solid var(--border-color);
           border-radius: 4px;
           font-size: 0.85rem;
           text-align: center;
+          background: var(--bg-card);
+          color: var(--text-main);
 
           &:focus {
-            border-color: #3f51b5;
+            border-color: var(--primary-color);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.1);
+            box-shadow: 0 0 0 2px var(--info-bg);
           }
         }
       }
     }
 
     .remove-btn {
-      color: #999;
+      color: var(--text-hint);
 
       &:hover {
-        color: #f44336;
+        color: var(--error-color);
       }
     }
   }
@@ -454,7 +479,7 @@ mat-form-field {
   flex-direction: column;
   align-items: center;
   padding: 24px;
-  color: #888;
+  color: var(--text-secondary);
 
   mat-icon {
     font-size: 32px;

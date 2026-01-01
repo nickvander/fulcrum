@@ -2,6 +2,7 @@
 
 ## High Priority
 
+- [/] Frontend Cleanup & Standardization (Active)
 - [ ] (Phase 8) Marketplace Integration (Amazon SP-API)
 - [ ] (Phase 9) AI Content Generation
 
