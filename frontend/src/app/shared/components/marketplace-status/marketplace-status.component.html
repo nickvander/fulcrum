@@ -1,0 +1,22 @@
+@if (listings && listings.length > 0) {
+<div class="status-container" [class.simple-container]="simple">
+    @for (listing of listings; track listing.id) {
+    <div class="marketplace-badge" [class.simple-badge]="simple"
+        [class.badge-amz]="getFallbackLabel(listing.marketplace_id) === 'AMZ'" [matTooltip]="getTooltip(listing)"
+        [class.status-active]="listing.status === 'active'" [class.status-error]="listing.status === 'error'"
+        [class.status-pending]="listing.status === 'pending'">
+        @if (getMarketplaceLogo(listing.marketplace_id)) {
+        <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo" [class.simple-logo]="simple" alt="logo">
+        } @else {
+        <span class="marketplace-icon">{{ getFallbackLabel(listing.marketplace_id) }}</span>
+        }
+        @if (!simple) {
+        <span class="status-dot"></span>
+        }
+    </div>
+    }
+</div>
+}
+@if (!listings || listings.length === 0) {
+<span class="no-listings">-</span>
+}

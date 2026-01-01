@@ -1,0 +1,21 @@
+<mat-form-field appearance="outline" class="sleek-select status-filter-field" subscriptSizing="dynamic">
+    <mat-label>{{ label }}</mat-label>
+    <mat-select [ngModel]="selectedValue" (selectionChange)="onValueChange($event.value)">
+        <mat-select-trigger>
+            <div class="selected-option">
+                <mat-icon *ngIf="getSelectedIcon()">{{ getSelectedIcon() }}</mat-icon>
+                <span>{{ getSelectedLabel() }}</span>
+            </div>
+        </mat-select-trigger>
+        <mat-option *ngFor="let option of options" [value]="option.value">
+            <div class="option-content">
+                <mat-icon *ngIf="option.icon">{{ option.icon }}</mat-icon>
+                <span>{{ option.label }}</span>
+            </div>
+        </mat-option>
+    </mat-select>
+    <button *ngIf="selectedValue && selectedValue !== defaultValue" mat-icon-button matSuffix
+        (click)="clearFilter($event)">
+        <mat-icon class="clear-icon">close</mat-icon>
+    </button>
+</mat-form-field>
