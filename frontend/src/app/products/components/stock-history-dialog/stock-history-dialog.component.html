@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>Stock Adjustment History for {{ data.productName }}</h2>
+<mat-dialog-content>
+    <div class="current-stock-info">
+        <mat-icon>inventory_2</mat-icon>
+        <div class="current-stock-text">
+            <span class="current-stock-label">Current Stock:</span>
+            <span class="current-stock-value">{{ data.currentStock }}</span>
+        </div>
+    </div>
+
+    @if (data.inventoryAdjustments.length === 0) {
+    <div class="no-history">
+        <p>No stock adjustments recorded yet.</p>
+    </div>
+    } @else {
+    <mat-list>
+        @for (adjustment of data.inventoryAdjustments | orderBy:'timestamp':true; track adjustment) {
+        <mat-list-item class="adjustment-item">
+            <div class="adjustment-content">
+                <div class="adjustment-main">
+                    <div class="adjustment-amount-container">
+                        <div class="adjustment-amount" [class.positive]="adjustment.adjustment > 0"
+                            [class.negative]="adjustment.adjustment < 0">
+                            <span class="adjustment-sign">{{ adjustment.adjustment > 0 ? '+' : '' }}</span>
+                            <span class="adjustment-value">{{ adjustment.adjustment }}</span>
+                        </div>
+                    </div>
+                    <div class="adjustment-details">
+                        <div class="adjustment-date-user">
+                            <span class="adjustment-date">{{ adjustment.timestamp | date:'short' }}</span>
+                            @if (adjustment.created_by) {
+                            <span class="adjustment-user">• {{ adjustment.created_by }}</span>
+                            }
+                        </div>
+                        @if (adjustment.reason) {
+                        <div class="adjustment-reason">
+                            <mat-icon class="reason-icon">info</mat-icon>
+                            <span>
+                                @if (isPoReason(adjustment.reason)) {
+                                Received <a href="javascript:void(0)" (click)="goToPo(adjustment.reason!)">{{
+                                    getPoLabel(adjustment.reason!) }}</a>
+                                } @else {
+                                {{ adjustment.reason }}
+                                }
+                            </span>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </mat-list-item>
+        }
+    </mat-list>
+    }
+
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()" cdkFocusInitial>Close</button>
+</mat-dialog-actions>

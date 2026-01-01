@@ -1,0 +1,137 @@
+    .no-history {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+    .current-stock-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 8px;
+        background-color: #f5f9ff;
+        border: 1px solid #d1e7ff;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+
+    .current-stock-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .current-stock-label {
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .current-stock-value {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #1976d2;
+        margin-top: 4px;
+    }
+
+    .adjustment-item {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        padding: 16px;
+        background-color: #fafafa;
+    }
+
+    .adjustment-content {
+        width: 100%;
+    }
+
+    .adjustment-main {
+        display: flex;
+        gap: 16px;
+    }
+
+    .adjustment-amount-container {
+        min-width: 80px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .adjustment-amount {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1em;
+        text-align: center;
+        border: 1px solid;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .positive {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        border-color: #c8e6c9;
+    }
+
+    .negative {
+        background-color: #ffebee;
+        color: #f44336;
+        border-color: #ffcdd2;
+    }
+
+    .adjustment-amount .adjustment-sign {
+        font-size: 0.9em;
+        line-height: 1;
+    }
+
+    .adjustment-amount .adjustment-value {
+        font-size: 1.2em;
+        line-height: 1;
+        font-weight: 700;
+    }
+
+    .adjustment-details {
+        flex: 1;
+    }
+
+    .adjustment-date-user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+
+    .adjustment-date {
+        font-size: 0.9em;
+        color: #666;
+        font-weight: 500;
+    }
+
+    .adjustment-user {
+        font-size: 0.9em;
+        color: #888;
+    }
+
+    .adjustment-reason {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        font-size: 0.85em;
+        color: #666;
+        font-style: italic;
+        margin-top: 6px;
+        padding-left: 4px;
+    }
+
+    .reason-icon {
+        font-size: 1em;
+        width: 1em;
+        height: 1em;
+        color: #666;
+        margin-top: 2px;
+    }
