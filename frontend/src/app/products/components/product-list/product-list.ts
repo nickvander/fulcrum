@@ -27,7 +27,7 @@ import { InfiniteScrollDirective } from '../../directives/infinite-scroll.direct
 import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component'; // Managed import
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
-import { StockHistoryDialog } from '../stock-history-dialog/stock-history-dialog';
+import { StockHistoryDialogComponent } from '../stock-history-dialog/stock-history-dialog.component';
 import { ProductFiltersComponent } from '../product-filters/product-filters';
 import { BatchOperationsService } from '../../services/batch-operations.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -565,7 +565,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   showStockHistory(product: Product): void {
-    const dialogRef = this.dialog.open(StockHistoryDialog, {
+    const dialogRef = this.dialog.open(StockHistoryDialogComponent, {
       width: '600px',
       data: {
         productName: product.name,

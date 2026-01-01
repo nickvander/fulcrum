@@ -1,15 +1,16 @@
+
 import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { StockHistoryDialog, StockHistoryDialogData } from './stock-history-dialog';
+import { StockHistoryDialogComponent, StockHistoryDialogData } from './stock-history-dialog.component';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { OrderByPipe } from '../../pipes/order-by.pipe';
 import { DatePipe } from '@angular/common';
 
-describe('StockHistoryDialog', () => {
-    let component: StockHistoryDialog;
-    let fixture: ComponentFixture<StockHistoryDialog>;
-    let dialogRefMock: MockedObject<MatDialogRef<StockHistoryDialog>>;
+describe('StockHistoryDialogComponent', () => {
+    let component: StockHistoryDialogComponent;
+    let fixture: ComponentFixture<StockHistoryDialogComponent>;
+    let dialogRefMock: MockedObject<MatDialogRef<StockHistoryDialogComponent>>;
 
     const mockData: StockHistoryDialogData = {
         productName: 'Test Product',
@@ -39,7 +40,7 @@ describe('StockHistoryDialog', () => {
 
         await TestBed.configureTestingModule({
             imports: [
-                StockHistoryDialog,
+                StockHistoryDialogComponent,
                 NoopAnimationsModule
             ],
             providers: [
@@ -50,7 +51,7 @@ describe('StockHistoryDialog', () => {
             ]
         }).compileComponents();
 
-        fixture = TestBed.createComponent(StockHistoryDialog);
+        fixture = TestBed.createComponent(StockHistoryDialogComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });
@@ -74,7 +75,7 @@ describe('StockHistoryDialog', () => {
         const emptyData = { ...mockData, inventoryAdjustments: [] } as any;
 
         TestBed.configureTestingModule({
-            imports: [StockHistoryDialog, NoopAnimationsModule],
+            imports: [StockHistoryDialogComponent, NoopAnimationsModule],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },
                 { provide: MAT_DIALOG_DATA, useValue: emptyData },
@@ -83,7 +84,7 @@ describe('StockHistoryDialog', () => {
             ]
         }).compileComponents();
 
-        const emptyFixture = TestBed.createComponent(StockHistoryDialog);
+        const emptyFixture = TestBed.createComponent(StockHistoryDialogComponent);
         emptyFixture.detectChanges();
         const compiled = emptyFixture.nativeElement;
 
