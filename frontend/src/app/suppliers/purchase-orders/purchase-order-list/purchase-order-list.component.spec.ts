@@ -15,34 +15,49 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('PurchaseOrderListComponent', () => {
   let component: PurchaseOrderListComponent;
   let fixture: ComponentFixture<PurchaseOrderListComponent>;
 
+  const suppliersServiceMock = {
+    getSuppliers: () => of([]),
+    getPurchaseOrders: () => of([])
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PurchaseOrderListComponent],
+      declarations: [],
       imports: [
-        HttpClientTestingModule,
-        RouterTestingModule,
+        PurchaseOrderListComponent,
+        CommonModule,
         MatTableModule,
-        MatCardModule,
-        MatButtonModule,
-        MatIconModule,
+        MatPaginatorModule,
         MatSortModule,
-        MatFormFieldModule,
+        MatIconModule,
+        MatButtonModule,
         MatSelectModule,
+        MatCardModule,
+        MatFormFieldModule,
         MatInputModule,
-        FormsModule,
-        NoopAnimationsModule
+        BrowserAnimationsModule,
+        RouterTestingModule,
+        HttpClientTestingModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, es: {} },
+          translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+        })
       ],
       providers: [
-        SuppliersService,
+        { provide: SuppliersService, useValue: suppliersServiceMock },
         DateRangeService
       ],
-      schemas: [NO_ERRORS_SCHEMA]
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })
       .compileComponents();
 

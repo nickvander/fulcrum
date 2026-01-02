@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -26,6 +26,7 @@ import { CostAllocationDialogComponent } from './purchase-orders/cost-allocation
 import { SupplierSelectionDialogComponent } from './purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component';
 import { UserService } from '../users/services/user.service';
 import { MatListModule } from '@angular/material/list';
+import { TranslocoModule } from '@ngneat/transloco';
 
 import { SuppliersRoutingModule } from './suppliers-routing.module';
 import { SupplierListComponent } from './supplier-list/supplier-list.component';
@@ -39,16 +40,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { SupplierProductManagerComponent } from './supplier-product-manager/supplier-product-manager.component';
 
 @NgModule({
-  declarations: [
-    SupplierListComponent,
-    SupplierDetailComponent,
-    PurchaseOrderListComponent,
-    PurchaseOrderEditComponent,
-    ReceivingDialogComponent,
-    QuickProductDialogComponent,
-    CostAllocationDialogComponent,
-    SupplierSelectionDialogComponent
-  ],
+  declarations: [],
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -77,10 +69,20 @@ import { SupplierProductManagerComponent } from './supplier-product-manager/supp
     DateRangePresetsComponent,
     MatPaginatorModule,
     MatSidenavModule,
-    SupplierDashboardComponent
+    SupplierDashboardComponent,
+    TranslocoModule,
+    SupplierListComponent,
+    SupplierDetailComponent,
+    SupplierSelectionDialogComponent,
+    CostAllocationDialogComponent,
+    ReceivingDialogComponent,
+    QuickProductDialogComponent,
+    PurchaseOrderListComponent,
+    PurchaseOrderEditComponent
   ],
   providers: [
     UserService
-  ]
+  ],
+  schemas: [NO_ERRORS_SCHEMA]
 })
 export class SuppliersModule { }

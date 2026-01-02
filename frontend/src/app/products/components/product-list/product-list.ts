@@ -26,6 +26,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component'; // Managed import
+import { TranslocoModule } from '@ngneat/transloco';
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialogComponent } from '../stock-history-dialog/stock-history-dialog.component';
@@ -76,7 +77,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     MatSelectModule,
     MatInputModule,
     MatPaginatorModule,
-    ProductDashboardComponent
+    ProductDashboardComponent,
+    TranslocoModule
   ],
 })
 export class ProductList implements OnInit, OnDestroy, AfterViewInit {

@@ -1,88 +1,90 @@
-<div class="sidenav-wrapper">
-  <div class="sidenav-header">
-    <div class="logo-container">
-      <mat-icon class="logo-icon">change_history</mat-icon>
-      <span class="logo-text">Fulcrum</span>
-    </div>
-  </div>
-
-  <div class="nav-scroll-content">
-    <!-- Main Navigation -->
-    <div class="nav-group">
-      <h3 class="group-title">Menu</h3>
-
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
-        <mat-icon>dashboard</mat-icon>
-        <span>Dashboard</span>
-      </a>
-
-      <a routerLink="/products" routerLinkActive="active" class="nav-item">
-        <mat-icon>inventory_2</mat-icon>
-        <span>Products</span>
-      </a>
-
-      <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
-        (closed)="purchasingExpanded = false">
-        <mat-expansion-panel-header>
-          <mat-panel-title>
-            <mat-icon>shopping_cart</mat-icon>
-            <span>Purchasing</span>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <div class="sub-nav">
-          <a routerLink="/suppliers/po" routerLinkActive="active" class="sub-nav-item">
-            <span>Purchase Orders</span>
-          </a>
-          <a routerLink="/suppliers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-            class="sub-nav-item">
-            <span>Suppliers</span>
-          </a>
-          <a routerLink="/expenses" routerLinkActive="active" class="sub-nav-item">
-            <span>Expenses</span>
-          </a>
-        </div>
-      </mat-expansion-panel>
-
-      <a routerLink="/marketplaces" routerLinkActive="active" class="nav-item">
-        <mat-icon>store</mat-icon>
-        <span>Marketplaces</span>
-      </a>
-
-      <a routerLink="/marketing" routerLinkActive="active" class="nav-item">
-        <mat-icon>campaign</mat-icon>
-        <span>Marketing</span>
-      </a>
-    </div>
-
-    <!-- Management Group -->
-    <div class="nav-group">
-      <h3 class="group-title">Management</h3>
-
-      <a routerLink="/users" routerLinkActive="active" class="nav-item">
-        <mat-icon>people</mat-icon>
-        <span>Users</span>
-      </a>
-
-      <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-        <mat-icon>settings</mat-icon>
-        <span>Settings</span>
-      </a>
-    </div>
-  </div>
-
-  <!-- Bottom User Section -->
-  <div class="sidenav-footer" *ngIf="currentUser$ | async as user">
-    <div class="user-card">
-      <div class="user-profile">
-        <div class="avatar-circle">{{ getUserInitials(user) }}</div>
-        <div class="user-info">
-          <span class="name">{{ getUserDisplayName(user) }}</span>
-          <span class="role">{{ getUserRole(user) }}</span>
-        </div>
+<ng-container *transloco="let t">
+  <div class="sidenav-wrapper">
+    <div class="sidenav-header">
+      <div class="logo-container">
+        <mat-icon class="logo-icon">change_history</mat-icon>
+        <span class="logo-text">Fulcrum</span>
       </div>
-      <button mat-icon-button class="logout-btn" matTooltip="Sign Out" (click)="logout()">
-        <mat-icon>logout</mat-icon>
-      </button>
+    </div>
+
+    <div class="nav-scroll-content">
+      <!-- Main Navigation -->
+      <div class="nav-group">
+        <h3 class="group-title">{{ t('nav.menu') }}</h3>
+
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+          <mat-icon>dashboard</mat-icon>
+          <span>{{ t('nav.dashboard') }}</span>
+        </a>
+
+        <a routerLink="/products" routerLinkActive="active" class="nav-item">
+          <mat-icon>inventory_2</mat-icon>
+          <span>{{ t('nav.products') }}</span>
+        </a>
+
+        <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
+          (closed)="purchasingExpanded = false">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>shopping_cart</mat-icon>
+              <span>{{ t('nav.purchasing') }}</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="sub-nav">
+            <a routerLink="/suppliers/po" routerLinkActive="active" class="sub-nav-item">
+              <span>{{ t('nav.purchaseOrders') }}</span>
+            </a>
+            <a routerLink="/suppliers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+              class="sub-nav-item">
+              <span>{{ t('nav.suppliers') }}</span>
+            </a>
+            <a routerLink="/expenses" routerLinkActive="active" class="sub-nav-item">
+              <span>{{ t('nav.expenses') }}</span>
+            </a>
+          </div>
+        </mat-expansion-panel>
+
+        <a routerLink="/marketplaces" routerLinkActive="active" class="nav-item">
+          <mat-icon>store</mat-icon>
+          <span>{{ t('nav.marketplaces') }}</span>
+        </a>
+
+        <a routerLink="/marketing" routerLinkActive="active" class="nav-item">
+          <mat-icon>campaign</mat-icon>
+          <span>{{ t('nav.marketing') }}</span>
+        </a>
+      </div>
+
+      <!-- Management Group -->
+      <div class="nav-group">
+        <h3 class="group-title">{{ t('nav.management') }}</h3>
+
+        <a routerLink="/users" routerLinkActive="active" class="nav-item">
+          <mat-icon>people</mat-icon>
+          <span>{{ t('nav.users') }}</span>
+        </a>
+
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+          <mat-icon>settings</mat-icon>
+          <span>{{ t('nav.settings') }}</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom User Section -->
+    <div class="sidenav-footer" *ngIf="currentUser$ | async as user">
+      <div class="user-card">
+        <div class="user-profile">
+          <div class="avatar-circle">{{ getUserInitials(user) }}</div>
+          <div class="user-info">
+            <span class="name">{{ getUserDisplayName(user) }}</span>
+            <span class="role">{{ getUserRole(user) }}</span>
+          </div>
+        </div>
+        <button mat-icon-button class="logout-btn" [matTooltip]="t('nav.signOut')" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
     </div>
   </div>
-</div>
+</ng-container>

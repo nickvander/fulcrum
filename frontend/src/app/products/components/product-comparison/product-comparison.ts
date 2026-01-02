@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 import { Product } from '../../models/product.model';
 
 @Component({
@@ -16,7 +17,8 @@ import { Product } from '../../models/product.model';
     MatIconModule,
     MatCardModule,
     MatTableModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TranslocoModule
   ],
   templateUrl: './product-comparison.html',
   styleUrls: ['./product-comparison.scss']
@@ -75,7 +77,7 @@ export class ProductComparisonComponent implements OnInit {
     if (value === null || value === undefined) {
       return 'N/A';
     }
-    
+
     switch (type) {
       case 'currency':
         return typeof value === 'number' ? `$${value.toFixed(2)}` : value;
@@ -110,7 +112,7 @@ export class ProductComparisonComponent implements OnInit {
       // Already showing a data URI, don't try again
       return;
     }
-    
+
     // Set a data URI placeholder image if the image fails to load
     event.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
   }
@@ -122,9 +124,9 @@ export class ProductComparisonComponent implements OnInit {
   hasDifference(element: any, productIndex: number): boolean {
     // Check if this product's value is different from others in the same attribute row
     if (this.products.length <= 1) return false;
-    
+
     const currentProductValue = element[`product${productIndex}`];
-    
+
     // Compare with other products in the same row
     for (let i = 0; i < this.products.length; i++) {
       if (i !== productIndex) {
@@ -134,7 +136,7 @@ export class ProductComparisonComponent implements OnInit {
         }
       }
     }
-    
+
     return false;
   }
 }

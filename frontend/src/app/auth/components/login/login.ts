@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +25,8 @@ import { RouterModule } from '@angular/router';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    RouterModule
+    RouterModule,
+    TranslocoModule
   ],
 })
 export class Login {

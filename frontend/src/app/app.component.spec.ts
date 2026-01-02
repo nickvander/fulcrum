@@ -1,15 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AppRoutingModule } from './app-routing.module';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CoreModule } from './core/core-module';
 import { CommonModule } from '@angular/common';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, RouterTestingModule, NoopAnimationsModule],
+      imports: [
+        AppComponent,
+        RouterTestingModule,
+        NoopAnimationsModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, 'es-MX': {} },
+          translocoConfig: {
+            availableLangs: ['en', 'es-MX'],
+            defaultLang: 'en',
+          },
+        }),
+      ],
     })
       .overrideComponent(AppComponent, {
         set: {
@@ -25,3 +36,4 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 });
+

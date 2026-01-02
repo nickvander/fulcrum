@@ -1,5 +1,6 @@
 import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -64,7 +65,11 @@ describe('UserList', () => {
                 MatSlideToggleModule,
                 MatIconModule,
                 MatTooltipModule,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: UserService, useClass: UserServiceMock },

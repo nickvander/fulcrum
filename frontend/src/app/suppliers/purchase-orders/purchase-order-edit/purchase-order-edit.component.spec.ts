@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { PurchaseOrderEditComponent } from './purchase-order-edit.component';
 import { SuppliersService } from '../../suppliers.service';
 import { UserService } from '../../../users/services/user.service';
+import { CommonModule } from '@angular/common';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ReactiveFormsModule, FormsModule, FormBuilder } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -43,8 +44,10 @@ describe('PurchaseOrderEditComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      declarations: [PurchaseOrderEditComponent],
+      declarations: [],
       imports: [
+        PurchaseOrderEditComponent,
+        CommonModule,
         HttpClientTestingModule,
         ReactiveFormsModule,
         FormsModule,

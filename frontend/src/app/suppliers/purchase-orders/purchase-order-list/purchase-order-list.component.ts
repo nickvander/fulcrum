@@ -1,13 +1,26 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';  // Added AfterViewInit
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { SuppliersService } from '../../suppliers.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator'; // Added Paginator
-import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
+import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
+import { TranslocoModule } from '@ngneat/transloco';
 import { ViewChild } from '@angular/core';
 
 interface POSummary {
@@ -21,7 +34,26 @@ interface POSummary {
   selector: 'app-purchase-order-list',
   templateUrl: './purchase-order-list.component.html',
   styleUrls: ['./purchase-order-list.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    MatTooltipModule,
+    MatProgressBarModule,
+    DateRangePresetsComponent,
+    StatCardComponent,
+    TranslocoModule
+  ]
 })
 export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewInit {
   // Data Source for MatTable with sorting

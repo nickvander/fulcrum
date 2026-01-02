@@ -10,6 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslocoModule } from '@ngneat/transloco';
 import { Expense } from '../../models/expense.model';
 
 @Component({
@@ -26,7 +27,8 @@ import { Expense } from '../../models/expense.model';
         MatNativeDateModule,
         MatButtonModule,
         MatButtonToggleModule,
-        MatIconModule
+        MatIconModule,
+        TranslocoModule
     ],
     templateUrl: './expense-dialog.html',
     styleUrl: './expense-dialog.scss'

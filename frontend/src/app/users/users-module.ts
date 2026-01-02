@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { TranslocoModule } from '@ngneat/transloco';
 
 import { UsersRoutingModule } from './users-routing-module';
 import { UserList } from './components/user-list/user-list';
@@ -43,6 +44,7 @@ import { AuditLogService } from './services/audit-log.service';
     MatTooltipModule,
     MatSnackBarModule,
     MatDialogModule,
+    TranslocoModule,
     UserList,
     UserForm,
     AccountManagement,

@@ -1,11 +1,20 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatSort } from '@angular/material/sort';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterModule, Router } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 import { forkJoin } from 'rxjs';
 import { SuppliersService } from '../suppliers.service';
 import { PurchaseOrder } from '../../shared/models/purchase-order.model';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { SupplierDashboardComponent } from '../pages/supplier-dashboard/supplier-dashboard.component';
 
 interface SupplierSummary {
     id: number;
@@ -20,7 +29,22 @@ interface SupplierSummary {
     selector: 'app-supplier-list',
     templateUrl: './supplier-list.component.html',
     styleUrls: ['./supplier-list.component.scss'],
-    standalone: false
+    standalone: true,
+    imports: [
+        CommonModule,
+        MatTableModule,
+        MatPaginatorModule,
+        MatSortModule,
+        MatButtonModule,
+        MatIconModule,
+        RouterModule,
+        TranslocoModule,
+        MatMenuModule,
+        MatCardModule,
+        MatProgressBarModule,
+        MatTooltipModule,
+        SupplierDashboardComponent
+    ]
 })
 export class SupplierListComponent implements OnInit, AfterViewInit {
     dataSource = new MatTableDataSource<SupplierSummary>([]);

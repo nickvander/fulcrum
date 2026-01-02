@@ -7,6 +7,7 @@ export interface AppSettings {
   ai_provider: string;
   ai_api_key: string;
   theme: 'light' | 'dark';
+  language: 'en' | 'es-MX';
 }
 
 export interface StoreSettings {

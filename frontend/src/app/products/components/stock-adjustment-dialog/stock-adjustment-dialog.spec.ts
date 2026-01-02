@@ -1,5 +1,6 @@
 import type { MockedObject } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { StockAdjustmentDialog, StockAdjustmentData } from './stock-adjustment-dialog';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +25,11 @@ describe('StockAdjustmentDialog', () => {
             imports: [
                 StockAdjustmentDialog,
                 FormsModule,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },

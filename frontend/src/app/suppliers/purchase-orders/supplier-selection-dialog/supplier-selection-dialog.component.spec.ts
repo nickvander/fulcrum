@@ -23,8 +23,8 @@ describe('SupplierSelectionDialogComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            declarations: [SupplierSelectionDialogComponent],
-            imports: [MatDialogModule, MatListModule, MatIconModule, MatButtonModule, NoopAnimationsModule],
+            declarations: [],
+            imports: [SupplierSelectionDialogComponent, MatDialogModule, MatListModule, MatIconModule, MatButtonModule, NoopAnimationsModule],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },
                 { provide: MAT_DIALOG_DATA, useValue: mockData }
