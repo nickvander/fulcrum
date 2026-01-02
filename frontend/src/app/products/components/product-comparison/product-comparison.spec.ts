@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { By } from '@angular/platform-browser';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -49,7 +50,11 @@ describe('ProductComparisonComponent', () => {
                 MatCardModule,
                 MatTableModule,
                 MatTooltipModule,
-                ProductComparisonComponent
+                ProductComparisonComponent,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ]
         })
             .compileComponents();

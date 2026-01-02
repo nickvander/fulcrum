@@ -1,183 +1,187 @@
-<div class="expense-container">
+<ng-container *transloco="let t">
+    <div class="expense-container">
 
-    <!-- Header -->
-    <div class="header">
-        <div class="header-left">
-            <h1>
-                <span>Business Expenses</span>
-                <span class="expense-count" *ngIf="expenses.length > 0">
-                    {{expenses.length}}
-                </span>
-            </h1>
-        </div>
-        <div class="header-actions">
-            <button mat-mini-fab color="primary" (click)="onAddExpense()" matTooltip="Add Expense">
-                <mat-icon>add</mat-icon>
-            </button>
-            <button mat-mini-fab color="accent" (click)="onCreateSupplier()" matTooltip="New Supplier">
-                <mat-icon>business</mat-icon>
-            </button>
-        </div>
-    </div>
-
-    <!-- KPI Cards Row -->
-    <div class="kpi-row">
-        <app-stat-card title="Total Expenses" [value]="'$' + getTotalExpenses()" icon="account_balance_wallet"
-            color="#e91e63" link="/expenses" tooltip="Total expenses for selected period">
-        </app-stat-card>
-        <app-stat-card title="Recurring" [value]="'$' + getRecurringTotal()" icon="repeat" color="#9c27b0"
-            link="/expenses" tooltip="Monthly/recurring expenses">
-        </app-stat-card>
-        <app-stat-card title="One-time" [value]="'$' + getOneTimeTotal()" icon="event" color="#3f51b5" link="/expenses"
-            tooltip="One-time expenses">
-        </app-stat-card>
-        <app-stat-card title="Entries" [value]="summary?.count || 0" icon="receipt_long" color="#009688"
-            link="/expenses" tooltip="Number of expense entries">
-        </app-stat-card>
-    </div>
-
-    <!-- Filters -->
-    <mat-card class="filter-card">
-        <mat-card-content>
-            <div class="filters-row">
-                <!-- Date Range Presets -->
-                <app-date-range-presets [useGlobalService]="true" (rangeChange)="onDateRangeChange($event)">
-                </app-date-range-presets>
-
-                <div class="filter-divider"></div>
-
-                <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-                    <mat-label>Category</mat-label>
-                    <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onFilterChange()">
-                        <mat-option value="">All Categories</mat-option>
-                        @for (cat of categories; track cat) {
-                        <mat-option [value]="cat">{{cat}}</mat-option>
-                        }
-                    </mat-select>
-                    @if (selectedCategory) {
-                    <button mat-icon-button matSuffix
-                        (click)="selectedCategory=''; onFilterChange(); $event.stopPropagation()">
-                        <mat-icon
-                            style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
-                    </button>
-                    }
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-                    <mat-label>Type</mat-label>
-                    <mat-select [(ngModel)]="selectedType" (selectionChange)="onFilterChange()">
-                        <mat-option value="">All Types</mat-option>
-                        <mat-option value="one_time">One-time</mat-option>
-                        <mat-option value="recurring">Recurring</mat-option>
-                    </mat-select>
-                    @if (selectedType) {
-                    <button mat-icon-button matSuffix
-                        (click)="selectedType=''; onFilterChange(); $event.stopPropagation()">
-                        <mat-icon
-                            style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
-                    </button>
-                    }
-                </mat-form-field>
-
-                @if (hasActiveFilters()) {
-                <button mat-button color="warn" (click)="clearFilters()">
-                    <mat-icon>clear</mat-icon> Clear
-                </button>
-                }
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1>
+                    <span>{{ t('nav.expenses') }}</span>
+                    <span class="expense-count" *ngIf="expenses.length > 0">
+                        {{expenses.length}}
+                    </span>
+                </h1>
             </div>
-        </mat-card-content>
-    </mat-card>
-
-    <!-- Expense Table -->
-    <mat-card class="table-card">
-        @if (isLoading) {
-        <div class="loading-state">
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-            <p>Loading expenses...</p>
+            <div class="header-actions">
+                <button mat-mini-fab color="primary" (click)="onAddExpense()" [matTooltip]="t('expenses.addExpense')">
+                    <mat-icon>add</mat-icon>
+                </button>
+                <button mat-mini-fab color="accent" (click)="onCreateSupplier()"
+                    [matTooltip]="t('suppliers.addSupplier')">
+                    <mat-icon>business</mat-icon>
+                </button>
+            </div>
         </div>
-        } @else if (dataSource.data.length === 0) {
-        <div class="empty-state">
-            <mat-icon class="empty-icon">receipt_long</mat-icon>
-            <h3>No expenses found</h3>
-            <p>Start tracking your business expenses by clicking "Add Expense".</p>
-            <button mat-raised-button color="primary" (click)="onAddExpense()">
-                <mat-icon>add</mat-icon> Add Your First Expense
-            </button>
-        </div>
-        } @else {
-        <table mat-table [dataSource]="dataSource" matSort class="expense-table">
-            <!-- Date Column -->
-            <ng-container matColumnDef="date">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
-                <td mat-cell *matCellDef="let expense"> {{expense.date | date:'mediumDate'}} </td>
-            </ng-container>
 
-            <!-- Description Column -->
-            <ng-container matColumnDef="description">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Description </th>
-                <td mat-cell *matCellDef="let expense">
-                    <div class="description-cell">
-                        <span class="description-text">{{expense.description}}</span>
-                        @if (expense.reference_number) {
-                        <span class="reference-badge">Ref: {{expense.reference_number}}</span>
+        <!-- KPI Cards Row -->
+        <div class="kpi-row">
+            <app-stat-card [title]="t('expenses.totalExpenses')" [value]="'$' + getTotalExpenses()"
+                icon="account_balance_wallet" color="#e91e63" link="/expenses" [tooltip]="t('expenses.totalExpenses')">
+            </app-stat-card>
+            <app-stat-card [title]="t('expenses.recurring')" [value]="'$' + getRecurringTotal()" icon="repeat"
+                color="#9c27b0" link="/expenses" [tooltip]="t('expenses.recurring')">
+            </app-stat-card>
+            <app-stat-card [title]="t('expenses.oneTime')" [value]="'$' + getOneTimeTotal()" icon="event"
+                color="#3f51b5" link="/expenses" [tooltip]="t('expenses.oneTime')">
+            </app-stat-card>
+            <app-stat-card [title]="t('expenses.entries')" [value]="summary?.count || 0" icon="receipt_long"
+                color="#009688" link="/expenses" [tooltip]="t('expenses.entries')">
+            </app-stat-card>
+        </div>
+
+        <!-- Filters -->
+        <mat-card class="filter-card">
+            <mat-card-content>
+                <div class="filters-row">
+                    <!-- Date Range Presets -->
+                    <app-date-range-presets [useGlobalService]="true" (rangeChange)="onDateRangeChange($event)">
+                    </app-date-range-presets>
+
+                    <div class="filter-divider"></div>
+
+                    <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+                        <mat-label>{{ t('expenses.category') }}</mat-label>
+                        <mat-select [(ngModel)]="selectedCategory" (selectionChange)="onFilterChange()">
+                            <mat-option value="">{{ t('common.all') }}</mat-option>
+                            @for (cat of categories; track cat) {
+                            <mat-option [value]="cat">{{cat}}</mat-option>
+                            }
+                        </mat-select>
+                        @if (selectedCategory) {
+                        <button mat-icon-button matSuffix
+                            (click)="selectedCategory=''; onFilterChange(); $event.stopPropagation()">
+                            <mat-icon
+                                style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
+                        </button>
                         }
-                    </div>
-                </td>
-            </ng-container>
+                    </mat-form-field>
 
-            <!-- Category Column -->
-            <ng-container matColumnDef="category">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Category </th>
-                <td mat-cell *matCellDef="let expense">
-                    <span class="category-badge" [style.background-color]="getCategoryColor(expense.category) + '20'"
-                        [style.color]="getCategoryColor(expense.category)">
-                        {{expense.category}}
-                    </span>
-                </td>
-            </ng-container>
+                    <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
+                        <mat-label>{{ t('expenses.type') }}</mat-label>
+                        <mat-select [(ngModel)]="selectedType" (selectionChange)="onFilterChange()">
+                            <mat-option value="">{{ t('common.all') }}</mat-option>
+                            <mat-option value="one_time">{{ t('expenses.oneTime') }}</mat-option>
+                            <mat-option value="recurring">{{ t('expenses.recurring') }}</mat-option>
+                        </mat-select>
+                        @if (selectedType) {
+                        <button mat-icon-button matSuffix
+                            (click)="selectedType=''; onFilterChange(); $event.stopPropagation()">
+                            <mat-icon
+                                style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
+                        </button>
+                        }
+                    </mat-form-field>
 
-            <!-- Type Column -->
-            <ng-container matColumnDef="type">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Type </th>
-                <td mat-cell *matCellDef="let expense">
-                    <span class="type-badge" [class.recurring]="expense.expense_type === 'recurring'">
-                        <mat-icon>{{getTypeIcon(expense.expense_type)}}</mat-icon>
-                        {{getTypeLabel(expense.expense_type)}}
-                    </span>
-                </td>
-            </ng-container>
-
-            <!-- Amount Column -->
-            <ng-container matColumnDef="amount">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header> Amount </th>
-                <td mat-cell *matCellDef="let expense" class="amount-cell">
-                    {{expense.amount | currency:expense.currency}}
-                </td>
-            </ng-container>
-
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let expense">
-                    <button mat-icon-button [matMenuTriggerFor]="actionMenu">
-                        <mat-icon>more_vert</mat-icon>
+                    @if (hasActiveFilters()) {
+                    <button mat-button color="warn" (click)="clearFilters()">
+                        <mat-icon>clear</mat-icon> {{ t('common.clear') }}
                     </button>
-                    <mat-menu #actionMenu="matMenu">
-                        <button mat-menu-item (click)="onEditExpense(expense)">
-                            <mat-icon>edit</mat-icon> Edit
-                        </button>
-                        <button mat-menu-item (click)="onDeleteExpense(expense.id)" class="delete-action">
-                            <mat-icon>delete</mat-icon> Delete
-                        </button>
-                    </mat-menu>
-                </td>
-            </ng-container>
+                    }
+                </div>
+            </mat-card-content>
+        </mat-card>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="expense-row"></tr>
-        </table>
-        <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
-            aria-label="Select page of expenses"></mat-paginator>
-        }
-    </mat-card>
-</div>
+        <!-- Expense Table -->
+        <mat-card class="table-card">
+            @if (isLoading) {
+            <div class="loading-state">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                <p>{{ t('common.loading') }}</p>
+            </div>
+            } @else if (dataSource.data.length === 0) {
+            <div class="empty-state">
+                <mat-icon class="empty-icon">receipt_long</mat-icon>
+                <h3>{{ t('common.noResults') }}</h3>
+                <p>{{ t('expenses.addExpense') }}</p>
+                <button mat-raised-button color="primary" (click)="onAddExpense()">
+                    <mat-icon>add</mat-icon> {{ t('expenses.addExpense') }}
+                </button>
+            </div>
+            } @else {
+            <table mat-table [dataSource]="dataSource" matSort class="expense-table">
+                <!-- Date Column -->
+                <ng-container matColumnDef="date">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.date') }} </th>
+                    <td mat-cell *matCellDef="let expense"> {{expense.date | date:'mediumDate'}} </td>
+                </ng-container>
+
+                <!-- Description Column -->
+                <ng-container matColumnDef="description">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.name') }} </th>
+                    <td mat-cell *matCellDef="let expense">
+                        <div class="description-cell">
+                            <span class="description-text">{{expense.description}}</span>
+                            @if (expense.reference_number) {
+                            <span class="reference-badge">Ref: {{expense.reference_number}}</span>
+                            }
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Category Column -->
+                <ng-container matColumnDef="category">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('expenses.category') }} </th>
+                    <td mat-cell *matCellDef="let expense">
+                        <span class="category-badge"
+                            [style.background-color]="getCategoryColor(expense.category) + '20'"
+                            [style.color]="getCategoryColor(expense.category)">
+                            {{expense.category}}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Type Column -->
+                <ng-container matColumnDef="type">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('expenses.type') }} </th>
+                    <td mat-cell *matCellDef="let expense">
+                        <span class="type-badge" [class.recurring]="expense.expense_type === 'recurring'">
+                            <mat-icon>{{getTypeIcon(expense.expense_type)}}</mat-icon>
+                            {{getTypeLabel(expense.expense_type)}}
+                        </span>
+                    </td>
+                </ng-container>
+
+                <!-- Amount Column -->
+                <ng-container matColumnDef="amount">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('expenses.amount') }} </th>
+                    <td mat-cell *matCellDef="let expense" class="amount-cell">
+                        {{expense.amount | currency:expense.currency}}
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let expense">
+                        <button mat-icon-button [matMenuTriggerFor]="actionMenu">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #actionMenu="matMenu">
+                            <button mat-menu-item (click)="onEditExpense(expense)">
+                                <mat-icon>edit</mat-icon> {{ t('common.edit') }}
+                            </button>
+                            <button mat-menu-item (click)="onDeleteExpense(expense.id)" class="delete-action">
+                                <mat-icon>delete</mat-icon> {{ t('common.delete') }}
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="expense-row"></tr>
+            </table>
+            <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
+                aria-label="Select page of expenses"></mat-paginator>
+            }
+        </mat-card>
+    </div>
+</ng-container>

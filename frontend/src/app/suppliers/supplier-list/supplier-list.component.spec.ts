@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SupplierListComponent } from './supplier-list.component';
 import { SuppliersService } from '../suppliers.service';
+import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
@@ -11,7 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { vi } from 'vitest';
 import { CommonModule } from '@angular/common';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('SupplierListComponent', () => {
     let component: SupplierListComponent;
@@ -34,21 +37,26 @@ describe('SupplierListComponent', () => {
         suppliersServiceMock.getPurchaseOrders.mockReturnValue(of([]));
 
         await TestBed.configureTestingModule({
-            declarations: [SupplierListComponent],
+            declarations: [],
             imports: [
+                SupplierListComponent,
                 CommonModule,
                 MatTableModule,
                 MatPaginatorModule,
                 MatSortModule,
                 MatIconModule,
                 MatButtonModule,
-                BrowserAnimationsModule
+                BrowserAnimationsModule,
+                RouterTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
-                { provide: SuppliersService, useValue: suppliersServiceMock },
-                { provide: Router, useValue: routerMock }
+                { provide: SuppliersService, useValue: suppliersServiceMock }
             ],
-            schemas: [CUSTOM_ELEMENTS_SCHEMA]
+            schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
         })
             .compileComponents();
 

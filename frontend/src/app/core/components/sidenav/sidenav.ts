@@ -10,13 +10,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-sidenav',
   templateUrl: './sidenav.html',
   styleUrls: ['./sidenav.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, MatListModule, MatIconModule, MatExpansionModule, MatButtonModule, MatTooltipModule],
+  imports: [CommonModule, RouterModule, MatListModule, MatIconModule, MatExpansionModule, MatButtonModule, MatTooltipModule, TranslocoModule],
 })
 export class Sidenav implements OnInit {
   isAdmin$!: Observable<boolean>;

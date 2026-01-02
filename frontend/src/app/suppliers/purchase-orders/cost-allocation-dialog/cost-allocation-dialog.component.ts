@@ -1,5 +1,11 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatTableModule } from '@angular/material/table';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SuppliersService } from '../../suppliers.service';
 
 export interface CostAllocationPreviewItem {
@@ -35,7 +41,16 @@ export interface CostAllocationDialogData {
     selector: 'app-cost-allocation-dialog',
     templateUrl: './cost-allocation-dialog.component.html',
     styleUrls: ['./cost-allocation-dialog.component.scss'],
-    standalone: false
+    standalone: true,
+    imports: [
+        CommonModule,
+        MatDialogModule,
+        MatTableModule,
+        MatCheckboxModule,
+        MatButtonModule,
+        MatIconModule,
+        MatProgressSpinnerModule
+    ]
 })
 export class CostAllocationDialogComponent implements OnInit {
     preview: CostAllocationPreview | null = null;

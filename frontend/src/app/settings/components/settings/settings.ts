@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -37,6 +38,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
     MatTooltipModule,
     MatTabsModule,
     MatDialogModule,
+    TranslocoModule,
   ],
 })
 export class Settings implements OnInit {
@@ -67,12 +69,14 @@ export class Settings implements OnInit {
     private settingsService: SettingsService,
     private notificationService: NotificationService,
     private integrationsService: IntegrationsService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private translocoService: TranslocoService
   ) {
     this.settingsForm = this.fb.group({
       ai_provider: ['', Validators.required],
       ai_api_key: ['', Validators.required],
-      theme: ['light', Validators.required]
+      theme: ['light', Validators.required],
+      language: [this.translocoService.getActiveLang(), Validators.required]
     });
 
     // Auto-save theme on change
@@ -81,6 +85,14 @@ export class Settings implements OnInit {
       const updatedSettings = { ...this.settingsService.loadSettings(), theme: value };
       this.settingsService.saveSettings(updatedSettings as any);
       this.notificationService.showSuccess(`Theme updated to ${value} mode`);
+    });
+
+    // Auto-save language on change
+    this.settingsForm.get('language')?.valueChanges.subscribe(value => {
+      this.translocoService.setActiveLang(value);
+      const updatedSettings = { ...this.settingsService.loadSettings(), language: value };
+      this.settingsService.saveSettings(updatedSettings as any);
+      this.notificationService.showSuccess(value === 'es-MX' ? 'Idioma actualizado a Español' : 'Language updated to English');
     });
 
     this.storeSettingsForm = this.fb.group({

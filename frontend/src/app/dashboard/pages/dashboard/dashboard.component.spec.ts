@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardStatsService } from '../../services/dashboard-stats.service';
 import { of } from 'rxjs';
@@ -39,7 +40,11 @@ describe('DashboardComponent', () => {
                 MatTooltipModule,
                 MatProgressSpinnerModule,
                 BrowserAnimationsModule,
-                RouterTestingModule
+                RouterTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: DashboardStatsService, useValue: statsServiceMock }

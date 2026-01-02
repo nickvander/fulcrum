@@ -1,193 +1,196 @@
-<div class="container">
-  <div class="header">
-    <h1>Users</h1>
-    <div class="header-actions">
-      <button mat-mini-fab color="primary" (click)="addNewUser()" matTooltip="New User">
-        <mat-icon>add</mat-icon>
-      </button>
-      <button mat-mini-fab color="accent" (click)="openImportDialog()" matTooltip="Import Users">
-        <mat-icon>upload_file</mat-icon>
-      </button>
-      <button mat-mini-fab color="basic" (click)="viewAuditLogs()" matTooltip="View Audit Logs">
-        <mat-icon>receipt</mat-icon>
+<ng-container *transloco="let t">
+  <div class="container">
+    <div class="header">
+      <h1>{{ t('nav.users') }}</h1>
+      <div class="header-actions">
+        <button mat-mini-fab color="primary" (click)="addNewUser()" [matTooltip]="t('users.addUser')">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-mini-fab color="accent" (click)="openImportDialog()" [matTooltip]="t('users.bulkImport')">
+          <mat-icon>upload_file</mat-icon>
+        </button>
+        <button mat-mini-fab color="basic" (click)="viewAuditLogs()" matTooltip="View Audit Logs">
+          <mat-icon>receipt</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <mat-form-field appearance="outline" class="sleek-select">
+        <mat-label>{{ t('users.role') }}</mat-label>
+        <mat-select [(value)]="user_type_filter" (selectionChange)="onFilterChange()">
+          <mat-option value="">{{ t('common.all') }}</mat-option>
+          <mat-option value="admin">{{ t('users.admin') }}</mat-option>
+          <mat-option value="employee">Employee</mat-option>
+          <mat-option value="customer">Customer</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sleek-select">
+        <mat-label>{{ t('common.status') }}</mat-label>
+        <mat-select [(value)]="is_active_filter" (selectionChange)="onFilterChange()">
+          <mat-option value="">{{ t('common.all') }}</mat-option>
+          <mat-option value="true">{{ t('common.active') }}</mat-option>
+          <mat-option value="false">{{ t('common.inactive') }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sleek-select">
+        <mat-label>{{ t('common.search') }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="search_filter" (keyup.enter)="onFilterChange()" [placeholder]="t('common.search')">
+        <button mat-icon-button matSuffix (click)="search_filter=''; onFilterChange()" *ngIf="search_filter"
+          [matTooltip]="t('common.clear')">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+
+      <button mat-button color="warn" (click)="clearFilters()"
+        *ngIf="user_type_filter || is_active_filter || search_filter">
+        {{ t('common.clear') }}
       </button>
     </div>
-  </div>
 
-  <!-- Filters -->
-  <div class="filters">
-    <mat-form-field appearance="outline" class="sleek-select">
-      <mat-label>User Type</mat-label>
-      <mat-select [(value)]="user_type_filter" (selectionChange)="onFilterChange()">
-        <mat-option value="">All Types</mat-option>
-        <mat-option value="admin">Admin</mat-option>
-        <mat-option value="employee">Employee</mat-option>
-        <mat-option value="customer">Customer</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="sleek-select">
-      <mat-label>Status</mat-label>
-      <mat-select [(value)]="is_active_filter" (selectionChange)="onFilterChange()">
-        <mat-option value="">All Statuses</mat-option>
-        <mat-option value="true">Active</mat-option>
-        <mat-option value="false">Inactive</mat-option>
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline" class="sleek-select">
-      <mat-label>Search</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [(ngModel)]="search_filter" (keyup.enter)="onFilterChange()" placeholder="Search users...">
-      <button mat-icon-button matSuffix (click)="search_filter=''; onFilterChange()" *ngIf="search_filter"
-        matTooltip="Clear Search">
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
-
-    <button mat-button color="warn" (click)="clearFilters()"
-      *ngIf="user_type_filter || is_active_filter || search_filter">
-      Reset Filters
-    </button>
-  </div>
-
-  @if (isLoading) {
-  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  }
-  <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
-    <!-- Avatar Column -->
-    <ng-container matColumnDef="avatar">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
-      <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
-        @if (row.avatar) {
-        <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
-          (error)="avatarError($event)">
-        }
-        @if (!row.avatar) {
-        <div class="avatar-placeholder">
-          <mat-icon>person</mat-icon>
-        </div>
-        }
-      </mat-cell>
-    </ng-container>
-
-    <!-- Employee ID Column -->
-    <ng-container matColumnDef="employee_id">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Employee ID</mat-header-cell>
-      <mat-cell *matCellDef="let row"
-        [matTooltip]="row.employee_id ? 'Employee ID: ' + row.employee_id : 'Customer (no employee ID)'">
-        {{row.employee_id || '—'}}
-      </mat-cell>
-    </ng-container>
-
-    <!-- First Name Column -->
-    <ng-container matColumnDef="first_name">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>First Name</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.first_name}}</mat-cell>
-    </ng-container>
-
-    <!-- Last Name Column -->
-    <ng-container matColumnDef="last_name">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Last Name</mat-header-cell>
-      <mat-cell *matCellDef="let row">{{row.last_name}}</mat-cell>
-    </ng-container>
-
-    <!-- Email Column -->
-    <ng-container matColumnDef="email">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Email</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <span matTooltip="{{row.email}}">{{row.email}}</span>
-      </mat-cell>
-    </ng-container>
-
-    <!-- User Type Column -->
-    <ng-container matColumnDef="user_type">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
-      <mat-cell *matCellDef="let row" [matTooltip]="'User Type: ' + row.user_type">
-        <span class="badge" [ngClass]="row.user_type">{{row.user_type}}</span>
-      </mat-cell>
-    </ng-container>
-
-    <!-- Active Status Column -->
-    <ng-container matColumnDef="is_active">
-      <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <div class="status-container">
-          <!-- Active/Inactive Badge -->
-          <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}"
-            [matTooltip]="row.is_active ? 'Active User' : 'Inactive User'">
-            <mat-icon class="status-icon">
-              {{row.is_active ? 'check_circle' : 'cancel'}}
-            </mat-icon>
-            <span class="status-label">{{row.is_active ? 'Active' : 'Inactive'}}</span>
-          </span>
-
-          <!-- Force Password Change Badge -->
-          @if (row.force_password_change) {
-          <span class="status-badge status-warning" matTooltip="User must change password on next login">
-            <mat-icon class="status-icon">lock_reset</mat-icon>
-            <span class="status-label">Password Reset Required</span>
-          </span>
+    @if (isLoading) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+    <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
+      <!-- Avatar Column -->
+      <ng-container matColumnDef="avatar">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
+        <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
+          @if (row.avatar) {
+          <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
+            (error)="avatarError($event)">
           }
-        </div>
-      </mat-cell>
-    </ng-container>
+          @if (!row.avatar) {
+          <div class="avatar-placeholder">
+            <mat-icon>person</mat-icon>
+          </div>
+          }
+        </mat-cell>
+      </ng-container>
+
+      <!-- Employee ID Column -->
+      <ng-container matColumnDef="employee_id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Employee ID</mat-header-cell>
+        <mat-cell *matCellDef="let row"
+          [matTooltip]="row.employee_id ? 'Employee ID: ' + row.employee_id : 'Customer (no employee ID)'">
+          {{row.employee_id || '—'}}
+        </mat-cell>
+      </ng-container>
+
+      <!-- First Name Column -->
+      <ng-container matColumnDef="first_name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.firstName') }}</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{row.first_name}}</mat-cell>
+      </ng-container>
+
+      <!-- Last Name Column -->
+      <ng-container matColumnDef="last_name">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.lastName') }}</mat-header-cell>
+        <mat-cell *matCellDef="let row">{{row.last_name}}</mat-cell>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.email') }}</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <span matTooltip="{{row.email}}">{{row.email}}</span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- User Type Column -->
+      <ng-container matColumnDef="user_type">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.role') }}</mat-header-cell>
+        <mat-cell *matCellDef="let row" [matTooltip]="'User Type: ' + row.user_type">
+          <span class="badge" [ngClass]="row.user_type">{{row.user_type}}</span>
+        </mat-cell>
+      </ng-container>
+
+      <!-- Active Status Column -->
+      <ng-container matColumnDef="is_active">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.status') }}</mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <div class="status-container">
+            <!-- Active/Inactive Badge -->
+            <span class="status-badge" [ngClass]="{'status-active': row.is_active, 'status-inactive': !row.is_active}"
+              [matTooltip]="row.is_active ? t('common.active') : t('common.inactive')">
+              <mat-icon class="status-icon">
+                {{row.is_active ? 'check_circle' : 'cancel'}}
+              </mat-icon>
+              <span class="status-label">{{row.is_active ? t('common.active') : t('common.inactive')}}</span>
+            </span>
+
+            <!-- Force Password Change Badge -->
+            @if (row.force_password_change) {
+            <span class="status-badge status-warning" [matTooltip]="t('users.resetPassword')">
+              <mat-icon class="status-icon">lock_reset</mat-icon>
+              <span class="status-label">{{ t('users.resetPassword') }}</span>
+            </span>
+            }
+          </div>
+        </mat-cell>
+      </ng-container>
 
 
 
-    <!-- Actions Column -->
-    <ng-container matColumnDef="actions">
-      <mat-header-cell *matHeaderCellDef></mat-header-cell>
-      <mat-cell *matCellDef="let row">
-        <!-- Desktop Actions -->
-        <div class="desktop-actions">
-          <button mat-icon-button [routerLink]="['edit', row.id]" matTooltip="Edit user" aria-label="Edit user">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button (click)="resetUserPassword(row.id, row.email)" matTooltip="Reset user password"
-            aria-label="Reset user password">
-            <mat-icon>lock_reset</mat-icon>
-          </button>
-          <button mat-icon-button (click)="deactivateUser(row.id)" matTooltip="Deactivate user"
-            aria-label="Deactivate user">
-            <mat-icon>block</mat-icon>
-          </button>
-          <button mat-icon-button (click)="deleteUser(row.id)" matTooltip="Permanently delete user" color="warn"
-            aria-label="Permanently delete user">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
-        </div>
-
-        <!-- Mobile Actions -->
-        <div class="mobile-actions">
-          <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #menu="matMenu">
-            <button mat-menu-item [routerLink]="['edit', row.id]">
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <!-- Desktop Actions -->
+          <div class="desktop-actions">
+            <button mat-icon-button [routerLink]="['edit', row.id]" [matTooltip]="t('common.edit')"
+              aria-label="Edit user">
               <mat-icon>edit</mat-icon>
-              <span>Edit</span>
             </button>
-            <button mat-menu-item (click)="resetUserPassword(row.id, row.email)">
+            <button mat-icon-button (click)="resetUserPassword(row.id, row.email)"
+              [matTooltip]="t('users.resetPassword')" aria-label="Reset user password">
               <mat-icon>lock_reset</mat-icon>
-              <span>Reset Password</span>
             </button>
-            <button mat-menu-item (click)="deactivateUser(row.id)">
+            <button mat-icon-button (click)="deactivateUser(row.id)" [matTooltip]="t('users.deactivate')"
+              aria-label="Deactivate user">
               <mat-icon>block</mat-icon>
-              <span>Deactivate</span>
             </button>
-            <button mat-menu-item (click)="deleteUser(row.id)" class="warn-text">
-              <mat-icon color="warn">delete_forever</mat-icon>
-              <span class="warn-text">Delete Permanently</span>
+            <button mat-icon-button (click)="deleteUser(row.id)" [matTooltip]="t('common.delete')" color="warn"
+              aria-label="Permanently delete user">
+              <mat-icon>delete_forever</mat-icon>
             </button>
-          </mat-menu>
-        </div>
-      </mat-cell>
-    </ng-container>
+          </div>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-  </mat-table>
+          <!-- Mobile Actions -->
+          <div class="mobile-actions">
+            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item [routerLink]="['edit', row.id]">
+                <mat-icon>edit</mat-icon>
+                <span>{{ t('common.edit') }}</span>
+              </button>
+              <button mat-menu-item (click)="resetUserPassword(row.id, row.email)">
+                <mat-icon>lock_reset</mat-icon>
+                <span>{{ t('users.resetPassword') }}</span>
+              </button>
+              <button mat-menu-item (click)="deactivateUser(row.id)">
+                <mat-icon>block</mat-icon>
+                <span>{{ t('users.deactivate') }}</span>
+              </button>
+              <button mat-menu-item (click)="deleteUser(row.id)" class="warn-text">
+                <mat-icon color="warn">delete_forever</mat-icon>
+                <span class="warn-text">{{ t('common.delete') }}</span>
+              </button>
+            </mat-menu>
+          </div>
+        </mat-cell>
+      </ng-container>
 
-  <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
-</div>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    </mat-table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </div>
+</ng-container>

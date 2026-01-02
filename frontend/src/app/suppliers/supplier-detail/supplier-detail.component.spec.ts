@@ -20,8 +20,9 @@ describe.skip('SupplierDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [SupplierDetailComponent],
+      declarations: [],
       imports: [
+        SupplierDetailComponent,
         ReactiveFormsModule,
         HttpClientTestingModule,
         RouterTestingModule,

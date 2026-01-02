@@ -33,8 +33,9 @@ describe('QuickProductDialogComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            declarations: [QuickProductDialogComponent],
+            declarations: [],
             imports: [
+                QuickProductDialogComponent,
                 CommonModule,
                 ReactiveFormsModule,
                 MatDialogModule,

@@ -6,6 +6,8 @@ import { of } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { vi } from 'vitest';
@@ -34,13 +36,16 @@ describe('CostAllocationDialogComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            declarations: [CostAllocationDialogComponent],
+            declarations: [],
             imports: [
+                CostAllocationDialogComponent,
                 CommonModule,
                 MatDialogModule,
                 MatTableModule,
                 MatCheckboxModule,
                 MatButtonModule,
+                MatIconModule,
+                MatProgressSpinnerModule,
                 FormsModule,
                 BrowserAnimationsModule
             ],

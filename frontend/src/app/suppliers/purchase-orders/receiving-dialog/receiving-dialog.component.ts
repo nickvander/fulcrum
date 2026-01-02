@@ -1,6 +1,12 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 import { PurchaseOrder, PurchaseOrderItem } from '../../../shared/models/purchase-order.model';
 import { SuppliersService } from '../../suppliers.service';
 
@@ -8,7 +14,17 @@ import { SuppliersService } from '../../suppliers.service';
     selector: 'app-receiving-dialog',
     templateUrl: './receiving-dialog.component.html',
     styleUrls: ['./receiving-dialog.component.scss'],
-    standalone: false
+    standalone: true,
+    imports: [
+        CommonModule,
+        ReactiveFormsModule,
+        MatDialogModule,
+        MatButtonModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatIconModule,
+        MatDividerModule
+    ]
 })
 export class ReceivingDialogComponent implements OnInit {
     receivingForm: FormGroup;

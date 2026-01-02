@@ -12,6 +12,7 @@ import { LoadingService } from './core/services/loading.service';
 import { ScreenService } from './core/services/screen.service';
 import { SettingsService } from './core/services/settings.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-root',
@@ -35,7 +36,8 @@ export class AppComponent {
     private router: Router,
     private loadingService: LoadingService,
     private screenService: ScreenService,
-    private settingsService: SettingsService // Injected settings service
+    private settingsService: SettingsService,
+    private translocoService: TranslocoService
   ) {
     this.isMobile$ = this.screenService.isMobile$;
 
@@ -53,6 +55,11 @@ export class AppComponent {
         document.body.classList.add('dark-theme');
       } else {
         document.body.classList.remove('dark-theme');
+      }
+
+      // Apply saved language preference
+      if (settings?.language) {
+        this.translocoService.setActiveLang(settings.language);
       }
     });
   }

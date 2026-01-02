@@ -34,8 +34,9 @@ describe('ReceivingDialogComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            declarations: [ReceivingDialogComponent],
+            declarations: [],
             imports: [
+                ReceivingDialogComponent,
                 CommonModule,
                 ReactiveFormsModule,
                 MatDialogModule,

@@ -26,6 +26,7 @@ import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-product-form',
@@ -47,7 +48,8 @@ import { CustomFieldService } from '../../../settings/services/custom-field.serv
     ProductVariantsComponent,
     MatTabsModule,
     MatSlideToggleModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    TranslocoModule
   ],
 })
 export class ProductForm implements OnInit {

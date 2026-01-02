@@ -10,6 +10,7 @@ import { LowStockListWidgetComponent } from '../../widgets/low-stock-list/low-st
 import { InventoryHealthWidgetComponent } from '../../widgets/inventory-health-widget/inventory-health-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-dashboard',
@@ -25,7 +26,8 @@ import { RouterModule } from '@angular/router';
         StatCardComponent,
         LowStockListWidgetComponent,
         InventoryHealthWidgetComponent,
-        RouterModule
+        RouterModule,
+        TranslocoModule
     ]
 })
 export class DashboardComponent implements OnInit {

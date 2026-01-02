@@ -11,6 +11,7 @@ import { ProductForm } from '../product-form/product-form';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-product-details-dialog',
@@ -27,7 +28,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         FormsModule,
         MatInputModule,
         MatInputModule,
-        MatTooltipModule
+        MatTooltipModule,
+        TranslocoModule
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {

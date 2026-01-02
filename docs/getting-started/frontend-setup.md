@@ -117,3 +117,53 @@ All scripts should be run from the `frontend` directory.
   output is placed in the `frontend/dist/` directory.
 - **`npm test`**: Runs the unit test suite using Vitest (via Angular CLI). See
   the [Testing & CI Guide](../guides/testing-and-ci.md) for more details.
+
+## Localization (i18n)
+
+The frontend uses **Transloco** (`@ngneat/transloco`) for internationalization.
+Currently supported languages are:
+
+- **English** (`en`) - Default
+- **Spanish (Mexico)** (`es-MX`)
+
+### Translation Files
+
+Translation files are located in `frontend/src/assets/i18n/`:
+
+- `en.json` - English translations
+- `es-MX.json` - Spanish (Mexico) translations
+
+### How to Use Transloco in Components
+
+1. **Import TranslocoModule** in standalone components or module imports:
+
+   ```typescript
+   import { TranslocoModule } from '@ngneat/transloco';
+
+   @Component({
+     standalone: true,
+     imports: [TranslocoModule],
+     // ...
+   })
+   ```
+
+2. **Wrap template with transloco directive**:
+
+   ```html
+   <ng-container *transloco="let t">
+     <h1>{{ t('nav.products') }}</h1>
+     <button [matTooltip]="t('common.save')">{{ t('common.save') }}</button>
+   </ng-container>
+   ```
+
+3. **Key Naming Convention**:
+   - Use nested keys organized by module: `nav.dashboard`, `products.addProduct`
+   - Common actions: `common.save`, `common.delete`, `common.loading`
+   - Module-specific: `products.*`, `expenses.*`, `purchaseOrders.*`
+
+### Adding New Translations
+
+1. Add the key to both `en.json` and `es-MX.json`
+2. Use consistent naming: `module.keyName` (camelCase for key names)
+3. Test both languages using **Settings → General → Language** selector
+

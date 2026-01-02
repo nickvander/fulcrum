@@ -1,5 +1,6 @@
 import type { MockedObject } from "vitest";
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { CommonModule } from '@angular/common';
 import { ProductForm } from './product-form';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -100,7 +101,12 @@ describe('ProductForm: Edge Cases', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatListModule
+                MatButtonModule,
+                MatListModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock },

@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'; // Added Paginator
 import { MatSort, MatSortModule } from '@angular/material/sort';
+import { TranslocoModule } from '@ngneat/transloco';
 
 import { MarketingService, CampaignSummary, CampaignEvent } from '../../services/marketing.service';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
@@ -44,7 +45,8 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
     MatPaginatorModule,
     MatSortModule,
     DateRangePresetsComponent,
-    StatusFilterComponent
+    StatusFilterComponent,
+    TranslocoModule
   ],
   templateUrl: './campaign-list.component.html',
   styleUrls: ['./campaign-list.component.scss']

@@ -25,6 +25,7 @@ import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-car
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-expense-list',
@@ -47,7 +48,8 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
         MatMenuModule,
         MatPaginatorModule,
         StatCardComponent,
-        DateRangePresetsComponent
+        DateRangePresetsComponent,
+        TranslocoModule
     ],
     templateUrl: './expense-list.html',
     styleUrl: './expense-list.scss'

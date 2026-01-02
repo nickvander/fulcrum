@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Sidenav } from './sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -14,6 +15,10 @@ describe('Sidenav', () => {
         NoopAnimationsModule,
         HttpClientTestingModule,
         RouterTestingModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, es: {} },
+          translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+        })
       ],
     }).compileComponents();
   });

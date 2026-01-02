@@ -1,16 +1,28 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
 import { SuppliersService } from '../../suppliers.service';
 import { ProductService } from '../../../products/services/product';
-import { ActivatedRoute, Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ReceivingDialogComponent } from '../receiving-dialog/receiving-dialog.component';
 import { QuickProductDialogComponent } from '../quick-product-dialog/quick-product-dialog.component';
 import { CostAllocationDialogComponent } from '../cost-allocation-dialog/cost-allocation-dialog.component';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatCardModule } from '@angular/material/card';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTableModule } from '@angular/material/table';
 import { SupplierInvoice } from '../../suppliers.service';
 import { UserService } from '../../../users/services/user.service'; // Import UserService
 import { User } from '../../../shared/models/user.model'; // Import User model
@@ -23,7 +35,27 @@ import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/s
   selector: 'app-purchase-order-edit',
   templateUrl: './purchase-order-edit.component.html',
   styleUrls: ['./purchase-order-edit.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    RouterModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatAutocompleteModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatNativeDateModule,
+    MatCardModule,
+    MatTooltipModule,
+    MatTableModule
+  ]
 })
 export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   poForm: FormGroup;

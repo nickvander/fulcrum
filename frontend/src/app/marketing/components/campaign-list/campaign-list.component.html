@@ -1,229 +1,236 @@
-<div class="campaign-list-container">
-    <!-- Header -->
-    <div class="marketing-header">
-        <div class="title-section">
-            <h1>Marketing</h1>
-            <p class="subtitle">Campaigns & Events</p>
+<ng-container *transloco="let t">
+    <div class="campaign-list-container">
+        <!-- Header -->
+        <div class="marketing-header">
+            <div class="title-section">
+                <h1>{{ t('nav.marketing') }}</h1>
+                <p class="subtitle">{{ t('marketing.campaigns') }}</p>
+            </div>
+            <div class="actions-section">
+                <!-- Calendar Toggle -->
+                <a mat-mini-fab color="accent" routerLink="/marketing/calendar" [matTooltip]="t('marketing.calendar')">
+                    <mat-icon>calendar_month</mat-icon>
+                </a>
+
+                <!-- Connectors -->
+                <a mat-mini-fab color="primary" routerLink="/marketing/connectors"
+                    [matTooltip]="t('marketing.connectors')">
+                    <mat-icon>settings_input_component</mat-icon>
+                </a>
+
+                <!-- Quick Post -->
+                <button mat-mini-fab color="warn" (click)="openQuickPostDialog()"
+                    [matTooltip]="t('marketing.quickPost')">
+                    <mat-icon>bolt</mat-icon>
+                </button>
+
+                <!-- New Campaign -->
+                <a mat-mini-fab color="primary" routerLink="/marketing/new"
+                    [matTooltip]="t('marketing.createCampaign')">
+                    <mat-icon>add</mat-icon>
+                </a>
+            </div>
         </div>
-        <div class="actions-section">
-            <!-- Calendar Toggle -->
-            <a mat-mini-fab color="accent" routerLink="/marketing/calendar" matTooltip="Calendar View">
-                <mat-icon>calendar_month</mat-icon>
-            </a>
 
-            <!-- Connectors -->
-            <a mat-mini-fab color="primary" routerLink="/marketing/connectors" matTooltip="Connectors">
-                <mat-icon>settings_input_component</mat-icon>
-            </a>
-
-            <!-- Quick Post -->
-            <button mat-mini-fab color="warn" (click)="openQuickPostDialog()" matTooltip="Quick Post">
-                <mat-icon>bolt</mat-icon>
-            </button>
-
-            <!-- New Campaign -->
-            <a mat-mini-fab color="primary" routerLink="/marketing/new" matTooltip="New Campaign">
-                <mat-icon>add</mat-icon>
-            </a>
+        <!-- KPI Cards -->
+        <div class="kpi-cards">
+            <mat-card class="kpi-card">
+                <mat-card-content>
+                    <div class="kpi-value">{{ campaigns.length }}</div>
+                    <div class="kpi-label">{{ t('marketing.campaigns') }}</div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card class="kpi-card active">
+                <mat-card-content>
+                    <div class="kpi-value">{{ getActiveCount() }}</div>
+                    <div class="kpi-label">{{ t('common.active') }}</div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card class="kpi-card scheduled">
+                <mat-card-content>
+                    <div class="kpi-value">{{ getScheduledCount() }}</div>
+                    <div class="kpi-label">{{ t('marketing.schedule') }}</div>
+                </mat-card-content>
+            </mat-card>
+            <mat-card class="kpi-card draft">
+                <mat-card-content>
+                    <div class="kpi-value">{{ getDraftCount() }}</div>
+                    <div class="kpi-label">{{ t('purchaseOrders.draft') }}</div>
+                </mat-card-content>
+            </mat-card>
         </div>
-    </div>
 
-    <!-- KPI Cards -->
-    <div class="kpi-cards">
-        <mat-card class="kpi-card">
-            <mat-card-content>
-                <div class="kpi-value">{{ campaigns.length }}</div>
-                <div class="kpi-label">Total Campaigns</div>
-            </mat-card-content>
+        <!-- Filters Toolbar -->
+        <div class="filters-toolbar">
+            <app-date-range-presets [useGlobalService]="false" [showAllOption]="true" [defaultPreset]="'all'"
+                (rangeChange)="onDateRangeChange($event)">
+            </app-date-range-presets>
+            <app-status-filter [options]="statusOptions" [selectedValue]="statusFilter"
+                (valueChange)="setStatusFilter($event)">
+            </app-status-filter>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-container" *ngIf="loading">
+            <mat-spinner diameter="40"></mat-spinner>
+        </div>
+
+        <!-- Campaign Section Header -->
+        <div class="section-header" *ngIf="!loading">
+            <h2>{{ t('marketing.campaigns') }}</h2>
+            <span class="result-count">{{ filteredCampaigns.data.length }} result{{ filteredCampaigns.data.length !== 1
+                ?
+                's' : ''
+                }}</span>
+        </div>
+
+        <!-- Campaign Table -->
+        <mat-card class="campaigns-table-card" *ngIf="!loading">
+            <table mat-table [dataSource]="filteredCampaigns" class="campaigns-table" matSort>
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('marketing.campaignName') }}</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <a [routerLink]="[campaign.id]" class="campaign-link">
+                            {{ campaign.name }}
+                        </a>
+                    </td>
+                </ng-container>
+
+                <!-- Status Column -->
+                <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.status') }}</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <mat-chip [ngClass]="'status-' + campaign.status">
+                            {{ campaign.status | titlecase }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Dates Column -->
+                <ng-container matColumnDef="dates">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.date') }}</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <span *ngIf="campaign.start_date; else noDates">
+                            {{ campaign.start_date | date:'mediumDate' }}
+                            <span *ngIf="campaign.end_date"> - {{ campaign.end_date | date:'mediumDate' }}</span>
+                        </span>
+                        <ng-template #noDates>
+                            <span class="no-date">Not scheduled</span>
+                        </ng-template>
+                    </td>
+                </ng-container>
+
+                <!-- Events Column -->
+                <ng-container matColumnDef="events">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Events</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <span class="event-count">{{ campaign.events_count }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Products Column -->
+                <ng-container matColumnDef="products">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('nav.products') }}</th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <span class="product-count">{{ campaign.products_count }}</span>
+                    </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef></th>
+                    <td mat-cell *matCellDef="let campaign">
+                        <button mat-icon-button [matMenuTriggerFor]="menu">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            <button mat-menu-item [routerLink]="[campaign.id]">
+                                <mat-icon>visibility</mat-icon>
+                                <span>{{ t('common.view') }}</span>
+                            </button>
+                            <button mat-menu-item [routerLink]="[campaign.id, 'edit']">
+                                <mat-icon>edit</mat-icon>
+                                <span>{{ t('common.edit') }}</span>
+                            </button>
+                            <button mat-menu-item (click)="duplicateCampaign(campaign)">
+                                <mat-icon>content_copy</mat-icon>
+                                <span>{{ t('common.copy') }}</span>
+                            </button>
+                            <button mat-menu-item class="delete-action" (click)="deleteCampaign(campaign)">
+                                <mat-icon>delete</mat-icon>
+                                <span>{{ t('common.delete') }}</span>
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="campaigns.length === 0">
+                <mat-icon>campaign</mat-icon>
+                <h3>{{ t('common.noResults') }}</h3>
+                <p>{{ t('marketing.createCampaign') }}</p>
+                <button mat-raised-button color="primary" routerLink="new">
+                    <mat-icon>add</mat-icon>
+                    {{ t('marketing.createCampaign') }}
+                </button>
+            </div>
+
+            <mat-paginator #campaignPaginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
+                aria-label="Select page of campaigns"></mat-paginator>
         </mat-card>
-        <mat-card class="kpi-card active">
-            <mat-card-content>
-                <div class="kpi-value">{{ getActiveCount() }}</div>
-                <div class="kpi-label">Active</div>
-            </mat-card-content>
-        </mat-card>
-        <mat-card class="kpi-card scheduled">
-            <mat-card-content>
-                <div class="kpi-value">{{ getScheduledCount() }}</div>
-                <div class="kpi-label">Scheduled</div>
-            </mat-card-content>
-        </mat-card>
-        <mat-card class="kpi-card draft">
-            <mat-card-content>
-                <div class="kpi-value">{{ getDraftCount() }}</div>
-                <div class="kpi-label">Drafts</div>
-            </mat-card-content>
-        </mat-card>
-    </div>
 
-    <!-- Filters Toolbar -->
-    <div class="filters-toolbar">
-        <app-date-range-presets [useGlobalService]="false" [showAllOption]="true" [defaultPreset]="'all'"
-            (rangeChange)="onDateRangeChange($event)">
-        </app-date-range-presets>
-        <app-status-filter [options]="statusOptions" [selectedValue]="statusFilter"
-            (valueChange)="setStatusFilter($event)">
-        </app-status-filter>
-    </div>
+        <!-- Quick Posts Section -->
+        <div class="section-header" *ngIf="!loading">
+            <h2>{{ t('marketing.quickPost') }}</h2>
+            <span class="result-count">{{ filteredQuickPosts.length }} result{{ filteredQuickPosts.length !== 1 ? 's' :
+                ''
+                }}</span>
+        </div>
+        <mat-card class="quick-posts-card" *ngIf="!loading">
+            <div class="quick-posts-list" *ngIf="visibleQuickPosts.length > 0; else noQuickPosts">
+                <div class="quick-post-item clickable" *ngFor="let post of visibleQuickPosts"
+                    (click)="openQuickPostDetail(post)">
 
-    <!-- Loading Spinner -->
-    <div class="loading-container" *ngIf="loading">
-        <mat-spinner diameter="40"></mat-spinner>
-    </div>
-
-    <!-- Campaign Section Header -->
-    <div class="section-header" *ngIf="!loading">
-        <h2>Campaigns</h2>
-        <span class="result-count">{{ filteredCampaigns.data.length }} result{{ filteredCampaigns.data.length !== 1 ?
-            's' : ''
-            }}</span>
-    </div>
-
-    <!-- Campaign Table -->
-    <mat-card class="campaigns-table-card" *ngIf="!loading">
-        <table mat-table [dataSource]="filteredCampaigns" class="campaigns-table" matSort>
-            <!-- Name Column -->
-            <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Campaign</th>
-                <td mat-cell *matCellDef="let campaign">
-                    <a [routerLink]="[campaign.id]" class="campaign-link">
-                        {{ campaign.name }}
-                    </a>
-                </td>
-            </ng-container>
-
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-                <td mat-cell *matCellDef="let campaign">
-                    <mat-chip [ngClass]="'status-' + campaign.status">
-                        {{ campaign.status | titlecase }}
-                    </mat-chip>
-                </td>
-            </ng-container>
-
-            <!-- Dates Column -->
-            <ng-container matColumnDef="dates">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Dates</th>
-                <td mat-cell *matCellDef="let campaign">
-                    <span *ngIf="campaign.start_date; else noDates">
-                        {{ campaign.start_date | date:'mediumDate' }}
-                        <span *ngIf="campaign.end_date"> - {{ campaign.end_date | date:'mediumDate' }}</span>
-                    </span>
-                    <ng-template #noDates>
-                        <span class="no-date">Not scheduled</span>
-                    </ng-template>
-                </td>
-            </ng-container>
-
-            <!-- Events Column -->
-            <ng-container matColumnDef="events">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Events</th>
-                <td mat-cell *matCellDef="let campaign">
-                    <span class="event-count">{{ campaign.events_count }}</span>
-                </td>
-            </ng-container>
-
-            <!-- Products Column -->
-            <ng-container matColumnDef="products">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Products</th>
-                <td mat-cell *matCellDef="let campaign">
-                    <span class="product-count">{{ campaign.products_count }}</span>
-                </td>
-            </ng-container>
-
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let campaign">
-                    <button mat-icon-button [matMenuTriggerFor]="menu">
+                    <div class="post-icon" [ngClass]="'channel-' + post.channel_type">
+                        <mat-icon>{{ getChannelIcon(post.channel_type) }}</mat-icon>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-header">
+                            <span class="post-name">{{ post.name || 'Untitled Post' }}</span>
+                            <mat-chip class="post-status" [ngClass]="'status-' + post.status">{{ post.status | titlecase
+                                }}</mat-chip>
+                        </div>
+                        <p class="post-body" *ngIf="post.content_body">{{ post.content_body | slice:0:100 }}{{
+                            post.content_body.length > 100 ? '...' : '' }}</p>
+                        <span class="post-date">{{ post.created_at | date:'medium' }}</span>
+                    </div>
+                    <button mat-icon-button [matMenuTriggerFor]="postMenu" (click)="$event.stopPropagation()">
                         <mat-icon>more_vert</mat-icon>
                     </button>
-                    <mat-menu #menu="matMenu">
-                        <button mat-menu-item [routerLink]="[campaign.id]">
-                            <mat-icon>visibility</mat-icon>
-                            <span>View Details</span>
-                        </button>
-                        <button mat-menu-item [routerLink]="[campaign.id, 'edit']">
-                            <mat-icon>edit</mat-icon>
-                            <span>Edit</span>
-                        </button>
-                        <button mat-menu-item (click)="duplicateCampaign(campaign)">
-                            <mat-icon>content_copy</mat-icon>
-                            <span>Duplicate</span>
-                        </button>
-                        <button mat-menu-item class="delete-action" (click)="deleteCampaign(campaign)">
+                    <mat-menu #postMenu="matMenu">
+                        <button mat-menu-item (click)="deleteQuickPost(post)">
                             <mat-icon>delete</mat-icon>
-                            <span>Delete</span>
+                            <span>{{ t('common.delete') }}</span>
                         </button>
                     </mat-menu>
-                </td>
-            </ng-container>
+                </div>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
-
-        <!-- Empty State -->
-        <div class="empty-state" *ngIf="campaigns.length === 0">
-            <mat-icon>campaign</mat-icon>
-            <h3>No campaigns yet</h3>
-            <p>Create your first marketing campaign to get started</p>
-            <button mat-raised-button color="primary" routerLink="new">
-                <mat-icon>add</mat-icon>
-                Create Campaign
-            </button>
-        </div>
-
-        <mat-paginator #campaignPaginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
-            aria-label="Select page of campaigns"></mat-paginator>
-    </mat-card>
-
-    <!-- Quick Posts Section -->
-    <div class="section-header" *ngIf="!loading">
-        <h2>Recent Quick Posts</h2>
-        <span class="result-count">{{ filteredQuickPosts.length }} result{{ filteredQuickPosts.length !== 1 ? 's' : ''
-            }}</span>
+                <mat-paginator #quickPostPaginator [length]="filteredQuickPosts.length" [pageSize]="quickPostPageSize"
+                    [pageSizeOptions]="[5, 10, 25]" (page)="onQuickPostPageChange($event)"
+                    aria-label="Select page of quick posts">
+                </mat-paginator>
+            </div>
+            <ng-template #noQuickPosts>
+                <div class="empty-state small">
+                    <mat-icon>bolt</mat-icon>
+                    <p>{{ t('marketing.createPost') }}</p>
+                </div>
+            </ng-template>
+        </mat-card>
     </div>
-    <mat-card class="quick-posts-card" *ngIf="!loading">
-        <div class="quick-posts-list" *ngIf="visibleQuickPosts.length > 0; else noQuickPosts">
-            <div class="quick-post-item clickable" *ngFor="let post of visibleQuickPosts"
-                (click)="openQuickPostDetail(post)">
-
-                <div class="post-icon" [ngClass]="'channel-' + post.channel_type">
-                    <mat-icon>{{ getChannelIcon(post.channel_type) }}</mat-icon>
-                </div>
-                <div class="post-content">
-                    <div class="post-header">
-                        <span class="post-name">{{ post.name || 'Untitled Post' }}</span>
-                        <mat-chip class="post-status" [ngClass]="'status-' + post.status">{{ post.status | titlecase
-                            }}</mat-chip>
-                    </div>
-                    <p class="post-body" *ngIf="post.content_body">{{ post.content_body | slice:0:100 }}{{
-                        post.content_body.length > 100 ? '...' : '' }}</p>
-                    <span class="post-date">{{ post.created_at | date:'medium' }}</span>
-                </div>
-                <button mat-icon-button [matMenuTriggerFor]="postMenu" (click)="$event.stopPropagation()">
-                    <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #postMenu="matMenu">
-                    <button mat-menu-item (click)="deleteQuickPost(post)">
-                        <mat-icon>delete</mat-icon>
-                        <span>Delete</span>
-                    </button>
-                </mat-menu>
-            </div>
-
-            <mat-paginator #quickPostPaginator [length]="filteredQuickPosts.length" [pageSize]="quickPostPageSize"
-                [pageSizeOptions]="[5, 10, 25]" (page)="onQuickPostPageChange($event)"
-                aria-label="Select page of quick posts">
-            </mat-paginator>
-        </div>
-        <ng-template #noQuickPosts>
-            <div class="empty-state small">
-                <mat-icon>bolt</mat-icon>
-                <p>No quick posts yet. Create your first quick post to share content immediately.</p>
-            </div>
-        </ng-template>
-    </mat-card>
-</div>
+</ng-container>

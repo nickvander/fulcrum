@@ -1,311 +1,312 @@
-<div class="form-container" [class.dialog-mode]="isDialogMode">
-  <!-- Return to Purchase Order Banner -->
-  @if (returnToPO) {
-  <div class="return-banner">
-    <mat-icon>arrow_back</mat-icon>
-    <span>You're creating a product for your purchase order.</span>
-    <button mat-stroked-button (click)="returnToPurchaseOrder()">
-      Return to Purchase Order
-    </button>
-  </div>
-  }
-
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
-    @if (!isDialogMode) {
-    <div class="form-header">
-      <h1>{{ isEditMode ? 'Edit Product' : 'Add New Product' }}</h1>
-      <div class="header-actions">
-        <button type="button" mat-stroked-button (click)="onCancel()">Cancel</button>
-        <button type="submit" mat-raised-button color="primary"
-          [disabled]="!isDirty || productForm.invalid">Save</button>
-      </div>
+<ng-container *transloco="let t">
+  <div class="form-container" [class.dialog-mode]="isDialogMode">
+    <!-- Return to Purchase Order Banner -->
+    @if (returnToPO) {
+    <div class="return-banner">
+      <mat-icon>arrow_back</mat-icon>
+      <span>{{ t('products.returnToPOMessage') }}</span>
+      <button mat-stroked-button (click)="returnToPurchaseOrder()">
+        {{ t('products.returnToPO') }}
+      </button>
     </div>
     }
 
-    <mat-tab-group animationDuration="0ms" class="product-tabs">
-      <!-- Tab 1: Product Details -->
-      <mat-tab label="Product Details">
-        <div class="form-columns">
-          <!-- Left Column -->
-          <div class="form-column">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Core Details</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-form-field>
-                  <mat-label>Name</mat-label>
-                  <input matInput formControlName="name" placeholder="Product Name">
-                </mat-form-field>
+    <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+      @if (!isDialogMode) {
+      <div class="form-header">
+        <h1>{{ isEditMode ? t('products.editProduct') : t('products.addProduct') }}</h1>
+        <div class="header-actions">
+          <button type="button" mat-stroked-button (click)="onCancel()">{{ t('common.cancel') }}</button>
+          <button type="submit" mat-raised-button color="primary" [disabled]="!isDirty || productForm.invalid">{{
+            t('common.save') }}</button>
+        </div>
+      </div>
+      }
 
-                <mat-form-field>
-                  <mat-label>SKU</mat-label>
-                  <input matInput formControlName="sku" placeholder="Product SKU">
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Description</mat-label>
-                  <textarea matInput formControlName="description" placeholder="Product Description"></textarea>
-                </mat-form-field>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="bundle-card">
-              <mat-card-header>
-                <div class="header-content">
-                  <mat-icon>inventory_2</mat-icon>
-                  <mat-card-title>Bundle Components</mat-card-title>
-                </div>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="bundle-toggle-container">
-                  @if (isEditMode && !product?.is_bundle) {
-                  <div class="bundle-conversion-notice">
-                    <mat-icon class="notice-icon">info</mat-icon>
-                    <span class="notice-text">To create a bundle containing this product, use the <strong>"Create Parent
-                        Bundle"</strong> action in the product menu.</span>
-                  </div>
-                  } @else {
-                  <mat-slide-toggle formControlName="is_bundle" color="primary">
-                    Combine products into a single bundle
-                  </mat-slide-toggle>
-                  }
-                </div>
-
-                @if (productForm.get('is_bundle')?.value) {
-                <div class="bundle-management" [@fadeIn]>
-                  <mat-form-field class="full-width search-field" appearance="outline">
-                    <mat-label>Search products to add</mat-label>
-                    <input type="text" #componentInput matInput [matAutocomplete]="auto"
-                      (input)="searchProducts(componentInput.value)" placeholder="Search by name or SKU...">
-                    <mat-icon matSuffix>search</mat-icon>
-                    <mat-autocomplete #auto="matAutocomplete"
-                      (optionSelected)="onAddBundleComponent($event.option.value); componentInput.value = ''"
-                      class="product-autocomplete">
-                      @for (p of availableProducts; track p.id) {
-                      <mat-option [value]="p" class="product-option">
-                        <div class="option-content">
-                          <img
-                            [src]="getImageUrl(p.primary_image?.image_path || (p.images && p.images.length > 0 ? p.images[0].image_path : ''))"
-                            class="option-thumb" (error)="onImageError($event)">
-                          <div class="option-info">
-                            <span class="p-name">{{p.name}}</span>
-                            <span class="p-sku">{{p.sku}}</span>
-                          </div>
-                        </div>
-                      </mat-option>
-                      }
-                    </mat-autocomplete>
+      <mat-tab-group animationDuration="0ms" class="product-tabs">
+        <!-- Tab 1: Product Details -->
+        <mat-tab [label]="t('products.productDetails')">
+          <div class="form-columns">
+            <!-- Left Column -->
+            <div class="form-column">
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.coreDetails') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <mat-form-field>
+                    <mat-label>{{ t('common.name') }}</mat-label>
+                    <input matInput formControlName="name" [placeholder]="t('products.productName')">
                   </mat-form-field>
 
-                  <div class="bundle-list-container">
-                    <mat-list class="bundle-list">
-                      @for (comp of bundleComponents; track $index) {
-                      <mat-list-item class="bundle-item">
-                        <div class="item-layout">
-                          <img [src]="getImageUrl(comp.component_image || '')" class="item-thumb"
-                            (error)="onImageError($event)">
-                          <div class="item-details">
-                            <span class="comp-name">{{comp.component_name}}</span>
-                            <span class="comp-stock" [class.low-stock]="(comp.component_stock || 0) < 10"
-                              style="font-size: 0.8rem; color: #666; display: block; margin-top: 2px;">
-                              Available: {{comp.component_stock || 0}}
-                            </span>
-                            <div class="qty-control">
-                              <label>Qty:</label>
-                              <input type="number" [(ngModel)]="comp.quantity" [ngModelOptions]="{standalone: true}"
-                                class="qty-input">
+                  <mat-form-field>
+                    <mat-label>{{ t('products.sku') }}</mat-label>
+                    <input matInput formControlName="sku" [placeholder]="t('products.sku')">
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('common.description') }}</mat-label>
+                    <textarea matInput formControlName="description" [placeholder]="t('common.description')"></textarea>
+                  </mat-form-field>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card class="bundle-card">
+                <mat-card-header>
+                  <div class="header-content">
+                    <mat-icon>inventory_2</mat-icon>
+                    <mat-card-title>{{ t('products.bundleComponents') }}</mat-card-title>
+                  </div>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="bundle-toggle-container">
+                    @if (isEditMode && !product?.is_bundle) {
+                    <div class="bundle-conversion-notice">
+                      <mat-icon class="notice-icon">info</mat-icon>
+                      <span class="notice-text">{{ t('products.bundleConversionNotice') }}</span>
+                    </div>
+                    } @else {
+                    <mat-slide-toggle formControlName="is_bundle" color="primary">
+                      {{ t('products.combineProductsBundle') }}
+                    </mat-slide-toggle>
+                    }
+                  </div>
+
+                  @if (productForm.get('is_bundle')?.value) {
+                  <div class="bundle-management" [@fadeIn]>
+                    <mat-form-field class="full-width search-field" appearance="outline">
+                      <mat-label>{{ t('products.searchProductsToAdd') }}</mat-label>
+                      <input type="text" #componentInput matInput [matAutocomplete]="auto"
+                        (input)="searchProducts(componentInput.value)" [placeholder]="t('common.search')">
+                      <mat-icon matSuffix>search</mat-icon>
+                      <mat-autocomplete #auto="matAutocomplete"
+                        (optionSelected)="onAddBundleComponent($event.option.value); componentInput.value = ''"
+                        class="product-autocomplete">
+                        @for (p of availableProducts; track p.id) {
+                        <mat-option [value]="p" class="product-option">
+                          <div class="option-content">
+                            <img
+                              [src]="getImageUrl(p.primary_image?.image_path || (p.images && p.images.length > 0 ? p.images[0].image_path : ''))"
+                              class="option-thumb" (error)="onImageError($event)">
+                            <div class="option-info">
+                              <span class="p-name">{{p.name}}</span>
+                              <span class="p-sku">{{p.sku}}</span>
                             </div>
                           </div>
-                          <button type="button" mat-icon-button (click)="onRemoveBundleComponent($index)"
-                            class="remove-btn" matTooltip="Remove from bundle">
-                            <mat-icon>close</mat-icon>
-                          </button>
+                        </mat-option>
+                        }
+                      </mat-autocomplete>
+                    </mat-form-field>
+
+                    <div class="bundle-list-container">
+                      <mat-list class="bundle-list">
+                        @for (comp of bundleComponents; track $index) {
+                        <mat-list-item class="bundle-item">
+                          <div class="item-layout">
+                            <img [src]="getImageUrl(comp.component_image || '')" class="item-thumb"
+                              (error)="onImageError($event)">
+                            <div class="item-details">
+                              <span class="comp-name">{{comp.component_name}}</span>
+                              <span class="comp-stock" [class.low-stock]="(comp.component_stock || 0) < 10"
+                                style="font-size: 0.8rem; color: #666; display: block; margin-top: 2px;">
+                                {{ t('products.available') }}: {{comp.component_stock || 0}}
+                              </span>
+                              <div class="qty-control">
+                                <label>{{ t('common.quantity') }}:</label>
+                                <input type="number" [(ngModel)]="comp.quantity" [ngModelOptions]="{standalone: true}"
+                                  class="qty-input">
+                              </div>
+                            </div>
+                            <button type="button" mat-icon-button (click)="onRemoveBundleComponent($index)"
+                              class="remove-btn" [matTooltip]="t('products.removeFromBundle')">
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          </div>
+                        </mat-list-item>
+                        }
+                        @if (bundleComponents.length === 0) {
+                        <div class="empty-bundle">
+                          <mat-icon>info_outline</mat-icon>
+                          <p>{{ t('products.noComponentsAdded') }}</p>
                         </div>
-                      </mat-list-item>
-                      }
-                      @if (bundleComponents.length === 0) {
-                      <div class="empty-bundle">
-                        <mat-icon>info_outline</mat-icon>
-                        <p>No components added to this bundle yet.</p>
-                      </div>
-                      }
-                    </mat-list>
+                        }
+                      </mat-list>
+                    </div>
+                  </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.pricingSupplier') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <mat-form-field>
+                    <mat-label>{{ t('products.resalePrice') }}</mat-label>
+                    <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.lowStockDays') }}</mat-label>
+                    <input matInput formControlName="low_inventory_threshold" type="number" placeholder="Default: 30"
+                      min="0">
+                    <mat-hint>{{ t('products.overrideGlobalSetting') }}</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.lowStockQuantity') }}</mat-label>
+                    <input matInput formControlName="low_stock_quantity_threshold" type="number"
+                      placeholder="Default: 10" min="0">
+                    <mat-hint>{{ t('products.overrideGlobalThreshold') }}</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.costPrice') }}</mat-label>
+                    <input matInput formControlName="cost_price" type="number" placeholder="0.00">
+                  </mat-form-field>
+                </mat-card-content>
+              </mat-card>
+
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.dimensionsWeight') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="dimensions-grid">
+                  <mat-form-field>
+                    <mat-label>{{ t('products.width') }}</mat-label>
+                    <input matInput formControlName="width" type="number" placeholder="0.00">
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.height') }}</mat-label>
+                    <input matInput formControlName="height" type="number" placeholder="0.00">
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.depth') }}</mat-label>
+                    <input matInput formControlName="depth" type="number" placeholder="0.00">
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.weight') }}</mat-label>
+                    <input matInput formControlName="weight" type="number" placeholder="0.00">
+                  </mat-form-field>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Right Column -->
+            <div class="form-column">
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.images') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-product-form-image-gallery [existingImages]="product?.images || []" [stagedImages]="stagedImages"
+                    [stagedImagePreviews]="stagedImagePreviews" [productId]="productId"
+                    (stagedImagesChange)="onStagedImagesChange($event)"
+                    (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
+                    (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
+                    (imageUpdated)="onImageUpdated($event)"
+                    (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
+                </mat-card-content>
+              </mat-card>
+
+              @if (customFields.length > 0) {
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.customFields') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  @for (field of customFields; track field) {
+                  <div>
+                    <mat-form-field>
+                      <mat-label>{{ field.name }}</mat-label>
+                      <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
+                    </mat-form-field>
+                  </div>
+                  }
+                </mat-card-content>
+              </mat-card>
+              }
+
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>{{ t('products.variants') }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <app-product-variants [productVariants]="productVariants" (variantsChanged)="productVariants = $event"
+                    (addVariant)="onAddVariant()">
+                  </app-product-variants>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Marketplaces -->
+        <mat-tab [label]="t('nav.marketplaces')">
+          <div class="marketplaces-tab-content">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>{{ t('marketplaces.listings') }}</mat-card-title>
+                <mat-card-subtitle>{{ t('products.manageMarketplaces') }}</mat-card-subtitle>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="listings-list">
+                  <mat-list>
+                    @for (listing of product?.marketplace_listings; track listing) {
+                    <mat-list-item class="listing-item">
+                      <mat-icon matListItemIcon>store</mat-icon>
+                      <h3 matListItemTitle class="listing-title">
+                        {{ getMarketplaceName(listing.marketplace_id) }}
+                        <span class="status-badge" [class.active]="listing.status === 'active'"
+                          [class.error]="listing.status === 'error'" [class.pending]="listing.status === 'pending'">{{
+                          listing.status | titlecase }}</span>
+                      </h3>
+                      <p matListItemLine>
+                        External ID: {{ listing.external_listing_id || 'N/A' }} |
+                        @if (listing.listing_url) {
+                        <a [href]="listing.listing_url" target="_blank" (click)="$event.stopPropagation()">{{
+                          t('common.view') }}</a>
+                        }
+                      </p>
+                      <button mat-icon-button matListItemMeta>
+                        <mat-icon>open_in_new</mat-icon>
+                      </button>
+                    </mat-list-item>
+                    }
+
+                    @if (!product?.marketplace_listings?.length) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>info</mat-icon>
+                      <div matListItemTitle>{{ t('products.noActiveListings') }}</div>
+                      <div matListItemLine>{{ t('products.notListedYet') }}</div>
+                    </mat-list-item>
+                    }
+                  </mat-list>
+                </div>
+
+                <div class="marketplace-actions">
+                  <h3>{{ t('products.availableMarketplaces') }}</h3>
+                  <div class="action-buttons">
+                    <button mat-stroked-button>
+                      <mat-icon>add</mat-icon> {{ t('products.publishTo') }} Amazon
+                    </button>
+                    <button mat-stroked-button>
+                      <mat-icon>add</mat-icon> {{ t('products.publishTo') }} eBay
+                    </button>
+                    <button mat-stroked-button>
+                      <mat-icon>add</mat-icon> {{ t('products.publishTo') }} Shopify
+                    </button>
                   </div>
                 </div>
-                }
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Pricing & Supplier</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-form-field>
-                  <mat-label>Resale Price</mat-label>
-                  <input matInput formControlName="default_resale_price" type="number" placeholder="0.00">
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Low Stock Threshold (Days)</mat-label>
-                  <input matInput formControlName="low_inventory_threshold" type="number" placeholder="Default: 30"
-                    min="0">
-                  <mat-hint>Override global setting (leave empty for default)</mat-hint>
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Low Stock Quantity (Units)</mat-label>
-                  <input matInput formControlName="low_stock_quantity_threshold" type="number" placeholder="Default: 10"
-                    min="0">
-                  <mat-hint>Override global unit threshold (leave empty for default)</mat-hint>
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Cost Price</mat-label>
-                  <input matInput formControlName="cost_price" type="number" placeholder="0.00">
-                </mat-form-field>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Dimensions & Weight</mat-card-title>
-              </mat-card-header>
-              <mat-card-content class="dimensions-grid">
-                <mat-form-field>
-                  <mat-label>Width</mat-label>
-                  <input matInput formControlName="width" type="number" placeholder="0.00">
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Height</mat-label>
-                  <input matInput formControlName="height" type="number" placeholder="0.00">
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Depth</mat-label>
-                  <input matInput formControlName="depth" type="number" placeholder="0.00">
-                </mat-form-field>
-
-                <mat-form-field>
-                  <mat-label>Weight</mat-label>
-                  <input matInput formControlName="weight" type="number" placeholder="0.00">
-                </mat-form-field>
               </mat-card-content>
             </mat-card>
           </div>
-
-          <!-- Right Column -->
-          <div class="form-column">
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Images</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <app-product-form-image-gallery [existingImages]="product?.images || []" [stagedImages]="stagedImages"
-                  [stagedImagePreviews]="stagedImagePreviews" [productId]="productId"
-                  (stagedImagesChange)="onStagedImagesChange($event)"
-                  (stagedImagePreviewsChange)="onStagedImagePreviewsChange($event)"
-                  (imagesToDelete)="onImagesToDelete($event)" (primaryImageChange)="onPrimaryImageChange($event)"
-                  (imageUpdated)="onImageUpdated($event)"
-                  (existingImagesChange)="onExistingImagesOrderChange($event)"></app-product-form-image-gallery>
-              </mat-card-content>
-            </mat-card>
-
-            @if (customFields.length > 0) {
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Custom Fields</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                @for (field of customFields; track field) {
-                <div>
-                  <mat-form-field>
-                    <mat-label>{{ field.name }}</mat-label>
-                    <input matInput [formControlName]="'custom_field_' + field.id" [type]="field.type">
-                  </mat-form-field>
-                </div>
-                }
-              </mat-card-content>
-            </mat-card>
-            }
-
-            <mat-card>
-              <mat-card-header>
-                <mat-card-title>Product Variants</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <app-product-variants [productVariants]="productVariants" (variantsChanged)="productVariants = $event"
-                  (addVariant)="onAddVariant()">
-                </app-product-variants>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </div>
-      </mat-tab>
-
-      <!-- Tab 2: Marketplaces -->
-      <mat-tab label="Marketplaces">
-        <div class="marketplaces-tab-content">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>Active Listings</mat-card-title>
-              <mat-card-subtitle>Manage product availability across marketplaces</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="listings-list">
-                <mat-list>
-                  @for (listing of product?.marketplace_listings; track listing) {
-                  <mat-list-item class="listing-item">
-                    <mat-icon matListItemIcon>store</mat-icon>
-                    <h3 matListItemTitle class="listing-title">
-                      {{ getMarketplaceName(listing.marketplace_id) }}
-                      <span class="status-badge" [class.active]="listing.status === 'active'"
-                        [class.error]="listing.status === 'error'" [class.pending]="listing.status === 'pending'">{{
-                        listing.status | titlecase }}</span>
-                    </h3>
-                    <p matListItemLine>
-                      External ID: {{ listing.external_listing_id || 'N/A' }} |
-                      @if (listing.listing_url) {
-                      <a [href]="listing.listing_url" target="_blank" (click)="$event.stopPropagation()">View
-                        Listing</a>
-                      }
-                    </p>
-                    <button mat-icon-button matListItemMeta>
-                      <mat-icon>open_in_new</mat-icon>
-                    </button>
-                  </mat-list-item>
-                  }
-
-                  @if (!product?.marketplace_listings?.length) {
-                  <mat-list-item>
-                    <mat-icon matListItemIcon>info</mat-icon>
-                    <div matListItemTitle>No active listings</div>
-                    <div matListItemLine>This product is not listed on any marketplace yet.</div>
-                  </mat-list-item>
-                  }
-                </mat-list>
-              </div>
-
-              <div class="marketplace-actions">
-                <h3>Available Marketplaces</h3>
-                <div class="action-buttons">
-                  <button mat-stroked-button>
-                    <mat-icon>add</mat-icon> Publish to Amazon
-                  </button>
-                  <button mat-stroked-button>
-                    <mat-icon>add</mat-icon> Publish to eBay
-                  </button>
-                  <button mat-stroked-button>
-                    <mat-icon>add</mat-icon> Publish to Shopify
-                  </button>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  </form>
-</div>
+        </mat-tab>
+      </mat-tab-group>
+    </form>
+  </div>
+</ng-container>

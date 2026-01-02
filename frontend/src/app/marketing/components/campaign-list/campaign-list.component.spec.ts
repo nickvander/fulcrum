@@ -1,5 +1,6 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { CampaignListComponent } from './campaign-list.component';
 import { MarketingService } from '../../services/marketing.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -38,7 +39,11 @@ describe('CampaignListComponent', () => {
             imports: [
                 CampaignListComponent,
                 NoopAnimationsModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },

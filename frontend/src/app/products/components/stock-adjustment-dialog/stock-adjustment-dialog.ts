@@ -6,6 +6,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslocoModule } from '@ngneat/transloco';
 
 export interface StockAdjustmentData {
   productName: string;
@@ -27,8 +28,9 @@ export interface StockAdjustmentResult {
     MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
-],
+    MatButtonModule,
+    TranslocoModule
+  ],
 })
 export class StockAdjustmentDialog {
   adjustment = 0;
@@ -38,7 +40,7 @@ export class StockAdjustmentDialog {
   constructor(
     public dialogRef: MatDialogRef<StockAdjustmentDialog>,
     @Inject(MAT_DIALOG_DATA) public data: StockAdjustmentData
-  ) {}
+  ) { }
 
   onCancel(): void {
     this.dialogRef.close();
