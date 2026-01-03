@@ -17,12 +17,6 @@
 - [ ] `UserBulkImportDialogComponent` tests disabled due to 120s timeout
 - [ ] Product form tests intermittently flaky
 
-### Code Modularity
-
-- [ ] Create shared MaterialModule for consolidated imports
-- [ ] Split ProductList into smaller focused components
-- [ ] Extract reusable empty-state and loading-spinner components
-
 ### Documentation
 
 - [ ] Update user guide with infinite scroll feature documentation
