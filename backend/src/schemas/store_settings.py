@@ -20,10 +20,23 @@ class SMTPConfig(SMTPConfigBase):
     """Read schema (excludes password)."""
     is_configured: bool = False
 
+class AIConfig(BaseModel):
+    """Read schema for AI configuration status."""
+    enabled: bool = False
+    provider: str = "google"
+    model: Optional[str] = None
+    google_configured: bool = False
+    openai_configured: bool = False
+    anthropic_configured: bool = False
+    qwen_configured: bool = False
+
 class StoreSettingsBase(BaseModel):
     settings: Dict[str, Any] = {}
     low_inventory_days_default: int = 30
     low_stock_quantity_default: int = 10
+    
+    # Allow updating these via base put/patch if needed, or keeping them in Update schema
+    # Adding here allows them to be part of the response if we map them (but we usually map via properties)
     
     @field_validator('low_inventory_days_default', 'low_stock_quantity_default', mode='before')
     @classmethod
@@ -39,11 +52,26 @@ class StoreSettingsCreate(StoreSettingsBase):
     pass
 
 class StoreSettingsUpdate(StoreSettingsBase):
-    pass
+    # Optional fields to update encrypted keys
+    ai_enabled: Optional[bool] = None  # Accept bool, convert to int in CRUD if needed
+    ai_provider: Optional[str] = None
+    ai_model: Optional[str] = None
+    
+    ai_google_api_key: Optional[str] = None
+    ai_openai_api_key: Optional[str] = None
+    ai_anthropic_api_key: Optional[str] = None
+    ai_qwen_api_key: Optional[str] = None
+    # SMTP password
+    smtp_password: Optional[str] = None
+    
+    # Store configuration
+    store_domain: Optional[str] = None
+    store_name: Optional[str] = None
 
 class StoreSettings(StoreSettingsBase):
     id: int
     smtp_config: Optional[SMTPConfig] = None
+    ai_config: Optional[AIConfig] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,0 +1,338 @@
+/* Main Container */
+.scanner-container {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    max-height: 600px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+
+    /* Use Theme Variables for true theme support */
+    background-color: var(--bg-card);
+    color: var(--text-main);
+}
+
+/* Tab Overrides */
+::ng-deep .mat-mdc-tab-group {
+    flex: 1;
+    width: 100%;
+}
+
+::ng-deep .mat-mdc-tab-body-wrapper {
+    height: 100%;
+}
+
+::ng-deep .mat-mdc-tab-header {
+    background-color: var(--bg-header) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Force override if mat-primary persists */
+::ng-deep .mat-primary .mat-mdc-tab-header {
+    background-color: var(--bg-header) !important;
+}
+
+/* Tab Labels Spacing */
+::ng-deep .mat-mdc-tab-labels {
+    gap: 16px;
+}
+
+::ng-deep .mdc-tab__content {
+    gap: 8px;
+}
+
+/* Tab Content Areas */
+.tab-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    background-color: var(--bg-card);
+    color: var(--text-main);
+
+    &.center-content {
+        justify-content: center;
+    }
+
+    &.barcode-tab {
+        overflow-y: auto;
+    }
+}
+
+/* Video / Camera Section */
+.video-wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+    /* Camera area always dark */
+
+    &.hidden {
+        display: none;
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Viewfinder Overlay */
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%;
+        height: 50%;
+        min-width: 250px;
+        min-height: 250px;
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+        pointer-events: none;
+    }
+}
+
+/* Placeholder for Camera Off */
+.placeholder-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    height: 100%;
+    width: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    color: var(--text-secondary);
+
+    .camera-icon {
+        font-size: 64px;
+        height: 64px;
+        width: 64px;
+        opacity: 0.5;
+        margin-bottom: 16px;
+        color: var(--text-hint);
+    }
+
+    .error-msg {
+        color: var(--error-color);
+        text-align: center;
+    }
+
+    p {
+        opacity: 0.8;
+        text-align: center;
+        margin: 0;
+    }
+}
+
+/* Controls (Bottom Bar) */
+.controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    z-index: 20;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+
+    .capture-btn {
+        transform: scale(1.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Top Close Button */
+.top-controls {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 30;
+    height: 48px;
+    width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Clean button without bleed */
+    button {
+        color: var(--text-secondary);
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border-radius: 50%;
+
+        &:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        mat-icon {
+            font-size: 24px;
+        }
+    }
+}
+
+/* Loading Overlay */
+.scanner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.9);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-main);
+}
+
+/* 
+   Keyboard / Bluetooth Scanner Section 
+*/
+.keyboard-scanner-section {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+
+    .scanner-instruction {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin: 0;
+
+        mat-icon {
+            color: var(--primary-color);
+        }
+    }
+
+    /* Input Styling - strictly follow theme */
+    .barcode-input {
+        width: 100%;
+
+        /* Ensure background matches main app fields */
+        ::ng-deep .mat-mdc-text-field-wrapper {
+            background-color: var(--bg-app) !important;
+        }
+
+        ::ng-deep input.mat-mdc-input-element {
+            color: var(--text-main) !important;
+        }
+
+        ::ng-deep .mat-mdc-floating-label {
+            color: var(--text-secondary) !important;
+        }
+
+        ::ng-deep .mat-mdc-form-field-icon-suffix {
+            color: var(--text-secondary) !important;
+        }
+    }
+
+    /* Buttons */
+    button {
+        min-width: 180px;
+        height: 48px;
+        font-size: 1rem;
+
+        /* Disabled state */
+        &:disabled {
+            background-color: var(--bg-hover) !important;
+            color: var(--text-hint) !important;
+
+            mat-icon {
+                color: var(--text-hint) !important;
+            }
+        }
+
+        /* Primary Button (Lookup) */
+        &.mat-primary {
+            background-color: var(--primary-color) !important;
+            color: var(--text-on-primary) !important;
+
+            mat-icon {
+                color: var(--text-on-primary) !important;
+            }
+        }
+    }
+}
+
+mat-divider {
+    width: 80%;
+    margin: 8px auto;
+    opacity: 0.5;
+    border-top-color: var(--border-color);
+}
+
+/* Secondary Camera Section (Barcode Tab) */
+.camera-scanner-section {
+    padding: 24px;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .section-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    ngx-scanner-qrcode {
+        width: 100%;
+        max-width: 400px;
+        height: 300px;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Buttons in camera section */
+    button {
+        &.mat-accent {
+            border-color: var(--accent-color) !important;
+            color: var(--accent-color) !important;
+
+            mat-icon {
+                color: var(--accent-color) !important;
+            }
+        }
+
+        &.mat-warn {
+            border-color: var(--error-color) !important;
+            color: var(--error-color) !important;
+
+            mat-icon {
+                color: var(--error-color) !important;
+            }
+        }
+    }
+}

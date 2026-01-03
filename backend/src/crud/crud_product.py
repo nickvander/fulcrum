@@ -155,6 +155,13 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_by_sku(self, db: Session, *, sku: str) -> Product | None:
         return db.query(Product).filter(Product.sku == sku).first()
 
+    def get_by_barcode(self, db: Session, *, barcode_value: str) -> Product | None:
+        return db.query(Product).filter(
+            (Product.barcode_value == barcode_value) | 
+            (Product.qrcode_value == barcode_value) |
+            (Product.sku == barcode_value) # Fallback to SKU for robustness
+        ).first()
+
     def generate_unique_sku(self, db: Session, prefix: str = "PRD") -> str:
         """Generate a unique SKU with format: PREFIX-YYYYMMDD-XXXX"""
         import secrets
@@ -187,6 +194,39 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
         db.flush() # Get the ID for the new product
+        
+        # Generate Barcodes & QR Codes
+        try:
+            from src.services.barcode_service import BarcodeService
+            import os
+            
+            # Ensure directories exist
+            barcode_dir = "uploads/barcodes"
+            qr_dir = "uploads/qrcodes"
+            os.makedirs(barcode_dir, exist_ok=True)
+            os.makedirs(qr_dir, exist_ok=True)
+
+            barcode_bytes, qr_bytes = BarcodeService.generate_codes_for_product(db_obj.id, db_obj.sku)
+            
+            if barcode_bytes:
+                b_filename = f"{db_obj.sku}.png"
+                b_path = os.path.join(barcode_dir, b_filename)
+                with open(b_path, "wb") as f:
+                    f.write(barcode_bytes)
+                db_obj.barcode_image_url = f"/uploads/barcodes/{b_filename}"
+                db_obj.barcode_value = db_obj.sku # Code128 uses SKU by default in BarcodeService
+            
+            if qr_bytes:
+                q_filename = f"{db_obj.id}_qr.png"
+                q_path = os.path.join(qr_dir, q_filename)
+                with open(q_path, "wb") as f:
+                    f.write(qr_bytes)
+                db_obj.qrcode_image_url = f"/uploads/qrcodes/{q_filename}"
+                db_obj.qrcode_value = f"fulcrum-product:{db_obj.id}" # Standard logic in BarcodeService
+                
+        except Exception as e:
+            print(f"Error generating barcodes for product {db_obj.id}: {e}")
+            # Don't fail the transaction just for barcodes
         
         if bundle_components:
             for bc in bundle_components:

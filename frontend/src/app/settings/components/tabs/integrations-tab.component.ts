@@ -17,7 +17,6 @@ import { SettingsService } from '../../../core/services/settings.service';
   styleUrls: ['./integrations-tab.component.scss']
 })
 export class IntegrationsTabComponent implements OnInit {
-  aiForm: FormGroup;
   apiKeys: ApiKeyInfo[] = [];
   loadingKeys = false;
   creatingKey = false;
@@ -33,27 +32,11 @@ export class IntegrationsTabComponent implements OnInit {
     private notificationService: NotificationService,
     private settingsService: SettingsService,
     private dialog: MatDialog
-  ) {
-    this.aiForm = this.fb.group({
-      ai_provider: ['', Validators.required],
-      ai_api_key: ['', Validators.required]
-    });
-  }
+  ) { }
 
   ngOnInit(): void {
-    const currentSettings = this.settingsService.loadSettings();
-    if (currentSettings) {
-      this.aiForm.patchValue(currentSettings);
-    }
     this.loadApiKeys();
     this.loadPendingSyncCount();
-  }
-
-  onAiSubmit(): void {
-    if (this.aiForm.valid) {
-      this.settingsService.saveSettings(this.aiForm.value);
-      this.notificationService.showSuccess('AI Settings saved successfully!');
-    }
   }
 
   loadApiKeys(): void {

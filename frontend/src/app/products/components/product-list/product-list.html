@@ -47,7 +47,7 @@
           <button mat-mini-fab color="accent" (click)="onAddBundle()" [matTooltip]="t('products.createBundle')">
             <mat-icon>inventory_2</mat-icon>
           </button>
-          <button mat-mini-fab color="primary" routerLink="/ingest" [matTooltip]="t('products.scanProduct')">
+          <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
             <mat-icon>qr_code_scanner</mat-icon>
           </button>
         </div>

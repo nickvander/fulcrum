@@ -56,6 +56,17 @@ const routes: Routes = [
   },
   { path: 'marketplaces', loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule), canActivate: [AuthGuard] },
 
+  // Public QR Redirect
+  {
+    path: 'qr/:id',
+    loadComponent: () => import('./public/qr-redirect').then(m => m.QrRedirectComponent)
+  },
+  // Public Store Placeholder
+  {
+    path: 'store/products/:id',
+    loadComponent: () => import('./public/store-product').then(m => m.StoreProductComponent)
+  },
+
   { path: '**', redirectTo: '/products' } // Wildcard route
 ];
 

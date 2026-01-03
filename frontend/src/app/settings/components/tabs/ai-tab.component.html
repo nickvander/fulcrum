@@ -1,0 +1,89 @@
+<div class="tab-content" *transloco="let t">
+    <div class="settings-section">
+        <h3>{{ t('settings.aiAgents') }}</h3>
+        <p class="section-description">
+            Configure AI-powered features like product identification from photos.
+            Only the active provider needs an API key configured.
+        </p>
+
+        <form [formGroup]="aiForm" (ngSubmit)="saveSettings()">
+
+            <div class="global-settings">
+                <mat-slide-toggle formControlName="ai_enabled" color="primary">
+                    Enable AI Features
+                </mat-slide-toggle>
+
+                <div class="config-row" *ngIf="aiForm.get('ai_enabled')?.value">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Active Provider</mat-label>
+                        <mat-select formControlName="ai_provider">
+                            <mat-option value="google">Google Gemini</mat-option>
+                            <mat-option value="openai">OpenAI</mat-option>
+                            <mat-option value="anthropic">Anthropic Claude</mat-option>
+                            <mat-option value="qwen">Qwen (Alibaba)</mat-option>
+                        </mat-select>
+                        <mat-hint>This provider will be used for AI features</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Model Override (Optional)</mat-label>
+                        <input matInput formControlName="ai_model" placeholder="Leave empty for default"
+                            autocomplete="off">
+                        <mat-hint>e.g. gpt-4o, claude-3-5-sonnet, gemini-1.5-flash</mat-hint>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Active Provider Key Section -->
+            <div class="active-key-section" *ngIf="aiForm.get('ai_enabled')?.value">
+                <h4>
+                    <mat-icon>key</mat-icon>
+                    API Key for {{ getProviderName(aiForm.get('ai_provider')?.value) }}
+                </h4>
+
+                <div class="key-status" [class.configured]="isActiveProviderConfigured()">
+                    <mat-icon>{{ isActiveProviderConfigured() ? 'check_circle' : 'warning' }}</mat-icon>
+                    <span>{{ isActiveProviderConfigured() ? 'Key configured' : 'Key required to enable AI' }}</span>
+                </div>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ getProviderName(aiForm.get('ai_provider')?.value) }} API Key</mat-label>
+                    <input matInput [formControlName]="getActiveKeyControlName()" type="password"
+                        placeholder="Enter key to update" autocomplete="new-password">
+                    <mat-hint>Enter a new key to update. Leave empty to keep existing.</mat-hint>
+                </mat-form-field>
+            </div>
+
+            <!-- Other Provider Keys (Collapsible) -->
+            <div class="other-keys-section" *ngIf="aiForm.get('ai_enabled')?.value">
+                <button type="button" mat-button (click)="showOtherKeys = !showOtherKeys">
+                    <mat-icon>{{ showOtherKeys ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    {{ showOtherKeys ? 'Hide' : 'Show' }} Other Provider Keys
+                </button>
+
+                <div class="other-keys-grid" *ngIf="showOtherKeys">
+                    <ng-container *ngFor="let provider of getOtherProviders()">
+                        <div class="provider-key-row">
+                            <div class="provider-info">
+                                <span class="provider-name">{{ getProviderName(provider) }}</span>
+                                <span class="key-status small" [class.configured]="isProviderConfigured(provider)">
+                                    {{ isProviderConfigured(provider) ? '✓ Configured' : 'Not configured' }}
+                                </span>
+                            </div>
+                            <mat-form-field appearance="outline" class="compact-field">
+                                <input matInput [formControlName]="getKeyControlName(provider)" type="password"
+                                    placeholder="Enter to update" autocomplete="new-password">
+                            </mat-form-field>
+                        </div>
+                    </ng-container>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+                    {{ t('common.save') }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

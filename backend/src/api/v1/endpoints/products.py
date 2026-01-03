@@ -426,6 +426,20 @@ def search_products(
     return products
 
 
+@router.get("/lookup/barcode", response_model=product_schema.Product)
+def lookup_product_by_barcode(
+    barcode: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Lookup a product by its barcode, QR value, or SKU.
+    """
+    product = crud_product.product.get_by_barcode(db, barcode_value=barcode)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+
 @router.post("/{product_id}/assemble", response_model=product_schema.Product)
 def assemble_bundle(
     product_id: int,

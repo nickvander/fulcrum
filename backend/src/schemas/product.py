@@ -60,6 +60,13 @@ class ProductBase(BaseModel):
     sku: Optional[str] = None  # Optional - auto-generated if not provided
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
+    # Barcodes
+    # Barcodes
+    barcode_image_url: Optional[str] = None
+    barcode_value: Optional[str] = None
+    qrcode_image_url: Optional[str] = None
+    qrcode_value: Optional[str] = None
+    
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
     category: Optional[str] = None
@@ -90,6 +97,11 @@ class ProductUpdate(BaseModel):
     weight: Optional[float] = None
     is_bundle: Optional[bool] = None
     bundle_components: Optional[List[BundleComponentCreate]] = None
+    # Allow manually saving/updating generated barcodes
+    barcode_value: Optional[str] = None
+    qrcode_value: Optional[str] = None
+    barcode_image_url: Optional[str] = None
+    qrcode_image_url: Optional[str] = None
 
 
 

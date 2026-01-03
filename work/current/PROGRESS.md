@@ -3,4 +3,6 @@
 ## Status: Ready
 
 ### Current Objective
-- [ ] Awaiting new objectives.
+- [/] AI Integration & Intelligent Agents
+  - Plan: [73-ai-integration-plan.md](./73-ai-integration-plan.md)
+  - Log: [73-ai-integration-log.md](./73-ai-integration-log.md)

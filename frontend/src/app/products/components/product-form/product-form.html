@@ -44,6 +44,27 @@
                     <input matInput formControlName="sku" [placeholder]="t('products.sku')">
                   </mat-form-field>
 
+                  <div class="barcode-field-container" style="display: flex; align-items: baseline; gap: 8px;">
+                    <mat-form-field style="flex: 1;">
+                      <mat-label>Barcode / UPC</mat-label>
+                      <input matInput formControlName="barcode_value" placeholder="Scan or Enter Code">
+                    </mat-form-field>
+                    <button type="button" mat-stroked-button color="accent" (click)="generateStoreBarcode()"
+                      [disabled]="!productForm.get('sku')?.value">
+                      Generate Store Barcode
+                    </button>
+                  </div>
+
+                  <div class="qrcode-field-container" style="display: flex; align-items: baseline; gap: 8px;">
+                    <mat-form-field style="flex: 1;">
+                      <mat-label>QR Code URL</mat-label>
+                      <input matInput formControlName="qrcode_value" placeholder="Generated automatically">
+                    </mat-form-field>
+                    <button type="button" mat-stroked-button color="accent" (click)="generateQRCode()">
+                      Generate QR Code
+                    </button>
+                  </div>
+
                   <mat-form-field>
                     <mat-label>{{ t('common.description') }}</mat-label>
                     <textarea matInput formControlName="description" [placeholder]="t('common.description')"></textarea>

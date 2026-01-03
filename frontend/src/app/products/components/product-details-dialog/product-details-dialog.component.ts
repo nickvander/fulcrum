@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
+import { CodeDisplayComponent } from '../../../shared/components/code-display/code-display.component';
 
 @Component({
     selector: 'app-product-details-dialog',
@@ -29,7 +30,8 @@ import { TranslocoModule } from '@ngneat/transloco';
         MatInputModule,
         MatInputModule,
         MatTooltipModule,
-        TranslocoModule
+        TranslocoModule,
+        CodeDisplayComponent
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {
@@ -46,12 +48,14 @@ export class ProductDetailsDialogComponent implements OnInit {
     showFullDescription = false;
     showMarketplaces = false;
     showMarketing = false;
+    showCodes = false; // Collapsed by default
     isMobile = false;
     isTablet = false;
+    stagedImage: File | null = null;
 
     constructor(
         public dialogRef: MatDialogRef<ProductDetailsDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { product: Product, mode?: 'view' | 'edit' },
+        @Inject(MAT_DIALOG_DATA) public data: { product: Product, mode?: 'view' | 'edit', stagedImage?: File },
         private productService: ProductService,
         private router: Router,
         private dialog: MatDialog
@@ -59,6 +63,7 @@ export class ProductDetailsDialogComponent implements OnInit {
         // Initialize with passed data for immediate display
         this.product = data.product;
         this.isEditMode = data.mode === 'edit';
+        this.stagedImage = data.stagedImage || null;
     }
 
     get dialogTitle(): string {
