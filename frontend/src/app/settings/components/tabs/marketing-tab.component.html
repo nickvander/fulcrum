@@ -1,0 +1,67 @@
+<div class="tab-content" *transloco="let t">
+    <!-- Email Configuration -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.emailConfiguration') }}</h2>
+        <p class="section-desc">{{ t('settings.emailConfigDesc') }}</p>
+        <div class="settings-card">
+            <form [formGroup]="smtpForm" (ngSubmit)="onSmtpSubmit()">
+                <mat-form-field appearance="outline" class="sleek-field">
+                    <mat-label>{{ t('settings.provider') }}</mat-label>
+                    <mat-select formControlName="provider" (selectionChange)="onProviderChange($event.value)">
+                        <mat-option value="gmail">Gmail</mat-option>
+                        <mat-option value="outlook">Outlook</mat-option>
+                        <mat-option value="yahoo">Yahoo</mat-option>
+                        <mat-option value="custom">{{ t('settings.customSmtp') }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <div *ngIf="smtpForm.get('provider')?.value === 'custom'" class="form-row">
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.host') }}</mat-label>
+                        <input matInput formControlName="host">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="sleek-field short">
+                        <mat-label>{{ t('settings.port') }}</mat-label>
+                        <input matInput type="number" formControlName="port">
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('common.email') }}</mat-label>
+                        <input matInput formControlName="username" type="email" autocomplete="off">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('auth.password') }}</mat-label>
+                        <input matInput formControlName="password" type="password" autocomplete="new-password">
+                    </mat-form-field>
+                </div>
+
+                <div class="smtp-status" *ngIf="smtpConfigured">
+                    <mat-icon>check_circle</mat-icon> {{ t('settings.connected') }}
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" mat-stroked-button (click)="testSmtp()" [disabled]="testingSmtp">
+                        {{ testingSmtp ? t('settings.testing') : t('settings.testConnection') }}
+                    </button>
+                    <button type="submit" mat-flat-button color="primary" [disabled]="!smtpForm.valid || savingSmtp">
+                        {{ savingSmtp ? t('settings.saving') : t('common.save') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Future: Social Media Connections -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('marketing.socialMedia') }}</h2>
+        <p class="section-desc">{{ t('settings.comingSoon') }}</p>
+        <div class="settings-card coming-soon">
+            <div class="coming-soon-content">
+                <mat-icon>construction</mat-icon>
+                <span>{{ t('settings.comingSoon') }}</span>
+            </div>
+        </div>
+    </div>
+</div>

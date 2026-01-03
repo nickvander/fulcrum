@@ -8,6 +8,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ActivatedRoute } from '@angular/router';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ConnectorSettingsComponent', () => {
     let component: ConnectorSettingsComponent;
@@ -39,7 +40,11 @@ describe('ConnectorSettingsComponent', () => {
             imports: [
                 ConnectorSettingsComponent,
                 NoopAnimationsModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, 'es-MX': {} },
+                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },

@@ -7,6 +7,7 @@ import { Directive } from '@angular/core';
 import { PaginationComponent } from '../pagination/pagination';
 import { ProductFiltersComponent } from '../product-filters/product-filters';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MaterialModule } from '../../../shared/material.module';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ProductService } from '../../services/product';
@@ -15,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { MatCardModule } from '@angular/material/card';
@@ -219,6 +221,7 @@ describe('ProductList', () => {
                 remove: {
                     imports: [
                         SharedModule,
+                        MaterialModule,
                         ProductForm,
                         BatchActionToolbarComponent,
                         PaginationComponent,
@@ -245,6 +248,9 @@ describe('ProductList', () => {
                     ]
                 },
                 add: {
+                    providers: [
+                        { provide: MatDialog, useValue: dialogMock }
+                    ],
                     imports: [
                         AiSearchBarStubComponent,
                         ProductFormStubComponent,
@@ -254,8 +260,10 @@ describe('ProductList', () => {
                         InfiniteScrollStubDirective,
                         MarketplaceStatusStubComponent,
                         CommonModule,
+                        FormsModule,
                         MatMenuModule,
-                        MatButtonModule
+                        MatButtonModule,
+                        MatButtonToggleModule
                     ],
                     schemas: [NO_ERRORS_SCHEMA]
                 }

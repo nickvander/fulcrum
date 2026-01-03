@@ -14,7 +14,6 @@ def get_all_keys(data: Dict[str, Any], prefix: str = "") -> Set[str]:
 
 def check_duplicates(file_path: str) -> List[str]:
     duplicates = []
-    duplicates = []
     
     class DuplicateCheckDecoder(json.JSONDecoder):
         def __init__(self, *args, **kwargs):

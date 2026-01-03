@@ -21,16 +21,12 @@
             </div>
 
             @if (loading) {
-            <div class="loading-state">
-                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-                <p>{{ t('settings.changeLog.loading') }}</p>
-            </div>
+            <app-loading-spinner [message]="t('settings.changeLog.loading')">
+            </app-loading-spinner>
             } @else if (entries.length === 0) {
-            <div class="empty-state">
-                <mat-icon>history_toggle_off</mat-icon>
-                <h3>{{ t('settings.changeLog.noChanges') }}</h3>
-                <p>{{ t('settings.changeLog.noChangesDesc') }}</p>
-            </div>
+            <app-empty-state icon="history_toggle_off" [title]="t('settings.changeLog.noChanges')"
+                [description]="t('settings.changeLog.noChangesDesc')">
+            </app-empty-state>
             } @else {
             <div class="log-table">
                 <div class="table-header">

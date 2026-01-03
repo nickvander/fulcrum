@@ -1,0 +1,34 @@
+<div class="tab-content" *transloco="let t">
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.appearance') }}</h2>
+        <div class="settings-card">
+            <form [formGroup]="form">
+                <mat-form-field appearance="outline" class="sleek-field">
+                    <mat-label>{{ t('settings.theme') }}</mat-label>
+                    <mat-select formControlName="theme">
+                        <mat-option value="light">{{ t('settings.lightMode') }}</mat-option>
+                        <mat-option value="dark">{{ t('settings.darkMode') }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <p class="section-desc" style="margin-top: 8px; margin-bottom: 0;">{{ t('settings.themeAutoSave') }}</p>
+            </form>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.language') }}</h2>
+        <div class="settings-card">
+            <form [formGroup]="form">
+                <mat-form-field appearance="outline" class="sleek-field">
+                    <mat-label>{{ t('settings.languageLabel') }}</mat-label>
+                    <mat-select formControlName="language">
+                        <mat-option value="en">English</mat-option>
+                        <mat-option value="es-MX">Español (México)</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <p class="section-desc" style="margin-top: 8px; margin-bottom: 0;">{{ t('settings.languageAutoSave') }}
+                </p>
+            </form>
+        </div>
+    </div>
+</div>

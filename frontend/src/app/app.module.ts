@@ -11,10 +11,9 @@ import { CoreModule } from './core/core-module';
 import { AuthModule } from './auth/auth-module';
 import { AuthInterceptor } from './auth/interceptors/auth-interceptor';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor';
+import { MaterialModule } from './shared/material.module';
 
 import { TranslocoRootModule } from './transloco-root.module';
 import { TranslocoPaginatorIntl } from './shared/services/transloco-paginator-intl';
@@ -28,14 +27,13 @@ import { TranslocoPaginatorIntl } from './shared/services/transloco-paginator-in
     HttpClientModule,
     CoreModule,
     AuthModule,
+    MaterialModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: !isDevMode(),
       // Register the ServiceWorker as soon as the application is stable
       // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000'
     }),
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
     AppRoutingModule
   ],
   providers: [

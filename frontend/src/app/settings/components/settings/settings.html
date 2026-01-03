@@ -9,421 +9,49 @@
     <!-- Tabbed Navigation -->
     <mat-tab-group class="settings-tabs" animationDuration="200ms">
 
-      <!-- ================================================================ -->
       <!-- TAB 1: General -->
-      <!-- ================================================================ -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>tune</mat-icon>
           <span>{{ t('settings.general') }}</span>
         </ng-template>
-
-        <div class="tab-content">
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.appearance') }}</h2>
-            <div class="settings-card">
-              <form [formGroup]="settingsForm">
-                <mat-form-field appearance="outline" class="sleek-field">
-                  <mat-label>{{ t('settings.theme') }}</mat-label>
-                  <mat-select formControlName="theme">
-                    <mat-option value="light">{{ t('settings.lightMode') }}</mat-option>
-                    <mat-option value="dark">{{ t('settings.darkMode') }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <p class="section-desc" style="margin-top: 8px; margin-bottom: 0;">{{ t('settings.themeAutoSave') }}</p>
-              </form>
-            </div>
-          </div>
-
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.language') }}</h2>
-            <div class="settings-card">
-              <form [formGroup]="settingsForm">
-                <mat-form-field appearance="outline" class="sleek-field">
-                  <mat-label>{{ t('settings.languageLabel') }}</mat-label>
-                  <mat-select formControlName="language">
-                    <mat-option value="en">English</mat-option>
-                    <mat-option value="es-MX">Español (México)</mat-option>
-                  </mat-select>
-                </mat-form-field>
-                <p class="section-desc" style="margin-top: 8px; margin-bottom: 0;">{{ t('settings.languageAutoSave') }}
-                </p>
-              </form>
-            </div>
-          </div>
-        </div>
+        <app-general-tab></app-general-tab>
       </mat-tab>
 
-      <!-- ================================================================ -->
       <!-- TAB 2: Integrations & AI -->
-      <!-- ================================================================ -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>extension</mat-icon>
           <span>{{ t('settings.integrations') }}</span>
         </ng-template>
-
-        <div class="tab-content">
-          <!-- AI Configuration -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.aiProvider') }}</h2>
-            <p class="section-desc">{{ t('settings.aiProviderDesc') }}</p>
-            <div class="settings-card">
-              <form [formGroup]="settingsForm" (ngSubmit)="onSubmit()">
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.provider') }}</mat-label>
-                    <mat-select formControlName="ai_provider">
-                      <mat-option value="openai">OpenAI</mat-option>
-                      <mat-option value="google">Google Gemini</mat-option>
-                      <mat-option value="anthropic">Anthropic Claude</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.apiKey') }}</mat-label>
-                    <input matInput formControlName="ai_api_key" type="password" placeholder="sk-..."
-                      autocomplete="off">
-                  </mat-form-field>
-                </div>
-                <div class="form-actions">
-                  <button mat-flat-button color="primary" type="submit" [disabled]="!settingsForm.valid">
-                    {{ t('settings.saveAiSettings') }}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- API Keys for External Tools -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.externalApiKeys') }}</h2>
-            <p class="section-desc">{{ t('settings.externalApiKeysDesc') }}</p>
-            <div class="settings-card">
-              <!-- Existing Keys (only show active by default) -->
-              <div class="api-keys-list" *ngIf="getVisibleKeys().length > 0">
-                <div class="api-key-item" *ngFor="let key of getVisibleKeys()">
-                  <div class="key-info">
-                    <span class="key-name">{{ key.name }}</span>
-                    <code class="key-prefix">{{ key.key_prefix }}...****</code>
-                    <span class="key-status" [class.active]="key.is_active" [class.revoked]="!key.is_active">
-                      {{ key.is_active ? t('common.active') : t('settings.revoke') }}
-                    </span>
-                  </div>
-                  <button mat-icon-button color="warn" (click)="revokeKey(key.id)" *ngIf="key.is_active"
-                    [matTooltip]="t('settings.revoke')">
-                    <mat-icon>delete_outline</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="deleteRevokedKey(key.id)" *ngIf="!key.is_active"
-                    [matTooltip]="t('common.delete')">
-                    <mat-icon>delete_forever</mat-icon>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Toggle for revoked keys -->
-              <div class="revoked-toggle" *ngIf="hasRevokedKeys()">
-                <button mat-button (click)="showRevokedKeys = !showRevokedKeys">
-                  <mat-icon>{{ showRevokedKeys ? 'visibility_off' : 'visibility' }}</mat-icon>
-                  {{ showRevokedKeys ? t('settings.hideRevoked') : t('settings.showRevoked') }} {{ getRevokedCount() }}
-                </button>
-              </div>
-
-              <div class="empty-state-inline" *ngIf="getVisibleKeys().length === 0 && !loadingKeys">
-                <mat-icon>key_off</mat-icon>
-                <span>{{ t('settings.noApiKeys') }}</span>
-              </div>
-
-              <!-- Generate New Key -->
-              <div class="new-key-form" *ngIf="!newKeyResult">
-                <mat-form-field appearance="outline" class="sleek-field">
-                  <mat-label>{{ t('settings.keyName') }}</mat-label>
-                  <input matInput [(ngModel)]="newKeyName" placeholder="e.g., Google Sheets">
-                </mat-form-field>
-                <button mat-stroked-button color="primary" (click)="createApiKey()"
-                  [disabled]="!(newKeyName || '').trim() || creatingKey">
-                  <mat-icon>add</mat-icon> {{ t('settings.generate') }}
-                </button>
-              </div>
-
-              <!-- New Key Result -->
-              <div class="new-key-result" *ngIf="newKeyResult">
-                <div class="success-banner">
-                  <mat-icon>check_circle</mat-icon>
-                  <strong>{{ t('settings.keyCreated') }}</strong>
-                </div>
-                <p class="warning-text">{{ t('settings.copyKeyWarning') }}</p>
-                <div class="key-display">
-                  <code>{{ newKeyResult.api_key }}</code>
-                  <button mat-icon-button (click)="copyToClipboard(newKeyResult.api_key)"
-                    [matTooltip]="t('common.copy')">
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                </div>
-                <button mat-stroked-button (click)="dismissKeyResult()">{{ t('common.done') }}</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pending Sync Changes -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.pendingSync') }}</h2>
-            <p class="section-desc">{{ t('settings.pendingSyncDesc') }}</p>
-            <div class="settings-card">
-              <div class="pending-sync-row">
-                <div class="pending-info">
-                  <mat-icon>sync_alt</mat-icon>
-                  <span class="pending-label">{{ t('settings.changesAwaiting') }}</span>
-                  <span class="pending-badge">
-                    {{ pendingBatchCount }} {{ t('settings.operations') }}
-                    ({{ pendingSyncCount }} {{ t('settings.changes') }})
-                  </span>
-                </div>
-                @if (pendingSyncCount > 0) {
-                <button mat-flat-button color="primary" (click)="openPendingSyncDialog()">
-                  <mat-icon>rate_review</mat-icon>
-                  {{ t('settings.review') }}
-                </button>
-                } @else {
-                <span class="empty-hint">{{ t('settings.noPendingChanges') }}</span>
-                }
-              </div>
-            </div>
-          </div>
-
-          <!-- Change Log -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.changeLogButton') }}</h2>
-            <p class="section-desc">{{ t('settings.changeLogDesc') }}</p>
-            <div class="settings-card">
-              <div class="change-log-row">
-                <div class="log-info">
-                  <mat-icon>history</mat-icon>
-                  <span>{{ t('settings.changeLogButton') }}</span>
-                </div>
-                <button mat-stroked-button (click)="openChangeLogDialog()">
-                  <mat-icon>visibility</mat-icon>
-                  {{ t('settings.viewLog') }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <app-integrations-tab></app-integrations-tab>
       </mat-tab>
 
-      <!-- ================================================================ -->
       <!-- TAB 3: Marketing & Email -->
-      <!-- ================================================================ -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>campaign</mat-icon>
           <span>{{ t('settings.marketingTab') }}</span>
         </ng-template>
-
-        <div class="tab-content">
-          <!-- Email Configuration -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.emailConfiguration') }}</h2>
-            <p class="section-desc">{{ t('settings.emailConfigDesc') }}</p>
-            <div class="settings-card">
-              <form [formGroup]="smtpForm" (ngSubmit)="onSmtpSubmit()">
-                <mat-form-field appearance="outline" class="sleek-field">
-                  <mat-label>{{ t('settings.provider') }}</mat-label>
-                  <mat-select formControlName="provider" (selectionChange)="onProviderChange($event.value)">
-                    <mat-option value="gmail">Gmail</mat-option>
-                    <mat-option value="outlook">Outlook</mat-option>
-                    <mat-option value="yahoo">Yahoo</mat-option>
-                    <mat-option value="custom">{{ t('settings.customSmtp') }}</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <div *ngIf="smtpForm.get('provider')?.value === 'custom'" class="form-row">
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.host') }}</mat-label>
-                    <input matInput formControlName="host">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="sleek-field short">
-                    <mat-label>{{ t('settings.port') }}</mat-label>
-                    <input matInput type="number" formControlName="port">
-                  </mat-form-field>
-                </div>
-
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('common.email') }}</mat-label>
-                    <input matInput formControlName="username" type="email" autocomplete="off">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('auth.password') }}</mat-label>
-                    <input matInput formControlName="password" type="password" autocomplete="new-password">
-                  </mat-form-field>
-                </div>
-
-                <div class="smtp-status" *ngIf="smtpConfigured">
-                  <mat-icon>check_circle</mat-icon> {{ t('settings.connected') }}
-                </div>
-
-                <div class="form-actions">
-                  <button type="button" mat-stroked-button (click)="testSmtp()" [disabled]="testingSmtp">
-                    {{ testingSmtp ? t('settings.testing') : t('settings.testConnection') }}
-                  </button>
-                  <button type="submit" mat-flat-button color="primary" [disabled]="!smtpForm.valid || savingSmtp">
-                    {{ savingSmtp ? t('settings.saving') : t('common.save') }}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- Future: Social Media Connections -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('marketing.socialMedia') }}</h2>
-            <p class="section-desc">{{ t('settings.comingSoon') }}</p>
-            <div class="settings-card coming-soon">
-              <div class="coming-soon-content">
-                <mat-icon>construction</mat-icon>
-                <span>{{ t('settings.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <app-marketing-tab></app-marketing-tab>
       </mat-tab>
 
-      <!-- ================================================================ -->
       <!-- TAB 4: Inventory -->
-      <!-- ================================================================ -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>inventory_2</mat-icon>
           <span>{{ t('settings.inventory') }}</span>
         </ng-template>
-
-        <div class="tab-content">
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.stockThresholds') }}</h2>
-            <p class="section-desc">{{ t('settings.stockThresholdsDesc') }}</p>
-            <div class="settings-card">
-              <form [formGroup]="storeSettingsForm" (ngSubmit)="onStoreSettingsSubmit()">
-                <div class="form-row">
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.lowStockDays') }}</mat-label>
-                    <input matInput type="number" formControlName="low_inventory_days_default" min="1">
-                    <mat-hint>{{ t('settings.lowStockDaysHint') }}</mat-hint>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.lowQuantityThreshold') }}</mat-label>
-                    <input matInput type="number" formControlName="low_stock_quantity_default" min="0">
-                    <mat-hint>{{ t('settings.lowQuantityHint') }}</mat-hint>
-                  </mat-form-field>
-                </div>
-                <div class="form-actions">
-                  <button type="submit" mat-flat-button color="primary" [disabled]="!storeSettingsForm.valid">
-                    {{ t('settings.saveRules') }}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+        <app-inventory-tab></app-inventory-tab>
       </mat-tab>
 
-      <!-- ================================================================ -->
       <!-- TAB 5: Data Management -->
-      <!-- ================================================================ -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>storage</mat-icon>
           <span>{{ t('settings.data') }}</span>
         </ng-template>
-
-        <div class="tab-content">
-          <!-- Export Section -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.exportData') }}</h2>
-            <p class="section-desc">{{ t('settings.exportDataDesc') }}</p>
-            <div class="settings-card">
-              <div class="export-grid">
-                <!-- Products -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>inventory_2</mat-icon>
-                    <span>{{ t('nav.products') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('products', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('products', 'json')">JSON</button>
-                  </div>
-                </div>
-                <!-- Inventory -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>warehouse</mat-icon>
-                    <span>{{ t('settings.inventory') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('inventory', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('inventory', 'json')">JSON</button>
-                  </div>
-                </div>
-                <!-- Suppliers -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>local_shipping</mat-icon>
-                    <span>{{ t('nav.suppliers') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('suppliers', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('suppliers', 'json')">JSON</button>
-                  </div>
-                </div>
-                <!-- Purchase Orders -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>receipt_long</mat-icon>
-                    <span>{{ t('nav.purchaseOrders') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('purchase-orders', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('purchase-orders', 'json')">JSON</button>
-                  </div>
-                </div>
-                <!-- Expenses -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>payments</mat-icon>
-                    <span>{{ t('nav.expenses') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('expenses', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('expenses', 'json')">JSON</button>
-                  </div>
-                </div>
-                <!-- Marketing -->
-                <div class="export-row">
-                  <div class="export-label">
-                    <mat-icon>campaign</mat-icon>
-                    <span>{{ t('marketing.campaigns') }}</span>
-                  </div>
-                  <div class="export-buttons">
-                    <button mat-stroked-button (click)="exportData('campaigns', 'csv')">CSV</button>
-                    <button mat-stroked-button (click)="exportData('campaigns', 'json')">JSON</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Import Section (Coming Soon) -->
-          <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.importData') }}</h2>
-            <p class="section-desc">{{ t('settings.importDataDesc') }}</p>
-            <div class="settings-card coming-soon">
-              <div class="coming-soon-content">
-                <mat-icon>upload_file</mat-icon>
-                <span>{{ t('settings.comingSoon') }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <app-data-tab></app-data-tab>
       </mat-tab>
 
     </mat-tab-group>

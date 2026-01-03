@@ -125,22 +125,16 @@
       </div>
 
       @if (products.length === 0 && !isLoading) {
-      <div class="empty-state">
-        <mat-icon class="empty-state-icon">inventory_2</mat-icon>
-        <h2>{{ t('products.noProducts') }}</h2>
-        <p>{{ t('products.addProduct') }}</p>
+      <app-empty-state icon="inventory_2" [title]="t('products.noProducts')" [description]="t('products.addProduct')">
         <button mat-raised-button color="primary" routerLink="new">
           <mat-icon>add</mat-icon>
           <span>{{ t('products.addProduct') }}</span>
         </button>
-      </div>
+      </app-empty-state>
       }
 
-      @if (isLoading) {
-      <div class="loading-state">
-        <mat-spinner></mat-spinner>
-        <p>{{ t('common.loading') }}</p>
-      </div>
+      @if (isLoading && products.length === 0) {
+      <app-loading-spinner [message]="t('common.loading')"></app-loading-spinner>
       }
 
       <!-- Grid View -->
@@ -396,10 +390,7 @@
 
       <!-- Loading spinner for infinite scroll -->
       @if (useInfiniteScroll && isLoading && products.length > 0) {
-      <div class="loading-state">
-        <mat-spinner diameter="30"></mat-spinner>
-        <p>Loading more products...</p>
-      </div>
+      <app-loading-spinner [diameter]="30" [message]="t('products.loadingMore')"></app-loading-spinner>
       }
 
       <!-- Infinite scroll trigger -->

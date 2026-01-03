@@ -1,0 +1,146 @@
+<div class="tab-content" *transloco="let t">
+    <!-- AI Configuration -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.aiProvider') }}</h2>
+        <p class="section-desc">{{ t('settings.aiProviderDesc') }}</p>
+        <div class="settings-card">
+            <form [formGroup]="aiForm" (ngSubmit)="onAiSubmit()">
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.provider') }}</mat-label>
+                        <mat-select formControlName="ai_provider">
+                            <mat-option value="openai">OpenAI</mat-option>
+                            <mat-option value="google">Google Gemini</mat-option>
+                            <mat-option value="anthropic">Anthropic Claude</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.apiKey') }}</mat-label>
+                        <input matInput formControlName="ai_api_key" type="password" placeholder="sk-..."
+                            autocomplete="off">
+                    </mat-form-field>
+                </div>
+                <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="!aiForm.valid">
+                        {{ t('settings.saveAiSettings') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- API Keys for External Tools -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.externalApiKeys') }}</h2>
+        <p class="section-desc">{{ t('settings.externalApiKeysDesc') }}</p>
+        <div class="settings-card">
+            <!-- Existing Keys (only show active by default) -->
+            <div class="api-keys-list" *ngIf="getVisibleKeys().length > 0">
+                <div class="api-key-item" *ngFor="let key of getVisibleKeys()">
+                    <div class="key-info">
+                        <span class="key-name">{{ key.name }}</span>
+                        <code class="key-prefix">{{ key.key_prefix }}...****</code>
+                        <span class="key-status" [class.active]="key.is_active" [class.revoked]="!key.is_active">
+                            {{ key.is_active ? t('common.active') : t('settings.revoke') }}
+                        </span>
+                    </div>
+                    <button mat-icon-button color="warn" (click)="revokeKey(key.id)" *ngIf="key.is_active"
+                        [matTooltip]="t('settings.revoke')">
+                        <mat-icon>delete_outline</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="deleteRevokedKey(key.id)" *ngIf="!key.is_active"
+                        [matTooltip]="t('common.delete')">
+                        <mat-icon>delete_forever</mat-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toggle for revoked keys -->
+            <div class="revoked-toggle" *ngIf="hasRevokedKeys()">
+                <button mat-button (click)="showRevokedKeys = !showRevokedKeys">
+                    <mat-icon>{{ showRevokedKeys ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    {{ showRevokedKeys ? t('settings.hideRevoked') : t('settings.showRevoked') }} {{ getRevokedCount()
+                    }}
+                </button>
+            </div>
+
+            <div class="empty-state-inline" *ngIf="getVisibleKeys().length === 0 && !loadingKeys">
+                <mat-icon>key_off</mat-icon>
+                <span>{{ t('settings.noApiKeys') }}</span>
+            </div>
+
+            <!-- Generate New Key -->
+            <div class="new-key-form" *ngIf="!newKeyResult">
+                <mat-form-field appearance="outline" class="sleek-field">
+                    <mat-label>{{ t('settings.keyName') }}</mat-label>
+                    <input matInput [(ngModel)]="newKeyName" placeholder="e.g., Google Sheets">
+                </mat-form-field>
+                <button mat-stroked-button color="primary" (click)="createApiKey()"
+                    [disabled]="!(newKeyName || '').trim() || creatingKey">
+                    <mat-icon>add</mat-icon> {{ t('settings.generate') }}
+                </button>
+            </div>
+
+            <!-- New Key Result -->
+            <div class="new-key-result" *ngIf="newKeyResult">
+                <div class="success-banner">
+                    <mat-icon>check_circle</mat-icon>
+                    <strong>{{ t('settings.keyCreated') }}</strong>
+                </div>
+                <p class="warning-text">{{ t('settings.copyKeyWarning') }}</p>
+                <div class="key-display">
+                    <code>{{ newKeyResult.api_key }}</code>
+                    <button mat-icon-button (click)="copyToClipboard(newKeyResult.api_key)"
+                        [matTooltip]="t('common.copy')">
+                        <mat-icon>content_copy</mat-icon>
+                    </button>
+                </div>
+                <button mat-stroked-button (click)="dismissKeyResult()">{{ t('common.done') }}</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Sync Changes -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.pendingSync') }}</h2>
+        <p class="section-desc">{{ t('settings.pendingSyncDesc') }}</p>
+        <div class="settings-card">
+            <div class="pending-sync-row">
+                <div class="pending-info">
+                    <mat-icon>sync_alt</mat-icon>
+                    <span class="pending-label">{{ t('settings.changesAwaiting') }}</span>
+                    <span class="pending-badge">
+                        {{ pendingBatchCount }} {{ t('settings.operations') }}
+                        ({{ pendingSyncCount }} {{ t('settings.changes') }})
+                    </span>
+                </div>
+                @if (pendingSyncCount > 0) {
+                <button mat-flat-button color="primary" (click)="openPendingSyncDialog()">
+                    <mat-icon>rate_review</mat-icon>
+                    {{ t('settings.review') }}
+                </button>
+                } @else {
+                <span class="empty-hint">{{ t('settings.noPendingChanges') }}</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Log -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.changeLogButton') }}</h2>
+        <p class="section-desc">{{ t('settings.changeLogDesc') }}</p>
+        <div class="settings-card">
+            <div class="change-log-row">
+                <div class="log-info">
+                    <mat-icon>history</mat-icon>
+                    <span>{{ t('settings.changeLogButton') }}</span>
+                </div>
+                <button mat-stroked-button (click)="openChangeLogDialog()">
+                    <mat-icon>visibility</mat-icon>
+                    {{ t('settings.viewLog') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

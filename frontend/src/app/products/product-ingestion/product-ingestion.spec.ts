@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ProductIngestion } from './product-ingestion';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ProductIngestion', () => {
   let component: ProductIngestion;
@@ -8,9 +9,16 @@ describe('ProductIngestion', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ProductIngestion, HttpClientTestingModule]
+      imports: [
+        ProductIngestion,
+        HttpClientTestingModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, 'es-MX': {} },
+          translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+        })
+      ]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(ProductIngestion);
     component = fixture.componentInstance;

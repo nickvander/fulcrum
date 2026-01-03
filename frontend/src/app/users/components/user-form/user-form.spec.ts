@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('UserForm', () => {
     describe('Create Mode', () => {
@@ -30,7 +31,22 @@ describe('UserForm', () => {
             routerSpy.navigate.mockReturnValue(Promise.resolve(true));
 
             await TestBed.configureTestingModule({
-                imports: [UserForm],
+                imports: [
+                    UserForm,
+                    TranslocoTestingModule.forRoot({
+                        langs: {
+                            en: {
+                                common: {
+                                    strengthWeak: 'Weak',
+                                    strengthMedium: 'Medium',
+                                    strengthStrong: 'Strong'
+                                }
+                            },
+                            'es-MX': {}
+                        },
+                        translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                    })
+                ],
                 providers: [
                     { provide: UserService, useClass: UserServiceMock },
                     { provide: AuthService, useValue: authServiceSpy },
@@ -171,7 +187,22 @@ describe('UserForm', () => {
             routerSpy.navigate.mockReturnValue(Promise.resolve(true));
 
             await TestBed.configureTestingModule({
-                imports: [UserForm],
+                imports: [
+                    UserForm,
+                    TranslocoTestingModule.forRoot({
+                        langs: {
+                            en: {
+                                common: {
+                                    strengthWeak: 'Weak',
+                                    strengthMedium: 'Medium',
+                                    strengthStrong: 'Strong'
+                                }
+                            },
+                            'es-MX': {}
+                        },
+                        translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                    })
+                ],
                 providers: [
                     { provide: UserService, useClass: UserServiceMock },
                     { provide: AuthService, useValue: authServiceSpy },

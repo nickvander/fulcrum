@@ -156,4 +156,21 @@ export class ExpenseDialogComponent implements OnInit {
     get isRecurring(): boolean {
         return this.expenseForm.get('expense_type')?.value === 'recurring';
     }
+
+    getCategoryKey(category: string): string {
+        const map: { [key: string]: string } = {
+            'Gas/Transportation': 'transportation',
+            'Office Supplies': 'officeSupplies',
+            'Packing Materials': 'packingMaterials'
+        };
+        return map[category] || category.toLowerCase();
+    }
+
+    getPaymentMethodKey(value: string): string {
+        const map: { [key: string]: string } = {
+            'card': 'creditCard',
+            'transfer': 'bankTransfer'
+        };
+        return map[value] || value;
+    }
 }

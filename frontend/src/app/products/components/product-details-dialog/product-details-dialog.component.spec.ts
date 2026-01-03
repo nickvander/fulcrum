@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Product } from '../../models/product.model';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ProductDetailsDialogComponent', () => {
     let component: ProductDetailsDialogComponent;
@@ -50,7 +51,11 @@ describe('ProductDetailsDialogComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 ProductDetailsDialogComponent,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, 'es-MX': {} },
+                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },

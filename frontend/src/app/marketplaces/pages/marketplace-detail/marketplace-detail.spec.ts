@@ -4,6 +4,7 @@ import { MarketplaceDetailComponent } from './marketplace-detail';
 import { MarketplacesService } from '../../marketplaces';
 import { of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('MarketplaceDetailComponent', () => {
   let component: MarketplaceDetailComponent;
@@ -11,7 +12,13 @@ describe('MarketplaceDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MarketplaceDetailComponent],
+      imports: [
+        MarketplaceDetailComponent,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, 'es-MX': {} },
+          translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+        })
+      ],
       providers: [
         {
           provide: MarketplacesService,

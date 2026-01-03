@@ -1,0 +1,7 @@
+<div class="loading-container" [class.overlay]="overlay">
+    <div class="spinner-wrapper">
+        <mat-progress-spinner [mode]="mode" [diameter]="diameter" [strokeWidth]="strokeWidth" [value]="value">
+        </mat-progress-spinner>
+        <p *ngIf="message" class="loading-message">{{ message }}</p>
+    </div>
+</div>
