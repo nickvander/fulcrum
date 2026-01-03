@@ -21,7 +21,14 @@ class Product(Base):
     embedding = Column(Vector(384)) # Example dimension
     manufacturer = Column(String, nullable=True)
     brand = Column(String, nullable=True)
+    brand = Column(String, nullable=True)
     category = Column(String, nullable=True)
+    # Barcode/QR Images & Values
+    barcode_image_url = Column(String, nullable=True)
+    barcode_value = Column(String, nullable=True, index=True)
+    qrcode_image_url = Column(String, nullable=True)
+    qrcode_value = Column(String, nullable=True, index=True)
+    
     width = Column(Float, nullable=True)
     height = Column(Float, nullable=True)
     depth = Column(Float, nullable=True)

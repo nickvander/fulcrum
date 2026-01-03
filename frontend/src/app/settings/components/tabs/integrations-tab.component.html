@@ -1,33 +1,4 @@
 <div class="tab-content" *transloco="let t">
-    <!-- AI Configuration -->
-    <div class="settings-section">
-        <h2 class="section-title">{{ t('settings.aiProvider') }}</h2>
-        <p class="section-desc">{{ t('settings.aiProviderDesc') }}</p>
-        <div class="settings-card">
-            <form [formGroup]="aiForm" (ngSubmit)="onAiSubmit()">
-                <div class="form-row">
-                    <mat-form-field appearance="outline" class="sleek-field">
-                        <mat-label>{{ t('settings.provider') }}</mat-label>
-                        <mat-select formControlName="ai_provider">
-                            <mat-option value="openai">OpenAI</mat-option>
-                            <mat-option value="google">Google Gemini</mat-option>
-                            <mat-option value="anthropic">Anthropic Claude</mat-option>
-                        </mat-select>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="sleek-field">
-                        <mat-label>{{ t('settings.apiKey') }}</mat-label>
-                        <input matInput formControlName="ai_api_key" type="password" placeholder="sk-..."
-                            autocomplete="off">
-                    </mat-form-field>
-                </div>
-                <div class="form-actions">
-                    <button mat-flat-button color="primary" type="submit" [disabled]="!aiForm.valid">
-                        {{ t('settings.saveAiSettings') }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- API Keys for External Tools -->
     <div class="settings-section">

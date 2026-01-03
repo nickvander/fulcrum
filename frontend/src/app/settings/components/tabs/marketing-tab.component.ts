@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { TranslocoModule } from '@ngneat/transloco';
 import { MaterialModule } from '../../../shared/material.module';
 import { NotificationService } from '../../../core/services/notification.service';
+import { SettingsService } from '../../../core/services/settings.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -16,15 +17,18 @@ import { environment } from '../../../../environments/environment';
 })
 export class MarketingTabComponent implements OnInit {
     smtpForm: FormGroup;
+    storeForm: FormGroup;
     smtpConfigured = false;
     testingSmtp = false;
     savingSmtp = false;
+    savingStore = false;
     private readonly apiUrl = environment.apiUrl;
 
     constructor(
         private fb: FormBuilder,
         private http: HttpClient,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private settingsService: SettingsService
     ) {
         this.smtpForm = this.fb.group({
             provider: ['gmail'],
@@ -34,10 +38,44 @@ export class MarketingTabComponent implements OnInit {
             password: [''],
             from_name: [''],
         });
+
+        this.storeForm = this.fb.group({
+            store_name: [''],
+            store_domain: ['']
+        });
     }
 
     ngOnInit(): void {
         this.loadSmtpSettings();
+        this.loadStoreSettings();
+    }
+
+    loadStoreSettings(): void {
+        this.settingsService.storeSettings$.subscribe(settings => {
+            if (settings) {
+                this.storeForm.patchValue({
+                    store_name: (settings as any).store_name || '',
+                    store_domain: (settings as any).store_domain || ''
+                }, { emitEvent: false });
+                this.storeForm.markAsPristine();
+            }
+        });
+    }
+
+    onStoreSubmit(): void {
+        if (!this.storeForm.dirty) return;
+        this.savingStore = true;
+        this.settingsService.updateStoreSettings(this.storeForm.value).subscribe({
+            next: () => {
+                this.savingStore = false;
+                this.storeForm.markAsPristine();
+                this.notificationService.showSuccess('Store settings saved!');
+            },
+            error: () => {
+                this.savingStore = false;
+                this.notificationService.showError('Failed to save store settings');
+            }
+        });
     }
 
     loadSmtpSettings(): void {

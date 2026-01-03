@@ -1,0 +1,110 @@
+<div class="scanner-container" *transloco="let t">
+    <div class="top-controls">
+        <button mat-icon-button (click)="closeDialog()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="scanner-overlay" *ngIf="isProcessing">
+        <mat-spinner diameter="60"></mat-spinner>
+        <p>{{ t('common.loading') }}</p>
+    </div>
+
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="no-primary-bg" mat-stretch-tabs="false"
+        mat-align-tabs="center">
+
+        <!-- Tab 1: AI Camera / Manual Photo -->
+        <mat-tab *ngIf="isAiEnabled">
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">camera_alt</mat-icon>
+                {{ t('products.aiPowered') }}
+            </ng-template>
+            <div class="tab-content">
+                <div class="video-wrapper" [class.hidden]="!isCameraActive || isProcessing">
+                    <video #videoElement autoplay playsinline></video>
+                </div>
+
+                <div class="placeholder-wrapper" *ngIf="!isCameraActive && !isProcessing">
+                    <mat-icon class="camera-icon">photo_camera</mat-icon>
+                    <p *ngIf="cameraError" class="error-msg">{{ t('products.cameraError') }}</p>
+                    <p *ngIf="!cameraError">{{ isAiEnabled ? t('products.startCameraHint') : 'Use camera to capture
+                        product photo' }}</p>
+                </div>
+
+                <!-- Hidden canvas for capture -->
+                <canvas #canvasElement style="display: none;"></canvas>
+
+                <div class="controls">
+                    <ng-container *ngIf="!isCameraActive && !isProcessing">
+                        <button mat-raised-button color="primary" (click)="startCamera()">
+                            <mat-icon>videocam</mat-icon> {{ t('products.scanWithCamera') }}
+                        </button>
+                        <button mat-stroked-button (click)="fileInput.click()">
+                            <mat-icon>upload</mat-icon> {{ t('products.uploadImage') }}
+                        </button>
+                        <input #fileInput type="file" (change)="onFileSelected($event)" accept="image/*"
+                            style="display: none;">
+                    </ng-container>
+
+                    <ng-container *ngIf="isCameraActive && !isProcessing">
+                        <button mat-fab color="warn" class="capture-btn" (click)="capturePhoto()">
+                            <mat-icon>camera</mat-icon>
+                        </button>
+                    </ng-container>
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- Tab 2: Barcode Scanner -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon class="tab-icon">qr_code_scanner</mat-icon>
+                {{ t('products.barcodeScanner') }}
+            </ng-template>
+            <div class="tab-content barcode-tab">
+
+                <!-- Primary: Keyboard/Bluetooth Scanner Input -->
+                <div class="keyboard-scanner-section">
+                    <p class="scanner-instruction">
+                        <mat-icon>keyboard</mat-icon>
+                        {{ t('products.scanInstruction') }}
+                    </p>
+                    <mat-form-field appearance="outline" class="barcode-input">
+                        <mat-label>{{ t('products.barcode') }}</mat-label>
+                        <input matInput #barcodeInput [(ngModel)]="manualBarcode"
+                            (keydown.enter)="onManualBarcodeSubmit()" [placeholder]="t('products.scanPlaceholder')"
+                            autocomplete="off">
+                        <mat-icon matSuffix>barcode_scanner</mat-icon>
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" (click)="onManualBarcodeSubmit()"
+                        [disabled]="!manualBarcode || isProcessing">
+                        <mat-icon>search</mat-icon>
+                        {{ t('products.lookupProduct') }}
+                    </button>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <!-- Secondary: Camera Scanner -->
+                <div class="camera-scanner-section">
+                    <p class="section-label">{{ t('products.orUseCamera') }}</p>
+                    <ngx-scanner-qrcode #action="scanner" [config]="config" (event)="onBarcodeEvent($event, action)">
+                    </ngx-scanner-qrcode>
+
+                    <div class="controls" *ngIf="!isProcessing">
+                        <button mat-stroked-button color="accent" *ngIf="!action.isStart"
+                            (click)="startBarcodeScanner()">
+                            <mat-icon>videocam</mat-icon> {{ t('products.startCamera') }}
+                        </button>
+                        <button mat-stroked-button color="warn" *ngIf="action.isStart" (click)="stopBarcodeScanner()">
+                            <mat-icon>stop</mat-icon> {{ t('products.stopCamera') }}
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

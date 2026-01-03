@@ -1,1 +1,14 @@
-<app-product-list></app-product-list>
+<div class="products-container">
+    <div class="products-header">
+        <h1>Products</h1> <!-- Or Transloco -->
+        <div class="actions">
+            <button mat-raised-button color="accent" (click)="openScanner()" style="margin-right: 8px;">
+                <mat-icon>camera_alt</mat-icon> Scan Product
+            </button>
+            <button mat-raised-button color="primary" (click)="openAddPanel()">
+                <mat-icon>add</mat-icon> Add Product
+            </button>
+        </div>
+    </div>
+    <app-product-list></app-product-list>
+</div>

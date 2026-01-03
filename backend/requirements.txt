@@ -24,3 +24,12 @@ slowapi
 ruff
 testcontainers[postgres,redis]
 aiosmtplib
+
+# AI & Agents
+google-adk
+google-generativeai
+anthropic
+openai
+qrcode[pil]
+python-barcode
+pillow

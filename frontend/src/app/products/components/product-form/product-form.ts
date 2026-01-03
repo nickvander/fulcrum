@@ -55,6 +55,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 export class ProductForm implements OnInit {
   @Input() product?: Product | null;
   @Input() isDialogMode: boolean = false;
+  @Input() initialStagedImages: File[] = [];
   @Output() productSaved = new EventEmitter<void>();
   @Output() formClosed = new EventEmitter<void>();
 
@@ -85,6 +86,7 @@ export class ProductForm implements OnInit {
     private dialog: MatDialog
   ) {
     this.productForm = this.fb.group({
+      id: [null],
       name: ['', Validators.required],
       sku: ['', Validators.required],
       description: [''],
@@ -100,6 +102,8 @@ export class ProductForm implements OnInit {
       low_inventory_threshold: [null, [Validators.min(0)]],
       low_stock_quantity_threshold: [null, [Validators.min(0)]],
       is_bundle: [false],
+      barcode_value: [''],
+      qrcode_value: ['']
     });
   }
 
@@ -408,6 +412,72 @@ export class ProductForm implements OnInit {
     return `/uploads/product_images/${imagePath}`;
   }
 
+  generateStoreBarcode(): void {
+    const sku = this.productForm.get('sku')?.value;
+    const existingBarcode = this.productForm.get('barcode_value')?.value;
+
+    if (!sku) {
+      this.notificationService.showError('Please enter a SKU to generate a barcode.');
+      return;
+    }
+
+    const newBarcode = `FUL-${sku}`;
+
+    if (existingBarcode && existingBarcode.trim() !== '') {
+      // Ask for confirmation before overwriting
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Replace Barcode?',
+          message: `This will replace the existing barcode "${existingBarcode}" with "${newBarcode}". Continue?`
+        }
+      });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.productForm.patchValue({ barcode_value: newBarcode });
+          this.productForm.markAsDirty();
+        }
+      });
+    } else {
+      this.productForm.patchValue({ barcode_value: newBarcode });
+      this.productForm.markAsDirty();
+    }
+  }
+
+  generateQRCode(): void {
+    const productId = this.productForm.get('id')?.value;
+    const sku = this.productForm.get('sku')?.value;
+    const existingQR = this.productForm.get('qrcode_value')?.value;
+
+    // Use product ID if available, otherwise use SKU
+    const identifier = productId || sku;
+    if (!identifier) {
+      this.notificationService.showError('Please save the product first or enter a SKU to generate a QR code.');
+      return;
+    }
+
+    // Generate URL that links to QR redirect endpoint
+    // In production, replace localhost with actual domain
+    const qrValue = `http://localhost:4200/qr/${identifier}`;
+
+    if (existingQR && existingQR.trim() !== '') {
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Replace QR Code?',
+          message: `This will replace the existing QR code. Continue?`
+        }
+      });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.productForm.patchValue({ qrcode_value: qrValue });
+          this.productForm.markAsDirty();
+        }
+      });
+    } else {
+      this.productForm.patchValue({ qrcode_value: qrValue });
+      this.productForm.markAsDirty();
+    }
+  }
+
   onSubmit(): void {
     if (this.productForm.invalid) {
       return;
@@ -433,7 +503,9 @@ export class ProductForm implements OnInit {
       bundle_components: formValue.is_bundle ? this.bundleComponents.map(bc => ({
         component_id: bc.component_id,
         quantity: bc.quantity
-      })) : []
+      })) : [],
+      barcode_value: formValue.barcode_value,
+      qrcode_value: formValue.qrcode_value
     };
 
     // Handle custom fields

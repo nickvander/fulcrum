@@ -647,312 +647,403 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     this.openDetailsDialog(newBundle, 'edit');
   }
 
-  openEditPanel(product: Product): void {
-    this.openDetailsDialog(product, 'edit');
-  }
+  openScanner(): void {
+    import('../product-scanner/product-scanner.component').then(({ ProductScannerComponent }) => {
+      const dialogRef = this.dialog.open(ProductScannerComponent, {
+        width: '600px',
+        height: 'auto',
+        panelClass: 'scanner-dialog'
+      });
 
-  onProductSaved(): void {
-    // Refresh the current page to ensure all changes are reflected
-    this.loadProducts(this.currentPage, this.pageSize);
-  }
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          // Case 1: Existing Product Found
+          if (result.foundProduct) {
+            this.openDetailsDialog(result.foundProduct, 'edit');
+            return;
+          }
 
-  // Standard MatPaginator Event Handler
-  handlePageEvent(e: PageEvent): void {
-    this.pageSize = e.pageSize;
-    this.currentPage = e.pageIndex + 1; // Paginator is 0-indexed, API is 1-indexed
-    this.loadProducts(this.currentPage, this.pageSize);
-  }
+          // Case 2: Product Not Found (or just barcode scanned) -> Create New
+          if (result.notFound || result.barcode) {
+            const newProduct = {
+              id: 0,
+              name: '',
+              sku: '',
+              description: '',
+              default_resale_price: 0,
+              cost_price: 0,
+              images: [],
+              custom_fields: [],
+              is_bundle: false,
+              barcode_value: result.barcode
+            } as Product;
 
-  // Legacy/Custom pagination glue (can be removed if app-pagination is removed)
-  onPageChange(page: number): void {
-    if (this.paginatedProducts) {
-      if (page >= 1 && page <= this.paginatedProducts.totalPages && page !== this.currentPage) {
-        this.loadProducts(page, this.pageSize);
+            // If AI returned name/data, merge it
+            if (result.name) newProduct.name = result.name;
+            if (result.sku) newProduct.sku = result.sku; // This might be the barcode, visualized as SKU
+            if (result.description) newProduct.description = result.description;
+            if (result.brand) newProduct.brand = result.brand;
+            if (result.category) newProduct.category = result.category;
+
+            this.openDetailsDialog(newProduct, 'create');
+            return;
+          }
+
+          // Case 3: AI Response only (fallback)
+          if (result.name || result.sku) {
+            const newProduct = {
+              id: 0,
+              name: result.name || '',
+              sku: result.sku || '',
+              description: result.description || '',
+              brand: result.brand || '',
+              category: result.category || '',
+              default_resale_price: 0,
+              cost_price: 0,
+              images: [],
+              custom_fields: [],
+              is_bundle: false
+            } as Product;
+
+            this.openDetailsDialog(newProduct, 'create');
+          }
+        }
+        // Check if result is a manual image capture (we will need to implement this structure in scanner)
+        else if (result.imageFile) {
+          // Handle manual image - we need to pass this to the dialog
+          const newProduct = {
+            id: 0,
+            name: '',
+            sku: '',
+            description: '',
+            default_resale_price: 0,
+            cost_price: 0,
+            images: [], // We can't easily put File here directly as it expects ProductImage objects
+            custom_fields: [],
+            is_bundle: false
+          } as Product;
+
+          // We need to pass the file to the dialog. 
+          // openDetailsDialog accepts { product, mode }. We might need to extend it.
+          // For now, let's just open the dialog and let the user upload, 
+          // OR ideally, we pass it via 'state' or extend the dialog data.
+          this.dialog.open(ProductDetailsDialogComponent, {
+            width: '1000px',
+            maxHeight: '90vh',
+            data: { product: newProduct, mode: 'create', stagedImage: result.imageFile }
+          });
+        }
       }
-    }
+      });
+  });
+}
+
+openEditPanel(product: Product): void {
+  this.openDetailsDialog(product, 'edit');
+}
+
+onProductSaved(): void {
+  // Refresh the current page to ensure all changes are reflected
+  this.loadProducts(this.currentPage, this.pageSize);
+}
+
+// Standard MatPaginator Event Handler
+handlePageEvent(e: PageEvent): void {
+  this.pageSize = e.pageSize;
+  this.currentPage = e.pageIndex + 1; // Paginator is 0-indexed, API is 1-indexed
+  this.loadProducts(this.currentPage, this.pageSize);
+}
+
+// Legacy/Custom pagination glue (can be removed if app-pagination is removed)
+onPageChange(page: number): void {
+  if(this.paginatedProducts) {
+  if (page >= 1 && page <= this.paginatedProducts.totalPages && page !== this.currentPage) {
+    this.loadProducts(page, this.pageSize);
+  }
+}
   }
 
-  onPageSizeChange(size: number): void {
-    this.loadProducts(1, size);
+onPageSizeChange(size: number): void {
+  this.loadProducts(1, size);
+}
+
+
+
+toggleInfiniteScroll(): void {
+  // Flip the value since we're using (click)
+  this.useInfiniteScroll = !this.useInfiniteScroll;
+
+  if(this.useInfiniteScroll) {
+  // Initialize for infinite scroll - reset to first page
+  this.allProducts = [];
+  this.hasMoreProducts = true;
+  this.loadProducts(1, this.pageSize);
+} else {
+  // Reset to regular pagination
+  this.loadProducts(1, this.pageSize);
+}
+this.cdr.markForCheck();
   }
 
+toggleDashboard(): void {
+  this.showDashboard = !this.showDashboard;
+}
 
-
-  toggleInfiniteScroll(): void {
-    // Flip the value since we're using (click)
-    this.useInfiniteScroll = !this.useInfiniteScroll;
-
-    if (this.useInfiniteScroll) {
-      // Initialize for infinite scroll - reset to first page
-      this.allProducts = [];
-      this.hasMoreProducts = true;
-      this.loadProducts(1, this.pageSize);
-    } else {
-      // Reset to regular pagination
-      this.loadProducts(1, this.pageSize);
-    }
-    this.cdr.markForCheck();
-  }
-
-  toggleDashboard(): void {
-    this.showDashboard = !this.showDashboard;
-  }
-
-  onWindowScroll(): void {
-    this.checkAndLoadMore();
-  }
+onWindowScroll(): void {
+  this.checkAndLoadMore();
+}
 
   private handleWindowScroll(): void {
-    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
-      console.log('[InfiniteScroll] Window scroll blocked:', {
-        useInfiniteScroll: this.useInfiniteScroll,
-        hasMoreProducts: this.hasMoreProducts,
-        isLoading: this.isLoading
-      });
-      return;
-    }
+  if(!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+  console.log('[InfiniteScroll] Window scroll blocked:', {
+    useInfiniteScroll: this.useInfiniteScroll,
+    hasMoreProducts: this.hasMoreProducts,
+    isLoading: this.isLoading
+  });
+  return;
+}
 
-    const pos = window.innerHeight + window.scrollY;
-    const max = document.documentElement.scrollHeight;
-    const distanceFromBottom = max - pos;
+const pos = window.innerHeight + window.scrollY;
+const max = document.documentElement.scrollHeight;
+const distanceFromBottom = max - pos;
 
-    // Load more when within 200px of bottom
-    if (distanceFromBottom <= 200) {
-      this.checkAndLoadMore();
-    }
+// Load more when within 200px of bottom
+if (distanceFromBottom <= 200) {
+  this.checkAndLoadMore();
+}
   }
 
-  onContainerScroll(event: Event): void {
-    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
-      return;
-    }
+onContainerScroll(event: Event): void {
+  if(!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+  return;
+}
 
-    const container = event.target as HTMLElement;
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+const container = event.target as HTMLElement;
+const { scrollTop, scrollHeight, clientHeight } = container;
+const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
 
-    // Load more when within 200px of bottom
-    if (distanceFromBottom <= 200) {
-      this.checkAndLoadMore();
-    }
+// Load more when within 200px of bottom
+if (distanceFromBottom <= 200) {
+  this.checkAndLoadMore();
+}
   }
 
   private checkAndLoadMore(): void {
-    if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
-      return;
-    }
-    // Load next page
-    const nextPage = this.paginatedProducts ? this.paginatedProducts.currentPage + 1 : 2;
-    if (nextPage <= (this.paginatedProducts?.totalPages || 1)) {
-      this.loadMoreProducts(nextPage, this.pageSize);
-    }
+  if(!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
+  return;
+}
+// Load next page
+const nextPage = this.paginatedProducts ? this.paginatedProducts.currentPage + 1 : 2;
+if (nextPage <= (this.paginatedProducts?.totalPages || 1)) {
+  this.loadMoreProducts(nextPage, this.pageSize);
+}
   }
 
   private loadMoreProducts(page: number, size: number): void {
-    this.isLoading = true;
-    this.cdr.markForCheck();
+  this.isLoading = true;
+  this.cdr.markForCheck();
 
-    // For infinite scroll, we'll need to get more products and append them
-    const searchActive = Object.keys(this.activeFilters).some(key =>
-      this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== ''
-    );
+  // For infinite scroll, we'll need to get more products and append them
+  const searchActive = Object.keys(this.activeFilters).some(key =>
+    this.activeFilters[key] !== null && this.activeFilters[key] !== undefined && this.activeFilters[key] !== ''
+  );
 
-    if (searchActive) {
-      this.productService.searchProductsAdvanced(this.activeFilters, page, size)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (result) => {
-            // Append new products to existing products
-            this.allProducts = [...this.allProducts, ...result.data];
-            this.products = this.allProducts; // Update the displayed products
-            this.paginatedProducts = result;
-            this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false; this.isReloading = false;
-            this.updateDataSource();
-            this.cdr.markForCheck();
-          },
-          error: (error) => {
-            console.error('Error loading more products:', error);
-            this.isLoading = false; this.isReloading = false;
-            this.cdr.markForCheck();
-          }
-        });
-    } else {
-      this.productService.getProducts(page, size, this.activeFilters)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (result) => {
-            this.allProducts = [...this.allProducts, ...result.data];
-            this.products = this.allProducts;
-            this.paginatedProducts = result;
-            this.hasMoreProducts = result.currentPage < result.totalPages;
-            this.isLoading = false; this.isReloading = false;
-            this.updateDataSource();
-            this.cdr.markForCheck();
-          },
-          error: (error) => {
-            console.error('Error loading more products:', error);
-            this.isLoading = false; this.isReloading = false;
-            this.cdr.markForCheck();
-          }
-        });
-    }
-  }
-
-  onBatchPriceUpdate(event: { productIds: number[], price: number }): void {
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    const priceAdjustment = 10;
-    const adjustmentType: 'set' | 'increase' = 'set';
-
-    this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType)
+  if(searchActive) {
+    this.productService.searchProductsAdvanced(this.activeFilters, page, size)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize);
-          this.deselectAll();
+        next: (result) => {
+          // Append new products to existing products
+          this.allProducts = [...this.allProducts, ...result.data];
+          this.products = this.allProducts; // Update the displayed products
+          this.paginatedProducts = result;
+          this.hasMoreProducts = result.currentPage < result.totalPages;
+          this.isLoading = false; this.isReloading = false;
+          this.updateDataSource();
+          this.cdr.markForCheck();
         },
         error: (error) => {
-          this.notificationService.showError('Error updating product prices');
+          console.error('Error loading more products:', error);
+          this.isLoading = false; this.isReloading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  } else {
+    this.productService.getProducts(page, size, this.activeFilters)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.allProducts = [...this.allProducts, ...result.data];
+          this.products = this.allProducts;
+          this.paginatedProducts = result;
+          this.hasMoreProducts = result.currentPage < result.totalPages;
+          this.isLoading = false; this.isReloading = false;
+          this.updateDataSource();
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Error loading more products:', error);
+          this.isLoading = false; this.isReloading = false;
+          this.cdr.markForCheck();
         }
       });
   }
+}
 
-  onBatchCategoryUpdate(event: { productIds: number[], category: string }): void {
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    const category = 'Electronics';
+onBatchPriceUpdate(event: { productIds: number[], price: number }): void {
+  const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+  const priceAdjustment = 10;
+  const adjustmentType: 'set' | 'increase' = 'set';
 
-    this.batchOperationsService.batchUpdateCategories(productIds, category)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize);
-          this.deselectAll();
-        },
-        error: (error) => {
-          this.notificationService.showError('Error updating product categories');
-        }
-      });
-  }
-
-  onBatchCustomFieldUpdate(event: { productIds: number[], updates: { [key: string]: any } }): void {
-    const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
-    const updates = { warranty_period: '12 months' };
-
-    this.batchOperationsService.batchUpdateCustomFields(productIds, updates)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
-          this.loadProducts(this.currentPage, this.pageSize);
-          this.deselectAll();
-        },
-        error: (error) => {
-          this.notificationService.showError('Error updating custom fields');
-        }
-      });
-  }
-
-  onProductTypeChange(type: 'all' | 'product' | 'bundle'): void {
-    this.activeProductType = type;
-
-    if (type === 'all') {
-      delete this.activeFilters.is_bundle;
-    } else if (type === 'product') {
-      this.activeFilters.is_bundle = false;
-    } else if (type === 'bundle') {
-      this.activeFilters.is_bundle = true;
-    }
-
-    this.loadProducts(1, this.pageSize);
-  }
-
-  getEffectiveCost(product: Product): number {
-    if (product.is_bundle && (!product.cost_price || product.cost_price === 0)) {
-      if (product.bundle_components && product.bundle_components.length > 0) {
-        return product.bundle_components.reduce((sum, bc) => {
-          const cost = bc.component_cost || 0;
-          return sum + (cost * bc.quantity);
-        }, 0);
+  this.batchOperationsService.batchUpdatePrices(productIds, priceAdjustment, adjustmentType)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+        this.loadProducts(this.currentPage, this.pageSize);
+        this.deselectAll();
+      },
+      error: (error) => {
+        this.notificationService.showError('Error updating product prices');
       }
-    }
-    return product.cost_price || 0;
+    });
+}
+
+onBatchCategoryUpdate(event: { productIds: number[], category: string }): void {
+  const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+  const category = 'Electronics';
+
+  this.batchOperationsService.batchUpdateCategories(productIds, category)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+        this.loadProducts(this.currentPage, this.pageSize);
+        this.deselectAll();
+      },
+      error: (error) => {
+        this.notificationService.showError('Error updating product categories');
+      }
+    });
+}
+
+onBatchCustomFieldUpdate(event: { productIds: number[], updates: { [key: string]: any } }): void {
+  const productIds = event.productIds.length === 0 ? Array.from(this.selectedProducts) : event.productIds;
+  const updates = { warranty_period: '12 months' };
+
+  this.batchOperationsService.batchUpdateCustomFields(productIds, updates)
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+        this.loadProducts(this.currentPage, this.pageSize);
+        this.deselectAll();
+      },
+      error: (error) => {
+        this.notificationService.showError('Error updating custom fields');
+      }
+    });
+}
+
+onProductTypeChange(type: 'all' | 'product' | 'bundle'): void {
+  this.activeProductType = type;
+
+  if(type === 'all') {
+  delete this.activeFilters.is_bundle;
+} else if (type === 'product') {
+  this.activeFilters.is_bundle = false;
+} else if (type === 'bundle') {
+  this.activeFilters.is_bundle = true;
+}
+
+this.loadProducts(1, this.pageSize);
   }
 
-  getBundleAverageCost(product: Product): number {
-    if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+getEffectiveCost(product: Product): number {
+  if (product.is_bundle && (!product.cost_price || product.cost_price === 0)) {
+    if (product.bundle_components && product.bundle_components.length > 0) {
       return product.bundle_components.reduce((sum, bc) => {
         const cost = bc.component_cost || 0;
         return sum + (cost * bc.quantity);
       }, 0);
     }
-    return product.average_cost || 0;
+  }
+  return product.cost_price || 0;
+}
+
+getBundleAverageCost(product: Product): number {
+  if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
+    return product.bundle_components.reduce((sum, bc) => {
+      const cost = bc.component_cost || 0;
+      return sum + (cost * bc.quantity);
+    }, 0);
+  }
+  return product.average_cost || 0;
+}
+
+getAllocatedBundleNames(product: Product): string {
+  if (!product.part_of_bundles || product.part_of_bundles.length === 0) return '';
+  const names = Array.from(new Set(product.part_of_bundles.map(b => b.bundle_name).filter(n => n)));
+  return names.join(', ');
+}
+
+showAdvancedFilters = false;
+
+toggleAdvancedFilters(): void {
+  this.showAdvancedFilters = !this.showAdvancedFilters;
+}
+
+applyFilter(type: string, value: any): void {
+  if(value === null || value === '' || value === undefined) {
+  delete this.activeFilters[type];
+} else {
+  this.activeFilters[type] = value;
+}
+this.filterSubject.next();
   }
 
-  getAllocatedBundleNames(product: Product): string {
-    if (!product.part_of_bundles || product.part_of_bundles.length === 0) return '';
-    const names = Array.from(new Set(product.part_of_bundles.map(b => b.bundle_name).filter(n => n)));
-    return names.join(', ');
-  }
+resetFilters(): void {
+  this.activeFilters = {};
+  this.currentSearchQuery = '';
+  this.activeProductType = 'all';
+  this.loadProducts(1, this.pageSize);
+}
 
-  showAdvancedFilters = false;
-
-  toggleAdvancedFilters(): void {
-    this.showAdvancedFilters = !this.showAdvancedFilters;
-  }
-
-  applyFilter(type: string, value: any): void {
-    if (value === null || value === '' || value === undefined) {
-      delete this.activeFilters[type];
+applyQuickFilter(filterType: string, value: any): void {
+  const toggle = (key: string, val: any) => {
+    if (this.activeFilters[key] === val) {
+      delete this.activeFilters[key];
     } else {
-      this.activeFilters[type] = value;
+      this.activeFilters[key] = val;
     }
-    this.filterSubject.next();
-  }
+  };
 
-  resetFilters(): void {
-    this.activeFilters = {};
-    this.currentSearchQuery = '';
-    this.activeProductType = 'all';
-    this.loadProducts(1, this.pageSize);
-  }
-
-  applyQuickFilter(filterType: string, value: any): void {
-    const toggle = (key: string, val: any) => {
-      if (this.activeFilters[key] === val) {
-        delete this.activeFilters[key];
-      } else {
-        this.activeFilters[key] = val;
-      }
-    };
-
-    switch (filterType) {
+  switch(filterType) {
       case 'in_stock':
-        delete this.activeFilters.max_stock;
-        toggle('min_stock', 1);
+  delete this.activeFilters.max_stock;
+  toggle('min_stock', 1);
         break;
-      case 'out_of_stock':
-        delete this.activeFilters.min_stock;
-        toggle('max_stock', 0);
+  case 'out_of_stock':
+  delete this.activeFilters.min_stock;
+  toggle('max_stock', 0);
         break;
-      case 'low_stock':
-        delete this.activeFilters.min_stock;
-        toggle('max_stock', 10);
+  case 'low_stock':
+  delete this.activeFilters.min_stock;
+  toggle('max_stock', 10);
         break;
-      case 'expensive':
-        delete this.activeFilters.max_price;
-        toggle('min_price', 500);
+  case 'expensive':
+  delete this.activeFilters.max_price;
+  toggle('min_price', 500);
         break;
-      case 'cheap':
-        delete this.activeFilters.min_price;
-        toggle('max_price', 50);
+  case 'cheap':
+  delete this.activeFilters.min_price;
+  toggle('max_price', 50);
         break;
-      default:
-        this.activeFilters[filterType] = value;
-        break;
-    }
+  default:
+    this.activeFilters[filterType] = value;
+  break;
+}
 
-    this.loadProducts(1, this.pageSize);
+this.loadProducts(1, this.pageSize);
   }
 }

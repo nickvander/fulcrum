@@ -15,6 +15,24 @@ export interface StoreSettings {
   settings?: any;
   low_inventory_days_default?: number;
   low_stock_quantity_default?: number;
+  ai_config?: {
+    enabled: boolean;
+    provider: string;
+    model?: string;
+    google_configured: boolean;
+    openai_configured: boolean;
+    anthropic_configured: boolean;
+    qwen_configured: boolean;
+  };
+  ai_active_provider?: string; // These are technically part of settings/update object but not always returned fully in 'storeSettings' depending on API
+  // Frontend sends these for updates:
+  ai_enabled?: boolean;
+  ai_provider?: string;
+  ai_model?: string;
+  ai_google_api_key?: string;
+  ai_openai_api_key?: string;
+  ai_anthropic_api_key?: string;
+  ai_qwen_api_key?: string;
 }
 
 @Injectable({

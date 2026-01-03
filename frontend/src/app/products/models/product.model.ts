@@ -57,6 +57,8 @@ export interface Product {
   name: string;
   description: string;
   sku: string;
+  barcode_value?: string;
+  qrcode_value?: string;
   supplier_id?: number;
   default_resale_price: number;
   cost_price?: number;

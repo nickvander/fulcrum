@@ -1,4 +1,30 @@
 <div class="tab-content" *transloco="let t">
+    <!-- Store Brand & Domain -->
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.storeBrand') }}</h2>
+        <p class="section-desc">{{ t('settings.storeBrandDesc') }}</p>
+        <div class="settings-card">
+            <form [formGroup]="storeForm" (ngSubmit)="onStoreSubmit()">
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.storeName') }}</mat-label>
+                        <input matInput formControlName="store_name" placeholder="My Awesome Store">
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.storeDomain') }}</mat-label>
+                        <input matInput formControlName="store_domain" placeholder="https://mystore.com">
+                        <mat-hint>{{ t('settings.storeDomainHint') }}</mat-hint>
+                    </mat-form-field>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" mat-flat-button color="primary" [disabled]="!storeForm.dirty || savingStore">
+                        {{ savingStore ? t('settings.saving') : t('common.save') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Email Configuration -->
     <div class="settings-section">
         <h2 class="section-title">{{ t('settings.emailConfiguration') }}</h2>

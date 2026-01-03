@@ -1,36 +1,58 @@
 """
 API endpoints for AI-related tasks.
 """
-from fastapi import APIRouter, Depends, HTTPException
+import shutil
+import tempfile
+import os
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel, HttpUrl
-from typing import Optional
+from typing import Optional, Dict, Any
+from sqlalchemy.orm import Session
 
-from src.api.dependencies import get_ai_service
-from src.services.base import AIService
+from src.api.dependencies import get_db
+from src.services.adk.manager import ADKManager
+from src.services.adk.orchestrator import AgentOrchestrator
 
 router = APIRouter()
 
-class ImageIdentificationRequest(BaseModel):
-    image_url: HttpUrl
-
 class ImageIdentificationResponse(BaseModel):
-    name: str
-    description: str
+    name: str = "Unknown"
+    brand: Optional[str] = None
     sku: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    error: Optional[str] = None
 
-@router.post("/identify-from-image", response_model=ImageIdentificationResponse)
-def identify_from_image(
-    request: ImageIdentificationRequest,
-    ai_service: AIService = Depends(get_ai_service),
+@router.post("/identify-product", response_model=ImageIdentificationResponse)
+async def identify_product(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
 ):
     """
-    Analyze an image from a URL and return identified product information.
+    Analyze an uploaded image and return identified product information.
     """
+    # 1. Save Upload to Temp (Agent needs path)
+    suffix = os.path.splitext(file.filename)[1] if file.filename else ".jpg"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
     try:
-        product_info = ai_service.identify_product_from_image(str(request.image_url))
-        if not product_info:
-            raise HTTPException(status_code=404, detail="Could not identify product from image.")
-        return ImageIdentificationResponse(**product_info)
+        # 2. Initialize ADK Manager & Orchestrator
+        adk_manager = ADKManager(db)
+        orchestrator = AgentOrchestrator(adk_manager)
+        
+        # 3. Process with Vision Agent (via Orchestrator)
+        result = await orchestrator.process_product_image(tmp_path)
+        
+        # 4. Format Response
+        return ImageIdentificationResponse(**result)
+
     except Exception as e:
-        # In a real app, you'd have more specific error handling and logging
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Cleanup
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)

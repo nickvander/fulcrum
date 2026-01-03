@@ -1,0 +1,153 @@
+.tab-content {
+    padding: 24px;
+    max-width: 600px;
+}
+
+.settings-section {
+    h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .section-description {
+        color: var(--text-secondary);
+        margin: 0 0 24px 0;
+        line-height: 1.5;
+    }
+}
+
+.global-settings {
+    background: var(--surface-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.config-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+
+    mat-form-field {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+.active-key-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+
+    h4 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 12px 0;
+        font-size: 1rem;
+        font-weight: 500;
+
+        mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+    }
+
+    .key-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+        background: rgba(244, 67, 54, 0.1);
+        color: var(--warn-color, #f44336);
+
+        mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+        }
+
+        &.configured {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color, #4caf50);
+        }
+    }
+}
+
+.other-keys-section {
+    margin-bottom: 24px;
+
+    >button {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+}
+
+.other-keys-grid {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.provider-key-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: var(--bg-app);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+
+    .provider-info {
+        min-width: 140px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .provider-name {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .key-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+
+            &.configured {
+                color: var(--success-color, #4caf50);
+            }
+        }
+    }
+
+    .compact-field {
+        flex: 1;
+
+        ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+            display: none;
+        }
+    }
+}
+
+.full-width {
+    width: 100%;
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 16px;
+}
