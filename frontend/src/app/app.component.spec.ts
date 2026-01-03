@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatNativeDateModule } from '@angular/material/core';
 import { CoreModule } from './core/core-module';
 import { CommonModule } from '@angular/common';
 import { TranslocoTestingModule } from '@ngneat/transloco';
@@ -20,6 +21,7 @@ describe('AppComponent', () => {
             defaultLang: 'en',
           },
         }),
+        MatNativeDateModule,
       ],
     })
       .overrideComponent(AppComponent, {

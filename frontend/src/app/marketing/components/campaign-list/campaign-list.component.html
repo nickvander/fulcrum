@@ -102,7 +102,7 @@
                     <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.status') }}</th>
                     <td mat-cell *matCellDef="let campaign">
                         <mat-chip [ngClass]="'status-' + campaign.status">
-                            {{ campaign.status | titlecase }}
+                            {{ t('marketing.status.' + campaign.status) }}
                         </mat-chip>
                     </td>
                 </ng-container>
@@ -202,8 +202,8 @@
                     <div class="post-content">
                         <div class="post-header">
                             <span class="post-name">{{ post.name || 'Untitled Post' }}</span>
-                            <mat-chip class="post-status" [ngClass]="'status-' + post.status">{{ post.status | titlecase
-                                }}</mat-chip>
+                            <mat-chip class="post-status" [ngClass]="'status-' + post.status">{{ t('marketing.status.' +
+                                post.status) }}</mat-chip>
                         </div>
                         <p class="post-body" *ngIf="post.content_body">{{ post.content_body | slice:0:100 }}{{
                             post.content_body.length > 100 ? '...' : '' }}</p>

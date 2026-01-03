@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { ProductService } from '../../../products/services/product';
 import { Router } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-quick-product-dialog',
@@ -27,7 +28,8 @@ import { Router } from '@angular/router';
         MatCheckboxModule,
         MatIconModule,
         MatProgressSpinnerModule,
-        MatDividerModule
+        MatDividerModule,
+        TranslocoModule
     ]
 })
 export class QuickProductDialogComponent implements OnInit {

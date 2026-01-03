@@ -1,88 +1,91 @@
-<div class="supplier-dashboard px-4 pt-2">
-    <ng-container *ngIf="stats$ | async as stats; else loading">
-        <!-- KPI Cards Row - Marketing Style -->
-        <div class="kpi-cards">
-            <app-stat-card title="Suppliers" [value]="stats.totalSuppliers" icon="business" colorType="primary"
-                link="/suppliers">
-            </app-stat-card>
+<ng-container *transloco="let t">
+    <div class="supplier-dashboard px-4 pt-2">
+        <ng-container *ngIf="stats$ | async as stats; else loading">
+            <!-- KPI Cards Row - Marketing Style -->
+            <div class="kpi-cards">
+                <app-stat-card [title]="t('suppliers.title')" [value]="stats.totalSuppliers" icon="business"
+                    colorType="primary" link="/suppliers">
+                </app-stat-card>
 
-            <app-stat-card title="Active POs" [value]="stats.activePos" icon="shopping_cart" colorType="warn"
-                link="/suppliers/po">
-            </app-stat-card>
+                <app-stat-card [title]="t('suppliers.activePos')" [value]="stats.activePos" icon="shopping_cart"
+                    colorType="warn" link="/suppliers/po">
+                </app-stat-card>
 
-            <app-stat-card title="Total Spend" [value]="(stats.totalSpend | currency:'USD':'symbol':'1.0-0') ?? ''"
-                icon="receipt_long" colorType="success">
-            </app-stat-card>
+                <app-stat-card [title]="t('suppliers.totalSpend')"
+                    [value]="(stats.totalSpend | currency:'USD':'symbol':'1.0-0') ?? ''" icon="receipt_long"
+                    colorType="success">
+                </app-stat-card>
 
-            <app-stat-card title="Overdue" [value]="stats.overduePos" icon="warning" colorType="error"
-                link="/suppliers/po">
-            </app-stat-card>
-        </div>
+                <app-stat-card [title]="t('suppliers.overdue')" [value]="stats.overduePos" icon="warning"
+                    colorType="error" link="/suppliers/po">
+                </app-stat-card>
+            </div>
 
-        <div class="widgets-row">
-            <!-- Recent POs Widget -->
-            <div class="widget-card">
-                <div class="widget-header">
-                    <h3>Recent Purchase Orders</h3>
-                    <a mat-button color="primary" routerLink="/suppliers/po">View All</a>
-                </div>
-                <div class="widget-content">
-                    <mat-nav-list class="dense-list">
-                        <a mat-list-item *ngFor="let po of stats.recentPos" [routerLink]="['/suppliers/po', po.id]"
-                            class="list-item">
-                            <span matListItemIcon class="icon-badge primary">
-                                <mat-icon>description</mat-icon>
-                            </span>
-                            <span matListItemTitle>PO #{{po.id}} | {{po.supplier_name}}</span>
-                            <span matListItemLine class="list-meta">
-                                <span>{{po.total_amount | currency}}</span>
-                                <span class="status-badge" [class.status-ordered]="po.status === 'ordered'"
-                                    [class.status-completed]="po.status === 'completed'"
-                                    [class.status-draft]="po.status === 'draft'">
-                                    {{po.status}}
+            <div class="widgets-row">
+                <!-- Recent POs Widget -->
+                <div class="widget-card">
+                    <div class="widget-header">
+                        <h3>{{ t('suppliers.recentPurchaseOrders') }}</h3>
+                        <a mat-button color="primary" routerLink="/suppliers/po">{{ t('common.viewAll') }}</a>
+                    </div>
+                    <div class="widget-content">
+                        <mat-nav-list class="dense-list">
+                            <a mat-list-item *ngFor="let po of stats.recentPos" [routerLink]="['/suppliers/po', po.id]"
+                                class="list-item">
+                                <span matListItemIcon class="icon-badge primary">
+                                    <mat-icon>description</mat-icon>
                                 </span>
-                            </span>
-                        </a>
-                        <div *ngIf="stats.recentPos.length === 0" class="empty-widget">
-                            <mat-icon>inbox</mat-icon>
-                            <span>No recent orders</span>
-                        </div>
-                    </mat-nav-list>
+                                <span matListItemTitle>PO #{{po.id}} | {{po.supplier_name}}</span>
+                                <span matListItemLine class="list-meta">
+                                    <span>{{po.total_amount | currency}}</span>
+                                    <span class="status-badge" [class.status-ordered]="po.status === 'ordered'"
+                                        [class.status-completed]="po.status === 'completed'"
+                                        [class.status-draft]="po.status === 'draft'">
+                                        {{po.status}}
+                                    </span>
+                                </span>
+                            </a>
+                            <div *ngIf="stats.recentPos.length === 0" class="empty-widget">
+                                <mat-icon>inbox</mat-icon>
+                                <span>{{ t('suppliers.noRecentOrders') }}</span>
+                            </div>
+                        </mat-nav-list>
+                    </div>
+                </div>
+
+                <!-- Top Suppliers Widget -->
+                <div class="widget-card">
+                    <div class="widget-header">
+                        <h3>{{ t('suppliers.topSuppliers') }}</h3>
+                        <a mat-button color="primary" routerLink="/suppliers">{{ t('common.viewAll') }}</a>
+                    </div>
+                    <div class="widget-content">
+                        <mat-nav-list class="dense-list">
+                            <a mat-list-item *ngFor="let supplier of stats.topSuppliers"
+                                [routerLink]="['/suppliers/id', supplier.id]" class="list-item">
+                                <span matListItemIcon class="icon-badge accent">
+                                    <mat-icon>business</mat-icon>
+                                </span>
+                                <span matListItemTitle>{{supplier.name}}</span>
+                                <span matListItemLine class="list-meta">
+                                    <span>{{supplier.contact_person || t('suppliers.noContact')}}</span>
+                                    <span class="orders-count">{{supplier.po_count}} {{ t('suppliers.orders') }}</span>
+                                </span>
+                            </a>
+                            <div *ngIf="stats.topSuppliers.length === 0" class="empty-widget">
+                                <mat-icon>business_off</mat-icon>
+                                <span>{{ t('suppliers.noSupplierData') }}</span>
+                            </div>
+                        </mat-nav-list>
+                    </div>
                 </div>
             </div>
+        </ng-container>
 
-            <!-- Top Suppliers Widget -->
-            <div class="widget-card">
-                <div class="widget-header">
-                    <h3>Top Suppliers</h3>
-                    <a mat-button color="primary" routerLink="/suppliers">View All</a>
-                </div>
-                <div class="widget-content">
-                    <mat-nav-list class="dense-list">
-                        <a mat-list-item *ngFor="let supplier of stats.topSuppliers"
-                            [routerLink]="['/suppliers/id', supplier.id]" class="list-item">
-                            <span matListItemIcon class="icon-badge accent">
-                                <mat-icon>business</mat-icon>
-                            </span>
-                            <span matListItemTitle>{{supplier.name}}</span>
-                            <span matListItemLine class="list-meta">
-                                <span>{{supplier.contact_person || 'No contact'}}</span>
-                                <span class="orders-count">{{supplier.po_count}} Orders</span>
-                            </span>
-                        </a>
-                        <div *ngIf="stats.topSuppliers.length === 0" class="empty-widget">
-                            <mat-icon>business_off</mat-icon>
-                            <span>No supplier data</span>
-                        </div>
-                    </mat-nav-list>
-                </div>
+        <ng-template #loading>
+            <div class="loading-spinner">
+                <div class="spinner"></div>
             </div>
-        </div>
-    </ng-container>
-
-    <ng-template #loading>
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-        </div>
-    </ng-template>
-</div>
+        </ng-template>
+    </div>
+</ng-container>

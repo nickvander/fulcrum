@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Subject, takeUntil } from 'rxjs';
 import { BulkImportService } from '../../services/bulk-import.service';
 
@@ -24,8 +25,9 @@ import { BulkImportService } from '../../services/bulk-import.service';
     MatTabsModule,
     MatTableModule,
     MatSnackBarModule,
-    MatTooltipModule
-],
+    MatTooltipModule,
+    TranslocoModule
+  ],
   providers: [BulkImportService]
 })
 export class UserBulkImportDialogComponent implements OnDestroy {
@@ -37,7 +39,8 @@ export class UserBulkImportDialogComponent implements OnDestroy {
   constructor(
     public dialogRef: MatDialogRef<UserBulkImportDialogComponent>,
     private bulkImportService: BulkImportService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translocoService: TranslocoService
   ) { }
 
   ngOnDestroy(): void {
@@ -50,7 +53,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
     if (file) {
       const validation = this.bulkImportService.validateFile(file);
       if (!validation.valid) {
-        this.snackBar.open(validation.error!, 'Close', { duration: 3000 });
+        this.snackBar.open(validation.error!, this.translocoService.translate('common.close'), { duration: 3000 });
         return;
       }
       this.selectedFile = file;
@@ -80,15 +83,15 @@ export class UserBulkImportDialogComponent implements OnDestroy {
           this.isUploading = false;
           this.importResult = result;
           if (result.failed_users.length === 0) {
-            this.snackBar.open('Import completed successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translocoService.translate('users.messages.importSuccess'), this.translocoService.translate('common.close'), { duration: 3000 });
           } else {
-            this.snackBar.open('Import completed with some errors', 'Close', { duration: 5000 });
+            this.snackBar.open(this.translocoService.translate('users.messages.importWithErrors'), this.translocoService.translate('common.close'), { duration: 5000 });
           }
         },
         error: (error) => {
           this.isUploading = false;
           console.error('Import failed', error);
-          this.snackBar.open(error.error?.detail || 'Import failed', 'Close', { duration: 5000 });
+          this.snackBar.open(error.error?.detail || this.translocoService.translate('users.errors.importFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
         }
       });
   }
@@ -99,7 +102,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
 
   copyPassword(password: string): void {
     navigator.clipboard.writeText(password).then(() => {
-      this.snackBar.open('Password copied to clipboard', 'Close', { duration: 2000 });
+      this.snackBar.open(this.translocoService.translate('common.messages.copied'), this.translocoService.translate('common.close'), { duration: 2000 });
     });
   }
 
@@ -109,7 +112,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
     const csvContent = this.bulkImportService.formatResultsAsCsv(this.importResult.created_users);
 
     navigator.clipboard.writeText(csvContent).then(() => {
-      this.snackBar.open('All results copied to clipboard', 'Close', { duration: 2000 });
+      this.snackBar.open(this.translocoService.translate('common.messages.copied'), this.translocoService.translate('common.close'), { duration: 2000 });
     });
   }
 }

@@ -10,7 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Expense } from '../../models/expense.model';
 
 @Component({
@@ -51,12 +51,16 @@ export class ExpenseDialogComponent implements OnInit {
     ];
     showCustomCategory = false;
     isEditMode = false;
+    currentLang: string;
 
     constructor(
         private fb: FormBuilder,
         private dialogRef: MatDialogRef<ExpenseDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { expense?: Expense; categories?: string[] }
+        @Inject(MAT_DIALOG_DATA) public data: { expense?: Expense; categories?: string[] },
+        private translocoService: TranslocoService
     ) {
+        this.currentLang = this.translocoService.getActiveLang();
+
         this.categories = data.categories || [
             'Marketing', 'Software', 'Rent', 'Shipping', 'Office Supplies',
             'Legal', 'Gas/Transportation', 'Utilities', 'Packing Materials', 'Other'

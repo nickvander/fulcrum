@@ -13,6 +13,7 @@ import {
     PendingChangeInfo
 } from '../../services/integrations.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-pending-sync-dialog',
@@ -28,6 +29,7 @@ import { NotificationService } from '../../../core/services/notification.service
         MatCheckboxModule,
         MatProgressBarModule,
         MatTooltipModule,
+        TranslocoModule
     ]
 })
 export class PendingSyncDialog implements OnInit {
@@ -41,7 +43,8 @@ export class PendingSyncDialog implements OnInit {
     constructor(
         private dialogRef: MatDialogRef<PendingSyncDialog>,
         private integrationsService: IntegrationsService,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private translocoService: TranslocoService
     ) { }
 
     ngOnInit(): void {
@@ -61,6 +64,7 @@ export class PendingSyncDialog implements OnInit {
             },
             error: (err) => {
                 console.error('Failed to load pending batches', err);
+                this.notificationService.showError(this.translocoService.translate('users.errors.loadFailed'));
                 this.loading = false;
             }
         });
@@ -102,7 +106,7 @@ export class PendingSyncDialog implements OnInit {
     approveSelected(batch: PendingBatchInfo): void {
         const changeIds = Array.from(this.selectedChanges.get(batch.id) ?? []);
         if (changeIds.length === 0) {
-            this.notificationService.showError('Select at least one change to approve');
+            this.notificationService.showError(this.translocoService.translate('settings.sync.messages.selectOneApprove'));
             return;
         }
 
@@ -114,7 +118,7 @@ export class PendingSyncDialog implements OnInit {
                 this.loadPendingBatches();
             },
             error: (err) => {
-                this.notificationService.showError('Failed to approve changes');
+                this.notificationService.showError(this.translocoService.translate('settings.sync.errors.approveFailed'));
                 this.processing = false;
             }
         });
@@ -123,7 +127,7 @@ export class PendingSyncDialog implements OnInit {
     rejectSelected(batch: PendingBatchInfo): void {
         const changeIds = Array.from(this.selectedChanges.get(batch.id) ?? []);
         if (changeIds.length === 0) {
-            this.notificationService.showError('Select at least one change to reject');
+            this.notificationService.showError(this.translocoService.translate('settings.sync.messages.selectOneReject'));
             return;
         }
 
@@ -135,7 +139,7 @@ export class PendingSyncDialog implements OnInit {
                 this.loadPendingBatches();
             },
             error: (err) => {
-                this.notificationService.showError('Failed to reject changes');
+                this.notificationService.showError(this.translocoService.translate('settings.sync.errors.rejectFailed'));
                 this.processing = false;
             }
         });
@@ -151,7 +155,7 @@ export class PendingSyncDialog implements OnInit {
                 this.loadPendingBatches();
             },
             error: (err) => {
-                this.notificationService.showError('Failed to approve changes');
+                this.notificationService.showError(this.translocoService.translate('settings.sync.errors.approveFailed'));
                 this.processing = false;
             }
         });
@@ -167,7 +171,7 @@ export class PendingSyncDialog implements OnInit {
                 this.loadPendingBatches();
             },
             error: (err) => {
-                this.notificationService.showError('Failed to reject changes');
+                this.notificationService.showError(this.translocoService.translate('settings.sync.errors.rejectFailed'));
                 this.processing = false;
             }
         });
@@ -193,11 +197,7 @@ export class PendingSyncDialog implements OnInit {
     }
 
     getSourceLabel(source: string): string {
-        switch (source) {
-            case 'google_sheets': return 'Google Sheets';
-            case 'csv_import': return 'CSV Import';
-            default: return source;
-        }
+        return this.translocoService.translate(`settings.sync.sources.${source}`);
     }
 
     close(): void {

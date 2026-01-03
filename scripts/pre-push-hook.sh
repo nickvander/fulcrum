@@ -9,14 +9,12 @@ echo "Running fast backend tests..."
 if [ -f ".venv/bin/activate" ]; then
     # Use virtual environment if available
     source .venv/bin/activate
-    cd backend && python -m pytest -c pytest.ini -m 'not db and not integration'
+    (cd backend && python -m pytest -c pytest.ini -m 'not db and not integration')
     backend_result=$?
-    cd ..
 elif command -v pytest &> /dev/null; then
     # Fallback to system pytest if available
-    cd backend && pytest -c pytest.ini -m 'not db and not integration'
+    (cd backend && pytest -c pytest.ini -m 'not db and not integration')
     backend_result=$?
-    cd ..
 else
     # Fallback to npm script
     if command -v npm &> /dev/null; then
@@ -86,6 +84,21 @@ else
         echo "  npm install -g ruff"
         exit 1
     fi
+fi
+
+# Run i18n validation check
+echo "Running i18n validation check..."
+if command -v python3 &> /dev/null; then
+    python3 check_i18n_consistency.py frontend/src/assets/i18n/en.json frontend/src/assets/i18n/es-MX.json &> /dev/null
+    i18n_result=$?
+    if [ $i18n_result -ne 0 ]; then
+        echo "❌ I18n validation failed. Run 'python3 check_i18n_consistency.py frontend/src/assets/i18n/en.json' for details. Push blocked."
+        exit 1
+    else
+        echo "✅ I18n validation passed."
+    fi
+else
+    echo "⚠️ Python3 not found, skipping i18n validation check."
 fi
 
 echo "✅ All checks passed. Proceeding with push..."

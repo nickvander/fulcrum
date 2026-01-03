@@ -1,9 +1,9 @@
 <ng-container *transloco="let t">
-  <h2 mat-dialog-title>{{ t('products.adjustStock') }} {{ data.productName }}</h2>
+  <h2 mat-dialog-title>{{ t('products.adjustStockTitle') }} {{ data.productName }}</h2>
   <mat-dialog-content>
     @if (!showConfirmation) {
     <div>
-      <p class="current-stock">{{ t('products.currentStock') }}: <strong>{{ data.currentQuantity }}</strong></p>
+      <p class="current-stock">{{ t('products.currentStockLabel') }}: <strong>{{ data.currentQuantity }}</strong></p>
       <mat-form-field class="full-width">
         <mat-label>{{ t('products.adjustmentAmount') }}</mat-label>
         <input matInput type="number" [(ngModel)]="adjustment" [placeholder]="t('products.adjustmentAmount')"
@@ -19,7 +19,7 @@
     <p class="confirmation-title">{{ t('products.confirmStockAdjustment') }}</p>
     <div class="confirmation-details">
       <p><strong>{{ t('nav.products') }}:</strong> {{ data.productName }}</p>
-      <p><strong>{{ t('products.currentStock') }}:</strong> {{ data.currentQuantity }}</p>
+      <p><strong>{{ t('products.currentStockLabel') }}:</strong> {{ data.currentQuantity }}</p>
       <p><strong>{{ t('products.adjustment') }}:</strong> {{ adjustment > 0 ? '+' : '' }}{{ adjustment }}</p>
       <p><strong>{{ t('products.newStock') }}:</strong> {{ data.currentQuantity + adjustment }}</p>
       @if (reason) {

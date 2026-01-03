@@ -1,273 +1,280 @@
-<div class="details-container" [class.mobile]="isMobile" [class.tablet]="isTablet">
-    <!-- Header with close button -->
-    <div class="header-bar">
-        @if (navigationStack.length > 0) {
-        <button mat-icon-button (click)="onNavigateBack()" class="back-btn" matTooltip="Go Back">
-            <mat-icon>arrow_back</mat-icon>
-        </button>
-        }
-        <h2 class="title">{{ dialogTitle }}</h2>
-        <button mat-icon-button (click)="onClose()" class="close-btn" matTooltip="Close">
-            <mat-icon>close</mat-icon>
-        </button>
-    </div>
-
-    <mat-dialog-content class="content-wrapper">
-        @if (!isEditMode) {
-        <!-- ==================== VIEW MODE ==================== -->
-        <div class="view-layout">
-            <!-- Hero Section: Image + Key Stats -->
-            <div class="hero-section">
-                <div class="product-image">
-                    @if (getPrimaryImage()) {
-                    <img [src]="getImageUrl(getPrimaryImage())" alt="Product">
-                    } @else {
-                    <div class="no-image">
-                        <mat-icon>image</mat-icon>
-                    </div>
-                    }
-                    @if (product.is_bundle) {
-                    <span class="bundle-badge"><mat-icon>inventory_2</mat-icon> Bundle</span>
-                    }
-                </div>
-
-                <div class="key-stats">
-                    <div class="stat-pill sku">
-                        <span class="label">SKU</span>
-                        <span class="value">{{ product.sku || '—' }}</span>
-                    </div>
-                    <div class="stat-pill price">
-                        <span class="label">Price</span>
-                        <span class="value">{{ product.default_resale_price | currency }}</span>
-                    </div>
-                    <div class="stat-pill cost">
-                        <span class="label">Avg Cost</span>
-                        <span class="value">{{ product.average_cost | currency }}</span>
-                    </div>
-                    <div class="stat-pill cost">
-                        <span class="label">{{ product.is_bundle ? 'Est. Cost' : 'Last Cost' }}</span>
-                        <span class="value">{{ getEffectiveCost() | currency }}</span>
-                    </div>
-                    <div class="stat-pill stock" [class.low]="getAvailablePhysicalStock() <= 10"
-                        [class.out]="getAvailablePhysicalStock() === 0">
-                        <span class="label">Stock</span>
-                        <span class="value">{{ getAvailablePhysicalStock() }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Description (collapsible if long) -->
-            <div class="section description-section">
-                <p class="description"
-                    [class.truncated]="!showFullDescription && ((product.description || '').length) > 150">
-                    {{ product.description || 'No description available.' }}
-                </p>
-                @if (((product.description || '').length) > 150) {
-                <button mat-button class="expand-btn" (click)="showFullDescription = !showFullDescription">
-                    {{ showFullDescription ? 'Show less' : 'Show more' }}
-                </button>
-                }
-            </div>
-
-            <!-- Attributes Row -->
-            <div class="attributes-row">
-                @if (product.brand) {
-                <div class="attr"><span class="label">Brand</span>{{ product.brand }}</div>
-                }
-                @if (product.category) {
-                <div class="attr"><span class="label">Category</span>{{ product.category }}</div>
-                }
-                @if (product.manufacturer) {
-                <div class="attr"><span class="label">Mfr</span>{{ product.manufacturer }}</div>
-                }
-            </div>
-
-            <!-- Bundle Components / Part of Bundles -->
-            @if (product.is_bundle && product.bundle_components?.length) {
-            <div class="section">
-                <div class="section-header">
-                    <h3>Components</h3>
-                    <span class="count-badge">{{ product.bundle_components?.length || 0 }}</span>
-                </div>
-                <div class="items-list">
-                    @for (comp of product.bundle_components; track comp.id) {
-                    <div class="item-row" (click)="onNavigateToProduct(comp.component_id)">
-                        <img [src]="getImageUrl(comp.component_image || '')" class="thumb"
-                            (error)="onImageError($event)">
-                        <div class="item-info">
-                            <span class="name">{{ comp.component_name }}</span>
-                            <span class="meta">×{{ comp.quantity }}</span>
-                        </div>
-                        <mat-icon class="chevron">chevron_right</mat-icon>
-                    </div>
-                    }
-                </div>
-            </div>
+<ng-container *transloco="let t">
+    <div class="details-container" [class.mobile]="isMobile" [class.tablet]="isTablet">
+        <!-- Header with close button -->
+        <div class="header-bar">
+            @if (navigationStack.length > 0) {
+            <button mat-icon-button (click)="onNavigateBack()" class="back-btn" [matTooltip]="t('products.goBack')">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
             }
+            <h2 class="title">{{ dialogTitle }}</h2>
+            <button mat-icon-button (click)="onClose()" class="close-btn" [matTooltip]="t('common.close')">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
 
-            @if (!product.is_bundle && product.part_of_bundles?.length) {
-            <div class="section">
-                <div class="section-header">
-                    <h3>Part of Bundles</h3>
-                    <span class="count-badge">{{ product.part_of_bundles?.length || 0 }}</span>
-                </div>
-                <div class="items-list">
-                    @for (b of product.part_of_bundles; track $index) {
-                    <div class="item-row" (click)="onNavigateToProduct(b.bundle_id || 0)">
-                        <img [src]="getImageUrl(b.bundle_image || '')" class="thumb" (error)="onImageError($event)">
-                        <div class="item-info">
-                            <span class="name">{{ b.bundle_name }}</span>
-                            <span class="meta">Uses {{ b.quantity }}× this item</span>
-                        </div>
-                        <mat-icon class="chevron">chevron_right</mat-icon>
-                    </div>
-                    }
-                </div>
-            </div>
-            }
-
-            <!-- Inventory (only for non-bundles with allocated stock) -->
-            @if (!product.is_bundle && getAllocatedStock() > 0) {
-            <div class="section inventory-detail">
-                <h3>Inventory Breakdown</h3>
-                <div class="inventory-row">
-                    <span>Physical: <strong>{{ getTotalPhysicalStock() }}</strong></span>
-                    <span>Allocated: <strong class="allocated">{{ getAllocatedStock() }}</strong></span>
-                    <span>Available: <strong class="available">{{ getAvailablePhysicalStock() }}</strong></span>
-                </div>
-            </div>
-            }
-
-            <!-- Bundle Assembly -->
-            @if (product.is_bundle) {
-            <div class="section assembly-section">
-                @if (!isAssembling) {
-                <button mat-stroked-button color="primary" (click)="startAssembly()">
-                    <mat-icon>archive</mat-icon> Reserve Stock
-                </button>
-                } @else {
-                <div class="assembly-input">
-                    <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
-                        <mat-label>Qty</mat-label>
-                        <input matInput type="number" [(ngModel)]="assembleQuantity" min="1">
-                    </mat-form-field>
-                    <button mat-icon-button color="primary"
-                        (click)="confirmAssembly()"><mat-icon>check</mat-icon></button>
-                    <button mat-icon-button (click)="cancelAssembly()"><mat-icon>close</mat-icon></button>
-                </div>
-                }
-            </div>
-            }
-
-            <!-- Marketplaces (expandable) -->
-            @if (product.marketplace_listings?.length) {
-            <div class="section">
-                <div class="section-header clickable" (click)="showMarketplaces = !showMarketplaces">
-                    <h3>Marketplaces</h3>
-                    <span class="count-badge">{{ product.marketplace_listings?.length || 0 }}</span>
-                    <mat-icon class="expand-icon">{{ showMarketplaces ? 'expand_less' : 'expand_more' }}</mat-icon>
-                </div>
-                @if (showMarketplaces) {
-                <div class="marketplace-chips">
-                    @for (listing of product.marketplace_listings; track $index) {
-                    <div class="mp-chip" [class.active]="listing.status === 'active'"
-                        [class.pending]="listing.status === 'pending'" [class.error]="listing.status === 'error'">
-                        @if (getMarketplaceLogo(listing.marketplace_id)) {
-                        <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo">
+        <mat-dialog-content class="content-wrapper">
+            @if (!isEditMode) {
+            <!-- ==================== VIEW MODE ==================== -->
+            <div class="view-layout">
+                <!-- Hero Section: Image + Key Stats -->
+                <div class="hero-section">
+                    <div class="product-image">
+                        @if (getPrimaryImage()) {
+                        <img [src]="getImageUrl(getPrimaryImage())" alt="Product">
                         } @else {
-                        <mat-icon>store</mat-icon>
+                        <div class="no-image">
+                            <mat-icon>image</mat-icon>
+                        </div>
                         }
-                        <span>{{ getMarketplaceName(listing.marketplace_id) }}</span>
-                        <span class="status">{{ listing.status }}</span>
+                        @if (product.is_bundle) {
+                        <span class="bundle-badge"><mat-icon>inventory_2</mat-icon> {{ t('products.bundle') }}</span>
+                        }
+                    </div>
+
+                    <div class="key-stats">
+                        <div class="stat-pill sku">
+                            <span class="label">{{ t('products.sku') }}</span>
+                            <span class="value">{{ product.sku || '—' }}</span>
+                        </div>
+                        <div class="stat-pill price">
+                            <span class="label">{{ t('common.price') }}</span>
+                            <span class="value">{{ product.default_resale_price | currency }}</span>
+                        </div>
+                        <div class="stat-pill cost">
+                            <span class="label">{{ t('products.avgCost') }}</span>
+                            <span class="value">{{ product.average_cost | currency }}</span>
+                        </div>
+                        <div class="stat-pill cost">
+                            <span class="label">{{ product.is_bundle ? t('products.estCost') : t('products.lastCost')
+                                }}</span>
+                            <span class="value">{{ getEffectiveCost() | currency }}</span>
+                        </div>
+                        <div class="stat-pill stock" [class.low]="getAvailablePhysicalStock() <= 10"
+                            [class.out]="getAvailablePhysicalStock() === 0">
+                            <span class="label">{{ t('common.stock') }}</span>
+                            <span class="value">{{ getAvailablePhysicalStock() }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description (collapsible if long) -->
+                <div class="section description-section">
+                    <p class="description"
+                        [class.truncated]="!showFullDescription && ((product.description || '').length) > 150">
+                        {{ product.description || t('products.noDescription') }}
+                    </p>
+                    @if (((product.description || '').length) > 150) {
+                    <button mat-button class="expand-btn" (click)="showFullDescription = !showFullDescription">
+                        {{ showFullDescription ? t('products.showLess') : t('products.showMore') }}
+                    </button>
+                    }
+                </div>
+
+                <!-- Attributes Row -->
+                <div class="attributes-row">
+                    @if (product.brand) {
+                    <div class="attr"><span class="label">{{ t('products.brand') }}</span>{{ product.brand }}</div>
+                    }
+                    @if (product.category) {
+                    <div class="attr"><span class="label">{{ t('products.category') }}</span>{{ product.category }}
+                    </div>
+                    }
+                    @if (product.manufacturer) {
+                    <div class="attr"><span class="label">{{ t('products.manufacturer') }}</span>{{ product.manufacturer
+                        }}</div>
+                    }
+                </div>
+
+                <!-- Bundle Components / Part of Bundles -->
+                @if (product.is_bundle && product.bundle_components?.length) {
+                <div class="section">
+                    <div class="section-header">
+                        <h3>{{ t('products.components') }}</h3>
+                        <span class="count-badge">{{ product.bundle_components?.length || 0 }}</span>
+                    </div>
+                    <div class="items-list">
+                        @for (comp of product.bundle_components; track comp.id) {
+                        <div class="item-row" (click)="onNavigateToProduct(comp.component_id)">
+                            <img [src]="getImageUrl(comp.component_image || '')" class="thumb"
+                                (error)="onImageError($event)">
+                            <div class="item-info">
+                                <span class="name">{{ comp.component_name }}</span>
+                                <span class="meta">×{{ comp.quantity }}</span>
+                            </div>
+                            <mat-icon class="chevron">chevron_right</mat-icon>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+
+                @if (!product.is_bundle && product.part_of_bundles?.length) {
+                <div class="section">
+                    <div class="section-header">
+                        <h3>{{ t('products.partOfBundles') }}</h3>
+                        <span class="count-badge">{{ product.part_of_bundles?.length || 0 }}</span>
+                    </div>
+                    <div class="items-list">
+                        @for (b of product.part_of_bundles; track $index) {
+                        <div class="item-row" (click)="onNavigateToProduct(b.bundle_id || 0)">
+                            <img [src]="getImageUrl(b.bundle_image || '')" class="thumb" (error)="onImageError($event)">
+                            <div class="item-info">
+                                <span class="name">{{ b.bundle_name }}</span>
+                                <span class="meta">Uses {{ b.quantity }}× this item</span>
+                            </div>
+                            <mat-icon class="chevron">chevron_right</mat-icon>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- Inventory (only for non-bundles with allocated stock) -->
+                @if (!product.is_bundle && getAllocatedStock() > 0) {
+                <div class="section inventory-detail">
+                    <h3>{{ t('products.inventoryBreakdown') }}</h3>
+                    <div class="inventory-row">
+                        <span>{{ t('products.physical') }}: <strong>{{ getTotalPhysicalStock() }}</strong></span>
+                        <span>{{ t('products.allocated') }}: <strong class="allocated">{{ getAllocatedStock()
+                                }}</strong></span>
+                        <span>{{ t('products.available') }}: <strong class="available">{{ getAvailablePhysicalStock()
+                                }}</strong></span>
+                    </div>
+                </div>
+                }
+
+                <!-- Bundle Assembly -->
+                @if (product.is_bundle) {
+                <div class="section assembly-section">
+                    @if (!isAssembling) {
+                    <button mat-stroked-button color="primary" (click)="startAssembly()">
+                        <mat-icon>archive</mat-icon> {{ t('products.reserveStock') }}
+                    </button>
+                    } @else {
+                    <div class="assembly-input">
+                        <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
+                            <mat-label>Qty</mat-label>
+                            <input matInput type="number" [(ngModel)]="assembleQuantity" min="1">
+                        </mat-form-field>
+                        <button mat-icon-button color="primary"
+                            (click)="confirmAssembly()"><mat-icon>check</mat-icon></button>
+                        <button mat-icon-button (click)="cancelAssembly()"><mat-icon>close</mat-icon></button>
+                    </div>
+                    }
+                </div>
+                }
+
+                <!-- Marketplaces (expandable) -->
+                @if (product.marketplace_listings?.length) {
+                <div class="section">
+                    <div class="section-header clickable" (click)="showMarketplaces = !showMarketplaces">
+                        <h3>{{ t('marketing.marketplaces') }}</h3>
+                        <span class="count-badge">{{ product.marketplace_listings?.length || 0 }}</span>
+                        <mat-icon class="expand-icon">{{ showMarketplaces ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    </div>
+                    @if (showMarketplaces) {
+                    <div class="marketplace-chips">
+                        @for (listing of product.marketplace_listings; track $index) {
+                        <div class="mp-chip" [class.active]="listing.status === 'active'"
+                            [class.pending]="listing.status === 'pending'" [class.error]="listing.status === 'error'">
+                            @if (getMarketplaceLogo(listing.marketplace_id)) {
+                            <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo">
+                            } @else {
+                            <mat-icon>store</mat-icon>
+                            }
+                            <span>{{ getMarketplaceName(listing.marketplace_id) }}</span>
+                            <span class="status">{{ listing.status }}</span>
+                        </div>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+
+                <!-- Marketing (campaigns + quick posts) -->
+                @if ((product.active_campaigns?.length || 0) > 0 || (product.quick_posts?.length || 0) > 0) {
+                <div class="section">
+                    <div class="section-header clickable" (click)="showMarketing = !showMarketing">
+                        <h3>{{ t('nav.marketing') }}</h3>
+                        <span class="count-badge">{{ (product.active_campaigns?.length || 0) +
+                            (product.quick_posts?.length
+                            || 0) }}</span>
+                        <mat-icon class="expand-icon">{{ showMarketing ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    </div>
+                    @if (showMarketing) {
+                    <div class="marketing-list">
+                        @for (c of product.active_campaigns; track c.id) {
+                        <div class="marketing-item campaign">
+                            <mat-icon>campaign</mat-icon>
+                            <span class="name">{{ c.name }}</span>
+                            <span class="dates">{{ c.start_date | date:'shortDate' }} - {{ c.end_date | date:'shortDate'
+                                }}</span>
+                        </div>
+                        }
+                        @for (p of product.quick_posts; track p.id) {
+                        <a class="marketing-item post" (click)="navigateToQuickPost(p.id)">
+                            <mat-icon>{{ p.channel_type === 'email' ? 'email' : 'share' }}</mat-icon>
+                            <span class="name">{{ p.name }}</span>
+                            <span class="status" [class.published]="p.status === 'published'">{{ p.status }}</span>
+                        </a>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+
+                <!-- Purchase History (expandable) -->
+                @if (purchaseHistory.length) {
+                <div class="section">
+                    <div class="section-header clickable" (click)="showHistory = !showHistory">
+                        <h3>{{ t('products.purchaseHistory') }}</h3>
+                        <span class="count-badge">{{ purchaseHistory.length }}</span>
+                        <mat-icon class="expand-icon">{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
+                    </div>
+                    @if (showHistory) {
+                    <div class="history-list">
+                        @for (h of purchaseHistory; track $index) {
+                        <div class="history-row" (click)="onGoToPO(h.po_id)">
+                            <span class="date">{{ h.date | date:'shortDate' }}</span>
+                            <span class="po">PO #{{ h.po_id }}</span>
+                            <span class="qty">×{{ h.quantity }}</span>
+                            <span class="cost">{{ h.unit_cost | currency }}</span>
+                            <mat-icon class="chevron">chevron_right</mat-icon>
+                        </div>
+                        }
                     </div>
                     }
                 </div>
                 }
             </div>
-            }
-
-            <!-- Marketing (campaigns + quick posts) -->
-            @if ((product.active_campaigns?.length || 0) > 0 || (product.quick_posts?.length || 0) > 0) {
-            <div class="section">
-                <div class="section-header clickable" (click)="showMarketing = !showMarketing">
-                    <h3>Marketing</h3>
-                    <span class="count-badge">{{ (product.active_campaigns?.length || 0) + (product.quick_posts?.length
-                        || 0) }}</span>
-                    <mat-icon class="expand-icon">{{ showMarketing ? 'expand_less' : 'expand_more' }}</mat-icon>
-                </div>
-                @if (showMarketing) {
-                <div class="marketing-list">
-                    @for (c of product.active_campaigns; track c.id) {
-                    <div class="marketing-item campaign">
-                        <mat-icon>campaign</mat-icon>
-                        <span class="name">{{ c.name }}</span>
-                        <span class="dates">{{ c.start_date | date:'shortDate' }} - {{ c.end_date | date:'shortDate'
-                            }}</span>
-                    </div>
-                    }
-                    @for (p of product.quick_posts; track p.id) {
-                    <a class="marketing-item post" (click)="navigateToQuickPost(p.id)">
-                        <mat-icon>{{ p.channel_type === 'email' ? 'email' : 'share' }}</mat-icon>
-                        <span class="name">{{ p.name }}</span>
-                        <span class="status" [class.published]="p.status === 'published'">{{ p.status }}</span>
-                    </a>
-                    }
-                </div>
-                }
+            } @else {
+            <!-- ==================== EDIT MODE ==================== -->
+            <div class="edit-container">
+                <app-product-form #productForm [product]="product" [isDialogMode]="true"
+                    (productSaved)="onProductSaved()" (formClosed)="onCancelEdit()">
+                </app-product-form>
             </div>
             }
+        </mat-dialog-content>
 
-            <!-- Purchase History (expandable) -->
-            @if (purchaseHistory.length) {
-            <div class="section">
-                <div class="section-header clickable" (click)="showHistory = !showHistory">
-                    <h3>Purchase History</h3>
-                    <span class="count-badge">{{ purchaseHistory.length }}</span>
-                    <mat-icon class="expand-icon">{{ showHistory ? 'expand_less' : 'expand_more' }}</mat-icon>
-                </div>
-                @if (showHistory) {
-                <div class="history-list">
-                    @for (h of purchaseHistory; track $index) {
-                    <div class="history-row" (click)="onGoToPO(h.po_id)">
-                        <span class="date">{{ h.date | date:'shortDate' }}</span>
-                        <span class="po">PO #{{ h.po_id }}</span>
-                        <span class="qty">×{{ h.quantity }}</span>
-                        <span class="cost">{{ h.unit_cost | currency }}</span>
-                        <mat-icon class="chevron">chevron_right</mat-icon>
-                    </div>
-                    }
-                </div>
-                }
-            </div>
+        <mat-dialog-actions class="actions-bar">
+            @if (!isEditMode) {
+            <button mat-button (click)="onClose()">{{ t('common.close') }}</button>
+            @if (!product.is_bundle) {
+            <button mat-stroked-button color="accent" (click)="onCreateParentBundle()">
+                <mat-icon>inventory_2</mat-icon> {{ t('products.createBundle') }}
+            </button>
             }
-        </div>
-        } @else {
-        <!-- ==================== EDIT MODE ==================== -->
-        <div class="edit-container">
-            <app-product-form #productForm [product]="product" [isDialogMode]="true" (productSaved)="onProductSaved()"
-                (formClosed)="onCancelEdit()">
-            </app-product-form>
-        </div>
-        }
-    </mat-dialog-content>
-
-    <!-- Footer Actions -->
-    <mat-dialog-actions class="actions-bar">
-        @if (!isEditMode) {
-        <button mat-button (click)="onClose()">Close</button>
-        @if (!product.is_bundle) {
-        <button mat-stroked-button color="accent" (click)="onCreateParentBundle()">
-            <mat-icon>inventory_2</mat-icon> Create Bundle
-        </button>
-        }
-        <button mat-flat-button color="primary" (click)="onEdit()">
-            <mat-icon>edit</mat-icon> Edit
-        </button>
-        } @else {
-        <button mat-button (click)="onCancelEdit()">Cancel</button>
-        <button mat-flat-button color="primary" (click)="saveProduct()" [disabled]="isFormInvalid">
-            <mat-icon>save</mat-icon> Save
-        </button>
-        }
-    </mat-dialog-actions>
-</div>
+            <button mat-flat-button color="primary" (click)="onEdit()">
+                <mat-icon>edit</mat-icon> {{ t('common.edit') }}
+            </button>
+            } @else {
+            <button mat-button (click)="onCancelEdit()">{{ t('common.cancel') }}</button>
+            <button mat-flat-button color="primary" (click)="saveProduct()" [disabled]="isFormInvalid">
+                <mat-icon>save</mat-icon> {{ t('common.save') }}
+            </button>
+            }
+        </mat-dialog-actions>
+    </div>
+</ng-container>

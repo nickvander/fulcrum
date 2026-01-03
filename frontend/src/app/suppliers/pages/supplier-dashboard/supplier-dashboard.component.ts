@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 import { Observable, forkJoin, map } from 'rxjs';
 import { SuppliersService } from '../../suppliers.service';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
@@ -34,7 +35,8 @@ interface SupplierStats {
         MatCardModule,
         MatListModule,
         MatTooltipModule,
-        StatCardComponent
+        StatCardComponent,
+        TranslocoModule
     ],
     templateUrl: './supplier-dashboard.component.html',
     styleUrls: ['./supplier-dashboard.component.scss']

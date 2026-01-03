@@ -11,6 +11,8 @@ import { SuppliersService } from '../suppliers.service';
 import { Supplier, SupplierCreate } from '../../shared/models/supplier.model';
 import { SupplierProductManagerComponent } from '../supplier-product-manager/supplier-product-manager.component';
 
+import { TranslocoModule } from '@ngneat/transloco';
+
 @Component({
   selector: 'app-supplier-detail',
   templateUrl: './supplier-detail.component.html',
@@ -25,7 +27,8 @@ import { SupplierProductManagerComponent } from '../supplier-product-manager/sup
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    SupplierProductManagerComponent
+    SupplierProductManagerComponent,
+    TranslocoModule
   ]
 })
 export class SupplierDetailComponent implements OnInit {

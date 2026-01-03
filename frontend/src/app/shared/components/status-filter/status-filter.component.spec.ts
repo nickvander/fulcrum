@@ -2,6 +2,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { StatusFilterComponent } from './status-filter.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('StatusFilterComponent', () => {
     let component: StatusFilterComponent;
@@ -9,7 +10,11 @@ describe('StatusFilterComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [StatusFilterComponent, NoopAnimationsModule]
+            imports: [
+                StatusFilterComponent,
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
+            ]
         }).compileComponents();
 
         fixture = TestBed.createComponent(StatusFilterComponent);

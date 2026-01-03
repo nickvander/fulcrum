@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of } from 'rxjs';
 
 import { AuditLogList } from './audit-log-list';
@@ -95,7 +96,8 @@ describe('AuditLogList', () => {
                 MatInputModule,
                 MatSelectModule,
                 MatButtonModule,
-                BrowserAnimationsModule
+                BrowserAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
             ],
             providers: [
                 { provide: AuditLogService, useValue: auditLogServiceSpy },

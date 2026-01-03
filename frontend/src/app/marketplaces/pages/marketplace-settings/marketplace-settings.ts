@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { environment } from '../../../../environments/environment';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
@@ -33,7 +34,8 @@ interface Account {
         MatInputModule,
         MatInputModule,
         MatSnackBarModule,
-        MatDialogModule
+        MatDialogModule,
+        TranslocoModule
     ],
     templateUrl: './marketplace-settings.html',
     styleUrl: './marketplace-settings.scss',
@@ -60,7 +62,8 @@ export class MarketplaceSettingsComponent implements OnInit {
         private router: Router,
         private http: HttpClient,
         private snackBar: MatSnackBar,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private translocoService: TranslocoService
     ) { }
 
     ngOnInit(): void {
@@ -103,7 +106,7 @@ export class MarketplaceSettingsComponent implements OnInit {
             name: this.newAccount.name
         };
 
-        this.snackBar.open('Saving credentials and connecting...', '', { duration: 2000 });
+        this.snackBar.open(this.translocoService.translate('marketplaces.messages.saving'), '', { duration: 2000 });
 
         // Save first, then redirect to OAuth
         this.http.post(`${environment.apiUrl}/settings/marketplace`, payload).subscribe({
@@ -115,13 +118,13 @@ export class MarketplaceSettingsComponent implements OnInit {
                     },
                     error: (err) => {
                         console.error('Auth error:', err);
-                        this.snackBar.open(`Failed to get authorization URL.`, 'Close', { duration: 5000 });
+                        this.snackBar.open(this.translocoService.translate('marketplaces.errors.authUrlFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
                     }
                 });
             },
             error: (err) => {
                 console.error('Save error:', err);
-                this.snackBar.open(`Failed to save credentials.`, 'Close', { duration: 5000 });
+                this.snackBar.open(this.translocoService.translate('marketplaces.errors.saveFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
             }
         });
     }
@@ -133,7 +136,7 @@ export class MarketplaceSettingsComponent implements OnInit {
             },
             error: (err) => {
                 console.error('Auth error:', err);
-                this.snackBar.open('Failed to get authorization URL.', 'Close', { duration: 5000 });
+                this.snackBar.open(this.translocoService.translate('marketplaces.errors.authUrlFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
             }
         });
     }
@@ -141,15 +144,15 @@ export class MarketplaceSettingsComponent implements OnInit {
     deleteAccount(accountId: number): void {
         const dialogRef = this.dialog.open(ConfirmationDialog, {
             data: {
-                title: 'Remove Account',
-                message: 'Are you sure you want to remove this account?'
+                title: this.translocoService.translate('marketplaces.removeAccountTitle'),
+                message: this.translocoService.translate('marketplaces.removeAccountConfirm')
             } as ConfirmationDialogData
         });
 
         dialogRef.afterClosed().subscribe(confirmed => {
             if (confirmed) {
                 // TODO: Implement delete API
-                this.snackBar.open('Account removed.', 'Close', { duration: 3000 });
+                this.snackBar.open(this.translocoService.translate('marketplaces.messages.accountRemoved'), this.translocoService.translate('common.close'), { duration: 3000 });
                 this.accounts = this.accounts.filter(a => a.id !== accountId);
             }
         });

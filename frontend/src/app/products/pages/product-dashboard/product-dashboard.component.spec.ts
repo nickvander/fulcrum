@@ -6,6 +6,7 @@ import { ScreenService } from '../../../core/services/screen.service';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ProductDashboardComponent', () => {
     let component: ProductDashboardComponent;
@@ -31,7 +32,11 @@ describe('ProductDashboardComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [ProductDashboardComponent, NoopAnimationsModule],
+            imports: [
+                ProductDashboardComponent,
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
+            ],
             providers: [
                 { provide: DashboardStatsService, useValue: statsServiceMock },
                 { provide: ScreenService, useValue: screenServiceMock },

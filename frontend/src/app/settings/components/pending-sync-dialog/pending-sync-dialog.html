@@ -1,93 +1,99 @@
-<div class="pending-sync-dialog">
-    <h2 mat-dialog-title>
-        <mat-icon>rate_review</mat-icon>
-        Review Pending Changes
-    </h2>
+<ng-container *transloco="let t">
+    <div class="pending-sync-dialog">
+        <h2 mat-dialog-title>
+            <mat-icon>rate_review</mat-icon>
+            {{ t('settings.sync.reviewTitle') }}
+        </h2>
 
-    <mat-dialog-content>
-        @if (loading) {
-        <div class="loading-state">
-            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-            <p>Loading pending changes...</p>
-        </div>
-        } @else if (batches.length === 0) {
-        <div class="empty-state">
-            <mat-icon>check_circle</mat-icon>
-            <h3>No Pending Changes</h3>
-            <p>All changes have been reviewed. You're all caught up!</p>
-        </div>
-        } @else {
-        <div class="batches-container">
-            @for (batch of batches; track batch.id) {
-            <div class="batch-card">
-                <div class="batch-header">
-                    <div class="batch-info">
-                        <span class="batch-source">
-                            <mat-icon>cloud_sync</mat-icon>
-                            {{ getSourceLabel(batch.source) }}
-                        </span>
-                        <span class="batch-date">{{ batch.created_at | date:'medium' }}</span>
-                        <span class="batch-count">{{ batch.changes.length }} change(s)</span>
-                    </div>
-                    <div class="batch-actions">
-                        <button mat-button (click)="selectAll(batch)" [disabled]="processing">Select All</button>
-                        <button mat-button (click)="deselectAll(batch)" [disabled]="processing">Deselect</button>
-                    </div>
-                </div>
-
-                <div class="changes-list">
-                    @for (change of batch.changes; track change.id) {
-                    <div class="change-row" [class.selected]="isChangeSelected(batch.id, change.id)"
-                        (click)="toggleChange(batch.id, change.id)">
-                        <mat-checkbox [checked]="isChangeSelected(batch.id, change.id)"
-                            (click)="$event.stopPropagation()" (change)="toggleChange(batch.id, change.id)">
-                        </mat-checkbox>
-
-                        <div class="change-entity">
-                            <span class="entity-name">{{ change.entity_name || 'Unknown' }}</span>
-                            @if (change.entity_sku) {
-                            <span class="entity-sku">{{ change.entity_sku }}</span>
-                            }
+        <mat-dialog-content>
+            @if (loading) {
+            <div class="loading-state">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                <p>{{ t('settings.sync.loading') }}</p>
+            </div>
+            } @else if (batches.length === 0) {
+            <div class="empty-state">
+                <mat-icon>check_circle</mat-icon>
+                <h3>{{ t('settings.sync.noChanges') }}</h3>
+                <p>{{ t('settings.sync.allCaughtUp') }}</p>
+            </div>
+            } @else {
+            <div class="batches-container">
+                @for (batch of batches; track batch.id) {
+                <div class="batch-card">
+                    <div class="batch-header">
+                        <div class="batch-info">
+                            <span class="batch-source">
+                                <mat-icon>cloud_sync</mat-icon>
+                                {{ getSourceLabel(batch.source) }}
+                            </span>
+                            <span class="batch-date">{{ batch.created_at | date:'medium' }}</span>
+                            <span class="batch-count">{{ t('settings.sync.counts', { count: batch.changes.length })
+                                }}</span>
                         </div>
-
-                        <div class="change-field">
-                            <mat-icon>{{ getFieldIcon(change.field) }}</mat-icon>
-                            <span>{{ change.field | titlecase }}</span>
-                        </div>
-
-                        <div class="change-diff">
-                            <span class="old-value">{{ formatValue(change.old_value, change.field) }}</span>
-                            <mat-icon class="arrow">arrow_forward</mat-icon>
-                            <span class="new-value">{{ formatValue(change.new_value, change.field) }}</span>
+                        <div class="batch-actions">
+                            <button mat-button (click)="selectAll(batch)" [disabled]="processing">{{
+                                t('settings.sync.selectAll') }}</button>
+                            <button mat-button (click)="deselectAll(batch)" [disabled]="processing">{{
+                                t('settings.sync.deselect') }}</button>
                         </div>
                     </div>
-                    }
-                </div>
 
-                <div class="batch-footer">
-                    <div class="selection-info">
-                        {{ getSelectedCount(batch.id) }} of {{ batch.changes.length }} selected
+                    <div class="changes-list">
+                        @for (change of batch.changes; track change.id) {
+                        <div class="change-row" [class.selected]="isChangeSelected(batch.id, change.id)"
+                            (click)="toggleChange(batch.id, change.id)">
+                            <mat-checkbox [checked]="isChangeSelected(batch.id, change.id)"
+                                (click)="$event.stopPropagation()" (change)="toggleChange(batch.id, change.id)">
+                            </mat-checkbox>
+
+                            <div class="change-entity">
+                                <span class="entity-name">{{ change.entity_name || 'Unknown' }}</span>
+                                @if (change.entity_sku) {
+                                <span class="entity-sku">{{ change.entity_sku }}</span>
+                                }
+                            </div>
+
+                            <div class="change-field">
+                                <mat-icon>{{ getFieldIcon(change.field) }}</mat-icon>
+                                <span>{{ change.field | titlecase }}</span>
+                            </div>
+
+                            <div class="change-diff">
+                                <span class="old-value">{{ formatValue(change.old_value, change.field) }}</span>
+                                <mat-icon class="arrow">arrow_forward</mat-icon>
+                                <span class="new-value">{{ formatValue(change.new_value, change.field) }}</span>
+                            </div>
+                        </div>
+                        }
                     </div>
-                    <div class="footer-actions">
-                        <button mat-stroked-button color="warn" (click)="rejectSelected(batch)"
-                            [disabled]="getSelectedCount(batch.id) === 0 || processing">
-                            <mat-icon>close</mat-icon>
-                            Reject Selected
-                        </button>
-                        <button mat-flat-button color="primary" (click)="approveSelected(batch)"
-                            [disabled]="getSelectedCount(batch.id) === 0 || processing">
-                            <mat-icon>check</mat-icon>
-                            Approve Selected
-                        </button>
+
+                    <div class="batch-footer">
+                        <div class="selection-info">
+                            {{ t('settings.sync.selectedOfTotal', { selected: getSelectedCount(batch.id), total:
+                            batch.changes.length }) }}
+                        </div>
+                        <div class="footer-actions">
+                            <button mat-stroked-button color="warn" (click)="rejectSelected(batch)"
+                                [disabled]="getSelectedCount(batch.id) === 0 || processing">
+                                <mat-icon>close</mat-icon>
+                                {{ t('settings.sync.rejectSelected') }}
+                            </button>
+                            <button mat-flat-button color="primary" (click)="approveSelected(batch)"
+                                [disabled]="getSelectedCount(batch.id) === 0 || processing">
+                                <mat-icon>check</mat-icon>
+                                {{ t('settings.sync.approveSelected') }}
+                            </button>
+                        </div>
                     </div>
                 </div>
+                }
             </div>
             }
-        </div>
-        }
-    </mat-dialog-content>
+        </mat-dialog-content>
 
-    <mat-dialog-actions align="end">
-        <button mat-button (click)="close()">Close</button>
-    </mat-dialog-actions>
-</div>
+        <mat-dialog-actions align="end">
+            <button mat-button (click)="close()">{{ t('common.close') }}</button>
+        </mat-dialog-actions>
+    </div>
+</ng-container>

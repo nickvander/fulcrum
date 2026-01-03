@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors, HttpClientModule } from '@angular/common/http';
-
+import { MatPaginatorIntl } from '@angular/material/paginator';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -17,6 +17,7 @@ import { LoadingInterceptor } from './core/interceptors/loading.interceptor';
 import { HttpErrorInterceptor } from './core/interceptors/http-error.interceptor';
 
 import { TranslocoRootModule } from './transloco-root.module';
+import { TranslocoPaginatorIntl } from './shared/services/transloco-paginator-intl';
 
 @NgModule({
   imports: [
@@ -40,7 +41,8 @@ import { TranslocoRootModule } from './transloco-root.module';
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAnimationsAsync(),
-    provideHttpClient(withInterceptors([AuthInterceptor, LoadingInterceptor, HttpErrorInterceptor]))
+    provideHttpClient(withInterceptors([AuthInterceptor, LoadingInterceptor, HttpErrorInterceptor])),
+    { provide: MatPaginatorIntl, useClass: TranslocoPaginatorIntl }
   ],
   bootstrap: [AppComponent]
 })

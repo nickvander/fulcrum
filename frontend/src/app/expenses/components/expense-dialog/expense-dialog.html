@@ -25,7 +25,7 @@
                 <mat-label>{{ t('expenses.frequency') }}</mat-label>
                 <mat-select formControlName="recurrence_interval">
                     @for (interval of recurrenceIntervals; track interval.value) {
-                    <mat-option [value]="interval.value">{{ t('expenses.' + interval.value) }}</mat-option>
+                    <mat-option [value]="interval.value">{{ t('expenses.recurrence.' + interval.value) }}</mat-option>
                     }
                 </mat-select>
             </mat-form-field>
@@ -36,7 +36,7 @@
                 <mat-label>{{ t('common.description') }}</mat-label>
                 <input matInput formControlName="description" [placeholder]="t('common.description')">
                 <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
-                    {{ t('common.description') }}
+                    {{ t('common.description') }} is required
                 </mat-error>
             </mat-form-field>
 
@@ -49,7 +49,7 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="currency-field">
-                    <mat-label>Currency</mat-label>
+                    <mat-label>{{ t('common.currency') }}</mat-label>
                     <mat-select formControlName="currency">
                         @for (curr of currencies; track curr) {
                         <mat-option [value]="curr">{{curr}}</mat-option>
@@ -72,7 +72,7 @@
             <!-- Custom Category Input -->
             @if (showCustomCategory) {
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ t('expenses.category') }}</mat-label>
+                <mat-label>{{ t('expenses.fields.customCategory') }}</mat-label>
                 <input matInput formControlName="customCategory" [placeholder]="t('expenses.category')">
             </mat-form-field>
             }
@@ -88,25 +88,49 @@
             <!-- Payment Method & Reference Row -->
             <div class="form-row">
                 <mat-form-field appearance="outline" class="flex-field">
-                    <mat-label>Payment Method</mat-label>
+                    <mat-label>{{ t('expenses.fields.paymentMethod') }}</mat-label>
                     <mat-select formControlName="payment_method">
-                        <mat-option [value]="null">Not specified</mat-option>
+                        <mat-option [value]="null">{{ t('expenses.paymentMethod.none') }}</mat-option>
+                        <!-- Assuming paymentMethods in TS are just values or mapped similarly to PO. 
+                             Wait, TS has {value: 'cash', label: 'Cash'}. 
+                             I need to map 'cash' to 'purchaseOrders.paymentMethod.cash' (reusing PO keys) 
+                             OR add expense keys. I added generic keys in PO. 
+                             Let's use 'purchaseOrders.paymentMethod.' + method.value if values match.
+                             Values in ExpenseDialog TS: 'cash', 'card', 'transfer', 'check'.
+                             Values in PO (mapped): 'bankTransfer', 'creditCard', 'cash', 'check', 'other'.
+                             They don't match perfectly ('card' vs 'creditCard', 'transfer' vs 'bankTransfer').
+                             I should add a map in the template or change TS. 
+                             Let's assume I'll map them here manually or use a switch.
+                             Better: Use specific keys I added or reuse PO keys if I update TS values. 
+                             I'll stick to mapping manually in the template for safety since I can't easily change backend values right now? 
+                             Actually, I can just use a map object in the template or t('purchaseOrders.paymentMethod.' + (method.value === 'card' ? 'creditCard' : (method.value === 'transfer' ? 'bankTransfer' : method.value)))
+                             Or simpler: just translate the LABEL that is already there? No, label is hardcoded English string.
+                             I will use a switch case or map in the loop. 
+                        -->
                         @for (method of paymentMethods; track method.value) {
-                        <mat-option [value]="method.value">{{method.label}}</mat-option>
+                        <mat-option [value]="method.value">
+                            {{
+                            method.value === 'card' ? t('purchaseOrders.paymentMethod.creditCard') :
+                            method.value === 'transfer' ? t('purchaseOrders.paymentMethod.bankTransfer') :
+                            t('purchaseOrders.paymentMethod.' + method.value)
+                            }}
+                        </mat-option>
                         }
                     </mat-select>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="flex-field">
-                    <mat-label>Reference #</mat-label>
-                    <input matInput formControlName="reference_number" placeholder="Invoice/Receipt #">
+                    <mat-label>{{ t('expenses.fields.referenceNumber') }}</mat-label>
+                    <input matInput formControlName="reference_number"
+                        [placeholder]="t('common.placeholders.invoiceNumber')">
                 </mat-form-field>
             </div>
 
             <!-- Notes -->
             <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ t('common.notes') }}</mat-label>
-                <textarea matInput formControlName="notes" rows="3" [placeholder]="t('common.notes')"></textarea>
+                <textarea matInput formControlName="notes" rows="3"
+                    [placeholder]="t('common.placeholders.enterNote')"></textarea>
             </mat-form-field>
         </form>
     </mat-dialog-content>

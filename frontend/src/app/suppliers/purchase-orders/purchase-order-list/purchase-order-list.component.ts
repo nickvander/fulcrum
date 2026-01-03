@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
@@ -20,8 +20,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
-import { TranslocoModule } from '@ngneat/transloco';
-import { ViewChild } from '@angular/core';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 interface POSummary {
   total_orders: number;
@@ -59,7 +58,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   // Data Source for MatTable with sorting
   dataSource = new MatTableDataSource<PurchaseOrder>([]);
   @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator; // Added Paginator ViewChild
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   purchaseOrders: PurchaseOrder[] = [];
   filteredOrders: PurchaseOrder[] = [];
@@ -78,17 +77,27 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   endDate: Date | null = null;
 
   private destroy$ = new Subject<void>();
+  currentLang: string;
 
   constructor(
     private suppliersService: SuppliersService,
     private router: Router,
     private route: ActivatedRoute,
-    private dateRangeService: DateRangeService
-  ) { }
+    private dateRangeService: DateRangeService,
+    private translocoService: TranslocoService
+  ) {
+    this.currentLang = this.translocoService.getActiveLang();
+  }
 
   ngOnInit(): void {
+    // Subscribe to language changes for date pipe
+    this.translocoService.langChanges$.pipe(takeUntil(this.destroy$)).subscribe(lang => {
+      this.currentLang = lang;
+    });
+
     // Initialize date range from service's current value
     const currentRange = this.dateRangeService.currentRange;
+    // ... (rest of ngOnInit)
     this.startDate = currentRange.startDate;
     this.endDate = currentRange.endDate;
 
@@ -281,5 +290,15 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
 
   getReceivedValueFormatted(): string {
     return this.summary.received_value.toFixed(2);
+  }
+
+  getStatusTranslationKey(status: string): string {
+    // Convert 'Partially_received' or 'PARTIALLY_RECEIVED' to 'partiallyReceived'
+    // and lowerCamelCase for others.
+    if (!status) return '';
+
+    // Handle specific case for partially received if needed or generic camelCase
+    const camelCaseStatus = status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    return `purchaseOrders.${camelCaseStatus}`;
   }
 }

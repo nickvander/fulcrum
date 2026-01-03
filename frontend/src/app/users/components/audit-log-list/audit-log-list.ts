@@ -14,6 +14,7 @@ import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule } from '@ngneat/transloco';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -33,7 +34,8 @@ import { catchError } from 'rxjs/operators';
     MatSelectModule,
     MatButtonModule,
     MatTooltipModule,
-    MatIconModule
+    MatIconModule,
+    TranslocoModule
   ],
 })
 export class AuditLogList implements OnInit {

@@ -9,7 +9,7 @@
         <button mat-mini-fab color="accent" (click)="openImportDialog()" [matTooltip]="t('users.bulkImport')">
           <mat-icon>upload_file</mat-icon>
         </button>
-        <button mat-mini-fab color="basic" (click)="viewAuditLogs()" matTooltip="View Audit Logs">
+        <button mat-mini-fab color="basic" (click)="viewAuditLogs()" [matTooltip]="t('users.viewAuditLogs')">
           <mat-icon>receipt</mat-icon>
         </button>
       </div>
@@ -22,8 +22,8 @@
         <mat-select [(value)]="user_type_filter" (selectionChange)="onFilterChange()">
           <mat-option value="">{{ t('common.all') }}</mat-option>
           <mat-option value="admin">{{ t('users.admin') }}</mat-option>
-          <mat-option value="employee">Employee</mat-option>
-          <mat-option value="customer">Customer</mat-option>
+          <mat-option value="employee">{{ t('users.employee') }}</mat-option>
+          <mat-option value="customer">{{ t('users.customer') }}</mat-option>
         </mat-select>
       </mat-form-field>
 
@@ -58,7 +58,7 @@
     <mat-table [dataSource]="dataSource" matSort [style.opacity]="isLoading ? '0.5' : '1'">
       <!-- Avatar Column -->
       <ng-container matColumnDef="avatar">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>Avatar</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.avatar') }}</mat-header-cell>
         <mat-cell *matCellDef="let row" [matTooltip]="row.first_name + ' ' + row.last_name + ' (' + row.email + ')'">
           @if (row.avatar) {
           <img [src]="row.avatar" [alt]="row.first_name + ' ' + row.last_name" class="avatar"
@@ -74,7 +74,7 @@
 
       <!-- Employee ID Column -->
       <ng-container matColumnDef="employee_id">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>Employee ID</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.employeeId') }}</mat-header-cell>
         <mat-cell *matCellDef="let row"
           [matTooltip]="row.employee_id ? 'Employee ID: ' + row.employee_id : 'Customer (no employee ID)'">
           {{row.employee_id || '—'}}
@@ -95,7 +95,7 @@
 
       <!-- Email Column -->
       <ng-container matColumnDef="email">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.email') }}</mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.email') }}</mat-header-cell>
         <mat-cell *matCellDef="let row">
           <span matTooltip="{{row.email}}">{{row.email}}</span>
         </mat-cell>

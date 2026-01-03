@@ -3,6 +3,7 @@ import { LowStockListWidgetComponent } from './low-stock-list.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { By } from '@angular/platform-browser';
 import { Product } from '../../../products/models/product.model';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('LowStockListWidgetComponent', () => {
     let component: LowStockListWidgetComponent;
@@ -12,7 +13,8 @@ describe('LowStockListWidgetComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 LowStockListWidgetComponent,
-                RouterTestingModule
+                RouterTestingModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
             ]
         }).compileComponents();
 
@@ -30,7 +32,8 @@ describe('LowStockListWidgetComponent', () => {
         fixture.detectChanges();
         const emptyState = fixture.debugElement.query(By.css('.empty-state'));
         expect(emptyState).toBeTruthy();
-        expect(emptyState.nativeElement.textContent).toContain('All stock levels healthy');
+        // Check for element presence, not specific translated text
+        expect(emptyState.nativeElement.querySelector('mat-icon, .icon')).toBeTruthy();
     });
 
     it('should display products when provided', () => {
@@ -52,6 +55,7 @@ describe('LowStockListWidgetComponent', () => {
         const listItems = fixture.debugElement.queryAll(By.css('a[mat-list-item]'));
         expect(listItems.length).toBe(1);
         expect(listItems[0].nativeElement.textContent).toContain('Test Product');
-        expect(listItems[0].nativeElement.textContent).toContain('5 units');
+        // Check for numeric value instead of translated unit suffix
+        expect(listItems[0].nativeElement.textContent).toContain('5');
     });
 });

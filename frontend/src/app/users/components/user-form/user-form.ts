@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -29,6 +30,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatButtonModule,
     MatSnackBarModule,
     MatTooltipModule,
+    TranslocoModule
   ],
 })
 export class UserForm implements OnInit {
@@ -44,7 +46,8 @@ export class UserForm implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private translocoService: TranslocoService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -115,7 +118,7 @@ export class UserForm implements OnInit {
           });
         },
         error: (error) => {
-          this.snackBar.open('Error loading user data', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('users.errors.loadFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
           this.router.navigate(['/users']);
         }
       });
@@ -170,7 +173,7 @@ export class UserForm implements OnInit {
         // Update existing user
         this.userService.updateUser(this.user.id, formValue).subscribe({
           next: () => {
-            this.snackBar.open('User updated successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translocoService.translate('users.messages.updated'), this.translocoService.translate('common.close'), { duration: 3000 });
             this.router.navigate(['/users']);
           },
           error: (error) => {
@@ -186,7 +189,7 @@ export class UserForm implements OnInit {
         this.userService.createUser(formValue).subscribe({
           next: (user) => {
             console.log('UserForm: createUser success');
-            this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translocoService.translate('users.messages.created'), this.translocoService.translate('common.close'), { duration: 3000 });
             this.router.navigate(['/users']).then(() => console.log('UserForm: Navigation complete'));
           },
           error: (error) => {
@@ -199,7 +202,7 @@ export class UserForm implements OnInit {
 
       }
     } else {
-      this.snackBar.open('Please fill in all required fields correctly', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translocoService.translate('common.errors.fillRequired'), this.translocoService.translate('common.close'), { duration: 3000 });
     }
   }
 
@@ -234,9 +237,9 @@ export class UserForm implements OnInit {
     const password = this.form.get('password')?.value;
     const strength = this.getPasswordStrength(password);
 
-    if (strength <= 1) return 'Weak';
-    if (strength <= 2) return 'Medium';
-    if (strength >= 3) return 'Strong';
+    if (strength <= 1) return this.translocoService.translate('common.strengthWeak');
+    if (strength <= 2) return this.translocoService.translate('common.strengthMedium');
+    if (strength >= 3) return this.translocoService.translate('common.strengthStrong');
     return '';
   }
 
@@ -249,7 +252,7 @@ export class UserForm implements OnInit {
 
       this.userService.createUser(formValue).subscribe({
         next: (user) => {
-          this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('users.messages.created'), this.translocoService.translate('common.close'), { duration: 3000 });
 
           // Reset form for new user creation
           this.form.reset();

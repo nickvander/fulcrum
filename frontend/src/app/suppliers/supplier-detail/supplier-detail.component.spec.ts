@@ -12,6 +12,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SupplierProductManagerComponent } from '../supplier-product-manager/supplier-product-manager.component';
 import { SuppliersService } from '../suppliers.service';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 // Skip: DOM removeChild error in happy-dom environment, unrelated to component logic
 describe.skip('SupplierDetailComponent', () => {
@@ -34,7 +35,8 @@ describe.skip('SupplierDetailComponent', () => {
         MatTabsModule,
         MatSnackBarModule,
         MatDialogModule,
-        SupplierProductManagerComponent
+        SupplierProductManagerComponent,
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
       ],
       providers: [SuppliersService]
     })

@@ -64,11 +64,11 @@
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-                        <mat-label>{{ t('purchaseOrders.status') }}</mat-label>
+                        <mat-label>{{ t('common.status') }}</mat-label>
                         <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onFilterChange()">
                             <mat-option value="">{{ t('common.all') }}</mat-option>
                             <mat-option *ngFor="let status of statusOptions" [value]="status">
-                                {{status | titlecase}}
+                                {{ t(getStatusTranslationKey(status)) }}
                             </mat-option>
                         </mat-select>
                         <button *ngIf="selectedStatus" mat-icon-button matSuffix
@@ -125,11 +125,11 @@
 
                         <!-- Status Column -->
                         <ng-container matColumnDef="status">
-                            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('purchaseOrders.status') }}</th>
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.status') }}</th>
                             <td mat-cell *matCellDef="let po">
                                 <span class="status-badge" [style.background-color]="getStatusColor(po.status) + '20'"
                                     [style.color]="getStatusColor(po.status)">
-                                    {{po.status | titlecase}}
+                                    {{ t(getStatusTranslationKey(po.status)) }}
                                 </span>
                             </td>
                         </ng-container>
@@ -145,7 +145,8 @@
                         <!-- Created At Column -->
                         <ng-container matColumnDef="created_at">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.date') }}</th>
-                            <td mat-cell *matCellDef="let po">{{po.created_at | date:'mediumDate'}}</td>
+                            <td mat-cell *matCellDef="let po">{{po.created_at |
+                                date:'mediumDate':undefined:currentLang}}</td>
                         </ng-container>
 
                         <!-- Actions Column -->
