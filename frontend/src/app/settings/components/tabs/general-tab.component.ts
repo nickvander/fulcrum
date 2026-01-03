@@ -41,7 +41,6 @@ export class GeneralTabComponent implements OnInit {
     this.form.get('theme')?.valueChanges.subscribe(value => {
       const updatedSettings = { ...this.settingsService.loadSettings(), theme: value };
       this.settingsService.saveSettings(updatedSettings as any);
-      this.notificationService.showSuccess(`Theme updated to ${value} mode`);
     });
 
     // Auto-save language on change
@@ -49,7 +48,6 @@ export class GeneralTabComponent implements OnInit {
       this.translocoService.setActiveLang(value);
       const updatedSettings = { ...this.settingsService.loadSettings(), language: value };
       this.settingsService.saveSettings(updatedSettings as any);
-      this.notificationService.showSuccess(value === 'es-MX' ? 'Idioma actualizado a Español' : 'Language updated to English');
     });
   }
 }
