@@ -11,7 +11,8 @@ import { SuppliersService } from '../suppliers.service';
 import { Supplier, SupplierCreate } from '../../shared/models/supplier.model';
 import { SupplierProductManagerComponent } from '../supplier-product-manager/supplier-product-manager.component';
 
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-supplier-detail',
@@ -28,7 +29,8 @@ import { TranslocoModule } from '@ngneat/transloco';
     MatInputModule,
     MatButtonModule,
     SupplierProductManagerComponent,
-    TranslocoModule
+    TranslocoModule,
+    MatSnackBarModule
   ]
 })
 export class SupplierDetailComponent implements OnInit {
@@ -40,7 +42,9 @@ export class SupplierDetailComponent implements OnInit {
     private fb: FormBuilder,
     private suppliersService: SuppliersService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar,
+    private translocoService: TranslocoService
   ) {
     this.supplierForm = this.fb.group({
       name: ['', Validators.required],
@@ -78,11 +82,7 @@ export class SupplierDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading supplier', err);
-        // Show error to user via template or alert
-        // Assuming there isn't a global snackbar service injected right now easily, 
-        // asking the user to check console is hard. 
-        // I'll assume standard 404 means the ID is wrong, but I just verified ID 2 exists.
-        // I will retry just in case of race condition or add a delay? No.
+        this.snackBar.open(this.translocoService.translate('suppliers.messages.loadFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -93,7 +93,7 @@ export class SupplierDetailComponent implements OnInit {
     const supplierData: SupplierCreate = this.supplierForm.value;
 
     this.suppliersService.createSupplier(supplierData).subscribe(supplier => {
-      // Navigate to list or stay
+      this.snackBar.open(this.translocoService.translate('suppliers.messages.created'), this.translocoService.translate('common.close'), { duration: 3000 });
       this.router.navigate(['/suppliers/list']);
     });
   }

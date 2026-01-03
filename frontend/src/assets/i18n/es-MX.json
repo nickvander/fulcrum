@@ -322,6 +322,10 @@
         "errors": {
             "nameRequired": "El nombre del proveedor es requerido",
             "invalidEmail": "Correo electrónico inválido"
+        },
+        "messages": {
+            "created": "Proveedor creado exitosamente",
+            "loadFailed": "Error al cargar proveedor"
         }
     },
     "purchaseOrders": {
@@ -388,6 +392,46 @@
             "unlockOrder": "Desbloquear para Editar",
             "uploadInvoice": "Subir Factura",
             "clearDraft": "Borrar Borrador"
+        },
+        "messages": {
+            "unpackingBundle": "Desempaquetando paquete: {{name}}...",
+            "autoSelectedSupplier": "Proveedor seleccionado automáticamente: {{name}}",
+            "defaultSupplier": "Se usó el proveedor predeterminado del producto",
+            "incrementedQty": "Cantidad incrementada para {{name}}",
+            "addedProduct": "Se agregó {{name}} a la orden",
+            "selectSupplierFirst": "Por favor seleccione un proveedor primero",
+            "savedDraft": "Orden guardada como borrador",
+            "saveDraftRequired": {
+                "title": "Guardar Borrador Requerido",
+                "message": "Para usar la herramienta de asignación de costos, necesitamos guardar esta orden como borrador primero. ¿Continuar?"
+            },
+            "updated": "Orden actualizada exitosamente",
+            "deleteConfirm": {
+                "title": "Eliminar Orden de Compra",
+                "message": "¿Está seguro de que desea eliminar esta orden? Esta acción no se puede deshacer."
+            },
+            "deleteSuccess": "Orden de Compra eliminada exitosamente",
+            "deleteFailed": "Error al eliminar la orden",
+            "placeOrderConfirm": {
+                "title": "Realizar Pedido",
+                "message": "¿Está seguro de que desea realizar este pedido? Esto lo marcará como Ordenado."
+            },
+            "placed": "Pedido realizado exitosamente",
+            "restoredDraft": "Borrador restaurado de la sesión anterior",
+            "clearDraftConfirm": {
+                "title": "Limpiar Borrador",
+                "message": "¿Está seguro de que desea limpiar este borrador? Todos los datos ingresados se perderán."
+            },
+            "clearedDraft": "Borrador limpiado",
+            "unsavedChanges": {
+                "title": "Cambios sin guardar",
+                "message": "Tiene cambios sin guardar. ¿Está seguro de que desea salir?"
+            },
+            "unlockConfirm": {
+                "title": "Desbloquear Orden",
+                "message": "Esta orden está finalizada. Desbloquearla permite editar pero puede causar inconsistencias si ya fue procesada. ¿Está seguro?"
+            },
+            "unlocked": "Orden desbloqueada para edición"
         }
     },
     "expenses": {
@@ -420,9 +464,21 @@
             "yearly": "Anual"
         },
         "fields": {
-            "referenceNumber": "Número de Referencia",
+            "referenceNumber": "Referencia #",
             "customCategory": "Categoría Personalizada",
             "payment": "Método de Pago"
+        },
+        "categories": {
+            "marketing": "Marketing",
+            "software": "Software",
+            "rent": "Renta",
+            "shipping": "Envío",
+            "officeSupplies": "Artículos de Oficina",
+            "legal": "Legal",
+            "transportation": "Gasolina/Transporte",
+            "utilities": "Servicios",
+            "packingMaterials": "Materiales de Empaque",
+            "other": "Otro"
         }
     },
     "marketing": {
@@ -712,7 +768,9 @@
         },
         "noPendingChanges": "No hay cambios pendientes",
         "changeLogButton": "Registro de Cambios",
-        "changeLogDesc": "Ver historial de todos los cambios de datos, incluyendo si vinieron de Sheets o ediciones directas.",
+        "changeLogDesc": "Ver el historial de modificaciones de datos.",
+        "pendingSync": "Operaciones de Sincronización Pendientes",
+        "pendingSyncDesc": "Administre las tareas de sincronización pendientes para integraciones externas.",
         "viewLog": "Ver Registro",
         "marketingTab": "Marketing",
         "emailConfiguration": "Configuración de Correo",

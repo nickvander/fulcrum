@@ -322,6 +322,10 @@
         "errors": {
             "nameRequired": "Supplier name is required",
             "invalidEmail": "Invalid email address"
+        },
+        "messages": {
+            "created": "Supplier created successfully",
+            "loadFailed": "Error loading supplier"
         }
     },
     "purchaseOrders": {
@@ -388,6 +392,46 @@
             "unlockOrder": "Unlock to Edit",
             "uploadInvoice": "Upload Invoice",
             "clearDraft": "Clear Draft"
+        },
+        "messages": {
+            "unpackingBundle": "Unpacking bundle: {{name}}...",
+            "autoSelectedSupplier": "Auto-selected supplier: {{name}}",
+            "defaultSupplier": "Used default supplier from product",
+            "incrementedQty": "Incremented quantity for {{name}}",
+            "addedProduct": "Added {{name}} to order",
+            "selectSupplierFirst": "Please select a supplier first",
+            "savedDraft": "Order saved as Draft",
+            "saveDraftRequired": {
+                "title": "Save Draft Required",
+                "message": "To use the detailed cost allocation tool, we need to save this order as a Draft first. Continue?"
+            },
+            "updated": "Order updated successfully",
+            "deleteConfirm": {
+                "title": "Delete Purchase Order",
+                "message": "Are you sure you want to delete this order? This action cannot be undone."
+            },
+            "deleteSuccess": "Purchase Order deleted successfully",
+            "deleteFailed": "Failed to delete order",
+            "placeOrderConfirm": {
+                "title": "Place Order",
+                "message": "Are you sure you want to place this order? This will mark it as Ordered."
+            },
+            "placed": "Order placed successfully",
+            "restoredDraft": "Restored draft from previous session",
+            "clearDraftConfirm": {
+                "title": "Clear Draft",
+                "message": "Are you sure you want to clear this draft? All entered data will be lost."
+            },
+            "clearedDraft": "Draft cleared",
+            "unsavedChanges": {
+                "title": "Unsaved Changes",
+                "message": "You have unsaved changes. Are you sure you want to leave?"
+            },
+            "unlockConfirm": {
+                "title": "Unlock Order",
+                "message": "This order is finalized. Unlocking it allows editing but may cause data inconsistencies if already processed. Are you sure?"
+            },
+            "unlocked": "Order unlocked for editing"
         }
     },
     "expenses": {
@@ -423,6 +467,18 @@
             "referenceNumber": "Reference #",
             "customCategory": "Custom Category",
             "payment": "Payment Method"
+        },
+        "categories": {
+            "marketing": "Marketing",
+            "software": "Software",
+            "rent": "Rent",
+            "shipping": "Shipping",
+            "officeSupplies": "Office Supplies",
+            "legal": "Legal",
+            "transportation": "Gas/Transportation",
+            "utilities": "Utilities",
+            "packingMaterials": "Packing Materials",
+            "other": "Other"
         }
     },
     "marketing": {
@@ -712,7 +768,9 @@
         },
         "noPendingChanges": "No pending changes",
         "changeLogButton": "Change Log",
-        "changeLogDesc": "View history of all data changes, including whether they came from Sheets or direct edits.",
+        "changeLogDesc": "View the history of data modifications.",
+        "pendingSync": "Pending Sync Operations",
+        "pendingSyncDesc": "Manage pending synchronization tasks for external integrations.",
         "viewLog": "View Log",
         "marketingTab": "Marketing",
         "emailConfiguration": "Email Configuration",

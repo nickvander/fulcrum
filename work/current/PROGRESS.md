@@ -37,6 +37,12 @@
 - [x] Applied transloco to Marketplace Settings
 - [x] Added TranslocoModule to SuppliersModule
 
+#### Phase C: Code Modularity Refactoring 🚧 IN PROGRESS
+
+- [ ] Consolidate Material Module Imports (`MaterialModule`)
+- [ ] Refactor large components (`ProductList`, `Settings`)
+- [ ] Extract reusable UI patterns (`EmptyState`, `LoadingSpinner`)
+
 #### Phase D: Standardization & Automation ✅ COMPLETE
 
 - [x] Standardized common keys (Name, Email, Status, Price, Stock, etc.)

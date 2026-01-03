@@ -9,6 +9,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('PasswordResetDialog', () => {
     let component: PasswordResetDialog;
@@ -38,7 +39,11 @@ describe('PasswordResetDialog', () => {
             imports: [
                 PasswordResetDialog,
                 ReactiveFormsModule,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, 'es-MX': {} },
+                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },

@@ -5,6 +5,7 @@ import { MarketplacesService } from '../../marketplaces';
 import { of } from 'rxjs';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('MarketplaceListComponent', () => {
   let component: MarketplaceListComponent;
@@ -15,7 +16,11 @@ describe('MarketplaceListComponent', () => {
       imports: [
         MarketplaceListComponent,
         MatSnackBarModule,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, 'es-MX': {} },
+          translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+        })
       ],
       providers: [
         {

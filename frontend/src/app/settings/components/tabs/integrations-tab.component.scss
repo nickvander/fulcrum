@@ -1,0 +1,153 @@
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.sleek-field {
+    flex: 1;
+}
+
+.form-actions {
+    margin-top: 16px;
+}
+
+.api-keys-list {
+    margin-bottom: 16px;
+}
+
+.api-key-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.key-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.key-name {
+    font-weight: 500;
+    width: 150px;
+    color: var(--text-main);
+}
+
+.key-prefix {
+    background: var(--bg-hover);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: var(--text-secondary);
+}
+
+.key-status {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+
+    &.active {
+        background: var(--success-bg);
+        color: var(--success-color);
+    }
+
+    &.revoked {
+        background: var(--error-bg);
+        color: var(--error-color);
+    }
+}
+
+.revoked-toggle {
+    margin-top: 8px;
+}
+
+.empty-state-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    color: var(--text-hint);
+    font-style: italic;
+}
+
+.new-key-form {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.new-key-result {
+    background: var(--success-bg);
+    border: 1px solid var(--success-color);
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+
+    .success-banner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--success-color);
+        margin-bottom: 8px;
+    }
+
+    .warning-text {
+        font-size: 0.85rem;
+        color: var(--warning-color);
+        margin-bottom: 12px;
+    }
+
+    .key-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+
+        code {
+            flex: 1;
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+    }
+}
+
+.pending-sync-row,
+.change-log-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pending-info,
+.log-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pending-label {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.pending-badge {
+    background: var(--info-bg);
+    color: var(--info-color);
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.empty-hint {
+    color: var(--text-hint);
+    font-style: italic;
+}

@@ -163,7 +163,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       if (product) {
         // --- Bundle Handling ---
         if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
-          this.snackBar.open(`Unpacking bundle: ${product.name}...`, 'Close', { duration: 2000 });
+          const msg = this.translocoService.translate('purchaseOrders.messages.unpackingBundle', { name: product.name });
+          this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 2000 });
           product.bundle_components.forEach(component => {
             // Recursively add each component
             // Note: Component logic assumes component_id is a valid Product ID
@@ -184,7 +185,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             selectedSupplierId = supplierProducts[0].supplier_id;
             selectedSupplierProduct = supplierProducts[0];
             this.poForm.patchValue({ supplier_id: selectedSupplierId });
-            this.snackBar.open(`Auto-selected supplier: ${supplierProducts[0].supplier_name}`, 'Close', { duration: 3000 });
+            const msg = this.translocoService.translate('purchaseOrders.messages.autoSelectedSupplier', { name: supplierProducts[0].supplier_name });
+            this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 3000 });
           } else if (supplierProducts.length > 1) {
             // Multiple sources -> Ask user
             const dialogRef = this.dialog.open(SupplierSelectionDialogComponent, {
@@ -210,7 +212,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             if (product.supplier_id) {
               selectedSupplierId = product.supplier_id;
               this.poForm.patchValue({ supplier_id: selectedSupplierId });
-              this.snackBar.open(`Used default supplier from product`, 'Close', { duration: 3000 });
+              const msg = this.translocoService.translate('purchaseOrders.messages.defaultSupplier');
+              this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 3000 });
             }
           }
         } else {
@@ -235,7 +238,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       const currentQty = existing.get('quantity_ordered')?.value || 0;
       existing.patchValue({ quantity_ordered: currentQty + quantity });
       // Also update cost if it was 0? No, keep existing price if set.
-      this.snackBar.open(`Incremented quantity for ${product.name}`, 'Close', { duration: 3000 });
+      const msg = this.translocoService.translate('purchaseOrders.messages.incrementedQty', { name: product.name });
+      this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 3000 });
     } else {
       // Remove empty first item if it's the only one and has no product_id
       const firstItem = this.items.at(0);
@@ -249,7 +253,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         quantity_ordered: quantity,
         unit_cost: unitCost || product.cost_price || 0
       });
-      this.snackBar.open(`Added ${product.name} to order`, 'Close', { duration: 3000 });
+      const msg = this.translocoService.translate('purchaseOrders.messages.addedProduct', { name: product.name });
+      this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 3000 });
     }
   }
 
@@ -323,8 +328,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   unlockOrder(): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Unlock Order',
-        message: 'This order is finalized. Unlocking it allows editing but may cause data inconsistencies if already processed. Are you sure?',
+        title: this.translocoService.translate('purchaseOrders.messages.unlockConfirm.title'),
+        message: this.translocoService.translate('purchaseOrders.messages.unlockConfirm.message'),
         confirmColor: 'warn'
       }
     });
@@ -333,7 +338,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       if (result) {
         this.isLocked = false;
         this.poForm.enable();
-        this.snackBar.open('Order unlocked for editing', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.unlocked'), this.translocoService.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -495,7 +500,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     };
 
     if (!newPo.supplier_id) {
-      this.snackBar.open('Please select a supplier first', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.selectSupplierFirst'), this.translocoService.translate('common.close'), { duration: 3000 });
       return;
     }
 
@@ -506,7 +511,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
       // Update URL without reloading
       window.history.replaceState({}, '', `/suppliers/po/${po.id}`);
-      this.snackBar.open('Order saved as Draft', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.savedDraft'), this.translocoService.translate('common.close'), { duration: 3000 });
 
       if (actionCallback) {
         actionCallback();
@@ -518,8 +523,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     if (!this.isEditMode || !this.poId) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Save Draft Required',
-          message: 'To use the detailed cost allocation tool, we need to save this order as a Draft first. Continue?'
+          title: this.translocoService.translate('purchaseOrders.messages.saveDraftRequired.title'),
+          message: this.translocoService.translate('purchaseOrders.messages.saveDraftRequired.message')
         }
       });
 
@@ -586,8 +591,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Purchase Order',
-        message: 'Are you sure you want to delete this order? This action cannot be undone.',
+        title: this.translocoService.translate('purchaseOrders.messages.deleteConfirm.title'),
+        message: this.translocoService.translate('purchaseOrders.messages.deleteConfirm.message'),
         confirmColor: 'warn'
       }
     });
@@ -596,13 +601,13 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       if (result) {
         this.suppliersService.deletePurchaseOrder(this.poId!).subscribe({
           next: () => {
-            this.snackBar.open('Purchase Order deleted successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.deleteSuccess'), this.translocoService.translate('common.close'), { duration: 3000 });
             this.router.navigate(['/suppliers/po/list']);
           },
           error: (err) => {
             // Backend will send 400 if items are received
-            const msg = err.error?.detail || 'Failed to delete order';
-            this.snackBar.open(msg, 'Close', { duration: 5000 });
+            const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.messages.deleteFailed');
+            this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
           }
         });
       }
@@ -622,15 +627,15 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     // If existing, update status
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Place Order',
-        message: 'Are you sure you want to place this order? This will mark it as Ordered.'
+        title: this.translocoService.translate('purchaseOrders.messages.placeOrderConfirm.title'),
+        message: this.translocoService.translate('purchaseOrders.messages.placeOrderConfirm.message')
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.suppliersService.updatePurchaseOrderStatus(this.poId!, PurchaseOrderStatus.ORDERED).subscribe(() => {
-          this.snackBar.open('Order placed successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.placed'), this.translocoService.translate('common.close'), { duration: 3000 });
           this.loadPurchaseOrder(this.poId!);
           this.router.navigate(['/suppliers/po/list']);
         });
@@ -645,7 +650,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     if (this.isEditMode && this.poId) {
       this.updateOrder().subscribe(() => {
-        this.snackBar.open('Order updated successfully', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.updated'), this.translocoService.translate('common.close'), { duration: 3000 });
         this.router.navigate(['/suppliers/po/list']);
       });
     } else {
@@ -732,7 +737,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           this.addLineItem();
         }
 
-        this.snackBar.open('Restored draft from previous session', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.restoredDraft'), this.translocoService.translate('common.close'), { duration: 3000 });
       } catch (e) {
         console.error('Failed to parse draft', e);
         this.addLineItem();
@@ -745,8 +750,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   clearDraft(): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Clear Draft',
-        message: 'Are you sure you want to clear this draft? All entered data will be lost.'
+        title: this.translocoService.translate('purchaseOrders.messages.clearDraftConfirm.title'),
+        message: this.translocoService.translate('purchaseOrders.messages.clearDraftConfirm.message')
       }
     });
 
@@ -771,7 +776,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         this.productSearchControls = [];
         this.filteredProducts$ = [];
         this.addLineItem(); // Add one empty row
-        this.snackBar.open('Draft cleared', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.clearedDraft'), this.translocoService.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -780,8 +785,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     if (this.poForm.dirty) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Unsaved Changes',
-          message: 'You have unsaved changes. Are you sure you want to leave?'
+          title: this.translocoService.translate('purchaseOrders.messages.unsavedChanges.title'),
+          message: this.translocoService.translate('purchaseOrders.messages.unsavedChanges.message')
         }
       });
       dialogRef.afterClosed().subscribe(result => {

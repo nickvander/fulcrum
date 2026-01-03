@@ -63,7 +63,7 @@
                 <mat-label>{{ t('expenses.category') }}</mat-label>
                 <mat-select formControlName="category" (selectionChange)="onCategoryChange($event.value)">
                     @for (cat of categories; track cat) {
-                    <mat-option [value]="cat">{{cat}}</mat-option>
+                    <mat-option [value]="cat">{{ t('expenses.categories.' + getCategoryKey(cat)) }}</mat-option>
                     }
                     <mat-option value="__custom__">+ {{ t('common.add') }}</mat-option>
                 </mat-select>
@@ -109,11 +109,7 @@
                         -->
                         @for (method of paymentMethods; track method.value) {
                         <mat-option [value]="method.value">
-                            {{
-                            method.value === 'card' ? t('purchaseOrders.paymentMethod.creditCard') :
-                            method.value === 'transfer' ? t('purchaseOrders.paymentMethod.bankTransfer') :
-                            t('purchaseOrders.paymentMethod.' + method.value)
-                            }}
+                            {{ t('purchaseOrders.paymentMethod.' + getPaymentMethodKey(method.value)) }}
                         </mat-option>
                         }
                     </mat-select>

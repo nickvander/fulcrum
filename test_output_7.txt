@@ -5,48 +5,50 @@
 ❯ Building...
 ✔ Building...
 Initial chunk files                                                                                 | Names                                                                                            |  Raw size
-chunk-Z4UYGROB.js                                                                                   | -                                                                                                | 159.86 kB | 
+chunk-HWTF7VYS.js                                                                                   | -                                                                                                | 162.08 kB | 
 styles.css                                                                                          | styles                                                                                           | 155.00 kB | 
-spec-app-settings-components-settings-settings.js                                                   | spec-app-settings-components-settings-settings                                                   | 110.00 kB | 
-spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component.js             | spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component             | 101.65 kB | 
-chunk-UNKWRRNQ.js                                                                                   | -                                                                                                | 101.06 kB | 
-chunk-YON2CJKL.js                                                                                   | -                                                                                                |  99.52 kB | 
-spec-app-marketing-components-campaign-list-campaign-list.component.js                              | spec-app-marketing-components-campaign-list-campaign-list.component                              |  91.08 kB | 
-chunk-IG2BXFNF.js                                                                                   | -                                                                                                |  70.74 kB | 
-spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component.js             | spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component             |  66.32 kB | 
+spec-app-settings-components-settings-settings.js                                                   | spec-app-settings-components-settings-settings                                                   | 133.90 kB | 
+spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component.js             | spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component             | 110.35 kB | 
+chunk-QSIWTHLC.js                                                                                   | -                                                                                                | 106.40 kB | 
+chunk-BBHYWHIQ.js                                                                                   | -                                                                                                | 101.11 kB | 
+spec-app-marketing-components-campaign-list-campaign-list.component.js                              | spec-app-marketing-components-campaign-list-campaign-list.component                              |  91.09 kB | 
+chunk-ORJHY3MS.js                                                                                   | -                                                                                                |  71.66 kB | 
+spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component.js             | spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component             |  67.05 kB | 
 spec-app-marketing-components-campaign-wizard-campaign-wizard.component.js                          | spec-app-marketing-components-campaign-wizard-campaign-wizard.component                          |  63.69 kB | 
-spec-app-marketing-components-connector-settings-connector-settings.component.js                    | spec-app-marketing-components-connector-settings-connector-settings.component                    |  58.77 kB | 
-spec-app-suppliers-supplier-list-supplier-list.component.js                                         | spec-app-suppliers-supplier-list-supplier-list.component                                         |  40.21 kB | 
-spec-app-marketplaces-pages-marketplace-list-marketplace-list.js                                    | spec-app-marketplaces-pages-marketplace-list-marketplace-list                                    |  39.92 kB | 
-chunk-FVOCRGE7.js                                                                                   | -                                                                                                |  37.96 kB | 
-spec-app-users-components-user-form-user-form.js                                                    | spec-app-users-components-user-form-user-form                                                    |  37.89 kB | 
-spec-app-users-components-audit-log-list-audit-log-list.js                                          | spec-app-users-components-audit-log-list-audit-log-list                                          |  35.37 kB | 
+spec-app-marketing-components-connector-settings-connector-settings.component.js                    | spec-app-marketing-components-connector-settings-connector-settings.component                    |  60.99 kB | 
+spec-app-users-components-user-form-user-form.js                                                    | spec-app-users-components-user-form-user-form                                                    |  43.35 kB | 
+spec-app-marketplaces-pages-marketplace-list-marketplace-list.js                                    | spec-app-marketplaces-pages-marketplace-list-marketplace-list                                    |  43.09 kB | 
+spec-app-suppliers-supplier-list-supplier-list.component.js                                         | spec-app-suppliers-supplier-list-supplier-list.component                                         |  40.20 kB | 
+spec-app-users-components-audit-log-list-audit-log-list.js                                          | spec-app-users-components-audit-log-list-audit-log-list                                          |  38.84 kB | 
+chunk-MBPUSVZ3.js                                                                                   | -                                                                                                |  37.96 kB | 
+spec-app-expenses-components-expense-dialog-expense-dialog.js                                       | spec-app-expenses-components-expense-dialog-expense-dialog                                       |  36.30 kB | 
+chunk-QUJ3GOZE.js                                                                                   | -                                                                                                |  34.20 kB | 
 chunk-HITQFE7J.js                                                                                   | -                                                                                                |  34.18 kB | 
 spec-app-products-components-product-comparison-product-comparison.js                               | spec-app-products-components-product-comparison-product-comparison                               |  33.73 kB | 
-chunk-ZYVOZDIJ.js                                                                                   | -                                                                                                |  33.17 kB | 
+chunk-ZEEZAOHR.js                                                                                   | -                                                                                                |  33.17 kB | 
+spec-app-marketing-components-campaign-calendar-campaign-calendar.component.js                      | spec-app-marketing-components-campaign-calendar-campaign-calendar.component                      |  32.43 kB | 
 chunk-OTZIQR5N.js                                                                                   | -                                                                                                |  32.19 kB | 
-chunk-SQLYXAYO.js                                                                                   | -                                                                                                |  30.04 kB | 
-spec-app-marketing-components-campaign-calendar-campaign-calendar.component.js                      | spec-app-marketing-components-campaign-calendar-campaign-calendar.component                      |  29.59 kB | 
+chunk-76CWESBT.js                                                                                   | -                                                                                                |  31.80 kB | 
+spec-app-marketplaces-pages-marketplace-detail-marketplace-detail.js                                | spec-app-marketplaces-pages-marketplace-detail-marketplace-detail                                |  31.28 kB | 
+spec-app-suppliers-supplier-detail-supplier-detail.component.js                                     | spec-app-suppliers-supplier-detail-supplier-detail.component                                     |  30.32 kB | 
 chunk-JOWTJOXQ.js                                                                                   | -                                                                                                |  28.78 kB | 
 spec-app-marketing-components-campaign-detail-campaign-detail.component.js                          | spec-app-marketing-components-campaign-detail-campaign-detail.component                          |  28.07 kB | 
-spec-app-marketplaces-pages-marketplace-detail-marketplace-detail.js                                | spec-app-marketplaces-pages-marketplace-detail-marketplace-detail                                |  27.84 kB | 
-spec-app-auth-components-login-login.js                                                             | spec-app-auth-components-login-login                                                             |  26.86 kB | 
+spec-app-auth-components-login-login.js                                                             | spec-app-auth-components-login-login                                                             |  27.16 kB | 
 chunk-DCVYJOSC.js                                                                                   | -                                                                                                |  26.80 kB | 
-chunk-WGPPBPQ5.js                                                                                   | -                                                                                                |  23.84 kB | 
+chunk-VP7TYNX4.js                                                                                   | -                                                                                                |  25.57 kB | 
+chunk-MC5PM4P5.js                                                                                   | -                                                                                                |  25.50 kB | 
+chunk-GPT7IDQJ.js                                                                                   | -                                                                                                |  25.11 kB | 
+chunk-OIXBRY7U.js                                                                                   | -                                                                                                |  24.88 kB | 
+chunk-X6XBNC2G.js                                                                                   | -                                                                                                |  23.79 kB | 
 spec-app-auth-components-reset-password-reset-password.component.js                                 | spec-app-auth-components-reset-password-reset-password.component                                 |  23.66 kB | 
-chunk-UL6Z6OEB.js                                                                                   | -                                                                                                |  23.35 kB | 
-chunk-6JOXWHYV.js                                                                                   | -                                                                                                |  23.25 kB | 
+spec-app-products-components-product-list-product-list.js                                           | spec-app-products-components-product-list-product-list                                           |  23.41 kB | 
+spec-app-dashboard-pages-dashboard-dashboard.component.js                                           | spec-app-dashboard-pages-dashboard-dashboard.component                                           |  23.23 kB | 
+chunk-M7CJGOXQ.js                                                                                   | -                                                                                                |  23.19 kB | 
 spec-app-products-components-enhanced-image-management-enhanced-image-management.js                 | spec-app-products-components-enhanced-image-management-enhanced-image-management                 |  23.14 kB | 
-spec-app-dashboard-pages-dashboard-dashboard.component.js                                           | spec-app-dashboard-pages-dashboard-dashboard.component                                           |  23.05 kB | 
-chunk-KM3GU2I7.js                                                                                   | -                                                                                                |  22.91 kB | 
-spec-app-suppliers-supplier-detail-supplier-detail.component.js                                     | spec-app-suppliers-supplier-detail-supplier-detail.component                                     |  22.64 kB | 
-chunk-T4VLU6XH.js                                                                                   | -                                                                                                |  22.62 kB | 
-spec-app-products-components-product-list-product-list.js                                           | spec-app-products-components-product-list-product-list                                           |  22.35 kB | 
-chunk-NSOVAKXC.js                                                                                   | -                                                                                                |  21.73 kB | 
+chunk-THQHSGSK.js                                                                                   | -                                                                                                |  20.80 kB | 
 chunk-77VT2VSS.js                                                                                   | -                                                                                                |  19.97 kB | 
 chunk-TCG7EWMO.js                                                                                   | -                                                                                                |  19.23 kB | 
-chunk-5IHRCV3O.js                                                                                   | -                                                                                                |  19.22 kB | 
-chunk-JES4HK6R.js                                                                                   | -                                                                                                |  18.96 kB | 
+chunk-OSEUOEXQ.js                                                                                   | -                                                                                                |  18.99 kB | 
 spec-app-users-components-force-password-change-force-password-change.component.js                  | spec-app-users-components-force-password-change-force-password-change.component                  |  18.88 kB | 
 spec-app-auth-components-forgot-password-forgot-password.component.js                               | spec-app-auth-components-forgot-password-forgot-password.component                               |  18.63 kB | 
 chunk-WNSEQ7LX.js                                                                                   | -                                                                                                |  18.39 kB | 
@@ -57,17 +59,17 @@ chunk-W7NVY6G7.js                                                               
 chunk-XPQ7IJB3.js                                                                                   | -                                                                                                |  14.37 kB | 
 chunk-EJF754GH.js                                                                                   | -                                                                                                |  14.07 kB | 
 spec-app-products-components-product-form-product-form-error-handling.js                            | spec-app-products-components-product-form-product-form-error-handling                            |  13.91 kB | 
-spec-app-app.component.js                                                                           | spec-app-app.component                                                                           |  12.73 kB | 
+spec-app-app.component.js                                                                           | spec-app-app.component                                                                           |  13.43 kB | 
+chunk-R6ZQRTA7.js                                                                                   | -                                                                                                |  13.41 kB | 
 chunk-TAWIXE7H.js                                                                                   | -                                                                                                |  12.52 kB | 
-chunk-OZRLCSS6.js                                                                                   | -                                                                                                |  12.22 kB | 
 spec-app-settings-components-custom-field-list-custom-field-list.js                                 | spec-app-settings-components-custom-field-list-custom-field-list                                 |  12.01 kB | 
+chunk-ITILPNFI.js                                                                                   | -                                                                                                |  11.40 kB | 
 spec-app-products-components-product-form-product-form-create.js                                    | spec-app-products-components-product-form-product-form-create                                    |  10.73 kB | 
-chunk-QNQJOFVS.js                                                                                   | -                                                                                                |  10.41 kB | 
-chunk-DGFSEUIY.js                                                                                   | -                                                                                                |   9.98 kB | 
+spec-app-products-product-ingestion-product-ingestion.js                                            | spec-app-products-product-ingestion-product-ingestion                                            |  10.53 kB | 
+chunk-4IWTJ6WO.js                                                                                   | -                                                                                                |   9.98 kB | 
 chunk-DZG6GE6E.js                                                                                   | -                                                                                                |   9.36 kB | 
-spec-app-products-product-ingestion-product-ingestion.js                                            | spec-app-products-product-ingestion-product-ingestion                                            |   9.03 kB | 
 spec-app-users-components-user-bulk-import-dialog-user-bulk-import-dialog.js                        | spec-app-users-components-user-bulk-import-dialog-user-bulk-import-dialog                        |   9.00 kB | 
-spec-app-products-components-products-products.js                                                   | spec-app-products-components-products-products                                                   |   8.84 kB | 
+spec-app-products-components-products-products.js                                                   | spec-app-products-components-products-products                                                   |   8.96 kB | 
 spec-app-users-components-user-list-user-list.js                                                    | spec-app-users-components-user-list-user-list                                                    |   8.37 kB | 
 spec-app-users-components-user-list-user-list-ux.js                                                 | spec-app-users-components-user-list-user-list-ux                                                 |   8.12 kB | 
 spec-app-products-components-product-form-product-form-advanced-error-handling.js                   | spec-app-products-components-product-form-product-form-advanced-error-handling                   |   8.04 kB | 
@@ -75,7 +77,7 @@ spec-app-products-components-product-form-product-form-edit.js                  
 chunk-XE6M6P2I.js                                                                                   | -                                                                                                |   7.68 kB | 
 spec-app-products-services-product.js                                                               | spec-app-products-services-product                                                               |   7.65 kB | 
 spec-app-users-components-user-create-modal-user-create-modal-ux.js                                 | spec-app-users-components-user-create-modal-user-create-modal-ux                                 |   7.55 kB | 
-chunk-TM2QMGDX.js                                                                                   | -                                                                                                |   7.24 kB | 
+chunk-6CU5VAJP.js                                                                                   | -                                                                                                |   7.19 kB | 
 spec-app-products-components-product-form-product-form-image.js                                     | spec-app-products-components-product-form-product-form-image                                     |   7.17 kB | 
 spec-app-users-services-user.service.js                                                             | spec-app-users-services-user.service                                                             |   7.08 kB | 
 spec-app-products-components-product-form-product-form-edge-cases.js                                | spec-app-products-components-product-form-product-form-edge-cases                                |   6.72 kB | 
@@ -83,23 +85,24 @@ chunk-MTE7AV2A.js                                                               
 chunk-TDDHO7M7.js                                                                                   | -                                                                                                |   5.85 kB | 
 spec-app-shared-components-image-dialog-image-dialog.js                                             | spec-app-shared-components-image-dialog-image-dialog                                             |   5.74 kB | 
 chunk-LN3R4WPD.js                                                                                   | -                                                                                                |   5.65 kB | 
+chunk-X7X5UA7G.js                                                                                   | -                                                                                                |   5.27 kB | 
+chunk-MY6Z62RO.js                                                                                   | -                                                                                                |   5.25 kB | 
 spec-app-products-components-product-form-product-form-image-gallery.component.js                   | spec-app-products-components-product-form-product-form-image-gallery.component                   |   5.18 kB | 
 chunk-FVCY32IZ.js                                                                                   | -                                                                                                |   5.14 kB | 
 chunk-73VDDOLD.js                                                                                   | -                                                                                                |   5.00 kB | 
-spec-app-shared-directives-infinite-scroll.directive.js                                             | spec-app-shared-directives-infinite-scroll.directive                                             |   4.97 kB | 
 spec-app-users-services-bulk-import.service.js                                                      | spec-app-users-services-bulk-import.service                                                      |   4.82 kB | 
 chunk-KW5PPPAI.js                                                                                   | -                                                                                                |   4.81 kB | 
 chunk-NXYRM5NR.js                                                                                   | -                                                                                                |   4.47 kB | 
+spec-app-users-components-password-reset-dialog-password-reset-dialog.js                            | spec-app-users-components-password-reset-dialog-password-reset-dialog                            |   4.21 kB | 
 chunk-HI7Z4XWC.js                                                                                   | -                                                                                                |   4.15 kB | 
+spec-app-products-components-product-details-dialog-product-details-dialog.component.js             | spec-app-products-components-product-details-dialog-product-details-dialog.component             |   4.14 kB | 
 spec-app-marketing-components-quick-post-detail-dialog-quick-post-detail-dialog.component.js        | spec-app-marketing-components-quick-post-detail-dialog-quick-post-detail-dialog.component        |   4.11 kB | 
 spec-app-products-components-product-variants-product-variants.js                                   | spec-app-products-components-product-variants-product-variants                                   |   3.99 kB | 
 spec-app-products-components-batch-action-toolbar-batch-action-toolbar.js                           | spec-app-products-components-batch-action-toolbar-batch-action-toolbar                           |   3.98 kB | 
-spec-app-users-components-password-reset-dialog-password-reset-dialog.js                            | spec-app-users-components-password-reset-dialog-password-reset-dialog                            |   3.96 kB | 
-spec-app-products-components-product-details-dialog-product-details-dialog.component.js             | spec-app-products-components-product-details-dialog-product-details-dialog.component             |   3.89 kB | 
+spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component.js           | spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component           |   3.91 kB | 
 spec-app-products-components-product-filters-product-filters.js                                     | spec-app-products-components-product-filters-product-filters                                     |   3.88 kB | 
 spec-app-products-components-stock-history-dialog-stock-history-dialog.component.js                 | spec-app-products-components-stock-history-dialog-stock-history-dialog.component                 |   3.79 kB | 
 chunk-QCSBRV2P.js                                                                                   | -                                                                                                |   3.66 kB | 
-spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component.js           | spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component           |   3.65 kB | 
 chunk-7T2ENOEB.js                                                                                   | -                                                                                                |   3.65 kB | 
 spec-app-products-services-batch-operations.service.js                                              | spec-app-products-services-batch-operations.service                                              |   3.58 kB | 
 spec-app-products-components-pagination-pagination.js                                               | spec-app-products-components-pagination-pagination                                               |   3.57 kB | 
@@ -107,31 +110,35 @@ spec-app-products-components-stock-adjustment-dialog-stock-adjustment-dialog.js 
 spec-app-suppliers-purchase-orders-cost-allocation-dialog-cost-allocation-dialog.component.js       | spec-app-suppliers-purchase-orders-cost-allocation-dialog-cost-allocation-dialog.component       |   3.55 kB | 
 spec-app-suppliers-purchase-orders-receiving-dialog-receiving-dialog.component.js                   | spec-app-suppliers-purchase-orders-receiving-dialog-receiving-dialog.component                   |   3.47 kB | 
 chunk-DOB37P2C.js                                                                                   | -                                                                                                |   3.45 kB | 
+chunk-GN5MU3EN.js                                                                                   | -                                                                                                |   3.42 kB | 
+chunk-JGOXSBDG.js                                                                                   | -                                                                                                |   3.35 kB | 
 chunk-S3NIZ4U2.js                                                                                   | -                                                                                                |   3.35 kB | 
 spec-app-marketing-components-quick-post-dialog-quick-post-dialog.component.js                      | spec-app-marketing-components-quick-post-dialog-quick-post-dialog.component                      |   3.10 kB | 
 chunk-TULVJMRC.js                                                                                   | -                                                                                                |   3.01 kB | 
-chunk-2A27SBJ6.js                                                                                   | -                                                                                                |   2.95 kB | 
+spec-app-products-pages-product-dashboard-product-dashboard.component.js                            | spec-app-products-pages-product-dashboard-product-dashboard.component                            |   2.82 kB | 
 chunk-7HYHBWIQ.js                                                                                   | -                                                                                                |   2.82 kB | 
 spec-app-products-services-product-comparison.service.js                                            | spec-app-products-services-product-comparison.service                                            |   2.79 kB | 
-spec-app-products-pages-product-dashboard-product-dashboard.component.js                            | spec-app-products-pages-product-dashboard-product-dashboard.component                            |   2.65 kB | 
-spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component.js             | spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component             |   2.48 kB | 
-spec-app-dashboard-widgets-low-stock-list-low-stock-list.component.js                               | spec-app-dashboard-widgets-low-stock-list-low-stock-list.component                               |   2.42 kB | 
+spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component.js             | spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component             |   2.63 kB | 
+spec-app-settings-components-change-log-dialog-change-log-dialog.js                                 | spec-app-settings-components-change-log-dialog-change-log-dialog                                 |   2.58 kB | 
+spec-app-dashboard-widgets-low-stock-list-low-stock-list.component.js                               | spec-app-dashboard-widgets-low-stock-list-low-stock-list.component                               |   2.56 kB | 
+spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component.js                         | spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component                         |   2.55 kB | 
+chunk-UM2GVXRM.js                                                                                   | -                                                                                                |   2.48 kB | 
 chunk-LF6RV7CL.js                                                                                   | -                                                                                                |   2.31 kB | 
 spec-app-suppliers-purchase-orders-supplier-selection-dialog-supplier-selection-dialog.component.js | spec-app-suppliers-purchase-orders-supplier-selection-dialog-supplier-selection-dialog.component |   2.28 kB | 
-spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component.js                         | spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component                         |   2.26 kB | 
+spec-app-shared-directives-infinite-scroll.directive.js                                             | spec-app-shared-directives-infinite-scroll.directive                                             |   2.25 kB | 
 chunk-NKKYPARP.js                                                                                   | -                                                                                                |   2.23 kB | 
 spec-app-suppliers-supplier-product-manager-supplier-product-manager.component.js                   | spec-app-suppliers-supplier-product-manager-supplier-product-manager.component                   |   2.19 kB | 
+spec-app-shared-components-date-range-presets-date-range-presets.component.js                       | spec-app-shared-components-date-range-presets-date-range-presets.component                       |   2.18 kB | 
 chunk-H5RVQ2HP.js                                                                                   | -                                                                                                |   2.17 kB | 
 chunk-SFJ6U3II.js                                                                                   | -                                                                                                |   2.16 kB | 
 spec-app-users-users.js                                                                             | spec-app-users-users                                                                             |   2.02 kB | 
-spec-app-shared-components-date-range-presets-date-range-presets.component.js                       | spec-app-shared-components-date-range-presets-date-range-presets.component                       |   2.00 kB | 
 spec-app-dashboard-widgets-stat-card-stat-card.component.js                                         | spec-app-dashboard-widgets-stat-card-stat-card.component                                         |   1.96 kB | 
 spec-app-core-components-sidenav-sidenav.js                                                         | spec-app-core-components-sidenav-sidenav                                                         |   1.58 kB | 
 chunk-GESPVYGS.js                                                                                   | -                                                                                                |   1.56 kB | 
+spec-app-shared-components-status-filter-status-filter.component.js                                 | spec-app-shared-components-status-filter-status-filter.component                                 |   1.48 kB | 
 spec-app-settings-components-custom-field-dialog-custom-field-dialog.js                             | spec-app-settings-components-custom-field-dialog-custom-field-dialog                             |   1.43 kB | 
 chunk-GEWRVAOP.js                                                                                   | -                                                                                                |   1.38 kB | 
 chunk-TRPV7GQW.js                                                                                   | -                                                                                                |   1.33 kB | 
-spec-app-shared-components-status-filter-status-filter.component.js                                 | spec-app-shared-components-status-filter-status-filter.component                                 |   1.30 kB | 
 init-testbed.js                                                                                     | init-testbed                                                                                     |   1.25 kB | 
 spec-app-shared-components-marketplace-status-marketplace-status.component.js                       | spec-app-shared-components-marketplace-status-marketplace-status.component                       |   1.20 kB | 
 spec-app-core-components-header-header.js                                                           | spec-app-core-components-header-header                                                           |   1.09 kB | 
@@ -147,30 +154,97 @@ spec-app-shared-pipes-safe-url-pipe.js                                          
 chunk-2Y7KLMLV.js                                                                                   | -                                                                                                | 345 bytes | 
 polyfills.js                                                                                        | polyfills                                                                                        | 121 bytes | 
 
-                                                                                                    | Initial total                                                                                    |   2.48 MB
+                                                                                                    | Initial total                                                                                    |   2.66 MB
 
 Lazy chunk files                                                                                    | Names                                                                                            |  Raw size
-chunk-AVEEAW5G.js                                                                                   | pending-sync-dialog                                                                              |  37.08 kB | 
-chunk-P3ZJ64X7.js                                                                                   | change-log-dialog                                                                                |  29.17 kB | 
+chunk-I5DOIX6V.js                                                                                   | pending-sync-dialog                                                                              |  40.25 kB | 
+chunk-KNJSLOY4.js                                                                                   | change-log-dialog                                                                                | 362 bytes | 
 
-Application bundle generation complete. [8.051 seconds] - 2026-01-02T22:46:22.549Z
+Application bundle generation complete. [11.106 seconds] - 2026-01-03T03:07:22.067Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: InfiniteScrollDirective is not used within the template of ProductList[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/products/components/product-list/product-list.ts:48:4:
+[37m      48 │     [32mInfiniteScrollDirective[37m
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: EmptyStateComponent is not used within the template of IntegrationsTabComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/settings/components/tabs/integrations-tab.component.ts:16:93:
+[37m      16 │ ...ormsModule, TranslocoModule, MaterialModule, [32mEmptyStateComponent[37m],
+         ╵                                                 [32m~~~~~~~~~~~~~~~~~~~[0m
+
 
 
 [1m[46m RUN [49m[22m [36mv4.0.15 [39m[90m/home/nickvander/fulcrum/frontend[39m
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-comparison/product-comparison.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 431[2mms[22m[39m
- [31m❯[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-list/supplier-list.component.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 209[2mms[22m[39m
-[31m     [31m×[31m should create[39m[32m 158[2mms[22m[39m
-[31m     [31m×[31m should load data on init[39m[32m 49[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/pages/dashboard/dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 71[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/sidenav/sidenav.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
- [31m❯[39m [30m[43m frontend [49m[39m src/app/auth/components/login/login.spec.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 8[2mms[22m[39m
-[31m     [31m×[31m should create the component[39m[32m 8[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-list/campaign-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 246[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1411[2mms[22m[39m
+     [33m[2m✓[22m[39m should apply filters correctly [33m 333[2mms[22m[39m
 [90mstderr[2m | src/app/users/components/user-list/user-list-ux.spec.ts[2m > [22m[2mUserList - UX Tests[2m > [22m[2mshould handle error when loading users
 [22m[39mError loading users: { error: [32m'Network error'[39m }
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list-ux.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 744[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list-ux.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 779[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-list/product-list.spec.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 1780[2mms[22m[39m
+     [33m[2m✓[22m[39m should create the component [33m 457[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-create-modal/user-create-modal-ux.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 335[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-wizard/campaign-wizard.component.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 387[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/account-management/account-management.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/batch-action-toolbar/batch-action-toolbar.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/audit-log-list/audit-log-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 352[2mms[22m[39m
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
+[22m[39mUserForm: Calling createUser
+UserForm: createUser success
+
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
+[22m[39mUserForm: Navigation complete
+
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
+[22m[39mUserForm: Calling createUser
+UserForm: createUser error
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
+[22m[39mError creating user: { error: { detail: [32m'Email already exists'[39m } }
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-comparison/product-comparison.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 233[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-form/user-form.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould create
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
+[22m[39mFilters changed: { category: [32m'Electronics'[39m }
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
+[22m[39mFilters changed: {
+  category: [32m'Electronics'[39m,
+  brand: [32m'Brand A'[39m,
+  min_price: [33m10[39m,
+  max_price: [33m100[39m
+}
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
+[22m[39mFilters changed: {}
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould have default filter values
+[22m[39mLoading categories and brands
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-variants/product-variants.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 291[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
+[22m[39mFilters changed: { search_term: [32m'test product'[39m }
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-filters/product-filters.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 361[2mms[22m[39m
 [90mstdout[2m | src/app/products/components/product-form/product-form-edge-cases.spec.ts[2m > [22m[2mProductForm: Edge Cases[2m > [22m[2mform validation edge cases[2m > [22m[2mshould not submit invalid form
 [22m[39mProductForm: ngOnInit started
 ProductForm: Route mode
@@ -195,76 +269,25 @@ ProductForm: calling initializeForm
 ProductForm: initializeForm next
 ProductForm: initializeForm complete
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-edge-cases.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 159[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 664[2mms[22m[39m
-[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
-[22m[39mUserForm: Calling createUser
-UserForm: createUser success
-
-[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
-[22m[39mUserForm: Navigation complete
-
-[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
-[22m[39mUserForm: Calling createUser
-UserForm: createUser error
-
-[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
-[22m[39mError creating user: { error: { detail: [32m'Email already exists'[39m } }
-
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-form/user-form.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 279[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-wizard/campaign-wizard.component.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 292[2mms[22m[39m
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould create
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
-[22m[39mFilters changed: { category: [32m'Electronics'[39m }
-
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-create-modal/user-create-modal-ux.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 269[2mms[22m[39m
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
-[22m[39mFilters changed: {
-  category: [32m'Electronics'[39m,
-  brand: [32m'Brand A'[39m,
-  min_price: [33m10[39m,
-  max_price: [33m100[39m
-}
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
-[22m[39mFilters changed: {}
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould have default filter values
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
-[22m[39mLoading categories and brands
-
-[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
-[22m[39mFilters changed: { search_term: [32m'test product'[39m }
-
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-filters/product-filters.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 253[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/audit-log-list/audit-log-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 246[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-variants/product-variants.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 184[2mms[22m[39m
-[90mstderr[2m | src/app/shared/components/image-dialog/image-dialog.spec.ts[2m > [22m[2mImageDialogComponent[2m > [22m[2msave functionality[2m > [22m[2mshould show error notification when saving fails
-[22m[39mError updating image: Error occurred
-
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/image-dialog/image-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-edge-cases.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 214[2mms[22m[39m
 [90mstdout[2m | src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.spec.ts[2m > [22m[2mPurchaseOrderEditComponent[2m > [22m[2mshould unpack bundle and add components recursively
 [22m[39mhandleProductAutofill started for [33m99[39m
 handleProductAutofill started for [33m101[39m
 handleProductAutofill started for [33m102[39m
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 191[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 54[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/enhanced-image-management/enhanced-image-management.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 106[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-adjustment-dialog/stock-adjustment-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 187[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-details-dialog/product-details-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/quick-product-dialog/quick-product-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-list/campaign-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 153[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-history-dialog/stock-history-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+[90mstderr[2m | src/app/shared/components/image-dialog/image-dialog.spec.ts[2m > [22m[2mImageDialogComponent[2m > [22m[2msave functionality[2m > [22m[2mshould show error notification when saving fails
+[22m[39mError updating image: Error occurred
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/image-dialog/image-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 134[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/enhanced-image-management/enhanced-image-management.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-adjustment-dialog/stock-adjustment-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-dialog/quick-post-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-calendar/campaign-calendar.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 123[2mms[22m[39m
 [90mstdout[2m | src/app/products/components/product-form/product-form-image.spec.ts[2m > [22m[2mProductForm: Image Management[2m > [22m[2mimage handling[2m > [22m[2mshould format image URL correctly
 [22m[39mProductForm: ngOnInit started
 ProductForm: Route mode
@@ -273,29 +296,25 @@ ProductForm: calling initializeForm
 ProductForm: initializeForm next
 ProductForm: initializeForm complete
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 76[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/account-management/account-management.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 117[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-calendar/campaign-calendar.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 75[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/batch-action-toolbar/batch-action-toolbar.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 81[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/quick-product-dialog/quick-product-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 67[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-dialog/quick-post-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 80[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-details-dialog/product-details-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 62[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/reset-password/reset-password.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 33[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/password-reset-dialog/password-reset-dialog.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 44[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/low-stock-list/low-stock-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/receiving-dialog/receiving-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 40[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/connector-settings/connector-settings.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 48[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-detail-dialog/quick-post-detail-dialog.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 43[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-history-dialog/stock-history-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 52[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image-gallery.component.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 32[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/pagination/pagination.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 35[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/user.service.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 23[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 36[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/forgot-password/forgot-password.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/inventory-health-widget/inventory-health-widget.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 21[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-detail/campaign-detail.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/pages/product-dashboard/product-dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 20[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/product-ingestion/product-ingestion.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/expenses/components/expense-dialog/expense-dialog.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/password-reset-dialog/password-reset-dialog.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-list/supplier-list.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 95[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/connector-settings/connector-settings.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/change-log-dialog/change-log-dialog.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-detail-dialog/quick-post-detail-dialog.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image-gallery.component.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/receiving-dialog/receiving-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/pagination/pagination.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-product-manager/supplier-product-manager.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/pages/dashboard/dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-detail/campaign-detail.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/reset-password/reset-password.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/inventory-health-widget/inventory-health-widget.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/user.service.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/app.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 25[2mms[22m[39m
 Error: connect ECONNREFUSED 127.0.0.1:3000
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16) {
   errno: -111,
@@ -304,25 +323,7 @@ Error: connect ECONNREFUSED 127.0.0.1:3000
   address: '127.0.0.1',
   port: 3000
 }
-DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/assets/wasm/index.js": connect ECONNREFUSED 127.0.0.1:3000
-    at Fetch.onError (file:///home/nickvander/fulcrum/frontend/node_modules/happy-dom/lib/fetch/Fetch.js:384:21)
-    at ClientRequest.emit (node:events:508:28)
-    at emitErrorEvent (node:_http_client:107:11)
-    at Socket.socketErrorListener (node:_http_client:574:5)
-    at Socket.emit (node:events:508:28)
-    at emitErrorNT (node:internal/streams/destroy:170:8)
-    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
-    at processTicksAndRejections (node:internal/process/task_queues:90:21)
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 27[2mms[22m[39m
-Error: connect ECONNREFUSED 127.0.0.1:3000
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16) {
-  errno: -111,
-  code: 'ECONNREFUSED',
-  syscall: 'connect',
-  address: '127.0.0.1',
-  port: 3000
-}
-[90mstderr[2m | src/app/app.component.spec.ts
+[90mstderr[2m | Object.error (/home/nickvander/fulcrum/frontend/src/app/core/services/settings.service.ts:66:31)
 [22m[39mFailed to load store settings HttpErrorResponse {
   headers: HttpHeaders {
     headers: Map(0) {},
@@ -368,7 +369,7 @@ Error: connect ECONNREFUSED 127.0.0.1:3000
     [32mSymbol(cancelable)[39m: [33mfalse[39m,
     [32mSymbol(defaultPrevented)[39m: [33mfalse[39m,
     [32mSymbol(eventPhase)[39m: [33m2[39m,
-    [32mSymbol(timeStamp)[39m: [33m5555.356131[39m,
+    [32mSymbol(timeStamp)[39m: [33m7682.677053[39m,
     [32mSymbol(type)[39m: [32m'error'[39m,
     [32mSymbol(immediatePropagationStopped)[39m: [33mfalse[39m,
     [32mSymbol(propagationStopped)[39m: [33mfalse[39m,
@@ -422,10 +423,34 @@ Error: connect ECONNREFUSED 127.0.0.1:3000
   }
 }
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/app.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 23[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/force-password-change/force-password-change.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/low-stock-list/low-stock-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/forgot-password/forgot-password.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/force-password-change/force-password-change.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/pages/product-dashboard/product-dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/bulk-import.service.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+Error: connect ECONNREFUSED 127.0.0.1:3000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1637:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 3000
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/assets/wasm/index.js": connect ECONNREFUSED 127.0.0.1:3000
+    at Fetch.onError (file:///home/nickvander/fulcrum/frontend/node_modules/happy-dom/lib/fetch/Fetch.js:384:21)
+    at ClientRequest.emit (node:events:508:28)
+    at emitErrorEvent (node:_http_client:107:11)
+    at Socket.socketErrorListener (node:_http_client:574:5)
+    at Socket.emit (node:events:508:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
  [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/custom-field-dialog/custom-field-dialog.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 17[2mms[22m[39m
-[90mstderr[2m | src/app/suppliers/supplier-product-manager/supplier-product-manager.component.spec.ts
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/product-ingestion/product-ingestion.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/stat-card/stat-card.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/pages/supplier-dashboard/supplier-dashboard.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+[90mstderr[2m | Object.api.onUnhandledError (/home/nickvander/fulcrum/frontend/node_modules/zone.js/fesm2015/zone.js:2316:29)
 [22m[39mReferenceError: __dirname is not defined
     at n (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:3668)
     at eval (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:9716)
@@ -438,76 +463,39 @@ Error: connect ECONNREFUSED 127.0.0.1:3000
     at END [90m(file:///home/nickvander/fulcrum/frontend/[39mnode_modules/[4mngx-scanner-qrcode[24m/fesm2022/ngx-scanner-qrcode.mjs:774:34[90m)[39m
     at L [90m(file:///home/nickvander/fulcrum/frontend/[39mnode_modules/[4mngx-scanner-qrcode[24m/fesm2022/ngx-scanner-qrcode.mjs:780:36[90m)[39m
 
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/bulk-import.service.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 15[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-product-manager/supplier-product-manager.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/stat-card/stat-card.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/date-range-presets/date-range-presets.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product-comparison.service.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 12[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/batch-operations.service.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/pages/supplier-dashboard/supplier-dashboard.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-detail/marketplace-detail.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/status-filter/status-filter.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/settings/settings.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/custom-field-list/custom-field-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/ai-search-bar/ai-search-bar.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-list/marketplace-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/header/header.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/marketplace-status/marketplace-status.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/directives/infinite-scroll.directive.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 4[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/users/users.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/auth.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/marketplaces.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/suppliers.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/hardware.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/pipes/safe-url-pipe.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 1[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/guards/auth-guard.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 0[2mms[22m[39m
- [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/interceptors/auth-interceptor.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-detail/marketplace-detail.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/date-range-presets/date-range-presets.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/batch-operations.service.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product-comparison.service.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/status-filter/status-filter.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-list/marketplace-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/ai-search-bar/ai-search-bar.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/login/login.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/settings/settings.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/custom-field-list/custom-field-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/sidenav/sidenav.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/header/header.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/marketplace-status/marketplace-status.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/directives/infinite-scroll.directive.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/users.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/hardware.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/pipes/safe-url-pipe.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/auth.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/suppliers.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/marketplaces.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/guards/auth-guard.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/interceptors/auth-interceptor.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/suppliers/supplier-detail/supplier-detail.component.spec.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-advanced-error-handling.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-create.spec.ts [2m([22m[2m8 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-edit.spec.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-error-handling.spec.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/products/products.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
- [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-list/product-list.spec.ts [2m([22m[2m15 tests[22m[2m | [22m[33m15 skipped[39m[2m)[22m
  [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts [2m([22m[2m12 tests[22m[2m | [22m[33m12 skipped[39m[2m)[22m
 
-[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 3 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
-
-[41m[1m FAIL [22m[49m [30m[43m frontend [49m[39m src/app/suppliers/supplier-list/supplier-list.component.spec.ts[2m > [22mSupplierListComponent[2m > [22mshould create
-[41m[1m FAIL [22m[49m [30m[43m frontend [49m[39m src/app/suppliers/supplier-list/supplier-list.component.spec.ts[2m > [22mSupplierListComponent[2m > [22mshould load data on init
-[31m[1mɵNotFound[22m: NG0201: No provider found for `ActivatedRoute`. Source: Standalone[_SupplierListComponent]. Find more at https://v21.angular.dev/errors/NG0201[39m
-[90m [2m❯[22m createRuntimeError node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m555:17[22m[39m
-[90m [2m❯[22m NullInjector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m836:21[22m[39m
-[90m [2m❯[22m R3Injector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1192:27[22m[39m
-[90m [2m❯[22m R3Injector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1192:27[22m[39m
-[90m [2m❯[22m R3Injector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1192:27[22m[39m
-[90m [2m❯[22m ChainedInjector.get node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:[2m7490:32[22m[39m
-[90m [2m❯[22m lookupTokenUsingModuleInjector node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:[2m890:31[22m[39m
-[90m [2m❯[22m getOrCreateInjectable node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:[2m913:10[22m[39m
-[90m [2m❯[22m ɵɵdirectiveInject node_modules/@angular/core/fesm2022/_debug_node-chunk.mjs:[2m7524:17[22m[39m
-[90m [2m❯[22m NodeInjectorFactory.RouterLink_Factory [as factory] ng:/RouterLink/ɵfac.js:[2m6:7[22m[39m
-
-[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯[22m[39m
-
-[41m[1m FAIL [22m[49m [30m[43m frontend [49m[39m src/app/auth/components/login/login.spec.ts[2m > [22mLogin[2m > [22mshould create the component
-[31m[1mɵNotFound[22m: NG0201: No provider found for `InjectionToken TRANSLOCO_TRANSPILER`. Source: Standalone[_Login]. Path: TranslocoService -> InjectionToken TRANSLOCO_TRANSPILER. Find more at https://v21.angular.dev/errors/NG0201[39m
-[90m [2m❯[22m createRuntimeError node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m555:17[22m[39m
-[90m [2m❯[22m NullInjector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m836:21[22m[39m
-[90m [2m❯[22m R3Injector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1192:27[22m[39m
-[90m [2m❯[22m R3Injector.get node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1192:27[22m[39m
-[90m [2m❯[22m R3Injector.retrieve node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1102:19[22m[39m
-[90m [2m❯[22m injectInjectorOnly node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m625:35[22m[39m
-[90m [2m❯[22m ɵɵinject node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m637:59[22m[39m
-[90m [2m❯[22m Object.TranslocoService_Factory [as factory] ng:/TranslocoService/ɵfac.js:[2m6:10[22m[39m
-[90m [2m❯[22m node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m1297:35[22m[39m
-[90m [2m❯[22m runInInjectorProfilerContext node_modules/@angular/core/fesm2022/_untracked-chunk.mjs:[2m437:5[22m[39m
-
-[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯[22m[39m
-
-
-[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m70 passed[39m[22m[2m | [22m[33m8 skipped[39m[90m (80)[39m
-[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m277 passed[39m[22m[2m | [22m[33m42 skipped[39m[90m (328)[39m
-[2m   Start at [22m 14:46:22
-[2m   Duration [22m 6.10s[2m (transform 1.55s, setup 875ms, import 4.18s, tests 5.95s, environment 17.68s)[22m
+[2m Test Files [22m [1m[32m75 passed[39m[22m[2m | [22m[33m7 skipped[39m[90m (82)[39m
+[2m      Tests [22m [1m[32m300 passed[39m[22m[2m | [22m[33m27 skipped[39m[90m (333)[39m
+[2m   Start at [22m 19:07:22
+[2m   Duration [22m 8.89s[2m (transform 2.42s, setup 1.01s, import 5.61s, tests 9.55s, environment 19.30s)[22m
 

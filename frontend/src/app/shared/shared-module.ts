@@ -1,29 +1,17 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MaterialModule } from './material.module';
 import { AiSearchBar } from './components/ai-search-bar/ai-search-bar';
 import { SafeUrlPipe } from './pipes/safe-url-pipe';
 import { ConfirmationDialog } from './components/confirmation-dialog/confirmation-dialog';
 import { ImageDialogComponent } from './components/image-dialog/image-dialog';
 
-const MATERIAL_MODULES = [
-  MatFormFieldModule,
-  MatInputModule,
-  MatButtonModule,
-  MatIconModule,
-  MatDialogModule
-];
-
 @NgModule({
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    ...MATERIAL_MODULES,
+    MaterialModule,
     AiSearchBar, // Import standalone components
     SafeUrlPipe, // Import standalone pipes
     ConfirmationDialog,
@@ -36,7 +24,7 @@ const MATERIAL_MODULES = [
     ImageDialogComponent,
     CommonModule,
     ReactiveFormsModule,
-    ...MATERIAL_MODULES,
+    MaterialModule,
   ],
 })
-export class SharedModule {}
+export class SharedModule { }

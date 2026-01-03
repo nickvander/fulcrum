@@ -4,46 +4,28 @@ import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
-import { SharedModule } from '../../../shared/shared-module';
+import { MaterialModule } from '../../../shared/material.module';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 import { RouterModule, ActivatedRoute } from '@angular/router';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-import { MatCardModule } from '@angular/material/card';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { MatSort, MatSortModule } from '@angular/material/sort';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
-import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component'; // Managed import
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
+import { MatDialog } from '@angular/material/dialog';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { SharedModule } from '../../../shared/shared-module';
+import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component';
 import { TranslocoModule } from '@ngneat/transloco';
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialogComponent } from '../stock-history-dialog/stock-history-dialog.component';
-import { ProductFiltersComponent } from '../product-filters/product-filters';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { BatchOperationsService } from '../../services/batch-operations.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductComparisonService } from '../../services/product-comparison.service';
-import { ProductComparisonComponent } from '../product-comparison/product-comparison';
 import { ScreenService } from '../../../core/services/screen.service';
-
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
-
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-product-list',
@@ -56,29 +38,12 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
     FormsModule,
     RouterModule,
     SharedModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatSidenavModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
-    MatTooltipModule,
-    MatMenuModule,
-    MatDividerModule,
-    MatChipsModule,
-    MatTableModule,
-    MatSortModule,
-    MatButtonToggleModule,
-    MatSlideToggleModule,
+    MaterialModule,
     MarketplaceStatusComponent,
-    MatFormFieldModule,
-    MatSelectModule,
-    MatInputModule,
-    MatPaginatorModule,
     ProductDashboardComponent,
-    TranslocoModule
+    TranslocoModule,
+    LoadingSpinnerComponent,
+    EmptyStateComponent
   ],
 })
 export class ProductList implements OnInit, OnDestroy, AfterViewInit {

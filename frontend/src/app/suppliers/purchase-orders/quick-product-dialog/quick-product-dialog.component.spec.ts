@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { vi } from 'vitest';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('QuickProductDialogComponent', () => {
     let component: QuickProductDialogComponent;
@@ -43,7 +44,11 @@ describe('QuickProductDialogComponent', () => {
                 MatInputModule,
                 MatCheckboxModule,
                 MatButtonModule,
-                BrowserAnimationsModule
+                BrowserAnimationsModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, 'es-MX': {} },
+                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 FormBuilder,
