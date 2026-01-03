@@ -81,9 +81,37 @@
             <span class="role">{{ getUserRole(user) }}</span>
           </div>
         </div>
-        <button mat-icon-button class="logout-btn" [matTooltip]="t('nav.signOut')" (click)="logout()">
-          <mat-icon>logout</mat-icon>
+        <button mat-icon-button class="user-menu-btn" [matMenuTriggerFor]="userMenu">
+          <mat-icon>more_vert</mat-icon>
         </button>
+
+        <mat-menu #userMenu="matMenu" xPosition="after" class="user-options-menu">
+          <button mat-menu-item (click)="toggleTheme()">
+            <mat-icon>{{ currentTheme === 'light' ? 'dark_mode' : 'light_mode' }}</mat-icon>
+            <span>{{ currentTheme === 'light' ? t('settings.darkMode') : t('settings.lightMode') }}</span>
+          </button>
+
+          <button mat-menu-item [matMenuTriggerFor]="langMenu">
+            <mat-icon>language</mat-icon>
+            <span>{{ t('settings.language') }}</span>
+          </button>
+
+          <mat-divider></mat-divider>
+
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>{{ t('nav.signOut') }}</span>
+          </button>
+        </mat-menu>
+
+        <mat-menu #langMenu="matMenu">
+          <button mat-menu-item (click)="setLanguage('en')" [disabled]="currentLang === 'en'">
+            <span>English</span>
+          </button>
+          <button mat-menu-item (click)="setLanguage('es-MX')" [disabled]="currentLang === 'es-MX'">
+            <span>Español (MX)</span>
+          </button>
+        </mat-menu>
       </div>
     </div>
   </div>

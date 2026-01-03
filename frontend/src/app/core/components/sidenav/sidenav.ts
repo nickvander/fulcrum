@@ -10,29 +10,78 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoModule } from '@ngneat/transloco';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { SettingsService, AppSettings } from '../../services/settings.service';
 
 @Component({
   selector: 'app-sidenav',
   templateUrl: './sidenav.html',
   styleUrls: ['./sidenav.scss'],
   standalone: true,
-  imports: [CommonModule, RouterModule, MatListModule, MatIconModule, MatExpansionModule, MatButtonModule, MatTooltipModule, TranslocoModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatListModule,
+    MatIconModule,
+    MatExpansionModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatDividerModule,
+    TranslocoModule
+  ],
 })
 export class Sidenav implements OnInit {
   isAdmin$!: Observable<boolean>;
   purchasingExpanded = true;
   currentUser$!: Observable<User | null>;
+  currentTheme: 'light' | 'dark' = 'light';
+  currentLang: 'en' | 'es-MX' = 'en';
 
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private settingsService: SettingsService,
+    private translocoService: TranslocoService
+  ) { }
 
   ngOnInit(): void {
     this.isAdmin$ = this.authService.isAdmin();
     this.currentUser$ = this.authService.getCurrentUserObservable();
+
+    this.settingsService.settings$.subscribe(settings => {
+      if (settings) {
+        this.currentTheme = settings.theme;
+        this.currentLang = settings.language;
+      }
+    });
+
+    // Initialize logic if settings are not loaded yet
+    const loaded = this.settingsService.loadSettings();
+    if (loaded) {
+      this.currentTheme = loaded.theme;
+      this.currentLang = loaded.language;
+    }
   }
 
   logout(): void {
     this.authService.logout();
+  }
+
+  toggleTheme(): void {
+    const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+    const settings = this.settingsService.loadSettings() || { ai_provider: 'openai', ai_api_key: '', theme: 'light', language: 'en' };
+    this.settingsService.saveSettings({ ...settings, theme: newTheme });
+  }
+
+  setLanguage(lang: 'en' | 'es-MX'): void {
+    const settings = this.settingsService.loadSettings() || { ai_provider: 'openai', ai_api_key: '', theme: 'light', language: 'en' };
+    // Only save/set if changed
+    if (settings.language !== lang) {
+      this.settingsService.saveSettings({ ...settings, language: lang });
+      this.translocoService.setActiveLang(lang);
+    }
   }
 
   getUserDisplayName(user: User | null): string {
