@@ -1,105 +1,146 @@
-<div class="supplier-detail-container">
-    <div class="header-row">
-        <h1>{{ isEditMode ? 'Edit' : 'Create' }} Supplier</h1>
-    </div>
+<ng-container *transloco="let t">
+    <div class="supplier-detail-container">
+        <div class="header">
+            <h1>{{ isEditMode ? t('suppliers.editSupplier') : t('suppliers.addSupplier') }}</h1>
+        </div>
 
-    <mat-tab-group>
-        <mat-tab label="Details">
-            <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()" class="tab-content">
-                <mat-card class="form-section">
-                    <h3>Basic Info</h3>
-                    <div class="row">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Name</mat-label>
-                            <input matInput formControlName="name">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Contact Person</mat-label>
-                            <input matInput formControlName="contact_person">
-                        </mat-form-field>
-                    </div>
-                    <div class="row">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Email</mat-label>
-                            <input matInput formControlName="email">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Phone</mat-label>
-                            <input matInput formControlName="phone">
-                        </mat-form-field>
-                    </div>
-                </mat-card>
+        <form [formGroup]="supplierForm" (ngSubmit)="onSubmit()">
+            <mat-tab-group animationDuration="0ms">
+                <!-- Basic Info Tab -->
+                <mat-tab [label]="t('suppliers.sections.basicInfo')">
+                    <div class="tab-content">
+                        <mat-card>
+                            <mat-card-content>
+                                <div class="row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>{{ t('common.name') }}</mat-label>
+                                        <input matInput formControlName="name"
+                                            [placeholder]="t('suppliers.supplierName')" required>
+                                        <mat-error *ngIf="supplierForm.get('name')?.hasError('required')">
+                                            {{ t('suppliers.errors.nameRequired') }}
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
 
-                <mat-card class="form-section">
-                    <h3>Address</h3>
-                    <div class="row">
-                        <mat-form-field appearance="fill" class="full-width">
-                            <mat-label>Street</mat-label>
-                            <input matInput formControlName="address_street">
-                        </mat-form-field>
-                    </div>
-                    <div class="row">
-                        <mat-form-field appearance="fill">
-                            <mat-label>City</mat-label>
-                            <input matInput formControlName="address_city">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>State</mat-label>
-                            <input matInput formControlName="address_state">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Zip</mat-label>
-                            <input matInput formControlName="address_zip">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Country</mat-label>
-                            <input matInput formControlName="address_country">
-                        </mat-form-field>
-                    </div>
-                </mat-card>
+                                <div class="row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.contactPerson') }}</mat-label>
+                                        <input matInput formControlName="contact_person" placeholder="John Doe">
+                                    </mat-form-field>
 
-                <mat-card class="form-section">
-                    <h3>Financials & Details</h3>
-                    <div class="row">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Tax ID</mat-label>
-                            <input matInput formControlName="tax_id">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Payment Terms</mat-label>
-                            <input matInput formControlName="payment_terms">
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>Currency</mat-label>
-                            <input matInput formControlName="currency">
-                        </mat-form-field>
-                    </div>
-                    <div class="row">
-                        <mat-form-field appearance="fill" class="full-width">
-                            <mat-label>Website</mat-label>
-                            <input matInput formControlName="website">
-                        </mat-form-field>
-                    </div>
-                    <div class="row">
-                        <mat-form-field appearance="fill" class="full-width">
-                            <mat-label>Internal Notes</mat-label>
-                            <textarea matInput formControlName="internal_notes"></textarea>
-                        </mat-form-field>
-                    </div>
-                </mat-card>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('common.email') }}</mat-label>
+                                        <input matInput formControlName="email" placeholder="email@example.com">
+                                        <mat-error *ngIf="supplierForm.get('email')?.hasError('email')">
+                                            {{ t('suppliers.errors.invalidEmail') }}
+                                        </mat-error>
+                                    </mat-form-field>
+                                </div>
 
-                <div class="actions">
-                    <button mat-raised-button color="primary" type="submit"
-                        [disabled]="supplierForm.invalid">Save</button>
-                    <button mat-button type="button" routerLink="/suppliers/list">Cancel</button>
-                </div>
-            </form>
-        </mat-tab>
+                                <div class="row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.phone') }}</mat-label>
+                                        <input matInput formControlName="phone" placeholder="+1 555-0123">
+                                    </mat-form-field>
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.website') }}</mat-label>
+                                        <input matInput formControlName="website" placeholder="https://example.com">
+                                    </mat-form-field>
+                                </div>
 
-        <mat-tab label="Products" *ngIf="isEditMode && supplierId">
-            <div class="tab-content">
-                <app-supplier-product-manager [supplierId]="supplierId"></app-supplier-product-manager>
+                                <div class="row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>{{ t('suppliers.fields.internalNotes') }}</mat-label>
+                                        <textarea matInput formControlName="internal_notes" rows="3"
+                                            [placeholder]="t('common.placeholders.enterNote')"></textarea>
+                                    </mat-form-field>
+                                </div>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </mat-tab>
+
+                <!-- Address Tab -->
+                <mat-tab [label]="t('suppliers.sections.address')">
+                    <div class="tab-content">
+                        <mat-card>
+                            <mat-card-content>
+                                <div class="row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>{{ t('suppliers.fields.street') }}</mat-label>
+                                        <input matInput formControlName="address_street" placeholder="123 Main St">
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.city') }}</mat-label>
+                                        <input matInput formControlName="address_city">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.state') }}</mat-label>
+                                        <input matInput formControlName="address_state">
+                                    </mat-form-field>
+                                </div>
+
+                                <div class="row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.zip') }}</mat-label>
+                                        <input matInput formControlName="address_zip">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.country') }}</mat-label>
+                                        <input matInput formControlName="address_country">
+                                    </mat-form-field>
+                                </div>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </mat-tab>
+
+                <!-- Financials Tab -->
+                <mat-tab [label]="t('suppliers.sections.financials')">
+                    <div class="tab-content">
+                        <mat-card>
+                            <mat-card-content>
+                                <div class="row">
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('suppliers.fields.taxId') }}</mat-label>
+                                        <input matInput formControlName="tax_id" placeholder="VAT/Tax ID">
+                                    </mat-form-field>
+
+                                    <mat-form-field appearance="outline">
+                                        <mat-label>{{ t('common.currency') }}</mat-label>
+                                        <input matInput formControlName="currency" placeholder="USD">
+                                    </mat-form-field>
+                                </div>
+                                <div class="row">
+                                    <mat-form-field appearance="outline" class="full-width">
+                                        <mat-label>{{ t('suppliers.fields.paymentTerms') }}</mat-label>
+                                        <input matInput formControlName="payment_terms" placeholder="e.g. Net 30">
+                                    </mat-form-field>
+                                </div>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </mat-tab>
+
+                <!-- Products Tab (only in edit mode) -->
+                <mat-tab [label]="t('common.products')" *ngIf="isEditMode">
+                    <div class="tab-content">
+                        <app-supplier-product-manager [supplierId]="supplierId!"></app-supplier-product-manager>
+                    </div>
+                </mat-tab>
+            </mat-tab-group>
+
+            <div class="actions">
+                <button mat-button type="button" [routerLink]="['/suppliers/list']">{{ t('common.cancel') }}</button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="supplierForm.invalid">
+                    {{ isEditMode ? t('common.save') : t('common.create') }}
+                </button>
             </div>
-        </mat-tab>
-    </mat-tab-group>
-</div>
+        </form>
+    </div>
+</ng-container>

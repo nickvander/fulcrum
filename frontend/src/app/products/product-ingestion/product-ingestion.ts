@@ -5,13 +5,14 @@ import { HardwareService } from '../../core/services/hardware.service';
 import { SharedModule } from '../../shared/shared-module';
 import { ProductService } from '../services/product';
 import { switchMap, from, tap } from 'rxjs';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-product-ingestion',
   templateUrl: './product-ingestion.html',
   styleUrls: ['./product-ingestion.scss'],
   standalone: true,
-  imports: [SharedModule, NgxScannerQrcodeComponent],
+  imports: [SharedModule, NgxScannerQrcodeComponent, TranslocoModule],
 })
 export class ProductIngestion implements AfterViewInit, OnDestroy {
   @ViewChild('scanner') scanner!: NgxScannerQrcodeComponent;
@@ -23,7 +24,7 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
     private hardwareService: HardwareService,
     private productService: ProductService,
     private router: Router
-  ) {}
+  ) { }
 
   ngAfterViewInit(): void {
     // The scanner component will automatically start
@@ -43,7 +44,7 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
     this.productService.searchProductsBySku(result).subscribe((paginatedResult: any) => {
       // Check if result is PaginatedProducts or just an array
       const products = Array.isArray(paginatedResult) ? paginatedResult : paginatedResult.data || [];
-      
+
       if (products.length > 0) {
         // Product found, navigate to the edit page
         this.router.navigate(['/products', products[0].id, 'edit']);
@@ -56,14 +57,14 @@ export class ProductIngestion implements AfterViewInit, OnDestroy {
 
   capturePhoto(): void {
     this.hardwareService.getCameraStream().pipe(
-      switchMap(stream => 
+      switchMap(stream =>
         from(this.hardwareService.captureImage(stream)).pipe(
           tap(blob => this.capturedImage = blob),
           switchMap(blob => {
             const file = new File([blob], 'ingestion.jpg', { type: 'image/jpeg' });
             return this.productService.uploadImage(file);
           }),
-          switchMap(uploadResult => 
+          switchMap(uploadResult =>
             this.productService.identifyProductFromImage(uploadResult.file_path)
           ),
           tap(() => stream.getTracks().forEach(track => track.stop()))

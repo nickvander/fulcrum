@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil } from 'rxjs';
 import { DateRangeService, DateRangePreset, DateRange } from '../../services/date-range.service';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-date-range-presets',
@@ -25,7 +26,8 @@ import { DateRangeService, DateRangePreset, DateRange } from '../../services/dat
         MatInputModule,
         MatIconModule,
         MatButtonModule,
-        MatTooltipModule
+        MatTooltipModule,
+        TranslocoModule
     ],
     templateUrl: './date-range-presets.component.html',
     styleUrls: ['./date-range-presets.component.scss']

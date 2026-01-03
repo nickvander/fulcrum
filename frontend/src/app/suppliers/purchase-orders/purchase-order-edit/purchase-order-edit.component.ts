@@ -24,12 +24,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
 import { SupplierInvoice } from '../../suppliers.service';
-import { UserService } from '../../../users/services/user.service'; // Import UserService
-import { User } from '../../../shared/models/user.model'; // Import User model
+import { UserService } from '../../../users/services/user.service';
+import { User } from '../../../shared/models/user.model';
 import { Observable, Subject, of, zip } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, takeUntil, map, catchError } from 'rxjs/operators';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/supplier-selection-dialog.component';
+import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-purchase-order-edit',
@@ -51,10 +52,10 @@ import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/s
     MatIconModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatNativeDateModule,
     MatCardModule,
     MatTooltipModule,
-    MatTableModule
+    MatTableModule,
+    TranslocoModule
   ]
 })
 export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
@@ -64,15 +65,24 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   poId: number | null = null;
   suppliers: Supplier[] = [];
   invoices: SupplierInvoice[] = [];
-  users: User[] = []; // Store users for dropdown
+  users: User[] = [];
   statusOptions = Object.values(PurchaseOrderStatus);
   paymentStatusOptions = ['unpaid', 'partial', 'paid'];
-  paymentMethodOptions = ['Bank Transfer', 'Credit Card', 'Cash', 'Check', 'Other'];
+
+  // Map backend values to translation keys
+  paymentMethodOptions = [
+    { value: 'Bank Transfer', labelKey: 'purchaseOrders.paymentMethod.bankTransfer' },
+    { value: 'Credit Card', labelKey: 'purchaseOrders.paymentMethod.creditCard' },
+    { value: 'Cash', labelKey: 'purchaseOrders.paymentMethod.cash' },
+    { value: 'Check', labelKey: 'purchaseOrders.paymentMethod.check' },
+    { value: 'Other', labelKey: 'purchaseOrders.paymentMethod.other' }
+  ];
 
   // Product autocomplete
   productSearchControls: FormControl[] = [];
   filteredProducts$: Observable<Product[]>[] = [];
   private destroy$ = new Subject<void>();
+  currentLang: string;
 
   constructor(
     private fb: FormBuilder,
@@ -82,8 +92,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private userService: UserService // Inject UserService
+    private userService: UserService,
+    private translocoService: TranslocoService
   ) {
+    this.currentLang = this.translocoService.getActiveLang();
+
     this.poForm = this.fb.group({
       supplier_id: [null, Validators.required],
       status: [PurchaseOrderStatus.DRAFT],
@@ -103,6 +116,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Subscribe to language changes for date pipe
+    this.translocoService.langChanges$.pipe(takeUntil(this.destroy$)).subscribe(lang => {
+      this.currentLang = lang;
+    });
+
     this.loadSuppliers();
     this.loadUsers(); // Load users
 
@@ -294,6 +312,12 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     } else {
       this.poForm.enable();
     }
+  }
+
+  getStatusTranslationKey(status: string): string {
+    if (!status) return '';
+    const camelCaseStatus = status.toLowerCase().replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    return `purchaseOrders.${camelCaseStatus}`;
   }
 
   unlockOrder(): void {

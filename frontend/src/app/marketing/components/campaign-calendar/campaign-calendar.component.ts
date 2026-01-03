@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule, FormStyle, TranslationWidth, getLocaleDayNames } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { Subscription } from 'rxjs';
 
 import { MarketingService, CampaignEvent } from '../../services/marketing.service';
 
@@ -33,24 +35,63 @@ interface CalendarDay {
     MatTooltipModule,
     MatChipsModule,
     MatSnackBarModule,
-    DragDropModule
+    DragDropModule,
+    TranslocoModule
   ],
   templateUrl: './campaign-calendar.component.html',
   styleUrls: ['./campaign-calendar.component.scss']
 })
-export class CampaignCalendarComponent implements OnInit {
+export class CampaignCalendarComponent implements OnInit, OnDestroy {
   currentDate = new Date();
-  weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  weekdays: string[] = [];
   calendarDays: CalendarDay[] = [];
   events: CampaignEvent[] = [];
+  currentLang: string;
+  private langSub!: Subscription;
 
   constructor(
     private marketingService: MarketingService,
-    private snackBar: MatSnackBar
-  ) { }
+    private snackBar: MatSnackBar,
+    private translocoService: TranslocoService
+  ) {
+    this.currentLang = this.translocoService.getActiveLang();
+  }
 
   ngOnInit(): void {
+    this.updateWeekdays();
     this.loadEvents();
+
+    this.langSub = this.translocoService.langChanges$.subscribe(lang => {
+      this.currentLang = lang;
+      this.updateWeekdays();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.langSub) {
+      this.langSub.unsubscribe();
+    }
+  }
+
+  updateWeekdays(): void {
+    // Generate localized weekdays suitable for the current locale
+    // This is a simple way: create a known week and map to day names
+    // Or use Angular's getLocaleDayNames if available, but that requires locale id 'es-MX' loaded.
+    // Easiest is to use Intl or just hardcode translated keys if we only have 2 langs.
+    // But let's try to be dynamic using Date objects of a specific week.
+    // Jan 1 2023 was a Sunday.
+    const baseDate = new Date(2023, 0, 1); // Sunday
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(baseDate);
+      date.setDate(baseDate.getDate() + i);
+      // Use the currentLang for formatting. 'es-MX' or 'en'
+      // We need to map 'en' to 'en-US' maybe? Transloco uses 'en' or 'es-MX'. 'es-MX' works fine.
+      // Angular DatePipe can do this, but we are in TS. 
+      // Browser Intl:
+      days.push(new Intl.DateTimeFormat(this.currentLang, { weekday: 'short' }).format(date));
+    }
+    this.weekdays = days;
   }
 
   loadEvents(): void {

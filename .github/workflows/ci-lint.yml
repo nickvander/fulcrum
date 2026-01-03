@@ -39,3 +39,8 @@ jobs:
         source .venv/bin/activate
         uv pip install ruff
         ruff check .
+
+    - name: Run i18n validation check
+      run: |
+        source .venv/bin/activate
+        python check_i18n_consistency.py frontend/src/assets/i18n/en.json frontend/src/assets/i18n/es-MX.json

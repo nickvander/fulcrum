@@ -13,9 +13,10 @@ import { ProductService } from '../../services/product';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -95,7 +96,7 @@ class MarketplaceStatusStubComponent {
 }
 
 // @todo: Fix tests due to complex component dependencies with Dialog and Filters
-describe.skip('ProductList', () => {
+describe('ProductList', () => {
     let component: ProductList;
     let fixture: ComponentFixture<ProductList>;
     let productServiceMock: MockedObject<ProductService>;
@@ -198,7 +199,12 @@ describe.skip('ProductList', () => {
                 ProductList,
                 NoopAnimationsModule,
                 HttpClientTestingModule,
+                HttpClientTestingModule,
                 RouterTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, es: {} },
+                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock },
@@ -231,7 +237,8 @@ describe.skip('ProductList', () => {
                         // FormsModule, // Keep for ngModel in filters
                         RouterModule,
                         MarketplaceStatusComponent,
-                        AiSearchBar
+                        AiSearchBar,
+                        MatDialogModule // Ensure real dialog module is removed so mock is used
                         // MatFormFieldModule, // Keep for filters
                         // MatSelectModule, // Keep for filters
                         // MatInputModule // Keep for filters
@@ -260,6 +267,10 @@ describe.skip('ProductList', () => {
 
         // Provide default mock for dialog.open to avoid crashes
         dialogMock.open.mockReturnValue({ afterClosed: () => of(false) } as any);
+
+        // Provide default mock for getProducts to avoid crash in ngOnInit -> loadProducts
+        productServiceMock.getProducts.mockReturnValue(of(mockPaginatedProducts));
+
         fixture.detectChanges();
     });
 
@@ -379,18 +390,22 @@ describe.skip('ProductList', () => {
         it('should display stock count in product card', () => {
             const productWithStock = {
                 ...mockProducts[0],
-                inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }]
+                inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }],
+                stock_quantity: 42
             };
 
             const paginatedWithStock = { ...mockPaginatedProducts, data: [productWithStock] };
             productServiceMock.getProducts.mockReturnValue(of(paginatedWithStock));
 
+            component.viewMode = 'grid'; // Switch to grid view to render cards
             component.loadProducts();
             fixture.detectChanges();
 
             const compiled = fixture.nativeElement;
             const stockElement = compiled.querySelector('.stock');
-            expect(stockElement.textContent).toContain('Stock: 42');
+            // Expect "42 " because "inStock" key isn't translated in mock config, or returns key
+            // The template is "{{ product.stock_quantity }} {{ t('products.stockStatus.inStock') }}"
+            expect(stockElement.textContent).toContain('42');
         });
     });
 

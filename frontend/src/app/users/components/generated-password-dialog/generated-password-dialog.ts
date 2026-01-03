@@ -3,6 +3,8 @@ import { Component, Inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-generated-password-dialog',
@@ -12,14 +14,16 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [
     MatDialogModule,
     MatButtonModule,
-    MatIconModule
-],
+    MatIconModule,
+    MatTooltipModule,
+    TranslocoModule
+  ],
 })
 export class GeneratedPasswordDialog {
   constructor(
     public dialogRef: MatDialogRef<GeneratedPasswordDialog>,
     @Inject(MAT_DIALOG_DATA) public data: { password: string, userEmail: string }
-  ) {}
+  ) { }
 
   onCopyPassword(): void {
     navigator.clipboard.writeText(this.data.password).then(() => {

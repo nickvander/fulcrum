@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('InventoryHealthWidgetComponent', () => {
     let component: InventoryHealthWidgetComponent;
@@ -30,7 +31,8 @@ describe('InventoryHealthWidgetComponent', () => {
                 MatCardModule,
                 MatListModule,
                 MatIconModule,
-                RouterModule.forRoot([])
+                RouterModule.forRoot([]),
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock }

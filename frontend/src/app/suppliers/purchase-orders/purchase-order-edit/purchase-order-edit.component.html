@@ -1,285 +1,294 @@
-<div class="po-edit-container">
-    <div class="header">
-        <div class="title-group">
-            <h1>{{ isEditMode ? 'Edit Purchase Order #' + poId : 'Create Purchase Order' }}</h1>
-            <span class="status-badge" [class]="poForm.get('status')?.value" *ngIf="poForm.get('status')?.value">
-                {{ poForm.get('status')?.value | titlecase }}
-            </span>
+<ng-container *transloco="let t">
+    <div class="po-edit-container">
+        <div class="header">
+            <div class="title-group">
+                <h1>{{ isEditMode ? t('purchaseOrders.editPO') : t('purchaseOrders.createPO') }} {{ poId ? '#' + poId :
+                    '' }}</h1>
+                <span class="status-badge" [class]="poForm.get('status')?.value" *ngIf="poForm.get('status')?.value">
+                    {{ t(getStatusTranslationKey(poForm.get('status')?.value)) }}
+                </span>
+            </div>
+            <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
+                (click)="openReceivingDialog()">
+                {{ t('purchaseOrders.actions.receiveItems') }}
+            </button>
         </div>
-        <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
-            (click)="openReceivingDialog()">
-            Receive Items
-        </button>
-    </div>
 
-    <form [formGroup]="poForm" (ngSubmit)="onSubmit()" autocomplete="off">
-        <mat-card class="form-section">
-            <h3>Order Details</h3>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Supplier</mat-label>
-                    <mat-select formControlName="supplier_id">
-                        <mat-option *ngFor="let s of suppliers" [value]="s.id">
-                            {{s.name}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
+        <form [formGroup]="poForm" (ngSubmit)="onSubmit()" autocomplete="off">
+            <mat-card class="form-section">
+                <h3>{{ t('purchaseOrders.sections.orderDetails') }}</h3>
+                <div class="row">
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.supplier') }}</mat-label>
+                        <mat-select formControlName="supplier_id">
+                            <mat-option *ngFor="let s of suppliers" [value]="s.id">
+                                {{s.name}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
 
-                <mat-form-field appearance="fill">
-                    <mat-label>Currency</mat-label>
-                    <input matInput formControlName="currency" autocomplete="off">
-                </mat-form-field>
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('common.currency') }}</mat-label>
+                        <input matInput formControlName="currency" autocomplete="off">
+                    </mat-form-field>
+
+                    <div class="row">
+                        <mat-form-field appearance="fill">
+                            <mat-label>{{ t('common.notes') }}</mat-label>
+                            <textarea matInput formControlName="notes"
+                                [placeholder]="t('common.placeholders.enterNote')"></textarea>
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>{{ t('purchaseOrders.orderDate') }}</mat-label>
+                            <input matInput [matDatepicker]="pickerOrdered" formControlName="ordered_at">
+                            <mat-datepicker-toggle matSuffix [for]="pickerOrdered"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerOrdered></mat-datepicker>
+                        </mat-form-field>
+                        <mat-form-field appearance="fill">
+                            <mat-label>{{ t('purchaseOrders.receivedDate') }}</mat-label>
+                            <input matInput [matDatepicker]="pickerReceived" formControlName="received_at">
+                            <mat-datepicker-toggle matSuffix [for]="pickerReceived"></mat-datepicker-toggle>
+                            <mat-datepicker #pickerReceived></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </mat-card>
+
+            <mat-card class="form-section">
+                <h3>{{ t('purchaseOrders.sections.products') }}</h3>
+                <div formArrayName="items">
+                    <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
+
+                        <mat-form-field appearance="fill" class="product-field">
+                            <mat-label>{{ t('products.productName') }}</mat-label>
+                            <input matInput [formControl]="productSearchControls[i]" [matAutocomplete]="productAuto"
+                                [placeholder]="t('common.placeholders.typeToSearch')" autocomplete="off">
+                            <mat-autocomplete #productAuto="matAutocomplete" [displayWith]="displayProductFn"
+                                (optionSelected)="selectProduct($event.option.value, i)">
+                                <mat-option *ngFor="let product of (filteredProducts$[i] | async)" [value]="product">
+                                    <div class="product-option">
+                                        <strong>{{ product.name }}</strong>
+                                        <span class="sku">{{ t('products.sku') }}: {{ product.sku }}</span>
+                                        <span class="price">${{ product.cost_price | number:'1.2-2' }}</span>
+                                    </div>
+                                </mat-option>
+                            </mat-autocomplete>
+                            <button mat-icon-button matSuffix type="button" (click)="openQuickAddProduct(i)"
+                                [matTooltip]="t('products.addProduct')">
+                                <mat-icon>add_circle</mat-icon>
+                            </button>
+                            <mat-hint *ngIf="item.get('product_id')?.value">
+                                ID: {{ item.get('product_id')?.value }}
+                            </mat-hint>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="qty-field">
+                            <mat-label>{{ t('common.quantity') }}</mat-label>
+                            <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off">
+                        </mat-form-field>
+
+                        <mat-form-field appearance="fill" class="cost-field">
+                            <mat-label>{{ t('purchaseOrders.unitCost') }}</mat-label>
+                            <span matPrefix>$&nbsp;</span>
+                            <input matInput type="number" formControlName="unit_cost" min="0" step="0.01"
+                                autocomplete="off">
+                            <!-- Projected Cost Hint -->
+                            <mat-hint *ngIf="calculatePerUnitLandedCost() > 0" class="projected-cost-hint">
+                                + ${{ calculatePerUnitLandedCost() | number:'1.2-2' }} alloc.
+                                = <strong>${{ getEstimatedAllocatedCost(item.get('unit_cost')?.value) | number:'1.2-2'
+                                    }}</strong>
+                            </mat-hint>
+                        </mat-form-field>
+
+                        <button mat-icon-button color="warn" type="button" (click)="removeItem(i)"
+                            [disabled]="isLocked">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </div>
+                <button mat-button type="button" (click)="addLineItem()" [disabled]="isLocked">
+                    <mat-icon>add</mat-icon> {{ t('purchaseOrders.addItem') }}
+                </button>
+            </mat-card>
+
+            <!-- Additional Costs Section -->
+            <mat-card class="form-section" *ngIf="isEditMode || items.length > 0">
+                <h3>{{ t('purchaseOrders.sections.shippingAndCosts') }}</h3>
+                <p class="section-hint">Enter any extra costs beyond the product prices. These can be distributed across
+                    your items.</p>
+                <div class="row costs-row">
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.shippingCost') }}</mat-label>
+                        <span matTextPrefix>$&nbsp;</span>
+                        <input matInput type="number" formControlName="shipping_cost" min="0" step="0.01"
+                            autocomplete="off">
+                        <mat-hint>Delivery and transport fees</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.importDuties') }}</mat-label>
+                        <span matTextPrefix>$&nbsp;</span>
+                        <input matInput type="number" formControlName="import_cost" min="0" step="0.01"
+                            autocomplete="off">
+                        <mat-hint>Taxes on imported goods</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.otherCosts') }}</mat-label>
+                        <span matTextPrefix>$&nbsp;</span>
+                        <input matInput type="number" formControlName="other_costs" min="0" step="0.01"
+                            autocomplete="off">
+                        <mat-hint>Insurance, handling, etc.</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <div class="cost-summary" *ngIf="calculateTotalAdditionalCosts() > 0">
+                    <div class="summary-row">
+                        <span>Total Extra Costs:</span>
+                        <strong>${{ calculateTotalAdditionalCosts() | number:'1.2-2' }}</strong>
+                    </div>
+                    <div class="summary-row" *ngIf="items.length > 0">
+                        <span>Cost per unit (if distributed evenly):</span>
+                        <strong>${{ calculatePerUnitLandedCost() | number:'1.2-2' }}</strong>
+                    </div>
+                    <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()"
+                        [disabled]="isLocked">
+                        <mat-icon>add_circle</mat-icon> {{ t('purchaseOrders.allocateCosts') }}
+                    </button>
+                    <p class="apply-hint" *ngIf="poId">This will add the per-unit cost to each line item's unit cost.
+                    </p>
+                    <p class="apply-hint" *ngIf="!poId">Costs will be distributed evenly. Save order to preview detailed
+                        allocation.</p>
+                </div>
+            </mat-card>
+
+            <!-- Payment Information -->
+            <mat-card class="form-section">
+                <h3>{{ t('purchaseOrders.sections.paymentInfo') }}</h3>
+                <div class="row">
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.paymentStatus.title') }}</mat-label>
+                        <mat-select formControlName="payment_status">
+                            <mat-option *ngFor="let status of paymentStatusOptions" [value]="status">
+                                {{ t('purchaseOrders.paymentStatus.' + status) }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <mat-label>{{ t('purchaseOrders.paymentMethod.title') }}</mat-label>
+                        <mat-select formControlName="payment_method">
+                            <mat-option [value]="null">{{ t('purchaseOrders.paymentMethod.none') }}</mat-option>
+                            <mat-option *ngFor="let method of paymentMethodOptions" [value]="method.value">
+                                {{ t(method.labelKey) }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
 
                 <div class="row">
                     <mat-form-field appearance="fill">
-                        <mat-label>Notes</mat-label>
-                        <textarea matInput formControlName="notes"></textarea>
-                    </mat-form-field>
-                    <mat-form-field appearance="fill">
-                        <mat-label>Ordered Date</mat-label>
-                        <input matInput [matDatepicker]="pickerOrdered" formControlName="ordered_at">
-                        <mat-datepicker-toggle matSuffix [for]="pickerOrdered"></mat-datepicker-toggle>
-                        <mat-datepicker #pickerOrdered></mat-datepicker>
-                    </mat-form-field>
-                    <mat-form-field appearance="fill">
-                        <mat-label>Received Date</mat-label>
-                        <input matInput [matDatepicker]="pickerReceived" formControlName="received_at">
-                        <mat-datepicker-toggle matSuffix [for]="pickerReceived"></mat-datepicker-toggle>
-                        <mat-datepicker #pickerReceived></mat-datepicker>
-                    </mat-form-field>
-                </div>
-            </div>
-        </mat-card>
-
-        <mat-card class="form-section">
-            <h3>Products</h3>
-            <div formArrayName="items">
-                <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
-
-                    <mat-form-field appearance="fill" class="product-field">
-                        <mat-label>Product</mat-label>
-                        <input matInput [formControl]="productSearchControls[i]" [matAutocomplete]="productAuto"
-                            placeholder="Type to search products..." autocomplete="off">
-                        <mat-autocomplete #productAuto="matAutocomplete" [displayWith]="displayProductFn"
-                            (optionSelected)="selectProduct($event.option.value, i)">
-                            <mat-option *ngFor="let product of (filteredProducts$[i] | async)" [value]="product">
-                                <div class="product-option">
-                                    <strong>{{ product.name }}</strong>
-                                    <span class="sku">SKU: {{ product.sku }}</span>
-                                    <span class="price">${{ product.cost_price | number:'1.2-2' }}</span>
-                                </div>
+                        <mat-label>{{ t('common.placeholders.selectUser') }}</mat-label>
+                        <mat-select formControlName="paid_by_user_id">
+                            <mat-option [value]="null">{{ t('common.placeholders.selectUser') }}</mat-option>
+                            <mat-option *ngFor="let user of users" [value]="user.id">
+                                {{ (user.first_name && user.last_name) ? (user.first_name + ' ' + user.last_name) :
+                                user.email }}
                             </mat-option>
-                        </mat-autocomplete>
-                        <button mat-icon-button matSuffix type="button" (click)="openQuickAddProduct(i)"
-                            matTooltip="Create new product">
-                            <mat-icon>add_circle</mat-icon>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill">
+                        <mat-label>Custom Payer Name</mat-label>
+                        <input matInput formControlName="custom_payer_name" placeholder="e.g. External Partner">
+                        <mat-hint>If paid by someone outside the system</mat-hint>
+                    </mat-form-field>
+                </div>
+            </mat-card>
+
+            <!-- Invoices Section -->
+            <mat-card class="form-section">
+                <div class="section-header invoice-header">
+                    <h3>{{ t('purchaseOrders.sections.invoices') }}</h3>
+                    <div class="actions-right" *ngIf="poId">
+                        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
+                            accept=".pdf,.jpg,.jpeg,.png">
+                        <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
+                            <mat-icon>cloud_upload</mat-icon> {{ t('purchaseOrders.actions.uploadInvoice') }}
                         </button>
-                        <mat-hint *ngIf="item.get('product_id')?.value">
-                            ID: {{ item.get('product_id')?.value }}
-                        </mat-hint>
-                    </mat-form-field>
-
-                    <mat-form-field appearance="fill" class="qty-field">
-                        <mat-label>Qty</mat-label>
-                        <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off">
-                    </mat-form-field>
-
-                    <mat-form-field appearance="fill" class="cost-field">
-                        <mat-label>Unit Cost</mat-label>
-                        <span matPrefix>$&nbsp;</span>
-                        <input matInput type="number" formControlName="unit_cost" min="0" step="0.01"
-                            autocomplete="off">
-                        <!-- Projected Cost Hint -->
-                        <mat-hint *ngIf="calculatePerUnitLandedCost() > 0" class="projected-cost-hint">
-                            + ${{ calculatePerUnitLandedCost() | number:'1.2-2' }} alloc.
-                            = <strong>${{ getEstimatedAllocatedCost(item.get('unit_cost')?.value) | number:'1.2-2'
-                                }}</strong>
-                        </mat-hint>
-                    </mat-form-field>
-
-                    <button mat-icon-button color="warn" type="button" (click)="removeItem(i)" [disabled]="isLocked">
-                        <mat-icon>delete</mat-icon>
-                    </button>
+                    </div>
                 </div>
-            </div>
-            <button mat-button type="button" (click)="addLineItem()" [disabled]="isLocked">
-                <mat-icon>add</mat-icon> Add Item
-            </button>
-        </mat-card>
 
-        <!-- Additional Costs Section -->
-        <mat-card class="form-section" *ngIf="isEditMode || items.length > 0">
-            <h3>Shipping & Additional Costs</h3>
-            <p class="section-hint">Enter any extra costs beyond the product prices. These can be distributed across
-                your items.</p>
-            <div class="row costs-row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Shipping / Freight</mat-label>
-                    <span matTextPrefix>$&nbsp;</span>
-                    <input matInput type="number" formControlName="shipping_cost" min="0" step="0.01"
-                        autocomplete="off">
-                    <mat-hint>Delivery and transport fees</mat-hint>
-                </mat-form-field>
+                <p class="section-hint" *ngIf="!poId">Please save the order to upload invoices.</p>
+                <p class="section-hint" *ngIf="poId && invoices.length === 0">No invoices attached.</p>
 
-                <mat-form-field appearance="fill">
-                    <mat-label>Customs / Import Duties</mat-label>
-                    <span matTextPrefix>$&nbsp;</span>
-                    <input matInput type="number" formControlName="import_cost" min="0" step="0.01" autocomplete="off">
-                    <mat-hint>Taxes on imported goods</mat-hint>
-                </mat-form-field>
+                <table mat-table [dataSource]="invoices" *ngIf="poId && invoices.length > 0" class="invoice-table">
+                    <!-- Date Column -->
+                    <ng-container matColumnDef="date">
+                        <th mat-header-cell *matHeaderCellDef> {{ t('common.date') }} </th>
+                        <td mat-cell *matCellDef="let invoice"> {{invoice.uploaded_at |
+                            date:'mediumDate':undefined:currentLang}} </td>
+                    </ng-container>
 
-                <mat-form-field appearance="fill">
-                    <mat-label>Other Fees</mat-label>
-                    <span matTextPrefix>$&nbsp;</span>
-                    <input matInput type="number" formControlName="other_costs" min="0" step="0.01" autocomplete="off">
-                    <mat-hint>Insurance, handling, etc.</mat-hint>
-                </mat-form-field>
-            </div>
+                    <!-- Name Column -->
+                    <ng-container matColumnDef="name">
+                        <th mat-header-cell *matHeaderCellDef> Filename </th>
+                        <td mat-cell *matCellDef="let invoice">
+                            <a [href]="getInvoiceFileUrl(invoice.file_path)" target="_blank" class="invoice-link">
+                                {{invoice.filename || 'Invoice'}}
+                            </a>
+                        </td>
+                    </ng-container>
 
-            <div class="cost-summary" *ngIf="calculateTotalAdditionalCosts() > 0">
-                <div class="summary-row">
-                    <span>Total Extra Costs:</span>
-                    <strong>${{ calculateTotalAdditionalCosts() | number:'1.2-2' }}</strong>
+                    <!-- Actions Column -->
+                    <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef> </th>
+                        <td mat-cell *matCellDef="let invoice">
+                            <button mat-icon-button color="warn" (click)="deleteInvoice(invoice.id)" type="button">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </td>
+                    </ng-container>
+
+                    <tr mat-header-row *matHeaderRowDef="['date', 'name', 'actions']"></tr>
+                    <tr mat-row *matRowDef="let row; columns: ['date', 'name', 'actions'];"></tr>
+                </table>
+            </mat-card>
+
+            <div class="actions">
+                <div class="actions-left">
+                    <button mat-button type="button" (click)="cancel()">{{ t('common.cancel') }}</button>
+                    <button mat-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">{{
+                        t('purchaseOrders.actions.clearDraft') }}</button>
                 </div>
-                <div class="summary-row" *ngIf="items.length > 0">
-                    <span>Cost per unit (if distributed evenly):</span>
-                    <strong>${{ calculatePerUnitLandedCost() | number:'1.2-2' }}</strong>
+
+                <!-- Grand Total Display -->
+                <div class="grand-total-display">
+                    <span class="label">{{ t('purchaseOrders.totalValue') }}:</span>
+                    <span class="amount">{{ calculateGrandTotal() | currency: poForm.get('currency')?.value }}</span>
                 </div>
-                <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()"
-                    [disabled]="isLocked">
-                    <mat-icon>add_circle</mat-icon> Add to Unit Costs
+
+                <!-- Lock/Unlock Buttons -->
+                <button mat-stroked-button color="warn" type="button" *ngIf="isLocked" (click)="unlockOrder()">
+                    <mat-icon>lock_open</mat-icon> {{ t('purchaseOrders.actions.unlockOrder') }}
                 </button>
-                <p class="apply-hint" *ngIf="poId">This will add the per-unit cost to each line item's unit cost.</p>
-                <p class="apply-hint" *ngIf="!poId">Costs will be distributed evenly. Save order to preview detailed
-                    allocation.</p>
+
+                <!-- Save/Create Buttons (Hidden if Locked) -->
+                <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid" *ngIf="!isLocked">
+                    {{ isEditMode ? t('common.update') : t('common.create') }} {{ t('purchaseOrders.order') }}
+                </button>
+
+                <button mat-raised-button class="place-order-btn" type="button"
+                    *ngIf="poForm.get('status')?.value === 'draft' && !isLocked" (click)="placeOrder()"
+                    [disabled]="poForm.invalid">
+                    {{ t('purchaseOrders.actions.placeOrder') }}
+                </button>
+
+                <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId && !isLocked"
+                    (click)="deleteOrder()">
+                    <mat-icon>delete</mat-icon> {{ t('purchaseOrders.deletePO') }}
+                </button>
             </div>
-        </mat-card>
-
-        <!-- Payment Information -->
-        <mat-card class="form-section">
-            <h3>Payment Information</h3>
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Payment Status</mat-label>
-                    <mat-select formControlName="payment_status">
-                        <mat-option *ngFor="let status of paymentStatusOptions" [value]="status">
-                            {{status | titlecase}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="fill">
-                    <mat-label>Payment Method</mat-label>
-                    <mat-select formControlName="payment_method">
-                        <mat-option [value]="null">None</mat-option>
-                        <mat-option *ngFor="let method of paymentMethodOptions" [value]="method">
-                            {{method}}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-
-            <div class="row">
-                <mat-form-field appearance="fill">
-                    <mat-label>Paid By (User)</mat-label>
-                    <mat-select formControlName="paid_by_user_id">
-                        <mat-option [value]="null">Select User</mat-option>
-                        <mat-option *ngFor="let user of users" [value]="user.id">
-                            {{ (user.first_name && user.last_name) ? (user.first_name + ' ' + user.last_name) :
-                            user.email }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="fill">
-                    <mat-label>Custom Payer Name</mat-label>
-                    <input matInput formControlName="custom_payer_name" placeholder="e.g. External Partner">
-                    <mat-hint>If paid by someone outside the system</mat-hint>
-                </mat-form-field>
-            </div>
-        </mat-card>
-
-        <!-- Invoices Section -->
-        <mat-card class="form-section">
-            <div class="section-header invoice-header">
-                <h3>Supplier Invoices</h3>
-                <div class="actions-right" *ngIf="poId">
-                    <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
-                        accept=".pdf,.jpg,.jpeg,.png">
-                    <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
-                        <mat-icon>cloud_upload</mat-icon> Upload Invoice
-                    </button>
-                </div>
-            </div>
-
-            <p class="section-hint" *ngIf="!poId">Please save the order to upload invoices.</p>
-            <p class="section-hint" *ngIf="poId && invoices.length === 0">No invoices attached.</p>
-
-            <table mat-table [dataSource]="invoices" *ngIf="poId && invoices.length > 0" class="invoice-table">
-                <!-- Date Column -->
-                <ng-container matColumnDef="date">
-                    <th mat-header-cell *matHeaderCellDef> Date </th>
-                    <td mat-cell *matCellDef="let invoice"> {{invoice.uploaded_at | date}} </td>
-                </ng-container>
-
-                <!-- Name Column -->
-                <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef> Filename </th>
-                    <td mat-cell *matCellDef="let invoice">
-                        <a [href]="getInvoiceFileUrl(invoice.file_path)" target="_blank" class="invoice-link">
-                            {{invoice.filename || 'Invoice'}}
-                        </a>
-                    </td>
-                </ng-container>
-
-                <!-- Actions Column -->
-                <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef> </th>
-                    <td mat-cell *matCellDef="let invoice">
-                        <button mat-icon-button color="warn" (click)="deleteInvoice(invoice.id)" type="button">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                    </td>
-                </ng-container>
-
-                <tr mat-header-row *matHeaderRowDef="['date', 'name', 'actions']"></tr>
-                <tr mat-row *matRowDef="let row; columns: ['date', 'name', 'actions'];"></tr>
-            </table>
-        </mat-card>
-
-        <div class="actions">
-            <div class="actions-left">
-                <button mat-button type="button" (click)="cancel()">Cancel</button>
-                <button mat-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">Clear
-                    Draft</button>
-            </div>
-
-            <!-- Grand Total Display -->
-            <div class="grand-total-display">
-                <span class="label">Total Order Value:</span>
-                <span class="amount">{{ calculateGrandTotal() | currency: poForm.get('currency')?.value }}</span>
-            </div>
-
-            <!-- Lock/Unlock Buttons -->
-            <button mat-stroked-button color="warn" type="button" *ngIf="isLocked" (click)="unlockOrder()">
-                <mat-icon>lock_open</mat-icon> Unlock to Edit
-            </button>
-
-            <!-- Save/Create Buttons (Hidden if Locked) -->
-            <button mat-raised-button color="primary" type="submit" [disabled]="poForm.invalid" *ngIf="!isLocked">
-                {{ isEditMode ? 'Update' : 'Create' }} Order
-            </button>
-
-            <button mat-raised-button class="place-order-btn" type="button"
-                *ngIf="poForm.get('status')?.value === 'draft' && !isLocked" (click)="placeOrder()"
-                [disabled]="poForm.invalid">
-                Place Order
-            </button>
-
-            <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId && !isLocked"
-                (click)="deleteOrder()">
-                <mat-icon>delete</mat-icon> Delete Order
-            </button>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
+</ng-container>

@@ -1,95 +1,98 @@
-<div class="audit-log-container">
-  <h2>Audit Logs</h2>
+<ng-container *transloco="let t">
+  <div class="audit-log-container">
+    <h2>{{ t('auditLogs.title') }}</h2>
 
-  <!-- Filters -->
-  <div class="filters">
-    <mat-form-field appearance="outline" class="sleek-select">
-      <mat-label>User</mat-label>
-      <mat-select [(value)]="user_filter" (selectionChange)="onFilterChange()">
-        <mat-option [value]="null">All Users</mat-option>
-        @for (user of users; track user) {
-        <mat-option [value]="user.id">
-          {{ user.first_name }} {{ user.last_name }}
-        </mat-option>
+    <!-- Filters -->
+    <div class="filters">
+      <mat-form-field appearance="outline" class="sleek-select">
+        <mat-label>{{ t('auditLogs.user') }}</mat-label>
+        <mat-select [(value)]="user_filter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">{{ t('auditLogs.allUsers') }}</mat-option>
+          @for (user of users; track user) {
+          <mat-option [value]="user.id">
+            {{ user.first_name }} {{ user.last_name }}
+          </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="sleek-select">
+        <mat-label>{{ t('auditLogs.action') }}</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="action_filter" (keyup.enter)="onFilterChange()"
+          [placeholder]="t('auditLogs.filterAction')">
+        @if (action_filter) {
+        <button mat-icon-button matSuffix (click)="action_filter=''; onFilterChange()">
+          <mat-icon>close</mat-icon>
+        </button>
         }
-      </mat-select>
-    </mat-form-field>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline" class="sleek-select">
-      <mat-label>Action</mat-label>
-      <mat-icon matPrefix>search</mat-icon>
-      <input matInput [(ngModel)]="action_filter" (keyup.enter)="onFilterChange()" placeholder="Filter by action...">
-      @if (action_filter) {
-      <button mat-icon-button matSuffix (click)="action_filter=''; onFilterChange()">
-        <mat-icon>close</mat-icon>
+      <button mat-stroked-button (click)="onFilterChange()">
+        <mat-icon>filter_list</mat-icon> {{ t('auditLogs.apply') }}
       </button>
+
+      @if (user_filter || action_filter) {
+      <button mat-button color="warn" (click)="clearFilters()">{{ t('auditLogs.reset') }}</button>
       }
-    </mat-form-field>
+    </div>
 
-    <button mat-stroked-button (click)="onFilterChange()">
-      <mat-icon>filter_list</mat-icon> Apply
-    </button>
+    <!-- Audit Logs Table -->
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort>
 
-    @if (user_filter || action_filter) {
-    <button mat-button color="warn" (click)="clearFilters()">Reset</button>
-    }
+        <!-- Timestamp Column -->
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('auditLogs.timestamp') }}</th>
+          <td mat-cell *matCellDef="let log">{{ log.created_at | date:'medium' }}</td>
+        </ng-container>
+
+        <!-- User Column -->
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('auditLogs.user') }}</th>
+          <td mat-cell *matCellDef="let log">
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-weight: 500;">{{ log.user_email || 'Unknown' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Actor Column -->
+        <ng-container matColumnDef="actor">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('auditLogs.actor') }}</th>
+          <td mat-cell *matCellDef="let log" class="text-secondary">{{ log.actor_email || 'System' }}</td>
+        </ng-container>
+
+        <!-- Action Column -->
+        <ng-container matColumnDef="action">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('auditLogs.action') }}</th>
+          <td mat-cell *matCellDef="let log">
+            <span class="badge" [ngClass]="{'badge-change': true}">{{ log.action }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Details Column -->
+        <ng-container matColumnDef="details">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.details') }}</th>
+          <td mat-cell *matCellDef="let log" [matTooltip]="log.details"
+            style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ log.details }}
+          </td>
+        </ng-container>
+
+        <!-- IP Address Column -->
+        <ng-container matColumnDef="ip_address">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('auditLogs.ipAddress') }}</th>
+          <td mat-cell *matCellDef="let log" class="text-secondary">{{ log.ip_address || '-' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons aria-label="Select page of audit logs">
+    </mat-paginator>
   </div>
-
-  <!-- Audit Logs Table -->
-  <div class="table-container">
-    <table mat-table [dataSource]="dataSource" matSort>
-
-      <!-- Timestamp Column -->
-      <ng-container matColumnDef="timestamp">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Timestamp</th>
-        <td mat-cell *matCellDef="let log">{{ log.created_at | date:'medium' }}</td>
-      </ng-container>
-
-      <!-- User Column -->
-      <ng-container matColumnDef="user">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>User</th>
-        <td mat-cell *matCellDef="let log">
-          <div style="display: flex; flex-direction: column;">
-            <span style="font-weight: 500;">{{ log.user_email || 'Unknown' }}</span>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Actor Column -->
-      <ng-container matColumnDef="actor">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Actor</th>
-        <td mat-cell *matCellDef="let log" class="text-secondary">{{ log.actor_email || 'System' }}</td>
-      </ng-container>
-
-      <!-- Action Column -->
-      <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Action</th>
-        <td mat-cell *matCellDef="let log">
-          <span class="badge" [ngClass]="{'badge-change': true}">{{ log.action }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Details Column -->
-      <ng-container matColumnDef="details">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Details</th>
-        <td mat-cell *matCellDef="let log" [matTooltip]="log.details"
-          style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          {{ log.details }}
-        </td>
-      </ng-container>
-
-      <!-- IP Address Column -->
-      <ng-container matColumnDef="ip_address">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>IP Address</th>
-        <td mat-cell *matCellDef="let log" class="text-secondary">{{ log.ip_address || '-' }}</td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
-  </div>
-
-  <!-- Paginator -->
-  <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons aria-label="Select page of audit logs">
-  </mat-paginator>
-</div>
+</ng-container>

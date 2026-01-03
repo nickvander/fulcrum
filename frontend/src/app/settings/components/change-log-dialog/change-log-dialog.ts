@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import {
     IntegrationsService,
     ChangeLogEntry
@@ -28,6 +29,7 @@ import {
         MatSelectModule,
         MatFormFieldModule,
         MatPaginatorModule,
+        TranslocoModule
     ]
 })
 export class ChangeLogDialog implements OnInit {
@@ -44,7 +46,8 @@ export class ChangeLogDialog implements OnInit {
 
     constructor(
         private dialogRef: MatDialogRef<ChangeLogDialog>,
-        private integrationsService: IntegrationsService
+        private integrationsService: IntegrationsService,
+        private translocoService: TranslocoService
     ) { }
 
     ngOnInit(): void {
@@ -104,14 +107,7 @@ export class ChangeLogDialog implements OnInit {
         }
     }
 
-    getSourceLabel(source: string): string {
-        switch (source) {
-            case 'sheets_import': return 'Sheets Import';
-            case 'direct_edit': return 'Direct Edit';
-            case 'api': return 'API';
-            default: return source;
-        }
-    }
+    // REPLACED getSourceLabel with direct template translation
 
     getFieldIcon(field: string): string {
         switch (field) {
@@ -120,6 +116,16 @@ export class ChangeLogDialog implements OnInit {
             case 'name': return 'label';
             case 'stock': return 'inventory';
             default: return 'edit';
+        }
+    }
+
+    getFieldLabelKey(field: string): string {
+        switch (field) {
+            case 'cost_price': return 'common.cost';
+            case 'resale_price': return 'common.price';
+            case 'name': return 'common.name';
+            case 'stock': return 'common.stock';
+            default: return 'settings.changeLog.fields.' + field;
         }
     }
 

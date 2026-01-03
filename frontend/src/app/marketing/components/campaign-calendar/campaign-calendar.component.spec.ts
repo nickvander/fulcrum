@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('CampaignCalendarComponent', () => {
     let component: CampaignCalendarComponent;
@@ -28,7 +29,8 @@ describe('CampaignCalendarComponent', () => {
             imports: [
                 CampaignCalendarComponent,
                 NoopAnimationsModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },

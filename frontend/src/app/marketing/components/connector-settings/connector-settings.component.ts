@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 import {
   MarketingService,
@@ -41,6 +42,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatChipsModule,
+    TranslocoModule,
   ],
   templateUrl: './connector-settings.component.html',
   styleUrls: ['./connector-settings.component.scss']

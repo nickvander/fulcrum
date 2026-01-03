@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslocoModule } from '@ngneat/transloco';
 
 export interface StatusFilterOption {
   value: string;
@@ -21,7 +22,8 @@ export interface StatusFilterOption {
     MatFormFieldModule,
     MatSelectModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    TranslocoModule
   ],
   templateUrl: './status-filter.component.html',
   styleUrls: ['./status-filter.component.scss']

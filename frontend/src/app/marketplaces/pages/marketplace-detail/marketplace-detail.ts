@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 import { MarketplacesService, MarketplaceListing } from '../../marketplaces';
 import { Observable, of } from 'rxjs';
 
@@ -21,7 +22,8 @@ import { Observable, of } from 'rxjs';
     MatIconModule,
     MatChipsModule,
     MatSnackBarModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TranslocoModule
   ],
   templateUrl: './marketplace-detail.html',
   styleUrl: './marketplace-detail.scss',

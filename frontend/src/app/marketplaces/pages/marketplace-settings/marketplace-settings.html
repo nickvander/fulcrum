@@ -1,129 +1,138 @@
-<div class="settings-container">
-    <div class="page-header">
-        <button mat-icon-button routerLink="/marketplaces" class="back-btn">
-            <mat-icon>arrow_back</mat-icon>
-        </button>
-        <div class="header-text">
-            <h1>
-                <img [src]="'images/marketplaces/' + marketplaceType + '.png'" [alt]="marketplaceName"
-                    class="header-logo">
-                {{ marketplaceName }} Accounts
-            </h1>
-            <p>Manage your {{ marketplaceName }} seller accounts and API credentials.</p>
-        </div>
-        <button mat-flat-button color="primary" (click)="showAddForm = true" *ngIf="!showAddForm">
-            <mat-icon>add</mat-icon>
-            Add Account
-        </button>
-    </div>
-
-    <!-- Add New Account Form -->
-    @if (showAddForm) {
-    <mat-card class="add-account-card">
-        <mat-card-header>
-            <mat-card-title>Add New {{ marketplaceName }} Account</mat-card-title>
-            <mat-card-subtitle>Enter your developer credentials to connect a seller account</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-            <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Account Name (for your reference)</mat-label>
-                <input matInput [(ngModel)]="newAccount.name" placeholder="e.g. My US Store, Mexico Store">
-                <mat-hint>A friendly name to identify this account</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Client ID / App ID</mat-label>
-                <input matInput [(ngModel)]="newAccount.clientId"
-                    [placeholder]="marketplaceType === 'amazon' ? 'amzn1.application-oa2-client.xxx' : '1234567890'">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Client Secret / Secret Key</mat-label>
-                <input matInput [(ngModel)]="newAccount.clientSecret" type="password" placeholder="Your secret">
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Redirect URI</mat-label>
-                <input matInput [(ngModel)]="newAccount.redirectUri" [placeholder]="defaultRedirectUri">
-            </mat-form-field>
-
-            <div class="help-section">
-                <mat-icon>help_outline</mat-icon>
-                <div class="help-text">
-                    <strong>How to get credentials:</strong>
-                    @if (marketplaceType === 'amazon') {
-                    <ol>
-                        <li>Go to <a href="https://sellercentral.amazon.com" target="_blank">Seller Central</a></li>
-                        <li>Navigate to Apps & Services → Develop Apps</li>
-                        <li>Create a new SP-API application</li>
-                        <li>Copy your Client ID and Secret</li>
-                    </ol>
-                    } @else {
-                    <ol>
-                        <li>Go to <a href="https://developers.mercadolibre.com.mx" target="_blank">Developer Center</a>
-                        </li>
-                        <li>Create a new application</li>
-                        <li>Copy your App ID and Secret Key</li>
-                        <li>Set your redirect URI in the app settings</li>
-                    </ol>
-                    }
-                </div>
+<ng-container *transloco="let t">
+    <div class="settings-container">
+        <div class="page-header">
+            <button mat-icon-button routerLink="/marketplaces" class="back-btn">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+            <div class="header-text">
+                <h1>
+                    <img [src]="'images/marketplaces/' + marketplaceType + '.png'" [alt]="marketplaceName"
+                        class="header-logo">
+                    {{ marketplaceName }} {{ t('marketplaces.accounts') }}
+                </h1>
+                <p>{{ t('marketplaces.manageAccounts', { name: marketplaceName }) }}</p>
             </div>
-        </mat-card-content>
-
-        <mat-card-actions align="end">
-            <button mat-button (click)="showAddForm = false">Cancel</button>
-            <button mat-flat-button color="primary" (click)="saveAndConnect()"
-                [disabled]="!newAccount.clientId || !newAccount.clientSecret">
-                <mat-icon>link</mat-icon>
-                Save & Connect
-            </button>
-        </mat-card-actions>
-    </mat-card>
-    }
-
-    <!-- Existing Accounts -->
-    <div class="accounts-section">
-        <h2>Connected Accounts</h2>
-
-        @if (accounts.length === 0 && !showAddForm) {
-        <div class="no-accounts">
-            <mat-icon>account_circle</mat-icon>
-            <p>No {{ marketplaceName }} accounts connected yet.</p>
-            <button mat-stroked-button color="primary" (click)="showAddForm = true">
+            <button mat-flat-button color="primary" (click)="showAddForm = true" *ngIf="!showAddForm">
                 <mat-icon>add</mat-icon>
-                Add Your First Account
+                {{ t('marketplaces.addAccount') }}
             </button>
         </div>
-        }
 
-        @for (account of accounts; track account.id) {
-        <mat-card class="account-card">
+        <!-- Add New Account Form -->
+        @if (showAddForm) {
+        <mat-card class="add-account-card">
             <mat-card-header>
-                <div mat-card-avatar class="account-avatar">
-                    <mat-icon>store</mat-icon>
-                </div>
-                <mat-card-title>{{ account.name || 'Account ' + account.id }}</mat-card-title>
-                <mat-card-subtitle>
-                    <span class="status-dot" [class.online]="account.connected"></span>
-                    {{ account.connected ? 'Connected' : 'Not connected' }}
-                </mat-card-subtitle>
+                <mat-card-title>{{ t('marketplaces.addNewAccount', { name: marketplaceName }) }}</mat-card-title>
+                <mat-card-subtitle>{{ t('marketplaces.addNewAccountSubtitle') }}</mat-card-subtitle>
             </mat-card-header>
 
+            <mat-card-content>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ t('marketplaces.accountNameLabel') }}</mat-label>
+                    <input matInput [(ngModel)]="newAccount.name"
+                        [placeholder]="t('marketplaces.accountNamePlaceholder')">
+                    <mat-hint>{{ t('marketplaces.accountNameHint') }}</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ marketplaceType === 'amazon' ? t('marketplaces.clientId') : t('marketplaces.appId')
+                        }}</mat-label>
+                    <input matInput [(ngModel)]="newAccount.clientId"
+                        [placeholder]="marketplaceType === 'amazon' ? 'amzn1.application-oa2-client.xxx' : '1234567890'">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ marketplaceType === 'amazon' ? t('marketplaces.clientSecret') :
+                        t('marketplaces.secretKey') }}</mat-label>
+                    <input matInput [(ngModel)]="newAccount.clientSecret" type="password"
+                        [placeholder]="t('marketplaces.secretPlaceholder')">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>{{ t('marketplaces.redirectUri') }}</mat-label>
+                    <input matInput [(ngModel)]="newAccount.redirectUri" [placeholder]="defaultRedirectUri">
+                </mat-form-field>
+
+                <div class="help-section">
+                    <mat-icon>help_outline</mat-icon>
+                    <div class="help-text">
+                        <strong>{{ t('marketplaces.howToGetCredentials') }}</strong>
+                        @if (marketplaceType === 'amazon') {
+                        <ol>
+                            <li>{{ t('marketplaces.amazonStep1') }} <a href="https://sellercentral.amazon.com"
+                                    target="_blank">Seller Central</a></li>
+                            <li>{{ t('marketplaces.amazonStep2') }}</li>
+                            <li>{{ t('marketplaces.amazonStep3') }}</li>
+                            <li>{{ t('marketplaces.amazonStep4') }}</li>
+                        </ol>
+                        } @else {
+                        <ol>
+                            <li>{{ t('marketplaces.mercadoLibreStep1') }} <a
+                                    href="https://developers.mercadolibre.com.mx" target="_blank">Developer Center</a>
+                            </li>
+                            <li>{{ t('marketplaces.mercadoLibreStep2') }}</li>
+                            <li>{{ t('marketplaces.mercadoLibreStep3') }}</li>
+                            <li>{{ t('marketplaces.mercadoLibreStep4') }}</li>
+                        </ol>
+                        }
+                    </div>
+                </div>
+            </mat-card-content>
+
             <mat-card-actions align="end">
-                <button mat-button color="warn" (click)="deleteAccount(account.id)">
-                    <mat-icon>delete</mat-icon>
-                    Remove
-                </button>
-                @if (!account.connected) {
-                <button mat-flat-button color="primary" (click)="reconnect(account.id)">
+                <button mat-button (click)="showAddForm = false">{{ t('common.cancel') }}</button>
+                <button mat-flat-button color="primary" (click)="saveAndConnect()"
+                    [disabled]="!newAccount.clientId || !newAccount.clientSecret">
                     <mat-icon>link</mat-icon>
-                    Connect
+                    {{ t('marketplaces.saveAndConnect') }}
                 </button>
-                }
             </mat-card-actions>
         </mat-card>
         }
+
+        <!-- Existing Accounts -->
+        <div class="accounts-section">
+            <h2>{{ t('marketplaces.connectedAccounts') }}</h2>
+
+            @if (accounts.length === 0 && !showAddForm) {
+            <div class="no-accounts">
+                <mat-icon>account_circle</mat-icon>
+                <p>{{ t('marketplaces.noAccountsConnected', { name: marketplaceName }) }}</p>
+                <button mat-stroked-button color="primary" (click)="showAddForm = true">
+                    <mat-icon>add</mat-icon>
+                    {{ t('marketplaces.addYourFirstAccount') }}
+                </button>
+            </div>
+            }
+
+            @for (account of accounts; track account.id) {
+            <mat-card class="account-card">
+                <mat-card-header>
+                    <div mat-card-avatar class="account-avatar">
+                        <mat-icon>store</mat-icon>
+                    </div>
+                    <mat-card-title>{{ account.name || t('marketplaces.accountDefaultName', { id: account.id })
+                        }}</mat-card-title>
+                    <mat-card-subtitle>
+                        <span class="status-dot" [class.online]="account.connected"></span>
+                        {{ account.connected ? t('marketplaces.connected') : t('marketplaces.notConnected') }}
+                    </mat-card-subtitle>
+                </mat-card-header>
+
+                <mat-card-actions align="end">
+                    <button mat-button color="warn" (click)="deleteAccount(account.id)">
+                        <mat-icon>delete</mat-icon>
+                        {{ t('common.remove') }}
+                    </button>
+                    @if (!account.connected) {
+                    <button mat-flat-button color="primary" (click)="reconnect(account.id)">
+                        <mat-icon>link</mat-icon>
+                        {{ t('common.connect') }}
+                    </button>
+                    }
+                </mat-card-actions>
+            </mat-card>
+            }
+        </div>
     </div>
-</div>
+</ng-container>

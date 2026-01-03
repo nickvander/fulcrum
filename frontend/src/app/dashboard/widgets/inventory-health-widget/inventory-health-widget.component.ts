@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-inventory-health-widget',
@@ -24,7 +25,8 @@ import { RouterModule } from '@angular/router';
         MatProgressBarModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
-        RouterModule
+        RouterModule,
+        TranslocoModule
     ],
     templateUrl: './inventory-health-widget.component.html',
     styleUrls: ['./inventory-health-widget.component.scss']

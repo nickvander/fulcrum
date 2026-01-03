@@ -69,11 +69,11 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   @ViewChild('quickPostPaginator') quickPostPaginator!: MatPaginator;
 
   statusOptions: StatusFilterOption[] = [
-    { value: 'all', label: 'All' },
-    { value: 'draft', label: 'Draft', icon: 'edit_note' },
-    { value: 'scheduled', label: 'Scheduled', icon: 'schedule' },
-    { value: 'active', label: 'Active', icon: 'play_circle' },
-    { value: 'completed', label: 'Done', icon: 'check_circle' }
+    { value: 'all', label: 'common.all' },
+    { value: 'draft', label: 'marketing.status.draft', icon: 'edit_note' },
+    { value: 'scheduled', label: 'marketing.status.scheduled', icon: 'schedule' },
+    { value: 'active', label: 'common.active' },
+    { value: 'completed', label: 'marketing.status.completed', icon: 'check_circle' }
   ];
 
   // Quick Post Pagination

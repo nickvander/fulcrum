@@ -22,6 +22,7 @@ import { ProductService } from '../../../products/services/product';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { vi, describe, it, expect, beforeEach, MockInstance } from 'vitest';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('PurchaseOrderEditComponent', () => {
   let component: PurchaseOrderEditComponent;
@@ -62,7 +63,8 @@ describe('PurchaseOrderEditComponent', () => {
         MatNativeDateModule,
         RouterTestingModule,
         NoopAnimationsModule,
-        MatAutocompleteModule
+        MatAutocompleteModule,
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
       ],
       providers: [
         { provide: SuppliersService, useValue: suppliersServiceSpy },

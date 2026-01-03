@@ -6,6 +6,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-low-stock-list',
@@ -16,7 +17,8 @@ import { RouterModule } from '@angular/router';
     MatListModule,
     MatIconModule,
     MatButtonModule,
-    RouterModule
+    RouterModule,
+    TranslocoModule
   ],
   templateUrl: './low-stock-list.component.html',
   styleUrls: ['./low-stock-list.component.scss']

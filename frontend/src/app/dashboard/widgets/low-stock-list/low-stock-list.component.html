@@ -1,29 +1,32 @@
-<div class="widget-container">
-    <div class="widget-header">
-        <h3>Critical Low Stock</h3>
-        <a mat-button color="primary" routerLink="/products" [queryParams]="{max_stock: 10}">View All</a>
-    </div>
-
-    <div class="widget-content">
-        <div *ngIf="products.length === 0" class="empty-state">
-            <mat-icon class="success-icon">check_circle</mat-icon>
-            <p>All stock levels healthy</p>
+<ng-container *transloco="let t">
+    <div class="widget-container">
+        <div class="widget-header">
+            <h3>{{ t('dashboard.criticalStock') }}</h3>
+            <a mat-button color="primary" routerLink="/products" [queryParams]="{max_stock: 10}">{{ t('common.viewAll')
+                }}</a>
         </div>
 
-        <mat-nav-list *ngIf="products.length > 0" class="dense-list">
-            <a mat-list-item *ngFor="let product of products" [routerLink]="['/products']"
-                [queryParams]="{open_sku: product.sku}" class="list-item">
-                <span matListItemIcon class="icon-badge error">
-                    <mat-icon>error_outline</mat-icon>
-                </span>
-                <span matListItemTitle class="item-name">{{ product.name }}</span>
-                <span matListItemLine class="item-meta">
-                    <span>SKU: {{ product.sku }}</span>
-                    <span class="stock-badge" [class.critical]="getTotalStock(product) === 0">
-                        {{ getTotalStock(product) }} units
+        <div class="widget-content">
+            <div *ngIf="products.length === 0" class="empty-state">
+                <mat-icon class="success-icon">check_circle</mat-icon>
+                <p>{{ t('common.allStockHealthy') }}</p>
+            </div>
+
+            <mat-nav-list *ngIf="products.length > 0" class="dense-list">
+                <a mat-list-item *ngFor="let product of products" [routerLink]="['/products']"
+                    [queryParams]="{open_sku: product.sku}" class="list-item">
+                    <span matListItemIcon class="icon-badge error">
+                        <mat-icon>error_outline</mat-icon>
                     </span>
-                </span>
-            </a>
-        </mat-nav-list>
+                    <span matListItemTitle class="item-name">{{ product.name }}</span>
+                    <span matListItemLine class="item-meta">
+                        <span>SKU: {{ product.sku }}</span>
+                        <span class="stock-badge" [class.critical]="getTotalStock(product) === 0">
+                            {{ getTotalStock(product) }} {{ t('common.units') }}
+                        </span>
+                    </span>
+                </a>
+            </mat-nav-list>
+        </div>
     </div>
-</div>
+</ng-container>

@@ -2,6 +2,11 @@ import { provideZoneChangeDetection } from "@angular/core";
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 
+import { registerLocaleData } from '@angular/common';
+import localeEsMx from '@angular/common/locales/es-MX';
+
+registerLocaleData(localeEsMx, 'es-MX');
+
 // Global error handler to show errors on screen
 window.onerror = function (message, source, lineno, colno, error) {
   const errorDiv = document.createElement('div');

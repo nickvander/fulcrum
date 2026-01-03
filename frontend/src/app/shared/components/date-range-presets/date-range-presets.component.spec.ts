@@ -4,6 +4,7 @@ import { DateRangePresetsComponent } from './date-range-presets.component';
 import { DateRangeService } from '../../services/date-range.service';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('DateRangePresetsComponent', () => {
     let component: DateRangePresetsComponent;
@@ -20,7 +21,11 @@ describe('DateRangePresetsComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [DateRangePresetsComponent, NoopAnimationsModule],
+            imports: [
+                DateRangePresetsComponent,
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } })
+            ],
             providers: [
                 { provide: DateRangeService, useValue: dateRangeServiceMock }
             ]

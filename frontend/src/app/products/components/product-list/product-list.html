@@ -4,7 +4,7 @@
 
     <!-- Floating Infinite Scroll Toggle -->
     <button mat-mini-fab class="infinite-scroll-fab" [class.active]="useInfiniteScroll" (click)="toggleInfiniteScroll()"
-      [matTooltip]="useInfiniteScroll ? 'Switch to Pagination' : 'Enable Infinite Scroll'">
+      [matTooltip]="useInfiniteScroll ? t('products.switchToPagination') : t('products.enableInfiniteScroll')">
       <mat-icon>{{ useInfiniteScroll ? 'view_list' : 'all_inclusive' }}</mat-icon>
     </button>
 
@@ -37,7 +37,8 @@
 
           <!-- Action Buttons -->
           <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
-            matTooltip="Toggle Dashboard" class="dashboard-toggle-btn" style="margin-right: 8px;">
+            [matTooltip]="showDashboard ? t('products.hideDashboard') : t('products.showDashboard')"
+            class="dashboard-toggle-btn" style="margin-right: 8px;">
             <mat-icon>analytics</mat-icon>
           </button>
           <button mat-mini-fab color="primary" (click)="onAddProduct()" [matTooltip]="t('products.addProduct')">
@@ -46,7 +47,7 @@
           <button mat-mini-fab color="accent" (click)="onAddBundle()" [matTooltip]="t('products.createBundle')">
             <mat-icon>inventory_2</mat-icon>
           </button>
-          <button mat-mini-fab color="primary" routerLink="/ingest" matTooltip="Scan Product">
+          <button mat-mini-fab color="primary" routerLink="/ingest" [matTooltip]="t('products.scanProduct')">
             <mat-icon>qr_code_scanner</mat-icon>
           </button>
         </div>
@@ -64,36 +65,36 @@
         <!-- ... existing filter fields same as before ... -->
         <div class="filter-row">
           <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-            <mat-label>Product Type</mat-label>
+            <mat-label>{{ t('products.filters.productType') }}</mat-label>
             <mat-select [(ngModel)]="activeProductType" (selectionChange)="onProductTypeChange($event.value)">
-              <mat-option value="all">All Items</mat-option>
-              <mat-option value="product">Products Only</mat-option>
-              <mat-option value="bundle">Bundles Only</mat-option>
+              <mat-option value="all">{{ t('products.filters.all') }}</mat-option>
+              <mat-option value="product">{{ t('products.filters.products') }}</mat-option>
+              <mat-option value="bundle">{{ t('products.filters.bundles') }}</mat-option>
             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-            <mat-label>Min Price</mat-label>
+            <mat-label>{{ t('products.filters.minPrice') }}</mat-label>
             <input matInput type="number" [(ngModel)]="activeFilters.min_price"
               (ngModelChange)="applyFilter('min_price', activeFilters.min_price)" placeholder="0.00">
             <span matPrefix>$&nbsp;</span>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-            <mat-label>Max Price</mat-label>
+            <mat-label>{{ t('products.filters.maxPrice') }}</mat-label>
             <input matInput type="number" [(ngModel)]="activeFilters.max_price"
               (ngModelChange)="applyFilter('max_price', activeFilters.max_price)" placeholder="1000.00">
             <span matPrefix>$&nbsp;</span>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-            <mat-label>Min Stock</mat-label>
+            <mat-label>{{ t('products.filters.minStock') }}</mat-label>
             <input matInput type="number" [(ngModel)]="activeFilters.min_stock"
               (ngModelChange)="applyFilter('min_stock', activeFilters.min_stock)">
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="filter-field sleek-select" subscriptSizing="dynamic">
-            <mat-label>Max Stock</mat-label>
+            <mat-label>{{ t('products.filters.maxStock') }}</mat-label>
             <input matInput type="number" [(ngModel)]="activeFilters.max_stock"
               (ngModelChange)="applyFilter('max_stock', activeFilters.max_stock)">
           </mat-form-field>
@@ -106,17 +107,19 @@
       <div class="quick-filters-bar">
         <mat-chip-listbox aria-label="Quick Filters" multiple="true" class="quick-chips">
           <mat-chip-option (click)="applyQuickFilter('in_stock', null)" [selected]="activeFilters.min_stock === 1"
-            class="app-chip-success">In Stock</mat-chip-option>
+            class="app-chip-success">{{ t('products.stockStatus.inStock') }}</mat-chip-option>
           <mat-chip-option (click)="applyQuickFilter('out_of_stock', null)" [selected]="activeFilters.max_stock === 0"
-            class="app-chip-error">Out of Stock</mat-chip-option>
+            class="app-chip-error">{{ t('products.stockStatus.outOfStock') }}</mat-chip-option>
           <mat-chip-option (click)="applyQuickFilter('low_stock', null)" [selected]="activeFilters.max_stock === 10"
-            class="app-chip-warning">Low Stock</mat-chip-option>
+            class="app-chip-warning">{{ t('products.stockStatus.lowStock') }}</mat-chip-option>
         </mat-chip-listbox>
 
         <div class="view-controls-container">
           <mat-button-toggle-group [(ngModel)]="viewMode" aria-label="View Mode" class="compact-toggle tiny-toggle">
-            <mat-button-toggle value="list" matTooltip="List View"><mat-icon>view_list</mat-icon></mat-button-toggle>
-            <mat-button-toggle value="grid" matTooltip="Grid View"><mat-icon>grid_view</mat-icon></mat-button-toggle>
+            <mat-button-toggle value="list"
+              [matTooltip]="t('products.listView')"><mat-icon>view_list</mat-icon></mat-button-toggle>
+            <mat-button-toggle value="grid"
+              [matTooltip]="t('products.gridView')"><mat-icon>grid_view</mat-icon></mat-button-toggle>
           </mat-button-toggle-group>
         </div>
       </div>
@@ -216,7 +219,7 @@
             <div class="product-metrics">
               <div class="price">{{ product.default_resale_price | currency }}</div>
               <div class="stock" [class.low-stock]="(product.stock_quantity || 0) <= 10">
-                {{ product.stock_quantity }} in stock
+                {{ product.stock_quantity }} {{ t('products.stockStatus.inStock') }}
               </div>
             </div>
           </mat-card-content>
@@ -263,14 +266,14 @@
           </ng-container>
           <!-- Image Column -->
           <ng-container matColumnDef="image">
-            <th mat-header-cell *matHeaderCellDef> Image </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('products.columns.image') }} </th>
             <td mat-cell *matCellDef="let element">
               <img [src]="getImageUrl(getPrimaryImage(element))" class="table-thumbnail" (error)="onImageError($event)">
             </td>
           </ng-container>
           <!-- Name Column -->
           <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Name </th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.name') }} </th>
             <td mat-cell *matCellDef="let element">
               <div class="product-name-cell">
                 <span class="product-name">{{element.name}}</span>
@@ -279,36 +282,38 @@
                 }
               </div>
               @if (element.is_bundle) {
-              <span class="table-bundle-badge">Bundle</span>
+              <span class="table-bundle-badge">{{ t('products.bundle') }}</span>
               }
             </td>
           </ng-container>
           <!-- SKU Column -->
           <ng-container matColumnDef="sku">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> SKU </th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('products.columns.sku') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.sku}} </td>
           </ng-container>
           <!-- Price Column -->
           <ng-container matColumnDef="price">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Price </th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.price') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.default_resale_price | currency}} </td>
           </ng-container>
           <!-- Cost Column -->
           <ng-container matColumnDef="cost_price">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Cost </th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.cost') }} </th>
             <td mat-cell *matCellDef="let element">
               <div *ngIf="getEffectiveCost(element) > 0" style="font-size: 0.9em;">
-                {{ element.is_bundle ? 'Est: ' : 'Last: ' }}{{ getEffectiveCost(element) | currency }}
+                {{ element.is_bundle ? (t('products.estCost') + ': ') : (t('products.lastCost') + ': ') }}{{
+                getEffectiveCost(element) | currency }}
               </div>
               <div class="text-muted" style="font-size: 0.8em;"
                 *ngIf="element.average_cost || (element.is_bundle && getBundleAverageCost(element) > 0)">
-                Avg: {{ (element.is_bundle ? getBundleAverageCost(element) : element.average_cost) | currency }}
+                {{ t('products.avgCost') }}: {{ (element.is_bundle ? getBundleAverageCost(element) :
+                element.average_cost) | currency }}
               </div>
             </td>
           </ng-container>
           <!-- Stock Column -->
           <ng-container matColumnDef="stock">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Stock </th>
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.stock') }} </th>
             <td mat-cell *matCellDef="let element">
               <span
                 [class.low-stock]="getCurrentStock(element) < (element.low_stock_quantity_threshold || 10) || (element.days_of_inventory !== undefined && element.days_of_inventory < (element.low_inventory_threshold || 30))"
@@ -318,13 +323,13 @@
               <div *ngIf="element.days_of_inventory !== undefined && element.days_of_inventory < 999"
                 class="text-xs text-gray-500 mt-1"
                 [class.text-red-500]="element.days_of_inventory < (element.low_inventory_threshold || 30)">
-                {{ element.days_of_inventory | number:'1.0-1' }} days
+                {{ element.days_of_inventory | number:'1.0-1' }} {{ t('common.days') }}
               </div>
             </td>
           </ng-container>
           <!-- Marketplace Status Column -->
           <ng-container matColumnDef="marketplaces">
-            <th mat-header-cell *matHeaderCellDef> Marketplaces </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('products.columns.marketplaces') }} </th>
             <td mat-cell *matCellDef="let element">
               <app-marketplace-status [listings]="element.marketplace_listings"></app-marketplace-status>
               @if (!element.marketplace_listings?.length) {
@@ -334,26 +339,26 @@
           </ng-container>
           <!-- Actions Column -->
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef> Actions </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('common.actions') }} </th>
             <td mat-cell *matCellDef="let element">
               <button mat-icon-button [matMenuTriggerFor]="tableMenu" (click)="$event.stopPropagation()">
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #tableMenu="matMenu">
                 <button mat-menu-item (click)="openEditPanel(element)">
-                  <mat-icon>edit</mat-icon><span>Edit</span>
+                  <mat-icon>edit</mat-icon><span>{{ t('common.edit') }}</span>
                 </button>
                 <button mat-menu-item (click)="openStockAdjustmentDialog(element)">
-                  <mat-icon>trending_up</mat-icon><span>Adjust Stock</span>
+                  <mat-icon>trending_up</mat-icon><span>{{ t('products.adjustStock') }}</span>
                 </button>
                 @if (element.inventory_adjustments && element.inventory_adjustments.length > 0) {
                 <button mat-menu-item (click)="showStockHistory(element)">
-                  <mat-icon>history</mat-icon><span>History</span>
+                  <mat-icon>history</mat-icon><span>{{ t('products.stockHistory') }}</span>
                 </button>
                 }
                 <mat-divider></mat-divider>
                 <button mat-menu-item color="warn" (click)="deleteProduct(element.id)">
-                  <mat-icon>delete</mat-icon><span>Delete</span>
+                  <mat-icon>delete</mat-icon><span>{{ t('common.delete') }}</span>
                 </button>
               </mat-menu>
             </td>

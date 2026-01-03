@@ -20,10 +20,10 @@
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="sleek-auth-field">
-              <mat-label>{{ t('auth.email') }}</mat-label>
+              <mat-label>{{ t('common.email') }}</mat-label>
               <input matInput formControlName="email" type="email" placeholder="name@company.com" autocomplete="email">
               <mat-icon matPrefix>email</mat-icon>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">{{ t('auth.email') }} is
+              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">{{ t('common.email') }} is
                 required</mat-error>
               <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
             </mat-form-field>

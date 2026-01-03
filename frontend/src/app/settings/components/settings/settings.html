@@ -192,13 +192,13 @@
 
           <!-- Change Log -->
           <div class="settings-section">
-            <h2 class="section-title">{{ t('settings.changeLog') }}</h2>
+            <h2 class="section-title">{{ t('settings.changeLogButton') }}</h2>
             <p class="section-desc">{{ t('settings.changeLogDesc') }}</p>
             <div class="settings-card">
               <div class="change-log-row">
                 <div class="log-info">
                   <mat-icon>history</mat-icon>
-                  <span>{{ t('settings.changeLog') }}</span>
+                  <span>{{ t('settings.changeLogButton') }}</span>
                 </div>
                 <button mat-stroked-button (click)="openChangeLogDialog()">
                   <mat-icon>visibility</mat-icon>
@@ -232,7 +232,7 @@
                     <mat-option value="gmail">Gmail</mat-option>
                     <mat-option value="outlook">Outlook</mat-option>
                     <mat-option value="yahoo">Yahoo</mat-option>
-                    <mat-option value="custom">Custom SMTP</mat-option>
+                    <mat-option value="custom">{{ t('settings.customSmtp') }}</mat-option>
                   </mat-select>
                 </mat-form-field>
 
@@ -249,7 +249,7 @@
 
                 <div class="form-row">
                   <mat-form-field appearance="outline" class="sleek-field">
-                    <mat-label>{{ t('settings.email') }}</mat-label>
+                    <mat-label>{{ t('common.email') }}</mat-label>
                     <input matInput formControlName="username" type="email" autocomplete="off">
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="sleek-field">

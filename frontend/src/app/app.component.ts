@@ -13,6 +13,7 @@ import { ScreenService } from './core/services/screen.service';
 import { SettingsService } from './core/services/settings.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoService } from '@ngneat/transloco';
+import { DateAdapter, MatNativeDateModule } from '@angular/material/core';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,8 @@ import { TranslocoService } from '@ngneat/transloco';
     MatSidenavModule,
     RouterModule,
     CoreModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatNativeDateModule
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -37,7 +39,8 @@ export class AppComponent {
     private loadingService: LoadingService,
     private screenService: ScreenService,
     private settingsService: SettingsService,
-    private translocoService: TranslocoService
+    private translocoService: TranslocoService,
+    private dateAdapter: DateAdapter<Date>
   ) {
     this.isMobile$ = this.screenService.isMobile$;
 
@@ -49,7 +52,7 @@ export class AppComponent {
 
     this.loading$ = this.loadingService.loading$.pipe(delay(0));
 
-    // Subscribe to theme changes
+    // Subscribe to theme and language changes
     this.settingsService.settings$.subscribe(settings => {
       if (settings?.theme === 'dark') {
         document.body.classList.add('dark-theme');
@@ -57,10 +60,14 @@ export class AppComponent {
         document.body.classList.remove('dark-theme');
       }
 
-      // Apply saved language preference
-      if (settings?.language) {
-        this.translocoService.setActiveLang(settings.language);
-      }
+      const lang = settings?.language || 'en';
+      this.translocoService.setActiveLang(lang);
+      this.dateAdapter.setLocale(lang);
+    });
+
+    // Subscribe to language changes to update date adapter
+    this.translocoService.langChanges$.subscribe(lang => {
+      this.dateAdapter.setLocale(lang);
     });
   }
 }

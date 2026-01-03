@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatMenuModule } from '@angular/material/menu';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { UserService, UserListParams } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { RouterModule, Router } from '@angular/router';
@@ -62,7 +62,8 @@ export class UserList implements OnInit, AfterViewInit {
   constructor(
     private userService: UserService,
     private dialog: MatDialog,
-    private router: Router
+    private router: Router,
+    private translocoService: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -144,10 +145,10 @@ export class UserList implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       width: '400px',
       data: {
-        title: 'Deactivate User',
-        message: 'Are you sure you want to deactivate this user? The user will no longer be able to log in.',
-        confirmText: 'Deactivate',
-        cancelText: 'Cancel'
+        title: this.translocoService.translate('users.deactivateTitle'),
+        message: this.translocoService.translate('users.deactivateMessage'),
+        confirmText: this.translocoService.translate('users.deactivate'),
+        cancelText: this.translocoService.translate('common.cancel')
       }
     });
 
@@ -169,10 +170,10 @@ export class UserList implements OnInit, AfterViewInit {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       width: '400px',
       data: {
-        title: 'Permanently Delete User',
-        message: 'Are you sure you want to permanently delete this user? This action cannot be undone.',
-        confirmText: 'Delete Permanently',
-        cancelText: 'Cancel'
+        title: this.translocoService.translate('users.deleteTitle'),
+        message: this.translocoService.translate('users.deleteMessage'),
+        confirmText: this.translocoService.translate('common.delete'),
+        cancelText: this.translocoService.translate('common.cancel')
       }
     });
 

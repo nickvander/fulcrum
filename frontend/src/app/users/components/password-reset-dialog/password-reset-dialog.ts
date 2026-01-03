@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { UserService } from '../../services/user.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { GeneratedPasswordDialog } from '../generated-password-dialog/generated-password-dialog';
@@ -20,8 +21,9 @@ import { Subject, takeUntil } from 'rxjs';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
-],
+    MatButtonModule,
+    TranslocoModule
+  ],
 })
 export class PasswordResetDialog implements OnDestroy {
   form: FormGroup;
@@ -33,7 +35,8 @@ export class PasswordResetDialog implements OnDestroy {
     private fb: FormBuilder,
     private userService: UserService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private translocoService: TranslocoService
   ) {
     // For admin resets, we don't need password input fields as the system generates a random password
     if (data.isForAdmin) {
@@ -97,7 +100,7 @@ export class PasswordResetDialog implements OnDestroy {
               // Close the password reset dialog after showing the generated password dialog
               this.dialogRef.close({ success: true, newPassword: response.new_password });
             } else {
-              this.snackBar.open('Password reset successfully. New password has been generated and should be communicated to the user securely.', 'Close', {
+              this.snackBar.open(this.translocoService.translate('users.messages.resetSuccess'), this.translocoService.translate('common.close'), {
                 duration: 5000,
               });
               this.dialogRef.close({ success: true });
@@ -112,7 +115,7 @@ export class PasswordResetDialog implements OnDestroy {
     } else if (this.form.valid) {
       // For user reset, we would need the token - this is for self-initiated reset
       // However, since admin shouldn't be doing user's token-based reset, we'll just show an appropriate message
-      this.snackBar.open('User-initiated password reset not available from admin panel.', 'Close', {
+      this.snackBar.open(this.translocoService.translate('users.errors.adminResetOnly'), this.translocoService.translate('common.close'), {
         duration: 5000,
       });
       this.dialogRef.close();

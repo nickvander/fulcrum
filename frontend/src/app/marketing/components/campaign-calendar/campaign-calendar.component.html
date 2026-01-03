@@ -1,69 +1,72 @@
-<div class="calendar-container">
-    <!-- Header -->
-    <div class="calendar-header">
-        <div class="header-left">
-            <button mat-icon-button routerLink="/marketing">
-                <mat-icon>arrow_back</mat-icon>
-            </button>
-            <h1>Marketing Calendar</h1>
-        </div>
-        <div class="header-center">
-            <button mat-icon-button (click)="previousMonth()">
-                <mat-icon>chevron_left</mat-icon>
-            </button>
-            <span class="current-month">{{ currentDate | date:'MMMM yyyy' }}</span>
-            <button mat-icon-button (click)="nextMonth()">
-                <mat-icon>chevron_right</mat-icon>
-            </button>
-        </div>
-        <div class="header-right">
-            <button mat-stroked-button (click)="goToToday()">Today</button>
-            <button mat-raised-button color="primary" routerLink="/marketing/campaigns/new">
-                <mat-icon>add</mat-icon>
-                New Campaign
-            </button>
-        </div>
-    </div>
-
-    <!-- Calendar Grid -->
-    <mat-card class="calendar-card">
-        <!-- Day Headers -->
-        <div class="weekday-header">
-            <div class="weekday" *ngFor="let day of weekdays">{{ day }}</div>
+<ng-container *transloco="let t">
+    <div class="calendar-container">
+        <!-- Header -->
+        <div class="calendar-header">
+            <div class="header-left">
+                <button mat-icon-button routerLink="/marketing">
+                    <mat-icon>arrow_back</mat-icon>
+                </button>
+                <h1>{{ t('marketing.calendar') }}</h1>
+            </div>
+            <div class="header-center">
+                <button mat-icon-button (click)="previousMonth()">
+                    <mat-icon>chevron_left</mat-icon>
+                </button>
+                <span class="current-month">{{ currentDate | date:'MMMM yyyy':undefined:currentLang }}</span>
+                <button mat-icon-button (click)="nextMonth()">
+                    <mat-icon>chevron_right</mat-icon>
+                </button>
+            </div>
+            <div class="header-right">
+                <button mat-stroked-button (click)="goToToday()">{{ t('common.today') }}</button>
+                <button mat-raised-button color="primary" routerLink="/marketing/campaigns/new">
+                    <mat-icon>add</mat-icon>
+                    {{ t('marketing.newCampaign') }}
+                </button>
+            </div>
         </div>
 
-        <!-- Calendar Days -->
-        <div class="calendar-grid" cdkDropListGroup>
-            <div class="calendar-day" *ngFor="let day of calendarDays" [class.other-month]="!day.isCurrentMonth"
-                [class.today]="day.isToday" cdkDropList [cdkDropListData]="day.events"
-                (cdkDropListDropped)="onEventDrop($event, day)">
+        <!-- Calendar Grid -->
+        <mat-card class="calendar-card">
+            <!-- Day Headers -->
+            <div class="weekday-header">
+                <div class="weekday" *ngFor="let day of weekdays">{{ day }}</div>
+            </div>
 
-                <span class="day-number">{{ day.date | date:'d' }}</span>
+            <!-- Calendar Days -->
+            <div class="calendar-grid" cdkDropListGroup>
+                <div class="calendar-day" *ngFor="let day of calendarDays" [class.other-month]="!day.isCurrentMonth"
+                    [class.today]="day.isToday" cdkDropList [cdkDropListData]="day.events"
+                    (cdkDropListDropped)="onEventDrop($event, day)">
 
-                <div class="day-events">
-                    <div class="event-chip" *ngFor="let event of day.events" cdkDrag [cdkDragData]="event"
-                        [class]="'status-' + event.status" [matTooltip]="event.name + ' (' + event.channel_type + ')'">
-                        <mat-icon class="channel-icon">{{ getChannelIcon(event.channel_type) }}</mat-icon>
-                        <span class="event-name">{{ event.name }}</span>
+                    <span class="day-number">{{ day.date | date:'d' }}</span>
+
+                    <div class="day-events">
+                        <div class="event-chip" *ngFor="let event of day.events" cdkDrag [cdkDragData]="event"
+                            [class]="'status-' + event.status"
+                            [matTooltip]="event.name + ' (' + event.channel_type + ')'">
+                            <mat-icon class="channel-icon">{{ getChannelIcon(event.channel_type) }}</mat-icon>
+                            <span class="event-name">{{ event.name }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </mat-card>
+        </mat-card>
 
-    <!-- Legend -->
-    <div class="calendar-legend">
-        <span class="legend-item">
-            <span class="legend-dot status-draft"></span> Draft
-        </span>
-        <span class="legend-item">
-            <span class="legend-dot status-scheduled"></span> Scheduled
-        </span>
-        <span class="legend-item">
-            <span class="legend-dot status-published"></span> Published
-        </span>
-        <span class="legend-item">
-            <span class="legend-dot status-failed"></span> Failed
-        </span>
+        <!-- Legend -->
+        <div class="calendar-legend">
+            <span class="legend-item">
+                <span class="legend-dot status-draft"></span> {{ t('marketing.status.draft') }}
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot status-scheduled"></span> {{ t('marketing.status.scheduled') }}
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot status-published"></span> {{ t('marketing.status.completed') }}
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot status-failed"></span> Failed
+            </span>
+        </div>
     </div>
-</div>
+</ng-container>
