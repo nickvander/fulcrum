@@ -31,7 +31,8 @@ describe('ProductScannerComponent', () => {
             close: vi.fn()
         };
         settingsServiceSpy = {
-            storeSettings$: of({ ai_config: { google_configured: true } })
+            storeSettings$: of({ ai_config: { google_configured: true, enabled: true } }),
+            loadStoreSettings: vi.fn()
         };
 
         await TestBed.configureTestingModule({
@@ -66,7 +67,7 @@ describe('ProductScannerComponent', () => {
 
     it('should process image via AI when enabled', () => {
         const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' });
-        const mockResponse = { name: 'Test Product', description: 'Desc' };
+        const mockResponse = { name: 'Test Product', description: 'Desc', exists: false };
         aiServiceSpy.identifyProduct.mockReturnValue(of(mockResponse));
 
         vi.spyOn(component.scanComplete, 'emit');
@@ -77,6 +78,28 @@ describe('ProductScannerComponent', () => {
         expect(component.isProcessing).toBe(false);
         expect(component.scanComplete.emit).toHaveBeenCalledWith(expect.objectContaining({ ...mockResponse, imageFile: mockFile }));
         expect(dialogRefSpy.close).toHaveBeenCalled();
+    });
+
+    it('should handle existing product detection', () => {
+        const mockFile = new File([''], 'test.jpg', { type: 'image/jpeg' });
+        const mockResponse = {
+            name: 'Existing Product',
+            sku: 'EXIST-123',
+            exists: true,
+            product_id: 123
+        };
+        aiServiceSpy.identifyProduct.mockReturnValue(of(mockResponse));
+
+        vi.spyOn(component.scanComplete, 'emit');
+
+        component.processImage(mockFile);
+
+        expect(aiServiceSpy.identifyProduct).toHaveBeenCalledWith(mockFile);
+        expect(component.productFound).toBe(true);
+        expect(component.foundProduct).toEqual(mockResponse);
+        // Should NOT close dialog or emit scanComplete yet
+        expect(component.scanComplete.emit).not.toHaveBeenCalled();
+        expect(dialogRefSpy.close).not.toHaveBeenCalled();
     });
 
     it('should perform barcode lookup', () => {
