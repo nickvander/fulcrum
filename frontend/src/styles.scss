@@ -441,6 +441,21 @@ h6 {
     select,
     .mat-mdc-input-element {
         color: var(--text-main) !important;
+
+        &::placeholder {
+            color: var(--text-hint) !important;
+        }
+    }
+
+    // Material 3 / MDC specific overrides for text fields
+    --mdc-filled-text-field-input-text-color: var(--text-main);
+    --mdc-outlined-text-field-input-text-color: var(--text-main);
+    --mat-form-field-state-layer-color: var(--text-main);
+
+    // Ensure placeholders in Material fields also follow theme
+    .mat-mdc-form-field {
+        --mdc-filled-text-field-input-text-placeholder-color: var(--text-hint);
+        --mdc-outlined-text-field-input-text-placeholder-color: var(--text-hint);
     }
 
     // Info icons that are black
