@@ -89,10 +89,10 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
         // Need to check Store settings for AI config
         this.settingsService.storeSettings$.subscribe(storeSettings => {
-            console.log('[Scanner] Store settings received:', storeSettings);
+
             if (storeSettings?.ai_config) {
                 this.isAiEnabled = storeSettings.ai_config.enabled;
-                console.log('[Scanner] AI Enabled:', this.isAiEnabled);
+
             }
         });
 
@@ -208,13 +208,13 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     }
 
     processImage(file: File): void {
-        console.log('[Scanner] processImage called. isAiEnabled:', this.isAiEnabled);
+
         this.isProcessing = true;
         this.stopCamera();
 
         if (!this.isAiEnabled) {
             // Manual Mode: Just emit the file
-            console.log('[Scanner] AI disabled, using manual mode');
+
             const result = { imageFile: file };
             this.scanComplete.emit(result as any);
             if (this.dialogRef) this.dialogRef.close(result);
@@ -222,7 +222,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             return;
         }
 
-        console.log('[Scanner] Calling AI service...');
+
         this.isAnalyzing = true; // Start analysis overlay
 
         // Save file for later use if we find a duplicate
@@ -230,13 +230,13 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
         this.aiService.identifyProduct(file).subscribe({
             next: (response) => {
-                console.log('[Scanner] AI Response received:', response);
+
                 this.isProcessing = false;
                 this.isAnalyzing = false;
 
                 // Check for existing product
                 if (response.exists) {
-                    console.log('[Scanner] Product exists in database');
+
                     this.productFound = true;
                     this.foundProduct = response;
                     this.cdr.detectChanges(); // Force update

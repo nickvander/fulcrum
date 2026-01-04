@@ -43,7 +43,7 @@ def find_product_in_database(name: str, sku: str = None, brand: str = None) -> d
     from src.database import SessionLocal
     from src.models.product import Product
     
-    print(f"[DBTool] find_product_in_database called with: name='{name}', sku='{sku}', brand='{brand}'")
+
     
     # Normalize string 'None' to actual None
     if sku and str(sku).lower() in ('none', 'null', ''):
@@ -51,7 +51,7 @@ def find_product_in_database(name: str, sku: str = None, brand: str = None) -> d
     if brand and str(brand).lower() in ('none', 'null', ''):
         brand = None
     
-    print(f"[DBTool] After normalization: name='{name}', sku={sku}, brand={brand}")
+
     
     db = SessionLocal()
     try:
@@ -75,7 +75,7 @@ def find_product_in_database(name: str, sku: str = None, brand: str = None) -> d
                 (Product.name.ilike(f"%{name.split()[0]}%"))  # First word of name
             )
         
-        print(f"[DBTool] Number of search conditions: {len(conditions)}")
+
         
         if not conditions:
             return {
@@ -87,7 +87,7 @@ def find_product_in_database(name: str, sku: str = None, brand: str = None) -> d
         # Query with OR conditions
         product = db.query(Product).filter(or_(*conditions)).first()
         
-        print(f"[DBTool] Query result: {product.name if product else 'None found'}")
+
         
         if product:
             return {
