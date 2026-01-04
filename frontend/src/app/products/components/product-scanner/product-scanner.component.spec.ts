@@ -10,21 +10,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { NgxScannerQrcodeComponent } from 'ngx-scanner-qrcode';
 
-@Component({
-    selector: 'ngx-scanner-qrcode',
-    template: '',
-    standalone: true
-})
-class MockNgxScannerQrcodeComponent {
-    @Input() config: any;
-    @Output() event = new EventEmitter();
-    public isStart = false;
-
-    public start() { return of([]); }
-    public stop() { }
-}
 
 describe('ProductScannerComponent', () => {
     let component: ProductScannerComponent;
@@ -65,10 +51,6 @@ describe('ProductScannerComponent', () => {
                 { provide: SettingsService, useValue: settingsServiceSpy }
             ]
         })
-            .overrideComponent(ProductScannerComponent, {
-                remove: { imports: [NgxScannerQrcodeComponent] },
-                add: { imports: [MockNgxScannerQrcodeComponent] }
-            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ProductScannerComponent);
@@ -127,9 +109,6 @@ describe('ProductScannerComponent', () => {
         const mockProduct = { id: 1, name: 'Barcode Product', sku: 'TEST-SKU' };
         vi.spyOn(component.scanComplete, 'emit');
 
-        // Mock scanner component reference since it's ViewChild
-        component.scanner = { stop: vi.fn() } as any;
-
         component.lookupProduct(mockBarcode);
 
         const req = httpTestingController.expectOne(req => req.url.includes('/products/lookup/barcode') && req.params.get('barcode') === mockBarcode);
@@ -144,7 +123,6 @@ describe('ProductScannerComponent', () => {
     it('should handle barcode not found', () => {
         const mockBarcode = '999999';
         vi.spyOn(component.scanComplete, 'emit');
-        component.scanner = { stop: vi.fn() } as any;
 
         component.lookupProduct(mockBarcode);
 
