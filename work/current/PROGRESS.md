@@ -3,6 +3,6 @@
 ## Status: Ready
 
 ### Current Objective
-- [/] AI Integration & Intelligent Agents
-  - Plan: [73-ai-integration-plan.md](./73-ai-integration-plan.md)
-  - Log: [73-ai-integration-log.md](./73-ai-integration-log.md)
+- [x] AI Integration & Intelligent Agents
+  - Plan: [73-ai-integration-plan.md](../archive/73-ai-integration-plan.md)
+  - Log: [73-ai-integration-log.md](../archive/73-ai-integration-log.md)
