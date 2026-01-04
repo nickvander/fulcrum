@@ -90,9 +90,9 @@ graph TD
 
     A[ADKManager]:::manager --> B[AgentOrchestrator]:::orchestrator
     B --> C[ProductVisionRootAgent]:::agent
-    C --> D[VisionAnalysisAgent]:::agent
-    D --> E[SearchTool]:::tool
-    D --> F[FulcrumProductTool]:::tool
+    C -->|Sequential| D[VisionAnalysisAgent]:::agent
+    C -->|Sequential| E[ProductLookupAgent]:::agent
+    E --> F[find_product_in_database]:::tool
 ```
 
 ### Directory Structure
