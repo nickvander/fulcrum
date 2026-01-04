@@ -30,22 +30,29 @@ export class ProductsComponent implements OnInit {
   }
 
   openAddPanel(): void {
+    // Generate fresh identifiers for manual creation
+    const newSku = this.productService.generateUniqueSku();
+    const newBarcode = this.productService.generateBarcodeFromSku(newSku);
+    const newQrValue = `${window.location.origin}/products/view/${newSku}`;
+
     const newProduct = {
       id: 0,
       name: '',
-      sku: '',
+      sku: newSku,
       description: '',
       default_resale_price: 0,
       cost_price: 0,
       images: [],
       custom_fields: [],
-      is_bundle: false
+      is_bundle: false,
+      barcode_value: newBarcode,
+      qrcode_value: newQrValue
     } as Product;
 
     this.dialog.open(ProductDetailsDialogComponent, {
       width: '1000px',
       maxHeight: '90vh',
-      data: { product: newProduct, mode: 'create' }
+      data: { product: newProduct, mode: 'add' }
     });
   }
 
@@ -59,21 +66,31 @@ export class ProductsComponent implements OnInit {
 
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
-          // Case 1: Existing Product Found
-          if (result.foundProduct) {
-            this.dialog.open(ProductDetailsDialogComponent, {
-              width: '1000px',
-              maxHeight: '90vh',
-              data: { product: result.foundProduct, mode: 'edit' }
+          console.log('[Products] Scanner result:', result);
+
+          // Case 1: User clicked "Edit Existing" on a found product
+          if (result.action === 'edit-existing' && result.productId) {
+            // Fetch the full product and open in edit mode
+            this.productService.getProductById(result.productId).subscribe(product => {
+              this.dialog.open(ProductDetailsDialogComponent, {
+                width: '1000px',
+                maxHeight: '90vh',
+                data: { product: product, mode: 'edit' }
+              });
             });
             return;
           }
 
-          // Case 2: New / Not Found
+          // Case 2: New product (either AI didn't find match, or user clicked "Create New")
+          // Generate fresh identifiers for all new products
+          const newSku = this.productService.generateUniqueSku();
+          const newBarcode = this.productService.generateBarcodeFromSku(newSku);
+          const newQrValue = `${window.location.origin}/products/view/${newSku}`;
+
           const newProduct = {
             id: 0,
             name: result.name || '',
-            sku: result.sku || '',
+            sku: newSku,
             description: result.description || '',
             brand: result.brand || '',
             category: result.category || '',
@@ -82,14 +99,17 @@ export class ProductsComponent implements OnInit {
             images: [],
             custom_fields: [],
             is_bundle: false,
-            barcode_value: result.barcode
+            barcode_value: newBarcode,
+            qrcode_value: newQrValue
           } as Product;
+
+          console.log('[Products] Opening dialog with new product:', newProduct);
 
           // Open Add Dialog with pre-filled data
           this.dialog.open(ProductDetailsDialogComponent, {
             width: '1000px',
             maxHeight: '90vh',
-            data: { product: newProduct, mode: 'create' }
+            data: { product: newProduct, mode: 'add' }
           });
         }
       });

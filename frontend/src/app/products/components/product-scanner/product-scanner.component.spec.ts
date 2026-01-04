@@ -3,13 +3,28 @@ import { ProductScannerComponent } from './product-scanner.component';
 import { AiService } from '../../../core/services/ai.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { MatDialogRef } from '@angular/material/dialog';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { NgxScannerQrcodeComponent } from 'ngx-scanner-qrcode';
+
+@Component({
+    selector: 'ngx-scanner-qrcode',
+    template: '',
+    standalone: true
+})
+class MockNgxScannerQrcodeComponent {
+    @Input() config: any;
+    @Output() event = new EventEmitter();
+    public isStart = false;
+
+    public start() { return of([]); }
+    public stop() { }
+}
 
 describe('ProductScannerComponent', () => {
     let component: ProductScannerComponent;
@@ -49,7 +64,12 @@ describe('ProductScannerComponent', () => {
                 { provide: MatDialogRef, useValue: dialogRefSpy },
                 { provide: SettingsService, useValue: settingsServiceSpy }
             ]
-        }).compileComponents();
+        })
+            .overrideComponent(ProductScannerComponent, {
+                remove: { imports: [NgxScannerQrcodeComponent] },
+                add: { imports: [MockNgxScannerQrcodeComponent] }
+            })
+            .compileComponents();
 
         fixture = TestBed.createComponent(ProductScannerComponent);
         component = fixture.componentInstance;
@@ -134,5 +154,57 @@ describe('ProductScannerComponent', () => {
         expect(snackBarSpy.open).toHaveBeenCalledWith('Product not found. Opening creation form...', 'Close', expect.anything());
         expect(component.scanComplete.emit).toHaveBeenCalledWith({ barcode: mockBarcode, notFound: true });
         expect(dialogRefSpy.close).toHaveBeenCalled();
+    });
+
+    it('should handle drag events', () => {
+        const dragEvent = {
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+            type: 'dragover'
+        } as unknown as DragEvent;
+
+        component.onDragOver(dragEvent);
+        expect(component.isDragOver).toBe(true);
+        expect(dragEvent.preventDefault).toHaveBeenCalled();
+
+        component.onDragLeave(dragEvent);
+        expect(component.isDragOver).toBe(false);
+    });
+
+    it('should handle file drop with image', () => {
+        const mockFile = new File([''], 'test.png', { type: 'image/png' });
+        const dropEvent = {
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+            dataTransfer: {
+                files: [mockFile]
+            }
+        } as unknown as DragEvent;
+
+        vi.spyOn(component, 'processImage').mockImplementation(() => { });
+
+        component.onDrop(dropEvent);
+
+        expect(component.isDragOver).toBe(false);
+        expect(component.processImage).toHaveBeenCalledWith(mockFile);
+        expect(dropEvent.preventDefault).toHaveBeenCalled();
+    });
+
+    it('should reject non-image file drop', () => {
+        const mockFile = new File([''], 'test.txt', { type: 'text/plain' });
+        const dropEvent = {
+            preventDefault: vi.fn(),
+            stopPropagation: vi.fn(),
+            dataTransfer: {
+                files: [mockFile]
+            }
+        } as unknown as DragEvent;
+
+        vi.spyOn(component, 'processImage').mockImplementation(() => { });
+
+        component.onDrop(dropEvent);
+
+        expect(component.processImage).not.toHaveBeenCalled();
+        expect(snackBarSpy.open).toHaveBeenCalledWith('Please drop an image file.', 'Close', expect.anything());
     });
 });

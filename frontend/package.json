@@ -46,6 +46,7 @@
     "@vitest/utils": "4.0.15",
     "acorn": "^8.14.0",
     "acorn-walk": "^8.3.4",
+    "barcode-detector": "^3.0.8",
     "buffer-builder": "^0.2.0",
     "cac": "^6.7.14",
     "chai": "^6.2.1",

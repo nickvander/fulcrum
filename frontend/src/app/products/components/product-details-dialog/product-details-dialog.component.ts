@@ -134,6 +134,11 @@ export class ProductDetailsDialogComponent implements OnInit {
     }
 
     onCancelEdit(): void {
+        // If creating a new product (no ID), cancel means close the dialog
+        if (!this.product.id) {
+            this.dialogRef.close();
+            return;
+        }
         this.isEditMode = false;
     }
 

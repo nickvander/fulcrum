@@ -39,29 +39,38 @@
                     <input matInput formControlName="name" [placeholder]="t('products.productName')">
                   </mat-form-field>
 
-                  <mat-form-field>
-                    <mat-label>{{ t('products.sku') }}</mat-label>
-                    <input matInput formControlName="sku" [placeholder]="t('products.sku')">
-                  </mat-form-field>
+                  <div class="sku-field-container" style="display: flex; align-items: baseline; gap: 8px;">
+                    <mat-form-field style="flex: 1;">
+                      <mat-label>{{ t('products.sku') }}</mat-label>
+                      <input matInput formControlName="sku" [placeholder]="t('products.sku')">
+                    </mat-form-field>
+                    <button type="button" mat-stroked-button color="accent" (click)="regenerateSku()">
+                      Regenerate SKU
+                    </button>
+                  </div>
 
+                  <!-- QR Code Display -->
+                  <div class="qr-display-section"
+                    style="display: flex; align-items: center; gap: 16px; padding: 12px 0;">
+                    <canvas #qrCanvas
+                      style="border: 1px solid var(--border-color); border-radius: 4px; min-width: 80px; min-height: 80px;"></canvas>
+                    <button type="button" mat-stroked-button color="accent" (click)="generateQRCode()"
+                      style="height: 40px;">
+                      <mat-icon>qr_code</mat-icon> Generate QR
+                    </button>
+                    <!-- Hidden field for form storage -->
+                    <input type="hidden" formControlName="qrcode_value">
+                  </div>
+
+                  <!-- Barcode / UPC Field -->
                   <div class="barcode-field-container" style="display: flex; align-items: baseline; gap: 8px;">
                     <mat-form-field style="flex: 1;">
                       <mat-label>Barcode / UPC</mat-label>
                       <input matInput formControlName="barcode_value" placeholder="Scan or Enter Code">
                     </mat-form-field>
-                    <button type="button" mat-stroked-button color="accent" (click)="generateStoreBarcode()"
+                    <button type="button" mat-stroked-button color="accent" (click)="regenerateBarcode()"
                       [disabled]="!productForm.get('sku')?.value">
-                      Generate Store Barcode
-                    </button>
-                  </div>
-
-                  <div class="qrcode-field-container" style="display: flex; align-items: baseline; gap: 8px;">
-                    <mat-form-field style="flex: 1;">
-                      <mat-label>QR Code URL</mat-label>
-                      <input matInput formControlName="qrcode_value" placeholder="Generated automatically">
-                    </mat-form-field>
-                    <button type="button" mat-stroked-button color="accent" (click)="generateQRCode()">
-                      Generate QR Code
+                      Regenerate Barcode
                     </button>
                   </div>
 

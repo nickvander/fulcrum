@@ -423,4 +423,27 @@ export class ProductService {
       })
     );
   }
+
+  // Helper to generate a SKU if none is provided
+  generateUniqueSku(prefix: string = 'SKU'): string {
+    const timestamp = new Date().getTime().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `${prefix}-${timestamp}-${random}`;
+  }
+
+  // Helper to generate a barcode from a SKU (simple deterministic mapping or random)
+  generateBarcodeFromSku(sku: string): string {
+    if (!sku) return '';
+    // Hash the SKU to get a numeric seed
+    let hash = 0;
+    for (let i = 0; i < sku.length; i++) {
+      hash = ((hash << 5) - hash) + sku.charCodeAt(i);
+      hash |= 0; // Convert to 32bit integer
+    }
+    const seed = Math.abs(hash).toString();
+    // Use a random component to ensure uniqueness if hash collides, or just pad
+    // For "best practice" internal barcodes, 12 digits is good (UPC-A length)
+    // We'll just pad the seed
+    return seed.padEnd(12, '0').substring(0, 12);
+  }
 }

@@ -16,6 +16,17 @@ body {
     height: 100vh;
 }
 
+// Global Heading Styles - ensure they respect theme variables
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-main);
+    margin-top: 0;
+}
+
 // Dark Mode Material Overrides
 .dark-theme {
 
@@ -99,6 +110,18 @@ body {
     .mat-mdc-checkbox .mdc-form-field label,
     .mat-mdc-radio-button .mdc-form-field label {
         color: var(--text-main) !important;
+    }
+
+    // Global text color inheritance for settings and content areas
+    .tab-content,
+    .settings-container,
+    .admin-container {
+
+        p:not([class]),
+        span:not([class]),
+        label:not([class]) {
+            color: var(--text-main);
+        }
     }
 
     // Calendar & Datepicker Popup - comprehensive dark mode
@@ -400,9 +423,23 @@ body {
     }
 
     // Page headers/titles
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
     .header-row h1,
     .page-header h1,
     .header h1 {
+        color: var(--text-main) !important;
+    }
+
+    // Generic Input & Form Text Fix
+    input,
+    textarea,
+    select,
+    .mat-mdc-input-element {
         color: var(--text-main) !important;
     }
 
@@ -411,6 +448,39 @@ body {
     .marketplace-actions mat-icon,
     .info-icon {
         color: var(--text-secondary) !important;
+    }
+
+    // Settings & Content Sections (Global Fix for black labels)
+    .section-title,
+    .section-header h2,
+    .section-header h3 {
+        color: var(--text-main) !important;
+    }
+
+    .section-desc,
+    .section-description,
+    .settings-subtitle {
+        color: var(--text-secondary) !important;
+    }
+
+    // Specfic settings labels (e.g., Change Log, Sync Status)
+    .log-info span,
+    .pending-label,
+    .export-label span,
+    .provider-name {
+        color: var(--text-main) !important;
+    }
+
+    // Fix disabled buttons in dark mode (prevent black-on-dark)
+    .mat-mdc-button-disabled,
+    .mat-mdc-flat-button[disabled],
+    .mat-mdc-raised-button[disabled],
+    .mat-mdc-outlined-button[disabled] {
+        color: rgba(255, 255, 255, 0.3) !important;
+
+        .mdc-button__label {
+            color: rgba(255, 255, 255, 0.3) !important;
+        }
     }
 
     // Expansion panels (for available marketplaces)
@@ -934,13 +1004,20 @@ body {
     .mdc-notched-outline__notch {
         border-top: 1px solid $sleek-border-color !important;
         border-bottom: 1px solid $sleek-border-color !important;
+        // Fix for "vertical notch line" - ensure no sideways borders
+        border-left: none !important;
+        border-right: none !important;
     }
 
     // Hover state
-    &:hover .mdc-notched-outline__leading,
-    &:hover .mdc-notched-outline__trailing,
-    &:hover .mdc-notched-outline__notch {
-        border-color: $sleek-border-hover !important;
+    &:hover,
+    &.mat-focused {
+
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__trailing,
+        .mdc-notched-outline__notch {
+            border-color: $sleek-border-hover !important;
+        }
     }
 
     .mat-mdc-form-field-icon-suffix {
@@ -962,22 +1039,25 @@ body {
     }
 }
 
-// Sleek Select Dark Mode - Remove borders completely
+// Sleek Select Dark Mode - Standardize border color (framed look)
 .dark-theme .sleek-select {
+    $dark-border-color: rgba(255, 255, 255, 0.4);
+    $dark-border-hover: rgba(255, 255, 255, 0.6);
 
     .mdc-notched-outline__leading,
     .mdc-notched-outline__trailing,
     .mdc-notched-outline__notch {
-        border: none !important;
+        border-color: $dark-border-color !important;
     }
 
     &:hover,
+    &.mat-focused,
     &:focus-within {
 
         .mdc-notched-outline__leading,
         .mdc-notched-outline__trailing,
         .mdc-notched-outline__notch {
-            border: none !important;
+            border-color: $dark-border-hover !important;
         }
     }
 }
@@ -1213,5 +1293,13 @@ body {
             background-color: var(--bg-hover) !important;
             border-radius: 4px;
         }
+    }
+}
+
+// --- GLOBAL SCANNER OVERRIDES ---
+// Fixes tab scrollbars at the root level
+app-product-scanner {
+    .mat-mdc-tab-body-content {
+        overflow: hidden !important;
     }
 }

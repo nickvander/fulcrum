@@ -146,6 +146,9 @@
         "aiPowered": "IA Activada",
         "identifyProduct": "Identificar Producto",
         "barcodeScanner": "Escáner de Código de Barras",
+        "scanner": {
+            "errorLookingUpBarcode": "Error al buscar el código de barras."
+        },
         "scanBarcode": "Escanear Código",
         "scanBarcodeInstruction": "Escanear código de barras o QR con dispositivo o escribir manualmente",
         "useCameraToScan": "Usar Cámara",
@@ -288,7 +291,19 @@
         "adjustmentHint": "Ingresa número positivo para aumentar, negativo para disminuir",
         "confirmStockAdjustment": "Confirmar Ajuste de Stock",
         "newStock": "Nuevo Stock",
-        "confirmAdjustment": "Confirmar Ajuste"
+        "confirmAdjustment": "Confirmar Ajuste",
+        "ai": {
+            "analyzingImage": "Usando IA para identificar el producto...",
+            "status": {
+                "initializing": "Inicializando Agente...",
+                "analyzing": "Analizando características de la imagen...",
+                "extracting": "Extrayendo texto y logotipos...",
+                "searching": "Buscando en la base de datos global de productos...",
+                "comparing": "Comparando huellas digitales visuales...",
+                "synthesizing": "Sintetizando detalles del producto...",
+                "finalizing": "Finalizando identificación..."
+            }
+        }
     },
     "suppliers": {
         "title": "Proveedores",

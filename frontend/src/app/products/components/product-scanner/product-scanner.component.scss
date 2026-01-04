@@ -1,52 +1,46 @@
-/* Main Container */
+@use '../../../../theme/mixins';
+@use '../../../../theme/variables';
+@use '../../../../styles/forms' as forms;
+
+/* Main Container - Adjusted to fit better in dialogs */
 .scanner-container {
     display: flex;
     flex-direction: column;
-    height: 90vh;
-    /* Default for desktop */
-    max-height: 900px;
+    height: 85vh; // Slightly less than full viewport for dialog padding
+    max-height: 800px;
     position: relative;
     overflow: hidden;
     border-radius: 8px;
+    background-color: var(--bg-app); // Use App BG (Grey) instead of Card for dialog background
+    color: var(--text-main);
 
     @media (max-width: 600px) {
         height: 100vh;
         max-height: none;
         border-radius: 0;
     }
-
-    /* Use Theme Variables for true theme support */
-    background-color: var(--bg-card);
-    color: var(--text-main);
 }
 
 /* Tab Overrides */
 ::ng-deep .mat-mdc-tab-group {
     flex: 1;
     width: 100%;
+    overflow: hidden; // Critical to prevent scrollbars on the group itself
 }
 
 ::ng-deep .mat-mdc-tab-body-wrapper {
     height: 100%;
 }
 
+/* NUCLEAR OPTION for Scrollbars: Force hidden on internal material container */
+::ng-deep .mat-mdc-tab-body-content {
+    overflow: hidden !important;
+}
+
 ::ng-deep .mat-mdc-tab-header {
     background-color: var(--bg-header) !important;
     border-bottom: 1px solid var(--border-color);
-}
-
-/* Force override if mat-primary persists */
-::ng-deep .mat-primary .mat-mdc-tab-header {
-    background-color: var(--bg-header) !important;
-}
-
-/* Tab Labels Spacing */
-::ng-deep .mat-mdc-tab-labels {
-    gap: 16px;
-}
-
-::ng-deep .mdc-tab__content {
-    gap: 8px;
+    flex-shrink: 0; // Don't shrink the header
 }
 
 /* Tab Content Areas */
@@ -59,27 +53,68 @@
     position: relative;
     background-color: var(--bg-card);
     color: var(--text-main);
-
-    &.center-content {
-        justify-content: center;
-    }
+    overflow: hidden; // Prevent scrollbars in the content area
 
     &.barcode-tab {
-        overflow-y: auto;
+        overflow-y: auto; // Allow scroll only if content truly exceeds
+        padding: 24px;
+        box-sizing: border-box;
+    }
+
+    /* Drag & Drop Visuals */
+    transition: background-color 0.2s,
+    border-color 0.2s;
+    border: 2px dashed transparent;
+
+    &.drag-over {
+        background-color: rgba(var(--primary-rgb, 33, 150, 243), 0.1);
+        border-color: var(--primary-color);
+
+        .video-wrapper,
+        .placeholder-wrapper,
+        .controls {
+            pointer-events: none;
+            opacity: 0.3;
+        }
+    }
+
+    .drag-hint {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 200;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--primary-color);
+        pointer-events: none;
+
+        mat-icon {
+            font-size: 64px;
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+
+        h3 {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0;
+        }
     }
 }
 
-/* Video / Camera Section */
+/* Video / Camera Section (Tab 1) */
 .video-wrapper {
     width: 100%;
-    height: 100%;
+    flex: 1; // Take available space
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
     background: #000;
-    /* Camera area always dark */
 
     &.hidden {
         display: none;
@@ -91,7 +126,7 @@
         object-fit: cover;
     }
 
-    /* Viewfinder Overlay - LARGER SIZE */
+    /* Viewfinder Overlay */
     &::after {
         content: '';
         position: absolute;
@@ -99,15 +134,11 @@
         left: 50%;
         transform: translate(-50%, -50%);
         width: 85%;
-        /* Increased from 70% */
         height: 70%;
-        /* Increased from 50% */
         min-width: 280px;
         min-height: 400px;
-        /* Taller for phone portrait */
         border: 2px solid rgba(255, 255, 255, 0.9);
         border-radius: 20px;
-        /* Softer corners */
         box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
         pointer-events: none;
     }
@@ -126,28 +157,45 @@
     box-sizing: border-box;
     color: var(--text-secondary);
 
-    .camera-icon {
-        font-size: 64px;
-        height: 64px;
-        width: 64px;
-        opacity: 0.5;
+    .icon-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: var(--bg-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         margin-bottom: 16px;
-        color: var(--text-hint);
+
+        .camera-icon {
+            font-size: 56px;
+            height: 56px;
+            width: 56px;
+            opacity: 0.8;
+            margin: 0;
+            color: var(--primary-color);
+        }
     }
 
-    .error-msg {
-        color: var(--error-color);
+    .instructions {
         text-align: center;
-    }
 
-    p {
-        opacity: 0.8;
-        text-align: center;
-        margin: 0;
+        .main-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+            color: var(--text-main);
+        }
+
+        .sub-text {
+            font-size: 0.9rem;
+            color: var(--text-hint);
+            margin: 0;
+        }
     }
 }
 
-/* Controls (Bottom Bar) */
+/* Controls (Bottom Bar - Tab 1) */
 .controls {
     position: absolute;
     bottom: 0;
@@ -171,13 +219,15 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
-    /* Persistent Upload Button - High Z-Index */
+    .start-cam-btn {
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.4);
+    }
+
     .upload-btn {
         position: absolute;
         left: 24px;
         bottom: 24px;
         z-index: 1001;
-        /* Ensure on top of everything */
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 
         @media (max-width: 600px) {
@@ -187,238 +237,247 @@
     }
 }
 
-/* Top Close Button */
+/* Top Close Button - Matches other dialogs */
 .top-controls {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 12px;
+    right: 12px;
     z-index: 30;
-    height: 48px;
-    width: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    /* Clean button without bleed */
+    // Adjusted container size to match content
+    width: auto;
+    height: auto;
+
     button {
         color: var(--text-secondary);
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 28px;
+        height: 28px;
         background: transparent;
-        border-radius: 50%;
+        margin: 0;
+        padding: 0;
+        border-radius: 6px;
+
+        // Remove button shadow if exists
+        box-shadow: none !important;
+
+        mat-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         &:hover {
             background-color: var(--bg-hover);
             color: var(--text-main);
         }
-
-        mat-icon {
-            font-size: 24px;
-        }
     }
 }
 
-/* Loading Overlay */
-.scanner-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(var(--bg-card-rgb, 255, 255, 255), 0.9);
-    z-index: 50;
+// Tab label styles
+.tab-label-content {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
-    color: var(--text-main);
+    gap: 8px;
+
+    mat-icon {
+        margin: 0 !important;
+    }
 }
 
-/* Tab Icon Spacing */
-.tab-icon {
-    margin-right: 8px;
-}
-
-/* 
-   Hardware / Bluetooth Scanner Section 
-*/
-.hardware-scanner-section {
-    padding: 32px 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
+/* Manual Input Section (Tab 2) */
+.manual-input-section {
     width: 100%;
     max-width: 500px;
-    margin: 0 auto;
-
-    .scanner-instruction {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--text-secondary);
-        font-size: 1rem;
-        margin: 0;
-
-        mat-icon {
-            color: var(--primary-color);
-        }
-    }
-
-    /* Input Styling - strictly follow theme */
-    .barcode-input {
-        width: 100%;
-
-        /* Ensure background matches main app fields */
-        ::ng-deep .mat-mdc-text-field-wrapper {
-            background-color: var(--bg-app) !important;
-        }
-
-        ::ng-deep input.mat-mdc-input-element {
-            color: var(--text-main) !important;
-        }
-
-        ::ng-deep .mat-mdc-floating-label {
-            color: var(--text-secondary) !important;
-        }
-
-        ::ng-deep .mat-mdc-form-field-icon-suffix {
-            color: var(--text-secondary) !important;
-        }
-    }
-
-    /* Buttons */
-    button {
-        min-width: 180px;
-        height: 48px;
-        font-size: 1rem;
-
-        /* Disabled state */
-        &:disabled {
-            background-color: var(--bg-hover) !important;
-            color: var(--text-hint) !important;
-
-            mat-icon {
-                color: var(--text-hint) !important;
-            }
-        }
-
-        /* Primary Button (Lookup) */
-        &.mat-primary {
-            background-color: var(--primary-color) !important;
-            color: var(--text-on-primary) !important;
-
-            mat-icon {
-                color: var(--text-on-primary) !important;
-            }
-        }
-    }
-}
-
-mat-divider {
-    width: 80%;
-    margin: 8px auto;
-    opacity: 0.5;
-    border-top-color: var(--border-color);
-}
-
-/* Secondary Camera Section (Barcode Tab) */
-.camera-scanner-section {
-    padding: 24px;
-    text-align: center;
-    width: 100%;
-    box-sizing: border-box;
-    /* Ensure padding doesn't cause overflow */
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 16px;
+    text-align: center;
 
-    .section-label {
+    // Ensure input itself has no background that causes highlight artifacts
+    input.mat-mdc-input-element {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .instruction {
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        font-size: 1rem;
         margin: 0;
     }
 
-    ngx-scanner-qrcode {
+    /* Input style uses .search-field-compact from _forms.scss */
+    /* FORCE pill shape locally to ensure it works */
+    .search-field-compact.full-width {
         width: 100%;
-        max-width: 400px;
-        height: 300px;
-        background: #000;
-        border-radius: 8px;
-        overflow: hidden;
-    }
+        max-width: 100%;
 
-    /* Buttons in camera section */
-    button {
-        &.mat-accent {
-            border-color: var(--accent-color) !important;
-            color: var(--accent-color) !important;
+        ::ng-deep .mat-mdc-text-field-wrapper {
+            border-radius: 999px !important;
+            padding-left: 16px !important; // More padding for pill shape
+        }
 
-            mat-icon {
-                color: var(--accent-color) !important;
+        ::ng-deep .mdc-notched-outline__leading {
+            border-top-left-radius: 999px !important;
+            border-bottom-left-radius: 999px !important;
+            width: 16px !important; // Ensure curve is visible
+        }
+
+        ::ng-deep .mdc-notched-outline__trailing {
+            border-top-right-radius: 999px !important;
+            border-bottom-right-radius: 999px !important;
+        }
+
+        // Fix the 'vertical notch line' globally for this instance
+        ::ng-deep .mdc-notched-outline__notch {
+            border-left: none !important;
+            border-right: none !important;
+        }
+
+        // Dark Mode Frame Visibility (Scoped)
+        :host-context(.dark-theme) & {
+            ::ng-deep {
+
+                .mdc-notched-outline__leading,
+                .mdc-notched-outline__notch,
+                .mdc-notched-outline__trailing {
+                    border-color: rgba(255, 255, 255, 0.4) !important;
+                }
+
+                // Interaction persistence
+                &.mat-focused,
+                &:hover {
+
+                    .mdc-notched-outline__leading,
+                    .mdc-notched-outline__notch,
+                    .mdc-notched-outline__trailing {
+                        border-color: rgba(255, 255, 255, 0.6) !important;
+                    }
+                }
             }
         }
 
-        &.mat-warn {
-            border-color: var(--error-color) !important;
-            color: var(--error-color) !important;
+        // Default Light Mode border (fallback)
+        ::ng-deep .mdc-notched-outline__leading,
+        ::ng-deep .mdc-notched-outline__notch,
+        ::ng-deep .mdc-notched-outline__trailing {
+            border-color: var(--border-color);
+        }
+    }
+}
 
-            mat-icon {
-                color: var(--error-color) !important;
-            }
+.or-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin: 24px 0;
+    color: var(--text-hint);
+    font-size: 0.9rem;
+    font-weight: 500;
+
+    &::before,
+    &::after {
+        content: '';
+        height: 1px;
+        flex: 1;
+        background-color: var(--border-color);
+        max-width: 120px;
+        margin: 0 16px;
+    }
+}
+
+/* Camera Scanner Section (Tab 2) */
+.camera-scanner-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+
+    .use-camera-btn {
+        height: 48px;
+        padding: 0 32px;
+        border-radius: 24px;
+        font-size: 1rem;
+        border: 2px solid var(--primary-color);
+        background: rgba(var(--primary-rgb), 0.05);
+
+        &:hover {
+            background: rgba(var(--primary-rgb), 0.1);
         }
     }
 
-    /* Scanner Wrapper to contain video and overlay */
     .scanner-wrapper {
         position: relative;
         width: 100%;
-        max-width: 800px;
-        /* aspect-ratio: 4/3;  Better for camera */
-        height: auto;
-        min-height: 300px;
+        max-width: 500px;
+        height: 350px;
         background: #000;
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
-        /* Key to prevent overflow */
-        margin: 0 auto;
+        animation: fadeIn 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 
-        &.active {
-            display: block;
-        }
-
-        ngx-scanner-qrcode {
+        // Native video element styling
+        .scanner-video {
             width: 100%;
             height: 100%;
-            display: block;
+            object-fit: cover;
+        }
 
-            /* Force video to fill and cover */
-            ::ng-deep video {
-                object-fit: cover;
-                width: 100%;
-                height: 100%;
+        // Scanning overlay with animated line
+        .scanning-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+
+            // Viewfinder corners
+            &::before {
+                content: '';
+                position: absolute;
+                top: 20%;
+                left: 20%;
+                right: 20%;
+                bottom: 20%;
+                border: 2px solid rgba(255, 255, 255, 0.6);
+                border-radius: 8px;
+            }
+
+            .scan-line {
+                position: absolute;
+                left: 20%;
+                right: 20%;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+                animation: scanLine 2s ease-in-out infinite;
             }
         }
 
         .overlay-controls {
             position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            z-index: 10;
+            top: 12px;
+            right: 12px;
+            z-index: 20;
+
+            button {
+                background: rgba(0, 0, 0, 0.6);
+                width: 36px;
+                height: 36px;
+                line-height: 36px;
+            }
         }
 
         .hint {
             position: absolute;
-            top: 20px;
+            bottom: 24px;
             left: 0;
             right: 0;
             text-align: center;
@@ -426,81 +485,264 @@ mat-divider {
             z-index: 10;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
             margin: 0;
-            pointer-events: none;
         }
     }
 }
 
-/* Product Found Overlay */
-.product-found-overlay {
+@keyframes scanLine {
+
+    0%,
+    100% {
+        top: 25%;
+    }
+
+    50% {
+        top: 75%;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 
+   Loading & Product Found Overlays
+   (Kept concise but fully functional from previous version)
+*/
+.scanner-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(30, 30, 35, 0.98);
+    inset: 0;
+    background: rgba(var(--bg-card-rgb, 30, 30, 30), 0.95);
+    z-index: 50;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    color: var(--text-main);
+
+    &.scanning-mode {
+        background: var(--bg-card);
+
+        .scan-image-wrapper {
+            position: relative;
+            width: 80%;
+            max-width: 300px;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+            border: 1px solid rgba(var(--primary-rgb), 0.5);
+            margin-bottom: 2rem;
+
+            .scan-preview {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0.8;
+            }
+
+            .laser-scanner {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 10%;
+                background: linear-gradient(180deg, rgba(var(--primary-rgb), 0.0) 0%, rgba(var(--primary-rgb), 0.8) 90%, #fff 100%);
+                box-shadow: 0 0 15px var(--primary-color);
+                opacity: 0.9;
+                animation: scan 1.8s ease-in-out infinite;
+                z-index: 10;
+            }
+
+            .scan-overlay-text {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.7);
+                backdrop-filter: blur(4px);
+                padding: 8px 12px;
+                z-index: 20;
+
+                .agent-status {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    color: #fff;
+                    font-family: 'Roboto Mono', monospace;
+                    font-size: 0.85rem;
+                }
+            }
+        }
+
+        .processing-text {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            animation: fadeText 2s infinite;
+        }
+    }
+}
+
+.product-found-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(var(--bg-card-rgb, 20, 20, 20), 0.95);
+    display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
-    color: white;
+    color: var(--text-main);
     padding: 24px;
-    text-align: center;
 
-    .found-icon {
-        font-size: 64px;
-        height: 64px;
-        width: 64px;
-        color: var(--success-color, #4caf50);
-        margin-bottom: 16px;
-    }
-
-    h2 {
-        font-size: 24px;
-        margin-bottom: 24px;
-        color: white;
-    }
-
-    .found-product-card {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 16px;
-        border-radius: 8px;
+    .product-result-card {
+        background: var(--bg-card);
         width: 100%;
-        max-width: 320px;
-        margin-bottom: 24px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-
-        .product-name {
-            font-weight: 500;
-            font-size: 18px;
-            margin-bottom: 8px;
-            margin-top: 0;
-        }
-
-        .product-sku {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            margin: 0;
-        }
-    }
-
-    .action-buttons {
+        max-width: 380px;
+        border-radius: 16px;
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        width: 100%;
-        max-width: 320px;
 
-        button {
-            width: 100%;
-            height: 48px;
-            font-size: 16px;
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-app);
+            display: flex;
+            justify-content: center;
 
-            mat-icon {
-                margin-right: 8px;
+            .success-badge {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: var(--success-color);
+                font-weight: 600;
+                font-size: 1.1rem;
+
+                mat-icon {
+                    color: var(--success-color);
+                }
             }
         }
+
+        .card-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+
+            .product-image {
+                width: 100%;
+                aspect-ratio: 16/10;
+                background: var(--bg-hover);
+                border-radius: 8px;
+                overflow: hidden;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+            }
+
+            .product-details {
+                text-align: center;
+
+                .product-name {
+                    font-size: 1.4rem;
+                    font-weight: 600;
+                    margin: 0 0 8px 0;
+                }
+
+                .product-meta .sku-badge {
+                    background: var(--bg-hover);
+                    color: var(--text-secondary);
+                    padding: 4px 12px;
+                    border-radius: 100px;
+                    font-family: monospace;
+                    font-size: 0.9rem;
+                }
+            }
+        }
+
+        .card-actions {
+            padding: 0 24px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+
+            .action-btn {
+                height: 48px;
+                font-size: 1rem;
+                border-radius: 8px;
+            }
+
+            .secondary-actions {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+
+                button {
+                    flex: 1;
+                    height: 40px;
+                }
+            }
+        }
+    }
+}
+
+@keyframes scan {
+    0% {
+        top: -10%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 110%;
+        opacity: 0;
+    }
+}
+
+@keyframes fadeText {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
