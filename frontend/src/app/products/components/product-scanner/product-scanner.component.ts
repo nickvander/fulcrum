@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild, Optional, Inject, AfterViewInit, HostListener } from '@angular/core';
+import { Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild, Optional, Inject, AfterViewInit, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
 import { AiService, ProductIdentificationResponse } from '../../../core/services/ai.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -34,7 +35,8 @@ import { ProductService } from '../../services/product';
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
-        MatDividerModule
+        MatDividerModule,
+        MatTooltipModule
     ],
     templateUrl: './product-scanner.component.html',
     styleUrls: ['./product-scanner.component.scss']
@@ -50,7 +52,12 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     // Camera/AI State
     stream: MediaStream | null = null;
     isCameraActive = false;
+    productFound = false;
+    foundProduct: any = null;
+    currentImageFile: File | null = null;
     isProcessing = false;
+    isInitializing = false; // New: Camera is starting up
+    isAnalyzing = false;    // New: AI is analyzing image
     cameraError = false;
     isAiEnabled = false;
     manualBarcode = '';
@@ -72,26 +79,45 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         private router: Router,
         private settingsService: SettingsService,
         private aiService: AiService,
-        private http: HttpClient
+        private http: HttpClient,
+        private cdr: ChangeDetectorRef
     ) { }
 
     ngOnInit(): void {
+        // Force refresh store settings to ensure latest AI config
+        this.settingsService.loadStoreSettings();
+
         // Need to check Store settings for AI config
         this.settingsService.storeSettings$.subscribe(storeSettings => {
+            console.log('[Scanner] Store settings received:', storeSettings);
             if (storeSettings?.ai_config) {
                 this.isAiEnabled = storeSettings.ai_config.enabled;
-                if (!this.isAiEnabled) {
-                    this.activeTabIndex = 0; // If AI tab hidden, Barcode tab is first (index 0)
-                }
+                console.log('[Scanner] AI Enabled:', this.isAiEnabled);
             }
         });
 
-        // Initial setup
-        this.startBarcodeScanner();
+        // Sticky Tab: Restore last used tab index
+        const savedIndex = localStorage.getItem('productScanner_activeTabIndex');
+        if (savedIndex !== null) {
+            this.activeTabIndex = parseInt(savedIndex, 10);
+            // Validation: Ensure index is valid (0 or 1)
+            if (this.activeTabIndex < 0 || this.activeTabIndex > 1) {
+                this.activeTabIndex = 0;
+            }
+        }
     }
 
     ngAfterViewInit(): void {
-        // Start camera automatically if in AI mode? Maybe wait for user.
+        // Auto-start the camera if we land on Tab 1 (Identify)
+        setTimeout(() => {
+            if (this.activeTabIndex === 0) {
+                this.startCamera();
+            } else if (this.activeTabIndex === 1) {
+                // Focus input if starting on Barcode tab
+                const input = document.querySelector('.barcode-input input') as HTMLElement;
+                if (input) input.focus();
+            }
+        }, 500);
     }
 
     ngOnDestroy(): void {
@@ -101,15 +127,33 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
     // --- Tabs Handling ---
     onTabChange(index: number) {
-        // Stop everything when switching tabs
+        this.activeTabIndex = index;
+        localStorage.setItem('productScanner_activeTabIndex', index.toString());
+
+        // Stop everything first
         this.stopCamera();
         this.stopBarcodeScanner();
+
+        // Auto-start respective camera logic
+        setTimeout(() => {
+            if (index === 0) {
+                // Tab 1: Identify -> Auto-start camera
+                this.startCamera();
+            }
+            // Tab 2: Scan Barcode -> Do NOT auto-start camera (user must click "Use Camera")
+            // Focus on input field for hardware scanner
+            if (index === 1) {
+                const input = document.querySelector('.barcode-input input') as HTMLElement;
+                if (input) input.focus();
+            }
+        }, 300);
     }
 
     // --- AI Camera Logic ---
 
     async startCamera(): Promise<void> {
         this.cameraError = false;
+        this.isInitializing = true;
         try {
             this.stream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment' }
@@ -122,6 +166,8 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             console.error('Error accessing camera', err);
             this.cameraError = true;
             this.snackBar.open('Could not access camera', 'Close', { duration: 3000 });
+        } finally {
+            this.isInitializing = false;
         }
     }
 
@@ -162,11 +208,13 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     }
 
     processImage(file: File): void {
+        console.log('[Scanner] processImage called. isAiEnabled:', this.isAiEnabled);
         this.isProcessing = true;
         this.stopCamera();
 
         if (!this.isAiEnabled) {
             // Manual Mode: Just emit the file
+            console.log('[Scanner] AI disabled, using manual mode');
             const result = { imageFile: file };
             this.scanComplete.emit(result as any);
             if (this.dialogRef) this.dialogRef.close(result);
@@ -174,15 +222,29 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             return;
         }
 
+        console.log('[Scanner] Calling AI service...');
+        this.isAnalyzing = true; // Start analysis overlay
+
+        // Save file for later use if we find a duplicate
+        this.currentImageFile = file;
+
         this.aiService.identifyProduct(file).subscribe({
             next: (response) => {
+                console.log('[Scanner] AI Response received:', response);
                 this.isProcessing = false;
-                // Combine AI response with the original file
-                const result = { ...response, imageFile: file };
-                this.scanComplete.emit(result);
-                if (this.dialogRef) {
-                    this.dialogRef.close(result);
+                this.isAnalyzing = false;
+
+                // Check for existing product
+                if (response.exists) {
+                    console.log('[Scanner] Product exists in database');
+                    this.productFound = true;
+                    this.foundProduct = response;
+                    this.cdr.detectChanges(); // Force update
+                    // Don't close dialog yet - wait for user choice
+                    return;
                 }
+
+                this.finishScan(response, file);
             },
             error: (err) => {
                 console.error('AI Processing Error', err);
@@ -191,8 +253,36 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
                 this.scanComplete.emit(result as any);
                 if (this.dialogRef) this.dialogRef.close(result);
                 this.isProcessing = false;
+                this.isAnalyzing = false;
             }
         });
+    }
+
+    finishScan(response: any, file: File): void {
+        // Combine AI response with the original file
+        const result = { ...response, imageFile: file };
+        console.log('[Scanner] Closing dialog with result:', result);
+        this.scanComplete.emit(result);
+        if (this.dialogRef) {
+            this.dialogRef.close(result);
+        }
+    }
+
+    editExisting(): void {
+        if (this.foundProduct && this.foundProduct.product_id) {
+            this.dialogRef.close({
+                action: 'edit-existing',
+                productId: this.foundProduct.product_id,
+                originalResponse: this.foundProduct
+            });
+        }
+    }
+
+    createNewCopy(): void {
+        if (this.foundProduct && this.currentImageFile) {
+            // Treat as new but pre-filled with the found data
+            this.finishScan(this.foundProduct, this.currentImageFile);
+        }
     }
 
     // --- Bluetooth / Keyboard Scanner Support ---
@@ -239,7 +329,21 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             }
 
             this.scanner.start().subscribe({
-                next: (res) => console.log('Scanner started', res),
+                next: (res) => {
+                    console.log('Scanner started', res);
+                    // UX Improvement: Disable PiP on the scanner video
+                    setTimeout(() => {
+                        const videos = document.querySelectorAll('ngx-scanner-qrcode video');
+                        videos.forEach((v: any) => {
+                            if (v) {
+                                v.disablePictureInPicture = true;
+                                v.setAttribute('disablePictureInPicture', 'true');
+                                // Force style if needed
+                                v.style.objectFit = 'cover';
+                            }
+                        });
+                    }, 500);
+                },
                 error: (err) => {
                     console.error('Scanner start failed', err);
                     // Provide user-friendly error messages

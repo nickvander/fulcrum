@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from src.database import SessionLocal
 from src.models.product import Product
-from src.crud import crud_product
 
 def update_barcodes():
     db: Session = SessionLocal()

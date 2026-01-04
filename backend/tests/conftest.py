@@ -261,3 +261,52 @@ def admin_headers(client: TestClient, test_admin_user: models.User) -> dict:
     tokens = r.json()
     a_token = tokens["access_token"]
     return {"Authorization": f"Bearer {a_token}"}
+
+
+@pytest.fixture(scope="function")
+def staged_sync_batch(db: Session, test_admin_user: models.User, test_product: Product) -> int:
+    """
+    Creates a staged sync batch with pending changes for testing.
+    Returns the batch ID.
+    """
+    from src.models.pending_sync import SyncBatch, PendingSyncChange
+    
+    # Create a sync batch
+    batch = SyncBatch(
+        user_id=test_admin_user.id,
+        source="google_sheets",
+        status="pending",
+        total_changes=2
+    )
+    db.add(batch)
+    db.flush()
+    
+    # Add pending changes
+    change1 = PendingSyncChange(
+        batch_id=batch.id,
+        entity="products",
+        entity_id=test_product.id,
+        entity_name=test_product.name,
+        entity_sku=test_product.sku,
+        field="cost_price",
+        old_value="10.00",
+        new_value="15.00",
+        status="pending"
+    )
+    change2 = PendingSyncChange(
+        batch_id=batch.id,
+        entity="products",
+        entity_id=test_product.id,
+        entity_name=test_product.name,
+        entity_sku=test_product.sku,
+        field="default_resale_price",
+        old_value="19.99",
+        new_value="29.99",
+        status="pending"
+    )
+    db.add(change1)
+    db.add(change2)
+    db.flush()
+    
+    return batch.id
+

@@ -90,6 +90,15 @@ generating a product embedding), we use Celery.
   worker process (`src/celery_worker.py`) that listens to this queue. It picks
   up the task and executes it in the background.
 
+### AI & Barcode Services
+
+- **ADK Integration (`src/services/adk/`):** Manages AI agents like the Product
+  Vision Agent. It uses a modular tool-based architecture (Agents + ADK Tools)
+  to orchestrate tasks via LLMs (Gemini, OpenAI, etc.).
+- **Barcode Engine (`src/services/barcode/`):** Generates CODE128 barcodes and
+  QR codes for products. These are generated on-the-fly or stored as URLs for
+  fast retrieval.
+
 ---
 
 ```mermaid
@@ -104,6 +113,7 @@ graph TD
     classDef database fill:#BDB2FF,stroke:#AD9FFC,color:#000
     classDef task_queue fill:#FFADAD,stroke:#FF9A9A,color:#000
     classDef worker fill:#FFD6A5,stroke:#FDDFB2,color:#000
+    classDef adk fill:#E2F0CB,stroke:#B5D8A6,color:#000
 
     subgraph "Client"
         A["Browser/Frontend"]:::client
@@ -115,6 +125,7 @@ graph TD
             C["API Router"]:::router
             D["API Endpoints"]:::endpoint
             E["Services"]:::service
+            X["ADK & Barcode Services"]:::adk
             F["Repositories CRUD"]:::repository
             G["SQLAlchemy Models"]:::model
         end
@@ -133,7 +144,9 @@ graph TD
     B --> C
     C --> D
     D -- "Calls" --> E
+    D -- "Calls" --> X
     E -- "Uses" --> F
+    X -- "Uses" --> F
     F -- "Interacts with" --> G
     G -- "Mapped to" --> H
     F -- "Queries" --> H
@@ -141,6 +154,7 @@ graph TD
     D -- "Dispatches Task" --> I
     J -- "Listens to" --> I
     J -- "Executes Task" --> E
+    J -- "Executes Task" --> X
 ```
 
 ## Frontend Architecture

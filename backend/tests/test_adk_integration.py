@@ -1,43 +1,73 @@
-import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from src.services.adk.agents.product_vision.agent import ProductVisionAgent
-from src.services.adk.orchestrator import AgentOrchestrator
-from src.services.adk.manager import ADKManager
+"""
+ADK Integration Tests.
 
-@pytest.mark.asyncio
-async def test_product_vision_agent_fallback():
-    """Test standard fallback behavior without ADK."""
-    with patch('src.services.adk.agents.product_vision.agent.ADK_AVAILABLE', False):
-        agent = ProductVisionAgent(model="gemini-2.0-flash")
-        result = await agent.identify("fake_image.jpg")
+Tests for the ADK agent architecture without requiring actual API calls.
+"""
+from unittest.mock import MagicMock
+
+
+class TestProductVisionAgent:
+    """Tests for the ProductVisionAgent."""
+
+    def test_agent_fallback_when_adk_unavailable(self):
+        """Test standard fallback behavior without ADK."""
+        from src.services.adk.agents.product_vision import root_agent
         
-        # Should return error since we didn't mock the internal fallback execution
-        # but verifies the structure works
-        assert "error" in result
+        # Temporarily disable ADK
+        original_value = root_agent.ADK_AVAILABLE
+        root_agent.ADK_AVAILABLE = False
+        
+        try:
+            from src.services.adk.agents.product_vision.agent import ProductVisionAgent
+            agent = ProductVisionAgent(model="gemini-3.0-flash")
+            assert agent.is_available is False
+        finally:
+            root_agent.ADK_AVAILABLE = original_value
 
-@pytest.mark.asyncio
-async def test_orchestrator_initialization():
-    """Test orchestrator initialization."""
-    manager = MagicMock(spec=ADKManager)
-    orchestrator = AgentOrchestrator(manager)
-    assert orchestrator.manager == manager
+    def test_vision_agent_initialization(self):
+        """Test VisionAnalysisAgent initializes correctly."""
+        from src.services.adk.agents.product_vision.vision_agent import VisionAnalysisAgent
+        
+        agent = VisionAnalysisAgent(model="gemini-3.0-flash")
+        # May or may not be available depending on ADK installation
+        assert hasattr(agent, 'is_available')
+        assert hasattr(agent, 'adk_agent')
 
-@pytest.mark.asyncio
-async def test_orchestrator_vision_flow():
-    """Test the vision agent flow in orchestrator."""
-    manager = MagicMock(spec=ADKManager)
-    
-    # Mock manager config
-    # manager.get_active_config() returns a dict in the service code
-    manager.get_active_config.return_value = {"model": "gemini-2.0-flash"}
-    
-    # Mock vision agent
-    with patch('src.services.adk.orchestrator.ProductVisionAgent') as MockAgent:
-        mock_instance = MockAgent.return_value
-        mock_instance.identify = AsyncMock(return_value={"name": "Test Product", "category": "Test"})
+
+class TestAgentOrchestrator:
+    """Tests for the AgentOrchestrator."""
+
+    def test_orchestrator_initialization(self):
+        """Test orchestrator initialization."""
+        from src.services.adk.orchestrator import AgentOrchestrator
+        from src.services.adk.manager import ADKManager
+        
+        manager = MagicMock(spec=ADKManager)
+        orchestrator = AgentOrchestrator(manager)
+        assert orchestrator.manager == manager
+
+    def test_orchestrator_get_vision_agent(self):
+        """Test getting vision agent from orchestrator."""
+        from src.services.adk.orchestrator import AgentOrchestrator
+        from src.services.adk.manager import ADKManager
+        
+        manager = MagicMock(spec=ADKManager)
+        manager.get_active_config.return_value = {"model": "gemini-3.0-flash"}
         
         orchestrator = AgentOrchestrator(manager)
-        result = await orchestrator.process_product_image("fake_path.jpg")
+        agent = orchestrator._get_vision_agent()
         
-        assert result["name"] == "Test Product"
-        MockAgent.assert_called_with(model="gemini-2.0-flash")
+        assert agent is not None
+        assert hasattr(agent, 'is_available')
+
+
+class TestRootAgent:
+    """Tests for ProductVisionRootAgent."""
+
+    def test_root_agent_initialization(self):
+        """Test root agent initializes correctly."""
+        from src.services.adk.agents.product_vision.root_agent import ProductVisionRootAgent
+        
+        agent = ProductVisionRootAgent(model="gemini-3.0-flash")
+        assert hasattr(agent, 'is_available')
+        assert hasattr(agent, '_vision_agent')

@@ -3,7 +3,7 @@ ADK Manager Service.
 
 Handles initialization of AI agents and model clients using config from StoreSettings.
 """
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from src.models.store_settings import StoreSettings
 
@@ -27,15 +27,23 @@ class ADKManager:
         if not self.settings:
             return None
         
+        from src.core.encryption import encryption_service
+        
         provider = provider.lower()
+        encrypted_key = None
+        
         if provider == "google":
-            return self.settings.ai_google_api_key
+            encrypted_key = self.settings.ai_google_api_key
         elif provider == "openai":
-            return self.settings.ai_openai_api_key
+            encrypted_key = self.settings.ai_openai_api_key
         elif provider == "anthropic":
-            return self.settings.ai_anthropic_api_key
+            encrypted_key = self.settings.ai_anthropic_api_key
         elif provider == "qwen":
-            return self.settings.ai_qwen_api_key
+            encrypted_key = self.settings.ai_qwen_api_key
+            
+        if encrypted_key:
+            return encryption_service.decrypt(encrypted_key)
+            
         return None
 
     def is_configured(self, provider: str) -> bool:
@@ -59,13 +67,13 @@ class ADKManager:
         
         # Determine defaults
         defaults = {
-            "google": "gemini-1.5-flash-latest",
+            "google": "gemini-3-flash-preview",
             "openai": "gpt-4o",
             "anthropic": "claude-3-opus-20240229",
             "qwen": "qwen-plus" # Example, maps to model name
         }
         
-        default_model = defaults.get(provider, "gemini-1.5-flash-latest")
+        default_model = defaults.get(provider, "gemini-3-flash-preview")
         model = model_override if model_override else default_model
         
         api_key = self.get_api_key(provider)

@@ -8,8 +8,11 @@ pytestmark = pytest.mark.db
 
 def test_create_user(client: TestClient, db: Session) -> None:
     """Test creating a new user"""
+    import time
+    unique_email = f"test_{int(time.time())}@example.com"
+    
     user_data = {
-        "email": "test@example.com",
+        "email": unique_email,
         "password": "TestPassword123!",
         "first_name": "Test",
         "last_name": "User",
@@ -22,11 +25,12 @@ def test_create_user(client: TestClient, db: Session) -> None:
     assert response.status_code == 200
     
     data = response.json()
-    assert data["email"] == "test@example.com"
+    assert data["email"] == unique_email
     assert data["first_name"] == "Test"
     assert data["last_name"] == "User"
     assert data["user_type"] == "employee"
     assert data["employee_id"] is not None
+
 
 
 def test_create_user_with_weak_password(client: TestClient, db: Session) -> None:

@@ -4,8 +4,7 @@ ADK Orchestrator
 Manages the execution of sequential agent workflows.
 Orchestrates the flow between specialized agents (e.g. Vision -> Pricing -> Content).
 """
-import asyncio
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from .manager import ADKManager
 
 # Import agents
@@ -41,7 +40,7 @@ class AgentOrchestrator:
     def _get_vision_agent(self) -> ProductVisionAgent:
         """Get configured vision agent."""
         config = self.manager.get_active_config()
-        return ProductVisionAgent(model=config.get("model"))
+        return ProductVisionAgent(model=config.get("model"), api_key=config.get("api_key"))
 
     async def run_sequence(self, input_data: Any, agents: List[Any]) -> Any:
         """Generic sequential runner."""

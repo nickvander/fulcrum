@@ -6,6 +6,7 @@ Tests the pending sync staging, approval, rejection, and change logging endpoint
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from src.models.product import Product
 
 
 pytestmark = pytest.mark.db
@@ -15,17 +16,17 @@ class TestPendingSyncFlow:
     """Tests for the pending sync workflow."""
 
     def test_sync_push_stages_changes(
-        self, client: TestClient, auth_headers: dict, test_product: dict
+        self, client: TestClient, admin_headers: dict, test_product: Product
     ):
         """Test that sync-push stages changes instead of applying directly."""
         response = client.post(
             "/api/v1/integrations/sheets/sync-push",
-            headers=auth_headers,
+            headers=admin_headers,
             json={
                 "entity": "products",
                 "changes": [
-                    {"id": test_product["id"], "field": "cost_price", "new_value": "25.00"},
-                    {"id": test_product["id"], "field": "resale_price", "new_value": "50.00"},
+                    {"id": test_product.id, "field": "cost_price", "new_value": "25.00"},
+                    {"id": test_product.id, "field": "resale_price", "new_value": "50.00"},
                 ]
             }
         )
@@ -39,26 +40,26 @@ class TestPendingSyncFlow:
         assert "staged for review" in data["message"].lower()
 
     def test_pending_sync_count(
-        self, client: TestClient, auth_headers: dict, staged_sync_batch: int
+        self, client: TestClient, admin_headers: dict, staged_sync_batch: int
     ):
         """Test getting the pending sync count."""
         response = client.get(
             "/api/v1/integrations/sync/pending/count",
-            headers=auth_headers,
+            headers=admin_headers,
         )
         
         assert response.status_code == 200
         data = response.json()
         assert "count" in data
-        assert data["count"] >= 0
+        assert data["count"] >= 2  # At least the 2 changes from fixture
 
     def test_list_pending_batches(
-        self, client: TestClient, auth_headers: dict, staged_sync_batch: int
+        self, client: TestClient, admin_headers: dict, staged_sync_batch: int
     ):
         """Test listing pending sync batches."""
         response = client.get(
             "/api/v1/integrations/sync/pending",
-            headers=auth_headers,
+            headers=admin_headers,
         )
         
         assert response.status_code == 200
@@ -67,33 +68,32 @@ class TestPendingSyncFlow:
         assert "total_pending" in data
         
         # Should have at least the staged batch
-        if data["total_pending"] > 0:
-            batch = data["batches"][0]
-            assert "id" in batch
-            assert "source" in batch
-            assert "status" in batch
-            assert "changes" in batch
+        assert data["total_pending"] > 0
+        batch = data["batches"][0]
+        assert "id" in batch
+        assert "source" in batch
+        assert "status" in batch
+        assert "changes" in batch
 
     def test_approve_sync_changes(
-        self, client: TestClient, auth_headers: dict, staged_sync_batch: int, db: Session
+        self, client: TestClient, admin_headers: dict, staged_sync_batch: int, db: Session
     ):
         """Test approving sync changes."""
         # Get the pending changes
         pending_response = client.get(
             "/api/v1/integrations/sync/pending",
-            headers=auth_headers,
+            headers=admin_headers,
         )
         pending_data = pending_response.json()
         
-        if pending_data["total_pending"] == 0:
-            pytest.skip("No pending changes to approve")
+        assert pending_data["total_pending"] > 0, "No pending changes to approve"
         
         batch = pending_data["batches"][0]
         change_ids = [c["id"] for c in batch["changes"][:1]]  # Approve first change
         
         response = client.post(
             "/api/v1/integrations/sync/approve",
-            headers=auth_headers,
+            headers=admin_headers,
             json={
                 "batch_id": batch["id"],
                 "change_ids": change_ids,
@@ -107,25 +107,24 @@ class TestPendingSyncFlow:
         assert data["applied_count"] >= 0
 
     def test_reject_sync_changes(
-        self, client: TestClient, auth_headers: dict, staged_sync_batch: int
+        self, client: TestClient, admin_headers: dict, staged_sync_batch: int
     ):
         """Test rejecting sync changes."""
         # Get the pending changes
         pending_response = client.get(
             "/api/v1/integrations/sync/pending",
-            headers=auth_headers,
+            headers=admin_headers,
         )
         pending_data = pending_response.json()
         
-        if pending_data["total_pending"] == 0:
-            pytest.skip("No pending changes to reject")
+        assert pending_data["total_pending"] > 0, "No pending changes to reject"
         
         batch = pending_data["batches"][0]
         change_ids = [c["id"] for c in batch["changes"]]
         
         response = client.post(
             "/api/v1/integrations/sync/approve",
-            headers=auth_headers,
+            headers=admin_headers,
             json={
                 "batch_id": batch["id"],
                 "change_ids": change_ids,
@@ -142,12 +141,12 @@ class TestChangeLogs:
     """Tests for the change log functionality."""
 
     def test_list_change_logs(
-        self, client: TestClient, auth_headers: dict
+        self, client: TestClient, admin_headers: dict
     ):
         """Test listing change logs."""
         response = client.get(
             "/api/v1/integrations/change-logs",
-            headers=auth_headers,
+            headers=admin_headers,
         )
         
         assert response.status_code == 200
@@ -156,12 +155,12 @@ class TestChangeLogs:
         assert "total" in data
 
     def test_filter_change_logs_by_source(
-        self, client: TestClient, auth_headers: dict
+        self, client: TestClient, admin_headers: dict
     ):
         """Test filtering change logs by source."""
         response = client.get(
             "/api/v1/integrations/change-logs",
-            headers=auth_headers,
+            headers=admin_headers,
             params={"source": "sheets_import"}
         )
         
@@ -173,12 +172,12 @@ class TestChangeLogs:
             assert entry["source"] == "sheets_import"
 
     def test_filter_change_logs_by_entity(
-        self, client: TestClient, auth_headers: dict
+        self, client: TestClient, admin_headers: dict
     ):
         """Test filtering change logs by entity type."""
         response = client.get(
             "/api/v1/integrations/change-logs",
-            headers=auth_headers,
+            headers=admin_headers,
             params={"entity_type": "product"}
         )
         
@@ -189,12 +188,12 @@ class TestChangeLogs:
             assert entry["entity_type"] == "product"
 
     def test_change_logs_pagination(
-        self, client: TestClient, auth_headers: dict
+        self, client: TestClient, admin_headers: dict
     ):
         """Test change logs pagination."""
         response = client.get(
             "/api/v1/integrations/change-logs",
-            headers=auth_headers,
+            headers=admin_headers,
             params={"limit": 5, "offset": 0}
         )
         
@@ -207,16 +206,16 @@ class TestDirectEditLogging:
     """Tests for direct edit change logging."""
 
     def test_product_update_logs_changes(
-        self, client: TestClient, auth_headers: dict, test_product: dict
+        self, client: TestClient, admin_headers: dict, test_product: Product
     ):
         """Test that updating a product creates change log entries."""
-        old_name = test_product["name"]
+        old_name = test_product.name
         new_name = f"{old_name} (Updated)"
         
         # Update the product
         response = client.put(
-            f"/api/v1/products/{test_product['id']}",
-            headers=auth_headers,
+            f"/api/v1/products/{test_product.id}",
+            headers=admin_headers,
             json={"name": new_name}
         )
         
@@ -225,8 +224,8 @@ class TestDirectEditLogging:
         # Check change logs
         logs_response = client.get(
             "/api/v1/integrations/change-logs",
-            headers=auth_headers,
-            params={"entity_id": test_product["id"], "entity_type": "product"}
+            headers=admin_headers,
+            params={"entity_id": test_product.id, "entity_type": "product"}
         )
         
         assert logs_response.status_code == 200

@@ -5,8 +5,8 @@ import shutil
 import tempfile
 import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from pydantic import BaseModel, HttpUrl
-from typing import Optional, Dict, Any
+from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_db
@@ -22,6 +22,9 @@ class ImageIdentificationResponse(BaseModel):
     description: Optional[str] = None
     category: Optional[str] = None
     error: Optional[str] = None
+    exists: bool = False
+    product_id: Optional[int] = None
+    message: Optional[str] = None
 
 @router.post("/identify-product", response_model=ImageIdentificationResponse)
 async def identify_product(

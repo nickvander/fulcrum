@@ -2,12 +2,10 @@
 Barcode and QR Code Generator Service.
 """
 import io
-import base64
 from typing import Optional, Tuple
 import barcode
 from barcode.writer import ImageWriter
 import qrcode
-from PIL import Image
 
 class BarcodeService:
     """

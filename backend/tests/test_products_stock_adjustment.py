@@ -13,14 +13,14 @@ def db_session(db: Session):
     Create test data using the properly initialized database session.
     """
     # Create a test user and product for testing
-    test_user = User(email="test@example.com", hashed_password="HashedTestPassword123!", role="user")
+    test_user = User(email="stocktest@example.com", hashed_password="HashedTestPassword123!", role="user")
     db.add(test_user)
     db.flush()  # Get the user ID
     
     test_product = Product(
-        name="Test Product",
+        name="Test Product For Stock",
         description="Test Description",
-        sku="TEST001",
+        sku="STOCKTEST001",
         default_resale_price=10.0
     )
     db.add(test_product)
@@ -33,18 +33,19 @@ def db_session(db: Session):
         location="default"
     )
     db.add(initial_inventory)
-    db.commit()
+    db.flush()  # Use flush instead of commit to maintain transaction
     
     yield db
     
     # Test data will be cleaned up automatically by the transaction rollback in the db fixture
 
 
+
 @pytest.mark.db
 def test_adjust_stock_functionality(db_session: Session):
     """Test the direct functionality of the adjust_stock function."""
     # Get test data
-    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    test_product = db_session.query(Product).filter(Product.sku == "STOCKTEST001").first()
 
     
     # Create a mock current_user
@@ -86,7 +87,7 @@ def test_adjust_stock_functionality(db_session: Session):
 def test_adjust_stock_negative_value(db_session: Session):
     """Test that negative adjustments (decreases) work properly."""
     # Get the existing inventory item and update its quantity for testing
-    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    test_product = db_session.query(Product).filter(Product.sku == "STOCKTEST001").first()
     existing_inventory = db_session.query(InventoryItem).filter(
         InventoryItem.product_id == test_product.id,
         InventoryItem.location == "default"
@@ -121,7 +122,7 @@ def test_adjust_stock_negative_value(db_session: Session):
 @pytest.mark.db
 def test_adjust_stock_without_reason(db_session: Session):
     """Test that adjustments work without providing a reason."""
-    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    test_product = db_session.query(Product).filter(Product.sku == "STOCKTEST001").first()
     
     # Create a mock current_user
     mock_current_user = Mock()
@@ -154,7 +155,7 @@ def test_adjust_stock_without_reason(db_session: Session):
 @pytest.mark.db
 def test_adjust_stock_zero_value(db_session: Session):
     """Test that zero adjustments are handled correctly (should probably be allowed or no-op)."""
-    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    test_product = db_session.query(Product).filter(Product.sku == "STOCKTEST001").first()
     
     mock_current_user = Mock()
     mock_current_user.email = "test@example.com"
@@ -181,7 +182,7 @@ def test_adjust_stock_zero_value(db_session: Session):
 @pytest.mark.db
 def test_adjust_stock_large_value(db_session: Session):
     """Test that large adjustments are handled correctly."""
-    test_product = db_session.query(Product).filter(Product.sku == "TEST001").first()
+    test_product = db_session.query(Product).filter(Product.sku == "STOCKTEST001").first()
     
     mock_current_user = Mock()
     mock_current_user.email = "test@example.com"

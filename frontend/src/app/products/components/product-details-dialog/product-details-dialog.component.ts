@@ -55,14 +55,14 @@ export class ProductDetailsDialogComponent implements OnInit {
 
     constructor(
         public dialogRef: MatDialogRef<ProductDetailsDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { product: Product, mode?: 'view' | 'edit', stagedImage?: File },
+        @Inject(MAT_DIALOG_DATA) public data: { product: Product, mode?: 'view' | 'edit' | 'add', stagedImage?: File },
         private productService: ProductService,
         private router: Router,
         private dialog: MatDialog
     ) {
         // Initialize with passed data for immediate display
         this.product = data.product;
-        this.isEditMode = data.mode === 'edit';
+        this.isEditMode = data.mode === 'edit' || data.mode === 'add';
         this.stagedImage = data.stagedImage || null;
     }
 

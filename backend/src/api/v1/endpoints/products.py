@@ -201,8 +201,11 @@ def update_product(
         'category': product.category,
         'brand': product.brand,
         'weight': product.weight,
-        'dimensions': product.dimensions,
+        'width': product.width,
+        'height': product.height,
+        'depth': product.depth,
     }
+
     
     # Get new values from update payload
     update_data = product_in.model_dump(exclude_unset=True, exclude={'bundle_components'})
