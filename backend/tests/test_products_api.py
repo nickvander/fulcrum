@@ -92,7 +92,7 @@ def test_search_products_stock_filter(client: TestClient, db: Session, test_prod
     assert test_product.id not in [p["id"] for p in data]
 
 @pytest.mark.db
-def test_update_product(client: TestClient, test_product: Product):
+def test_update_product(client: TestClient, test_product: Product, admin_headers: dict):
     """
     Test updating a product successfully and that the embedding task is called.
     """
@@ -101,12 +101,14 @@ def test_update_product(client: TestClient, test_product: Product):
         response = client.put(
             f"/api/v1/products/{test_product.id}",
             json={"name": updated_name},
+            headers=admin_headers,
         )
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == updated_name
         assert data["id"] == test_product.id
         mock_delay.assert_called_once_with(test_product.id)
+
 
 @pytest.mark.db
 def test_upload_product_image(client: TestClient, test_product: Product):

@@ -3,9 +3,18 @@ Fulcrum Internal Product Tool for ADK Agents.
 Allows agents to check if products already exist in the database.
 """
 from typing import Dict, Any
-from sqlalchemy import or_
-from src.db.session import SessionLocal
-from src.models.product import Product
+
+# Conditional imports for test safety
+try:
+    from sqlalchemy import or_
+    from src.db.session import SessionLocal
+    from src.models.product import Product
+    DB_AVAILABLE = True
+except ImportError:
+    DB_AVAILABLE = False
+    SessionLocal = None
+    Product = None
+
 
 def find_internal_product(sku_or_name: str) -> Dict[str, Any]:
     """
@@ -18,6 +27,12 @@ def find_internal_product(sku_or_name: str) -> Dict[str, Any]:
     Returns:
         Dict containing found status and basic info if found.
     """
+    if not DB_AVAILABLE:
+        return {
+            "found": False,
+            "error": "Database not available in this context"
+        }
+        
     db = SessionLocal()
     try:
         # Search for SKU match OR Name match (case-insensitive fuzzy)

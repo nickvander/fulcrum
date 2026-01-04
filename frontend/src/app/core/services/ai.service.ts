@@ -10,6 +10,9 @@ export interface ProductIdentificationResponse {
     description?: string;
     category?: string;
     error?: string;
+    exists?: boolean;
+    product_id?: number | string;
+    message?: string;
 }
 
 @Injectable({

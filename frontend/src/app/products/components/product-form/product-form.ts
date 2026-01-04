@@ -110,6 +110,20 @@ export class ProductForm implements OnInit {
   ngOnInit(): void {
     console.log('ProductForm: ngOnInit started');
 
+    // Initialize staged images if provided
+    if (this.initialStagedImages && this.initialStagedImages.length > 0) {
+      this.stagedImages = [...this.initialStagedImages];
+      this.initialStagedImages.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          if (e.target?.result) {
+            this.stagedImagePreviews.push(e.target.result);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     // Check if we're coming from creating a product for a PO
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['returnTo'] === 'po') {
