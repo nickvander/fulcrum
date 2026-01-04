@@ -1,5 +1,6 @@
 import { Component, ElementRef, EventEmitter, OnDestroy, Output, ViewChild, Optional, Inject, AfterViewInit, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BarcodeDetector as BarcodeDetectorPolyfill } from 'barcode-detector/pure';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,18 +9,19 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { AiService, ProductIdentificationResponse } from '../../../core/services/ai.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogRef } from '@angular/material/dialog';
 import { SettingsService } from '../../../core/services/settings.service';
 import { MatTabsModule } from '@angular/material/tabs';
-import { NgxScannerQrcodeComponent, ScannerQRCodeConfig, ScannerQRCodeResult } from 'ngx-scanner-qrcode';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { Router } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { ProductService } from '../../services/product';
+
+import { SafeUrlPipe } from '../../../shared/pipes/safe-url-pipe';
 
 @Component({
     selector: 'app-product-scanner',
@@ -31,12 +33,12 @@ import { ProductService } from '../../services/product';
         MatProgressSpinnerModule,
         TranslocoModule,
         MatTabsModule,
-        NgxScannerQrcodeComponent,
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatDividerModule,
-        MatTooltipModule
+        MatTooltipModule,
+        SafeUrlPipe
     ],
     templateUrl: './product-scanner.component.html',
     styleUrls: ['./product-scanner.component.scss']
@@ -47,7 +49,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
     @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
     @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
-    @ViewChild('action') scanner!: NgxScannerQrcodeComponent;
+    @ViewChild('barcodeVideo') barcodeVideoElement!: ElementRef<HTMLVideoElement>;
 
     // Camera/AI State
     stream: MediaStream | null = null;
@@ -58,19 +60,18 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     isProcessing = false;
     isInitializing = false; // New: Camera is starting up
     isAnalyzing = false;    // New: AI is analyzing image
+    analysisStatus: string = ''; // New: Agent thought process
+    private analysisInterval: any;
     cameraError = false;
     isAiEnabled = false;
     manualBarcode = '';
     activeTabIndex: number = 0; // Default to the first tab (Barcode)
+    showBarcodeScanner = false; // Controls conditional rendering of scanner
 
-    // Barcode State
-    config: ScannerQRCodeConfig = {
-        constraints: {
-            video: {
-                facingMode: 'environment' // Search back camera
-            }
-        },
-    };
+    // Native Barcode Scanner State
+    private barcodeStream: MediaStream | null = null;
+    private barcodeDetector: any = null; // BarcodeDetector API
+    private scanAnimationFrame: number | null = null;
 
     constructor(
         private dialogRef: MatDialogRef<ProductScannerComponent>,
@@ -80,6 +81,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         private settingsService: SettingsService,
         private aiService: AiService,
         private http: HttpClient,
+        private translocoService: TranslocoService,
         private cdr: ChangeDetectorRef
     ) { }
 
@@ -140,10 +142,9 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
                 // Tab 1: Identify -> Auto-start camera
                 this.startCamera();
             }
-            // Tab 2: Scan Barcode -> Do NOT auto-start camera (user must click "Use Camera")
-            // Focus on input field for hardware scanner
+            // Tab 2: Scan Barcode -> Focus on barcode input, let user click button to start camera
             if (index === 1) {
-                const input = document.querySelector('.barcode-input input') as HTMLElement;
+                const input = document.querySelector('.hardware-scanner-section input') as HTMLElement;
                 if (input) input.focus();
             }
         }, 300);
@@ -185,18 +186,66 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         const video = this.videoElement.nativeElement;
         const canvas = this.canvasElement.nativeElement;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        // Calculate aspect ratio to match the overlay (roughly 0.7 or 0.85 depending on screen)
+        // Overlay is 85% width, 70% height
+        const overlayWidth = 0.85;
+        const overlayHeight = 0.7;
+
+        // Source dimensions
+        const vw = video.videoWidth;
+        const vh = video.videoHeight;
+
+        // Destination dimensions (crop area)
+        const dw = vw * overlayWidth;
+        const dh = vh * overlayHeight;
+
+        // Start coordinates (center crop)
+        const sx = (vw - dw) / 2;
+        const sy = (vh - dh) / 2;
+
+        canvas.width = dw;
+        canvas.height = dh;
 
         const context = canvas.getContext('2d');
         if (context) {
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Draw only the cropped area
+            context.drawImage(video, sx, sy, dw, dh, 0, 0, dw, dh);
 
             canvas.toBlob(blob => {
                 if (blob) {
                     this.processImage(new File([blob], 'capture.jpg', { type: 'image/jpeg' }));
                 }
             }, 'image/jpeg', 0.9);
+        }
+    }
+
+    isDragOver = false;
+
+    onDragOver(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragOver = true;
+    }
+
+    onDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragOver = false;
+    }
+
+    onDrop(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragOver = false;
+
+        const files = event.dataTransfer?.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.type.match(/image\/*/)) {
+                this.processImage(file);
+            } else {
+                this.snackBar.open('Please drop an image file.', 'Close', { duration: 3000 });
+            }
         }
     }
 
@@ -224,13 +273,14 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
 
         this.isAnalyzing = true; // Start analysis overlay
+        this.startAnalysisSimulation();
 
         // Save file for later use if we find a duplicate
         this.currentImageFile = file;
 
         this.aiService.identifyProduct(file).subscribe({
             next: (response) => {
-
+                this.stopAnalysisSimulation();
                 this.isProcessing = false;
                 this.isAnalyzing = false;
 
@@ -254,6 +304,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
                 if (this.dialogRef) this.dialogRef.close(result);
                 this.isProcessing = false;
                 this.isAnalyzing = false;
+                this.stopAnalysisSimulation();
             }
         });
     }
@@ -280,8 +331,22 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
 
     createNewCopy(): void {
         if (this.foundProduct && this.currentImageFile) {
-            // Treat as new but pre-filled with the found data
-            this.finishScan(this.foundProduct, this.currentImageFile);
+            // Treat as new: Strip ALL unique identifiers to force fresh generation
+            const cleanProduct = {
+                ...this.foundProduct,
+                id: null,
+                product_id: null,
+                sku: null,
+                barcode_value: null,
+                qrcode_value: null,
+                exists: false, // Critical: Mark as non-existing so form generates new IDs
+                // Keep useful data - Prioritize text from AI analysis if available!
+                name: this.foundProduct.ai_name || this.foundProduct.name,
+                description: this.foundProduct.ai_description || this.foundProduct.description,
+                brand: this.foundProduct.ai_brand || this.foundProduct.brand,
+            };
+            console.log('[Scanner] Creating new copy with cleaned data:', cleanProduct);
+            this.finishScan(cleanProduct, this.currentImageFile);
         }
     }
 
@@ -318,72 +383,151 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         }
     }
 
-    // --- Barcode Logic ---
+    // --- Barcode Logic (Native Implementation) ---
 
-    startBarcodeScanner() {
-        // Small delay to ensure the scanner component is fully rendered
-        setTimeout(() => {
-            if (!this.scanner) {
-                this.snackBar.open('Scanner not ready. Please try again.', 'Close', { duration: 3000 });
-                return;
+    async startNativeBarcodeScanner(): Promise<void> {
+        console.log('Starting native barcode scanner...');
+
+        // IMPORTANT: Stop Tab 1's camera first to avoid conflicts
+        this.stopCamera();
+
+        // IMPORTANT: Stop Tab 1's camera first to avoid conflicts
+        this.stopCamera();
+
+        try {
+            // Initialize BarcodeDetector (Native or Polyfill)
+            if ('BarcodeDetector' in window) {
+                console.log('Using native BarcodeDetector API');
+                this.barcodeDetector = new (window as any).BarcodeDetector({
+                    formats: ['qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'code_128', 'itf', 'codabar']
+                });
+            } else {
+                console.log('Using BarcodeDetector Polyfill');
+                this.barcodeDetector = new BarcodeDetectorPolyfill({
+                    formats: ['qr_code', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_39', 'code_128', 'itf', 'codabar']
+                });
             }
 
-            this.scanner.start().subscribe({
-                next: (res) => {
-                    console.log('Scanner started', res);
-                    // UX Improvement: Disable PiP on the scanner video
-                    setTimeout(() => {
-                        const videos = document.querySelectorAll('ngx-scanner-qrcode video');
-                        videos.forEach((v: any) => {
-                            if (v) {
-                                v.disablePictureInPicture = true;
-                                v.setAttribute('disablePictureInPicture', 'true');
-                                // Force style if needed
-                                v.style.objectFit = 'cover';
-                            }
-                        });
-                    }, 500);
-                },
-                error: (err) => {
-                    console.error('Scanner start failed', err);
-                    // Provide user-friendly error messages
-                    let message = 'Scanner Error: ';
-                    if (err?.message?.includes('NotAllowedError') || err?.name === 'NotAllowedError') {
-                        message += 'Camera permission denied. Please allow camera access.';
-                    } else if (err?.message?.includes('NotFoundError') || err?.name === 'NotFoundError') {
-                        message += 'No camera found. Please connect a camera.';
-                    } else if (err?.message?.includes('object can not be found')) {
-                        message += 'Camera not available. Try refreshing the page.';
-                    } else {
-                        message += err?.message || 'Unknown error';
-                    }
-                    this.snackBar.open(message, 'Close', { duration: 5000 });
-                }
+            // Get camera stream
+            this.barcodeStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
             });
-        }, 100);
-    }
 
-    stopBarcodeScanner() {
-        if (this.scanner) {
-            this.scanner.stop();
+            // Show the scanner UI
+            this.showBarcodeScanner = true;
+            this.cdr.detectChanges();
+
+            // Wait for video element to be available, then attach stream
+            setTimeout(() => {
+                if (this.barcodeVideoElement?.nativeElement) {
+                    const video = this.barcodeVideoElement.nativeElement;
+                    video.srcObject = this.barcodeStream;
+                    video.play();
+
+                    // Start scanning loop
+                    this.startBarcodeDetectionLoop(video);
+                    console.log('Native barcode scanner started successfully');
+                } else {
+                    console.error('Video element not available');
+                    this.stopNativeBarcodeScanner();
+                }
+            }, 100);
+
+        } catch (err: any) {
+            console.error('Failed to start native barcode scanner:', err);
+            this.handleScannerError(err);
+            this.showBarcodeScanner = false;
         }
     }
 
+    private startBarcodeDetectionLoop(video: HTMLVideoElement): void {
+        const scan = async () => {
+            if (!this.showBarcodeScanner || !this.barcodeDetector) return;
+
+            try {
+                const barcodes = await this.barcodeDetector.detect(video);
+                if (barcodes.length > 0) {
+                    const barcode = barcodes[0];
+                    console.log('Barcode detected:', barcode.rawValue);
+
+                    // Process the barcode
+                    this.processDetectedBarcode(barcode.rawValue);
+                    return; // Stop scanning after successful detection
+                }
+            } catch (err) {
+                // Detection can fail on some frames, that's ok
+            }
+
+            // Continue scanning
+            this.scanAnimationFrame = requestAnimationFrame(scan);
+        };
+
+        this.scanAnimationFrame = requestAnimationFrame(scan);
+    }
+
+    private processDetectedBarcode(value: string): void {
+        // Stop the scanner
+        this.stopNativeBarcodeScanner();
+
+        // Look up the product
+        this.lookupProduct(value);
+    }
+
+    stopNativeBarcodeScanner(): void {
+        console.log('Stopping native barcode scanner...');
+
+        // Stop animation frame
+        if (this.scanAnimationFrame) {
+            cancelAnimationFrame(this.scanAnimationFrame);
+            this.scanAnimationFrame = null;
+        }
+
+        // Stop stream
+        if (this.barcodeStream) {
+            this.barcodeStream.getTracks().forEach(track => track.stop());
+            this.barcodeStream = null;
+        }
+
+        // Clear video source
+        if (this.barcodeVideoElement?.nativeElement) {
+            this.barcodeVideoElement.nativeElement.srcObject = null;
+        }
+
+        this.barcodeDetector = null;
+        this.showBarcodeScanner = false;
+    }
+
+    private handleScannerError(err: any) {
+        let message = 'Scanner Error: ';
+        if (err?.message?.includes('NotAllowedError') || err?.name === 'NotAllowedError') {
+            message += 'Camera permission denied. Please allow camera access.';
+        } else if (err?.message?.includes('NotFoundError') || err?.name === 'NotFoundError') {
+            message += 'No camera found. Please connect a camera.';
+        } else if (err?.message?.includes('object can not be found')) {
+            message += 'Camera not available. Try refreshing the page.';
+        } else {
+            message += err?.message || 'Unknown error';
+        }
+        this.snackBar.open(message, 'Close', { duration: 5000 });
+    }
+
+    // Keep old method for backwards compatibility (now just calls native)
+    startBarcodeScanner(event?: Event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        this.startNativeBarcodeScanner();
+    }
+
+    stopBarcodeScanner() {
+        // Stop native scanner
+        this.stopNativeBarcodeScanner();
+    }
     onManualBarcodeSubmit(): void {
         if (this.manualBarcode?.trim()) {
             this.lookupProduct(this.manualBarcode.trim());
             this.manualBarcode = ''; // Clear after submit
-        }
-    }
-
-    onBarcodeEvent(e: ScannerQRCodeResult[], action?: any): void {
-        if (e && e.length > 0) {
-            const result = e[0];
-            if (result.value) {
-                // Audio beep feedback could be good here
-                this.stopBarcodeScanner();
-                this.lookupProduct(result.value);
-            }
         }
     }
 
@@ -407,7 +551,11 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
                     this.scanComplete.emit(result);
                     if (this.dialogRef) this.dialogRef.close(result);
                 } else {
-                    this.snackBar.open('Error looking up barcode.', 'Close', { duration: 3000 });
+                    this.snackBar.open(
+                        this.translocoService.translate('products.scanner.errorLookingUpBarcode'),
+                        this.translocoService.translate('common.close'),
+                        { duration: 3000 }
+                    );
                 }
             }
         });
@@ -417,6 +565,34 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         this.close.emit();
         if (this.dialogRef) {
             this.dialogRef.close();
+        }
+    }
+
+    private startAnalysisSimulation() {
+        const messages = [
+            this.translocoService.translate('products.ai.status.analyzing'),
+            this.translocoService.translate('products.ai.status.extracting'),
+            this.translocoService.translate('products.ai.status.searching'),
+            this.translocoService.translate('products.ai.status.comparing'),
+            this.translocoService.translate('products.ai.status.synthesizing'),
+            this.translocoService.translate('products.ai.status.finalizing')
+        ];
+        let index = 0;
+        this.analysisStatus = messages[0];
+
+        // Update message every 1.5 seconds
+        if (this.analysisInterval) clearInterval(this.analysisInterval);
+        this.analysisInterval = setInterval(() => {
+            index = (index + 1) % messages.length;
+            this.analysisStatus = messages[index];
+            this.cdr.detectChanges();
+        }, 1500);
+    }
+
+    private stopAnalysisSimulation() {
+        if (this.analysisInterval) {
+            clearInterval(this.analysisInterval);
+            this.analysisInterval = null;
         }
     }
 }

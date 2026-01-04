@@ -25,6 +25,10 @@ class ImageIdentificationResponse(BaseModel):
     exists: bool = False
     product_id: Optional[int] = None
     message: Optional[str] = None
+    # AI Analysis Fields (preserved even if DB match found)
+    ai_name: Optional[str] = None
+    ai_brand: Optional[str] = None
+    ai_description: Optional[str] = None
 
 @router.post("/identify-product", response_model=ImageIdentificationResponse)
 async def identify_product(

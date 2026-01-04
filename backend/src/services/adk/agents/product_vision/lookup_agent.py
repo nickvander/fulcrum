@@ -149,6 +149,12 @@ If the tool returns found=True:
   "product_id": <from tool>,
   "name": <from tool>,
   "sku": <from tool>,
+  "brand": <from tool or vision>,
+  "description": <from tool or vision>,
+  "category": <from vision if available>,
+  "ai_name": <original name from vision analysis>,
+  "ai_description": <original description from vision analysis>,
+  "ai_brand": <original brand from vision analysis>,
   "message": "Found existing product in database"
 }
 ```

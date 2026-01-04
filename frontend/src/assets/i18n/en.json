@@ -146,6 +146,9 @@
         "aiPowered": "AI-Powered",
         "identifyProduct": "Identify Product",
         "barcodeScanner": "Barcode Scanner",
+        "scanner": {
+            "errorLookingUpBarcode": "Error looking up barcode."
+        },
         "scanBarcode": "Scan Barcode",
         "scanBarcodeInstruction": "Scan barcode or QR code with device or type manually",
         "useCameraToScan": "Use Camera",
@@ -288,7 +291,19 @@
         "adjustmentHint": "Enter positive number to increase, negative to decrease",
         "confirmStockAdjustment": "Confirm Stock Adjustment",
         "newStock": "New Stock",
-        "confirmAdjustment": "Confirm Adjustment"
+        "confirmAdjustment": "Confirm Adjustment",
+        "ai": {
+            "analyzingImage": "Using AI to identify product...",
+            "status": {
+                "initializing": "Initializing Agent...",
+                "analyzing": "Analyzing image features...",
+                "extracting": "Extracting text and logos...",
+                "searching": "Searching global product database...",
+                "comparing": "Comparing visual fingerprints...",
+                "synthesizing": "Synthesizing product details...",
+                "finalizing": "Finalizing identification..."
+            }
+        }
     },
     "suppliers": {
         "title": "Suppliers",

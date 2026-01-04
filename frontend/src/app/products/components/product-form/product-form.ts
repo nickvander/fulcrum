@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewChild, ElementRef } from '@angular/core';
 import { FormsModule, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductService } from '../../services/product';
@@ -20,12 +20,13 @@ import { ImageDialogComponent } from '../../../shared/components/image-dialog/im
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
 import { ProductVariantsComponent } from '../product-variants/product-variants';
-import { switchMap, map, takeUntil, catchError, tap } from 'rxjs/operators';
+import { switchMap, map, takeUntil, catchError, tap, distinctUntilChanged } from 'rxjs/operators';
 import { forkJoin, of, Subject, Observable } from 'rxjs';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
+import * as QRCode from 'qrcode'; // Import qrcode library
 import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
@@ -139,6 +140,19 @@ export class ProductForm implements OnInit {
       console.log('ProductForm: Route mode');
       this.initializeRouteMode();
     }
+
+    // Auto-generate Barcode when SKU changes
+    this.productForm.get('sku')?.valueChanges.pipe(
+      takeUntil(this.destroy$),
+      distinctUntilChanged()
+    ).subscribe(sku => {
+      // Only auto-generate if barcode is empty to avoid overwriting user data
+      const currentBarcode = this.productForm.get('barcode_value')?.value;
+      if (sku && (!currentBarcode || currentBarcode.trim() === '')) {
+        const barcode = this.productService.generateBarcodeFromSku(sku);
+        this.productForm.patchValue({ barcode_value: barcode }, { emitEvent: false });
+      }
+    });
   }
 
   returnToPurchaseOrder(): void {
@@ -186,12 +200,36 @@ export class ProductForm implements OnInit {
     ).subscribe({
       next: ({ product, customFields, variants }) => {
         console.log('ProductForm: Side panel data loaded');
+        console.log('ProductForm: Received product:', product);
+        console.log('ProductForm: Product identifiers:', {
+          sku: product.sku,
+          barcode_value: product.barcode_value,
+          qrcode_value: product.qrcode_value
+        });
         // Handle Product Data
         this.product = product;
         this.productId = product.id || null;
 
         if (product) {
           this.productForm.patchValue(product);
+          console.log('ProductForm: After patchValue, form sku:', this.productForm.get('sku')?.value);
+
+          // CRITICAL FIX: If we are in ADD mode (id=0) and SKU/Barcode/QR are missing, generate them NOW.
+          // This handles cases where the data passing might have failed or been incomplete.
+          if ((!this.productId || this.productId === 0) && !this.productForm.get('sku')?.value) {
+            console.log('ProductForm: Detected new product with missing SKU - Auto-generating...');
+            this.regenerateSku(); // Generates SKU and Barcode
+            setTimeout(() => this.generateQRCode(), 100); // Generate QR after a tick
+          } else if ((!this.productId || this.productId === 0)) {
+            // If SKU exists but QR is missing (e.g. passed from scanner but QR not rendered)
+            if (!this.productForm.get('qrcode_value')?.value) {
+              console.log('ProductForm: SKU exists but QR missing - Generating QR...');
+              this.generateQRCode();
+            }
+          } else if (this.productForm.get('qrcode_value')?.value) {
+            // If QR exists (e.g. Edit mode), we must render the visual canvas
+            setTimeout(() => this.renderQrCode(), 100);
+          }
 
           if (this.isEditMode) {
             this.originalValues = { ...product };
@@ -260,6 +298,14 @@ export class ProductForm implements OnInit {
       next: (initializationData: ProductFormInitializationData) => {
         console.log('ProductForm: initializeForm next');
         this.handleInitializationData(initializationData);
+
+        // Auto-Generate SKU for new products if missing (Manual Creation Flow)
+        if (!this.isEditMode && !this.productForm.get('sku')?.value) {
+          const newSku = this.productService.generateUniqueSku();
+          console.log('Auto-generating SKU:', newSku);
+          this.productForm.patchValue({ sku: newSku });
+          // This will trigger the valueChanges subscription to generate the barcode
+        }
       },
       error: (error) => {
         console.error('Error initializing form:', error);
@@ -333,6 +379,23 @@ export class ProductForm implements OnInit {
       });
 
       this.productForm.patchValue(patchData);
+    }
+
+    // Auto-Generate SKU, Barcode, and QR if missing for new products (e.g. from Scanner)
+    if (!this.isEditMode && !this.productForm.get('sku')?.value) {
+      const newSku = this.productService.generateUniqueSku();
+      const newBarcode = this.productService.generateBarcodeFromSku(newSku);
+      const newQrValue = `${window.location.origin}/products/view/${newSku}`;
+
+      console.log('Auto-generating SKU/Barcode/QR in handleInitializationData:', { newSku, newBarcode, newQrValue });
+      this.productForm.patchValue({
+        sku: newSku,
+        barcode_value: newBarcode,
+        qrcode_value: newQrValue
+      });
+
+      // Render visual QR after patch
+      setTimeout(() => this.renderQrCode(), 200);
     }
 
     // Add custom field controls after getting the data
@@ -426,69 +489,104 @@ export class ProductForm implements OnInit {
     return `/uploads/product_images/${imagePath}`;
   }
 
-  generateStoreBarcode(): void {
-    const sku = this.productForm.get('sku')?.value;
-    const existingBarcode = this.productForm.get('barcode_value')?.value;
 
+
+  generateQRCode(): void {
+    let sku = this.productForm.get('sku')?.value;
+    const existingQR = this.productForm.get('qrcode_value')?.value;
+
+    // Auto-generate SKU if missing
     if (!sku) {
-      this.notificationService.showError('Please enter a SKU to generate a barcode.');
-      return;
+      sku = this.productService.generateUniqueSku();
+      this.productForm.patchValue({ sku: sku });
     }
 
-    const newBarcode = `FUL-${sku}`;
+    // Generate URL using current origin + SKU
+    const qrValue = `${window.location.origin}/products/view/${sku}`;
 
-    if (existingBarcode && existingBarcode.trim() !== '') {
-      // Ask for confirmation before overwriting
+    const applyQr = () => {
+      this.productForm.patchValue({ qrcode_value: qrValue });
+      this.productForm.markAsDirty();
+      setTimeout(() => this.renderQrCode(), 100);
+    };
+
+    if (existingQR && existingQR.trim() !== '' && existingQR !== qrValue) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Replace Barcode?',
-          message: `This will replace the existing barcode "${existingBarcode}" with "${newBarcode}". Continue?`
+          title: 'Replace QR Code?',
+          message: 'This will replace the existing QR code. Continue?'
+        }
+      });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) applyQr();
+      });
+    } else {
+      applyQr();
+    }
+  }
+
+  @ViewChild('qrCanvas') qrCanvas!: ElementRef<HTMLCanvasElement>;
+
+  renderQrCode(): void {
+    const qrValue = this.productForm.get('qrcode_value')?.value;
+    if (qrValue && this.qrCanvas) {
+      QRCode.toCanvas(this.qrCanvas.nativeElement, qrValue, {
+        width: 128,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      }, function (error: any) {
+        if (error) console.error(error);
+      });
+    }
+  }
+
+  regenerateSku(): void {
+    console.log('Regenerate SKU clicked');
+    const newSku = this.productService.generateUniqueSku();
+    console.log('Generated new SKU:', newSku);
+
+    // Helper to sync barcode
+    const syncBarcode = (sku: string) => {
+      const newBarcode = this.productService.generateBarcodeFromSku(sku);
+      this.productForm.patchValue({ barcode_value: newBarcode });
+    };
+
+    const currentSku = this.productForm.get('sku')?.value;
+
+    if (currentSku && currentSku.trim() !== '') {
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Regenerate SKU?',
+          message: 'This will update both SKU and Barcode. Continue?'
         }
       });
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
-          this.productForm.patchValue({ barcode_value: newBarcode });
+          console.log('User confirmed SKU regeneration');
+          this.productForm.patchValue({ sku: newSku });
+          syncBarcode(newSku); // Force sync
           this.productForm.markAsDirty();
         }
       });
     } else {
-      this.productForm.patchValue({ barcode_value: newBarcode });
+      console.log('Auto-patching SKU (no existing value)');
+      this.productForm.patchValue({ sku: newSku });
+      syncBarcode(newSku); // Force sync
       this.productForm.markAsDirty();
     }
   }
 
-  generateQRCode(): void {
-    const productId = this.productForm.get('id')?.value;
+  regenerateBarcode(): void {
     const sku = this.productForm.get('sku')?.value;
-    const existingQR = this.productForm.get('qrcode_value')?.value;
-
-    // Use product ID if available, otherwise use SKU
-    const identifier = productId || sku;
-    if (!identifier) {
-      this.notificationService.showError('Please save the product first or enter a SKU to generate a QR code.');
-      return;
-    }
-
-    // Generate URL that links to QR redirect endpoint
-    // In production, replace localhost with actual domain
-    const qrValue = `http://localhost:4200/qr/${identifier}`;
-
-    if (existingQR && existingQR.trim() !== '') {
-      const dialogRef = this.dialog.open(ConfirmationDialog, {
-        data: {
-          title: 'Replace QR Code?',
-          message: `This will replace the existing QR code. Continue?`
-        }
-      });
-      dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.productForm.patchValue({ qrcode_value: qrValue });
-          this.productForm.markAsDirty();
-        }
-      });
-    } else {
-      this.productForm.patchValue({ qrcode_value: qrValue });
+    if (sku) {
+      const barcode = this.productService.generateBarcodeFromSku(sku);
+      this.productForm.patchValue({ barcode_value: barcode });
       this.productForm.markAsDirty();
+    } else {
+      this.notificationService.showError('Please enter a SKU first.');
     }
   }
 

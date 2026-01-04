@@ -189,7 +189,15 @@ class ProductVisionRootAgent:
                     print(f"[RootAgent] State lookup error: {e}")
             
             if final_text:
-                return self._parse_response(final_text)
+                parsed_result = self._parse_response(final_text)
+                
+                # LOG FOR USER VERIFICATION
+                print("\n" + "="*50)
+                print("[RootAgent] FINAL AI IDENTIFICATION RESULT:")
+                print(json.dumps(parsed_result, indent=2))
+                print("="*50 + "\n")
+                
+                return parsed_result
             
             return {"error": "No response from pipeline", "name": "Unknown"}
             
