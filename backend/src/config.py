@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "fulcrum"
     POSTGRES_DB: str = "fulcrum"
     POSTGRES_HOST: str = "db"
+    
+    # AI 
+    GEMINI_API_KEY: Optional[str] = None
 
     @model_validator(mode='before')
     def assemble_db_connection(cls, v: Any) -> Any:

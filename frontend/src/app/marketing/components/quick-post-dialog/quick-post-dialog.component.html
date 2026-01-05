@@ -7,8 +7,122 @@
             Publish a one-off update to your social channels.
         </p>
 
+        <!-- Product Linking -->
+        <mat-form-field appearance="outline" class="full-width compact-field" subscriptSizing="dynamic">
+            <mat-label>Link Products (Required for AI)</mat-label>
+            <mat-chip-grid #chipGrid aria-label="Product selection">
+                <mat-chip-row *ngFor="let product of selectedProducts" (removed)="removeProduct(product)">
+                    <img matChipAvatar
+                        [src]="product.primary_image?.image_path || (product.images && product.images.length > 0 ? product.images[0].image_path : '')"
+                        onerror="this.src='assets/placeholder.jpg'"
+                        *ngIf="product.primary_image || (product.images && product.images.length > 0)" />
+                    {{product.name}}
+                    <button matChipRemove [attr.aria-label]="'remove ' + product.name">
+                        <mat-icon>cancel</mat-icon>
+                    </button>
+                </mat-chip-row>
+            </mat-chip-grid>
+            <input placeholder="Search products..." #productInput [formControl]="productSearchCtrl"
+                [matChipInputFor]="chipGrid" [matAutocomplete]="auto">
+            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="productSelected($event)">
+                <mat-option *ngFor="let product of filteredProducts$ | async" [value]="product">
+                    <img [src]="product.primary_image?.image_path || (product.images && product.images.length > 0 ? product.images[0].image_path : '') || 'assets/placeholder.jpg'"
+                        class="option-img" onerror="this.style.display='none'">
+                    <span>{{product.name}}</span>
+                </mat-option>
+            </mat-autocomplete>
+        </mat-form-field>
+
+        <!-- AI Assistant Panel (only if AI enabled) -->
+        <div class="ai-assistant-panel" *ngIf="aiEnabled">
+            <div class="panel-header" (click)="toggleAiPanel()">
+                <div class="header-content">
+                    <mat-icon>auto_awesome</mat-icon>
+                    <span>AI Content Assistant</span>
+                </div>
+                <mat-icon>{{ showAiPanel ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </div>
+
+            <div class="panel-body" *ngIf="showAiPanel">
+                <!-- Tone Chips -->
+                <div class="tone-section">
+                    <label class="section-label">Tone</label>
+                    <div class="tone-chips">
+                        <button mat-stroked-button type="button" *ngFor="let preset of tonePresets"
+                            [class.selected]="selectedTone?.id === preset.id" (click)="selectTone(preset)"
+                            [matTooltip]="preset.description">
+                            {{ preset.name }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content Prompt Section -->
+                <div class="prompt-section">
+                    <label class="section-label">
+                        <mat-icon>article</mat-icon>
+                        Content Prompt
+                    </label>
+                    <mat-form-field appearance="outline" class="full-width prompt-field" subscriptSizing="dynamic">
+                        <textarea matInput [formControl]="customPromptCtrl" rows="2"
+                            placeholder="Describe the post style, key points to highlight..."></textarea>
+                        <mat-hint>This guides the AI in writing your social media post</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <!-- Image Prompt Section (expanded when image toggle is on) -->
+                <div class="prompt-section" *ngIf="aiImageCtrl.value">
+                    <label class="section-label">
+                        <mat-icon>image</mat-icon>
+                        Image Prompt
+                    </label>
+                    <mat-form-field appearance="outline" class="full-width prompt-field" subscriptSizing="dynamic">
+                        <textarea matInput [formControl]="imagePromptCtrl" rows="2"
+                            placeholder="Describe the visual style, composition, lighting..."></textarea>
+                        <mat-hint>This guides the AI in generating product images</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <!-- Generate Actions -->
+                <div class="generate-actions">
+                    <div class="action-row">
+                        <button mat-stroked-button type="button" class="action-btn" (click)="generateText()"
+                            [disabled]="generating || selectedProducts.length === 0">
+                            <mat-icon>article</mat-icon>
+                            <span>{{ hasContent() ? 'Regenerate' : 'Generate' }} Text</span>
+                        </button>
+
+                        <button mat-stroked-button type="button" class="action-btn" (click)="generateImage()"
+                            [disabled]="generating || selectedProducts.length === 0">
+                            <mat-icon>image</mat-icon>
+                            <span>{{ hasImage() ? 'Regenerate' : 'Generate' }} Image</span>
+                        </button>
+                    </div>
+
+                    <button mat-flat-button color="accent" type="button" class="action-btn full-width"
+                        (click)="generateBoth()" [disabled]="generating || selectedProducts.length === 0">
+                        <mat-spinner diameter="16" *ngIf="generating"></mat-spinner>
+                        <mat-icon *ngIf="!generating">auto_awesome</mat-icon>
+                        <span *ngIf="!generating">{{ hasBoth() ? 'Regenerate Both' : 'Generate All' }}</span>
+                    </button>
+                </div>
+
+                <div class="error-msg" *ngIf="selectedProducts.length === 0">
+                    <mat-icon>info</mat-icon>
+                    Please link a product above to use AI generation.
+                </div>
+
+                <!-- AI Metadata Preview -->
+                <div class="generated-info" *ngIf="aiResult">
+                    <h4>Viral Strategy</h4>
+                    <div class="strategy-text">
+                        {{ aiResult.research?.viral_angles?.join(', ') || 'N/A' }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Connector Selection -->
-        <mat-form-field appearance="fill" class="full-width">
+        <mat-form-field appearance="outline" class="full-width compact-field" subscriptSizing="dynamic">
             <mat-label>Select Channel</mat-label>
             <mat-select formControlName="connector_id">
                 <mat-option *ngFor="let connector of connectors" [value]="connector.id">
@@ -20,46 +134,41 @@
             </mat-select>
         </mat-form-field>
 
-        <!-- Product Linking -->
-        <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Link Products (Leave empty for General/Store Post)</mat-label>
-            <mat-chip-grid #chipGrid aria-label="Product selection">
-                <mat-chip-row *ngFor="let product of selectedProducts" (removed)="removeProduct(product)">
-                    <img matChipAvatar [src]="product.primary_image?.image_path"
-                        onerror="this.src='assets/placeholder.jpg'" *ngIf="product.primary_image?.image_path" />
-                    {{product.name}}
-                    <button matChipRemove [attr.aria-label]="'remove ' + product.name">
-                        <mat-icon>cancel</mat-icon>
-                    </button>
-                </mat-chip-row>
-            </mat-chip-grid>
-            <input placeholder="Search products..." #productInput [formControl]="productSearchCtrl"
-                [matChipInputFor]="chipGrid" [matAutocomplete]="auto">
-            <mat-autocomplete #auto="matAutocomplete" (optionSelected)="productSelected($event)">
-                <mat-option *ngFor="let product of filteredProducts$ | async" [value]="product">
-                    <img [src]="product.primary_image?.image_path || ''" class="option-img"
-                        onerror="this.style.display='none'">
-                    <span>{{product.name}}</span>
-                </mat-option>
-            </mat-autocomplete>
-        </mat-form-field>
-
         <!-- Email Subject -->
-        <mat-form-field *ngIf="isChannel('email')" appearance="fill" class="full-width">
+        <mat-form-field *ngIf="isChannel('email')" appearance="outline" class="full-width compact-field"
+            subscriptSizing="dynamic">
             <mat-label>Subject Line</mat-label>
             <input matInput formControlName="content_subject">
         </mat-form-field>
 
         <!-- Content -->
-        <mat-form-field appearance="fill" class="full-width">
+        <mat-form-field appearance="outline" class="full-width content-field" subscriptSizing="dynamic">
             <mat-label>Post Content</mat-label>
-            <textarea matInput formControlName="content_body" rows="4" placeholder="What's happening?"></textarea>
+            <textarea matInput formControlName="content_body" rows="6" placeholder="What's happening?"></textarea>
             <mat-hint align="end" *ngIf="isChannel('twitter')">{{postForm.get('content_body')?.value?.length || 0}} /
                 280</mat-hint>
         </mat-form-field>
 
-        <!-- Image URL -->
-        <mat-form-field appearance="fill" class="full-width">
+        <!-- Image Preview (immediately after content) -->
+        <div class="image-preview-section" *ngIf="postForm.get('content_image_url')?.value">
+            <img [src]="postForm.get('content_image_url')?.value" alt="Generated Preview"
+                onerror="this.style.display='none'" class="preview-image">
+        </div>
+
+        <!-- Image URL as Chip -->
+        <div class="image-chip-section" *ngIf="postForm.get('content_image_url')?.value">
+            <div class="image-chip">
+                <mat-icon>image</mat-icon>
+                <span class="chip-text">{{ getImageFilename() }}</span>
+                <button mat-icon-button type="button" (click)="clearImage()" class="chip-remove">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Image URL input (hidden when image exists, toggle to show) -->
+        <mat-form-field *ngIf="!postForm.get('content_image_url')?.value" appearance="outline"
+            class="full-width compact-field image-url-field" subscriptSizing="dynamic">
             <mat-label>Image URL {{ isChannel('instagram') ? '(Required)' : '(Optional)' }}</mat-label>
             <input matInput formControlName="content_image_url" placeholder="https://...">
             <button mat-icon-button matSuffix type="button" (click)="fileInput.click()">
@@ -68,28 +177,15 @@
         </mat-form-field>
         <input #fileInput type="file" style="display:none">
 
-        <!-- Preview -->
-        <div class="preview-box" *ngIf="postForm.get('content_image_url')?.value || selectedProducts.length > 0">
-            <h4 *ngIf="selectedProducts.length > 0">Linked Products:</h4>
-            <div class="product-preview-list" *ngIf="selectedProducts.length > 0">
-                <div *ngFor="let p of selectedProducts" class="product-chip">
-                    <img [src]="p.primary_image?.image_path" onerror="this.style.display='none'">
-                    <span>{{p.name}}</span>
-                    <a [href]="'/products/' + p.id" target="_blank"
-                        class="link-icon"><mat-icon>open_in_new</mat-icon></a>
-                </div>
-            </div>
-
-            <img [src]="postForm.get('content_image_url')?.value" alt="Preview" onerror="this.style.display='none'"
-                *ngIf="postForm.get('content_image_url')?.value">
-        </div>
-
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
         <button mat-button type="button" mat-dialog-close>Cancel</button>
+        <button mat-button color="primary" type="button" (click)="saveDraft()" [disabled]="submitting">
+            Save Draft
+        </button>
         <button mat-raised-button color="primary" type="submit" [disabled]="!postForm.valid || submitting">
-            <mat-spinner diameter="20" *ngIf="submitting"></mat-spinner>
+            <mat-spinner diameter="18" *ngIf="submitting"></mat-spinner>
             <span *ngIf="!submitting">Post Now</span>
         </button>
     </mat-dialog-actions>

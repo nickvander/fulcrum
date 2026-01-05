@@ -31,6 +31,45 @@ Quick Posts are perfect for immediate updates that don't need a full campaign.
 4. Link any **Products** if you want to track sales from this post.
 5. Click **Post Now** to publish immediately.
 
+## AI Content Assistant
+
+> **Prerequisite:** Enable AI in **Settings → AI & Agents**. See the
+> [AI Integration Guide](/guides/ai-integration) for setup instructions.
+
+The AI Content Assistant helps you create engaging social media content quickly.
+
+### How to Use
+
+1. Open **Quick Post** and link a product.
+2. The **AI Content Assistant** panel appears (if AI is enabled).
+3. **Select a Tone:** Click a chip (Professional, Casual, Viral, Luxury, or
+   Custom).
+4. **Edit the Prompt:** The prompt pre-fills based on your tone selection. You
+   can customize it before generating.
+5. Toggle **Generate Image** if you want AI-generated visuals.
+6. Click **Generate** to create content.
+7. Review and edit the generated text, then **Post Now** or **Save Draft**.
+
+### Tone Presets
+
+| Tone         | Best For                           |
+| ------------ | ---------------------------------- |
+| Professional | B2B, formal announcements          |
+| Casual       | Friendly, conversational posts     |
+| Viral / Hype | High-energy, engagement-focused    |
+| Luxury       | Premium brands, aspirational       |
+| Custom       | Write your own prompt from scratch |
+
+### Saving Drafts
+
+When you save a draft, AI metadata is preserved:
+
+- The tone and prompt you used
+- The model that generated the content
+- Timestamp of generation
+
+This helps you iterate on content or replicate successful posts later.
+
 ## Managing the Calendar
 
 The calendar allows you to visualize your workflow and make changes on the fly.

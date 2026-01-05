@@ -145,6 +145,14 @@ export interface SmartBoostRecommendation {
     confidence_score: number;
 }
 
+export interface ContentGenerationResponse {
+    research: any;
+    content: any;
+    image_concept: any;
+    generated_image_url?: string;
+    event_id?: number;
+}
+
 // Email provider presets (matching backend)
 export const EMAIL_PROVIDER_PRESETS = {
     gmail: {
@@ -289,4 +297,36 @@ export class MarketingService {
     getSmartBoostRecommendations(): Observable<SmartBoostRecommendation[]> {
         return this.http.get<SmartBoostRecommendation[]>(`${this.baseUrl}/smart-boost`);
     }
+
+    // ===========================
+    // AI Content Generation
+    // ===========================
+
+    getTonePresets(): Observable<TonePreset[]> {
+        return this.http.get<TonePreset[]>(`${this.baseUrl}/tone-presets`);
+    }
+
+    generateContent(
+        productId: number,
+        platform: string,
+        tone: string = 'Professional',
+        generateImage: boolean = true,
+        customPrompt?: string
+    ): Observable<ContentGenerationResponse> {
+        return this.http.post<ContentGenerationResponse>(`${this.baseUrl}/generate-content`, {
+            product_id: productId,
+            platform,
+            tone,
+            generate_image: generateImage,
+            custom_prompt: customPrompt
+        });
+    }
+}
+
+// TonePreset interface
+export interface TonePreset {
+    id: string;
+    name: string;
+    prompt: string;
+    description: string;
 }

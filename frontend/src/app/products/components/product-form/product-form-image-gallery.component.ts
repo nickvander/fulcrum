@@ -46,6 +46,8 @@ export class ProductFormImageGalleryComponent implements OnInit {
   ngOnInit(): void { }
 
   getImageUrl(imagePath: string): string {
+    if (imagePath.startsWith('http')) return imagePath;
+
     return `/uploads/product_images/${imagePath}`;
   }
 
