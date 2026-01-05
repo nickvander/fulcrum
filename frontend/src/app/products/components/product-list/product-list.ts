@@ -60,6 +60,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   currentSearchQuery: string = '';
 
   showDashboard = false; // Drawer state
+  showScrollFab = false; // Toggle visibility based on scroll
 
   // Table View Data Source
   dataSource: MatTableDataSource<Product> = new MatTableDataSource();
@@ -754,6 +755,14 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private handleWindowScroll(): void {
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const shouldShow = scrollTop > 300;
+
+    if (this.showScrollFab !== shouldShow) {
+      this.showScrollFab = shouldShow;
+      this.cdr.markForCheck();
+    }
+
     if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
       console.log('[InfiniteScroll] Window scroll blocked:', {
         useInfiniteScroll: this.useInfiniteScroll,
@@ -774,12 +783,19 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onContainerScroll(event: Event): void {
+    const container = event.target as HTMLElement;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+
+    const shouldShow = scrollTop > 300;
+    if (this.showScrollFab !== shouldShow) {
+      this.showScrollFab = shouldShow;
+      this.cdr.markForCheck();
+    }
+
     if (!this.useInfiniteScroll || !this.hasMoreProducts || this.isLoading) {
       return;
     }
 
-    const container = event.target as HTMLElement;
-    const { scrollTop, scrollHeight, clientHeight } = container;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
 
     // Load more when within 200px of bottom

@@ -925,6 +925,11 @@ mat-card-header {
 .infinite-scroll-fab {
   position: fixed;
   bottom: 24px;
+
+  @media (max-width: 600px) {
+    bottom: 70px !important; // Clear paginator on mobile
+  }
+
   right: 24px;
   z-index: 1000;
   background: var(--bg-card) !important;
@@ -941,6 +946,17 @@ mat-card-header {
     color: var(--text-secondary) !important;
   }
 
+  // Ensure visible by default (reverting fade logic due to unreliability)
+  opacity: 1;
+  pointer-events: all;
+  transform: scale(0.8);
+
+  &.visible {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+  }
+
   &:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
@@ -953,7 +969,13 @@ mat-card-header {
 
     mat-icon {
       color: white !important;
-      animation: pulse-glow 2s ease-in-out infinite;
+    }
+  }
+
+  // Phone view: Move button higher ONLY when shifted up (selection bar active)
+  &.shifted-up {
+    @media (max-width: 600px) {
+      bottom: 115px !important; // Raised to 115px (74px bar + gap)
     }
   }
 }
@@ -1158,26 +1180,28 @@ mat-card-header {
   // Phone view - Ultra compact layout to prevent overflow
   @media (max-width: 600px) {
     position: fixed !important;
-    bottom: 12px !important;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
-    left: 6px !important;
-    right: 6px !important;
+    // Raised to 74px to sit ABOVE the mobile paginator (approx 50px high)
+    bottom: 74px !important;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 50% !important;
+    right: auto !important;
     top: auto !important;
-    transform: none !important;
-    max-width: none !important;
+    transform: translateX(-50%) !important;
+    max-width: 96vw !important;
+    width: fit-content !important;
 
     .selection-bar-content {
       width: 100%;
       justify-content: center;
-      gap: 2px; // Minimal gap
-      padding: 4px 2px; // Minimal side padding
+      gap: 1px; // Minimal gap to fix overflow
+      padding: 4px 1px; // Minimal side padding
       flex-wrap: nowrap;
     }
 
     .selection-info {
       flex: 0 0 auto;
       gap: 2px; // Tighter gap
-      padding-right: 6px;
+      padding-right: 4px; // Reduced from 6px
       border-right: 1px solid #e2e8f0;
 
       mat-icon {
@@ -1194,23 +1218,23 @@ mat-card-header {
 
     .selection-actions {
       flex: 0 0 auto;
-      gap: 3px; // Very tight
+      gap: 2px; // Reduced from 3px
 
       .action-btn {
         font-size: 9px;
-        padding: 4px 6px;
+        padding: 4px 8px 4px 6px; // Increase left padding slightly for cleaner look
         white-space: nowrap;
         min-width: unset;
 
         .action-label {
-          display: inline;
+          display: inline; // SHOW LABEL (Reverted)
         }
 
         mat-icon {
           font-size: 11px;
           width: 11px;
           height: 11px;
-          margin-right: 1px;
+          margin-right: 4px; // Increased spacing
         }
       }
 
@@ -1262,6 +1286,20 @@ mat-card-header {
 
 // Dark Mode Overrides (Global for Component)
 :host-context(.dark-theme) {
+  // Mobile Paginator Fixes (Dark Mode specific if needed, but general overrides below)
+}
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+// Container padding to prevent floating bar overlap
+.container.has-selection {
+  padding-bottom: 80px !important; // Make space for the fixed selection bar
+}
+
+:host-context(.dark-theme) {
 
   // Grid View Stock
   .stock {
@@ -1269,16 +1307,82 @@ mat-card-header {
       color: #69f0ae !important;
     }
 
-    // Bright Green
     &.stock-low {
       color: #ffd740 !important;
     }
 
-    // Bright Orange
     &.stock-out {
       color: #ff5252 !important;
     }
+  }
+}
 
-    // Bright Red
+// Mobile Paginator Optimization (Updated for MDC & Single Line)
+@media (max-width: 768px) {
+
+  ::ng-deep .mat-paginator-container,
+  ::ng-deep .mat-mdc-paginator-container {
+    flex-wrap: nowrap !important;
+    padding: 0 2px !important;
+    min-height: 40px !important; // Smaller height
+    font-size: 9px !important; // Requested smaller
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  // Hide Labels
+  ::ng-deep .mat-paginator-page-size-label,
+  ::ng-deep .mat-mdc-paginator-page-size-label {
+    display: none !important;
+  }
+
+  // Range Label
+  ::ng-deep .mat-paginator-range-label,
+  ::ng-deep .mat-mdc-paginator-range-label {
+    margin: 0 4px !important;
+    white-space: nowrap !important;
+  }
+
+  // Navigation Buttons
+  ::ng-deep .mat-paginator-navigation-next,
+  ::ng-deep .mat-paginator-navigation-previous,
+  ::ng-deep .mat-paginator-navigation-first,
+  ::ng-deep .mat-paginator-navigation-last,
+  ::ng-deep .mat-mdc-paginator-navigation-next,
+  ::ng-deep .mat-mdc-paginator-navigation-previous,
+  ::ng-deep .mat-mdc-paginator-navigation-first,
+  ::ng-deep .mat-mdc-paginator-navigation-last,
+  ::ng-deep .mat-mdc-icon-button {
+    width: 24px !important; // Smaller
+    height: 24px !important;
+    line-height: 24px !important;
+    padding: 0 !important;
+
+    // Icons (SVG/Font)
+    mat-icon,
+    .mat-icon,
+    svg {
+      font-size: 16px !important;
+      width: 16px !important;
+      height: 16px !important;
+      line-height: 16px !important;
+      padding: 0 !important;
+    }
+  }
+
+  // Page Size Select
+  ::ng-deep .mat-mdc-paginator-page-size {
+    align-items: center !important;
+    margin-right: 4px !important;
+  }
+
+  ::ng-deep .mat-mdc-select-trigger {
+    height: 24px !important;
+    min-height: 24px !important;
+    align-items: center !important;
+  }
+
+  ::ng-deep .mat-mdc-select-value {
+    font-size: 9px !important;
   }
 }
