@@ -133,6 +133,7 @@
     "products": {
         "title": "Products",
         "productList": "Product List",
+        "selected": "selected",
         "addProduct": "Add Product",
         "editProduct": "Edit Product",
         "deleteProduct": "Delete Product",
@@ -146,6 +147,8 @@
         "aiPowered": "AI-Powered",
         "identifyProduct": "Identify Product",
         "barcodeScanner": "Barcode Scanner",
+        "identifyShort": "Identify",
+        "scanShort": "Scan",
         "scanner": {
             "errorLookingUpBarcode": "Error looking up barcode."
         },
@@ -155,6 +158,7 @@
         "pointAtBarcode": "Point camera at a barcode or QR code",
         "cameraInstruction": "Position product in view to scan",
         "cameraError": "Unable to access camera. Please check permissions.",
+        "cameraPermissionHint": "Grant camera access to enable visual search",
         "startCameraHint": "Start camera to scan items",
         "aiIdentifyHint": "Use AI to identify the product",
         "startScanner": "Start Scanner",

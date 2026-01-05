@@ -77,9 +77,9 @@
         <!-- Tab 1: Identify / Photo -->
         <mat-tab>
             <ng-template mat-tab-label>
-                <span class="tab-label-content">
+                <span class="tab-label-content" [attr.data-short-label]="t('products.identifyShort')">
                     <mat-icon class="tab-icon">camera_alt</mat-icon>
-                    {{ t('products.identifyProduct') }}
+                    <span class="label-text">{{ t('products.identifyProduct') }}</span>
                 </span>
             </ng-template>
             <div class="tab-content" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
@@ -140,9 +140,9 @@
         <!-- Tab 2: Scan Barcode (Hardware / Custom) -->
         <mat-tab>
             <ng-template mat-tab-label>
-                <span class="tab-label-content">
+                <span class="tab-label-content" [attr.data-short-label]="t('products.scanShort')">
                     <mat-icon class="tab-icon">qr_code_2</mat-icon>
-                    {{ t('products.scanBarcode') }}
+                    <span class="label-text">{{ t('products.scanBarcode') }}</span>
                 </span>
             </ng-template>
             <div class="tab-content barcode-tab">

@@ -9,7 +9,7 @@
   color: var(--text-main);
 
   &.dialog-mode {
-    padding: 0 16px 16px 16px;
+    padding: 0 12px 12px 12px; // Slightly more compact
     gap: 4px;
     font-size: 12.5px;
 
@@ -18,8 +18,16 @@
     }
 
     mat-form-field {
-      margin-bottom: 2px;
+      margin-bottom: 0px; // Even more compact
       font-size: 13.5px;
+
+      // Ensure labels don't overflow
+      .mdc-floating-label {
+        max-width: 90%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
 
       .mat-mdc-form-field-subscript-wrapper {
         display: none;
@@ -39,6 +47,12 @@
 
     .bundle-management {
       gap: 8px;
+    }
+
+    // Stack columns on mobile/tablet
+    .form-columns {
+      flex-direction: column !important;
+      gap: 12px !important;
     }
   }
 }
@@ -88,17 +102,42 @@
   h1 {
     margin: 0;
     color: var(--text-main);
+
+    @media (max-width: 600px) {
+      font-size: 1.25rem;
+    }
   }
 
   .header-actions {
     display: flex;
     gap: 8px;
+
+    @media (max-width: 600px) {
+      button {
+        padding: 0 8px !important;
+        font-size: 0.8rem;
+        min-width: 64px;
+        height: 32px;
+        line-height: 32px;
+
+        mat-icon {
+          font-size: 18px;
+          height: 18px;
+          width: 18px;
+        }
+      }
+    }
   }
 }
 
 .form-columns {
   display: flex;
   gap: 24px;
+
+  @media (max-width: 768px) {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
 }
 
 .form-column {
@@ -126,6 +165,44 @@ mat-form-field {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+
+  @media (max-width: 600px) {
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sku-field-container,
+.barcode-field-container {
+  display: flex !important;
+  align-items: baseline;
+  gap: 8px;
+
+  @media (max-width: 500px) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px;
+
+    button {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+.qr-display-section {
+  @media (max-width: 500px) {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+
+    button {
+      width: 100%;
+    }
+  }
 }
 
 .image-upload {
@@ -244,6 +321,24 @@ mat-form-field {
 
   .mat-mdc-tab-body-wrapper {
     margin-top: 16px;
+
+    @media (max-width: 600px) {
+      margin-top: 8px;
+    }
+  }
+
+  // Compact tabs on mobile
+  .mat-mdc-tab {
+    @media (max-width: 600px) {
+      min-width: 80px !important;
+      padding: 0 12px !important;
+      font-size: 0.85rem;
+    }
+  }
+
+  // Ensure tabs can scroll on extremely small screens
+  .mat-mdc-tab-header-pagination-chevron {
+    border-color: var(--text-main) !important;
   }
 }
 

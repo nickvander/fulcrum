@@ -6,9 +6,10 @@
 
 @if (!isLoginPage) {
 <mat-sidenav-container class="sidenav-container">
-  <mat-sidenav #drawer class="sidenav" fixedInViewport [attr.role]="(isMobile$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isMobile$ | async) ? 'over' : 'side'" [opened]="(isMobile$ | async) === false"
-    [class.mobile-sidenav]="(isMobile$ | async)">
+  <mat-sidenav #drawer class="sidenav" fixedInViewport
+    [attr.role]="(isMobileOrTablet$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isMobileOrTablet$ | async) ? 'over' : 'side'" [opened]="(isDesktop$ | async)"
+    [class.mobile-sidenav]="(isMobileOrTablet$ | async)">
     <app-sidenav></app-sidenav>
   </mat-sidenav>
   <mat-sidenav-content>

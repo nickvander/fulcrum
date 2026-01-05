@@ -35,21 +35,35 @@
 
           <mat-divider vertical style="height: 24px; margin: 0 4px;"></mat-divider>
 
-          <!-- Action Buttons -->
-          <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
-            [matTooltip]="showDashboard ? t('products.hideDashboard') : t('products.showDashboard')"
-            class="dashboard-toggle-btn" style="margin-right: 8px;">
-            <mat-icon>analytics</mat-icon>
-          </button>
-          <button mat-mini-fab color="primary" (click)="onAddProduct()" [matTooltip]="t('products.addProduct')">
-            <mat-icon>add</mat-icon>
-          </button>
-          <button mat-mini-fab color="accent" (click)="onAddBundle()" [matTooltip]="t('products.createBundle')">
-            <mat-icon>inventory_2</mat-icon>
-          </button>
-          <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
-            <mat-icon>qr_code_scanner</mat-icon>
-          </button>
+          <!-- Action Buttons (Desktop) -->
+          <div class="desktop-actions">
+            <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
+              [matTooltip]="showDashboard ? t('products.hideDashboard') : t('products.showDashboard')"
+              class="dashboard-toggle-btn">
+              <mat-icon>analytics</mat-icon>
+            </button>
+            <button mat-mini-fab color="primary" (click)="onAddProduct()" [matTooltip]="t('products.addProduct')">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
+              <mat-icon>qr_code_scanner</mat-icon>
+            </button>
+          </div>
+
+          <!-- Action Menu (Mobile/Tablet) - Show all 3 icons since they fit -->
+          <div class="mobile-actions">
+            <button mat-mini-fab [color]="showDashboard ? 'primary' : 'basic'" (click)="toggleDashboard()"
+              [matTooltip]="showDashboard ? t('products.hideDashboard') : t('products.showDashboard')"
+              class="dashboard-toggle-btn">
+              <mat-icon>analytics</mat-icon>
+            </button>
+            <button mat-mini-fab color="primary" (click)="onAddProduct()" [matTooltip]="t('products.addProduct')">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
+              <mat-icon>qr_code_scanner</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -212,7 +226,9 @@
             <!-- Metrics -->
             <div class="product-metrics">
               <div class="price">{{ product.default_resale_price | currency }}</div>
-              <div class="stock" [class.low-stock]="(product.stock_quantity || 0) <= 10">
+              <div class="stock" [class.stock-healthy]="(product.stock_quantity || 0) > 10"
+                [class.stock-low]="(product.stock_quantity || 0) > 0 && (product.stock_quantity || 0) <= 10"
+                [class.stock-out]="(product.stock_quantity || 0) === 0">
                 {{ product.stock_quantity }} {{ t('products.stockStatus.inStock') }}
               </div>
             </div>
@@ -309,14 +325,15 @@
           <ng-container matColumnDef="stock">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.stock') }} </th>
             <td mat-cell *matCellDef="let element">
-              <span
-                [class.low-stock]="getCurrentStock(element) < (element.low_stock_quantity_threshold || 10) || (element.days_of_inventory !== undefined && element.days_of_inventory < (element.low_inventory_threshold || 30))"
-                [class.out-of-stock]="getCurrentStock(element) === 0">
+              <span class="stock-value"
+                [class.stock-healthy]="getCurrentStock(element) > (element.low_stock_quantity_threshold || 10)"
+                [class.stock-low]="getCurrentStock(element) > 0 && getCurrentStock(element) <= (element.low_stock_quantity_threshold || 10)"
+                [class.stock-out]="getCurrentStock(element) === 0">
                 {{getCurrentStock(element)}}
               </span>
               <div *ngIf="element.days_of_inventory !== undefined && element.days_of_inventory < 999"
-                class="text-xs text-gray-500 mt-1"
-                [class.text-red-500]="element.days_of_inventory < (element.low_inventory_threshold || 30)">
+                class="days-of-inventory"
+                [class.days-warning]="element.days_of_inventory < (element.low_inventory_threshold || 30)">
                 {{ element.days_of_inventory | number:'1.0-1' }} {{ t('common.days') }}
               </div>
             </td>
@@ -398,5 +415,27 @@
       <div class="infinite-scroll-trigger"></div>
       }
     </div>
+
+    <!-- Selection Action Bar (Appears when products are selected) -->
+    @if (selectedProducts.size > 0) {
+    <div class="selection-action-bar">
+      <div class="selection-bar-content">
+        <div class="selection-info">
+          <mat-icon>check_circle</mat-icon>
+          <span class="selection-count">{{ selectedProducts.size }} {{ t('products.selected') }}</span>
+        </div>
+        <div class="selection-actions">
+          <button mat-flat-button color="accent" (click)="createBundleFromSelection()" class="action-btn">
+            <mat-icon>inventory_2</mat-icon>
+            <span class="action-label">{{ t('products.createBundle') }}</span>
+          </button>
+          <button mat-stroked-button (click)="deselectAll()" class="clear-btn">
+            <mat-icon>close</mat-icon>
+            <span class="action-label">{{ t('common.clear') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    }
   </div>
 </ng-container>

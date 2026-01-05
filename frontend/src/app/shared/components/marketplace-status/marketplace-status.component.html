@@ -1,8 +1,10 @@
-@if (listings && listings.length > 0) {
+@if (getUniqueListings().length > 0) {
 <div class="status-container" [class.simple-container]="simple">
-    @for (listing of listings; track listing.id) {
+    @for (listing of getUniqueListings(); track listing.marketplace_id) {
     <div class="marketplace-badge" [class.simple-badge]="simple"
-        [class.badge-amz]="getFallbackLabel(listing.marketplace_id) === 'AMZ'" [matTooltip]="getTooltip(listing)"
+        [class.badge-amz]="getFallbackLabel(listing.marketplace_id) === 'AMZ'"
+        [class.badge-ebay]="getFallbackLabel(listing.marketplace_id) === 'eBay'"
+        [class.badge-ml]="getFallbackLabel(listing.marketplace_id) === 'ML'" [matTooltip]="getTooltip(listing)"
         [class.status-active]="listing.status === 'active'" [class.status-error]="listing.status === 'error'"
         [class.status-pending]="listing.status === 'pending'">
         @if (getMarketplaceLogo(listing.marketplace_id)) {
@@ -17,6 +19,6 @@
     }
 </div>
 }
-@if (!listings || listings.length === 0) {
+@if (getUniqueListings().length === 0) {
 <span class="no-listings">-</span>
 }
