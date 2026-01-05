@@ -21,6 +21,7 @@ import { MarketingService, MarketingConnector, TonePreset } from '../../services
 import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
 import { SettingsService } from '../../../core/services/settings.service';
+import { AiPromptPreviewComponent } from '../../../shared/components/ai-prompt-preview/ai-prompt-preview';
 
 @Component({
   selector: 'app-quick-post-dialog',
@@ -38,7 +39,8 @@ import { SettingsService } from '../../../core/services/settings.service';
     MatAutocompleteModule,
     MatChipsModule,
     MatSlideToggleModule,
-    MatTooltipModule
+    MatTooltipModule,
+    AiPromptPreviewComponent
   ],
   templateUrl: './quick-post-dialog.component.html',
   styleUrls: ['./quick-post-dialog.component.scss']
@@ -190,6 +192,7 @@ export class QuickPostDialogComponent implements OnInit {
   aiImageCtrl = new FormControl(false); // Default OFF
   aiResult: any = null;
   draftEventId: number | null = null; // If AI generated, we have a draft event ID
+  channelGuidelines = ''; // For prompt preview
 
   toggleAiPanel() {
     this.showAiPanel = !this.showAiPanel;
