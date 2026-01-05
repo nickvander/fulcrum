@@ -306,6 +306,10 @@ export class MarketingService {
         return this.http.get<TonePreset[]>(`${this.baseUrl}/tone-presets`);
     }
 
+    getChannelGuidelines(channel: string): Observable<ChannelGuidelines> {
+        return this.http.get<ChannelGuidelines>(`${this.baseUrl}/channel-guidelines/${encodeURIComponent(channel)}`);
+    }
+
     generateContent(
         productId: number,
         platform: string,
@@ -329,4 +333,10 @@ export interface TonePreset {
     name: string;
     prompt: string;
     description: string;
+}
+
+// ChannelGuidelines interface
+export interface ChannelGuidelines {
+    channel: string;
+    guidelines: string;
 }
