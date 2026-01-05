@@ -3,7 +3,8 @@
     <!-- Top Dashboard Expansion Panel -->
 
     <!-- Floating Infinite Scroll Toggle -->
-    <button mat-mini-fab class="infinite-scroll-fab" [class.active]="useInfiniteScroll" (click)="toggleInfiniteScroll()"
+    <button mat-mini-fab class="infinite-scroll-fab" [class.active]="useInfiniteScroll"
+      [class.shifted-up]="selectedProducts.size > 0" [class.visible]="showScrollFab" (click)="toggleInfiniteScroll()"
       [matTooltip]="useInfiniteScroll ? t('products.switchToPagination') : t('products.enableInfiniteScroll')">
       <mat-icon>{{ useInfiniteScroll ? 'view_list' : 'all_inclusive' }}</mat-icon>
     </button>
