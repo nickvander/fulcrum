@@ -67,7 +67,7 @@ ADK. Users can:
 - [ ] Frontend unit tests for QuickPostDialogComponent
 - [x] Refactor tone prompts to `.md` files for easier maintenance
 - [x] Channel-aware prompt modifications (Instagram = more hashtags)
-- [ ] UI to preview active tone + channel prompts before generating
+- [x] UI to preview active tone + channel prompts before generating
 
 ## Prompt File Structure (Added 2026-01-05)
 

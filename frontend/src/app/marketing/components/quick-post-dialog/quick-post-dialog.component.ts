@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -22,6 +22,7 @@ import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
 import { SettingsService } from '../../../core/services/settings.service';
 import { AiPromptPreviewComponent } from '../../../shared/components/ai-prompt-preview/ai-prompt-preview';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-quick-post-dialog',
@@ -64,7 +65,8 @@ export class QuickPostDialogComponent implements OnInit {
     private productService: ProductService,
     private settingsService: SettingsService,
     private dialogRef: MatDialogRef<QuickPostDialogComponent>,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     this.postForm = this.fb.group({
       connector_id: ['', Validators.required],
@@ -279,7 +281,16 @@ export class QuickPostDialogComponent implements OnInit {
       error: (err) => {
         this.generating = false;
         console.error(err);
-        this.snackBar.open('Generation failed', 'Close', { duration: 3000 });
+        // Extract meaningful error message for user
+        let errorMsg = 'Generation failed';
+        if (err?.error?.detail) {
+          errorMsg = err.error.detail;
+        } else if (err?.error?.message) {
+          errorMsg = err.error.message;
+        } else if (err?.message?.includes('quota') || err?.message?.includes('429')) {
+          errorMsg = 'API quota exceeded. Please try again later.';
+        }
+        this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
       }
     });
   }
@@ -300,32 +311,64 @@ export class QuickPostDialogComponent implements OnInit {
   // Generate text only
   generateText(): void {
     if (this.hasContent()) {
-      const confirmed = confirm('This will overwrite your existing content. Continue?');
-      if (!confirmed) return;
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Overwrite Content?',
+          message: 'This will replace your existing text content. Continue?'
+        }
+      });
+      dialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.aiImageCtrl.setValue(false);
+          this.generateContent();
+        }
+      });
+    } else {
+      this.aiImageCtrl.setValue(false);
+      this.generateContent();
     }
-    this.aiImageCtrl.setValue(false);
-    this.generateContent();
   }
 
   // Generate image only
   generateImage(): void {
     if (this.hasImage()) {
-      const confirmed = confirm('This will overwrite your existing image. Continue?');
-      if (!confirmed) return;
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Overwrite Image?',
+          message: 'This will replace your existing image. Continue?'
+        }
+      });
+      dialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.aiImageCtrl.setValue(true);
+          this.generateContentImageOnly();
+        }
+      });
+    } else {
+      this.aiImageCtrl.setValue(true);
+      this.generateContentImageOnly();
     }
-    // For image-only, we still need text generation to get context, but we only apply image
-    this.aiImageCtrl.setValue(true);
-    this.generateContentImageOnly();
   }
 
   // Generate both text and image
   generateBoth(): void {
     if (this.hasBoth()) {
-      const confirmed = confirm('This will overwrite your existing content and image. Continue?');
-      if (!confirmed) return;
+      const dialogRef = this.dialog.open(ConfirmationDialog, {
+        data: {
+          title: 'Overwrite All?',
+          message: 'This will replace your existing text and image. Continue?'
+        }
+      });
+      dialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed) {
+          this.aiImageCtrl.setValue(true);
+          this.generateContent();
+        }
+      });
+    } else {
+      this.aiImageCtrl.setValue(true);
+      this.generateContent();
     }
-    this.aiImageCtrl.setValue(true);
-    this.generateContent();
   }
 
   // Image-only generation - runs full pipeline but only applies image
@@ -362,7 +405,16 @@ export class QuickPostDialogComponent implements OnInit {
       error: (err) => {
         this.generating = false;
         console.error(err);
-        this.snackBar.open('Image generation failed', 'Close', { duration: 3000 });
+        // Extract meaningful error message for user
+        let errorMsg = 'Image generation failed';
+        if (err?.error?.detail) {
+          errorMsg = err.error.detail;
+        } else if (err?.error?.message) {
+          errorMsg = err.error.message;
+        } else if (err?.message?.includes('quota') || err?.message?.includes('429')) {
+          errorMsg = 'API quota exceeded. Please try again later.';
+        }
+        this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
       }
     });
   }
