@@ -109,6 +109,7 @@ class Product(ProductBase):
     id: int
     supplier_id: Optional[int] = None
     images: List[ProductImage] = []
+    primary_image: Optional[ProductImage] = None
     inventory_items: List[InventoryItemSchema] = []
     inventory_adjustments: List[InventoryAdjustmentSchema] = []
     manufacturer: Optional[str] = None

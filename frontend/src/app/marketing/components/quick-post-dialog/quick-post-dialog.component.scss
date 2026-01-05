@@ -1,89 +1,383 @@
-    .dialog-header {
-        background: #263238;
-        color: white;
-        padding: 16px 24px;
-        margin: 0 !important;
+// Quick Post Dialog - Modern Fixed-Width Design
+:host {
+    display: block;
+    font-size: 13px;
+}
+
+// Fixed dialog width via global styles
+::ng-deep .mat-mdc-dialog-container {
+    max-width: 520px !important;
+
+    .mdc-dialog__surface {
+        border-radius: 12px !important;
+    }
+}
+
+// All textareas - fixed height, no resize
+::ng-deep textarea {
+    resize: none !important;
+}
+
+.dialog-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color, #e1e8f5);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+}
+
+.intro-text {
+    color: var(--text-secondary, #666);
+    margin-bottom: 14px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+// Compact form fields - consistent sizing
+.compact-field {
+    font-size: 13px;
+
+    ::ng-deep {
+        .mat-mdc-form-field-flex {
+            min-height: 38px !important;
+        }
+
+        .mat-mdc-form-field-infix {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            min-height: 32px !important;
+        }
+
+        .mdc-floating-label {
+            font-size: 12px;
+        }
+    }
+}
+
+// Content textarea - moderate height
+.content-field {
+    font-size: 13px;
+
+    ::ng-deep {
+        textarea {
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 80px;
+        }
+    }
+}
+
+// Image URL field - even more compact
+.image-url-field {
+    ::ng-deep {
+        .mat-mdc-form-field-flex {
+            min-height: 36px !important;
+        }
+
+        .mat-mdc-form-field-infix {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+    }
+}
+
+// Compact button styling
+.compact-btn {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 12px !important;
+    font-size: 12px;
+    line-height: 32px;
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+// AI Assistant Panel
+.ai-assistant-panel {
+    background-color: transparent;
+    border: 1px solid var(--border-color, #e1e8f5);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+
+    .panel-header {
+        padding: 8px 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        width: 100%;
-        box-sizing: border-box;
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.03);
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+        }
     }
 
-    .dialog-header h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        font-weight: 500;
-    }
-
-    .full-width {
-        width: 100%;
-        margin-bottom: 16px;
-    }
-
-    .intro-text {
-        color: #666;
-        margin-bottom: 24px;
-    }
-
-    .preview-box {
-        border: 1px solid #ddd;
-        padding: 10px;
-        border-radius: 4px;
-        margin-top: 10px;
-    }
-
-    .preview-box img {
-        max-width: 100%;
-        max-height: 200px;
-        border-radius: 8px;
-    }
-
-    .option-img {
-        width: 30px;
-        height: 30px;
-        border-radius: 4px;
-        margin-right: 10px;
-        vertical-align: middle;
-    }
-
-    .product-preview-list {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-    }
-
-    .product-chip {
-        display: flex;
-        align-items: center;
-        background: #f0f0f0;
-        padding: 4px 8px;
-        border-radius: 16px;
+    .panel-body {
+        padding: 10px 12px;
+        border-top: 1px solid var(--border-color, #e1e8f5);
         font-size: 12px;
-    }
 
-    .product-chip img {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        margin-right: 5px;
+        .ai-controls {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
     }
+}
 
-    .link-icon {
-        margin-left: 5px;
-        color: #666;
-        text-decoration: none;
-        display: flex;
-    }
+// Error message styling
+.error-msg {
+    color: var(--warning-color, orange);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: -4px;
 
-    .link-icon mat-icon {
+    mat-icon {
         font-size: 14px;
         width: 14px;
         height: 14px;
     }
+}
 
-    mat-spinner {
-        display: inline-block;
-        margin-right: 8px;
+// Generated info / strategy section
+.generated-info {
+    margin-top: 8px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+    border: 1px solid var(--border-color, #eee);
+
+    h4 {
+        margin: 0 0 4px 0;
+        font-size: 10px;
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
     }
+
+    .strategy-text {
+        font-size: 11px;
+        color: var(--text-secondary, #555);
+        line-height: 1.3;
+    }
+}
+
+// Image preview section - right after content
+.image-preview-section {
+    margin: 8px 0 12px 0;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color, #eee);
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 180px;
+        border-radius: 6px;
+        object-fit: contain;
+    }
+}
+
+// Autocomplete option images
+.option-img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+    object-fit: cover;
+}
+
+// Dialog actions - consistent button spacing
+::ng-deep mat-dialog-actions {
+    padding: 8px 16px !important;
+    gap: 8px;
+
+    button {
+        font-size: 13px;
+    }
+}
+
+// Tone section
+.tone-section {
+    margin-bottom: 10px;
+
+    .section-label {
+        display: block;
+        font-size: 11px;
+        color: var(--text-secondary, #666);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+// Tone chips - pill-style buttons
+.tone-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    button {
+        height: 28px !important;
+        min-height: 28px !important;
+        padding: 0 12px !important;
+        font-size: 11px;
+        border-radius: 14px !important;
+        border-color: var(--border-color, #e1e8f5) !important;
+        transition: all 0.2s ease;
+
+        &.selected {
+            background-color: var(--primary-color, #673ab7) !important;
+            color: white !important;
+            border-color: var(--primary-color, #673ab7) !important;
+        }
+
+        &:hover:not(.selected) {
+            background-color: var(--bg-hover, #f5f5f5);
+        }
+    }
+}
+
+// Prompt section with icon label
+.prompt-section {
+    margin-top: 10px;
+
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: var(--text-secondary, #666);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}
+
+// Prompt field - consistent font
+.prompt-field {
+    font-size: 12px;
+
+    ::ng-deep {
+        textarea {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .mat-mdc-form-field-hint {
+            font-size: 10px;
+            color: var(--text-hint, #999);
+        }
+    }
+}
+
+// Generate actions - split button layout
+.generate-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color, #eee);
+
+    .action-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .action-btn {
+        flex: 1;
+        height: 36px !important;
+        min-height: 36px !important;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+
+        mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+        }
+
+        &.full-width {
+            width: 100%;
+        }
+    }
+}
+
+// Image chip section
+.image-chip-section {
+    margin-bottom: 10px;
+}
+
+.image-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-hover, #f0f0f0);
+    border-radius: 16px;
+    padding: 4px 8px 4px 10px;
+    font-size: 12px;
+    color: var(--text-main);
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: var(--text-secondary);
+    }
+
+    .chip-text {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .chip-remove {
+        width: 20px !important;
+        height: 20px !important;
+        line-height: 20px !important;
+
+        mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+        }
+    }
+}

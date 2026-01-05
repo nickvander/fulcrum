@@ -527,6 +527,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
 
   getImageUrl(imagePath: string): string {
+    if (imagePath && imagePath.startsWith('http')) return imagePath;
     // Backend serves images from the 'uploads/product_images' directory.
     return `/uploads/product_images/${imagePath}`;
   }

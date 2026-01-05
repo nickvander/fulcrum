@@ -222,6 +222,8 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(() => this.loadQuickPosts());
   }
 
+
+
   loadQuickPosts(): void {
     this.marketingService.getQuickPosts(20).subscribe({
       next: (posts) => {

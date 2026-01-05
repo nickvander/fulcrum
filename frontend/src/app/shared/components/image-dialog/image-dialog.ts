@@ -20,7 +20,7 @@ import { NotificationService } from '../../../core/services/notification.service
     MatFormFieldModule,
     MatInputModule,
     MatIconModule
-],
+  ],
   templateUrl: './image-dialog.html',
   styleUrls: ['./image-dialog.scss']
 })
@@ -42,7 +42,7 @@ export class ImageDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   onNoClick(): void {
     this.dialogRef.close();
@@ -54,7 +54,7 @@ export class ImageDialogComponent implements OnInit {
         title: this.imageForm.value.title,
         description: this.imageForm.value.description
       };
-      
+
       this.productService.updateProductImage(this.data.productId, this.currentImage.id, updatedData)
         .subscribe({
           next: (updatedImage) => {
@@ -71,6 +71,7 @@ export class ImageDialogComponent implements OnInit {
   }
 
   getImageUrl(imagePath: string): string {
+    if (imagePath && imagePath.startsWith('http')) return imagePath;
     return `/uploads/product_images/${imagePath}`;
   }
 }

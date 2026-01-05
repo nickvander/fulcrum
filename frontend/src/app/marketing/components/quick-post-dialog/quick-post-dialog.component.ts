@@ -12,12 +12,15 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatChipsModule } from '@angular/material/chips';
-import { debounceTime, distinctUntilChanged, switchMap, startWith, map } from 'rxjs/operators';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { debounceTime, switchMap, startWith, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
-import { MarketingService, MarketingConnector, CampaignProductSummary } from '../../services/marketing.service';
+import { MarketingService, MarketingConnector, TonePreset } from '../../services/marketing.service';
 import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
   selector: 'app-quick-post-dialog',
@@ -33,7 +36,9 @@ import { Product } from '../../../products/models/product.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatAutocompleteModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSlideToggleModule,
+    MatTooltipModule
   ],
   templateUrl: './quick-post-dialog.component.html',
   styleUrls: ['./quick-post-dialog.component.scss']
@@ -55,6 +60,7 @@ export class QuickPostDialogComponent implements OnInit {
     private fb: FormBuilder,
     private marketingService: MarketingService,
     private productService: ProductService,
+    private settingsService: SettingsService,
     private dialogRef: MatDialogRef<QuickPostDialogComponent>,
     private snackBar: MatSnackBar
   ) {
@@ -81,6 +87,7 @@ export class QuickPostDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConnectors();
+    this.loadAiSettings();
 
     // Update channel type and validators when connector changes
     this.postForm.get('connector_id')?.valueChanges.subscribe(id => {
@@ -134,6 +141,15 @@ export class QuickPostDialogComponent implements OnInit {
     this.marketingService.getConnectors(true).subscribe({
       next: (data) => {
         this.connectors = data;
+
+        // Manual/Simulated Options if no connectors
+        if (this.connectors.length === 0) {
+          this.connectors = [
+            { id: -1, name: 'Twitter / X', connector_type: 'social', config_json: { provider: 'twitter' } } as any,
+            { id: -2, name: 'Instagram', connector_type: 'social', config_json: { provider: 'instagram' } } as any
+          ];
+        }
+
         // Auto-select first if available
         if (this.connectors.length > 0) {
           this.postForm.patchValue({ connector_id: this.connectors[0].id });
@@ -162,6 +178,246 @@ export class QuickPostDialogComponent implements OnInit {
     this.productSearchCtrl.setValue(null);
   }
 
+
+  // AI Controls
+  showAiPanel = true;
+  aiEnabled = false; // Controlled by settings
+  generating = false;
+  tonePresets: TonePreset[] = [];
+  selectedTone: TonePreset | null = null;
+  customPromptCtrl = new FormControl('');
+  imagePromptCtrl = new FormControl('Create a photorealistic product image with natural lighting and clean composition.');
+  aiImageCtrl = new FormControl(false); // Default OFF
+  aiResult: any = null;
+  draftEventId: number | null = null; // If AI generated, we have a draft event ID
+
+  toggleAiPanel() {
+    this.showAiPanel = !this.showAiPanel;
+  }
+
+  loadAiSettings() {
+    // Check if AI is enabled in store settings
+    this.settingsService.storeSettings$.subscribe(settings => {
+      this.aiEnabled = settings?.ai_config?.enabled || false;
+    });
+
+    // Load tone presets
+    this.marketingService.getTonePresets().subscribe({
+      next: (presets) => {
+        this.tonePresets = presets;
+        // Auto-select first non-custom preset
+        const defaultPreset = presets.find(p => p.id === 'professional');
+        if (defaultPreset) {
+          this.selectTone(defaultPreset);
+        }
+      },
+      error: (err) => console.error('Failed to load tone presets', err)
+    });
+  }
+
+  selectTone(preset: TonePreset) {
+    this.selectedTone = preset;
+    // Pre-fill the custom prompt with the preset's prompt (user can edit)
+    if (preset.id !== 'custom') {
+      this.customPromptCtrl.setValue(preset.prompt);
+    } else {
+      this.customPromptCtrl.setValue('');
+    }
+  }
+
+  clearImage() {
+    this.postForm.patchValue({ content_image_url: '' });
+  }
+
+  getImageFilename(): string {
+    const url = this.postForm.get('content_image_url')?.value || '';
+    if (!url) return '';
+    // Extract filename from URL path
+    const parts = url.split('/');
+    return parts[parts.length - 1] || 'image';
+  }
+
+  generateContent() {
+    if (this.selectedProducts.length === 0) return;
+
+    this.generating = true;
+    const product = this.selectedProducts[0]; // Use first product
+    const platform = this.postForm.get('channel_type')?.value === 'social' ? 'Twitter' : 'Instagram'; // Simple mapping
+
+    const tone = this.selectedTone?.name || 'Professional';
+    const customPrompt = this.customPromptCtrl.value || undefined;
+
+    this.marketingService.generateContent(
+      product.id,
+      platform,
+      tone,
+      this.aiImageCtrl.value || false,
+      customPrompt
+    ).subscribe({
+      next: (result) => {
+        this.generating = false;
+        this.aiResult = result;
+        this.draftEventId = result.event_id || null;
+
+        // Auto-fill form
+        if (result.content && result.content.content) {
+          this.postForm.patchValue({
+            content_body: result.content.content
+          });
+        }
+        if (result.generated_image_url) {
+          this.postForm.patchValue({
+            content_image_url: result.generated_image_url
+          });
+        }
+
+        this.snackBar.open('Content generated!', 'Close', { duration: 3000 });
+      },
+      error: (err) => {
+        this.generating = false;
+        console.error(err);
+        this.snackBar.open('Generation failed', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  // Helper methods for button labels
+  hasContent(): boolean {
+    return !!this.postForm.get('content_body')?.value?.trim();
+  }
+
+  hasImage(): boolean {
+    return !!this.postForm.get('content_image_url')?.value?.trim();
+  }
+
+  hasBoth(): boolean {
+    return this.hasContent() && this.hasImage();
+  }
+
+  // Generate text only
+  generateText(): void {
+    if (this.hasContent()) {
+      const confirmed = confirm('This will overwrite your existing content. Continue?');
+      if (!confirmed) return;
+    }
+    this.aiImageCtrl.setValue(false);
+    this.generateContent();
+  }
+
+  // Generate image only
+  generateImage(): void {
+    if (this.hasImage()) {
+      const confirmed = confirm('This will overwrite your existing image. Continue?');
+      if (!confirmed) return;
+    }
+    // For image-only, we still need text generation to get context, but we only apply image
+    this.aiImageCtrl.setValue(true);
+    this.generateContentImageOnly();
+  }
+
+  // Generate both text and image
+  generateBoth(): void {
+    if (this.hasBoth()) {
+      const confirmed = confirm('This will overwrite your existing content and image. Continue?');
+      if (!confirmed) return;
+    }
+    this.aiImageCtrl.setValue(true);
+    this.generateContent();
+  }
+
+  // Image-only generation - runs full pipeline but only applies image
+  private generateContentImageOnly(): void {
+    if (this.selectedProducts.length === 0) return;
+
+    this.generating = true;
+    const product = this.selectedProducts[0];
+    const platform = this.postForm.get('channel_type')?.value === 'social' ? 'Twitter' : 'Instagram';
+    const tone = this.selectedTone?.name || 'Professional';
+    const customPrompt = this.customPromptCtrl.value || undefined;
+
+    this.marketingService.generateContent(
+      product.id,
+      platform,
+      tone,
+      true, // Always generate image
+      customPrompt
+    ).subscribe({
+      next: (result) => {
+        this.generating = false;
+        this.aiResult = result;
+
+        // Only apply image, not text
+        if (result.generated_image_url) {
+          this.postForm.patchValue({
+            content_image_url: result.generated_image_url
+          });
+          this.snackBar.open('Image generated!', 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('No image was generated', 'Close', { duration: 3000 });
+        }
+      },
+      error: (err) => {
+        this.generating = false;
+        console.error(err);
+        this.snackBar.open('Image generation failed', 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  saveDraft() {
+    if (this.postForm.invalid) return;
+    this.submitting = true;
+
+    // Build AI metadata for content_json
+    const aiMetadata = {
+      ai_tone: this.selectedTone?.name || null,
+      ai_prompt: this.customPromptCtrl.value || null,
+      ai_model: 'gemini-2.0-flash-exp', // Track the model used
+      generated_at: this.aiResult ? new Date().toISOString() : null,
+    };
+
+    const payload = {
+      ...this.postForm.value,
+      product_ids: this.selectedProducts.map(p => p.id),
+      content_json: aiMetadata,
+    };
+
+    if (this.draftEventId) {
+      // Update existing draft
+      this.marketingService.updateEvent(this.draftEventId, {
+        content_body: payload.content_body,
+        content_image_url: payload.content_image_url,
+        content_json: aiMetadata,
+        name: payload.name
+      }).subscribe({
+        next: () => {
+          this.submitting = false;
+          this.snackBar.open('Draft updated', 'Close', { duration: 2000 });
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.submitting = false;
+          console.error(err);
+          this.snackBar.open('Failed to save draft', 'Close', { duration: 2000 });
+        }
+      });
+    } else {
+      // Create new draft
+      this.marketingService.createQuickPost(payload).subscribe({
+        next: (event) => {
+          this.submitting = false;
+          this.snackBar.open('Draft saved', 'Close', { duration: 2000 });
+          this.dialogRef.close(true);
+        },
+        error: (err) => {
+          this.submitting = false;
+          console.error(err);
+          this.snackBar.open('Failed to save draft', 'Close', { duration: 2000 });
+        }
+      });
+    }
+  }
+
   onSubmit(): void {
     if (this.postForm.invalid) return;
 
@@ -174,18 +430,30 @@ export class QuickPostDialogComponent implements OnInit {
       product_ids: this.selectedProducts.map(p => p.id)
     };
 
-    // First create the event (as draft/quick post) without campaign
-    this.marketingService.createQuickPost(payload).subscribe({
-      next: (event) => {
-        // Then immediately publish it
-        this.publishEvent(event.id);
-      },
-      error: (err) => {
-        this.submitting = false;
-        this.snackBar.open('Failed to create post', 'Close', { duration: 3000 });
-        console.error(err);
-      }
-    });
+    if (this.draftEventId) {
+      // Update draft then publish
+      this.marketingService.updateEvent(this.draftEventId, payload).subscribe({
+        next: () => {
+          this.publishEvent(this.draftEventId!);
+        },
+        error: (err) => {
+          this.submitting = false;
+          console.error(err);
+        }
+      });
+    } else {
+      // Create and publish
+      this.marketingService.createQuickPost(payload).subscribe({
+        next: (event) => {
+          this.publishEvent(event.id);
+        },
+        error: (err) => {
+          this.submitting = false;
+          this.snackBar.open('Failed to create post', 'Close', { duration: 3000 });
+          console.error(err);
+        }
+      });
+    }
   }
 
   publishEvent(eventId: number): void {
@@ -210,3 +478,4 @@ export class QuickPostDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 }
+

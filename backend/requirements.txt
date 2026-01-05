@@ -28,6 +28,7 @@ aiosmtplib
 # AI & Agents
 google-adk
 google-generativeai
+google-genai
 anthropic
 openai
 qrcode[pil]

@@ -20,6 +20,7 @@ from src.api.v1.endpoints import (
     expenses,
     inventory_settings,
     marketing,
+    marketing_ai,
     integrations,
 )
 
@@ -43,6 +44,7 @@ api_router.include_router(purchase_orders.router, prefix="/purchase-orders", tag
 api_router.include_router(supplier_products.router, prefix="/supplier-products", tags=["supplier-products"])
 api_router.include_router(expenses.router, prefix="/expenses", tags=["expenses"])
 api_router.include_router(marketing.router, prefix="/marketing", tags=["marketing"])
+api_router.include_router(marketing_ai.router, prefix="/marketing", tags=["marketing-ai"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
 
 

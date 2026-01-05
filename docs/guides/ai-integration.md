@@ -64,6 +64,35 @@ Products automatically get CODE128 barcodes and QR codes:
 - **Barcode:** Format `STORE-{SKU}` for internal tracking
 - **QR Code:** Links to your store domain (configured in Settings > Marketing)
 
+### Marketing Content Generation
+
+AI-powered content creation for social media marketing.
+
+**Features:**
+
+- **Tone Presets:** Professional, Casual, Viral/Hype, Luxury, or Custom
+- **Editable Prompts:** Pre-filled based on tone, fully customizable
+- **Image Generation:** Creates product images using Gemini's native image output
+- **Draft Persistence:** AI metadata (tone, prompt, model) saved in `content_json`
+
+**API Endpoints:**
+
+| Endpoint                         | Method | Description                  |
+| -------------------------------- | ------ | ---------------------------- |
+| `/api/v1/marketing/tone-presets` | GET    | List available tone presets  |
+| `/api/v1/marketing/generate-content` | POST | Generate content via AI agents |
+
+**`content_json` Schema:**
+
+```json
+{
+  "ai_tone": "Professional",
+  "ai_prompt": "Write a professional post...",
+  "ai_model": "gemini-2.0-flash-exp",
+  "generated_at": "2026-01-05T..."
+}
+```
+
 ---
 
 ## Supported Providers
@@ -81,6 +110,8 @@ Products automatically get CODE128 barcodes and QR codes:
 
 The AI system uses Google's Agent Development Kit (ADK) with a modular design.
 
+### Product Vision Agent
+
 ```mermaid
 graph TD
     classDef manager fill:#BDE0FE,stroke:#A2D2FF,color:#000
@@ -94,6 +125,35 @@ graph TD
     C -->|Sequential| E[ProductLookupAgent]:::agent
     E --> F[find_product_in_database]:::tool
 ```
+
+### Marketing Content Agent
+
+```mermaid
+graph TD
+    classDef root fill:#FFC8DD,stroke:#FFAFCC,color:#000
+    classDef agent fill:#CAFFBF,stroke:#B3F8AD,color:#000
+    classDef output fill:#FDFFB6,stroke:#F9FFA4,color:#000
+
+    A[MarketingRootAgent]:::root
+    A -->|Step 1| B[ResearchAgent]:::agent
+    A -->|Step 2| C[ContentAgent]:::agent
+    A -->|Step 3| D[ImageAgent]:::agent
+    
+    B --> E[Trends & Hashtags]:::output
+    C --> F[Post Text]:::output
+    D --> G[Product Image]:::output
+    
+    subgraph "Platform-Aware"
+        C
+        B
+    end
+```
+
+**Flow:**
+
+1. **ResearchAgent** - Searches trends, hashtags, and viral angles for the product
+2. **ContentAgent** - Writes platform-specific content (Twitter: 280 chars + hashtags, Instagram: longer + more hashtags)
+3. **ImageAgent** - Generates product images using Gemini's native image output
 
 ### Directory Structure
 

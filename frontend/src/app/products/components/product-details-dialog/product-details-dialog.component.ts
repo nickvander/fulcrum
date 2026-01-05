@@ -168,6 +168,7 @@ export class ProductDetailsDialogComponent implements OnInit {
 
     getImageUrl(path: string): string {
         if (!path) return 'assets/placeholder.jpg';
+        if (path.startsWith('http')) return path;
         // Match the path used in the rest of the app
         return `/uploads/product_images/${path}`;
     }

@@ -20,8 +20,10 @@ describe('QuickPostDialogComponent', () => {
     beforeEach(async () => {
         marketingServiceMock = {
             getConnectors: vi.fn().mockReturnValue(of([])),
+            getTonePresets: vi.fn().mockReturnValue(of([])),
             createQuickPost: vi.fn(),
-            publishEvent: vi.fn()
+            publishEvent: vi.fn(),
+            generateContent: vi.fn().mockReturnValue(of({}))
         };
 
         productServiceMock = {
