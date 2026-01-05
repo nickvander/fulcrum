@@ -1,0 +1,222 @@
+// AI Prompt Preview Component Styles
+// Responsive design: desktop > tablet > phone
+
+.ai-prompt-preview {
+    --preview-bg: var(--surface-container, #f5f5f5);
+    --preview-border: var(--outline-variant, #e0e0e0);
+    --section-bg: var(--surface, #ffffff);
+    --text-primary: var(--on-surface, #1a1a1a);
+    --text-secondary: var(--on-surface-variant, #666666);
+    --accent-color: var(--primary, #1976d2);
+
+    border: 1px solid var(--preview-border);
+    border-radius: 8px;
+    background: var(--preview-bg);
+    margin-top: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+
+    &.has-content {
+        .preview-header {
+            cursor: pointer;
+
+            &:hover {
+                background: rgba(var(--primary-rgb, 25, 118, 210), 0.04);
+            }
+        }
+    }
+}
+
+// Header Button
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 14px;
+    background: transparent;
+    border: none;
+    cursor: default;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: background 0.15s ease;
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .ai-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: var(--accent-color);
+    }
+
+    .header-title {
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .token-badge {
+        background: var(--accent-color);
+        color: white;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .expand-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: var(--text-secondary);
+        transition: transform 0.2s ease;
+    }
+}
+
+// Expanded Content Area
+.preview-content {
+    padding: 0 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+// Individual Prompt Section
+.prompt-section {
+    background: var(--section-bg);
+    border: 1px solid var(--preview-border);
+    border-radius: 6px;
+    overflow: hidden;
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(var(--primary-rgb, 25, 118, 210), 0.05);
+        border-bottom: 1px solid var(--preview-border);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .section-body {
+        padding: 10px 12px;
+        max-height: 180px;
+        overflow-y: auto;
+    }
+
+    .prompt-text {
+        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text-primary);
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        background: transparent;
+    }
+}
+
+// Responsive: Desktop (default above)
+// Tablet (768px and below)
+@media (max-width: 768px) {
+    .ai-prompt-preview {
+        margin-top: 10px;
+    }
+
+    .preview-header {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    .prompt-section {
+        .section-body {
+            max-height: 150px;
+        }
+
+        .prompt-text {
+            font-size: 11px;
+        }
+    }
+}
+
+// Phone (480px and below)
+@media (max-width: 480px) {
+    .ai-prompt-preview {
+        margin-top: 8px;
+        border-radius: 6px;
+    }
+
+    .preview-header {
+        padding: 8px 10px;
+
+        .header-title {
+            font-size: 12px;
+        }
+
+        .token-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+        }
+    }
+
+    .preview-content {
+        padding: 0 10px 10px;
+        gap: 8px;
+    }
+
+    .prompt-section {
+        .section-header {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+        .section-body {
+            padding: 8px 10px;
+            max-height: 120px;
+        }
+
+        .prompt-text {
+            font-size: 10px;
+            line-height: 1.4;
+        }
+    }
+}
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+    .ai-prompt-preview {
+        --preview-bg: #1e1e1e;
+        --preview-border: #3d3d3d;
+        --section-bg: #2d2d2d;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+    }
+}
