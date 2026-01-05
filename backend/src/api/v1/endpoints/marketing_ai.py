@@ -21,30 +21,53 @@ class TonePreset(BaseModel):
     description: str
 
 
-# Default tone presets - can be extended via DB in future
+def _load_prompt_file(filename: str) -> str:
+    """Load prompt content from a .md file."""
+    from pathlib import Path
+    prompts_dir = Path(__file__).parent.parent / "services" / "adk" / "agents" / "marketing" / "prompts"
+    filepath = prompts_dir / filename
+    if filepath.exists():
+        return filepath.read_text()
+    return ""
+
+
+def _load_tone_prompt(tone_id: str) -> str:
+    """Load tone-specific prompt from tones/{tone_id}.md"""
+    return _load_prompt_file(f"tones/{tone_id}.md")
+
+
+def _load_channel_guidelines(channel: str) -> str:
+    """Load channel-specific guidelines from channels/{channel}.md"""
+    channel_lower = channel.lower().replace("/", "").replace(" ", "")
+    if channel_lower in ["twitter", "x", "twitterx"]:
+        channel_lower = "twitter"
+    return _load_prompt_file(f"channels/{channel_lower}.md")
+
+
+# Default tone presets - prompts loaded from .md files
 TONE_PRESETS: List[TonePreset] = [
     TonePreset(
         id="professional",
         name="Professional",
-        prompt="Write a professional, polished social media post that highlights the key features and value proposition of this product. Use clear, confident language suitable for business audiences.",
+        prompt=_load_tone_prompt("professional") or "Write a professional, polished social media post that highlights the key features and value proposition of this product. Use clear, confident language suitable for business audiences.",
         description="Formal and polished for business audiences"
     ),
     TonePreset(
         id="casual",
         name="Casual",
-        prompt="Write a friendly, conversational social media post about this product. Keep it relaxed and approachable, like you're telling a friend about something cool you discovered.",
+        prompt=_load_tone_prompt("casual") or "Write a friendly, conversational social media post about this product. Keep it relaxed and approachable, like you're telling a friend about something cool you discovered.",
         description="Friendly and approachable"
     ),
     TonePreset(
         id="viral",
         name="Viral / Hype",
-        prompt="Write an attention-grabbing, viral-style social media post that creates excitement and FOMO. Use punchy language, emojis, and trending phrases to maximize engagement and shares.",
+        prompt=_load_tone_prompt("viral") or "Write an attention-grabbing, viral-style social media post that creates excitement and FOMO. Use punchy language, emojis, and trending phrases to maximize engagement and shares.",
         description="Attention-grabbing with high engagement"
     ),
     TonePreset(
         id="luxury",
         name="Luxury",
-        prompt="Write an elegant, sophisticated social media post that emphasizes exclusivity, premium quality, and refined taste. Use aspirational language that appeals to discerning customers.",
+        prompt=_load_tone_prompt("luxury") or "Write an elegant, sophisticated social media post that emphasizes exclusivity, premium quality, and refined taste. Use aspirational language that appeals to discerning customers.",
         description="Elegant and sophisticated"
     ),
     TonePreset(
@@ -54,6 +77,19 @@ TONE_PRESETS: List[TonePreset] = [
         description="Write your own prompt"
     ),
 ]
+
+
+# Channel guidelines endpoint
+class ChannelGuidelines(BaseModel):
+    channel: str
+    guidelines: str
+
+
+@router.get("/channel-guidelines/{channel}")
+async def get_channel_guidelines(channel: str) -> ChannelGuidelines:
+    """Get channel-specific posting guidelines."""
+    guidelines = _load_channel_guidelines(channel)
+    return ChannelGuidelines(channel=channel, guidelines=guidelines)
 
 
 @router.get("/tone-presets", response_model=List[TonePreset])

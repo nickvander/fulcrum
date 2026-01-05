@@ -65,5 +65,27 @@ ADK. Users can:
 ## Future Enhancements
 
 - [ ] Frontend unit tests for QuickPostDialogComponent
-- [ ] Refactor tone prompts to `.md` files for easier maintenance
-- [ ] Channel-aware prompt modifications (Instagram = more hashtags)
+- [x] Refactor tone prompts to `.md` files for easier maintenance
+- [x] Channel-aware prompt modifications (Instagram = more hashtags)
+- [ ] UI to preview active tone + channel prompts before generating
+
+## Prompt File Structure (Added 2026-01-05)
+
+```
+prompts/
+├── content.md           # Main ContentAgent system prompt
+├── research.md          # ResearchAgent system prompt
+├── image_generation.md  # ImageAgent system prompt
+├── channels/
+│   ├── twitter.md       # Twitter/X guidelines (280 chars, 1-2 hashtags)
+│   └── instagram.md     # Instagram guidelines (5-10 hashtags, line breaks)
+└── tones/
+    ├── professional.md  # Formal business voice
+    ├── casual.md        # Friendly conversational
+    ├── viral.md         # High-energy, FOMO-driven
+    └── luxury.md        # Elegant, aspirational
+```
+
+**API Endpoints:**
+- `GET /tone-presets` - Returns tone presets (prompts loaded from .md files)
+- `GET /channel-guidelines/{channel}` - Returns channel-specific guidelines
