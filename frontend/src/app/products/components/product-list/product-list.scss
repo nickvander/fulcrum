@@ -51,7 +51,68 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 48px; // Fixed height for alignment
+  height: 48px;
+
+  // Force white icons inside colored FAB buttons (overrides mat-icon-no-color)
+  ::ng-deep .mat-mdc-mini-fab.mat-primary mat-icon,
+  ::ng-deep .mat-mdc-mini-fab.mat-accent mat-icon,
+  ::ng-deep .mat-mdc-mini-fab.mat-warn mat-icon,
+  ::ng-deep button.mat-primary .mat-icon,
+  ::ng-deep button.mat-accent .mat-icon,
+  ::ng-deep button[color="primary"] .mat-icon,
+  ::ng-deep button[color="accent"] .mat-icon {
+    color: white !important;
+  }
+
+  // Dashboard toggle: Basic (inactive) state - use secondary text color
+  ::ng-deep .mat-mdc-mini-fab.mat-basic mat-icon,
+  ::ng-deep .mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) mat-icon,
+  ::ng-deep button.dashboard-toggle-btn:not(.mat-primary) .mat-icon {
+    color: var(--text-secondary) !important;
+  }
+
+  // Icon buttons (hamburger menu, filter) - should use secondary text color
+  .mat-mdc-icon-button .mat-icon,
+  button[mat-icon-button] mat-icon {
+    color: var(--text-secondary) !important;
+  }
+
+  // Dark mode: ensure icon buttons are visible (Slate 300)
+  :host-context(.dark-theme) & {
+
+    .mat-mdc-icon-button .mat-icon,
+    button[mat-icon-button] mat-icon {
+      color: #cbd5e1 !important; // Slate 300
+    }
+
+    // Ensure mini-fabs with basic color have visible icons
+    .mat-mdc-mini-fab.mat-basic mat-icon,
+    .mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) mat-icon {
+      color: #cbd5e1 !important;
+    }
+  }
+}
+
+// Desktop-only action buttons
+.desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 768px) {
+    display: none; // Hide on mobile/tablet
+  }
+}
+
+// Mobile/Tablet action buttons
+.mobile-actions {
+  display: none; // Hidden on desktop
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 768px) {
+    display: flex; // Show on mobile/tablet
+  }
 }
 
 .search-filter-group {
@@ -67,13 +128,15 @@
 // Moved toggle here, so ensure this bar has enough spacing below it
 // Quick Chips & View Toggle Bar
 .quick-filters-bar {
-  // reduced margin since toggle floats "above" list now
   margin-bottom: 24px;
   display: flex;
   align-items: center;
-  position: relative; // Context for absolute toggle
+  justify-content: space-between; // Split chips and toggle
+  flex-wrap: wrap; // Allow wrapping on small screens
+  gap: 12px;
+  position: relative;
   z-index: 50;
-  min-height: 40px; // Ensure height for chips
+  min-height: 48px;
 }
 
 .quick-chips {
@@ -88,10 +151,15 @@
 
 // View Toggle & Actions
 .view-controls-container {
-  position: absolute;
-  right: 0;
-  bottom: -16px; // Adjusted slightly up to split spacing
+  display: flex;
+  align-items: center;
   z-index: 60;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: -8px; // Pull up slightly if wrapped
+  }
 }
 
 .compact-toggle {
@@ -234,9 +302,15 @@
       border-bottom: 1px solid var(--border-color);
     }
 
-    tr.mat-row:hover {
-      background-color: var(--bg-hover) !important;
+    tr.mat-mdc-row {
       cursor: pointer;
+      position: relative;
+      z-index: 10;
+      pointer-events: auto !important;
+
+      &:hover {
+        background-color: var(--bg-hover) !important;
+      }
     }
   }
 }
@@ -289,15 +363,51 @@
   font-weight: 700;
 }
 
-// Stock & Price Styles
-.low-stock {
-  color: var(--warning-color);
-  font-weight: 600;
+.mat-column-stock {
+  width: 120px;
+
+  .stock-value {
+    font-weight: 500;
+
+    &.stock-healthy {
+      color: var(--success-color);
+    }
+
+    &.stock-low {
+      color: var(--warning-color);
+    }
+
+    &.stock-out {
+      color: var(--error-color);
+    }
+  }
+
+  // List View Dark Mode Overrides
+  :host-context(.dark-theme) {
+    .stock-value {
+      &.stock-healthy {
+        color: #69f0ae !important;
+      }
+
+      &.stock-low {
+        color: #ffd740 !important;
+      }
+
+      &.stock-out {
+        color: #ff5252 !important;
+      }
+    }
+  }
 }
 
-.out-of-stock {
-  color: var(--error-color);
-  font-weight: 700;
+.days-of-inventory {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+
+  &.days-warning {
+    color: var(--error-color);
+  }
 }
 
 // Grid View Styles (for Mobile preference)
@@ -334,10 +444,22 @@
     top: 12px;
     left: 12px;
     z-index: 10;
-    opacity: 0; // Hidden by default
+    opacity: 0.7; // Slightly visible by default for better discoverability
     transition: opacity 0.2s;
-    background: var(--bg-card); // Add background to make it pop against ANY image
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.9); // Semi-transparent white
+    border-radius: 6px;
+    padding: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); // Subtle shadow for visibility
+
+    &:hover {
+      opacity: 1;
+    }
+
+    // Dark mode: remove shadow, use subtle dark background
+    :host-context(.dark-theme) & {
+      background: rgba(30, 41, 59, 0.85); // Slate 800 semi-transparent
+      box-shadow: none; // No shadow in dark mode
+    }
 
     &.mat-mdc-checkbox-checked {
       opacity: 1;
@@ -360,8 +482,8 @@
     top: 8px;
     right: 8px;
     z-index: 10;
-    opacity: 0; // Hidden by default
-    background: var(--bg-card);
+    opacity: 0; // Hidden by default on desktop
+    background: rgba(255, 255, 255, 0.95); // Light background for contrast
     border-radius: 50%;
     width: 32px;
     height: 32px;
@@ -369,15 +491,43 @@
     align-items: center;
     justify-content: center;
     transition: opacity 0.2s, background 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); // Subtle shadow for visibility
 
     mat-icon {
       font-size: 20px;
       height: 20px;
       width: 20px;
+      color: #546E7A; // Slate grey for light mode
     }
 
     &:hover {
-      background: var(--bg-hover);
+      background: #f1f5f9; // Slate 100
+    }
+
+    // Dark mode styling
+    :host-context(.dark-theme) & {
+      background: rgba(30, 41, 59, 0.95); // Slate 800
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+      mat-icon {
+        color: #cbd5e1 !important; // Slate 300
+      }
+
+      &:hover {
+        background: #475569; // Slate 600
+      }
+    }
+  }
+
+  // Touch devices: Always show action menu (can't hover on touch)
+  @media (hover: none),
+  (max-width: 1024px) {
+    .action-menu {
+      opacity: 0.8 !important; // Always visible on touch
+    }
+
+    &:hover .action-menu {
+      opacity: 1 !important;
     }
   }
 
@@ -499,83 +649,187 @@
           color: var(--text-secondary);
         }
       }
+    }
 
-      .more-items {
-        font-size: 11px;
-        color: var(--primary-color);
-        margin-top: 2px;
-        font-style: italic;
+    // Grid View Stock Styling (Correctly Scoped)
+    .stock {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+
+      &.stock-healthy {
+        color: var(--success-color);
+      }
+
+      &.stock-low,
+      &.low-stock {
+        color: var(--warning-color);
+      }
+
+      &.stock-out {
+        color: var(--error-color);
       }
     }
 
-    // Marketplaces Row
-    .marketplace-icons {
+    .more-items {
+      font-size: 11px;
+      color: var(--primary-color);
+      margin-top: 2px;
+      font-style: italic;
+    }
+  }
+
+  // Marketplaces Row
+  .marketplace-icons {
+    display: flex;
+    gap: 8px; // Increased spacing
+    margin-top: 8px;
+
+    .no-marketplaces {
+      font-size: 11px;
+      color: var(--text-hint);
       display: flex;
-      gap: 8px; // Increased spacing
-      margin-top: 8px;
+      align-items: center;
+      gap: 4px;
 
-      .no-marketplaces {
-        font-size: 11px;
-        color: var(--text-hint);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-
-        mat-icon {
-          font-size: 14px;
-          width: 14px;
-          height: 14px;
-        }
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
       }
+    }
 
-      img {
-        width: 16px;
-        height: 16px;
-        opacity: 0.7;
-        transition: opacity 0.2s;
+    img {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
 
-        &:hover {
-          opacity: 1;
-        }
+      &:hover {
+        opacity: 1;
       }
     }
   }
 }
 
-// Responsive Design
-@media (max-width: 1024px) {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+}
 
-  // Hide less critical columns on tablet
+.desktop-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  @media (max-width: 1023px) {
+    display: none;
+  }
+}
+
+.mobile-actions {
+  display: none;
+  align-items: center;
+  gap: 4px;
+
+  @media (max-width: 1023px) {
+    display: flex;
+  }
+}
+
+// Responsive Design
+@media (max-width: 1100px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    padding-bottom: 4px;
+    gap: 8px;
+  }
+
+  // Hide non-critical columns on tablet
   .mat-column-sku,
+  .mat-column-cost_price,
   .mat-column-marketplaces {
+    display: none !important;
+  }
+
+  // Ensure search doesn't push buttons out
+  .search-filter-group {
+    flex: 1;
+    min-width: 0;
+
+    .search-field-compact {
+      width: 100% !important;
+      max-width: 400px;
+    }
+  }
+
+  // Hide divider to save space
+  mat-divider[vertical] {
     display: none;
   }
 }
 
 @media (max-width: 768px) {
-  .header {
-    flex-direction: column;
-    align-items: stretch;
+  :host {
+    padding: 16px; // Reduced padding
   }
 
   .header-actions {
-    overflow-x: auto;
-    padding-bottom: 8px;
-    width: 100%;
-    justify-content: flex-start;
+    gap: 4px;
   }
 
-  // On mobile, grid view might be better, or simplified list
+  // Mobile Chip Tweaks - Prevent blue outline/harsh borders
+  ::ng-deep {
+    .mat-mdc-chip {
+      --mdc-chip-outline-color: transparent !important;
+      --mdc-chip-focus-outline-color: transparent !important;
+
+      .mdc-evolution-chip__action {
+        outline: none !important;
+      }
+    }
+  }
+
+  // Hide even more on phone
   .mat-column-image,
-  .mat-column-cost_price,
-  .mat-column-actions {
-    display: none; // Hide on very small screens for list view
+  .mat-column-price {
+    display: none !important;
   }
 
   .product-table-container {
     border-radius: 0;
-    margin: 0 -16px; // Full width
+    margin: 0 -16px; // Exactly offset the 16px padding of :host
     width: calc(100% + 32px);
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    overflow-x: auto; // Allow horizontal scroll if content still exceeds width
+  }
+
+  table {
+    width: 100% !important;
+    min-width: 0 !important; // Allow shrinking
+  }
+
+  .mat-mdc-cell,
+  .mat-mdc-header-cell {
+    padding: 0 8px !important;
+  }
+
+  // Further reduce search width for small phones
+  .search-filter-group {
+    .search-field-compact {
+      max-width: 200px; // Very compact on mobile
+    }
   }
 }
 
@@ -673,11 +927,19 @@ mat-card-header {
   bottom: 24px;
   right: 24px;
   z-index: 1000;
-  background: var(--bg-card);
+  background: var(--bg-card) !important;
   color: var(--text-secondary);
   border: 2px solid var(--border-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
+
+  // Ensure icon is visible in light mode
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--text-secondary) !important;
+  }
 
   &:hover {
     transform: scale(1.1);
@@ -685,19 +947,14 @@ mat-card-header {
   }
 
   &.active {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color)) !important;
     color: white;
     border-color: transparent;
 
     mat-icon {
+      color: white !important;
       animation: pulse-glow 2s ease-in-out infinite;
     }
-  }
-
-  mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
   }
 }
 
@@ -771,4 +1028,257 @@ mat-card-header {
 .infinite-scroll-trigger {
   height: 1px;
   width: 100%;
+}
+
+// ============================================
+// Selection Action Bar - Modern Floating Design
+// ============================================
+.selection-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: calc(100vw - 32px); // Prevent overflow
+
+  .selection-bar-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+
+  .selection-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 12px;
+    border-right: 1px solid #e2e8f0;
+    flex-shrink: 0;
+
+    mat-icon {
+      color: #00BFA5; // Accent teal
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .selection-count {
+      font-weight: 600;
+      font-size: 14px;
+      color: #2C3E50;
+      white-space: nowrap;
+    }
+  }
+
+  .selection-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .action-btn {
+      // Use Material's pink accent color
+      background-color: #E91E63 !important; // Pink 500
+      color: white !important;
+
+      mat-icon {
+        color: white !important;
+      }
+
+      &:hover {
+        background-color: #D81B60 !important; // Pink 600
+      }
+    }
+
+    .clear-btn {
+      color: #546E7A;
+      border-color: #e2e8f0;
+
+      mat-icon {
+        color: #546E7A !important;
+      }
+    }
+  }
+
+  // ===== DARK MODE =====
+  :host-context(.dark-theme) & {
+    .selection-bar-content {
+      background: #1e293b; // Slate 800
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .selection-info {
+      border-right-color: #475569; // Slate 600
+
+      mat-icon {
+        color: #00DBBD; // Brighter teal for dark mode
+      }
+
+      .selection-count {
+        color: #f1f5f9; // Slate 100
+      }
+    }
+
+    .selection-actions {
+      .clear-btn {
+        color: #cbd5e1; // Slate 300
+        border-color: #475569;
+
+        mat-icon {
+          color: #cbd5e1 !important;
+        }
+      }
+    }
+  }
+
+  // ===== TABLET VIEW (601px to 1024px) =====
+  @media (min-width: 601px) and (max-width: 1024px) {
+    position: fixed !important;
+    bottom: 16px !important;
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    transform: translateX(-50%) !important; // Center like desktop
+    max-width: calc(100vw - 32px) !important;
+
+    // No overrides needed for .selection-bar-content - inherit desktop styles
+
+    .selection-actions {
+      .action-label {
+        display: inline; // Show labels on tablet
+      }
+    }
+  }
+
+  // Phone view - Ultra compact layout to prevent overflow
+  @media (max-width: 600px) {
+    position: fixed !important;
+    bottom: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    left: 6px !important;
+    right: 6px !important;
+    top: auto !important;
+    transform: none !important;
+    max-width: none !important;
+
+    .selection-bar-content {
+      width: 100%;
+      justify-content: center;
+      gap: 2px; // Minimal gap
+      padding: 4px 2px; // Minimal side padding
+      flex-wrap: nowrap;
+    }
+
+    .selection-info {
+      flex: 0 0 auto;
+      gap: 2px; // Tighter gap
+      padding-right: 6px;
+      border-right: 1px solid #e2e8f0;
+
+      mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+      }
+
+      .selection-count {
+        font-size: 10px;
+        white-space: nowrap;
+      }
+    }
+
+    .selection-actions {
+      flex: 0 0 auto;
+      gap: 3px; // Very tight
+
+      .action-btn {
+        font-size: 9px;
+        padding: 4px 6px;
+        white-space: nowrap;
+        min-width: unset;
+
+        .action-label {
+          display: inline;
+        }
+
+        mat-icon {
+          font-size: 11px;
+          width: 11px;
+          height: 11px;
+          margin-right: 1px;
+        }
+      }
+
+      .clear-btn {
+        min-width: 24px;
+        padding: 4px 5px;
+
+        .action-label {
+          display: none;
+        }
+
+        mat-icon {
+          font-size: 12px;
+          width: 12px;
+          height: 12px;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// Phone-specific slideUp animation
+@media (max-width: 1024px) {
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+// Dark Mode Overrides (Global for Component)
+:host-context(.dark-theme) {
+
+  // Grid View Stock
+  .stock {
+    &.stock-healthy {
+      color: #69f0ae !important;
+    }
+
+    // Bright Green
+    &.stock-low {
+      color: #ffd740 !important;
+    }
+
+    // Bright Orange
+    &.stock-out {
+      color: #ff5252 !important;
+    }
+
+    // Bright Red
+  }
 }

@@ -963,7 +963,97 @@ h6 {
 
     .marketplace-logo,
     .marketplace-icon {
+        // background: var(--bg-card) !important; // Removed to respect component-specific branding (e.g. eBay White/Amazon Soft Orange)
+    }
+
+    // mat-menu submenu arrow color fix
+    .mat-mdc-menu-submenu-icon {
+        color: #f1f5f9 !important; // Slate-100 fallback
+    }
+
+    // mat-menu panel dark mode fix - ensure dark background and light text
+    .mat-mdc-menu-panel {
         background: var(--bg-card) !important;
+
+        .mat-mdc-menu-item {
+            color: var(--text-main) !important;
+
+            .mat-icon {
+                color: var(--text-secondary) !important;
+            }
+        }
+
+        .mat-mdc-menu-item:hover:not([disabled]) {
+            background: var(--bg-hover) !important;
+        }
+    }
+
+    // mat-tab-group navigation arrows and header branding
+    .mat-mdc-tab-header {
+        .mat-mdc-tab-header-pagination-chevron {
+            border-color: #cbd5e1 !important; // Slate-300
+        }
+    }
+}
+
+
+// ============================================
+// CDK Overlay Dark Mode Fixes (Menus render outside component scope)
+// ============================================
+body.dark-theme {
+
+    // Mat-Menu in CDK overlay
+    .cdk-overlay-container .mat-mdc-menu-panel,
+    .mat-mdc-menu-panel.mat-mdc-menu-panel {
+        background: #1e293b !important; // Slate 800
+
+        .mat-mdc-menu-content {
+            background: transparent !important;
+        }
+
+        .mat-mdc-menu-item {
+            color: #f1f5f9 !important; // Slate 100
+
+            .mat-icon {
+                color: #cbd5e1 !important; // Slate 300
+            }
+
+            .mdc-list-item__primary-text {
+                color: #f1f5f9 !important;
+            }
+        }
+
+        .mat-mdc-menu-item:hover:not([disabled]) {
+            background: #334155 !important; // Slate 700
+        }
+    }
+}
+
+
+// ============================================
+// Global FAB Button Icon Colors
+// ============================================
+// Ensure colored FAB buttons always have white icons
+.mat-mdc-mini-fab.mat-primary .mat-icon,
+.mat-mdc-mini-fab.mat-accent .mat-icon,
+.mat-mdc-mini-fab.mat-warn .mat-icon,
+.mat-mdc-mini-fab[color="primary"] .mat-icon,
+.mat-mdc-mini-fab[color="accent"] .mat-icon {
+    color: white !important;
+}
+
+// Basic/uncolored FAB buttons use secondary text color
+.mat-mdc-mini-fab.mat-basic .mat-icon,
+.mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) .mat-icon {
+    color: var(--text-secondary) !important;
+}
+
+// Dark mode specific overrides
+body.dark-theme {
+
+    .mat-mdc-mini-fab.mat-basic .mat-icon,
+    .mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) .mat-icon {
+        color: #cbd5e1 !important; // Slate 300
     }
 }
 
@@ -1110,25 +1200,22 @@ h6 {
 // Global Semantic Chip Styles
 // "Modern, Bold, Young" Design - Refined V3
 @mixin app-chip-color($bg-color, $text-color, $selected-bg, $selected-text) {
-    // UNSELECTED STATE (The "Filter" Look)
-    // Lighter, smaller, less intrusive but visible
-    --mdc-chip-elevated-container-color: #f9fafb !important; // Gray 50 (Very light)
-    --mdc-chip-container-color: #f9fafb !important;
-    --mdc-chip-label-text-color: #9ca3af !important; // Gray 400 (Light text)
-    --mdc-chip-with-icon-icon-color: #9ca3af !important;
+    // UNSELECTED STATE
+    // Use theme variables instead of hardcoded grays
+    --mdc-chip-elevated-container-color: var(--bg-hover) !important;
+    --mdc-chip-container-color: var(--bg-hover) !important;
+    --mdc-chip-label-text-color: var(--text-secondary) !important;
+    --mdc-chip-with-icon-icon-color: var(--text-secondary) !important;
 
     border-radius: 99px !important;
 
     .mdc-evolution-chip__action {
-        // Unselected internals
-        background-color: #f9fafb !important;
-        color: #9ca3af !important;
-
+        background-color: var(--bg-hover) !important;
+        color: var(--text-secondary) !important;
         padding-left: 12px !important;
         padding-right: 12px !important;
-
         font-weight: 500 !important;
-        font-size: 11px !important; // Even smaller/discreet
+        font-size: 11px !important;
         letter-spacing: 0.3px;
 
         &::before {
@@ -1136,20 +1223,18 @@ h6 {
         }
 
         &:hover {
-            // Subtle hover for unselected
-            background-color: #f3f4f6 !important;
-            color: #6b7280 !important;
+            background-color: var(--border-color) !important;
+            color: var(--text-main) !important;
         }
     }
 
-    // Border radius internal fix
     .mdc-evolution-chip__cell--primary,
     .mdc-evolution-chip__action--primary,
     .mat-mdc-chip-action-label {
         border-radius: 99px !important;
     }
 
-    // SELECTED STATE - "Pop"
+    // SELECTED STATE
     &.mat-mdc-chip-selected,
     &.mat-mdc-chip-highlighted {
         --mdc-chip-elevated-container-color: #{$selected-bg} !important;
@@ -1157,7 +1242,7 @@ h6 {
         --mdc-chip-label-text-color: #{$selected-text} !important;
         --mdc-chip-with-icon-icon-color: #{$selected-text} !important;
 
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--shadow-sm);
         transform: translateY(-1px);
 
         .mdc-evolution-chip__action {
@@ -1165,39 +1250,43 @@ h6 {
             color: #{$selected-text} !important;
             padding-left: 14px !important;
             padding-right: 14px !important;
-
             font-weight: 700 !important;
-            font-size: 13px !important; // Pop size
+            font-size: 13px !important;
         }
 
         .mdc-evolution-chip__checkmark {
             color: #{$selected-text} !important;
 
-            svg {
-                color: #{$selected-text} !important;
-
-                path {
-                    stroke: #{$selected-text} !important;
-                    stroke-width: 3px;
-                }
+            svg path {
+                stroke: #{$selected-text} !important;
+                stroke-width: 3px;
             }
         }
     }
 }
 
-// Vibrant / "Young" Palette
-// Less "Office Pastel", more "App Pop"
-
 .app-chip-success {
-    @include app-chip-color(#d1fae5, #065f46, #10b981, #ffffff);
+    @include app-chip-color(var(--success-bg), var(--success-color), var(--success-color), white);
+
+    .dark-theme & {
+        @include app-chip-color(rgba(129, 199, 132, 0.1), var(--success-color), var(--success-color), var(--bg-app));
+    }
 }
 
 .app-chip-error {
-    @include app-chip-color(#ffe4e6, #881337, #f43f5e, #ffffff);
+    @include app-chip-color(var(--error-bg), var(--error-color), var(--error-color), white);
+
+    .dark-theme & {
+        @include app-chip-color(rgba(229, 115, 115, 0.1), var(--error-color), var(--error-color), var(--bg-app));
+    }
 }
 
 .app-chip-warning {
-    @include app-chip-color(#fef3c7, #78350f, #f59e0b, #ffffff);
+    @include app-chip-color(var(--warning-bg), var(--warning-color), var(--warning-color), white);
+
+    .dark-theme & {
+        @include app-chip-color(rgba(255, 183, 77, 0.1), var(--warning-color), var(--warning-color), var(--bg-app));
+    }
 }
 
 // GLOBAL PAGINATOR OVERRIDES

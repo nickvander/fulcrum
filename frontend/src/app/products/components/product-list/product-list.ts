@@ -266,6 +266,16 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
               this.hasMoreProducts = result.currentPage < result.totalPages;
               this.isLoading = false; this.isReloading = false;
               this.updateDataSource();
+
+              // Auto-open product dialog if pendingOpenSku match found
+              if (this.pendingOpenSku) {
+                const product = this.allProducts.find(p => p.sku === this.pendingOpenSku);
+                if (product) {
+                  this.openDetailsDialog(product, 'view');
+                  this.pendingOpenSku = null; // Clear so we don't re-trigger
+                }
+              }
+
               this.cdr.markForCheck();
             },
             error: (error) => {
@@ -558,10 +568,9 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
         // Let's assume strict virtual for now unless physical exists.
         const virtualStock = Math.min(...maxBundles);
 
-        // If we have physical stock, maybe we just show that? 
-        // Or usually, for Drop-Shipping/Virtual Bundling, stock is purely virtual.
-        // Let's sum them for "Total Available to Sell"
-        return physicalStock + virtualStock;
+        // User Preference: Show usage "Reserved" (Physical) stock as the primary number.
+        // We can show the potential "Assemblable" stock elsewhere or in a tooltip if needed.
+        return physicalStock;
       }
       return physicalStock;
     }
@@ -653,6 +662,40 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
       bundle_components: []
     } as Product;
     this.openDetailsDialog(newBundle, 'edit');
+  }
+
+  createBundleFromSelection(): void {
+    // Get selected products
+    const selectedProductIds = Array.from(this.selectedProducts);
+    const selectedProductsList = this.products.filter(p => selectedProductIds.includes(p.id));
+
+    // Create bundle components from selected products
+    const bundleComponents = selectedProductsList.map(product => ({
+      component_id: product.id,
+      component_sku: product.sku,
+      component_name: product.name,
+      quantity: 1,
+      component_stock: this.getCurrentStock(product)
+    }));
+
+    // Create new bundle pre-filled with components
+    const newBundle = {
+      id: 0,
+      name: 'New Bundle',
+      sku: '',
+      description: '',
+      default_resale_price: 0,
+      cost_price: selectedProductsList.reduce((sum, p) => sum + (p.cost_price || 0), 0),
+      images: [],
+      custom_fields: [],
+      is_bundle: true,
+      bundle_components: bundleComponents
+    } as Product;
+
+    // Open dialog and clear selection
+    this.openDetailsDialog(newBundle, 'edit');
+    this.selectedProducts.clear();
+    this.cdr.markForCheck();
   }
 
   openEditPanel(product: Product): void {

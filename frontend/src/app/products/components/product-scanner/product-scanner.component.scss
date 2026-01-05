@@ -250,15 +250,13 @@
 
     button {
         color: var(--text-secondary);
-        width: 28px;
-        height: 28px;
-        background: transparent;
+        width: 32px; // Slightly larger for touch
+        height: 32px;
+        background: rgba(var(--bg-card-rgb), 0.8); // Semi-transparent backdrop
         margin: 0;
         padding: 0;
-        border-radius: 6px;
-
-        // Remove button shadow if exists
-        box-shadow: none !important;
+        border-radius: 50%;
+        backdrop-filter: blur(4px);
 
         mat-icon {
             width: 20px;
@@ -281,6 +279,26 @@
     display: flex;
     align-items: center;
     gap: 8px;
+
+    @media (max-width: 480px) {
+        font-size: 0.8rem;
+        gap: 4px;
+
+        .label-text {
+            display: none;
+        }
+
+        &::after {
+            content: attr(data-short-label);
+            display: inline-block;
+        }
+
+        mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+        }
+    }
 
     mat-icon {
         margin: 0 !important;

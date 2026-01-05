@@ -59,4 +59,17 @@ export class MarketplaceStatusComponent {
       default: return 'Marketplace ' + id;
     }
   }
+
+  // Get unique listings (one per marketplace_id)
+  getUniqueListings(): MarketplaceListing[] {
+    if (!this.listings) return [];
+    const seen = new Set<number>();
+    return this.listings.filter(listing => {
+      if (seen.has(listing.marketplace_id)) {
+        return false;
+      }
+      seen.add(listing.marketplace_id);
+      return true;
+    });
+  }
 }

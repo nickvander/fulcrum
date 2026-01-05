@@ -29,17 +29,19 @@ import QRCode from 'qrcode';
       display: inline-flex;
       flex-direction: column;
       align-items: center;
-      padding: 12px;
-      background: white;
+      padding: 10px;
+      background: var(--bg-subtle, #f8fafc);
       border-radius: 8px;
+      border: 1px solid var(--border-color, #e2e8f0);
     }
     canvas {
       max-width: 100%;
+      max-height: 80px; /* Limit barcode/QR height */
     }
     .code-text {
       font-family: monospace;
       font-size: 11px;
-      color: #333;
+      color: var(--text-main, #333);
       margin-top: 6px;
       text-align: center;
       word-break: break-all;
@@ -52,7 +54,16 @@ import QRCode from 'qrcode';
       button {
         width: 32px;
         height: 32px;
-        mat-icon { font-size: 18px; width: 18px; height: 18px; }
+        color: var(--text-secondary, #546E7A);
+      }
+      button mat-icon { 
+        font-size: 18px; 
+        width: 18px; 
+        height: 18px; 
+        color: inherit;
+      }
+      button:hover {
+        color: var(--primary-color, #2E3A59);
       }
     }
   `]
@@ -90,20 +101,20 @@ export class CodeDisplayComponent implements AfterViewInit, OnChanges {
     try {
       JsBarcode(canvas, this.value, {
         format: this.format,
-        width: 2,
-        height: 60,
+        width: 1.5,
+        height: 40, // Reduced from 60
         displayValue: false,
-        margin: 10
+        margin: 5
       });
     } catch (e) {
       // Fallback to CODE128 which accepts any string
       try {
         JsBarcode(canvas, this.value, {
           format: 'CODE128',
-          width: 2,
-          height: 60,
+          width: 1.5,
+          height: 40,
           displayValue: false,
-          margin: 10
+          margin: 5
         });
       } catch (e2) {
         console.error('Barcode generation failed:', e2);
@@ -113,8 +124,8 @@ export class CodeDisplayComponent implements AfterViewInit, OnChanges {
 
   private generateQRCode(canvas: HTMLCanvasElement): void {
     QRCode.toCanvas(canvas, this.value, {
-      width: 150,
-      margin: 2,
+      width: 100, // Reduced from 150
+      margin: 1,
       errorCorrectionLevel: 'M'
     }, (error: any) => {
       if (error) console.error('QR code generation failed:', error);

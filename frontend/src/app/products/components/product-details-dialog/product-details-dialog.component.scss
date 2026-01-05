@@ -159,7 +159,7 @@
 .stat-pill {
     background: var(--bg-subtle);
     border-radius: 8px;
-    padding: 10px 12px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -167,7 +167,7 @@
     transition: border-color 0.2s;
 
     .label {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         color: var(--text-secondary);
@@ -175,9 +175,28 @@
     }
 
     .value {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         font-weight: 600;
         color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .potential {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+    }
+
+    // SKU: Make it smaller and less prominent
+    &.sku {
+        .value {
+            font-size: 0.75rem;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+        }
     }
 
     &.price .value {
@@ -589,6 +608,12 @@
     padding: 16px;
     max-height: calc(90vh - 100px);
     overflow-y: auto;
+
+    @media (max-width: 767px) {
+        padding: 8px; // Less padding on mobile
+        max-height: none; // Let the container expand
+        flex: 1;
+    }
 }
 
 /* ===== Actions Bar ===== */
@@ -618,7 +643,7 @@
         }
     }
 
-    // Close button - subtle
+    // Subtle button
     button[mat-button] {
         color: var(--text-secondary);
 
@@ -627,13 +652,31 @@
         }
     }
 
-    // Primary button - accent color
-    button[mat-flat-button] {
-        background: var(--accent);
+    // Primary button
+    button[mat-flat-button][color="primary"] {
+        mat-icon {
+            color: white !important;
+        }
+    }
+
+    // Accent button (Create Bundle) - Pink to match Material accent
+    button[mat-flat-button][color="accent"] {
+        background: #E91E63 !important; // Pink 500
         color: white;
 
+        mat-icon {
+            color: white !important;
+        }
+
         &:hover {
-            background: var(--accent-light);
+            background: #D81B60 !important; // Pink 600
+        }
+    }
+
+    // Dark mode: Ensure icons are visible
+    :host-context(.dark-theme) & {
+        button[mat-flat-button] mat-icon {
+            color: white !important;
         }
     }
 }
@@ -726,6 +769,14 @@
         button {
             flex: 1;
             min-height: 44px;
+            padding: 0 8px; // Smaller padding for tighter buttons
+            font-size: 0.8rem; // Match form button size
+
+            mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+            }
         }
     }
 }

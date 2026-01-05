@@ -31,6 +31,8 @@ import { DateAdapter, MatNativeDateModule } from '@angular/material/core';
 })
 export class AppComponent {
   isMobile$: Observable<boolean>;
+  isMobileOrTablet$: Observable<boolean>;
+  isDesktop$: Observable<boolean>;
   isLoginPage = false;
   loading$: Observable<boolean>;
 
@@ -43,6 +45,8 @@ export class AppComponent {
     private dateAdapter: DateAdapter<Date>
   ) {
     this.isMobile$ = this.screenService.isMobile$;
+    this.isMobileOrTablet$ = this.screenService.isMobileOrTablet$;
+    this.isDesktop$ = this.screenService.isDesktop$;
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)

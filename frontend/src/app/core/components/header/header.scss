@@ -8,13 +8,13 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); // Subtle shadow
 
   // Completely hide header on desktop since sidebar covers navigation
-  @media (min-width: 769px) {
+  @media (min-width: 1024px) {
     display: none;
   }
 }
 
 .app-header {
-  background: white; // Clean white header
+  background: var(--bg-header); // Respect theme background
   color: var(--text-main);
   height: 64px;
   padding: 0 24px;
@@ -26,22 +26,44 @@
 .sidenav-toggle {
   display: block; // Show by default (mobile)
 
-  @media (min-width: 769px) {
+  @media (min-width: 1024px) {
     display: none; // Hide on desktop (sidenav is permanent)
+  }
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 8px;
+
+  @media (min-width: 1024px) {
+    display: none;
+  }
+}
+
+.logo-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  color: var(--primary-color);
+
+  @media (max-width: 600px) {
+    display: none;
+  }
+
+  &.tablet-hide {
+    @media (max-width: 1024px) {
+      display: none;
+    }
   }
 }
 
 .logo {
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.25rem; // Match sidenav
   letter-spacing: -0.5px;
-  margin-left: 8px;
-  color: var(--primary-color);
-
-  // Hide on desktop since sidenav has logo
-  @media (min-width: 769px) {
-    display: none;
-  }
+  color: var(--text-main); // Match sidenav
 }
 
 .spacer {

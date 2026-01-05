@@ -216,12 +216,62 @@ export class ProductDetailsDialogComponent implements OnInit {
         return this.getAvailablePhysicalStock() + this.getAllocatedStock();
     }
 
+    // Matches product-list logic: Physical + Potential from Components
+    getTotalStock(): number {
+        // If it's a bundle, calculate how many we can make from components
+        if (this.product.is_bundle) {
+            let physicalStock = 0;
+            if (this.product.inventory_items && this.product.inventory_items.length > 0) {
+                const mainInventory = this.product.inventory_items.find(item => item.location === 'default');
+                physicalStock = mainInventory ? mainInventory.quantity : this.product.inventory_items.reduce((acc, item) => acc + item.quantity, 0);
+            }
+
+            // Calculate potential from components
+            if (this.product.bundle_components && this.product.bundle_components.length > 0) {
+                const maxBundles = this.product.bundle_components.map(bc => {
+                    const componentStock = bc.component_stock || 0;
+                    const required = bc.quantity || 1;
+                    return Math.floor(componentStock / required);
+                });
+                const virtualStock = Math.min(...maxBundles);
+                return physicalStock + virtualStock;
+            }
+            return physicalStock;
+        }
+
+        return this.getAvailablePhysicalStock();
+    }
+
+    getPotentialStock(): number {
+        if (!this.product.is_bundle || !this.product.bundle_components?.length) return 0;
+
+        const maxBundles = this.product.bundle_components.map(bc => {
+            const componentStock = bc.component_stock || 0;
+            const required = bc.quantity || 1;
+            return Math.floor(componentStock / required);
+        });
+        return Math.min(...maxBundles);
+    }
+
     getMarketplaceLogo(id: number): string | null {
         switch (id) {
             case 1: return 'assets/images/marketplaces/amazon.png';
             case 4: return 'assets/images/marketplaces/mercadolibre.png';
             default: return null;
         }
+    }
+
+    // Get unique marketplace listings (one per marketplace_id)
+    getUniqueMarketplaceListings(): any[] {
+        if (!this.product.marketplace_listings) return [];
+        const seen = new Set<number>();
+        return this.product.marketplace_listings.filter(listing => {
+            if (seen.has(listing.marketplace_id)) {
+                return false;
+            }
+            seen.add(listing.marketplace_id);
+            return true;
+        });
     }
 
     startAssembly(): void {

@@ -133,6 +133,7 @@
     "products": {
         "title": "Productos",
         "productList": "Lista de Productos",
+        "selected": "seleccionado(s)",
         "addProduct": "Agregar Producto",
         "editProduct": "Editar Producto",
         "deleteProduct": "Eliminar Producto",
@@ -146,6 +147,8 @@
         "aiPowered": "IA Activada",
         "identifyProduct": "Identificar Producto",
         "barcodeScanner": "Escáner de Código de Barras",
+        "identifyShort": "Iden.",
+        "scanShort": "Esc.",
         "scanner": {
             "errorLookingUpBarcode": "Error al buscar el código de barras."
         },
@@ -155,6 +158,7 @@
         "pointAtBarcode": "Apunte la cámara a un código de barras o QR",
         "cameraInstruction": "Coloque el producto a la vista para escanear",
         "cameraError": "No se puede acceder a la cámara. Por favor verifique los permisos.",
+        "cameraPermissionHint": "Permita el acceso a la cámara para habilitar la búsqueda visual",
         "startCameraHint": "Inicie la cámara para escanear artículos",
         "aiIdentifyHint": "Usar IA para identificar el producto",
         "startScanner": "Iniciar Escáner",
