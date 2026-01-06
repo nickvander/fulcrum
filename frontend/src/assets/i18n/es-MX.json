@@ -389,6 +389,7 @@
         "received": "Recibido",
         "partiallyReceived": "Parcialmente Recibido",
         "cancelled": "Cancelado",
+        "completed": "Completado",
         "items": "Artículos",
         "addItem": "Agregar Artículo",
         "removeItem": "Eliminar Artículo",

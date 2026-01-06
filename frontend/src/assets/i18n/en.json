@@ -389,6 +389,7 @@
         "received": "Received",
         "partiallyReceived": "Partially Received",
         "cancelled": "Cancelled",
+        "completed": "Completed",
         "items": "Items",
         "addItem": "Add Item",
         "removeItem": "Remove Item",
