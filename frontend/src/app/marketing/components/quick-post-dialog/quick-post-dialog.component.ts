@@ -21,7 +21,7 @@ import { MarketingService, MarketingConnector, TonePreset } from '../../services
 import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
 import { SettingsService } from '../../../core/services/settings.service';
-import { AiPromptPreviewComponent } from '../../../shared/components/ai-prompt-preview/ai-prompt-preview';
+
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
@@ -41,7 +41,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
     MatChipsModule,
     MatSlideToggleModule,
     MatTooltipModule,
-    AiPromptPreviewComponent
+
   ],
   templateUrl: './quick-post-dialog.component.html',
   styleUrls: ['./quick-post-dialog.component.scss']
