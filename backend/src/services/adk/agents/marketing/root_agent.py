@@ -205,12 +205,12 @@ class MarketingRootAgent:
                     "natural lighting, cinematic composition."
                 )
 
-                print(f"[MarketingRoot] Generating image with gemini-2.0-flash-exp via generate_content for prompt: {enhanced_prompt[:50]}...")
+                print(f"[MarketingRoot] Generating image with gemini-2.5-flash-image via generate_content for prompt: {enhanced_prompt[:50]}...")
                 client = Client(api_key=self.api_key)
                 
                 # Use generate_content with response_modalities to get image output
                 response = client.models.generate_content(
-                    model='gemini-2.0-flash-exp',
+                    model='gemini-2.5-flash-image',
                     contents=enhanced_prompt,
                     config=types.GenerateContentConfig(
                         response_modalities=['IMAGE', 'TEXT'],
