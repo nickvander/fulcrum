@@ -393,13 +393,16 @@ export class QuickPostDialogComponent implements OnInit {
         this.aiResult = result;
 
         // Only apply image, not text
-        if (result.generated_image_url) {
+        const imgUrl = result.generated_image_url;
+        const isPlaceholder = !imgUrl || imgUrl.includes('placeholder');
+
+        if (imgUrl && !isPlaceholder) {
           this.postForm.patchValue({
-            content_image_url: result.generated_image_url
+            content_image_url: imgUrl
           });
           this.snackBar.open('Image generated!', 'Close', { duration: 3000 });
         } else {
-          this.snackBar.open('No image was generated', 'Close', { duration: 3000 });
+          this.snackBar.open('Image generation failed. Please try again.', 'Close', { duration: 5000 });
         }
       },
       error: (err) => {
