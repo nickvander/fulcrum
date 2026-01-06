@@ -10,10 +10,34 @@ testing purposes.
 docker compose up -d
 
 # Run the seed script (inside Docker)
-docker compose exec backend python -m src.scripts.seed_products_images
+docker compose exec backend python -m src.scripts.seed_full
 ```
 
 ## Available Seed Scripts
+
+### Comprehensive Seeding (`seed_full.py`)
+
+**Recommended for fresh installs.** This script orchestrates the seeding of:
+
+- **Users**:
+    - `admin@example.com` (Password: `SecurePass123!`) - **Superuser**
+- **Products**:
+    - 30+ items across Electronics, Fashion, Home, Sports
+- **Suppliers**:
+    - Global Electronics Ltd
+    - Fashion Forward Inc
+    - Home Essentials Co
+- **Purchase Orders**:
+    - 1 Completed PO ($5,000)
+    - 1 Draft PO ($1,200.50)
+- **Expenses**:
+    - Office Supplies (One-time)
+    - Software Subscription (Recurring Monthly)
+
+```bash
+# From Docker
+docker compose exec backend python -m src.scripts.seed_full
+```
 
 ### Products with Images (`seed_products_images.py`)
 
@@ -21,14 +45,12 @@ Seeds the database with 30+ realistic products from various categories, complete
 with product images from Unsplash CDN.
 
 **Categories included:**
-
 - Electronics (headphones, laptops, cameras)
 - Home & Garden (furniture, kitchen items)
 - Fashion (accessories, apparel)
 - Sports & Outdoors (equipment, gear)
 
 **What gets seeded:**
-
 - Product names with realistic descriptions
 - SKUs and barcodes
 - Prices and cost prices
@@ -129,7 +151,7 @@ db.commit()
 "
 
 # Then run seed script
-docker compose exec backend python -m src.scripts.seed_products_images
+docker compose exec backend python -m src.scripts.seed_full
 ```
 
 ## Creating Custom Seed Scripts

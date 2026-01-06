@@ -83,7 +83,7 @@ sudo apt-get update && sudo apt-get install -y nodejs npm
     ```bash
     curl -X POST "http://localhost:8000/api/v1/users/" \
          -H "Content-Type: application/json" \
-         -d '{"email": "admin@example.com", "password": "changeme"}'
+         -d '{"email": "admin@example.com", "password": "SecurePass123!"}'
     ```
 
     You can now use these credentials to log into the frontend application.

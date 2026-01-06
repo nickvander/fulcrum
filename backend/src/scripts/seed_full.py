@@ -1,0 +1,162 @@
+import logging
+from datetime import datetime, timedelta
+
+from src.database import SessionLocal
+from src.core.security import get_password_hash
+from src.models.user import User
+from src.models.supplier import Supplier
+from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus, PaymentStatus
+from src.models.expense import Expense
+from src.scripts.seed_products_images import seed_products_with_images
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def seed_full():
+    db = SessionLocal()
+    try:
+        logger.info("Starting comprehensive seeding...")
+
+        # 1. Seed Products (using existing logic)
+        # Note: seed_products_with_images handles its own logging
+        logger.info("--- Seeding Products ---")
+        seed_products_with_images()
+        
+        # 2. Seed Users
+        logger.info("--- Seeding Users ---")
+        admin_email = "admin@example.com"
+        admin_password = "SecurePass123!"
+        
+        existing_admin = db.query(User).filter(User.email == admin_email).first()
+        if not existing_admin:
+            logger.info(f"Creating superuser: {admin_email}")
+            admin_user = User(
+                email=admin_email,
+                hashed_password=get_password_hash(admin_password),
+                first_name="Admin",
+                last_name="User",
+                user_type="admin",
+                is_active=True,
+                is_superuser=True,
+                role="admin",
+                employee_id="ADM000001"
+            )
+            db.add(admin_user)
+            db.commit()
+            db.refresh(admin_user)
+        else:
+            logger.info(f"Superuser {admin_email} already exists.")
+            admin_user = existing_admin
+
+        # 3. Seed Suppliers
+        logger.info("--- Seeding Suppliers ---")
+        suppliers_data = [
+            {
+                "name": "Global Electronics Ltd",
+                "contact_person": "John Smith",
+                "email": "contact@globalelectronics.com",
+                "phone": "+1-555-0101",
+                "currency": "USD",
+                "payment_terms": "Net 30"
+            },
+            {
+                "name": "Fashion Forward Inc",
+                "contact_person": "Sarah Johnson",
+                "email": "sales@fashionforward.com",
+                "phone": "+1-555-0102",
+                "currency": "USD",
+                "payment_terms": "Net 60"
+            },
+            {
+                "name": "Home Essentials Co",
+                "contact_person": "Mike Brown",
+                "email": "support@homeessentials.com",
+                "phone": "+1-555-0103",
+                "currency": "USD",
+                "payment_terms": "Due on Receipt"
+            }
+        ]
+        
+        created_suppliers = []
+        for s_data in suppliers_data:
+            supplier = db.query(Supplier).filter(Supplier.email == s_data["email"]).first()
+            if not supplier:
+                supplier = Supplier(**s_data)
+                db.add(supplier)
+                db.flush()
+                logger.info(f"Created Supplier: {supplier.name}")
+            else:
+                logger.info(f"Supplier {supplier.name} already exists.")
+            created_suppliers.append(supplier)
+        db.commit()
+
+        # 4. Seed Purchase Orders
+        logger.info("--- Seeding Purchase Orders ---")
+        if created_suppliers:
+            # Create a completed PO
+            po1 = PurchaseOrder(
+                supplier_id=created_suppliers[0].id,
+                status=PurchaseOrderStatus.COMPLETED.value,
+                total_amount=5000.00,
+                currency="USD",
+                payment_status=PaymentStatus.PAID.value,
+                ordered_at=datetime.utcnow() - timedelta(days=10),
+                received_at=datetime.utcnow() - timedelta(days=2),
+                paid_by_user_id=admin_user.id
+            )
+            db.add(po1)
+            
+            # Create a draft PO
+            po2 = PurchaseOrder(
+                supplier_id=created_suppliers[1].id,
+                status=PurchaseOrderStatus.DRAFT.value,
+                total_amount=1200.50,
+                currency="USD",
+                payment_status=PaymentStatus.UNPAID.value
+            )
+            db.add(po2)
+            
+            db.commit()
+            logger.info("Created sample Purchase Orders.")
+
+        # 5. Seed Expenses
+        logger.info("--- Seeding Expenses ---")
+        expenses_data = [
+            {
+                "description": "Office Supplies",
+                "amount": 150.25,
+                "category": "Office",
+                "date": datetime.utcnow().date(),
+                "paid_by_user_id": admin_user.id,
+                "expense_type": "one_time"
+            },
+            {
+                "description": "Monthly Software Subscription",
+                "amount": 49.99,
+                "category": "Software",
+                "date": datetime.utcnow().date(),
+                "paid_by_user_id": admin_user.id,
+                "expense_type": "recurring",
+                "recurrence_interval": "monthly"
+            }
+        ]
+        
+        for e_data in expenses_data:
+            expense = Expense(**e_data)
+            db.add(expense)
+        
+        db.commit()
+        logger.info("Created sample Expenses.")
+
+        logger.info("Comprehensive seeding completed successfully.")
+
+    except Exception as e:
+        logger.error(f"Error during seeding: {e}")
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    seed_full()
