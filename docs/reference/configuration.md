@@ -63,7 +63,7 @@ initial administrative user.
 
 ## Encryption & Security
 
-- **`ENCRYPTION_KEY`**
+- **`MARKETPLACE_ENCRYPTION_KEY`**
   - **Description:** A 32-byte (256-bit) key used for encrypting sensitive data
     like marketplace credentials. Generate with:
     `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`

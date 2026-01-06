@@ -33,3 +33,4 @@ bazel-fulcrum/
 # Logs
 frontend.log
 *.log
+.env
