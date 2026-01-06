@@ -8,74 +8,67 @@ credentials for Amazon SP-API and MercadoLibre implementation.
 
 ## 1. Amazon SP-API (Selling Partner API)
 
-To generate valid `client_id`, `client_secret`, and `refresh_token` for testing,
-you must register as a "Private Developer".
+There are two main paths to obtain API credentials. Choose the one that fits your budget and testing needs.
 
-### Prerequisites
+### Option A: Private Seller (Best for Internal Use)
+**Cost**: $39.99/month (Professional Seller Account)
+**Pros**: Simpler registration flow for internal apps ("Private Developer").
+**Cons**: Monthly fee.
 
-- **Amazon Seller Central Account**: You likely need a **Professional Seller**
-  plan ($39.99/mo) to initially register as a developer, though policies are
-  relaxing in 2026.
-  - _Tip_: If you only have a Buyer account, you must register as a Seller at
-    [sell.amazon.com](https://sell.amazon.com/).
-- **Identity Verification**: Amazon will require business/tax info and identity
-  verification (video call or ID upload).
+1.  **Register**: Go to [Amazon Seller Central](https://sellercentral.amazon.com/) and register for a **Professional Selling Plan**.
+2.  **Verify**: Complete the identity verification (ID upload + Video Call).
+3.  **App Registration**:
+    - Go to **Partner Network > Develop Apps**.
+    - Click **Register as a developer**.
+    - Select "My organization sells on Amazon" (Private Developer).
+    - Create a new App to get `client_id` and `client_secret`.
 
-### Step 1: Register as a Developer
+### Option B: Solution Provider (Best for Free Sandbox)
+**Cost**: Free
+**Pros**: Access to SP-API Sandbox without a monthly subscription.
+**Cons**: Registration flow allows for "Public" apps (intended for 3rd party tools), but works for sandbox testing. Still requires **Full Identity Validation**.
 
-1. Log in to [Amazon Seller Central](https://sellercentral.amazon.com/).
-2. Navigate to **Partner Network** > **Develop Apps**.
-3. Click **Register as a developer**.
-4. Fill in your contact info.
-5. **Data Access**: select "My organization sells on Amazon" (Private
-   Developer).
-   - This is simpler than Public Developer and requires less auditing for basic
-     features.
+1.  **Register**: Go to the [Solution Provider Portal](https://sellercentral.amazon.com/developer/register).
+2.  **Verify**: You must still provide business info and identity documents (ID, Bank Statement).
+3.  **App Registration**:
+    - Create a profile.
+    - Create an App intended for "Public" use (you don't need to list it publicly).
+    - This grants access to the **Sandbox** environment credentials.
 
-### Step 2: Create a Private App
+### Step 3: Get LWA Credentials (Both Options)
 
-1. Once approved (can take 24h+), go back to **Develop Apps**.
-2. Click **+ Add new app client**.
-3. App Name: `Fulcrum Test` (or similar).
-4. API Type: **SP-API**.
-5. **Redirect URI**: `http://localhost:4200/marketplaces/amazon/callback`
-   (Important for OAuth flow).
-   - Even if using headless script, set a valid localhost URL.
-6. Click **Save and Exit**.
+Once your app is created (Private or Public):
 
-### Step 3: Get LWA Credentials
-
-1. You will see your **LWA Client ID** and **LWA Client Secret**.
-2. Save these safe. These match `AMAZON_CLIENT_ID` and `AMAZON_CLIENT_SECRET`.
+1.  Copy your **LWA Client ID** and **LWA Client Secret**.
+2.  Save these as `AMAZON_CLIENT_ID` and `AMAZON_CLIENT_SECRET`.
 
 ### Step 4: Generate a Refresh Token (Self-Authorization)
 
-For server-to-server apps (like ours) acting as _yourself_, you can
-self-authorize to get a long-lived Refresh Token without the UI flow.
+For server-to-server apps acting as _yourself_:
 
-1. In the **Develop Apps** table, click the arrow next to "Edit App" and select
-   **Authorize**.
-2. This creates a "Self Authorization" flow.
-3. It will generate a **Refresh Token**.
-4. Save this as `AMAZON_REFRESH_TOKEN`.
+1.  In the **Develop Apps** table, click the arrow next to "Edit App" and select
+    **Authorize**.
+2.  This creates a "Self Authorization" flow (or generates a refresh token directly for private apps).
+3.  Save the **Refresh Token** as `AMAZON_REFRESH_TOKEN`.
 
 ---
 
 ## 2. MercadoLibre (Mexico)
 
-MercadoLibre requires **Identity Validation** before allowing app creation. You
-can use an infinite "Test User" for _some_ things, but to Create an App (to get
-Client ID), you need a real account.
+MercadoLibre requires **Strict Identity Validation** before you can create an App.
+Without an App, you cannot generate the credentials needed to create Test Users.
+There is **no workaround** for this initial step.
 
 ### Prerequisites
 
-- **Real MercadoLibre Account**: Can be an old one or new.
-- **Identity Validation**: Mandatory. You must upload front/back of ID and take
-  a selfie.
-  - Go to **My Account** > **Privacy** or try ensuring your "Seller" profile is
-    active.
-  - If you are blocked from creating an app, it will tell you "Validate
-    Identity".
+- **Real MercadoLibre Account**: Use your personal or business account.
+- **Identity Validation (The Main Blocker)**:
+  - You must verify your identity by uploading a **Government ID** (INE/IFE) and
+    taking a **Selfie**.
+  - Go to **My Account > Privacy** or visit the
+    [Developer Panel](https://developers.mercadolibre.com.mx/devcenter/) to
+    trigger the check.
+  - *Note*: You **cannot** proceed to create an App until this is green-lit.
 
 ### Step 1: Create the App
 

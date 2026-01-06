@@ -56,8 +56,8 @@ def seed_full():
 
         # 2b. Seed Extra Users
         extra_users = [
-            {"email": "manager@example.com", "role": "manager", "first_name": "Store", "last_name": "Manager", "emp_id": "EMP000002"},
-            {"email": "staff@example.com", "role": "staff", "first_name": "Support", "last_name": "Staff", "emp_id": "EMP000003"},
+            {"email": "manager@example.com", "role": "admin", "first_name": "Store", "last_name": "Manager", "emp_id": "EMP000002"},
+            {"email": "staff@example.com", "role": "employee", "first_name": "Support", "last_name": "Staff", "emp_id": "EMP000003"},
         ]
         
         for u_data in extra_users:
