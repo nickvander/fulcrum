@@ -33,6 +33,10 @@ docker compose exec backend python -m src.scripts.seed_full
 - **Expenses**:
     - Office Supplies (One-time)
     - Software Subscription (Recurring Monthly)
+- **Marketing**:
+    - **Connectors**: Instagram, Newsletter Service
+    - **Campaign**: "Summer Sale 2025" (Scheduled)
+    - **Events**: Teaser Post (IG), Launch Blast (Email)
 
 ```bash
 # From Docker

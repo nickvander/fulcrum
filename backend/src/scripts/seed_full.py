@@ -7,6 +7,10 @@ from src.models.user import User
 from src.models.supplier import Supplier
 from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus, PaymentStatus
 from src.models.expense import Expense
+from src.models.marketing import (
+    Campaign, CampaignStatus, CampaignEvent, MarketingConnector,
+    MarketingChannelType, ConnectorType
+)
 from src.scripts.seed_products_images import seed_products_with_images
 
 # Setup logging
@@ -148,6 +152,85 @@ def seed_full():
         
         db.commit()
         logger.info("Created sample Expenses.")
+
+        # 6. Seed Marketing Data
+        logger.info("--- Seeding Marketing Data ---")
+        
+        # Connectors
+        connectors_data = [
+            {
+                "name": "Official Instagram",
+                "connector_type": ConnectorType.INSTAGRAM.value,
+                "channel_type": MarketingChannelType.SOCIAL.value,
+                "user_id": admin_user.id,
+                "is_active": True
+            },
+            {
+                "name": "Newsletter Service",
+                "connector_type": ConnectorType.SENDGRID.value,
+                "channel_type": MarketingChannelType.EMAIL.value,
+                "user_id": admin_user.id,
+                "is_active": True
+            }
+        ]
+        
+        created_connectors = []
+        for c_data in connectors_data:
+            connector = db.query(MarketingConnector).filter(MarketingConnector.name == c_data["name"]).first()
+            if not connector:
+                connector = MarketingConnector(**c_data)
+                db.add(connector)
+                db.flush() # get ID
+                logger.info(f"Created Connector: {connector.name}")
+            created_connectors.append(connector)
+            
+        # Campaign
+        demo_campaign = db.query(Campaign).filter(Campaign.name == "Summer Sale 2025").first()
+        if not demo_campaign:
+            demo_campaign = Campaign(
+                name="Summer Sale 2025",
+                description="Huge discounts on electronics and outdoor gear.",
+                status=CampaignStatus.SCHEDULED.value,
+                start_date=datetime.utcnow().date() + timedelta(days=5),
+                end_date=datetime.utcnow().date() + timedelta(days=20),
+                budget=5000.0,
+                user_id=admin_user.id,
+                is_smart_boost=True,
+                boost_reason="Seasonal trend analysis indicates high demand."
+            )
+            db.add(demo_campaign)
+            db.flush()
+            logger.info(f"Created Campaign: {demo_campaign.name}")
+            
+            # Events
+            if len(created_connectors) >= 2:
+                events = [
+                    CampaignEvent(
+                        campaign_id=demo_campaign.id,
+                        connector_id=created_connectors[0].id, # Insta
+                        name="Teaser Post",
+                        channel_type=MarketingChannelType.SOCIAL.value,
+                        content_body="Get ready! Something big is coming... ☀️ #SummerSale",
+                        scheduled_at=datetime.utcnow() + timedelta(days=1),
+                        status="scheduled"
+                    ),
+                    CampaignEvent(
+                        campaign_id=demo_campaign.id,
+                        connector_id=created_connectors[1].id, # Email
+                        name="Launch Blast",
+                        channel_type=MarketingChannelType.EMAIL.value,
+                        content_subject="Summer Sale Starts Now!",
+                        content_body="Don't miss out on up to 50% off.",
+                        scheduled_at=datetime.utcnow() + timedelta(days=5),
+                        status="scheduled"
+                    )
+                ]
+                db.add_all(events)
+                logger.info("Created sample Campaign Events.")
+        else:
+            logger.info("Campaign 'Summer Sale 2025' already exists.")
+
+        db.commit()
 
         logger.info("Comprehensive seeding completed successfully.")
 
