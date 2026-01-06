@@ -141,8 +141,7 @@ class Product(ProductBase):
     updated_at: datetime
 
     model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={datetime: lambda v: v.isoformat() if v else None}
+        from_attributes=True
     )
 
 class PaginatedProducts(BaseModel):

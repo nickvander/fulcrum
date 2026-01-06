@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -25,8 +25,7 @@ class WebhookSubscription(WebhookSubscriptionBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Webhook Event Schemas ---
 
@@ -46,8 +45,7 @@ class WebhookEvent(WebhookEventBase):
     received_at: Optional[datetime] = None
     processed_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Incoming Webhook Payload (MercadoLibre format) ---
 
