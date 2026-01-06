@@ -5,6 +5,7 @@ from src.database import SessionLocal
 from src.core.security import get_password_hash
 from src.models.user import User
 from src.models.supplier import Supplier
+from src.models.product import Product
 from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus, PaymentStatus
 from src.models.expense import Expense
 from src.models.marketing import (
@@ -52,6 +53,32 @@ def seed_full():
         else:
             logger.info(f"Superuser {admin_email} already exists.")
             admin_user = existing_admin
+
+        # 2b. Seed Extra Users
+        extra_users = [
+            {"email": "manager@example.com", "role": "manager", "first_name": "Store", "last_name": "Manager", "emp_id": "EMP000002"},
+            {"email": "staff@example.com", "role": "staff", "first_name": "Support", "last_name": "Staff", "emp_id": "EMP000003"},
+        ]
+        
+        for u_data in extra_users:
+            existing_u = db.query(User).filter(User.email == u_data["email"]).first()
+            if not existing_u:
+                new_u = User(
+                    email=u_data["email"],
+                    hashed_password=get_password_hash("SecurePass123!"),
+                    first_name=u_data["first_name"],
+                    last_name=u_data["last_name"],
+                    user_type=u_data["role"],
+                    is_active=True,
+                    is_superuser=False,
+                    role=u_data["role"],
+                    employee_id=u_data["emp_id"]
+                )
+                db.add(new_u)
+                logger.info(f"Created user: {u_data['email']}")
+            else:
+                logger.info(f"User {u_data['email']} already exists.")
+        db.commit()
 
         # 3. Seed Suppliers
         logger.info("--- Seeding Suppliers ---")
@@ -229,6 +256,42 @@ def seed_full():
                 logger.info("Created sample Campaign Events.")
         else:
             logger.info("Campaign 'Summer Sale 2025' already exists.")
+
+        # Quick Posts (Independent Events)
+        logger.info("--- Seeding Quick Posts ---")
+        quick_post_check = db.query(CampaignEvent).filter(CampaignEvent.campaign_id.is_(None)).first()
+        if not quick_post_check and created_connectors:
+            quick_posts = [
+                CampaignEvent(
+                    campaign_id=None, # Independent
+                    connector_id=created_connectors[0].id, # Insta
+                    name="Flash Sale Alert",
+                    channel_type=MarketingChannelType.SOCIAL.value,
+                    content_body="Flash Sale happening now! ⚡ Link in bio.",
+                    status="published",
+                    published_at=datetime.utcnow(),
+                    external_url="https://instagram.com/p/123456789"
+                ),
+                CampaignEvent(
+                    campaign_id=None,
+                    connector_id=created_connectors[0].id, 
+                    name="New Arrival Teaser",
+                    channel_type=MarketingChannelType.SOCIAL.value,
+                    content_body="Guess what just arrived? 👀",
+                    status="draft",
+                    scheduled_at=datetime.utcnow() + timedelta(hours=2)
+                )
+            ]
+            
+            # Link a product to the first quick post if available
+            products = db.query(Product).limit(1).all()
+            if products:
+                quick_posts[0].products.append(products[0])
+                
+            db.add_all(quick_posts)
+            logger.info("Created sample Quick Posts.")
+        else:
+            logger.info("Quick posts already exist or no connectors available.")
 
         db.commit()
 

@@ -31,11 +31,21 @@ sudo apt-get update && sudo apt-get install -y docker.io docker-compose
     ```bash
     # From the project root
     cp backend/.env.example backend/.env
+    
+    # Also create a root .env for Docker Compose variable substitution
+    cp backend/.env .env
     ```
 
-    The default values in this file are suitable for local development. For a
-    detailed explanation of all the variables, see the
-    [**Configuration Reference**](../reference/configuration.md).
+    **Important:** You must generate a secure value for `MARKETPLACE_ENCRYPTION_KEY`
+    in your `.env` files. Run this command to generate one:
+
+    ```bash
+    python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    ```
+
+    The default values in `backend/.env.example` are suitable for local development,
+    except for the encryption key which you should generate. For a detailed explanation
+    of all variables, see the [**Configuration Reference**](../reference/configuration.md).
 
 ## Running the Application
 
