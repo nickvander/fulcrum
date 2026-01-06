@@ -271,15 +271,21 @@ def seed_products_with_images():
             # Check if exists
             existing = db.query(Product).filter(Product.name == item["name"]).first()
             if not existing:
+                sku_val = f"SKU-{random.randint(1000, 9999)}-{item['cat'][:3].upper()}"
                 product = Product(
                     name=item["name"],
                     description=f"High quality {item['name']} for your daily needs. Best in class performance and durability.",
                     default_resale_price=item["price"],
-                    sku=f"SKU-{random.randint(1000, 9999)}-{item['cat'][:3].upper()}",
+                    sku=sku_val,
                     cost_price=round(item["price"] * 0.6, 2),
+                    barcode_value=f"STORE-{sku_val}"
                 )
                 db.add(product)
                 db.flush() # get ID
+                
+                # Add QR Code
+                product.qrcode_value = f"http://localhost:4200/qr/{product.id}"
+                db.add(product)
                 
                 # Add Images
                 if "imgs" in item and item["imgs"]:
