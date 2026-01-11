@@ -462,7 +462,9 @@
             "differentPoMessage": "This invoice appears to match PO #{{poNumber}} from {{supplier}}. Would you like to view that PO instead?",
             "goToPo": "Go to PO",
             "scanAnother": "Try Another Invoice",
-            "noPoMatch": "No matching PO found. You can manually update item values if needed."
+            "noPoMatch": "No matching PO found. You can manually update item values if needed.",
+            "dropOrClick": "Drop invoice here or click to browse",
+            "parsing": "Parsing invoice..."
         },
         "importPo": "Import PO",
         "dropFileHere": "Drag & drop a Purchase Order file here",
@@ -488,6 +490,7 @@
             "incrementedQty": "Incremented quantity for {{name}}",
             "addedProduct": "Added {{name}} to order",
             "selectSupplierFirst": "Please select a supplier first",
+            "saveFirst": "Save order first to enable invoice upload",
             "savedDraft": "Order saved as Draft",
             "saveDraftRequired": {
                 "title": "Save Draft Required",

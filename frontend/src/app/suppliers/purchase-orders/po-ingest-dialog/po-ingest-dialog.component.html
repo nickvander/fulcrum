@@ -1,8 +1,14 @@
 <ng-container *transloco="let t">
-    <h2 mat-dialog-title>
-        <mat-icon>upload_file</mat-icon>
-        {{ t('purchaseOrders.importPo') }}
-    </h2>
+    <div class="dialog-header">
+        <h2 mat-dialog-title>
+            <mat-icon>upload_file</mat-icon>
+            {{ t('purchaseOrders.importPo') }}
+        </h2>
+        <span class="ai-badge" *ngIf="aiEnabled">
+            <mat-icon>auto_awesome</mat-icon>
+            {{ t('products.aiPowered') }}
+        </span>
+    </div>
 
     <mat-dialog-content>
         <!-- Step 1: Upload -->

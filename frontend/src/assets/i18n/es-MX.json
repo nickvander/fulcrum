@@ -462,7 +462,9 @@
             "differentPoMessage": "Esta factura parece coincidir con la OC #{{poNumber}} de {{supplier}}. ¿Desea ver esa OC?",
             "goToPo": "Ir a OC",
             "scanAnother": "Probar Otra Factura",
-            "noPoMatch": "No se encontró OC coincidente. Puede actualizar manualmente los valores si lo necesita."
+            "noPoMatch": "No se encontró OC coincidente. Puede actualizar manualmente los valores si lo necesita.",
+            "dropOrClick": "Arrastra factura aquí o haz clic para buscar",
+            "parsing": "Analizando factura..."
         },
         "importPo": "Importar OC",
         "dropFileHere": "Arrastra y suelta un archivo de Orden de Compra aquí",
@@ -488,6 +490,7 @@
             "incrementedQty": "Cantidad incrementada para {{name}}",
             "addedProduct": "Se agregó {{name}} a la orden",
             "selectSupplierFirst": "Por favor seleccione un proveedor primero",
+            "saveFirst": "Guarde la orden primero para habilitar la carga de facturas",
             "savedDraft": "Orden guardada como borrador",
             "saveDraftRequired": {
                 "title": "Guardar Borrador Requerido",

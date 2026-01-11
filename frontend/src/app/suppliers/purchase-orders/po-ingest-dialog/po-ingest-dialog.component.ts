@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -18,6 +18,9 @@ import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
+import { SettingsService } from '../../../core/services/settings.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 export interface PoIngestDialogResult {
     action: 'created' | 'cancelled';
@@ -45,9 +48,11 @@ export interface PoIngestDialogResult {
     templateUrl: './po-ingest-dialog.component.html',
     styleUrls: ['./po-ingest-dialog.component.scss']
 })
-export class PoIngestDialogComponent implements OnInit {
+export class PoIngestDialogComponent implements OnInit, OnDestroy {
     // State machine
     step: 'upload' | 'preview' | 'creating' = 'upload';
+    aiEnabled = false;
+    private destroy$ = new Subject<void>();
 
     // Upload state
     selectedFile: File | null = null;
@@ -76,12 +81,23 @@ export class PoIngestDialogComponent implements OnInit {
     constructor(
         private dialogRef: MatDialogRef<PoIngestDialogComponent, PoIngestDialogResult>,
         private suppliersService: SuppliersService,
-        private productService: ProductService
+        private productService: ProductService,
+        private settingsService: SettingsService
     ) { }
 
     ngOnInit(): void {
         this.loadSuppliers();
         this.loadProducts();
+
+        // Check if AI is enabled
+        this.settingsService.storeSettings$.pipe(takeUntil(this.destroy$)).subscribe(settings => {
+            this.aiEnabled = settings?.ai_config?.enabled || false;
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     loadSuppliers(): void {
