@@ -30,6 +30,7 @@ import { Observable, Subject, of, zip } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, takeUntil, map, catchError } from 'rxjs/operators';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/supplier-selection-dialog.component';
+import { InvoiceMatchDialogComponent } from '../invoice-match-dialog/invoice-match-dialog.component';
 import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
 
 @Component({
@@ -65,6 +66,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   poId: number | null = null;
   suppliers: Supplier[] = [];
   invoices: SupplierInvoice[] = [];
+  isParsingInvoice = false;
   users: User[] = [];
   statusOptions = Object.values(PurchaseOrderStatus);
   paymentStatusOptions = ['unpaid', 'partial', 'paid'];
@@ -875,5 +877,127 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
   getInvoiceFileUrl(path: string): string {
     return this.suppliersService.getInvoiceFileUrl(path);
+  }
+
+  onParseAndMatchSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file || !this.poId) return;
+    event.target.value = ''; // Reset input
+    this.parseAndMatchInvoice(file);
+  }
+
+  parseAndMatchInvoice(file: File): void {
+    if (!this.poId) {
+      this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.saveFirst'),
+        this.translocoService.translate('common.close'), { duration: 3000 });
+      return;
+    }
+
+    this.isParsingInvoice = true;
+
+    // Use unified parseDocument endpoint with target PO
+    this.suppliersService.parseDocument(file, this.poId).subscribe({
+      next: (result) => {
+        this.isParsingInvoice = false;
+
+        if (result.mode === 'match') {
+          // Check if matched a DIFFERENT PO
+          if (result.matched_po_id && result.matched_po_id !== this.poId) {
+            // Show warning: invoice matches different PO
+            this.dialog.open(ConfirmationDialog, {
+              data: {
+                title: this.translocoService.translate('purchaseOrders.invoiceMatching.differentPoTitle'),
+                message: this.translocoService.translate('purchaseOrders.invoiceMatching.differentPoMessage', {
+                  poNumber: result.matched_po_number,
+                  supplier: result.matched_supplier_name
+                }),
+                confirmText: this.translocoService.translate('purchaseOrders.invoiceMatching.goToPo'),
+                cancelText: this.translocoService.translate('purchaseOrders.invoiceMatching.scanAnother')
+              }
+            }).afterClosed().subscribe((goToPo) => {
+              if (goToPo) {
+                this.router.navigate(['/suppliers/po', result.matched_po_id]);
+              }
+              // Otherwise just close, user can try another document
+            });
+            return;
+          }
+
+          // Matched this PO - show comparison dialog
+          const dialogRef = this.dialog.open(InvoiceMatchDialogComponent, {
+            width: '900px',
+            data: {
+              matchResult: {
+                invoice_number: result.invoice_number,
+                invoice_date: result.document_date,
+                vendor_name: result.vendor_name,
+                matches: result.matches,
+                unmatched_po_items: result.unmatched_po_items,
+                unmatched_invoice_items: result.unmatched_invoice_items,
+                total_discrepancy: result.total_discrepancy,
+                overall_confidence: result.match_confidence,
+                extraction_confidence: result.confidence
+              },
+              poId: this.poId
+            }
+          });
+
+          dialogRef.afterClosed().subscribe((dialogResult) => {
+            if (dialogResult?.action === 'apply') {
+              this.applyInvoiceValuesToItems(dialogResult.matchResult);
+            }
+          });
+        } else {
+          // Mode: create - no match found, offer to apply extracted values
+          this.snackBar.open(
+            this.translocoService.translate('purchaseOrders.invoiceMatching.noPoMatch'),
+            this.translocoService.translate('common.close'),
+            { duration: 5000 }
+          );
+        }
+      },
+      error: (err) => {
+        this.isParsingInvoice = false;
+        const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.invoiceMatching.parseFailed');
+        this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
+      }
+    });
+  }
+
+  private applyInvoiceValuesToItems(matchResult: any): void {
+    // Apply matched invoice values to PO items
+    let updatedCount = 0;
+
+    for (const match of matchResult.matches || []) {
+      if (match.po_item_id && match.match_status !== 'unmatched') {
+        // Find the corresponding item in the form array
+        const itemIndex = this.items.controls.findIndex(
+          (ctrl) => ctrl.get('id')?.value === match.po_item_id
+        );
+
+        if (itemIndex >= 0) {
+          const item = this.items.at(itemIndex);
+          // Update unit cost from invoice
+          if (match.invoice_unit_cost && match.invoice_unit_cost !== item.get('unitCost')?.value) {
+            item.patchValue({ unitCost: match.invoice_unit_cost });
+            updatedCount++;
+          }
+        }
+      }
+    }
+
+    if (updatedCount > 0) {
+      this.snackBar.open(
+        this.translocoService.translate('purchaseOrders.invoiceMatching.valuesApplied', { count: updatedCount }),
+        this.translocoService.translate('common.close'),
+        { duration: 3000 }
+      );
+    } else {
+      this.snackBar.open(
+        this.translocoService.translate('purchaseOrders.invoiceMatching.noChanges'),
+        this.translocoService.translate('common.close'),
+        { duration: 3000 }
+      );
+    }
   }
 }

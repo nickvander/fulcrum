@@ -298,6 +298,7 @@
         "confirmAdjustment": "Confirmar Ajuste",
         "ai": {
             "analyzingImage": "Usando IA para identificar el producto...",
+            "generateDescription": "Generar con IA",
             "status": {
                 "initializing": "Inicializando Agente...",
                 "analyzing": "Analizando características de la imagen...",
@@ -307,7 +308,8 @@
                 "synthesizing": "Sintetizando detalles del producto...",
                 "finalizing": "Finalizando identificación..."
             }
-        }
+        },
+        "aiGenerate": "Generar con IA"
     },
     "suppliers": {
         "title": "Proveedores",
@@ -436,6 +438,49 @@
             "uploadInvoice": "Subir Factura",
             "clearDraft": "Borrar Borrador"
         },
+        "invoiceMatching": {
+            "title": "Resultados de Coincidencia de Factura",
+            "parseAndMatch": "Importar Factura",
+            "tooltip": "Importar y comparar factura con esta OC",
+            "parseFailed": "Error al analizar factura",
+            "invoiceNumber": "Factura #",
+            "vendor": "Proveedor",
+            "confidence": "Confianza",
+            "matchedItems": "Artículos Coincidentes",
+            "poItem": "Artículo OC",
+            "invoiceItem": "Artículo Factura",
+            "discrepancy": "Discrepancia",
+            "unmatchedPO": "Artículos en OC no encontrados en factura",
+            "unmatchedInvoice": "Artículos en factura no encontrados en OC",
+            "totalDiscrepancy": "Discrepancia Total",
+            "noMatches": "No se encontraron coincidencias",
+            "applyValues": "Aplicar Valores de Factura",
+            "applyTooltip": "Actualizar artículos de OC con precios de factura",
+            "valuesApplied": "Se actualizaron {{count}} artículo(s) con valores de factura",
+            "noChanges": "Sin cambios de precio que aplicar",
+            "differentPoTitle": "Factura Coincide con Otra OC",
+            "differentPoMessage": "Esta factura parece coincidir con la OC #{{poNumber}} de {{supplier}}. ¿Desea ver esa OC?",
+            "goToPo": "Ir a OC",
+            "scanAnother": "Probar Otra Factura",
+            "noPoMatch": "No se encontró OC coincidente. Puede actualizar manualmente los valores si lo necesita."
+        },
+        "importPo": "Importar OC",
+        "dropFileHere": "Arrastra y suelta un archivo de Orden de Compra aquí",
+        "supportedFormats": "Formatos soportados",
+        "browseFiles": "Buscar Archivos",
+        "processFile": "Procesar Archivo",
+        "creatingPo": "Creando Orden de Compra",
+        "confidence": "Confianza",
+        "detectedSupplier": "Proveedor detectado",
+        "lineItems": "Líneas de Artículos",
+        "sku": "SKU",
+        "description": "Descripción",
+        "qty": "Cant.",
+        "shipping": "Envío",
+        "tax": "Impuesto",
+        "total": "Total",
+        "currency": "Moneda",
+        "createPo": "Crear OC",
         "messages": {
             "unpackingBundle": "Desempaquetando paquete: {{name}}...",
             "autoSelectedSupplier": "Proveedor seleccionado automáticamente: {{name}}",

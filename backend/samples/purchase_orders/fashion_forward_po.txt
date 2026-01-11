@@ -1,0 +1,48 @@
+============================================================
+                    FASHION FORWARD INC.
+              Premium Apparel & Accessories
+============================================================
+                      PURCHASE ORDER
+------------------------------------------------------------
+
+PO#: FF-2025-00567
+Date: 2025-01-05
+Vendor: Fulcrum Commerce Inc.
+
+Payment Terms: Net 60
+Ship Via: Ground Freight
+Currency: USD
+
+------------------------------------------------------------
+ITEM                          QTY    UNIT PRICE    TOTAL
+------------------------------------------------------------
+SKU: APP-DRESS-BLK-M
+Women's Evening Dress Black    20      $89.99    $1,799.80
+Size: Medium
+
+SKU: APP-JACKET-NAV-L
+Men's Blazer Navy Blue         15     $149.99    $2,249.85
+Size: Large
+
+SKU: ACC-HANDBAG-TAN
+Leather Handbag Tan            30      $65.00    $1,950.00
+
+SKU: ACC-BELT-BRN-32
+Genuine Leather Belt           50      $24.99    $1,249.50
+Size: 32"
+
+SKU: APP-SCARF-SILK
+Silk Print Scarf               40      $35.00    $1,400.00
+
+------------------------------------------------------------
+                               SUBTOTAL:     $8,649.15
+                               SHIPPING:       $125.00
+                               TAX (6%):       $518.95
+                               =========     =========
+                               TOTAL:       $9,293.10
+------------------------------------------------------------
+
+Notes: Please ensure all items are individually bagged.
+       Delivery required by January 20, 2025.
+
+============================================================

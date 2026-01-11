@@ -415,6 +415,40 @@ def set_primary_image(
     return image
 
 
+@router.post(
+    "/{product_id}/images/reorder",
+    response_model=List[product_schema.ProductImage]
+)
+def reorder_product_images(
+    product_id: int,
+    image_ids: List[int] = Body(...),
+    db: Session = Depends(get_db),
+):
+    """
+    Reorder product images.
+    """
+    product = crud_product.product.get(db, id=product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Get all images for this product
+    images = db.query(crud_product_image.product_image.model).filter(
+        crud_product_image.product_image.model.product_id == product_id
+    ).all()
+    
+    image_map = {img.id: img for img in images}
+    
+    for idx, img_id in enumerate(image_ids):
+        if img_id in image_map:
+            image_map[img_id].order = idx
+            db.add(image_map[img_id])
+            
+    db.commit()
+    
+    # Return sorted images
+    return sorted(images, key=lambda x: x.order)
+
+
 @router.post("/search", response_model=List[product_schema.Product])
 def search_products(
     query: str,

@@ -213,6 +213,15 @@
                     <div class="actions-right" *ngIf="poId">
                         <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
                             accept=".pdf,.jpg,.jpeg,.png">
+                        <input type="file" #parseInput (change)="onParseAndMatchSelected($event)" style="display: none"
+                            accept=".pdf,.jpg,.jpeg,.png,.html,.htm">
+                        <button mat-stroked-button color="accent" type="button" (click)="parseInput.click()"
+                            [disabled]="isParsingInvoice || items.length === 0"
+                            [matTooltip]="t('purchaseOrders.invoiceMatching.tooltip')">
+                            <mat-icon *ngIf="!isParsingInvoice">auto_awesome</mat-icon>
+                            <mat-icon *ngIf="isParsingInvoice" class="spin">sync</mat-icon>
+                            {{ t('purchaseOrders.invoiceMatching.parseAndMatch') }}
+                        </button>
                         <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
                             <mat-icon>cloud_upload</mat-icon> {{ t('purchaseOrders.actions.uploadInvoice') }}
                         </button>

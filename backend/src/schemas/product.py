@@ -12,6 +12,7 @@ from ..schemas.marketplace import MarketplaceListing
 class ProductImageBase(BaseModel):
     image_path: str
     is_primary: Optional[int] = 0
+    order: Optional[int] = 0
     source: Optional[str] = None
     title: Optional[str] = None
     description: Optional[str] = None

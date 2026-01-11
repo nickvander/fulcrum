@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Orden de Compra - Distribuidora MexiTech</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 30px;
+            background: #fafafa;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            background: white;
+            border: 1px solid #eee;
+        }
+
+        .title {
+            font-size: 28px;
+            color: #006847;
+            border-bottom: 3px solid #CE1126;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .items th {
+            background: #006847;
+            color: white;
+            padding: 12px;
+        }
+
+        .items td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .summary {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invoice-box">
+        <div class="title">Distribuidora MexiTech S.A. de C.V.</div>
+        <p>Av. Reforma 234, Col. Centro, CDMX 06600<br>
+            RFC: DMT850101XXX | Tel: +52 55 1234 5678</p>
+
+        <h2>ORDEN DE COMPRA</h2>
+        <p><strong>Número:</strong> OC-MX-2025-0089<br>
+            <strong>Fecha:</strong> 05/01/2025<br>
+            <strong>Moneda:</strong> MXN (Peso Mexicano)<br>
+            <strong>Condiciones de Pago:</strong> 60 días
+        </p>
+
+        <h3>Proveedor:</h3>
+        <p>Fulcrum Commerce Inc.</p>
+
+        <table class="items">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TEL-SMART-MX01</td>
+                    <td>Smartphone Android 128GB</td>
+                    <td>100</td>
+                    <td>$4,500.00</td>
+                    <td>$450,000.00</td>
+                </tr>
+                <tr>
+                    <td>AUD-BTEAR-MX02</td>
+                    <td>Audífonos Bluetooth Premium</td>
+                    <td>200</td>
+                    <td>$850.00</td>
+                    <td>$170,000.00</td>
+                </tr>
+                <tr>
+                    <td>CAR-USBC-MX03</td>
+                    <td>Cargador USB-C 65W</td>
+                    <td>500</td>
+                    <td>$320.00</td>
+                    <td>$160,000.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <p><strong>Subtotal:</strong> $780,000.00 MXN</p>
+            <p><strong>IVA (16%):</strong> $124,800.00 MXN</p>
+            <p><strong>Envío:</strong> $5,500.00 MXN</p>
+            <p style="font-size: 18px;"><strong>Total:</strong> $910,300.00 MXN</p>
+        </div>
+    </div>
+</body>
+
+</html>

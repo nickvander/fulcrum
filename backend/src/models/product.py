@@ -38,7 +38,7 @@ class Product(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     supplier = relationship("Supplier")
-    images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan")
+    images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan", order_by="ProductImage.order")
     inventory_items = relationship("InventoryItem", back_populates="product", cascade="all, delete-orphan")
     inventory_adjustments = relationship("InventoryAdjustment", back_populates="product", cascade="all, delete-orphan")
     custom_fields = relationship("ProductCustomField", back_populates="product", cascade="all, delete-orphan")
@@ -128,5 +128,6 @@ class ProductImage(Base):
     source = Column(String)
     title = Column(String, nullable=True)
     description = Column(String, nullable=True)
+    order = Column(Integer, default=0, index=True)
 
     product = relationship("Product", back_populates="images")

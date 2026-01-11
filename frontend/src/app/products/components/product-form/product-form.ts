@@ -25,6 +25,7 @@ import { forkJoin, of, Subject, Observable } from 'rxjs';
 import { CustomField } from '../../../settings/models/custom-field.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService, ProductFormInitializationData } from '../../services/product-form-initializer.service';
+import { AiService } from '../../../core/services/ai.service';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import * as QRCode from 'qrcode'; // Import qrcode library
 import { TranslocoModule } from '@ngneat/transloco';
@@ -74,6 +75,7 @@ export class ProductForm implements OnInit {
   bundleComponents: any[] = [];
   availableProducts: Product[] = [];
   returnToPO = false;
+  isGeneratingDescription = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -84,7 +86,8 @@ export class ProductForm implements OnInit {
     private productFormInitializer: ProductFormInitializerService,
     private customFieldService: CustomFieldService,
     private notificationService: NotificationService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private aiService: AiService
   ) {
     this.productForm = this.fb.group({
       id: [null],
@@ -887,6 +890,46 @@ export class ProductForm implements OnInit {
       case 4: return 'MercadoLibre';
       default: return 'Marketplace ' + id;
     }
+  }
+
+  generateAiDescription(): void {
+    const productName = this.productForm.get('name')?.value;
+    if (!productName) {
+      this.notificationService.showError('Please enter a product name first.');
+      return;
+    }
+
+    this.isGeneratingDescription = true;
+    const context = [
+      this.productForm.get('brand')?.value ? `Brand: ${this.productForm.get('brand')?.value}` : '',
+      this.productForm.get('category')?.value ? `Category: ${this.productForm.get('category')?.value}` : '',
+      this.productForm.get('manufacturer')?.value ? `Manufacturer: ${this.productForm.get('manufacturer')?.value}` : ''
+    ].filter(Boolean).join(', ');
+
+    this.aiService.generateDescription({
+      product_name: productName,
+      context: context || undefined,
+      tone: 'Professional',
+      length: 'medium'
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (response) => {
+        this.isGeneratingDescription = false;
+        if (response.error) {
+          this.notificationService.showError(response.error);
+          return;
+        }
+        if (response.description) {
+          this.productForm.patchValue({ description: response.description });
+          this.notificationService.showSuccess('AI description generated successfully!');
+        }
+      },
+      error: (err) => {
+        this.isGeneratingDescription = false;
+        this.notificationService.showError('Failed to generate description: ' + (err.message || 'Unknown error'));
+      }
+    });
   }
 
   ngOnDestroy(): void {

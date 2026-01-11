@@ -4,11 +4,13 @@ import { ProductFormImageGalleryComponent } from './product-form-image-gallery.c
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { ProductImage } from '../../models/product.model';
+import { ProductService } from '../../services/product';
 
 describe('ProductFormImageGalleryComponent', () => {
     let component: ProductFormImageGalleryComponent;
     let fixture: ComponentFixture<ProductFormImageGalleryComponent>;
     let mockDialog: MockedObject<MatDialog>;
+    let mockProductService: MockedObject<ProductService>;
 
     // Mock FileReader
     class MockFileReader {
@@ -36,10 +38,15 @@ describe('ProductFormImageGalleryComponent', () => {
             open: vi.fn().mockName("MatDialog.open")
         } as any;
 
+        mockProductService = {
+            updateImageOrder: vi.fn().mockReturnValue(of({}))
+        } as any;
+
         await TestBed.configureTestingModule({
             imports: [ProductFormImageGalleryComponent],
             providers: [
                 { provide: MatDialog, useValue: mockDialog },
+                { provide: ProductService, useValue: mockProductService },
             ]
         })
             .compileComponents();
@@ -131,5 +138,48 @@ describe('ProductFormImageGalleryComponent', () => {
 
         expect(event.stopPropagation).toHaveBeenCalled();
         expect(component.primaryImageChange.emit).toHaveBeenCalledWith(1);
+    });
+
+    it('should reorder images and call backend when onImageReorder is called with productId', () => {
+        const image1 = { ...mockImage, id: 1 };
+        const image2 = { ...mockImage, id: 2 };
+        component.existingImages = [image1, image2];
+        component.productId = 123;
+
+        mockProductService.updateImageOrder.mockReturnValue(of({}));
+        vi.spyOn(component.existingImagesChange, 'emit');
+
+        // Mock Drop Event: moving index 1 (image2) to index 0
+        const event = {
+            item: { data: image2 },
+            currentIndex: 0
+        };
+
+        component.onImageReorder(event);
+
+        // Expected order: [image2, image1]
+        expect(component.existingImagesChange.emit).toHaveBeenCalledWith([image2, image1]);
+
+        const newOrderIds = [2, 1];
+        expect(mockProductService.updateImageOrder).toHaveBeenCalledWith(123, newOrderIds);
+    });
+
+    it('should reorder images but NOT call backend when onImageReorder is called without productId', () => {
+        const image1 = { ...mockImage, id: 1 };
+        const image2 = { ...mockImage, id: 2 };
+        component.existingImages = [image1, image2];
+        component.productId = null; // No ID
+
+        vi.spyOn(component.existingImagesChange, 'emit');
+
+        const event = {
+            item: { data: image2 },
+            currentIndex: 0
+        };
+
+        component.onImageReorder(event);
+
+        expect(component.existingImagesChange.emit).toHaveBeenCalledWith([image2, image1]);
+        expect(mockProductService.updateImageOrder).not.toHaveBeenCalled();
     });
 });

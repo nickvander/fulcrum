@@ -15,6 +15,20 @@ export interface ProductIdentificationResponse {
     message?: string;
 }
 
+export interface DescriptionGenerationRequest {
+    product_name: string;
+    context?: string;
+    tone?: string;
+    length?: string;
+}
+
+export interface DescriptionGenerationResponse {
+    description?: string;
+    seo_keywords?: string[];
+    tone_used?: string;
+    error?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -28,5 +42,9 @@ export class AiService {
         formData.append('file', imageFile);
 
         return this.http.post<ProductIdentificationResponse>(`${this.apiUrl}/identify-product`, formData);
+    }
+
+    generateDescription(request: DescriptionGenerationRequest): Observable<DescriptionGenerationResponse> {
+        return this.http.post<DescriptionGenerationResponse>(`${this.apiUrl}/generate-description`, request);
     }
 }

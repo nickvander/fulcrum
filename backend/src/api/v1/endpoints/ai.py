@@ -6,7 +6,7 @@ import tempfile
 import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_db
@@ -29,6 +29,21 @@ class ImageIdentificationResponse(BaseModel):
     ai_name: Optional[str] = None
     ai_brand: Optional[str] = None
     ai_description: Optional[str] = None
+
+
+class DescriptionGenerationRequest(BaseModel):
+    product_name: str
+    context: Optional[str] = None
+    tone: Optional[str] = None
+    length: Optional[str] = None
+
+
+class DescriptionGenerationResponse(BaseModel):
+    description: Optional[str] = None
+    seo_keywords: List[str] = []
+    tone_used: Optional[str] = None
+    error: Optional[str] = None
+
 
 @router.post("/identify-product", response_model=ImageIdentificationResponse)
 async def identify_product(
@@ -63,3 +78,44 @@ async def identify_product(
         # Cleanup
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
+
+
+@router.post("/generate-description", response_model=DescriptionGenerationResponse)
+async def generate_description(
+    request: DescriptionGenerationRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Generate a marketing description for a product using AI.
+    
+    Uses the ADK DescriptionAgent to create compelling, SEO-friendly
+    product descriptions based on the provided product name and context.
+    """
+    try:
+        # Initialize ADK Manager & Orchestrator
+        adk_manager = ADKManager(db)
+        orchestrator = AgentOrchestrator(adk_manager)
+        
+        # Generate description via orchestrator
+        result = await orchestrator.generate_product_description(
+            product_name=request.product_name,
+            context=request.context,
+            tone=request.tone,
+            length=request.length
+        )
+        
+        # Format Response
+        if "error" in result:
+            return DescriptionGenerationResponse(error=result["error"])
+        
+        return DescriptionGenerationResponse(
+            description=result.get("description"),
+            seo_keywords=result.get("seo_keywords", []),
+            tone_used=result.get("tone_used")
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+

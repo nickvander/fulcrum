@@ -296,7 +296,7 @@ export class ProductService {
   }
 
   updateImageOrder(productId: number, imageIdsInOrder: number[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${productId}/images/order`, { image_ids: imageIdsInOrder }).pipe(
+    return this.http.post(`${this.apiUrl}/${productId}/images/reorder`, imageIdsInOrder).pipe(
       tap(() => this.notificationService.showSuccess('Image order updated successfully!')),
       switchMap(() => this.getProducts())
     );
