@@ -23,6 +23,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SupplierInvoice } from '../../suppliers.service';
 import { UserService } from '../../../users/services/user.service';
 import { User } from '../../../shared/models/user.model';
@@ -32,6 +33,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
 import { SupplierSelectionDialogComponent } from '../supplier-selection-dialog/supplier-selection-dialog.component';
 import { InvoiceMatchDialogComponent } from '../invoice-match-dialog/invoice-match-dialog.component';
 import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
   selector: 'app-purchase-order-edit',
@@ -56,6 +58,7 @@ import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
     MatCardModule,
     MatTooltipModule,
     MatTableModule,
+    MatProgressSpinnerModule,
     TranslocoModule
   ]
 })
@@ -67,6 +70,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   suppliers: Supplier[] = [];
   invoices: SupplierInvoice[] = [];
   isParsingInvoice = false;
+  isDraggingInvoice = false;
+  aiEnabled = false;
   users: User[] = [];
   statusOptions = Object.values(PurchaseOrderStatus);
   paymentStatusOptions = ['unpaid', 'partial', 'paid'];
@@ -95,7 +100,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private userService: UserService,
-    private translocoService: TranslocoService
+    private translocoService: TranslocoService,
+    private settingsService: SettingsService
   ) {
     this.currentLang = this.translocoService.getActiveLang();
 
@@ -121,6 +127,11 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     // Subscribe to language changes for date pipe
     this.translocoService.langChanges$.pipe(takeUntil(this.destroy$)).subscribe(lang => {
       this.currentLang = lang;
+    });
+
+    // Check if AI is enabled
+    this.settingsService.storeSettings$.pipe(takeUntil(this.destroy$)).subscribe(settings => {
+      this.aiEnabled = settings?.ai_config?.enabled || false;
     });
 
     this.loadSuppliers();
@@ -998,6 +1009,34 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         this.translocoService.translate('common.close'),
         { duration: 3000 }
       );
+    }
+  }
+
+  // Drag & Drop handlers for invoice zone
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.poId && !this.isParsingInvoice) {
+      this.isDraggingInvoice = true;
+    }
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingInvoice = false;
+  }
+
+  onInvoiceDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDraggingInvoice = false;
+
+    if (!this.poId || this.isParsingInvoice) return;
+
+    const files = event.dataTransfer?.files;
+    if (files?.length) {
+      this.parseAndMatchInvoice(files[0]);
     }
   }
 }

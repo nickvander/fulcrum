@@ -208,38 +208,42 @@
 
             <!-- Invoices Section -->
             <mat-card class="form-section">
-                <div class="section-header invoice-header">
-                    <h3>{{ t('purchaseOrders.sections.invoices') }}</h3>
-                    <div class="actions-right" *ngIf="poId">
-                        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
-                            accept=".pdf,.jpg,.jpeg,.png">
-                        <input type="file" #parseInput (change)="onParseAndMatchSelected($event)" style="display: none"
-                            accept=".pdf,.jpg,.jpeg,.png,.html,.htm">
-                        <button mat-stroked-button color="accent" type="button" (click)="parseInput.click()"
-                            [disabled]="isParsingInvoice || items.length === 0"
-                            [matTooltip]="t('purchaseOrders.invoiceMatching.tooltip')">
-                            <mat-icon *ngIf="!isParsingInvoice">auto_awesome</mat-icon>
-                            <mat-icon *ngIf="isParsingInvoice" class="spin">sync</mat-icon>
-                            {{ t('purchaseOrders.invoiceMatching.parseAndMatch') }}
-                        </button>
-                        <button mat-stroked-button color="primary" type="button" (click)="fileInput.click()">
-                            <mat-icon>cloud_upload</mat-icon> {{ t('purchaseOrders.actions.uploadInvoice') }}
-                        </button>
-                    </div>
+                <h3>{{ t('purchaseOrders.sections.invoices') }}</h3>
+
+                <!-- Consolidated Drop Zone (works with or without AI) -->
+                <div class="invoice-drop-zone" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+                    (drop)="onInvoiceDrop($event)" (click)="parseInput.click()" [class.drag-over]="isDraggingInvoice"
+                    [class.disabled]="!poId" [class.parsing]="isParsingInvoice">
+                    <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
+                        accept=".pdf,.jpg,.jpeg,.png">
+                    <input type="file" #parseInput (change)="onParseAndMatchSelected($event)" style="display: none"
+                        accept=".pdf,.jpg,.jpeg,.png,.html,.htm,.txt">
+
+                    <ng-container *ngIf="!isParsingInvoice">
+                        <mat-icon>cloud_upload</mat-icon>
+                        <span class="drop-text">{{ poId ? t('purchaseOrders.invoiceMatching.dropOrClick') :
+                            t('purchaseOrders.messages.saveFirst') }}</span>
+                        <span class="file-types" *ngIf="poId">PDF, Images, HTML</span>
+                        <span class="ai-badge" *ngIf="poId && aiEnabled">
+                            <mat-icon>auto_awesome</mat-icon>
+                            {{ t('products.aiPowered') }}
+                        </span>
+                    </ng-container>
+
+                    <ng-container *ngIf="isParsingInvoice">
+                        <mat-spinner diameter="24"></mat-spinner>
+                        <span class="drop-text">{{ t('purchaseOrders.invoiceMatching.parsing') }}</span>
+                    </ng-container>
                 </div>
 
-                <p class="section-hint" *ngIf="!poId">Please save the order to upload invoices.</p>
-                <p class="section-hint" *ngIf="poId && invoices.length === 0">No invoices attached.</p>
-
+                <!-- Attached Invoices Table -->
                 <table mat-table [dataSource]="invoices" *ngIf="poId && invoices.length > 0" class="invoice-table">
-                    <!-- Date Column -->
                     <ng-container matColumnDef="date">
                         <th mat-header-cell *matHeaderCellDef> {{ t('common.date') }} </th>
                         <td mat-cell *matCellDef="let invoice"> {{invoice.uploaded_at |
                             date:'mediumDate':undefined:currentLang}} </td>
                     </ng-container>
 
-                    <!-- Name Column -->
                     <ng-container matColumnDef="name">
                         <th mat-header-cell *matHeaderCellDef> Filename </th>
                         <td mat-cell *matCellDef="let invoice">
@@ -249,7 +253,6 @@
                         </td>
                     </ng-container>
 
-                    <!-- Actions Column -->
                     <ng-container matColumnDef="actions">
                         <th mat-header-cell *matHeaderCellDef> </th>
                         <td mat-cell *matCellDef="let invoice">
