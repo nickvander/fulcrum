@@ -298,6 +298,7 @@
         "confirmAdjustment": "Confirm Adjustment",
         "ai": {
             "analyzingImage": "Using AI to identify product...",
+            "generateDescription": "Generate with AI",
             "status": {
                 "initializing": "Initializing Agent...",
                 "analyzing": "Analyzing image features...",
@@ -307,7 +308,8 @@
                 "synthesizing": "Synthesizing product details...",
                 "finalizing": "Finalizing identification..."
             }
-        }
+        },
+        "aiGenerate": "Generate with AI"
     },
     "suppliers": {
         "title": "Suppliers",
@@ -436,6 +438,49 @@
             "uploadInvoice": "Upload Invoice",
             "clearDraft": "Clear Draft"
         },
+        "invoiceMatching": {
+            "title": "Invoice Matching Results",
+            "parseAndMatch": "Import Invoice",
+            "tooltip": "Import and match invoice against this PO",
+            "parseFailed": "Failed to parse invoice",
+            "invoiceNumber": "Invoice #",
+            "vendor": "Vendor",
+            "confidence": "Confidence",
+            "matchedItems": "Matched Items",
+            "poItem": "PO Item",
+            "invoiceItem": "Invoice Item",
+            "discrepancy": "Discrepancy",
+            "unmatchedPO": "Items in PO not found in invoice",
+            "unmatchedInvoice": "Items in invoice not found in PO",
+            "totalDiscrepancy": "Total Discrepancy",
+            "noMatches": "No matching items found",
+            "applyValues": "Apply Invoice Values",
+            "applyTooltip": "Update PO items with invoice prices",
+            "valuesApplied": "Updated {{count}} item(s) with invoice values",
+            "noChanges": "No price changes to apply",
+            "differentPoTitle": "Invoice Matches Different PO",
+            "differentPoMessage": "This invoice appears to match PO #{{poNumber}} from {{supplier}}. Would you like to view that PO instead?",
+            "goToPo": "Go to PO",
+            "scanAnother": "Try Another Invoice",
+            "noPoMatch": "No matching PO found. You can manually update item values if needed."
+        },
+        "importPo": "Import PO",
+        "dropFileHere": "Drag & drop a Purchase Order file here",
+        "supportedFormats": "Supported formats",
+        "browseFiles": "Browse Files",
+        "processFile": "Process File",
+        "creatingPo": "Creating Purchase Order",
+        "confidence": "Confidence",
+        "detectedSupplier": "Detected supplier",
+        "lineItems": "Line Items",
+        "sku": "SKU",
+        "description": "Description",
+        "qty": "Qty",
+        "shipping": "Shipping",
+        "tax": "Tax",
+        "total": "Total",
+        "currency": "Currency",
+        "createPo": "Create PO",
         "messages": {
             "unpackingBundle": "Unpacking bundle: {{name}}...",
             "autoSelectedSupplier": "Auto-selected supplier: {{name}}",

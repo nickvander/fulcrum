@@ -10,6 +10,7 @@ import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { ProductImage } from '../../models/product.model';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { ProductService } from '../../services/product';
 
 @Component({
   selector: 'app-product-form-image-gallery',
@@ -41,7 +42,10 @@ export class ProductFormImageGalleryComponent implements OnInit {
 
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef<HTMLInputElement>;
 
-  constructor(private dialog: MatDialog) { }
+  constructor(
+    private dialog: MatDialog,
+    private productService: ProductService
+  ) { }
 
   ngOnInit(): void { }
 
@@ -143,8 +147,25 @@ export class ProductFormImageGalleryComponent implements OnInit {
     newImagesList.splice(prevIndex, 1);
     newImagesList.splice(event.currentIndex, 0, imageToMove);
 
-    // Emit the reordered list
+    // Emit the reordered list to update parent view immediately (Optimistic UI)
     this.existingImagesChange.emit(newImagesList);
+
+    // If we are in edit mode (have a product ID), persist the order immediately
+    if (this.productId) {
+      const newOrderIds = newImagesList.map(img => img.id);
+      this.productService.updateImageOrder(this.productId, newOrderIds).subscribe({
+        next: () => {
+          console.log('Image order updated successfully');
+        },
+        error: (err) => {
+          console.error('Failed to update image order', err);
+          // Revert the list on error?
+          // For now, we accept the optimistic UI might be out of sync until refresh
+          // or we could re-emit the original list here.
+          this.existingImagesChange.emit(this.existingImages); // Revert
+        }
+      });
+    }
   }
 
   trackByFn(index: number, item: ProductImage): any {

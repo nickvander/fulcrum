@@ -435,3 +435,643 @@ def delete_invoice(
     crud_supplier_invoice.remove(db=db, id=invoice_id)
     
     return {"message": "Invoice deleted successfully"}
+
+# --- Unified Document Parse Schemas ---
+class ExtractedItem(BaseModel):
+    """An extracted line item from a document."""
+    sku: str | None = None
+    description: str = ""
+    quantity: float = 0.0
+    unit_cost: float = 0.0
+    line_total: float = 0.0
+    matched_product_id: int | None = None
+
+
+class DocumentParseResult(BaseModel):
+    """
+    Unified result from parsing a supplier document.
+    
+    mode:
+    - "create": No matching PO found, use data to create new PO
+    - "match": Found matching PO, shows comparison for reconciliation
+    """
+    mode: str  # "create" or "match"
+    
+    # Extracted document data
+    vendor_name: str | None = None
+    po_number: str | None = None
+    invoice_number: str | None = None
+    document_date: str | None = None
+    currency: str = "USD"
+    items: List[ExtractedItem] = []
+    subtotal: float = 0.0
+    shipping_cost: float = 0.0
+    tax_amount: float = 0.0
+    total_amount: float = 0.0
+    confidence: float = 0.0
+    
+    # If mode == "match"
+    matched_po_id: int | None = None
+    matched_po_number: str | None = None
+    matched_supplier_name: str | None = None
+    match_confidence: float = 0.0
+    matches: List[Any] = []  # InvoiceMatchItem objects
+    unmatched_po_items: List[dict] = []
+    unmatched_invoice_items: List[dict] = []
+    total_discrepancy: float = 0.0
+
+
+@router.post("/parse-document", response_model=DocumentParseResult)
+async def parse_document(
+    *,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    target_po_id: int | None = Query(None, description="Optional: PO ID to match against"),
+):
+    """
+    Unified endpoint to parse supplier documents (invoices, quotes, POs).
+    
+    Smart behavior:
+    - If target_po_id provided: Match against that specific PO
+    - Otherwise: Search for matching PO by PO number or vendor+items
+    - If match found: Return mode="match" with comparison data
+    - If no match: Return mode="create" with extracted data
+    """
+    from difflib import SequenceMatcher
+    from src.services.adk.manager import ADKManager
+    from src.services.adk.orchestrator import AgentOrchestrator
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    
+    # Validate file type
+    allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.html', '.htm', '.txt'}
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+    
+    # Determine MIME type
+    mime_map = {
+        '.pdf': 'application/pdf',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.html': 'text/html',
+        '.htm': 'text/html',
+        '.txt': 'text/plain'
+    }
+    mime_type = mime_map.get(file_ext, 'text/plain')
+    
+    # Get store settings for AI config
+    settings = crud_store_settings.get_settings(db)
+    if not settings or not settings.ai_enabled:
+        raise HTTPException(
+            status_code=400, 
+            detail="AI features are disabled in Settings. Enable AI to use document parsing."
+        )
+    
+    # Initialize ADK manager and orchestrator
+    adk_manager = ADKManager(db)
+    orchestrator = AgentOrchestrator(adk_manager)
+    
+    # Parse document using AI
+    extraction_result = await orchestrator.parse_invoice(content, mime_type)
+    
+    if "error" in extraction_result:
+        raise HTTPException(status_code=500, detail=extraction_result["error"])
+    
+    # Extract document data
+    extracted_items = extraction_result.get("items", []) or extraction_result.get("line_items", [])
+    extraction_confidence = extraction_result.get("confidence", 0.5)
+    doc_po_number = extraction_result.get("po_number") or extraction_result.get("invoice_number")
+    doc_vendor = extraction_result.get("vendor_name")
+    
+    # Convert to ExtractedItem list
+    items = [
+        ExtractedItem(
+            sku=item.get("sku"),
+            description=item.get("description", ""),
+            quantity=item.get("quantity", 0),
+            unit_cost=item.get("unit_cost", 0),
+            line_total=item.get("line_total", 0)
+        )
+        for item in extracted_items
+    ]
+    
+    # Helper function for string similarity
+    def similarity(a: str, b: str) -> float:
+        if not a or not b:
+            return 0.0
+        return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+    
+    # === SMART PO MATCHING ===
+    matched_po = None
+    match_confidence = 0.0
+    
+    # 1. If target_po_id specified, use that PO
+    if target_po_id:
+        matched_po = crud_purchase_order.purchase_order.get(db=db, id=target_po_id)
+        if matched_po:
+            match_confidence = 1.0  # User explicitly requested this PO
+    
+    # 2. Otherwise, search for matching PO
+    if not matched_po:
+        all_pos = crud_purchase_order.purchase_order.get_multi(db=db, limit=500)
+        
+        for po in all_pos:
+            po_score = 0.0
+            
+            # Check vendor match (primary matching criteria since model has no po_number)
+            if doc_vendor and po.supplier:
+                vendor_sim = similarity(doc_vendor, po.supplier.name)
+                if vendor_sim > 0.7:
+                    po_score = vendor_sim * 0.6
+            
+            # If good PO match, check item overlap
+            if po_score > 0.5 and po.items:
+                item_matches = 0
+                for item in items:
+                    for po_item in po.items:
+                        if not po_item.product:
+                            continue
+                        # SKU match
+                        if item.sku and po_item.product.sku:
+                            if item.sku.upper() == po_item.product.sku.upper():
+                                item_matches += 1
+                                break
+                        # Description similarity
+                        if similarity(item.description, po_item.product.name or "") > 0.6:
+                            item_matches += 1
+                            break
+                
+                if items and item_matches > 0:
+                    item_ratio = item_matches / len(items)
+                    po_score = po_score * 0.5 + item_ratio * 0.5
+            
+            if po_score > match_confidence and po_score > 0.5:
+                match_confidence = po_score
+                matched_po = po
+    
+    # === BUILD RESPONSE ===
+    if matched_po and match_confidence > 0.4:
+        # Mode: MATCH
+        # Build comparison data (reusing existing matching logic)
+        po_items_by_id = {item.id: item for item in matched_po.items}
+        po_items_remaining = set(po_items_by_id.keys())
+        matches = []
+        unmatched_invoice_items = []
+        total_discrepancy = 0.0
+        
+        for item in items:
+            best_match = None
+            best_score = 0.0
+            
+            for po_item_id in po_items_remaining:
+                po_item = po_items_by_id[po_item_id]
+                if not po_item.product:
+                    continue
+                
+                # SKU exact match
+                if item.sku and po_item.product.sku:
+                    if item.sku.upper() == po_item.product.sku.upper():
+                        best_match = po_item
+                        best_score = 1.0
+                        break
+                
+                # Description similarity
+                desc_score = similarity(item.description, po_item.product.name or "")
+                if desc_score > best_score and desc_score > 0.5:
+                    best_match = po_item
+                    best_score = desc_score
+            
+            if best_match:
+                po_items_remaining.discard(best_match.id)
+                
+                qty_diff = abs(item.quantity - best_match.quantity_ordered)
+                price_diff = abs(item.unit_cost - best_match.unit_cost)
+                
+                discrepancy_parts = []
+                if qty_diff > 0.01:
+                    discrepancy_parts.append(f"Qty: PO={best_match.quantity_ordered}, Doc={item.quantity}")
+                    total_discrepancy += qty_diff * best_match.unit_cost
+                if price_diff > 0.01:
+                    discrepancy_parts.append(f"Price: PO=${best_match.unit_cost:.2f}, Doc=${item.unit_cost:.2f}")
+                    total_discrepancy += price_diff * item.quantity
+                
+                if qty_diff > 0.01 and price_diff > 0.01:
+                    status = "quantity_price_diff"
+                elif qty_diff > 0.01:
+                    status = "quantity_diff"
+                elif price_diff > 0.01:
+                    status = "price_diff"
+                else:
+                    status = "matched"
+                
+                matches.append({
+                    "po_item_id": best_match.id,
+                    "po_description": best_match.product.name if best_match.product else None,
+                    "po_quantity": best_match.quantity_ordered,
+                    "po_unit_cost": best_match.unit_cost,
+                    "invoice_sku": item.sku,
+                    "invoice_description": item.description,
+                    "invoice_quantity": item.quantity,
+                    "invoice_unit_cost": item.unit_cost,
+                    "invoice_line_total": item.line_total,
+                    "match_status": status,
+                    "confidence": best_score,
+                    "discrepancy_details": "; ".join(discrepancy_parts) if discrepancy_parts else None
+                })
+            else:
+                unmatched_invoice_items.append({
+                    "sku": item.sku,
+                    "description": item.description,
+                    "quantity": item.quantity,
+                    "unit_cost": item.unit_cost,
+                    "line_total": item.line_total
+                })
+        
+        unmatched_po_items = []
+        for po_item_id in po_items_remaining:
+            po_item = po_items_by_id[po_item_id]
+            unmatched_po_items.append({
+                "item_id": po_item.id,
+                "product_name": po_item.product.name if po_item.product else f"Product #{po_item.product_id}",
+                "quantity": po_item.quantity_ordered,
+                "unit_cost": po_item.unit_cost
+            })
+        
+        return DocumentParseResult(
+            mode="match",
+            vendor_name=doc_vendor,
+            po_number=doc_po_number,
+            invoice_number=extraction_result.get("invoice_number"),
+            document_date=extraction_result.get("invoice_date") or extraction_result.get("po_date"),
+            currency=extraction_result.get("currency", "USD"),
+            items=items,
+            subtotal=extraction_result.get("subtotal", 0),
+            shipping_cost=extraction_result.get("shipping_cost", 0),
+            tax_amount=extraction_result.get("tax_amount", 0),
+            total_amount=extraction_result.get("total_amount", 0),
+            confidence=extraction_confidence,
+            matched_po_id=matched_po.id,
+            matched_po_number=f"PO-{matched_po.id}",
+            matched_supplier_name=matched_po.supplier.name if matched_po.supplier else None,
+            match_confidence=match_confidence,
+            matches=matches,
+            unmatched_po_items=unmatched_po_items,
+            unmatched_invoice_items=unmatched_invoice_items,
+            total_discrepancy=total_discrepancy
+        )
+    else:
+        # Mode: CREATE
+        return DocumentParseResult(
+            mode="create",
+            vendor_name=doc_vendor,
+            po_number=doc_po_number,
+            invoice_number=extraction_result.get("invoice_number"),
+            document_date=extraction_result.get("invoice_date") or extraction_result.get("po_date"),
+            currency=extraction_result.get("currency", "USD"),
+            items=items,
+            subtotal=extraction_result.get("subtotal", 0),
+            shipping_cost=extraction_result.get("shipping_cost", 0),
+            tax_amount=extraction_result.get("tax_amount", 0),
+            total_amount=extraction_result.get("total_amount", 0),
+            confidence=extraction_confidence
+        )
+
+
+# --- PO Ingestion Schemas (DEPRECATED - use /parse-document instead) ---
+class ExtractedLineItemResponse(BaseModel):
+    """Response schema for an extracted line item."""
+    sku: str | None = None
+    description: str = ""
+    quantity: float = 0.0
+    unit_cost: float = 0.0
+    line_total: float = 0.0
+    matched_product_id: int | None = None
+
+
+class POIngestionResponse(BaseModel):
+    """Response schema for PO ingestion results."""
+    supplier_name: str | None = None
+    po_number: str | None = None
+    po_date: str | None = None
+    currency: str = "USD"
+    payment_terms: str | None = None
+    items: List[ExtractedLineItemResponse] = []
+    subtotal: float = 0.0
+    shipping_cost: float = 0.0
+    tax_amount: float = 0.0
+    total_amount: float = 0.0
+    extraction_method: str = "traditional"
+    confidence_score: float = 0.0
+    warnings: List[str] = []
+
+
+@router.post("/ingest", response_model=POIngestionResponse)
+async def ingest_purchase_order(
+    *,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    use_ai: bool = Query(False, description="Enable AI enhancement for complex documents"),
+):
+    """
+    Ingest a Purchase Order document (PDF, HTML, or TXT).
+    
+    Returns extracted data for preview before creating a PO.
+    The user should review and confirm before calling POST / to create the actual record.
+    
+    Args:
+        file: The PO document to ingest.
+        use_ai: Whether to use AI enhancement (requires AI features enabled in settings).
+    """
+    from src.services.purchase_order_ingestion_service import POIngestionService
+    
+    # Validate file type
+    allowed_types = {'.pdf', '.html', '.htm', '.txt', '.text'}
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+    
+    # Initialize service
+    service = POIngestionService(ai_enabled=use_ai)
+    
+    # Ingest and parse
+    try:
+        result = service.ingest_file(file.filename or "document.txt", content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+    
+    # Convert to response schema
+    items_response = [
+        ExtractedLineItemResponse(
+            sku=item.sku,
+            description=item.description,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            line_total=item.line_total,
+            matched_product_id=item.product_id
+        )
+        for item in result.items
+    ]
+    
+    return POIngestionResponse(
+        supplier_name=result.supplier_name,
+        po_number=result.po_number,
+        po_date=result.po_date.isoformat() if result.po_date else None,
+        currency=result.currency,
+        payment_terms=result.payment_terms,
+        items=items_response,
+        subtotal=result.subtotal,
+        shipping_cost=result.shipping_cost,
+        tax_amount=result.tax_amount,
+        total_amount=result.total_amount,
+        extraction_method=result.extraction_method,
+        confidence_score=result.confidence_score,
+        warnings=result.warnings
+    )
+
+
+# --- Invoice Parse & Match Schemas ---
+class InvoiceMatchItem(BaseModel):
+    """Result of matching an invoice item to a PO item."""
+    po_item_id: int | None = None
+    po_description: str | None = None
+    po_quantity: float | None = None
+    po_unit_cost: float | None = None
+    
+    invoice_sku: str | None = None
+    invoice_description: str
+    invoice_quantity: float
+    invoice_unit_cost: float
+    invoice_line_total: float
+    
+    match_status: str  # "matched", "quantity_diff", "price_diff", "unmatched"
+    confidence: float
+    discrepancy_details: str | None = None
+
+
+class InvoiceMatchResult(BaseModel):
+    """Result of parsing and matching an invoice against a PO."""
+    invoice_number: str | None = None
+    invoice_date: str | None = None
+    vendor_name: str | None = None
+    
+    matches: List[InvoiceMatchItem] = []
+    unmatched_po_items: List[dict] = []
+    unmatched_invoice_items: List[dict] = []
+    
+    total_discrepancy: float = 0.0
+    overall_confidence: float = 0.0
+    extraction_confidence: float = 0.0
+
+
+@router.post("/{id}/invoices/parse-and-match", response_model=InvoiceMatchResult)
+async def parse_and_match_invoice(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    file: UploadFile = File(...),
+):
+    """
+    Parse an invoice document and match items against the PO.
+    
+    Uses AI to extract invoice data, then matches each invoice line item
+    to the corresponding PO item by SKU or description similarity.
+    
+    Returns:
+        - Matched items with discrepancy details
+        - Unmatched PO items (missing from invoice)
+        - Unmatched invoice items (extra items not in PO)
+        - Overall confidence and discrepancy totals
+    """
+    from difflib import SequenceMatcher
+    from src.services.adk.manager import ADKManager
+    from src.services.adk.orchestrator import AgentOrchestrator
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    
+    # Verify PO exists
+    po = crud_purchase_order.purchase_order.get(db=db, id=id)
+    if not po:
+        raise HTTPException(status_code=404, detail="Purchase Order not found")
+    
+    # Validate file type
+    allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.html', '.htm'}
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+    
+    # Determine MIME type
+    mime_map = {
+        '.pdf': 'application/pdf',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.html': 'text/html',
+        '.htm': 'text/html'
+    }
+    mime_type = mime_map.get(file_ext, 'application/octet-stream')
+    
+    # Get store settings for AI config
+    settings = crud_store_settings.get_settings(db)
+    if not settings or not settings.ai_enabled:
+        raise HTTPException(
+            status_code=400, 
+            detail="AI features are disabled in Settings. Enable AI to use invoice parsing."
+        )
+    
+    # Initialize ADK manager and orchestrator
+    adk_manager = ADKManager(db)
+    orchestrator = AgentOrchestrator(adk_manager)
+    
+    # Parse invoice using AI
+    extraction_result = await orchestrator.parse_invoice(content, mime_type)
+    
+    if "error" in extraction_result:
+        raise HTTPException(status_code=500, detail=extraction_result["error"])
+    
+    # Extract invoice data
+    invoice_items = extraction_result.get("items", [])
+    extraction_confidence = extraction_result.get("confidence", 0.5)
+    
+    # Build PO item lookup
+    po_items_by_id = {item.id: item for item in po.items}
+    po_items_remaining = set(po_items_by_id.keys())
+    
+    # Matching logic
+    matches = []
+    unmatched_invoice_items = []
+    total_discrepancy = 0.0
+    
+    def similarity(a: str, b: str) -> float:
+        """Calculate string similarity."""
+        return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+    
+    for inv_item in invoice_items:
+        inv_sku = inv_item.get("sku", "")
+        inv_desc = inv_item.get("description", "")
+        inv_qty = inv_item.get("quantity", 0)
+        inv_cost = inv_item.get("unit_cost", 0)
+        inv_total = inv_item.get("line_total", 0)
+        
+        best_match = None
+        best_score = 0.0
+        
+        # Try to match by SKU first, then by description
+        for po_item_id in po_items_remaining:
+            po_item = po_items_by_id[po_item_id]
+            po_product = po_item.product
+            
+            if not po_product:
+                continue
+            
+            # SKU exact match (highest priority)
+            if inv_sku and po_product.sku and inv_sku.upper() == po_product.sku.upper():
+                best_match = po_item
+                best_score = 1.0
+                break
+            
+            # Description similarity
+            po_desc = po_product.name or ""
+            desc_score = similarity(inv_desc, po_desc)
+            if desc_score > best_score and desc_score > 0.5:
+                best_match = po_item
+                best_score = desc_score
+        
+        if best_match:
+            po_items_remaining.discard(best_match.id)
+            
+            # Determine match status and discrepancies
+            qty_diff = abs(inv_qty - best_match.quantity_ordered)
+            price_diff = abs(inv_cost - best_match.unit_cost)
+            
+            discrepancy_parts = []
+            if qty_diff > 0.01:
+                discrepancy_parts.append(f"Qty: PO={best_match.quantity_ordered}, Invoice={inv_qty}")
+                total_discrepancy += qty_diff * best_match.unit_cost
+            if price_diff > 0.01:
+                discrepancy_parts.append(f"Price: PO=${best_match.unit_cost:.2f}, Invoice=${inv_cost:.2f}")
+                total_discrepancy += price_diff * inv_qty
+            
+            if qty_diff > 0.01 and price_diff > 0.01:
+                status = "quantity_price_diff"
+            elif qty_diff > 0.01:
+                status = "quantity_diff"
+            elif price_diff > 0.01:
+                status = "price_diff"
+            else:
+                status = "matched"
+            
+            matches.append(InvoiceMatchItem(
+                po_item_id=best_match.id,
+                po_description=best_match.product.name if best_match.product else None,
+                po_quantity=best_match.quantity_ordered,
+                po_unit_cost=best_match.unit_cost,
+                invoice_sku=inv_sku,
+                invoice_description=inv_desc,
+                invoice_quantity=inv_qty,
+                invoice_unit_cost=inv_cost,
+                invoice_line_total=inv_total,
+                match_status=status,
+                confidence=best_score,
+                discrepancy_details="; ".join(discrepancy_parts) if discrepancy_parts else None
+            ))
+        else:
+            unmatched_invoice_items.append({
+                "sku": inv_sku,
+                "description": inv_desc,
+                "quantity": inv_qty,
+                "unit_cost": inv_cost,
+                "line_total": inv_total
+            })
+    
+    # Build unmatched PO items list
+    unmatched_po_items = []
+    for po_item_id in po_items_remaining:
+        po_item = po_items_by_id[po_item_id]
+        unmatched_po_items.append({
+            "item_id": po_item.id,
+            "product_name": po_item.product.name if po_item.product else f"Product #{po_item.product_id}",
+            "quantity": po_item.quantity_ordered,
+            "unit_cost": po_item.unit_cost
+        })
+    
+    # Calculate overall confidence
+    if matches:
+        overall_confidence = sum(m.confidence for m in matches) / len(matches) * extraction_confidence
+    else:
+        overall_confidence = extraction_confidence * 0.5
+    
+    return InvoiceMatchResult(
+        invoice_number=extraction_result.get("invoice_number"),
+        invoice_date=extraction_result.get("invoice_date"),
+        vendor_name=extraction_result.get("vendor_name"),
+        matches=matches,
+        unmatched_po_items=unmatched_po_items,
+        unmatched_invoice_items=unmatched_invoice_items,
+        total_discrepancy=total_discrepancy,
+        overall_confidence=overall_confidence,
+        extraction_confidence=extraction_confidence
+    )

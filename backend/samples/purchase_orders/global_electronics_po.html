@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Purchase Order - Global Electronics Ltd</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        .header {
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        .totals {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .totals td {
+            border: none;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="company-name">Global Electronics Ltd</div>
+        <div>123 Tech Drive, San Jose, CA 95134</div>
+        <div>Phone: +1-555-0101 | Email: orders@globalelectronics.com</div>
+    </div>
+
+    <h2>PURCHASE ORDER</h2>
+    <table style="width: 50%; border: none;">
+        <tr>
+            <td style="border:none;"><strong>PO Number:</strong></td>
+            <td style="border:none;">PO-2025-001234</td>
+        </tr>
+        <tr>
+            <td style="border:none;"><strong>Date:</strong></td>
+            <td style="border:none;">January 5, 2025</td>
+        </tr>
+        <tr>
+            <td style="border:none;"><strong>Payment Terms:</strong></td>
+            <td style="border:none;">Net 30</td>
+        </tr>
+        <tr>
+            <td style="border:none;"><strong>Currency:</strong></td>
+            <td style="border:none;">USD</td>
+        </tr>
+    </table>
+
+    <h3>Bill To:</h3>
+    <p>Fulcrum Commerce Inc.<br>456 Merchant Lane<br>Austin, TX 78701</p>
+
+    <h3>Order Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Description</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ELEC-LAPTOP-001</td>
+                <td>Pro Laptop 15" - 16GB RAM, 512GB SSD</td>
+                <td>10</td>
+                <td>$899.99</td>
+                <td>$8,999.90</td>
+            </tr>
+            <tr>
+                <td>ELEC-MOUSE-002</td>
+                <td>Wireless Ergonomic Mouse</td>
+                <td>50</td>
+                <td>$29.99</td>
+                <td>$1,499.50</td>
+            </tr>
+            <tr>
+                <td>ELEC-KEYBOARD-003</td>
+                <td>Mechanical Keyboard RGB</td>
+                <td>25</td>
+                <td>$79.99</td>
+                <td>$1,999.75</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals">
+        <tr>
+            <td>Subtotal:</td>
+            <td>$12,499.15</td>
+        </tr>
+        <tr>
+            <td>Shipping:</td>
+            <td>$150.00</td>
+        </tr>
+        <tr>
+            <td>Tax (8.25%):</td>
+            <td>$1,031.18</td>
+        </tr>
+        <tr>
+            <td><strong>Grand Total:</strong></td>
+            <td><strong>$13,680.33</strong></td>
+        </tr>
+    </table>
+</body>
+
+</html>

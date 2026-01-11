@@ -10,6 +10,10 @@
                 </span>
             </div>
             <div class="actions">
+                <button mat-mini-fab color="accent" (click)="openIngestDialog()"
+                    [matTooltip]="t('purchaseOrders.importPo')">
+                    <mat-icon>upload_file</mat-icon>
+                </button>
                 <button mat-mini-fab color="primary" (click)="createPurchaseOrder()"
                     [matTooltip]="t('purchaseOrders.createPO')">
                     <mat-icon>add</mat-icon>

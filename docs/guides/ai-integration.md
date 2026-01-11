@@ -93,7 +93,115 @@ AI-powered content creation for social media marketing.
 }
 ```
 
+### AI Description Generation
+
+Generate product descriptions automatically using AI.
+
+**API Endpoint:**
+
+| Endpoint                         | Method | Description                  |
+| -------------------------------- | ------ | ---------------------------- |
+| `/api/v1/ai/generate-description` | POST   | Generate product description |
+
+**Request:**
+
+```json
+{
+  "product_name": "Yoga Mat Non-Slip Cork",
+  "context": "Brand: EcoMat, Category: Fitness",
+  "tone": "Professional",
+  "length": "medium"
+}
+```
+
+**Response:**
+
+```json
+{
+  "description": "Elevate your yoga practice with the EcoMat Non-Slip Cork Yoga Mat...",
+  "seo_keywords": ["yoga mat", "cork mat", "eco-friendly"],
+  "tone_used": "Professional"
+}
+```
+
+**Frontend Integration:**
+
+- Located next to the Description field in the Product Form
+- Click the "AI" button (sparkle icon) to generate
+- Shows loading spinner while processing
+- Auto-populates the description textarea
+
+### Invoice Parser Service
+
+Parse invoices using AI multimodal vision to extract structured data and match
+against existing Purchase Orders.
+
+**API Endpoints:**
+
+| Endpoint | Method | Description |
+| --------------------------------------- | ------ | -------------------------------------- |
+| `/api/v1/purchase-orders/parse-document` | POST | **Unified** - Parse and smart-match PO |
+| `/api/v1/purchase-orders/{id}/invoices/parse-and-match` | POST | Parse invoice for specific PO (deprecated) |
+
+**Unified Endpoint Behavior:**
+
+The `/parse-document` endpoint intelligently determines whether to create a new
+PO or match against an existing one:
+
+- `mode: "create"` - No matching PO found, use extracted data to create new PO
+- `mode: "match"` - Found matching PO by vendor + items, returns comparison
+
+**Request:** Multipart form with `file` field, optional `target_po_id` query param
+
+**Supported File Types:** PDF, PNG, JPG, JPEG, HTML, TXT
+
+**Response (mode: match):**
+
+```json
+{
+  "mode": "match",
+  "vendor_name": "Tech Supplies Direct",
+  "invoice_number": "INV-2026-001",
+  "matched_po_id": 123,
+  "matched_po_number": "PO-123",
+  "matched_supplier_name": "Tech Supplies Direct",
+  "match_confidence": 0.85,
+  "matches": [
+    {
+      "po_item_id": 456,
+      "po_description": "1TB NVMe SSD",
+      "invoice_description": "1TB NVMe SSD Drive",
+      "match_status": "matched",
+      "confidence": 0.95
+    }
+  ],
+  "unmatched_po_items": [],
+  "unmatched_invoice_items": []
+}
+```
+
+**Response (mode: create):**
+
+```json
+{
+  "mode": "create",
+  "vendor_name": "New Supplier Co",
+  "items": [
+    { "sku": "PROD-001", "description": "Widget A", "quantity": 10 }
+  ],
+  "confidence": 0.92
+}
+```
+
+**Match Statuses:**
+
+- `matched` - Exact match on quantity and price
+- `quantity_diff` - Quantity differs from PO
+- `price_diff` - Unit cost differs from PO
+- `unmatched` - No matching PO item found
+
 ---
+
 
 ## Supported Providers
 
@@ -162,10 +270,16 @@ backend/src/services/adk/
 ├── manager.py            # Settings & API key management
 ├── orchestrator.py       # Workflow coordination
 ├── agents/
-│   └── product_vision/
-│       ├── root_agent.py # Entry point
-│       ├── vision_agent.py # Image analysis
-│       └── prompts/system.md
+│   ├── product_vision/
+│   │   ├── root_agent.py # Entry point
+│   │   ├── vision_agent.py # Image analysis
+│   │   └── prompts/system.md
+│   ├── marketing/
+│   │   ├── description_agent.py # Product description generation
+│   │   └── prompts/description.md
+│   └── invoice/
+│       ├── invoice_parser_agent.py # Invoice parsing (multimodal)
+│       └── prompts/invoice_extraction.md
 └── tools/
     ├── search_tool.py    # Google Search
     ├── fulcrum_tool.py   # Product DB lookup

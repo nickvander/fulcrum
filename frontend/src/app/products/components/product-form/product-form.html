@@ -74,10 +74,23 @@
                     </button>
                   </div>
 
-                  <mat-form-field>
-                    <mat-label>{{ t('common.description') }}</mat-label>
-                    <textarea matInput formControlName="description" [placeholder]="t('common.description')"></textarea>
-                  </mat-form-field>
+                  <div class="description-field-container" style="display: flex; align-items: flex-start; gap: 8px;">
+                    <mat-form-field style="flex: 1;">
+                      <mat-label>{{ t('common.description') }}</mat-label>
+                      <textarea matInput formControlName="description" [placeholder]="t('common.description')"
+                        rows="4"></textarea>
+                    </mat-form-field>
+                    <button type="button" mat-stroked-button color="accent" (click)="generateAiDescription()"
+                      [disabled]="isGeneratingDescription || !productForm.get('name')?.value"
+                      style="height: 56px; margin-top: 4px;" [matTooltip]="t('products.aiGenerate')">
+                      @if (isGeneratingDescription) {
+                      <mat-icon class="spin">sync</mat-icon>
+                      } @else {
+                      <mat-icon>auto_awesome</mat-icon>
+                      }
+                      AI
+                    </button>
+                  </div>
                 </mat-card-content>
               </mat-card>
 

@@ -18,6 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
@@ -49,6 +50,7 @@ interface POSummary {
     MatCardModule,
     MatTooltipModule,
     MatProgressBarModule,
+    MatDialogModule,
     DateRangePresetsComponent,
     StatCardComponent,
     TranslocoModule
@@ -84,7 +86,8 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     private router: Router,
     private route: ActivatedRoute,
     private dateRangeService: DateRangeService,
-    private translocoService: TranslocoService
+    private translocoService: TranslocoService,
+    private dialog: MatDialog
   ) {
     this.currentLang = this.translocoService.getActiveLang();
   }
@@ -271,6 +274,23 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
 
   createSupplier(): void {
     this.router.navigate(['/suppliers/id/new']);
+  }
+
+  openIngestDialog(): void {
+    import('../po-ingest-dialog/po-ingest-dialog.component').then(m => {
+      const dialogRef = this.dialog.open(m.PoIngestDialogComponent, {
+        width: '800px',
+        maxHeight: '90vh',
+        disableClose: true
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result?.action === 'created') {
+          // Reload data to show the new PO
+          this.loadData();
+        }
+      });
+    });
   }
 
   getStatusColor(status: PurchaseOrderStatus): string {

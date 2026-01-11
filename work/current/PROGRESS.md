@@ -2,17 +2,38 @@
 
 ## **Status:** **In Progress**
 
-- **Current Phase:** Phase 4 - AI Content Generation & Media Management
-- **Next Phase:** Phase 5 - AI-Powered Purchase Order Management
+- **Current Phase:** Phase 5 - AI-Powered Purchase Order Management
+- **Next Phase:** Phase 5 Completion - Final Testing & Polish
 
 ### Current Objective
 
-- [/] **AI Content Generation Enhancements**
-  - Plan: [75-ai-content-generation-plan.md](./75-ai-content-generation-plan.md)
-  - Log: [75-ai-content-generation-log.md](./75-ai-content-generation-log.md)
+- [x] **Unify Invoice Import & Matching Workflows**
+  - Plan: [76-milestone-consolidation-plan.md](./76-milestone-consolidation-plan.md)
+  - Log: [76-milestone-consolidation-log.md](./76-milestone-consolidation-log.md)
+
+### Completed This Session (2026-01-11)
+
+- [x] **Unified Parse Document Endpoint** - `POST /purchase-orders/parse-document`
+- [x] **Smart PO Matching** - Match by vendor name + item overlap
+- [x] **Frontend Service Update** - `parseDocument()` method with mode handling
+- [x] **Invoice Match Dialog** - Comparison UI with Apply Values action
+- [x] **Different PO Warning** - Dialog with navigation to matched PO
+- [x] **i18n Updates** - EN + ES-MX translations for unified flow
+- [x] **Lint Fixes** - Removed unused imports across backend
+
+### Completed (2026-01-10)
+
+- [x] **Image Reordering** - Backend + Frontend + Tests
+- [x] **AI Description Generation** - Backend endpoint + Frontend button
+- [x] **Invoice Parser Service** - Gemini multimodal extraction agent
+- [x] **Invoice Matching Endpoint** - Parse & match against PO items
+- [x] **Documentation** - Updated `ai-integration.md`
+- [x] **Tests** - `test_invoice_parser.py` (8 tests passing)
 
 ### Phase History
 
 - **Phase 1:** Core Foundation & Search Backend (Completed)
-- **Phase 2:** UI & UX Refinements (Completed - See `work/archive/phase-2-refinements-complete.md`)
-- **Phase 3:** Intelligent Product Ingestion (Completed - Barcode/Camera Scanning implemented)
+- **Phase 2:** UI & UX Refinements (Completed)
+- **Phase 3:** Intelligent Product Ingestion (Completed)
+- **Phase 4:** AI Content Generation & Media Management (Completed)
+

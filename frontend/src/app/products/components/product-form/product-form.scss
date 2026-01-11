@@ -606,3 +606,18 @@ mat-card-content {
 .mat-mdc-form-field-subscript-wrapper {
   display: none; // Minimize extra whitespace below fields if not showing hints/errors
 }
+
+// AI Generate button spin animation
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}

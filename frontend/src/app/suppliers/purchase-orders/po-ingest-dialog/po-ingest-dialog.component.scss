@@ -1,0 +1,163 @@
+.upload-step {
+  min-width: 500px;
+}
+
+.dropzone {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.02);
+
+  &:hover,
+  &.dragging {
+    border-color: var(--primary-color, #3f51b5);
+    background: rgba(63, 81, 181, 0.05);
+  }
+
+  .upload-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #999;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 8px 0;
+    color: #666;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: #999;
+  }
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+
+  mat-icon {
+    color: #3f51b5;
+  }
+
+  .file-size {
+    color: #999;
+    font-size: 12px;
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f44336;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: 8px;
+}
+
+// Preview Step
+.preview-step {
+  min-width: 700px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.confidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  &.primary {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4caf50;
+  }
+
+  &.accent {
+    background: rgba(255, 193, 7, 0.15);
+    color: #f9a825;
+  }
+
+  &.warn {
+    background: rgba(244, 67, 54, 0.15);
+    color: #f44336;
+  }
+}
+
+.warnings {
+  margin-bottom: 16px;
+}
+
+.header-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.items-table {
+  width: 100%;
+  margin-bottom: 16px;
+
+  .unmatched {
+    color: #f9a825;
+    font-style: italic;
+  }
+
+  .inline-input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: right;
+
+    &:focus {
+      outline: none;
+      border-color: #3f51b5;
+    }
+
+    &.wide {
+      width: 120px;
+      text-align: left;
+    }
+
+    &.extra-wide {
+      width: 200px;
+      text-align: left;
+    }
+  }
+}
+
+.creating-step {
+  text-align: center;
+  padding: 40px;
+
+  p {
+    margin-top: 16px;
+    color: #666;
+  }
+}
+
+h2[mat-dialog-title] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  mat-icon {
+    color: #3f51b5;
+  }
+}
