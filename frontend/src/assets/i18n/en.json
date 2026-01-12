@@ -20,6 +20,7 @@
         "actions": "Actions",
         "status": "Status",
         "name": "Name",
+        "title": "Title",
         "currency": "Currency",
         "description": "Description",
         "date": "Date",
@@ -714,7 +715,16 @@
         "errors": {
             "authUrlFailed": "Failed to get authorization URL.",
             "saveFailed": "Failed to save credentials."
-        }
+        },
+        "createListing": "Create Listing",
+        "selectMarketplace": "Marketplace",
+        "generateWithAI": "Generate with AI",
+        "suggestedKeywords": "Suggested Keywords",
+        "aiGenerating": "AI is generating content...",
+        "aiGenerateSuccess": "AI generated listing content successfully!",
+        "copyKeywords": "Copy all keywords",
+        "keywordsHint": "Use these keywords in your marketplace backend for better search visibility.",
+        "listingSaved": "Listing saved successfully!"
     },
     "users": {
         "title": "Users",

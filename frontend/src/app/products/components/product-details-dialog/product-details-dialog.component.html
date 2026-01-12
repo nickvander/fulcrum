@@ -21,7 +21,7 @@
                 <div class="hero-section">
                     <div class="product-image">
                         @if (getPrimaryImage()) {
-                        <img [src]="getImageUrl(getPrimaryImage())" alt="Product">
+                        <img [src]="getImageUrl(getPrimaryImage())" alt="Product" (error)="onImageError($event)">
                         } @else {
                         <div class="no-image">
                             <mat-icon>image</mat-icon>
@@ -228,7 +228,22 @@
                         </div>
                         }
                     </div>
+                    <button mat-stroked-button color="primary" class="add-listing-btn" (click)="openListingDialog()">
+                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') || 'Create Listing' }}
+                    </button>
                     }
+                </div>
+                } @else {
+                <!-- No listings yet - show option to create one -->
+                <div class="section">
+                    <div class="section-header">
+                        <h3>{{ t('marketing.marketplaces') }}</h3>
+                    </div>
+                    <p class="empty-note">{{ t('products.notListedYet') || 'This product is not listed on any
+                        marketplace yet.' }}</p>
+                    <button mat-stroked-button color="primary" class="add-listing-btn" (click)="openListingDialog()">
+                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') || 'Create Listing' }}
+                    </button>
                 </div>
                 }
 

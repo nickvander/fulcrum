@@ -29,6 +29,21 @@ export interface DescriptionGenerationResponse {
     error?: string;
 }
 
+export interface ListingDescriptionRequest {
+    product_id: number;
+    marketplace_name: string;
+    include_title?: boolean;
+    include_keywords?: boolean;
+}
+
+export interface ListingDescriptionResponse {
+    title?: string;
+    description?: string;
+    keywords?: string[];
+    marketplace: string;
+    error?: string;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -46,5 +61,9 @@ export class AiService {
 
     generateDescription(request: DescriptionGenerationRequest): Observable<DescriptionGenerationResponse> {
         return this.http.post<DescriptionGenerationResponse>(`${this.apiUrl}/generate-description`, request);
+    }
+
+    generateListingDescription(request: ListingDescriptionRequest): Observable<ListingDescriptionResponse> {
+        return this.http.post<ListingDescriptionResponse>(`${this.apiUrl}/generate-listing-description`, request);
     }
 }

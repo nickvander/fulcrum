@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>
+    <ng-container *transloco="let t">
+        {{ t('marketplaces.createListing') || 'Create Listing' }}
+    </ng-container>
+</h2>
+
+<mat-dialog-content>
+    <ng-container *transloco="let t">
+        <form [formGroup]="listingForm" class="listing-form">
+            <!-- Marketplace Selector -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ t('marketplaces.selectMarketplace') || 'Marketplace' }}</mat-label>
+                <mat-select formControlName="marketplace">
+                    <mat-option *ngFor="let mp of availableMarketplaces" [value]="mp.value">
+                        {{ mp.label }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Title -->
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ t('common.title') || 'Title' }}</mat-label>
+                <input matInput formControlName="title" />
+            </mat-form-field>
+
+            <!-- Description -->
+            <mat-form-field appearance="outline" class="full-width description-field">
+                <mat-label>{{ t('common.description') || 'Description' }}</mat-label>
+                <textarea matInput formControlName="description" rows="8"></textarea>
+            </mat-form-field>
+
+            <!-- AI Generate Button (only shown when AI is enabled) -->
+            <div class="ai-actions" *ngIf="aiEnabled">
+                <button mat-flat-button color="primary" type="button" (click)="generateWithAI()"
+                    [disabled]="isGenerating || isSaving">
+                    <mat-icon *ngIf="!isGenerating">auto_awesome</mat-icon>
+                    <mat-spinner *ngIf="isGenerating" diameter="20"></mat-spinner>
+                    <span>{{ t('marketplaces.generateWithAI') || 'Generate with AI' }}</span>
+                </button>
+            </div>
+
+            <!-- Generated Keywords -->
+            <div class="keywords-section" *ngIf="generatedKeywords.length > 0">
+                <div class="keywords-header">
+                    <label>{{ t('marketplaces.suggestedKeywords') || 'Suggested Keywords' }}</label>
+                    <button mat-icon-button type="button" (click)="copyKeywords()"
+                        [matTooltip]="t('marketplaces.copyKeywords') || 'Copy all keywords'" class="copy-keywords-btn">
+                        <mat-icon>content_copy</mat-icon>
+                    </button>
+                </div>
+                <mat-chip-set>
+                    <mat-chip *ngFor="let kw of generatedKeywords">{{ kw }}</mat-chip>
+                </mat-chip-set>
+                <p class="keywords-hint">{{ t('marketplaces.keywordsHint') || 'Use these keywords in your marketplace
+                    backend for better search visibility.' }}</p>
+            </div>
+        </form>
+    </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+    <ng-container *transloco="let t">
+        <button mat-button (click)="onCancel()" [disabled]="isSaving">{{ t('common.cancel') || 'Cancel' }}</button>
+        <button mat-flat-button color="primary" (click)="onSave()" [disabled]="listingForm.invalid || isSaving">
+            <mat-spinner *ngIf="isSaving" diameter="18" class="save-spinner"></mat-spinner>
+            <span *ngIf="!isSaving">{{ t('common.save') || 'Save' }}</span>
+            <span *ngIf="isSaving">{{ t('common.saving') || 'Saving...' }}</span>
+        </button>
+    </ng-container>
+</mat-dialog-actions>

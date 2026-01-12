@@ -45,6 +45,23 @@ class DescriptionGenerationResponse(BaseModel):
     error: Optional[str] = None
 
 
+class ListingDescriptionRequest(BaseModel):
+    """Request model for marketplace-specific listing generation."""
+    product_id: int
+    marketplace_name: str  # e.g., "amazon", "mercadolibre", "ebay"
+    include_title: bool = True
+    include_keywords: bool = True
+
+
+class ListingDescriptionResponse(BaseModel):
+    """Response with marketplace-optimized listing content."""
+    title: Optional[str] = None
+    description: Optional[str] = None
+    keywords: List[str] = []
+    marketplace: str = ""
+    error: Optional[str] = None
+
+
 @router.post("/identify-product", response_model=ImageIdentificationResponse)
 async def identify_product(
     file: UploadFile = File(...),
@@ -119,3 +136,83 @@ async def generate_description(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/generate-listing-description", response_model=ListingDescriptionResponse)
+async def generate_listing_description(
+    request: ListingDescriptionRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Generate a marketplace-optimized listing description for a product.
+    
+    This endpoint generates titles, descriptions, and keywords tailored
+    for specific marketplaces like Amazon, MercadoLibre, or eBay.
+    """
+    from src.crud.crud_product import product as product_crud
+    
+    try:
+        # 1. Fetch product details
+        product = product_crud.get(db, id=request.product_id)
+        if not product:
+            return ListingDescriptionResponse(
+                error=f"Product with ID {request.product_id} not found",
+                marketplace=request.marketplace_name
+            )
+        
+        # 2. Build context from product data
+        context_parts = [
+            f"Product Name: {product.name}",
+            f"Brand: {product.brand}" if product.brand else None,
+            f"Category: {product.category}" if product.category else None,
+            f"Current Description: {product.description}" if product.description else None,
+            f"SKU: {product.sku}" if product.sku else None,
+        ]
+        context = "\n".join([p for p in context_parts if p])
+        
+        # 3. Determine tone based on marketplace
+        marketplace = request.marketplace_name.lower()
+        tone_map = {
+            "amazon": "Professional and SEO-focused for Amazon shoppers",
+            "mercadolibre": "Friendly and direct for Latin American buyers",
+            "ebay": "Casual and deal-oriented for eBay users",
+        }
+        tone = tone_map.get(marketplace, "Professional")
+        
+        # 4. Initialize ADK Manager & Orchestrator
+        adk_manager = ADKManager(db)
+        orchestrator = AgentOrchestrator(adk_manager)
+        
+        # 5. Generate listing content via orchestrator
+        result = await orchestrator.generate_product_description(
+            product_name=product.name,
+            context=f"Target Marketplace: {request.marketplace_name}\n{context}",
+            tone=tone,
+            length="medium"
+        )
+        
+        # 6. Format Response
+        if "error" in result:
+            return ListingDescriptionResponse(
+                error=result["error"],
+                marketplace=request.marketplace_name
+            )
+        
+        # Generate a title if requested
+        title = None
+        if request.include_title:
+            # Use first sentence of description or product name + brand
+            title = f"{product.name}"
+            if product.brand:
+                title = f"{product.brand} {title}"
+        
+        return ListingDescriptionResponse(
+            title=title,
+            description=result.get("description"),
+            keywords=result.get("seo_keywords", []) if request.include_keywords else [],
+            marketplace=request.marketplace_name
+        )
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

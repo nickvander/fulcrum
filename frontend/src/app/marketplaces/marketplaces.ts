@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Marketplace {
@@ -19,6 +20,58 @@ export interface MarketplaceListing {
   sync_status?: string;
   last_sync?: string;
   marketplace_price?: number;
+  metadata_json?: MarketplaceListingMetadata;
+}
+
+/**
+ * Marketplace-agnostic structure for listing content.
+ * Fields are designed to map to Amazon, MercadoLibre, and eBay APIs.
+ */
+export interface MarketplaceListingMetadata {
+  // Universal fields
+  title: string;
+  description: string;
+  keywords?: string[];
+
+  // Price and quantity (universal)
+  price?: number;
+  currency?: string;
+  quantity?: number;
+  condition?: 'new' | 'used' | 'refurbished';
+
+  // Category (platform-specific IDs stored here)
+  category_id?: string;
+
+  // Amazon-specific
+  amazon?: {
+    product_type?: string;
+    bullet_points?: string[];
+    search_terms?: string[];
+    sku?: string;
+  };
+
+  // MercadoLibre-specific
+  mercadolibre?: {
+    site_id?: string;
+    listing_type_id?: string;
+    catalog_product_id?: string;
+  };
+
+  // eBay-specific
+  ebay?: {
+    item_specifics?: Record<string, string>;
+    subtitle?: string;
+    listing_duration?: string;
+  };
+}
+
+export interface MarketplaceListingCreate {
+  product_id: number;
+  marketplace_id: number;
+  status?: string;
+  sync_status?: string;
+  marketplace_price?: number;
+  metadata_json?: MarketplaceListingMetadata;
 }
 
 @Injectable({
@@ -33,11 +86,19 @@ export class MarketplacesService {
     return this.http.get<Marketplace[]>(`${this.apiUrl}/`);
   }
 
+  getMarketplaceByName(name: string): Observable<Marketplace | undefined> {
+    return this.getMarketplaces().pipe(
+      map(marketplaces => marketplaces.find(
+        m => m.name.toLowerCase() === name.toLowerCase()
+      ))
+    );
+  }
+
   getMarketplaceListings(): Observable<MarketplaceListing[]> {
     return this.http.get<MarketplaceListing[]>(`${this.apiUrl}/listings/`);
   }
 
-  createListing(listing: any): Observable<MarketplaceListing> {
+  createListing(listing: MarketplaceListingCreate): Observable<MarketplaceListing> {
     return this.http.post<MarketplaceListing>(`${this.apiUrl}/listings/`, listing);
   }
 
