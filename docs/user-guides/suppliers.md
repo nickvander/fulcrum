@@ -60,15 +60,16 @@ The PO list is designed for efficiency:
 
 ### Creating a Purchase Order
 
-1. From the **Purchase Orders** screen, click **+ Create PO**.
-2. Or from the **Suppliers** list, click **+ Add PO**.
-3. Select the **Supplier** (if not pre-selected).
-4. Add **Line Items**:
-   - Search for products or add new ones.
-   - Specify quantity and unit cost.
-5. Review totals (Subtotal, Tax, Shipping, Total).
-6. Set **Status**: Draft, Ordered, Received.
-7. Click **Save**.
+1. From the **Purchase Orders** list, click **+ Create PO**.
+2. **AI-Powered Fast Start (Optional):**
+   - If AI features are enabled, you'll see a drop zone at the bottom: **"Drop invoice to extract PO details"**.
+   - Drag & drop your invoice file here.
+   - The AI will automatically fill in the Supplier, Currency, Shipping/Tax costs, and add matching Line Items.
+3. **Manual Entry:**
+   - Select the **Supplier** (if not auto-selected).
+   - Add **Line Items**: Search for products or add new ones.
+   - Set **Status**: Draft, Ordered, Received.
+4. Click **Save**.
 
 ### PO Statuses
 
@@ -92,21 +93,19 @@ When goods arrive:
 When you receive an invoice from your supplier, Fulcrum can automatically match
 it against your PO using AI.
 
-![Invoice Import Button](images/invoice-import-button.png)
-
 #### How It Works
 
 1. Open the PO you want to match an invoice against.
 2. Scroll to the **Supplier Invoices** section.
-3. Click **Import Invoice** (✨ sparkle icon).
-4. Select your invoice file (PDF, Image, or HTML).
-5. The AI extracts vendor, items, and costs automatically.
-6. Review the matching results:
+3. **Drag & Drop** your invoice file into the zone labeled "Drop invoice here..."
+   - A purple **AI-Powered** badge indicates smart extraction is active.
+4. The AI extracts vendor, items, and costs automatically.
+5. Review the matching results:
    - 🟢 **Matched** - Items match exactly
    - 🟡 **Diff** - Quantity or price differs
    - 🔴 **Unmatched** - Item not found in PO
-7. Click **Apply Invoice Values** to update PO costs.
-8. **Save** your PO to persist changes.
+6. Click **Apply Invoice Values** to update PO costs.
+7. **Save** your PO to persist changes.
 
 > **Note:** "Import Invoice" is only available for Draft/Ordered POs.
 
@@ -114,12 +113,12 @@ it against your PO using AI.
 
 Fulcrum offers two ways to create Purchase Orders from supplier documents:
 
-| Feature | Import PO | Create PO + Import Invoice |
-| ------- | --------- | -------------------------- |
-| **Use When** | You have a supplier quote/invoice and want to create a NEW PO | You already have a PO and receive an invoice |
-| **How** | PO List → Import PO → Upload document | Open PO → Supplier Invoices → Import Invoice |
-| **Result** | Creates new PO with extracted data | Matches invoice to existing PO items |
-| **Updates Cost** | Sets initial costs | Updates costs if different |
+| Feature | Import PO (Dialog) | Create PO (Form) |
+| ------- | ------------------ | ---------------- |
+| **Use When** | You want a wizard-style flow to scan > preview > create | You want to verify/edit details immediately on the full form |
+| **How** | PO List → Import PO → Upload document | Create PO → Drag invoice to bottom drop zone |
+| **Result** | Creates new PO with extracted data | Pre-fills form with extracted data |
+| **Flexibility**| Best for quick ingestion | Best for checking details as you go |
 
 ### Recommended Workflow
 
