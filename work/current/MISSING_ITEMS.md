@@ -1,15 +1,11 @@
-# Missing Items / Todo List
+# Missing Items Tracker
 
-## High Priority (Milestone 3 Completion)
-- [x] **Backend**: Implement `POST /ai/generate-listing-description`.
-- [x] **Frontend**: Create `MarketplaceListingDialogComponent`.
-- [x] **Frontend**: Add "Generate with AI" button to Listing Dialog.
-- [ ] **Frontend**: Wire dialog into Product Detail or Marketplace UI.
-- [ ] **Frontend**: Polish Marketplace Status indicators.
+## High Priority
+- (none currently)
 
 ## Medium Priority
-- [ ] **Backend**: Review `MercadoLibreConnector` error handling.
-- [ ] **Frontend**: Add "Re-authorize" flow for expired tokens in UI.
+- [ ] Sync listings to actual marketplace APIs (Amazon SP-API, MercadoLibre API)
+- [ ] OAuth token refresh handling improvements
 
-## Future (Milestone 4)
-- [ ] Initialize Storefront Angular project.
+## Future
+- [ ] Enhance Marketplace Status UI with sync indicators
