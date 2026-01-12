@@ -1,7 +1,3 @@
-# Missing Items & Known Issues
+# Missing Items
 
-## High Priority
-*None*
-
-## Backlog
-*None*
+None.

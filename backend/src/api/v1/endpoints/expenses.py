@@ -8,6 +8,13 @@ from src.crud import crud_expense
 from src.models.expense import Expense as ExpenseModel
 from src.schemas import expense as expense_schema
 from src.api.dependencies import get_db
+import os
+import uuid
+import shutil
+from fastapi import File, UploadFile
+from src.crud.crud_expense_receipt import expense_receipt as crud_expense_receipt
+from src.schemas import expense_receipt as receipt_schema
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -169,4 +176,148 @@ def delete_expense(
         raise HTTPException(status_code=404, detail="Expense not found")
     expense = crud_expense.expense.remove(db, id=id)
     return expense
+
+
+# --- Receipt Management ---
+
+
+UPLOAD_RECEIPT_DIR = "uploads/receipts"
+
+@router.post("/{id}/receipts", response_model=receipt_schema.ExpenseReceipt)
+async def upload_receipt(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    file: UploadFile = File(...),
+):
+    """
+    Upload a receipt for an Expense.
+    """
+    expense = crud_expense.expense.get(db, id=id)
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # Validate file type (image or pdf)
+    allowed_types = {".jpg", ".jpeg", ".png", ".pdf", ".heic"}
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {allowed_types}")
+
+    # Ensure upload dir exists
+    save_dir = f"{UPLOAD_RECEIPT_DIR}/{id}"
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Secure filename
+    secure_name = f"{uuid.uuid4().hex}{file_ext}"
+    file_path = f"{save_dir}/{secure_name}"
+    
+    # Save file
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+        
+    created = crud_expense_receipt.create(db, obj_in=receipt_schema.ExpenseReceiptCreate(
+        expense_id=id,
+        file_path=file_path,
+        file_name=file.filename,
+        content_type=file.content_type,
+        file_size_bytes=os.path.getsize(file_path)
+    ))
+    return created
+
+@router.get("/{id}/receipts", response_model=List[receipt_schema.ExpenseReceipt])
+def list_receipts(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+):
+    """
+    List receipts for an Expense.
+    """
+    return crud_expense_receipt.get_by_expense(db, expense_id=id)
+
+@router.delete("/receipts/{receipt_id}", response_model=dict)
+def delete_receipt(
+    *,
+    db: Session = Depends(get_db),
+    receipt_id: int,
+):
+    """
+    Delete a receipt.
+    """
+    receipt = crud_expense_receipt.get(db, id=receipt_id)
+    if not receipt:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    # Delete file
+    if os.path.exists(receipt.file_path):
+        try:
+            os.remove(receipt.file_path)
+        except OSError:
+            pass
+            
+    crud_expense_receipt.remove(db, id=receipt_id)
+    return {"message": "Receipt deleted"}
+
+# --- AI Receipt Parsing ---
+
+
+class ReceiptItem(BaseModel):
+    description: str
+    quantity: float
+    amount: float
+
+class ReceiptExtractionResult(BaseModel):
+    merchant_name: str | None = None
+    receipt_number: str | None = None
+    date: str | None = None
+    currency: str = "USD"
+    total_amount: float = 0.0
+    tax_amount: float = 0.0
+    tip_amount: float = 0.0
+    category: str | None = None
+    items: List[ReceiptItem] = []
+    confidence: float = 0.0
+
+@router.post("/parse-receipt", response_model=ReceiptExtractionResult)
+async def parse_receipt(
+    *,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+):
+    """
+    Parse a receipt using AI to extract details.
+    """
+    from src.services.adk.manager import ADKManager
+    from src.services.adk.orchestrator import AgentOrchestrator
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+
+    # Check Settings
+    settings = crud_store_settings.get_settings(db)
+    if not settings or not settings.ai_enabled:
+        raise HTTPException(status_code=400, detail="AI features disabled.")
+
+    # Read file
+    content = await file.read()
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    mime_type = file.content_type or "application/octet-stream"
+    
+    # Map common extensions if mime type generic
+    if mime_type == "application/octet-stream":
+        if file_ext in [".jpg", ".jpeg"]:
+            mime_type = "image/jpeg"
+        elif file_ext == ".png":
+            mime_type = "image/png"
+        elif file_ext == ".pdf":
+            mime_type = "application/pdf"
+
+    # Orchestrator
+    adk_manager = ADKManager(db)
+    orchestrator = AgentOrchestrator(adk_manager)
+    
+    result = await orchestrator.parse_receipt(content, mime_type)
+    
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+        
+    return result
 

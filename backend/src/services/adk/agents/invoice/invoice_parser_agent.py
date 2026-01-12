@@ -35,9 +35,10 @@ class InvoiceParserAgent:
     Supports PDF and image files (PNG, JPG, JPEG).
     """
     
-    def __init__(self, model: str = "gemini-2.0-flash", api_key: Optional[str] = None):
+    def __init__(self, model: str = "gemini-2.0-flash", api_key: Optional[str] = None, instruction_file: str = "invoice_extraction.md"):
         self.model = model
         self.api_key = api_key
+        self.instruction_file = instruction_file
         self._agent = None
         
         if self.api_key:
@@ -52,7 +53,7 @@ class InvoiceParserAgent:
             return
             
         try:
-            instruction = load_prompt("invoice_extraction.md")
+            instruction = load_prompt(self.instruction_file)
             
             self._agent = LlmAgent(
                 name="invoice_parser",

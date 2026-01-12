@@ -233,10 +233,31 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
 
         dialogRef.afterClosed().subscribe(result => {
             if (result) {
-                this.expenseService.createExpense(result).subscribe({
-                    next: () => {
-                        this.notificationService.showSuccess('Expense added successfully');
-                        this.loadAllExpenses();
+                const pendingReceipt = result.pendingReceipt;
+                // Remove pendingReceipt from payload
+                const payload = { ...result };
+                delete payload.pendingReceipt;
+
+                this.expenseService.createExpense(payload).subscribe({
+                    next: (newExpense) => {
+                        if (pendingReceipt) {
+                            // Upload receipt
+                            this.notificationService.showSuccess('Expense created, uploading receipt...');
+                            this.expenseService.uploadReceipt(newExpense.id, pendingReceipt).subscribe({
+                                next: () => {
+                                    this.notificationService.showSuccess('Receipt attached successfully');
+                                    this.loadAllExpenses();
+                                },
+                                error: (err) => {
+                                    console.error('Receipt upload failed', err);
+                                    this.notificationService.showError('Expense added but receipt upload failed');
+                                    this.loadAllExpenses();
+                                }
+                            });
+                        } else {
+                            this.notificationService.showSuccess('Expense added successfully');
+                            this.loadAllExpenses();
+                        }
                     },
                     error: (error) => {
                         console.error('Error adding expense:', error);

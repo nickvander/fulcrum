@@ -1,14 +1,9 @@
 # Progress Log
 
-## **Status:** **Planning**
+## **Status:** **Idle**
 
-- **Current Phase:** Phase 5 Completion - Final Testing & Polish
-- **Next Phase:** Phase 6 - Marketplace Integration
+- **Current Phase:** None
+- **Last Completed:** Phase 6 - AI Expenses (Archived to `work/archive/78-ai-expenses-features.md`)
 
-### Current Objective
-
-- [ ] **Pending Planning**
-
-### Completed This Session
-
-*None*
+### Next Steps
+- Consult `work/00-project-plan.md` for next phase.

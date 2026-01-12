@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Expense, ExpenseSummary, ExpenseCreate, ExpenseUpdate } from '../models/expense.model';
+import { Expense, ExpenseSummary, ExpenseCreate, ExpenseUpdate, ExpenseReceipt, ReceiptParseResult } from '../models/expense.model';
 import { environment } from '../../../environments/environment';
 
 export interface ExpenseFilters {
@@ -59,6 +59,26 @@ export class ExpenseService {
 
     getCategories(): Observable<string[]> {
         return this.http.get<string[]>(`${this.apiUrl}/categories`);
+    }
+
+    uploadReceipt(expenseId: number, file: File): Observable<ExpenseReceipt> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<ExpenseReceipt>(`${this.apiUrl}/${expenseId}/receipts`, formData);
+    }
+
+    getReceipts(expenseId: number): Observable<ExpenseReceipt[]> {
+        return this.http.get<ExpenseReceipt[]>(`${this.apiUrl}/${expenseId}/receipts`);
+    }
+
+    deleteReceipt(receiptId: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/receipts/${receiptId}`);
+    }
+
+    parseReceipt(file: File): Observable<ReceiptParseResult> {
+        const formData = new FormData();
+        formData.append('file', file);
+        return this.http.post<ReceiptParseResult>(`${this.apiUrl}/parse-receipt`, formData);
     }
 }
 

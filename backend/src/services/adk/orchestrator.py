@@ -186,10 +186,51 @@ class AgentOrchestrator:
             traceback.print_exc()
             return {"error": str(e)}
     
+    async def parse_receipt(
+        self, 
+        file_content: bytes, 
+        file_type: str
+    ) -> Dict[str, Any]:
+        """
+        Parse a receipt document and extract structured data.
+        
+        Args:
+            file_content: Raw bytes of the receipt file
+            file_type: MIME type
+            
+        Returns:
+            Dict with extracted receipt data.
+        """
+        try:
+            agent = self._get_receipt_parser_agent()
+            if not agent.is_available:
+                return {"error": "Receipt parser agent not available"}
+            
+            print(f"[Orchestrator] Parsing receipt document of type: {file_type}")
+            # Reusing parse_invoice logic as the agent wrapper is the same, just different prompt
+            result = await agent.parse_invoice(file_content, file_type)
+            
+            return result
+            
+        except Exception as e:
+            print(f"[Orchestrator] Receipt parsing error: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}
+
     def _get_invoice_parser_agent(self) -> InvoiceParserAgent:
         """Get configured invoice parser agent."""
         config = self.manager.get_active_config()
         return InvoiceParserAgent(model=config.get("model"), api_key=config.get("api_key"))
+
+    def _get_receipt_parser_agent(self) -> InvoiceParserAgent:
+        """Get configured receipt parser agent with specialized prompt."""
+        config = self.manager.get_active_config()
+        return InvoiceParserAgent(
+            model=config.get("model"), 
+            api_key=config.get("api_key"),
+            instruction_file="receipt_extraction.md"
+        )
 
     async def run_sequence(self, input_data: Any, agents: List[Any]) -> Any:
         """Generic sequential runner."""
