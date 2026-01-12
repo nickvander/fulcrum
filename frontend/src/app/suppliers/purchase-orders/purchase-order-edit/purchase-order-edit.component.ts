@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFor
 import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
-import { SuppliersService } from '../../suppliers.service';
+import { SuppliersService, DocumentParseResult } from '../../suppliers.service';
 import { ProductService } from '../../../products/services/product';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -898,7 +898,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   }
 
   parseAndMatchInvoice(file: File): void {
-    if (!this.poId) {
+    // When creating new PO with AI enabled, allow extraction
+    if (!this.poId && !this.aiEnabled) {
       this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.saveFirst'),
         this.translocoService.translate('common.close'), { duration: 3000 });
       return;
@@ -906,8 +907,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     this.isParsingInvoice = true;
 
-    // Use unified parseDocument endpoint with target PO
-    this.suppliersService.parseDocument(file, this.poId).subscribe({
+    // Use unified parseDocument endpoint - pass poId if we have one
+    this.suppliersService.parseDocument(file, this.poId || undefined).subscribe({
       next: (result) => {
         this.isParsingInvoice = false;
 
@@ -959,12 +960,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             }
           });
         } else {
-          // Mode: create - no match found, offer to apply extracted values
-          this.snackBar.open(
-            this.translocoService.translate('purchaseOrders.invoiceMatching.noPoMatch'),
-            this.translocoService.translate('common.close'),
-            { duration: 5000 }
-          );
+          // Mode: create - populate form with extracted data
+          this.populateFormFromExtraction(result);
         }
       },
       error: (err) => {
@@ -1012,11 +1009,72 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     }
   }
 
+  private populateFormFromExtraction(result: DocumentParseResult): void {
+    let changesApplied = false;
+
+    // Try to match and set supplier
+    if (result.vendor_name && this.suppliers.length > 0) {
+      const matchedSupplier = this.suppliers.find(s =>
+        s.name.toLowerCase().includes(result.vendor_name!.toLowerCase()) ||
+        result.vendor_name!.toLowerCase().includes(s.name.toLowerCase())
+      );
+      if (matchedSupplier && !this.poForm.get('supplierId')?.value) {
+        this.poForm.patchValue({ supplierId: matchedSupplier.id });
+        this.snackBar.open(
+          this.translocoService.translate('purchaseOrders.messages.autoSelectedSupplier', { name: matchedSupplier.name }),
+          this.translocoService.translate('common.close'),
+          { duration: 3000 }
+        );
+        changesApplied = true;
+      }
+    }
+
+    // Set currency if extracted
+    if (result.currency && result.currency !== 'USD') {
+      this.poForm.patchValue({ currency: result.currency });
+    }
+
+    // Set shipping cost
+    if (result.shipping_cost > 0) {
+      this.poForm.patchValue({ shippingCost: result.shipping_cost });
+      changesApplied = true;
+    }
+
+    // Set tax amount
+    if (result.tax_amount > 0) {
+      this.poForm.patchValue({ taxAmount: result.tax_amount });
+      changesApplied = true;
+    }
+
+    // Add extracted items to the form
+    if (result.items && result.items.length > 0) {
+      for (const item of result.items) {
+        // Add item to form - will have product_id if matched
+        this.addLineItem({
+          product_id: item.matched_product_id || null,
+          product_name: item.description || item.sku || '',
+          quantity_ordered: item.quantity,
+          unit_cost: item.unit_cost
+        });
+        changesApplied = true;
+      }
+    }
+
+    if (!changesApplied) {
+      this.snackBar.open(
+        this.translocoService.translate('purchaseOrders.invoiceMatching.noPoMatch'),
+        this.translocoService.translate('common.close'),
+        { duration: 5000 }
+      );
+    }
+  }
+
   // Drag & Drop handlers for invoice zone
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
-    if (this.poId && !this.isParsingInvoice) {
+    // Allow drag when we have poId OR when AI is enabled for create flow
+    if ((this.poId || this.aiEnabled) && !this.isParsingInvoice) {
       this.isDraggingInvoice = true;
     }
   }
@@ -1032,7 +1090,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     event.stopPropagation();
     this.isDraggingInvoice = false;
 
-    if (!this.poId || this.isParsingInvoice) return;
+    // Allow drop when we have poId OR when AI is enabled for create flow
+    if ((!this.poId && !this.aiEnabled) || this.isParsingInvoice) return;
 
     const files = event.dataTransfer?.files;
     if (files?.length) {

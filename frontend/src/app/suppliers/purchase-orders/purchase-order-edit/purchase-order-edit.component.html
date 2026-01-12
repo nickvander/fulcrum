@@ -213,7 +213,7 @@
                 <!-- Consolidated Drop Zone (works with or without AI) -->
                 <div class="invoice-drop-zone" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
                     (drop)="onInvoiceDrop($event)" (click)="parseInput.click()" [class.drag-over]="isDraggingInvoice"
-                    [class.disabled]="!poId" [class.parsing]="isParsingInvoice">
+                    [class.disabled]="!poId && !aiEnabled" [class.parsing]="isParsingInvoice">
                     <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
                         accept=".pdf,.jpg,.jpeg,.png">
                     <input type="file" #parseInput (change)="onParseAndMatchSelected($event)" style="display: none"
@@ -221,10 +221,16 @@
 
                     <ng-container *ngIf="!isParsingInvoice">
                         <mat-icon>cloud_upload</mat-icon>
-                        <span class="drop-text">{{ poId ? t('purchaseOrders.invoiceMatching.dropOrClick') :
-                            t('purchaseOrders.messages.saveFirst') }}</span>
-                        <span class="file-types" *ngIf="poId">PDF, Images, HTML</span>
-                        <span class="ai-badge" *ngIf="poId && aiEnabled">
+                        <span class="drop-text">
+                            <ng-container *ngIf="poId">{{ t('purchaseOrders.invoiceMatching.dropOrClick')
+                                }}</ng-container>
+                            <ng-container *ngIf="!poId && aiEnabled">{{
+                                t('purchaseOrders.invoiceMatching.dropToExtract') }}</ng-container>
+                            <ng-container *ngIf="!poId && !aiEnabled">{{ t('purchaseOrders.messages.saveFirst')
+                                }}</ng-container>
+                        </span>
+                        <span class="file-types" *ngIf="poId || aiEnabled">PDF, Images, HTML</span>
+                        <span class="ai-badge" *ngIf="aiEnabled">
                             <mat-icon>auto_awesome</mat-icon>
                             {{ t('products.aiPowered') }}
                         </span>

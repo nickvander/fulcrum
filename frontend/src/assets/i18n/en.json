@@ -464,6 +464,7 @@
             "scanAnother": "Try Another Invoice",
             "noPoMatch": "No matching PO found. You can manually update item values if needed.",
             "dropOrClick": "Drop invoice here or click to browse",
+            "dropToExtract": "Drop invoice to extract PO details",
             "parsing": "Parsing invoice..."
         },
         "importPo": "Import PO",

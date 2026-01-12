@@ -464,6 +464,7 @@
             "scanAnother": "Probar Otra Factura",
             "noPoMatch": "No se encontró OC coincidente. Puede actualizar manualmente los valores si lo necesita.",
             "dropOrClick": "Arrastra factura aquí o haz clic para buscar",
+            "dropToExtract": "Arrastra factura para extraer detalles de OC",
             "parsing": "Analizando factura..."
         },
         "importPo": "Importar OC",

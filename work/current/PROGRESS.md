@@ -20,6 +20,8 @@
 - [x] **Different PO Warning** - Dialog with navigation to matched PO
 - [x] **i18n Updates** - EN + ES-MX translations for unified flow
 - [x] **Lint Fixes** - Removed unused imports across backend
+- [x] **PO Form Polish** - Compact layout, responsive styles, "AI-Powered" indicators
+- [x] **Create PO Extraction** - Auto-fill PO form from invoice upload on creation
 
 ### Completed (2026-01-10)
 
