@@ -64,6 +64,57 @@ Click on a connected account to see all synced listings.
 3. Review/map fields (title, price, description).
 4. Click **Publish**.
 
+## AI-Powered Listing Generation
+
+Fulcrum includes AI-powered tools to create optimized marketplace listings with
+professional titles, compelling descriptions, and SEO keywords.
+
+### How to Access
+
+1. Navigate to **Products** and click on any product to open the details dialog.
+2. Scroll to the **Marketplaces** section.
+3. Click **Create Listing**.
+
+### Generating Content with AI
+
+1. In the Create Listing dialog, select your target marketplace:
+   - **Amazon** – Professional, SEO-focused English content
+   - **MercadoLibre** – Friendly Spanish content for Latin American audiences
+   - **eBay** – Casual, deal-oriented English content
+2. Click **Generate with AI** (requires AI to be enabled in Settings).
+3. The AI will populate:
+   - **Title** – Optimized for marketplace search algorithms
+   - **Description** – Marketing-focused product description
+   - **Keywords** – SEO tags for improved discoverability
+4. Edit the generated content as needed.
+5. Click **Save** to store the draft listing.
+
+> **Note**: The "Generate with AI" button only appears if AI features are
+> enabled in **Settings > AI**.
+
+### Using Generated Keywords
+
+The AI generates suggested keywords based on your product attributes. These
+keywords are designed for use in:
+
+- Marketplace backend keyword/tag fields
+- Ad campaigns and sponsored listings
+- Search engine optimization
+
+To copy all keywords at once, click the **copy icon** next to the keywords
+section. The keywords will be copied as a comma-separated list.
+
+### Draft Listings
+
+Saved listings are stored as **drafts** in Fulcrum. They contain:
+
+- Title, description, and keywords in the `metadata_json` field
+- Marketplace association
+- Sync status (PENDING until published)
+
+> **Coming Soon**: Direct publishing to marketplace APIs with automatic
+> inventory synchronization.
+
 ## Order Management
 
 Incoming orders from marketplaces appear in the **Orders** section (if enabled).
@@ -77,4 +128,4 @@ Fulcrum can:
 
 ---
 
-_Last Updated: December 2025_
+_Last Updated: January 2026_

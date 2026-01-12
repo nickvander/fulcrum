@@ -20,6 +20,7 @@
         "actions": "Acciones",
         "status": "Estado",
         "name": "Nombre",
+        "title": "Título",
         "currency": "Moneda",
         "description": "Descripción",
         "date": "Fecha",
@@ -714,7 +715,16 @@
         "errors": {
             "authUrlFailed": "Error al obtener la URL de autorización.",
             "saveFailed": "Error al guardar las credenciales."
-        }
+        },
+        "createListing": "Crear Listado",
+        "selectMarketplace": "Mercado",
+        "generateWithAI": "Generar con IA",
+        "suggestedKeywords": "Palabras Clave Sugeridas",
+        "aiGenerating": "La IA está generando contenido...",
+        "aiGenerateSuccess": "¡Contenido generado con IA exitosamente!",
+        "copyKeywords": "Copiar todas las palabras clave",
+        "keywordsHint": "Usa estas palabras clave en tu panel de mercado para mejor visibilidad en búsquedas.",
+        "listingSaved": "¡Listado guardado exitosamente!"
     },
     "users": {
         "title": "Usuarios",

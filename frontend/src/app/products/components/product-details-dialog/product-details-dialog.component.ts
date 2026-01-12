@@ -13,6 +13,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
 import { CodeDisplayComponent } from '../../../shared/components/code-display/code-display.component';
+import { MarketplaceListingDialogComponent, MarketplaceListingDialogData } from '../../../marketplaces/components/marketplace-listing-dialog/marketplace-listing-dialog.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
     selector: 'app-product-details-dialog',
@@ -58,7 +60,8 @@ export class ProductDetailsDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: { product: Product, mode?: 'view' | 'edit' | 'add', stagedImage?: File },
         private productService: ProductService,
         private router: Router,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private notificationService: NotificationService
     ) {
         // Initialize with passed data for immediate display
         this.product = data.product;
@@ -330,5 +333,29 @@ export class ProductDetailsDialogComponent implements OnInit {
     navigateToQuickPost(postId: number): void {
         this.dialogRef.close();
         this.router.navigate(['/marketing'], { queryParams: { tab: 'quick-posts', highlight: postId } });
+    }
+
+    openListingDialog(marketplaceName: string = 'amazon'): void {
+        if (!this.product?.id) return;
+
+        const dialogRef = this.dialog.open(MarketplaceListingDialogComponent, {
+            width: '600px',
+            maxWidth: '95vw',
+            data: {
+                productId: this.product.id,
+                productName: this.product.name,
+                marketplace: marketplaceName,
+                existingTitle: this.product.name,
+                existingDescription: this.product.description
+            } as MarketplaceListingDialogData
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            if (result) {
+                // TODO: Handle saving the listing (call backend API)
+                console.log('Listing data:', result);
+                this.notificationService.showSuccess('Listing prepared! Publishing integration coming soon.');
+            }
+        });
     }
 }

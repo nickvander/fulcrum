@@ -528,6 +528,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
   getImageUrl(imagePath: string): string {
     if (imagePath && imagePath.startsWith('http')) return imagePath;
+    // Handle placeholder image - it's in assets, not uploads
+    if (imagePath === 'placeholder.jpg') return 'assets/placeholder.jpg';
     // Backend serves images from the 'uploads/product_images' directory.
     return `/uploads/product_images/${imagePath}`;
   }
