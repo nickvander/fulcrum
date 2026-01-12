@@ -5,6 +5,56 @@
     </h2>
 
     <mat-dialog-content>
+        <!-- Receipt Drop Zone -->
+        <div class="invoice-drop-zone" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)" (click)="fileInput.click()" [class.drag-over]="isDragging"
+            [class.parsing]="isParsing">
+
+            <input #fileInput type="file" (change)="onFileSelected($event)" style="display:none"
+                accept=".pdf,.png,.jpg,.jpeg">
+
+            <ng-container *ngIf="!isParsing && !pendingReceipt">
+                <mat-icon>cloud_upload</mat-icon>
+                <div class="drop-content">
+                    <span class="drop-text">
+                        {{ isEditMode ? 'Drop receipt to attach' : 'Drop receipt to auto-fill' }}
+                    </span>
+                    <div class="ai-badge">
+                        <mat-icon>auto_awesome</mat-icon> AI
+                    </div>
+                </div>
+                <span class="file-types">PDF, PNG, JPG</span>
+            </ng-container>
+
+            <div *ngIf="isParsing" class="parsing-state">
+                <mat-spinner diameter="24"></mat-spinner>
+                <span>Analyzing receipt...</span>
+            </div>
+
+            <div *ngIf="pendingReceipt" class="pending-file">
+                <mat-icon class="file-icon">description</mat-icon>
+                <span class="filename">{{ pendingReceipt.name }}</span>
+                <button mat-icon-button (click)="$event.stopPropagation(); removePendingReceipt()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Receipt List (Edit Mode) -->
+        <div *ngIf="isEditMode && attachedReceipts.length" class="receipt-list">
+            <h4>{{ t('common.attachments') }}</h4>
+            <div *ngFor="let receipt of attachedReceipts" class="receipt-item">
+                <div class="receipt-info">
+                    <mat-icon>receipt</mat-icon>
+                    <span class="name">{{ receipt.file_name }}</span>
+                </div>
+                <button mat-icon-button color="warn" (click)="deleteReceipt(receipt.id)">
+                    <mat-icon>delete</mat-icon>
+                </button>
+                <!-- Note: Viewing requires serving static files, assume handled or just list for now -->
+            </div>
+        </div>
+
         <form [formGroup]="expenseForm" class="expense-form">
             <!-- Expense Type Toggle -->
             <div class="form-section">

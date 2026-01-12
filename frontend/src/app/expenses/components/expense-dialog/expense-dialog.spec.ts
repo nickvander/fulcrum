@@ -4,16 +4,25 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ExpenseService } from '../../services/expense.service';
+import { of } from 'rxjs';
 
 describe('ExpenseDialogComponent', () => {
     let component: ExpenseDialogComponent;
     let fixture: ComponentFixture<ExpenseDialogComponent>;
     let mockDialogRef: any;
+    let mockExpenseService: any;
 
     beforeEach(async () => {
         mockDialogRef = {
             close: vi.fn()
+        };
+
+        mockExpenseService = {
+            getReceipts: vi.fn().mockReturnValue(of([])),
+            parseReceipt: vi.fn(),
+            uploadReceipt: vi.fn(),
+            deleteReceipt: vi.fn()
         };
 
         await TestBed.configureTestingModule({
@@ -21,12 +30,12 @@ describe('ExpenseDialogComponent', () => {
                 ExpenseDialogComponent, // Standalone
                 TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
                 NoopAnimationsModule,
-                HttpClientTestingModule,
                 ReactiveFormsModule
             ],
             providers: [
                 { provide: MatDialogRef, useValue: mockDialogRef },
                 { provide: MAT_DIALOG_DATA, useValue: { expense: null, categories: [] } },
+                { provide: ExpenseService, useValue: mockExpenseService },
                 FormBuilder
             ]
         }).compileComponents();

@@ -10,8 +10,11 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
-import { Expense } from '../../models/expense.model';
+
+import { Expense, ExpenseReceipt } from '../../models/expense.model';
+import { ExpenseService } from '../../services/expense.service';
 
 @Component({
     selector: 'app-expense-dialog',
@@ -28,7 +31,8 @@ import { Expense } from '../../models/expense.model';
         MatButtonModule,
         MatButtonToggleModule,
         MatIconModule,
-        TranslocoModule
+        TranslocoModule,
+        MatProgressSpinnerModule
     ],
     templateUrl: './expense-dialog.html',
     styleUrl: './expense-dialog.scss'
@@ -51,13 +55,22 @@ export class ExpenseDialogComponent implements OnInit {
     ];
     showCustomCategory = false;
     isEditMode = false;
+
     currentLang: string;
+
+    // Receipt Handling
+    isParsing = false;
+    isDragging = false;
+    pendingReceipt: File | null = null;
+    attachedReceipts: ExpenseReceipt[] = [];
 
     constructor(
         private fb: FormBuilder,
         private dialogRef: MatDialogRef<ExpenseDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { expense?: Expense; categories?: string[] },
-        private translocoService: TranslocoService
+
+        private translocoService: TranslocoService,
+        private expenseService: ExpenseService
     ) {
         this.currentLang = this.translocoService.getActiveLang();
 
@@ -103,6 +116,121 @@ export class ExpenseDialogComponent implements OnInit {
                 });
             }
         }
+
+        if (this.isEditMode) {
+            this.loadReceipts();
+        }
+    }
+
+    loadReceipts(): void {
+        this.expenseService.getReceipts(this.data.expense!.id).subscribe({
+            next: (receipts) => this.attachedReceipts = receipts,
+            error: (err) => console.error('Error loading receipts', err)
+        });
+    }
+
+    // --- Drag & Drop Receipt Handling ---
+
+    onDragOver(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragging = true;
+    }
+
+    onDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragging = false;
+    }
+
+    onDrop(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isDragging = false;
+
+        if (event.dataTransfer?.files.length) {
+            const file = event.dataTransfer.files[0];
+            if (this.isEditMode) {
+                this.uploadReceipt(file);
+            } else {
+                this.parseReceipt(file);
+            }
+        }
+    }
+
+    onFileSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (input.files?.length) {
+            const file = input.files[0];
+            if (this.isEditMode) {
+                this.uploadReceipt(file);
+            } else {
+                this.parseReceipt(file);
+            }
+        }
+    }
+
+    parseReceipt(file: File): void {
+        this.isParsing = true;
+        this.expenseService.parseReceipt(file).subscribe({
+            next: (result) => {
+                this.isParsing = false;
+                this.pendingReceipt = file;
+
+                // Auto-fill form
+                const patch: any = {};
+
+                if (result.merchant_name) patch.description = result.merchant_name;
+                if (result.total_amount) patch.amount = result.total_amount;
+                if (result.date) patch.date = new Date(result.date);
+                if (result.currency) patch.currency = result.currency;
+
+                if (result.category) {
+                    // Check if category exists
+                    if (this.categories.includes(result.category)) {
+                        patch.category = result.category;
+                    } else if (result.category === 'Other' || !result.category) {
+                        patch.category = 'Other';
+                    } else {
+                        // Custom? Or default to Other
+                        patch.category = 'Other';
+                        // Or create custom
+                    }
+                }
+
+                if (result.receipt_number) patch.reference_number = result.receipt_number;
+
+                this.expenseForm.patchValue(patch);
+            },
+            error: (err) => {
+                console.error('Parse error', err);
+                this.isParsing = false;
+                // Maybe notify generic error?
+            }
+        });
+    }
+
+    uploadReceipt(file: File): void {
+        if (!this.data.expense) return;
+
+        this.expenseService.uploadReceipt(this.data.expense.id, file).subscribe({
+            next: (receipt) => {
+                this.attachedReceipts.push(receipt);
+            },
+            error: (err) => console.error('Upload error', err)
+        });
+    }
+
+    deleteReceipt(receiptId: number): void {
+        this.expenseService.deleteReceipt(receiptId).subscribe({
+            next: () => {
+                this.attachedReceipts = this.attachedReceipts.filter(r => r.id !== receiptId);
+            }
+        });
+    }
+
+    removePendingReceipt(): void {
+        this.pendingReceipt = null;
     }
 
     onCategoryChange(value: string): void {
@@ -142,7 +270,8 @@ export class ExpenseDialogComponent implements OnInit {
                 recurrence_interval: val.expense_type === 'recurring' ? val.recurrence_interval : null,
                 reference_number: val.reference_number || null,
                 payment_method: val.payment_method || null,
-                notes: val.notes || null
+                notes: val.notes || null,
+                pendingReceipt: this.pendingReceipt // Pass to list component
             };
 
             this.dialogRef.close(result);

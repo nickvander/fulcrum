@@ -77,6 +77,27 @@ The expense list updates instantly as you interact with it:
 
 Click the **⋮** menu on any expense row to edit or delete.
 
+## AI Receipt Scanning
+
+The system includes AI-powered tools to simplify expense entry.
+
+### Creating from Receipt
+
+1. Open the "Add Expense" dialog.
+2. Drag and drop a receipt file (PDF or Image) into the drop zone at the top.
+3. The AI will analyze the document and automatically fill in:
+   - Merchant (Description)
+   - Date
+   - Amount
+   - Category
+4. Review the details and click **Add Expense**.
+
+### Attaching Receipts
+
+You can also attach receipt files to existing expenses:
+1. Edit an expense.
+2. Drop files to attach them for record-keeping.
+
 ## Calculating Business Profitability
 
 Expenses are used in profit calculations:

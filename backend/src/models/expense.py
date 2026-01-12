@@ -41,6 +41,8 @@ class Expense(Base):
     paid_by_user = relationship("User")
     product = relationship("Product")
     supplier = relationship("Supplier")
+
     purchase_order = relationship("PurchaseOrder")
+    receipts = relationship("ExpenseReceipt", back_populates="expense", cascade="all, delete-orphan")
 
 
