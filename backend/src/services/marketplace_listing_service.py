@@ -45,14 +45,18 @@ class MarketplaceListingService:
                 product_id = self._find_matching_product(db, ext_listing.sku)
                 
                 if not product_id:
-                    # No matching product found, create a shell?
-                    # For now, let's just mark as orphaned if no SKU match, 
-                    # but we could create a product shell here if the user wants.
-                    # Let's implement the 'auto-create' logic.
+                    # No matching product found, create a shell
                     product_id = self._create_product_shell(db, ext_listing)
                     stats["created_product_shell"] += 1
                 else:
                     stats["synced"] += 1
+                    # Add image if it matched an existing product without an image
+                    if ext_listing.image_url:
+                        from src.models.product import ProductImage
+                        has_image = db.query(ProductImage).filter(ProductImage.product_id == product_id).first()
+                        if not has_image:
+                            db.add(ProductImage(product_id=product_id, image_path=ext_listing.image_url, is_primary=1, order=0))
+                            db.commit()
 
                 db_listing = MarketplaceListing(
                     product_id=product_id,
@@ -62,14 +66,67 @@ class MarketplaceListingService:
                     status=ext_listing.status,
                     sync_status="SYNCED",
                     marketplace_price=ext_listing.price,
+                    original_price=ext_listing.original_price,
+                    discount_percentage=ext_listing.discount_percentage,
                     metadata_json=ext_listing.raw_data
                 )
                 db.add(db_listing)
             else:
-                # Existing listing, update status/price
+                # Existing listing, update fields
                 db_listing.status = ext_listing.status
                 db_listing.marketplace_price = ext_listing.price
+                db_listing.original_price = ext_listing.original_price
+                db_listing.discount_percentage = ext_listing.discount_percentage
                 db_listing.sync_status = "SYNCED"
+                
+                # Retroactively add images if missing or only thumbnail exists
+                from src.models.product import ProductImage
+                existing_images = db.query(ProductImage).filter(ProductImage.product_id == db_listing.product_id).all()
+                
+                # If we only have the initial thumbnail and there are more images available, refresh them
+                if len(existing_images) <= 1 and len(ext_listing.image_urls) > 1:
+                    for img in existing_images:
+                        db.delete(img)
+                    db.flush()
+                    
+                    for idx, img_url in enumerate(ext_listing.image_urls):
+                        db.add(ProductImage(
+                            product_id=db_listing.product_id, 
+                            image_path=img_url, 
+                            is_primary=(1 if idx == 0 else 0), 
+                            order=idx
+                        ))
+                elif not existing_images and ext_listing.image_url:
+                    db.add(ProductImage(
+                        product_id=db_listing.product_id, 
+                        image_path=ext_listing.image_url, 
+                        is_primary=1, 
+                        order=0
+                    ))
+                
+                # Sync stock proactively
+                if ext_listing.available_quantity is not None:
+                    from src.services.inventory_service import inventory_service
+                    # Get current stock at ML location
+                    from src.models.inventory import InventoryItem
+                    ml_stock = db.query(InventoryItem).filter(
+                        InventoryItem.product_id == db_listing.product_id,
+                        InventoryItem.location == "MercadoLibre"
+                    ).first()
+                    
+                    current_qty = ml_stock.quantity if ml_stock else 0
+                    if current_qty != ext_listing.available_quantity:
+                        adjustment = ext_listing.available_quantity - current_qty
+                        inventory_service.adjust_stock(
+                            db=db,
+                            product_id=db_listing.product_id,
+                            adjustment=adjustment,
+                            reason="Marketplace sync update",
+                            location="MercadoLibre",
+                            user_id="system"
+                        )
+                
+                db.commit()
                 stats["synced"] += 1
 
         db.commit()
@@ -92,6 +149,40 @@ class MarketplaceListingService:
             cost_price=0.0
         )
         product = crud_product.product.create(db, obj_in=product_in)
+        
+        # Save images if provided
+        from src.models.product import ProductImage
+        if listing.image_urls:
+            for idx, img_url in enumerate(listing.image_urls):
+                img = ProductImage(
+                    product_id=product.id,
+                    image_path=img_url,
+                    is_primary=(1 if idx == 0 else 0),
+                    order=idx
+                )
+                db.add(img)
+        elif listing.image_url:
+            img = ProductImage(
+                product_id=product.id,
+                image_path=listing.image_url,
+                is_primary=1,
+                order=0
+            )
+            db.add(img)
+            
+        # Proactively pull in stock
+        if listing.available_quantity is not None:
+            from src.services.inventory_service import inventory_service
+            inventory_service.adjust_stock(
+                db=db,
+                product_id=product.id,
+                adjustment=listing.available_quantity,
+                reason="Initial import from MercadoLibre",
+                location="MercadoLibre",
+                user_id="system"
+            )
+            
+        db.commit()
         return product.id
 
     async def publish_to_marketplace(self, db: Session, product_id: int, marketplace_id: int, user_id: int) -> MarketplaceListing:

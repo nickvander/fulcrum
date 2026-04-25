@@ -135,9 +135,36 @@ mat-row {
     }
 }
 
+.price-container {
+    display: flex;
+    flex-direction: column;
+}
+
 .price-value {
     font-weight: 700;
     color: #0f172a;
+}
+
+.promo-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.original-price {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-decoration: line-through;
+}
+
+.discount-badge {
+    font-size: 0.65rem;
+    background: #fef2f2;
+    color: #ef4444;
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-weight: 700;
 }
 
 .empty-table {

@@ -76,60 +76,40 @@ export class MarketplaceSettingsComponent implements OnInit {
     }
 
     loadAccounts(): void {
-        // For now, we'll simulate accounts from the credentials API
-        this.http.get<any>(`${environment.apiUrl}/settings/marketplace`).subscribe({
-            next: (settings) => {
-                // Check if this marketplace has credentials
-                const key = this.marketplaceType.toLowerCase();
-                if (settings[key] && settings[key].connected) {
-                    this.accounts = [{
-                        id: 1,
-                        name: `${this.marketplaceName} Account`,
-                        connected: true
-                    }];
-                } else {
-                    this.accounts = [];
+        // Get the marketplace ID first
+        this.http.get<any[]>(`${environment.apiUrl}/marketplace/`).subscribe({
+            next: (marketplaces) => {
+                const mp = marketplaces.find(m => m.name.toLowerCase() === this.marketplaceName.toLowerCase());
+                if (mp) {
+                    // Check if credentials exist for this marketplace
+                    this.http.get<any>(`${environment.apiUrl}/marketplace-credentials/${mp.id}`).subscribe({
+                        next: (cred) => {
+                            this.accounts = [{
+                                id: cred.id,
+                                name: `${this.marketplaceName} Account`,
+                                connected: true
+                            }];
+                        },
+                        error: (err) => {
+                            if (err.status === 404) {
+                                this.accounts = [];
+                            } else {
+                                console.error('Failed to load credentials:', err);
+                            }
+                        }
+                    });
                 }
             },
-            error: () => {
+            error: (err) => {
+                console.error('Failed to load marketplaces:', err);
                 this.accounts = [];
             }
         });
     }
 
     saveAndConnect(): void {
-        const payload = {
-            marketplace: this.marketplaceType,
-            client_id: this.newAccount.clientId,
-            client_secret: this.newAccount.clientSecret,
-            redirect_uri: this.newAccount.redirectUri,
-            name: this.newAccount.name
-        };
-
-        this.snackBar.open(this.translocoService.translate('marketplaces.messages.saving'), '', { duration: 2000 });
-
-        // Save first, then redirect to OAuth
-        this.http.post(`${environment.apiUrl}/settings/marketplace`, payload).subscribe({
-            next: () => {
-                // Get auth URL and redirect
-                this.http.get<{ auth_url: string }>(`${environment.apiUrl}/marketplace-credentials/by-name/${this.marketplaceType}/authorize`).subscribe({
-                    next: (response) => {
-                        window.location.href = response.auth_url;
-                    },
-                    error: (err) => {
-                        console.error('Auth error:', err);
-                        this.snackBar.open(this.translocoService.translate('marketplaces.errors.authUrlFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
-                    }
-                });
-            },
-            error: (err) => {
-                console.error('Save error:', err);
-                this.snackBar.open(this.translocoService.translate('marketplaces.errors.saveFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
-            }
-        });
-    }
-
-    reconnect(accountId: number): void {
+        // We don't need to post to /settings/marketplace anymore. 
+        // Just redirect to the authorization URL.
         this.http.get<{ auth_url: string }>(`${environment.apiUrl}/marketplace-credentials/by-name/${this.marketplaceType}/authorize`).subscribe({
             next: (response) => {
                 window.location.href = response.auth_url;
@@ -139,6 +119,10 @@ export class MarketplaceSettingsComponent implements OnInit {
                 this.snackBar.open(this.translocoService.translate('marketplaces.errors.authUrlFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
             }
         });
+    }
+
+    reconnect(accountId: number): void {
+        this.saveAndConnect();
     }
 
     deleteAccount(accountId: number): void {
@@ -151,9 +135,16 @@ export class MarketplaceSettingsComponent implements OnInit {
 
         dialogRef.afterClosed().subscribe(confirmed => {
             if (confirmed) {
-                // TODO: Implement delete API
-                this.snackBar.open(this.translocoService.translate('marketplaces.messages.accountRemoved'), this.translocoService.translate('common.close'), { duration: 3000 });
-                this.accounts = this.accounts.filter(a => a.id !== accountId);
+                this.http.delete(`${environment.apiUrl}/marketplace-credentials/${accountId}`).subscribe({
+                    next: () => {
+                        this.snackBar.open(this.translocoService.translate('marketplaces.messages.accountRemoved'), this.translocoService.translate('common.close'), { duration: 3000 });
+                        this.accounts = this.accounts.filter(a => a.id !== accountId);
+                    },
+                    error: (err) => {
+                        console.error('Delete error:', err);
+                        this.snackBar.open('Failed to disconnect account.', 'Close', { duration: 3000 });
+                    }
+                });
             }
         });
     }

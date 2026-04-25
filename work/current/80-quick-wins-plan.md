@@ -17,29 +17,30 @@ parsing patterns).
 
 ### Low Stock Widget
 
-| File | Change |
-|------|--------|
-| `backend/src/api/v1/endpoints/reports.py` | Add `/reports/low-stock` |
-| `frontend/src/app/dashboard/widgets/` | `LowStockWidgetComponent` |
-| `frontend/src/assets/i18n/*.json` | Translations |
+| File                                      | Change                    |
+| ----------------------------------------- | ------------------------- |
+| `backend/src/api/v1/endpoints/reports.py` | Add `/reports/low-stock`  |
+| `frontend/src/app/dashboard/widgets/`     | `LowStockWidgetComponent` |
+| `frontend/src/assets/i18n/*.json`         | Translations              |
 
 ### Export Service
 
-| File | Change |
-|------|--------|
-| [NEW] `backend/src/services/export_service.py` | CSV/PDF generation |
-| `backend/src/api/v1/endpoints/reports.py` | Add `/reports/export` |
-| `frontend/src/app/shared/` | Export button component |
+| File                                           | Change                  |
+| ---------------------------------------------- | ----------------------- |
+| [NEW] `backend/src/services/export_service.py` | CSV/PDF generation      |
+| `backend/src/api/v1/endpoints/reports.py`      | Add `/reports/export`   |
+| `frontend/src/app/shared/`                     | Export button component |
 
 ### AI Catalog Import (PDF-First)
 
-| File | Change |
-|------|--------|
-| [NEW] `backend/src/services/adk/agents/catalog/` | Catalog parsing agent |
-| `backend/src/api/v1/endpoints/ai.py` | Add `/ai/parse-catalog` |
-| [NEW] `frontend/src/app/products/catalog-import-dialog/` | Import dialog |
+| File                                                     | Change                  |
+| -------------------------------------------------------- | ----------------------- |
+| [NEW] `backend/src/services/adk/agents/catalog/`         | Catalog parsing agent   |
+| `backend/src/api/v1/endpoints/ai.py`                     | Add `/ai/parse-catalog` |
+| [NEW] `frontend/src/app/products/catalog-import-dialog/` | Import dialog           |
 
 **Supported PDF Types:**
+
 - Price lists (SKU, Name, Price tables)
 - Product catalogs (multi-page)
 - Invoices/Quotes (reuse existing parsing patterns)

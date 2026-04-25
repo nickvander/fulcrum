@@ -216,7 +216,7 @@
             <div class="marketplace-icons">
               @if (product.marketplace_listings && product.marketplace_listings.length > 0) {
               <app-marketplace-status [listings]="product.marketplace_listings"
-                [simple]="true"></app-marketplace-status>
+                [simple]="true" (click)="$event.stopPropagation()"></app-marketplace-status>
               } @else {
               <div class="no-marketplaces">
                 <mat-icon>link_off</mat-icon> <span>Unlisted</span>
@@ -343,7 +343,7 @@
           <ng-container matColumnDef="marketplaces">
             <th mat-header-cell *matHeaderCellDef> {{ t('products.columns.marketplaces') }} </th>
             <td mat-cell *matCellDef="let element">
-              <app-marketplace-status [listings]="element.marketplace_listings"></app-marketplace-status>
+              <app-marketplace-status [listings]="element.marketplace_listings" (click)="$event.stopPropagation()"></app-marketplace-status>
               @if (!element.marketplace_listings?.length) {
               <span class="text-muted" style="font-size: 0.8rem; color: #999;">-</span>
               }

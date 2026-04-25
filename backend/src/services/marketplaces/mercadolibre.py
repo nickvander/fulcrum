@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional
+import asyncio
 import httpx
 from src.config import settings
 from .base import BaseMarketplaceConnector
@@ -60,17 +61,135 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         """
         Fetches all listings from MercadoLibre for the authenticated user.
         """
-        # TODO: Implement real API call: GET /users/me/items/search
+        if not access_token:
+            raise ValueError("Access token is required to fetch listings")
+
         from .base import ListingData
-        return [
-            ListingData(
-                external_id="MLM-STUB-001",
-                sku="STUB-SKU-001",
-                title="Stub ML Mexico Product 1",
-                price=1500.0,
-                status="active"
-            )
-        ]
+        results = []
+        
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+            
+            # 1. Get User ID
+            user_response = await client.get(f"{self.API_URL}/users/me", headers=headers)
+            user_response.raise_for_status()
+            user_id = user_response.json().get("id")
+            
+            # 2. Get User Items (with pagination)
+            item_ids = []
+            offset = 0
+            limit = 50
+            
+            while True:
+                search_response = await client.get(
+                    f"{self.API_URL}/users/{user_id}/items/search", 
+                    params={"offset": offset, "limit": limit},
+                    headers=headers
+                )
+                search_response.raise_for_status()
+                data = search_response.json()
+                page_results = data.get("results", [])
+                
+                if not page_results:
+                    break
+                    
+                item_ids.extend(page_results)
+                
+                paging = data.get("paging", {})
+                total = paging.get("total", 0)
+                offset += limit
+                
+                if offset >= total:
+                    break
+            
+            if not item_ids:
+                return []
+                
+            # 3. Get Item Details (Chunking max 20 per request as per ML docs)
+            chunk_size = 20
+            semaphore = asyncio.Semaphore(10) # Limit concurrency
+            
+            async def get_item_with_prices(item_id_chunk, headers):
+                ids_param = ",".join(item_id_chunk)
+                async with semaphore:
+                    # Get Items
+                    items_response = await client.get(
+                        f"{self.API_URL}/items",
+                        params={
+                            "ids": ids_param,
+                            "attributes": "id,title,price,original_price,base_price,currency_id,thumbnail,permalink,pictures,status,available_quantity,attributes,variations,prices"
+                        },
+                        headers=headers
+                    )
+                    items_response.raise_for_status()
+                    items_data = items_response.json()
+                    
+                    chunk_results = []
+                    for item_obj in items_data:
+                        if item_obj.get("code") == 200:
+                            item = item_obj.get("body", {})
+                            
+                            # Get detailed prices from /items/{id}/prices because Multiget often hides them
+                            try:
+                                prices_response = await client.get(f"{self.API_URL}/items/{item.get('id')}/prices", headers=headers)
+                                if prices_response.status_code == 200:
+                                    prices_data = prices_response.json()
+                                    prices_list = prices_data.get("prices", [])
+                                    promo = next((p for p in prices_list if p.get("type") == "promotion"), None)
+                                    if promo:
+                                        item["price"] = promo.get("amount")
+                                        item["original_price"] = promo.get("regular_amount")
+                            except Exception:
+                                # Suppress in production or use logger
+                                pass
+
+                            # Extract all images
+                            pictures = item.get("pictures", [])
+                            image_urls = []
+                            for p in pictures:
+                                url = p.get("secure_url") or p.get("url")
+                                if url:
+                                    image_urls.append(url)
+                                    
+                            # Calculate discount if applicable
+                            price = item.get("price")
+                            original_price = item.get("original_price")
+                            
+                            # Only use base_price as original if it's higher than current price
+                            base_price = item.get("base_price")
+                            if not original_price and base_price and float(base_price) > float(price):
+                                original_price = base_price
+                                    
+                            discount_percentage = None
+                            if original_price and price and float(original_price) > float(price):
+                                discount_percentage = round((1 - (float(price) / float(original_price))) * 100, 2)
+                                
+                            chunk_results.append(ListingData(
+                                external_id=item.get("id"),
+                                sku=next((attr.get("value_name") for attr in item.get("attributes", []) if attr.get("id") == "SELLER_SKU"), None),
+                                title=item.get("title"),
+                                price=price,
+                                original_price=original_price,
+                                discount_percentage=discount_percentage,
+                                currency=item.get("currency_id", "MXN"),
+                                listing_url=item.get("permalink"),
+                                image_url=image_urls[0] if image_urls else item.get("thumbnail"),
+                                image_urls=image_urls,
+                                status=item.get("status"),
+                                available_quantity=item.get("available_quantity"),
+                                raw_data=item
+                            ))
+                    return chunk_results
+
+            # Create tasks for all chunks
+            chunks = [item_ids[i:i + chunk_size] for i in range(0, len(item_ids), chunk_size)]
+            tasks = [get_item_with_prices(chunk, headers) for chunk in chunks]
+            
+            chunked_results = await asyncio.gather(*tasks)
+            for chunk_res in chunked_results:
+                results.extend(chunk_res)
+                        
+        return results
 
     async def sync_inventory(self, external_id: str, quantity: int, access_token: Optional[str] = None) -> bool:
         """
@@ -101,6 +220,34 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         print(f"Publishing to ML Mexico: {product_data.get('name')}")
         # Real: POST /items with full product payload, site_id=MLM
         return "MLM-STUB-123"
+
+    async def fetch_public_listings(self, query: str) -> list:
+        """
+        Fetches public listings from MercadoLibre Mexico for a given search query.
+        Does NOT require an access token.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_URL}/sites/{self.SITE_ID}/search",
+                params={"q": query, "limit": 10},
+                headers={"User-Agent": "Fulcrum/1.0.0 (https://github.com/nickvander/fulcrum)"}
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            results = []
+            for item in data.get("results", []):
+                results.append({
+                    "external_id": item.get("id"),
+                    "title": item.get("title"),
+                    "price": item.get("price"),
+                    "currency": item.get("currency_id"),
+                    "permalink": item.get("permalink"),
+                    "thumbnail": item.get("thumbnail"),
+                    "condition": item.get("condition"),
+                    "available_quantity": item.get("available_quantity")
+                })
+            return results
 
     async def get_listing_status(self, external_id: str, access_token: Optional[str] = None) -> str:
         """

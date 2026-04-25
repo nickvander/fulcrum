@@ -35,9 +35,7 @@
       - Fixed Supplier Table sorting (async data loading issue).
       - Added Marketing Campaign Table sorting.
 
-
 - **2025-12-29**: Started Phase 1 of Frontend Refactoring & Modernization.
   - Defined "Calm & Professional" design palette (Deep Slate / Soft Teal).
   - Created global SCSS mixins for Cards, Badges, and Filters.
   - Installed `@ngneat/transloco` for multilingual support.
-

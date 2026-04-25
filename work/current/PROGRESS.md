@@ -1,7 +1,7 @@
 # Progress Log
 
-**Status:** Planning
-**Current Phase:** 80-quick-wins
+**Status:** Idle (Waiting for next task) **Current Phase:** Phase 6 - Deep
+Marketplace Integration Engine
 
 ## Current Work
 
@@ -9,5 +9,7 @@
 
 ## Recent Archive
 
-- [79-marketplace-integration-log.md](../archive/79-marketplace-integration-log.md) - AI Listing Generation
-
+- [81-mercadolibre-deep-integration.md](../archive/81-mercadolibre-deep-integration.md) -
+  Deep ML Sync & UI Polish
+- [79-marketplace-integration-log.md](../archive/79-marketplace-integration-log.md) -
+  AI Listing Generation

@@ -12,17 +12,16 @@ Settings.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> **Scope Decision**: This plan covers a comprehensive refactoring. Given the
-> scope, we can prioritize work in phases:
+> [!IMPORTANT] **Scope Decision**: This plan covers a comprehensive refactoring.
+> Given the scope, we can prioritize work in phases:
 >
 > - **Phase A**: Localization infrastructure + language selector (quick win)
 > - **Phase B**: Full UI translation (systematic, module-by-module)
 > - **Phase C**: Code modularity refactoring (component splitting, shared code)
 
-> [!NOTE]
-> **Translation Approach**: We will translate all user-facing strings but keep
-> code-level comments, console logs, and developer-facing text in English.
+> [!NOTE] **Translation Approach**: We will translate all user-facing strings
+> but keep code-level comments, console logs, and developer-facing text in
+> English.
 
 ---
 
@@ -61,17 +60,39 @@ Expand to include all UI text organized by module:
 
 ```json
 {
-  "common": { /* buttons, actions */ },
-  "nav": { /* navigation labels */ },
-  "auth": { /* login, password screens */ },
-  "dashboard": { /* dashboard widgets */ },
-  "products": { /* product list, form, dialogs */ },
-  "suppliers": { /* supplier management, POs */ },
-  "expenses": { /* expense tracking */ },
-  "marketing": { /* campaigns, posts */ },
-  "marketplaces": { /* marketplace integration */ },
-  "users": { /* user management */ },
-  "settings": { /* all settings tabs */ }
+  "common": {
+    /* buttons, actions */
+  },
+  "nav": {
+    /* navigation labels */
+  },
+  "auth": {
+    /* login, password screens */
+  },
+  "dashboard": {
+    /* dashboard widgets */
+  },
+  "products": {
+    /* product list, form, dialogs */
+  },
+  "suppliers": {
+    /* supplier management, POs */
+  },
+  "expenses": {
+    /* expense tracking */
+  },
+  "marketing": {
+    /* campaigns, posts */
+  },
+  "marketplaces": {
+    /* marketplace integration */
+  },
+  "users": {
+    /* user management */
+  },
+  "settings": {
+    /* all settings tabs */
+  }
 }
 ```
 
@@ -139,11 +160,20 @@ Create a centralized Material imports module to reduce repetition:
 
 ```typescript
 const MATERIAL_MODULES = [
-  MatButtonModule, MatIconModule, MatCardModule,
-  MatFormFieldModule, MatInputModule, MatSelectModule,
-  MatTableModule, MatSortModule, MatPaginatorModule,
-  MatDialogModule, MatTooltipModule, MatMenuModule,
-  MatCheckboxModule, MatProgressSpinnerModule,
+  MatButtonModule,
+  MatIconModule,
+  MatCardModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule,
+  MatTableModule,
+  MatSortModule,
+  MatPaginatorModule,
+  MatDialogModule,
+  MatTooltipModule,
+  MatMenuModule,
+  MatCheckboxModule,
+  MatProgressSpinnerModule,
   // ... all commonly used Material modules
 ];
 
@@ -223,14 +253,12 @@ npm run build --prefix frontend
 ### Manual Verification
 
 1. **Language Selector**:
-
    - Navigate to Settings → General tab
    - Change language from English to Español (México)
    - Verify all visible text changes immediately
    - Refresh page → language preference persists
 
 2. **Translation Coverage**:
-
    - Navigate through all major pages (Dashboard, Products, Suppliers, Settings)
    - Verify no English text appears when Spanish is selected
    - Check form labels, buttons, table headers, dialogs

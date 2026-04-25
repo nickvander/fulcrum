@@ -9,6 +9,8 @@ from src.models.marketplace import MarketplaceListing
 
 from src.schemas.marketplace_credential import MarketplaceCredentialCreate
 from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+from unittest.mock import patch, MagicMock, AsyncMock
+from src.services.marketplaces.base import ListingData
 
 @pytest.mark.db
 @pytest.mark.asyncio
@@ -33,7 +35,22 @@ async def test_import_listings_auto_mapping(db: Session, test_admin_user):
     p_stub_in = ProductCreate(name="Stub Match", sku="STUB-SKU-001", description="...", default_resale_price=10.0, cost_price=5.0)
     db_p_stub = crud_product.create(db, obj_in=p_stub_in)
     
-    stats = await marketplace_listing_service.import_marketplace_listings(db, db_m.id, test_admin_user.id)
+    mock_listing = ListingData(
+        external_id="AMZ-STUB-ASIN-001",
+        title="Stub Match",
+        sku="STUB-SKU-001",
+        price=12.99,
+        listing_url="https://amazon.com/dp/B001",
+        status="active"
+    )
+    
+    with patch("src.services.marketplace_service.marketplace_service.get_connector") as mock_get:
+        mock_connector = AsyncMock()
+        mock_connector.fetch_all_listings.return_value = [mock_listing]
+        mock_get.return_value = mock_connector
+        
+        with patch("src.services.marketplace_service.marketplace_service.get_valid_access_token", return_value="test-token"):
+            stats = await marketplace_listing_service.import_marketplace_listings(db, db_m.id, test_admin_user.id)
     
     assert stats["synced"] >= 1
     # Check if a listing was created and linked to db_p_stub
@@ -59,7 +76,22 @@ async def test_import_listings_auto_create_shell(db: Session, test_admin_user):
     )
     crud_cred.create_with_owner(db, obj_in=cred_in, user_id=test_admin_user.id)
     
-    stats = await marketplace_listing_service.import_marketplace_listings(db, db_m.id, test_admin_user.id)
+    mock_listing = ListingData(
+        external_id="MLM-STUB-123",
+        title="MercadoLibre Item",
+        sku="STUB-SKU-001",
+        price=150.0,
+        listing_url="https://mercadolibre.com.mx/p/MLM123",
+        status="active"
+    )
+    
+    with patch("src.services.marketplace_service.marketplace_service.get_connector") as mock_get:
+        mock_connector = AsyncMock()
+        mock_connector.fetch_all_listings.return_value = [mock_listing]
+        mock_get.return_value = mock_connector
+        
+        with patch("src.services.marketplace_service.marketplace_service.get_valid_access_token", return_value="test-token"):
+            stats = await marketplace_listing_service.import_marketplace_listings(db, db_m.id, test_admin_user.id)
     
     assert stats["created_product_shell"] >= 1
     # Check if a new product was created

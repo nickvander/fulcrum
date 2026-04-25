@@ -1,21 +1,40 @@
 @if (getUniqueListings().length > 0) {
 <div class="status-container" [class.simple-container]="simple">
     @for (listing of getUniqueListings(); track listing.marketplace_id) {
-    <div class="marketplace-badge" [class.simple-badge]="simple"
-        [class.badge-amz]="getFallbackLabel(listing.marketplace_id) === 'AMZ'"
-        [class.badge-ebay]="getFallbackLabel(listing.marketplace_id) === 'eBay'"
-        [class.badge-ml]="getFallbackLabel(listing.marketplace_id) === 'ML'" [matTooltip]="getTooltip(listing)"
+    @if (listing.listing_url) {
+    <a [href]="listing.listing_url" target="_blank"
+        class="marketplace-badge" [class.simple-badge]="simple"
+        [class.badge-amz]="getFallbackLabel(listing) === 'AMZ'"
+        [class.badge-ebay]="getFallbackLabel(listing) === 'eBay'"
+        [class.badge-ml]="getFallbackLabel(listing) === 'ML'" [matTooltip]="getTooltip(listing)"
         [class.status-active]="listing.status === 'active'" [class.status-error]="listing.status === 'error'"
         [class.status-pending]="listing.status === 'pending'">
-        @if (getMarketplaceLogo(listing.marketplace_id)) {
-        <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo" [class.simple-logo]="simple" alt="logo">
+        @if (getMarketplaceLogo(listing)) {
+        <img [src]="getMarketplaceLogo(listing)" class="mp-logo" [class.simple-logo]="simple" alt="logo">
         } @else {
-        <span class="marketplace-icon">{{ getFallbackLabel(listing.marketplace_id) }}</span>
+        <span class="marketplace-icon">{{ getFallbackLabel(listing) }}</span>
+        }
+        @if (!simple) {
+        <span class="status-dot"></span>
+        }
+    </a>
+    } @else {
+    <div class="marketplace-badge" [class.simple-badge]="simple"
+        [class.badge-amz]="getFallbackLabel(listing) === 'AMZ'"
+        [class.badge-ebay]="getFallbackLabel(listing) === 'eBay'"
+        [class.badge-ml]="getFallbackLabel(listing) === 'ML'" [matTooltip]="getTooltip(listing)"
+        [class.status-active]="listing.status === 'active'" [class.status-error]="listing.status === 'error'"
+        [class.status-pending]="listing.status === 'pending'">
+        @if (getMarketplaceLogo(listing)) {
+        <img [src]="getMarketplaceLogo(listing)" class="mp-logo" [class.simple-logo]="simple" alt="logo">
+        } @else {
+        <span class="marketplace-icon">{{ getFallbackLabel(listing) }}</span>
         }
         @if (!simple) {
         <span class="status-dot"></span>
         }
     </div>
+    }
     }
 </div>
 }

@@ -62,9 +62,11 @@ The PO list is designed for efficiency:
 
 1. From the **Purchase Orders** list, click **+ Create PO**.
 2. **AI-Powered Fast Start (Optional):**
-   - If AI features are enabled, you'll see a drop zone at the bottom: **"Drop invoice to extract PO details"**.
+   - If AI features are enabled, you'll see a drop zone at the bottom: **"Drop
+     invoice to extract PO details"**.
    - Drag & drop your invoice file here.
-   - The AI will automatically fill in the Supplier, Currency, Shipping/Tax costs, and add matching Line Items.
+   - The AI will automatically fill in the Supplier, Currency, Shipping/Tax
+     costs, and add matching Line Items.
 3. **Manual Entry:**
    - Select the **Supplier** (if not auto-selected).
    - Add **Line Items**: Search for products or add new ones.
@@ -97,7 +99,8 @@ it against your PO using AI.
 
 1. Open the PO you want to match an invoice against.
 2. Scroll to the **Supplier Invoices** section.
-3. **Drag & Drop** your invoice file into the zone labeled "Drop invoice here..."
+3. **Drag & Drop** your invoice file into the zone labeled "Drop invoice
+   here..."
    - A purple **AI-Powered** badge indicates smart extraction is active.
 4. The AI extracts vendor, items, and costs automatically.
 5. Review the matching results:
@@ -113,12 +116,12 @@ it against your PO using AI.
 
 Fulcrum offers two ways to create Purchase Orders from supplier documents:
 
-| Feature | Import PO (Dialog) | Create PO (Form) |
-| ------- | ------------------ | ---------------- |
-| **Use When** | You want a wizard-style flow to scan > preview > create | You want to verify/edit details immediately on the full form |
-| **How** | PO List → Import PO → Upload document | Create PO → Drag invoice to bottom drop zone |
-| **Result** | Creates new PO with extracted data | Pre-fills form with extracted data |
-| **Flexibility**| Best for quick ingestion | Best for checking details as you go |
+| Feature         | Import PO (Dialog)                                      | Create PO (Form)                                             |
+| --------------- | ------------------------------------------------------- | ------------------------------------------------------------ |
+| **Use When**    | You want a wizard-style flow to scan > preview > create | You want to verify/edit details immediately on the full form |
+| **How**         | PO List → Import PO → Upload document                   | Create PO → Drag invoice to bottom drop zone                 |
+| **Result**      | Creates new PO with extracted data                      | Pre-fills form with extracted data                           |
+| **Flexibility** | Best for quick ingestion                                | Best for checking details as you go                          |
 
 ### Recommended Workflow
 
@@ -150,21 +153,20 @@ Sample invoices are provided for testing both workflows:
 
 **Location:** `backend/samples/purchase_orders/`
 
-| File | Vendor | Best For |
-| ---- | ------ | -------- |
+| File                           | Vendor               | Best For                       |
+| ------------------------------ | -------------------- | ------------------------------ |
 | `tech_supplies_direct_po.html` | Tech Supplies Direct | Testing with electronics items |
-| `home_essentials_po.html` | Home Essentials Co. | Testing with home goods |
-| `global_electronics_po.html` | Global Electronics | Testing with computer parts |
-| `mexitech_po_spanish.html` | Mexitech | Spanish language invoice |
-| `fashion_forward_po.txt` | Fashion Forward | Plain text format |
+| `home_essentials_po.html`      | Home Essentials Co.  | Testing with home goods        |
+| `global_electronics_po.html`   | Global Electronics   | Testing with computer parts    |
+| `mexitech_po_spanish.html`     | Mexitech             | Spanish language invoice       |
+| `fashion_forward_po.txt`       | Fashion Forward      | Plain text format              |
 
 ### Test Mode 1: Import PO (Create New)
 
 1. Go to **Purchase Orders** list
 2. Click **Import PO** button
 3. Upload one of the sample files above
-4. Review extracted data (vendor, items, costs)
-5.Click **Create PO** to save
+4. Review extracted data (vendor, items, costs) 5.Click **Create PO** to save
 
 ### Test Mode 2: Import Invoice (Match Existing)
 
@@ -180,5 +182,3 @@ Sample invoices are provided for testing both workflows:
 ---
 
 _Last Updated: January 2026_
-
-

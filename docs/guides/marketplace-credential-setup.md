@@ -8,14 +8,18 @@ credentials for Amazon SP-API and MercadoLibre implementation.
 
 ## 1. Amazon SP-API (Selling Partner API)
 
-There are two main paths to obtain API credentials. Choose the one that fits your budget and testing needs.
+There are two main paths to obtain API credentials. Choose the one that fits
+your budget and testing needs.
 
 ### Option A: Private Seller (Best for Internal Use)
-**Cost**: $39.99/month (Professional Seller Account)
-**Pros**: Simpler registration flow for internal apps ("Private Developer").
-**Cons**: Monthly fee.
 
-1.  **Register**: Go to [Amazon Seller Central](https://sellercentral.amazon.com/) and register for a **Professional Selling Plan**.
+**Cost**: $39.99/month (Professional Seller Account) **Pros**: Simpler
+registration flow for internal apps ("Private Developer"). **Cons**: Monthly
+fee.
+
+1.  **Register**: Go to
+    [Amazon Seller Central](https://sellercentral.amazon.com/) and register for
+    a **Professional Selling Plan**.
 2.  **Verify**: Complete the identity verification (ID upload + Video Call).
 3.  **App Registration**:
     - Go to **Partner Network > Develop Apps**.
@@ -24,15 +28,20 @@ There are two main paths to obtain API credentials. Choose the one that fits you
     - Create a new App to get `client_id` and `client_secret`.
 
 ### Option B: Solution Provider (Best for Free Sandbox)
-**Cost**: Free
-**Pros**: Access to SP-API Sandbox without a monthly subscription.
-**Cons**: Registration flow allows for "Public" apps (intended for 3rd party tools), but works for sandbox testing. Still requires **Full Identity Validation**.
 
-1.  **Register**: Go to the [Solution Provider Portal](https://sellercentral.amazon.com/developer/register).
-2.  **Verify**: You must still provide business info and identity documents (ID, Bank Statement).
+**Cost**: Free **Pros**: Access to SP-API Sandbox without a monthly
+subscription. **Cons**: Registration flow allows for "Public" apps (intended for
+3rd party tools), but works for sandbox testing. Still requires **Full Identity
+Validation**.
+
+1.  **Register**: Go to the
+    [Solution Provider Portal](https://sellercentral.amazon.com/developer/register).
+2.  **Verify**: You must still provide business info and identity documents (ID,
+    Bank Statement).
 3.  **App Registration**:
     - Create a profile.
-    - Create an App intended for "Public" use (you don't need to list it publicly).
+    - Create an App intended for "Public" use (you don't need to list it
+      publicly).
     - This grants access to the **Sandbox** environment credentials.
 
 ### Step 3: Get LWA Credentials (Both Options)
@@ -48,16 +57,17 @@ For server-to-server apps acting as _yourself_:
 
 1.  In the **Develop Apps** table, click the arrow next to "Edit App" and select
     **Authorize**.
-2.  This creates a "Self Authorization" flow (or generates a refresh token directly for private apps).
+2.  This creates a "Self Authorization" flow (or generates a refresh token
+    directly for private apps).
 3.  Save the **Refresh Token** as `AMAZON_REFRESH_TOKEN`.
 
 ---
 
 ## 2. MercadoLibre (Mexico)
 
-MercadoLibre requires **Strict Identity Validation** before you can create an App.
-Without an App, you cannot generate the credentials needed to create Test Users.
-There is **no workaround** for this initial step.
+MercadoLibre requires **Strict Identity Validation** before you can create an
+App. Without an App, you cannot generate the credentials needed to create Test
+Users. There is **no workaround** for this initial step.
 
 ### Prerequisites
 
@@ -68,7 +78,7 @@ There is **no workaround** for this initial step.
   - Go to **My Account > Privacy** or visit the
     [Developer Panel](https://developers.mercadolibre.com.mx/devcenter/) to
     trigger the check.
-  - *Note*: You **cannot** proceed to create an App until this is green-lit.
+  - _Note_: You **cannot** proceed to create an App until this is green-lit.
 
 ### Step 1: Create the App
 

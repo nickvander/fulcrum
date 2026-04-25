@@ -40,6 +40,8 @@ class MarketplaceListing(Base):
     sync_status = Column(String, default="PENDING")
     last_sync = Column(DateTime(timezone=True), onupdate=func.now())
     marketplace_price = Column(Float, nullable=True)
+    original_price = Column(Float, nullable=True)
+    discount_percentage = Column(Float, nullable=True)
     error_message = Column(String, nullable=True)
     metadata_json = Column(JSON, nullable=True) # Renamed to avoid reserved word 'metadata'
 

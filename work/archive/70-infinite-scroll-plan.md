@@ -9,16 +9,15 @@ pagination size from 10 to 25 items for better UX.
 
 ## User Review Required
 
-> [!IMPORTANT]
-> **Breaking UX Changes:**
+> [!IMPORTANT] **Breaking UX Changes:**
+>
 > - Default pagination will change from 10 to 25 items
 > - A new "Infinite Scroll" toggle will appear in pagination controls
 > - When enabled, traditional paginator will be hidden
 
-> [!NOTE]
-> **Standard Pagination Defaults:**
-> Industry standards typically use 20-25 items for desktop web applications.
-> This balances initial load time with user convenience (less clicking).
+> [!NOTE] **Standard Pagination Defaults:** Industry standards typically use
+> 20-25 items for desktop web applications. This balances initial load time with
+> user convenience (less clicking).
 
 ## Root Cause Analysis
 

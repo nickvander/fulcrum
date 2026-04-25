@@ -50,7 +50,8 @@
 - [x] Created `check_i18n_consistency.py` validation script
 - [x] Integrated i18n validation into `pre-commit` and `pre-push` hooks
 - [x] Added i18n validation to CI pipeline (`ci-lint.yml`)
-- [x] Documented localization workflow in `docs/reference/localization_mapping.md`
+- [x] Documented localization workflow in
+      `docs/reference/localization_mapping.md`
 
 #### Build Verification
 

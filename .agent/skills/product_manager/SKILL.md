@@ -1,6 +1,8 @@
 ---
 name: Product Manager
-description: Plan, scope, and track new features for the Fulcrum project using the established work/ directory structure.
+description:
+  Plan, scope, and track new features for the Fulcrum project using the
+  established work/ directory structure.
 ---
 
 # Product Manager Skill
@@ -12,6 +14,7 @@ the conventions established in `GEMINI.md` and the `work/` directory.
 ## When to Use This Skill
 
 Use this skill when the user wants to:
+
 - Start a new feature or development phase.
 - Create a plan for a significant piece of work.
 - Understand the current project state.
@@ -53,8 +56,7 @@ Create `work/current/<ID>-<feature-slug>-plan.md`:
 
 ## User Review Required
 
-> [!IMPORTANT]
-> <Any decisions that need user input before proceeding.>
+> [!IMPORTANT] <Any decisions that need user input before proceeding.>
 
 ## Acceptance Criteria
 
@@ -66,21 +68,21 @@ Create `work/current/<ID>-<feature-slug>-plan.md`:
 
 ### Backend Changes
 
-| File | Change |
-|------|--------|
-| `models/<entity>.py` | Create new model |
-| `schemas/<entity>.py` | Create Pydantic schemas |
-| `crud/crud_<entity>.py` | Create CRUD repository |
-| `api/v1/endpoints/<entities>.py` | Create REST endpoints |
-| `api/v1/api.py` | Register router |
+| File                             | Change                  |
+| -------------------------------- | ----------------------- |
+| `models/<entity>.py`             | Create new model        |
+| `schemas/<entity>.py`            | Create Pydantic schemas |
+| `crud/crud_<entity>.py`          | Create CRUD repository  |
+| `api/v1/endpoints/<entities>.py` | Create REST endpoints   |
+| `api/v1/api.py`                  | Register router         |
 
 ### Frontend Changes
 
-| File | Change |
-|------|--------|
+| File                          | Change           |
+| ----------------------------- | ---------------- |
 | `<module>/components/<name>/` | Create component |
-| `assets/i18n/en.json` | Add translations |
-| `assets/i18n/es-MX.json` | Add translations |
+| `assets/i18n/en.json`         | Add translations |
+| `assets/i18n/es-MX.json`      | Add translations |
 
 ### Database Migrations
 
@@ -131,8 +133,7 @@ Update `work/current/PROGRESS.md`:
 ```markdown
 # Progress Log
 
-**Status:** In Progress
-**Current Phase:** <ID>-<feature-slug>
+**Status:** In Progress **Current Phase:** <ID>-<feature-slug>
 
 ## Current Work
 
@@ -194,12 +195,12 @@ mv work/current/<ID>-<feature-slug>-log.md work/archive/
 ```markdown
 # Progress Log
 
-**Status:** Ready for next phase
-**Current Phase:** —
+**Status:** Ready for next phase **Current Phase:** —
 
 ## Recent Archive
 
-- [<ID>-<feature-slug>-log.md](../archive/<ID>-<feature-slug>-log.md) - <Brief summary>
+- [<ID>-<feature-slug>-log.md](../archive/<ID>-<feature-slug>-log.md) -
+  <Brief summary>
 ```
 
 ### Step 4: Commit
@@ -226,9 +227,9 @@ When defining a new feature, ask:
 
 ## File Naming Conventions
 
-| Type | Pattern | Example |
-|------|---------|---------|
-| Plan | `<ID>-<slug>-plan.md` | `80-bulk-import-plan.md` |
-| Log | `<ID>-<slug>-log.md` | `80-bulk-import-log.md` |
+| Type        | Pattern                      | Example                         |
+| ----------- | ---------------------------- | ------------------------------- |
+| Plan        | `<ID>-<slug>-plan.md`        | `80-bulk-import-plan.md`        |
+| Log         | `<ID>-<slug>-log.md`         | `80-bulk-import-log.md`         |
 | Walkthrough | `<ID>-<slug>-walkthrough.md` | `80-bulk-import-walkthrough.md` |
-| Future work | `<topic>.md` | `mobile-app-integration.md` |
+| Future work | `<topic>.md`                 | `mobile-app-integration.md`     |

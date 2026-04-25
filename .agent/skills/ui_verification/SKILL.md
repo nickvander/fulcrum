@@ -1,6 +1,8 @@
 ---
 name: UI Verification
-description: Visually test and verify frontend features using browser automation, screenshots, and user flow testing.
+description:
+  Visually test and verify frontend features using browser automation,
+  screenshots, and user flow testing.
 ---
 
 # UI Verification Skill
@@ -11,6 +13,7 @@ UI features, test user flows, and document results using browser automation.
 ## When to Use This Skill
 
 Use this skill when:
+
 - Verifying a new component or feature looks correct.
 - Testing user flows (create product, login, etc.).
 - Checking dark/light mode appearance.
@@ -24,11 +27,13 @@ Use this skill when:
 Before running UI tests:
 
 1. **Start the frontend dev server**:
+
    ```bash
    cd frontend && ng serve
    ```
-   Wait for: `Application bundle generation complete.`
-   Default URL: `http://localhost:4200`
+
+   Wait for: `Application bundle generation complete.` Default URL:
+   `http://localhost:4200`
 
 2. **Start the backend** (if testing API-connected features):
    ```bash
@@ -42,12 +47,14 @@ Before running UI tests:
 ### Step 1: Navigate to Page
 
 Use the browser subagent to open the application:
+
 - Open `http://localhost:4200` for the Angular app
 - Navigate to specific routes like `/products`, `/expenses`, `/settings`
 
 ### Step 2: Verify Visual Elements
 
 Check for:
+
 - Component renders correctly
 - Theme variables applied (colors, spacing, shadows)
 - No broken layouts or overflow issues
@@ -159,14 +166,14 @@ Task: Test mobile layout
 
 When checking visual appearance, verify these CSS variables are applied:
 
-| Variable | Light Mode | Dark Mode |
-|----------|------------|-----------|
-| `--bg-app` | #F4F6F8 | #0f172a |
-| `--bg-card` | #FFFFFF | #1e293b |
-| `--text-main` | #2C3E50 | #f1f5f9 |
-| `--primary-color` | #2E3A59 | #8fa3d6 |
-| `--accent-color` | #00BFA5 | #00DBBD |
-| `--border-radius` | 12px | 12px |
+| Variable          | Light Mode | Dark Mode |
+| ----------------- | ---------- | --------- |
+| `--bg-app`        | #F4F6F8    | #0f172a   |
+| `--bg-card`       | #FFFFFF    | #1e293b   |
+| `--text-main`     | #2C3E50    | #f1f5f9   |
+| `--primary-color` | #2E3A59    | #8fa3d6   |
+| `--accent-color`  | #00BFA5    | #00DBBD   |
+| `--border-radius` | 12px       | 12px      |
 
 ---
 
@@ -209,15 +216,15 @@ When documenting UI bugs:
 
 ## Fulcrum-Specific Pages
 
-| Route | Page | Key Elements |
-|-------|------|--------------|
-| `/` | Dashboard | Widgets, charts, quick stats |
-| `/products` | Product List | Table, filters, Add button |
-| `/products/:id` | Product Detail | Form, images, tabs |
-| `/expenses` | Expense List | Table, filters, summary |
-| `/suppliers` | Suppliers | List, PO management |
-| `/settings` | Settings | Tabs: General, Admin, Sync |
-| `/marketing` | Campaigns | Quick posts, campaigns list |
+| Route           | Page           | Key Elements                 |
+| --------------- | -------------- | ---------------------------- |
+| `/`             | Dashboard      | Widgets, charts, quick stats |
+| `/products`     | Product List   | Table, filters, Add button   |
+| `/products/:id` | Product Detail | Form, images, tabs           |
+| `/expenses`     | Expense List   | Table, filters, summary      |
+| `/suppliers`    | Suppliers      | List, PO management          |
+| `/settings`     | Settings       | Tabs: General, Admin, Sync   |
+| `/marketing`    | Campaigns      | Quick posts, campaigns list  |
 
 ---
 

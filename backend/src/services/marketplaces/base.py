@@ -10,10 +10,14 @@ class ListingData(BaseModel):
     sku: Optional[str] = None
     title: str
     price: Optional[float] = None
+    original_price: Optional[float] = None
+    discount_percentage: Optional[float] = None
     currency: str = "USD"
     listing_url: Optional[str] = None
     image_url: Optional[str] = None
+    image_urls: List[str] = []
     status: str = "ACTIVE"
+    available_quantity: Optional[int] = None
     raw_data: Dict[str, Any] = {}
 
 class BaseMarketplaceConnector(ABC):

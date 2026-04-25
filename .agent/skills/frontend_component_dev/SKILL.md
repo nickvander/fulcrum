@@ -1,16 +1,20 @@
 ---
 name: Frontend Component Development
-description: Create new Angular components following Fulcrum's patterns (Standalone, Transloco, Angular Material, Theme Variables).
+description:
+  Create new Angular components following Fulcrum's patterns (Standalone,
+  Transloco, Angular Material, Theme Variables).
 ---
 
 # Frontend Component Development Skill
 
 You are a frontend developer for the Fulcrum project. Your role is to create new
-Angular components that follow the project's established patterns and conventions.
+Angular components that follow the project's established patterns and
+conventions.
 
 ## When to Use This Skill
 
 Use this skill when the user wants to:
+
 - Create a new Angular component.
 - Add a new dialog, page, or widget.
 - Extend an existing module with new functionality.
@@ -31,6 +35,7 @@ Before creating a component, gather:
 ## File Structure
 
 **Standard Components:**
+
 ```
 frontend/src/app/<module>/components/<feature-name>/
 ├── <feature-name>.component.ts
@@ -40,6 +45,7 @@ frontend/src/app/<module>/components/<feature-name>/
 ```
 
 **Dialogs (note: some use `.ts` only, others use `.component.ts`):**
+
 ```
 frontend/src/app/<module>/components/<feature>-dialog/
 ├── <feature>-dialog.ts           # OR <feature>-dialog.component.ts
@@ -53,19 +59,28 @@ frontend/src/app/<module>/components/<feature>-dialog/
 ## TypeScript Template
 
 ```typescript
-import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { Component, Inject, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from "@angular/forms";
+import { TranslocoModule, TranslocoService } from "@ngneat/transloco";
 
 // Material Imports - import individually, NOT MaterialModule in feature components
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+  MatDialogModule,
+} from "@angular/material/dialog";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatInputModule } from "@angular/material/input";
+import { MatButtonModule } from "@angular/material/button";
+import { MatIconModule } from "@angular/material/icon";
+import { MatSelectModule } from "@angular/material/select";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 // Shared Components (use when applicable)
 // import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
@@ -73,7 +88,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // import { ConfirmationDialog } from '@shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
-  selector: 'app-feature-name',
+  selector: "app-feature-name",
   standalone: true,
   imports: [
     CommonModule,
@@ -87,8 +102,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatSelectModule,
     MatProgressSpinnerModule,
   ],
-  templateUrl: './feature-name.component.html',
-  styleUrl: './feature-name.component.scss'  // Note: styleUrl (singular) in newer Angular
+  templateUrl: "./feature-name.component.html",
+  styleUrl: "./feature-name.component.scss", // Note: styleUrl (singular) in newer Angular
 })
 export class FeatureNameComponent implements OnInit {
   // Inject using constructor (project pattern)
@@ -96,7 +111,7 @@ export class FeatureNameComponent implements OnInit {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<FeatureNameComponent>,
     @Inject(MAT_DIALOG_DATA) public data: FeatureDialogData,
-    private translocoService: TranslocoService
+    private translocoService: TranslocoService,
   ) {
     this.currentLang = this.translocoService.getActiveLang();
   }
@@ -118,7 +133,7 @@ export class FeatureNameComponent implements OnInit {
 
 export interface FeatureDialogData {
   itemId?: number;
-  mode?: 'create' | 'edit';
+  mode?: "create" | "edit";
 }
 ```
 
@@ -136,7 +151,7 @@ Use `mat-dialog-*` directives for dialogs:
     <form [formGroup]="form">
       <mat-form-field appearance="outline">
         <mat-label>{{ t('module.fieldLabel') }}</mat-label>
-        <input matInput formControlName="fieldName">
+        <input matInput formControlName="fieldName" />
       </mat-form-field>
     </form>
 
@@ -150,15 +165,19 @@ Use `mat-dialog-*` directives for dialogs:
       *ngIf="!isLoading && items.length === 0"
       icon="inbox"
       [title]="t('common.noData')"
-      [description]="t('module.emptyDescription')">
+      [description]="t('module.emptyDescription')"
+    >
     </app-empty-state>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">
-      {{ t('common.cancel') }}
-    </button>
-    <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="!form.valid">
+    <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
+    <button
+      mat-flat-button
+      color="primary"
+      (click)="onSubmit()"
+      [disabled]="!form.valid"
+    >
       {{ t('common.save') }}
     </button>
   </mat-dialog-actions>
@@ -172,8 +191,8 @@ Use `mat-dialog-*` directives for dialogs:
 **CRITICAL**: Always use CSS custom properties from `theme/variables.scss`:
 
 ```scss
-@use 'theme/variables';
-@use 'theme/mixins';
+@use "theme/variables";
+@use "theme/mixins";
 
 .feature-container {
   padding: var(--card-padding);
@@ -236,36 +255,36 @@ Use `mat-dialog-*` directives for dialogs:
 
 ### Available Theme Variables
 
-| Variable | Purpose |
-|----------|---------|
-| `--primary-color` | Primary brand color (Deep Slate Blue) |
-| `--accent-color` | Action/accent color (Soft Teal) |
-| `--success-color`, `--success-bg` | Success states |
-| `--warning-color`, `--warning-bg` | Warning states |
-| `--error-color`, `--error-bg` | Error states |
-| `--bg-app` | App background |
-| `--bg-card` | Card/dialog background |
-| `--bg-hover` | Hover state |
-| `--text-main` | Primary text |
-| `--text-secondary` | Secondary/muted text |
-| `--text-hint` | Placeholder text |
-| `--border-color` | Borders |
-| `--border-radius` | Standard border radius (12px) |
-| `--card-padding` | Standard card padding (24px) |
-| `--spacing-unit` | Base spacing (8px) |
-| `--shadow-sm/md/lg` | Shadows |
+| Variable                          | Purpose                               |
+| --------------------------------- | ------------------------------------- |
+| `--primary-color`                 | Primary brand color (Deep Slate Blue) |
+| `--accent-color`                  | Action/accent color (Soft Teal)       |
+| `--success-color`, `--success-bg` | Success states                        |
+| `--warning-color`, `--warning-bg` | Warning states                        |
+| `--error-color`, `--error-bg`     | Error states                          |
+| `--bg-app`                        | App background                        |
+| `--bg-card`                       | Card/dialog background                |
+| `--bg-hover`                      | Hover state                           |
+| `--text-main`                     | Primary text                          |
+| `--text-secondary`                | Secondary/muted text                  |
+| `--text-hint`                     | Placeholder text                      |
+| `--border-color`                  | Borders                               |
+| `--border-radius`                 | Standard border radius (12px)         |
+| `--card-padding`                  | Standard card padding (24px)          |
+| `--spacing-unit`                  | Base spacing (8px)                    |
+| `--shadow-sm/md/lg`               | Shadows                               |
 
 ---
 
 ## Shared Components to Reuse
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `ConfirmationDialog` | `shared/components/confirmation-dialog/` | Yes/No confirmation dialogs |
-| `LoadingSpinnerComponent` | `shared/components/loading-spinner/` | Loading states |
-| `EmptyStateComponent` | `shared/components/empty-state/` | Empty list states |
-| `ImageDialogComponent` | `shared/components/image-dialog/` | Image preview |
-| `AiSearchBarComponent` | `shared/components/ai-search-bar/` | AI-powered search |
+| Component                 | Location                                 | Purpose                     |
+| ------------------------- | ---------------------------------------- | --------------------------- |
+| `ConfirmationDialog`      | `shared/components/confirmation-dialog/` | Yes/No confirmation dialogs |
+| `LoadingSpinnerComponent` | `shared/components/loading-spinner/`     | Loading states              |
+| `EmptyStateComponent`     | `shared/components/empty-state/`         | Empty list states           |
+| `ImageDialogComponent`    | `shared/components/image-dialog/`        | Image preview               |
+| `AiSearchBarComponent`    | `shared/components/ai-search-bar/`       | AI-powered search           |
 
 **Using ConfirmationDialog:**
 
@@ -294,24 +313,24 @@ openConfirmation(): void {
 ## Test Template (Web Test Runner)
 
 ```typescript
-import { expect } from '@esm-bundle/chai';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { getTranslocoModule } from '../../../testing/transloco-testing.module';
+import { expect } from "@esm-bundle/chai";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { getTranslocoModule } from "../../../testing/transloco-testing.module";
 
-import { FeatureDialogComponent } from './feature-dialog.component';
+import { FeatureDialogComponent } from "./feature-dialog.component";
 
-describe('FeatureDialogComponent', () => {
+describe("FeatureDialogComponent", () => {
   let component: FeatureDialogComponent;
   let fixture: ComponentFixture<FeatureDialogComponent>;
 
   const mockDialogRef = {
-    close: () => {}
+    close: () => {},
   };
 
   const mockDialogData = {
-    itemId: 1
+    itemId: 1,
   };
 
   beforeEach(async () => {
@@ -332,12 +351,12 @@ describe('FeatureDialogComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).to.exist;
   });
 
-  it('should close dialog on cancel', () => {
-    const closeSpy = sinon.spy(mockDialogRef, 'close');
+  it("should close dialog on cancel", () => {
+    const closeSpy = sinon.spy(mockDialogRef, "close");
     component.onCancel();
     expect(closeSpy.calledOnce).to.be.true;
   });
@@ -354,8 +373,10 @@ describe('FeatureDialogComponent', () => {
 2. `frontend/src/assets/i18n/es-MX.json`
 
 **Key Naming Convention:**
+
 - Module-scoped: `products.dialogTitle`, `expenses.addNew`
-- Common actions: `common.save`, `common.cancel`, `common.delete`, `common.loading`
+- Common actions: `common.save`, `common.cancel`, `common.delete`,
+  `common.loading`
 - Navigation: `nav.products`, `nav.dashboard`
 
 ---
@@ -368,5 +389,6 @@ After creating the component:
 2. **Lint Check**: `cd frontend && ng lint`
 3. **Test Check**: `npm test --prefix frontend`
 4. **Visual Check**: `cd frontend && ng serve`
-5. **Dark Mode Check**: Toggle dark mode in Settings to verify theme variables work
+5. **Dark Mode Check**: Toggle dark mode in Settings to verify theme variables
+   work
 6. **Language Check**: Switch language in Settings → Language

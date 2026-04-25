@@ -1,6 +1,8 @@
 ---
 name: Test Fixer
-description: Debug and fix common test failures in Fulcrum's backend (pytest) and frontend (Web Test Runner + Playwright) test suites.
+description:
+  Debug and fix common test failures in Fulcrum's backend (pytest) and frontend
+  (Web Test Runner + Playwright) test suites.
 ---
 
 # Test Fixer Skill
@@ -11,6 +13,7 @@ test failures in both backend and frontend test suites.
 ## When to Use This Skill
 
 Use this skill when:
+
 - Tests are failing and blocking commits.
 - Pre-commit hooks are failing on test steps.
 - Debugging flaky or hanging tests.
@@ -45,6 +48,7 @@ docker compose exec backend python -m pytest -v -s
 **Cause**: Database schema out of sync.
 
 **Solution**:
+
 ```bash
 docker compose down -v
 docker compose up -d
@@ -60,6 +64,7 @@ See `database_migration` skill for details.
 **Cause**: Test data conflicts with fixtures.
 
 **Solutions**:
+
 1. Use unique values (UUIDs, timestamps).
 2. Add cleanup in fixtures:
    ```python
@@ -80,6 +85,7 @@ See `database_migration` skill for details.
 **Cause**: Deleting/modifying a record with dependencies.
 
 **Solutions**:
+
 1. Create fixtures in dependency order.
 2. Delete in reverse order.
 3. Use `cascade="all, delete-orphan"` in relationships.
@@ -91,6 +97,7 @@ See `database_migration` skill for details.
 **Cause**: Shared state between tests.
 
 **Solution**: Ensure transaction isolation:
+
 ```python
 @pytest.fixture
 def db(db_session):
@@ -122,12 +129,13 @@ npm test --prefix frontend -- --files "**/product-list/**/*.spec.ts"
 **Cause**: Missing dependency in test module.
 
 **Solution**:
+
 ```typescript
 await TestBed.configureTestingModule({
   imports: [
     ComponentUnderTest,
     NoopAnimationsModule,
-    getTranslocoModule(),  // REQUIRED for any translated component
+    getTranslocoModule(), // REQUIRED for any translated component
     HttpClientTestingModule,
   ],
   providers: [
@@ -147,10 +155,11 @@ await TestBed.configureTestingModule({
 **Solutions**:
 
 1. **Use `fakeAsync` + `tick`:**
-   ```typescript
-   import { fakeAsync, tick, flush } from '@angular/core/testing';
 
-   it('should work', fakeAsync(() => {
+   ```typescript
+   import { fakeAsync, tick, flush } from "@angular/core/testing";
+
+   it("should work", fakeAsync(() => {
      component.loadData();
      tick(500);
      flush();
@@ -159,17 +168,18 @@ await TestBed.configureTestingModule({
    ```
 
 2. **Mock HTTP responses:**
+
    ```typescript
    const httpMock = TestBed.inject(HttpTestingController);
    component.loadData();
-   const req = httpMock.expectOne('/api/v1/data');
+   const req = httpMock.expectOne("/api/v1/data");
    req.flush({ items: [] });
    ```
 
 3. **Use `done` callback:**
    ```typescript
-   it('should work', (done) => {
-     component.data$.subscribe(data => {
+   it("should work", (done) => {
+     component.data$.subscribe((data) => {
        expect(data).toBeDefined();
        done();
      });
@@ -183,8 +193,9 @@ await TestBed.configureTestingModule({
 **Cause**: Transloco not configured.
 
 **Solution**: Use the testing module:
+
 ```typescript
-import { getTranslocoModule } from '../../../testing/transloco-testing.module';
+import { getTranslocoModule } from "../../../testing/transloco-testing.module";
 
 TestBed.configureTestingModule({
   imports: [getTranslocoModule()],
@@ -198,6 +209,7 @@ TestBed.configureTestingModule({
 **Cause**: `MAT_DIALOG_DATA` not provided.
 
 **Solution**:
+
 ```typescript
 TestBed.configureTestingModule({
   imports: [DialogComponent],
@@ -215,10 +227,11 @@ TestBed.configureTestingModule({
 **Cause**: Missing import.
 
 **Solution**:
-```typescript
-import sinon from 'sinon';
 
-const spy = sinon.spy(service, 'method');
+```typescript
+import sinon from "sinon";
+
+const spy = sinon.spy(service, "method");
 expect(spy.calledOnce).to.be.true;
 ```
 
@@ -245,6 +258,7 @@ npm test --prefix frontend -- --files "path/to/test.spec.ts"
 ### 3. Add Debugging
 
 **Backend:**
+
 ```python
 def test_something(db):
     print(f"DB state: {db.query(Model).count()}")
@@ -252,11 +266,12 @@ def test_something(db):
 ```
 
 **Frontend:**
+
 ```typescript
-it('should work', () => {
-  console.log('Component:', component);
+it("should work", () => {
+  console.log("Component:", component);
   fixture.detectChanges();
-  console.log('After detectChanges:', component.data);
+  console.log("After detectChanges:", component.data);
 });
 ```
 

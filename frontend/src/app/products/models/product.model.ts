@@ -50,6 +50,9 @@ export interface MarketplaceListing {
   external_listing_id?: string;
   listing_url?: string;
   status?: string;
+  marketplace_price: number;
+  original_price?: number;
+  discount_percentage?: number;
 }
 
 export interface Product {

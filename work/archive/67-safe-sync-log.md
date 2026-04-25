@@ -49,6 +49,7 @@ for review before applying.
    - Created `test_safe_sync.py` integration tests
 
 **Files Changed**:
+
 - `backend/src/models/pending_sync.py` (NEW)
 - `backend/src/services/change_log.py` (NEW)
 - `backend/src/api/v1/endpoints/integrations.py`

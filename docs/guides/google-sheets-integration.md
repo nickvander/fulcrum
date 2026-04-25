@@ -31,8 +31,7 @@ This integration is completely modular—your Fulcrum app works 100% without it.
 
 ## Step 2: Create Your Google Sheet
 
-1. Go to [Google Sheets](https://sheets.google.com) and create a new
-   spreadsheet
+1. Go to [Google Sheets](https://sheets.google.com) and create a new spreadsheet
 2. Name it something like "Fulcrum Inventory Sync"
 
 ---
@@ -78,8 +77,8 @@ brew install ngrok  # macOS
 ngrok http 8000
 ```
 
-You'll get a public URL like `https://abc123.ngrok.io`. Use this as your
-**API URL** in the Apps Script setup dialog:
+You'll get a public URL like `https://abc123.ngrok.io`. Use this as your **API
+URL** in the Apps Script setup dialog:
 
 ```
 https://abc123.ngrok.io/api/v1
@@ -99,13 +98,13 @@ directly in the API URL.
 
 ### Pulling Data (Fulcrum → Sheets)
 
-| Menu Item         | What It Does                                                   |
-| ----------------- | -------------------------------------------------------------- |
-| 🔄 Pull Products  | Fetches all products and creates/updates the "Products" sheet  |
-| 📦 Pull Inventory | Fetches stock levels into the "Inventory" sheet                |
-| 🏭 Pull Suppliers | Fetches suppliers into the "Suppliers" sheet                   |
-| 📜 Pull Purchase Orders | Fetches POs into "Purchase Orders" sheet                   |
-| 💸 Pull Expenses    | Fetches expenses into "Expenses" sheet                       |
+| Menu Item               | What It Does                                                  |
+| ----------------------- | ------------------------------------------------------------- |
+| 🔄 Pull Products        | Fetches all products and creates/updates the "Products" sheet |
+| 📦 Pull Inventory       | Fetches stock levels into the "Inventory" sheet               |
+| 🏭 Pull Suppliers       | Fetches suppliers into the "Suppliers" sheet                  |
+| 📜 Pull Purchase Orders | Fetches POs into "Purchase Orders" sheet                      |
+| 💸 Pull Expenses        | Fetches expenses into "Expenses" sheet                        |
 
 Each pull operation:
 
@@ -115,9 +114,8 @@ Each pull operation:
 
 ### Pushing Changes (Sheets → Fulcrum)
 
-> [!IMPORTANT]
-> Changes pushed from Google Sheets are **staged for review** — they are NOT
-> applied immediately. You must approve them in the Fulcrum app.
+> [!IMPORTANT] Changes pushed from Google Sheets are **staged for review** —
+> they are NOT applied immediately. You must approve them in the Fulcrum app.
 
 1. Make edits in the **Products** sheet (e.g., update cost price or resale
    price)
@@ -147,8 +145,8 @@ Each pull operation:
 
 ## Change Audit Trail
 
-All changes to products — whether from Sheets imports or direct edits in
-Fulcrum — are logged with source attribution.
+All changes to products — whether from Sheets imports or direct edits in Fulcrum
+— are logged with source attribution.
 
 **View the Change Log:**
 
@@ -168,17 +166,17 @@ Each log entry shows:
 
 The Apps Script uses these Fulcrum API endpoints:
 
-| Endpoint                                 | Method | Purpose                              |
-| ---------------------------------------- | ------ | ------------------------------------ |
-| `/api/v1/integrations/sheets/sync-pull`  | POST   | Pull data from Fulcrum               |
-| `/api/v1/integrations/sheets/sync-push`  | POST   | Stage changes for review             |
-| `/api/v1/integrations/sync/pending`      | GET    | List pending change batches          |
-| `/api/v1/integrations/sync/pending/count`| GET    | Get pending change count             |
-| `/api/v1/integrations/sync/approve`      | POST   | Approve or reject pending changes    |
-| `/api/v1/integrations/change-logs`       | GET    | View change audit trail              |
-| `/api/v1/integrations/export/products`   | GET    | Export products (CSV/JSON)           |
-| `/api/v1/integrations/export/inventory`  | GET    | Export inventory levels              |
-| `/api/v1/integrations/export/suppliers`  | GET    | Export suppliers                     |
+| Endpoint                                  | Method | Purpose                           |
+| ----------------------------------------- | ------ | --------------------------------- |
+| `/api/v1/integrations/sheets/sync-pull`   | POST   | Pull data from Fulcrum            |
+| `/api/v1/integrations/sheets/sync-push`   | POST   | Stage changes for review          |
+| `/api/v1/integrations/sync/pending`       | GET    | List pending change batches       |
+| `/api/v1/integrations/sync/pending/count` | GET    | Get pending change count          |
+| `/api/v1/integrations/sync/approve`       | POST   | Approve or reject pending changes |
+| `/api/v1/integrations/change-logs`        | GET    | View change audit trail           |
+| `/api/v1/integrations/export/products`    | GET    | Export products (CSV/JSON)        |
+| `/api/v1/integrations/export/inventory`   | GET    | Export inventory levels           |
+| `/api/v1/integrations/export/suppliers`   | GET    | Export suppliers                  |
 
 ### Sync Pull Request
 
@@ -294,7 +292,8 @@ For private/internal use without public Marketplace listing:
 
 For public distribution:
 
-1. Complete the [Google Workspace Marketplace requirements](https://developers.google.com/workspace/marketplace/how-to-publish)
+1. Complete the
+   [Google Workspace Marketplace requirements](https://developers.google.com/workspace/marketplace/how-to-publish)
 2. Submit for review (Google reviews all public add-ons)
 3. Once approved, users can install from the Marketplace
 
@@ -310,13 +309,13 @@ For public distribution:
 API keys in Fulcrum are tied to individual **users**, not the store as a whole.
 This is the recommended approach for several reasons:
 
-| Aspect        | Per-User Keys                    | Per-Store Keys           |
-| ------------- | -------------------------------- | ------------------------ |
-| Audit Trail   | ✅ Know who made each request    | ❌ No user attribution   |
-| Revocation    | ✅ Revoke one user without       | ❌ Affects everyone      |
-|               | affecting others                 |                          |
-| Permissions   | ✅ Can scope keys to user roles  | ❌ All-or-nothing access |
-| Best Practice | ✅ Industry standard             | ❌ Less secure           |
+| Aspect        | Per-User Keys                   | Per-Store Keys           |
+| ------------- | ------------------------------- | ------------------------ |
+| Audit Trail   | ✅ Know who made each request   | ❌ No user attribution   |
+| Revocation    | ✅ Revoke one user without      | ❌ Affects everyone      |
+|               | affecting others                |                          |
+| Permissions   | ✅ Can scope keys to user roles | ❌ All-or-nothing access |
+| Best Practice | ✅ Industry standard            | ❌ Less secure           |
 
 **How It Works:**
 
