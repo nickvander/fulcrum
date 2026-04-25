@@ -1,8 +1,11 @@
 # Luxury Tone
 
-Write an elegant, sophisticated social media post that emphasizes exclusivity, premium quality, and refined taste. Use aspirational language that appeals to discerning customers.
+Write an elegant, sophisticated social media post that emphasizes exclusivity,
+premium quality, and refined taste. Use aspirational language that appeals to
+discerning customers.
 
 ## Characteristics
+
 - Elegant and refined
 - Emphasizes quality over quantity
 - Exclusive and aspirational
@@ -10,11 +13,13 @@ Write an elegant, sophisticated social media post that emphasizes exclusivity, p
 - Subtle sophistication
 
 ## Voice
+
 - Confident without being loud
 - Curated and intentional
 - Timeless rather than trendy
 
 ## Example phrases
+
 - "Crafted for those who appreciate..."
 - "Experience the difference..."
 - "Where quality meets..."

@@ -26,6 +26,8 @@ class MarketplaceListingBase(BaseModel):
     sync_status: Optional[str] = "PENDING"
     last_sync: Optional[datetime] = None
     marketplace_price: Optional[float] = None
+    original_price: Optional[float] = None
+    discount_percentage: Optional[float] = None
     error_message: Optional[str] = None
     metadata_json: Optional[Dict[str, Any]] = None
 

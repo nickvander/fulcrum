@@ -32,7 +32,7 @@ def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Marketplace not found")
     return db_marketplace
 
-@router.get("/listings/", response_model=List[marketplace_schema.MarketplaceListing])
+@router.get("/listings/")
 def read_marketplace_listings(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
@@ -41,7 +41,23 @@ def read_marketplace_listings(
     """
     from src.models.marketplace import MarketplaceListing as ModelListing
     listings = db.query(ModelListing).offset(skip).limit(limit).all()
-    return listings
+    
+    result = []
+    for listing in listings:
+        result.append({
+            "id": listing.id,
+            "product_id": listing.product_id,
+            "marketplace_id": listing.marketplace_id,
+            "external_listing_id": listing.external_listing_id,
+            "listing_url": listing.listing_url,
+            "status": listing.status,
+            "sync_status": listing.sync_status,
+            "marketplace_price": listing.marketplace_price,
+            "original_price": listing.original_price,
+            "discount_percentage": listing.discount_percentage,
+            "product_name": listing.product.name if listing.product else f"Product #{listing.product_id}"
+        })
+    return result
 
 @router.post("/listings/", response_model=marketplace_schema.MarketplaceListing)
 async def create_marketplace_listing(

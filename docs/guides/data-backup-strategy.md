@@ -12,19 +12,20 @@ recovery, and provides peace of mind for production deployments.
 
 ### Level 1: Application-Level Exports (User-Initiated)
 
-Users can export their data at any time from **Settings > Data Export & Backup**:
+Users can export their data at any time from **Settings > Data Export &
+Backup**:
 
-| Entity          | Formats     | Use Case                       |
-| --------------- | ----------- | ------------------------------ |
-| Products        | CSV, JSON   | Product catalog backup         |
-| Inventory       | CSV, JSON   | Stock levels snapshot          |
-| Suppliers       | CSV, JSON   | Vendor contact list            |
-| Purchase Orders | CSV, JSON   | PO history for accounting      |
-| Expenses        | CSV, JSON   | Financial records              |
-| Campaigns       | CSV, JSON   | Marketing campaign history     |
+| Entity          | Formats   | Use Case                   |
+| --------------- | --------- | -------------------------- |
+| Products        | CSV, JSON | Product catalog backup     |
+| Inventory       | CSV, JSON | Stock levels snapshot      |
+| Suppliers       | CSV, JSON | Vendor contact list        |
+| Purchase Orders | CSV, JSON | PO history for accounting  |
+| Expenses        | CSV, JSON | Financial records          |
+| Campaigns       | CSV, JSON | Marketing campaign history |
 
-**Pros**: User-controlled, easy to restore manually
-**Cons**: Manual process, doesn't include relational data or images
+**Pros**: User-controlled, easy to restore manually **Cons**: Manual process,
+doesn't include relational data or images
 
 ---
 
@@ -86,15 +87,16 @@ echo "Backup completed: $BACKUP_FILE.gz"
 
 For production deployments, use a managed PostgreSQL service:
 
-| Provider              | Service                  | Auto-Backup |
-| --------------------- | ------------------------ | ----------- |
-| AWS                   | RDS for PostgreSQL       | ✅ Daily    |
-| Google Cloud          | Cloud SQL                | ✅ Daily    |
-| Azure                 | Azure Database for Postgres | ✅ Daily |
-| DigitalOcean          | Managed Databases        | ✅ Daily    |
-| Railway / Render      | Managed Postgres         | ✅ Daily    |
+| Provider         | Service                     | Auto-Backup |
+| ---------------- | --------------------------- | ----------- |
+| AWS              | RDS for PostgreSQL          | ✅ Daily    |
+| Google Cloud     | Cloud SQL                   | ✅ Daily    |
+| Azure            | Azure Database for Postgres | ✅ Daily    |
+| DigitalOcean     | Managed Databases           | ✅ Daily    |
+| Railway / Render | Managed Postgres            | ✅ Daily    |
 
 **Benefits**:
+
 - Point-in-time recovery (PITR)
 - Automated daily snapshots
 - Cross-region replication
@@ -132,11 +134,11 @@ For a new store setup from CSV exports:
 
 Product images and uploaded assets are stored in the configured storage backend:
 
-| Storage Type       | Backup Strategy                          |
-| ------------------ | ---------------------------------------- |
-| Local filesystem   | Include `uploads/` in backup script      |
-| AWS S3             | Enable versioning + cross-region replication |
-| MinIO              | Configure replication to secondary bucket |
+| Storage Type     | Backup Strategy                              |
+| ---------------- | -------------------------------------------- |
+| Local filesystem | Include `uploads/` in backup script          |
+| AWS S3           | Enable versioning + cross-region replication |
+| MinIO            | Configure replication to secondary bucket    |
 
 ---
 
@@ -166,9 +168,9 @@ Product images and uploaded assets are stored in the configured storage backend:
 
 ## Quick Reference
 
-| Scenario                  | Recommended Approach                      |
-| ------------------------- | ----------------------------------------- |
-| Local development         | Manual exports, occasional pg_dump        |
-| Self-hosted production    | Daily cron backup + cloud storage upload  |
-| Cloud-hosted production   | Managed PostgreSQL with auto-backups      |
-| Disaster recovery         | Point-in-time recovery from cloud service |
+| Scenario                | Recommended Approach                      |
+| ----------------------- | ----------------------------------------- |
+| Local development       | Manual exports, occasional pg_dump        |
+| Self-hosted production  | Daily cron backup + cloud storage upload  |
+| Cloud-hosted production | Managed PostgreSQL with auto-backups      |
+| Disaster recovery       | Point-in-time recovery from cloud service |

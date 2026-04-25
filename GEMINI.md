@@ -12,8 +12,8 @@ codebase.
 
 - **Frontend (Management PWA & E-commerce):** Angular, Angular Material, Angular
   PWA module (`@angular/pwa`).
-- **Localization:** `@ngneat/transloco` for internationalization (i18n). Supports
-  English (`en`) and Spanish Mexico (`es-MX`).
+- **Localization:** `@ngneat/transloco` for internationalization (i18n).
+  Supports English (`en`) and Spanish Mexico (`es-MX`).
 - **Backend:** Python, FastAPI, SQLAlchemy, Alembic, Pydantic, Celery & Redis.
 - **Database:** PostgreSQL with the `pgvector` extension.
 - **Deployment:** Docker & Docker Compose for the backend, static hosting for

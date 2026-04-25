@@ -15,6 +15,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 import { CodeDisplayComponent } from '../../../shared/components/code-display/code-display.component';
 import { MarketplaceListingDialogComponent, MarketplaceListingDialogData } from '../../../marketplaces/components/marketplace-listing-dialog/marketplace-listing-dialog.component';
 import { NotificationService } from '../../../core/services/notification.service';
+import { ImagePreviewDialogComponent } from './image-preview-dialog.component';
 
 @Component({
     selector: 'app-product-details-dialog',
@@ -54,6 +55,7 @@ export class ProductDetailsDialogComponent implements OnInit {
     isMobile = false;
     isTablet = false;
     stagedImage: File | null = null;
+    selectedImageIndex = 0;
 
     constructor(
         public dialogRef: MatDialogRef<ProductDetailsDialogComponent>,
@@ -169,6 +171,32 @@ export class ProductDetailsDialogComponent implements OnInit {
         return primary ? primary.image_path : this.product.images[0].image_path;
     }
 
+    getActiveImage(): string {
+        if (!this.product || !this.product.images || this.product.images.length === 0) {
+            return '';
+        }
+        if (this.selectedImageIndex >= this.product.images.length) {
+            this.selectedImageIndex = 0;
+        }
+        return this.product.images[this.selectedImageIndex].image_path;
+    }
+
+    selectImage(index: number): void {
+        this.selectedImageIndex = index;
+    }
+
+    openImagePreview(): void {
+        const imageUrl = this.getImageUrl(this.getActiveImage());
+        if (!imageUrl) return;
+
+        this.dialog.open(ImagePreviewDialogComponent, {
+            data: { imageUrl },
+            panelClass: 'image-preview-dialog-panel',
+            maxWidth: '95vw',
+            maxHeight: '95vh'
+        });
+    }
+
     getImageUrl(path: string): string {
         if (!path) return 'assets/placeholder.jpg';
         if (path.startsWith('http')) return path;
@@ -176,13 +204,18 @@ export class ProductDetailsDialogComponent implements OnInit {
         return `/uploads/product_images/${path}`;
     }
 
-    getMarketplaceName(id: number): string {
-        switch (id) {
-            case 1: return 'Amazon';
-            case 2: return 'eBay';
+    getMarketplaceName(listing: any): string {
+        if (!listing) return 'Marketplace';
+        const url = listing.listing_url || '';
+        if (url.includes('amazon')) return 'Amazon';
+        if (url.includes('mercadolibre.com')) return 'MercadoLibre';
+        
+        // Fallback to IDs (assuming MercadoLibre was created first in this DB)
+        switch (listing.marketplace_id) {
+            case 1: return 'MercadoLibre';
+            case 2: return 'Amazon';
             case 3: return 'Shopify';
-            case 4: return 'MercadoLibre';
-            default: return 'Marketplace ' + id;
+            default: return 'Marketplace ' + listing.marketplace_id;
         }
     }
 
@@ -257,10 +290,15 @@ export class ProductDetailsDialogComponent implements OnInit {
         return Math.min(...maxBundles);
     }
 
-    getMarketplaceLogo(id: number): string | null {
-        switch (id) {
-            case 1: return 'assets/images/marketplaces/amazon.png';
-            case 4: return 'assets/images/marketplaces/mercadolibre.png';
+    getMarketplaceLogo(listing: any): string | null {
+        if (!listing) return null;
+        const url = listing.listing_url || '';
+        if (url.includes('amazon')) return 'assets/images/marketplaces/amazon.png';
+        if (url.includes('mercadolibre.com')) return 'assets/images/marketplaces/mercadolibre.png';
+        
+        switch (listing.marketplace_id) {
+            case 1: return 'assets/images/marketplaces/mercadolibre.png';
+            case 2: return 'assets/images/marketplaces/amazon.png';
             default: return null;
         }
     }
@@ -276,6 +314,16 @@ export class ProductDetailsDialogComponent implements OnInit {
             seen.add(listing.marketplace_id);
             return true;
         });
+    }
+
+    getBestMarketplacePromo(): any | null {
+        if (!this.product.marketplace_listings || this.product.marketplace_listings.length === 0) {
+            return null;
+        }
+        // Find the listing with the highest discount percentage
+        return this.product.marketplace_listings
+            .filter(l => l.original_price && l.original_price > l.marketplace_price)
+            .sort((a, b) => (b.discount_percentage || 0) - (a.discount_percentage || 0))[0] || null;
     }
 
     startAssembly(): void {

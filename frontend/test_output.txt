@@ -1,0 +1,691 @@
+
+> frontend@0.0.0 test
+> ng test --watch=false --watch=false
+
+❯ Building...
+✔ Building...
+Initial chunk files                                                                                 | Names                                                                                            |  Raw size
+chunk-A357OGM6.js                                                                                   | -                                                                                                | 214.71 kB | 
+chunk-KJYH3RGV.js                                                                                   | -                                                                                                | 186.94 kB | 
+spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component.js             | spec-app-suppliers-purchase-orders-purchase-order-edit-purchase-order-edit.component             | 168.93 kB | 
+styles.css                                                                                          | styles                                                                                           | 167.94 kB | 
+spec-app-settings-components-settings-settings.js                                                   | spec-app-settings-components-settings-settings                                                   | 127.43 kB | 
+chunk-ZP6XEGYQ.js                                                                                   | -                                                                                                | 122.08 kB | 
+chunk-MOQW7PZZ.js                                                                                   | -                                                                                                | 111.74 kB | 
+spec-app-marketing-components-campaign-list-campaign-list.component.js                              | spec-app-marketing-components-campaign-list-campaign-list.component                              |  91.24 kB | 
+chunk-ADI7POS7.js                                                                                   | -                                                                                                |  73.43 kB | 
+chunk-ORJHY3MS.js                                                                                   | -                                                                                                |  71.66 kB | 
+spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component.js             | spec-app-suppliers-purchase-orders-purchase-order-list-purchase-order-list.component             |  68.58 kB | 
+spec-app-marketing-components-campaign-wizard-campaign-wizard.component.js                          | spec-app-marketing-components-campaign-wizard-campaign-wizard.component                          |  63.69 kB | 
+spec-app-expenses-components-expense-dialog-expense-dialog.js                                       | spec-app-expenses-components-expense-dialog-expense-dialog                                       |  61.52 kB | 
+spec-app-marketing-components-connector-settings-connector-settings.component.js                    | spec-app-marketing-components-connector-settings-connector-settings.component                    |  60.99 kB | 
+spec-app-users-components-user-form-user-form.js                                                    | spec-app-users-components-user-form-user-form                                                    |  43.35 kB | 
+spec-app-marketplaces-pages-marketplace-list-marketplace-list.js                                    | spec-app-marketplaces-pages-marketplace-list-marketplace-list                                    |  43.09 kB | 
+chunk-VLIMEZPH.js                                                                                   | -                                                                                                |  40.97 kB | 
+spec-app-suppliers-supplier-list-supplier-list.component.js                                         | spec-app-suppliers-supplier-list-supplier-list.component                                         |  40.20 kB | 
+spec-app-users-components-audit-log-list-audit-log-list.js                                          | spec-app-users-components-audit-log-list-audit-log-list                                          |  38.84 kB | 
+chunk-MBMFEYZX.js                                                                                   | -                                                                                                |  37.96 kB | 
+chunk-QUJ3GOZE.js                                                                                   | -                                                                                                |  34.20 kB | 
+spec-app-marketplaces-pages-marketplace-detail-marketplace-detail.js                                | spec-app-marketplaces-pages-marketplace-detail-marketplace-detail                                |  33.99 kB | 
+spec-app-products-components-product-comparison-product-comparison.js                               | spec-app-products-components-product-comparison-product-comparison                               |  33.81 kB | 
+spec-app-marketing-components-campaign-calendar-campaign-calendar.component.js                      | spec-app-marketing-components-campaign-calendar-campaign-calendar.component                      |  32.43 kB | 
+chunk-WMO7XALR.js                                                                                   | -                                                                                                |  32.19 kB | 
+chunk-3EPZOILC.js                                                                                   | -                                                                                                |  31.76 kB | 
+spec-app-suppliers-supplier-detail-supplier-detail.component.js                                     | spec-app-suppliers-supplier-detail-supplier-detail.component                                     |  31.16 kB | 
+chunk-CYZ636GH.js                                                                                   | -                                                                                                |  29.59 kB | 
+chunk-DCLHZOID.js                                                                                   | -                                                                                                |  28.35 kB | 
+spec-app-marketing-components-campaign-detail-campaign-detail.component.js                          | spec-app-marketing-components-campaign-detail-campaign-detail.component                          |  28.19 kB | 
+spec-app-auth-components-login-login.js                                                             | spec-app-auth-components-login-login                                                             |  27.16 kB | 
+chunk-BYKOYQF4.js                                                                                   | -                                                                                                |  26.80 kB | 
+chunk-K2CL5ER2.js                                                                                   | -                                                                                                |  25.57 kB | 
+chunk-ENW6BXN4.js                                                                                   | -                                                                                                |  25.50 kB | 
+chunk-GPT7IDQJ.js                                                                                   | -                                                                                                |  25.11 kB | 
+chunk-OIXBRY7U.js                                                                                   | -                                                                                                |  24.88 kB | 
+spec-app-shared-components-ai-prompt-preview-ai-prompt-preview.js                                   | spec-app-shared-components-ai-prompt-preview-ai-prompt-preview                                   |  24.35 kB | 
+chunk-X6XBNC2G.js                                                                                   | -                                                                                                |  23.79 kB | 
+spec-app-auth-components-reset-password-reset-password.component.js                                 | spec-app-auth-components-reset-password-reset-password.component                                 |  23.66 kB | 
+spec-app-products-components-product-list-product-list.js                                           | spec-app-products-components-product-list-product-list                                           |  23.46 kB | 
+spec-app-dashboard-pages-dashboard-dashboard.component.js                                           | spec-app-dashboard-pages-dashboard-dashboard.component                                           |  23.23 kB | 
+spec-app-products-components-enhanced-image-management-enhanced-image-management.js                 | spec-app-products-components-enhanced-image-management-enhanced-image-management                 |  23.22 kB | 
+chunk-M7CJGOXQ.js                                                                                   | -                                                                                                |  23.19 kB | 
+chunk-XMOMFTSG.js                                                                                   | -                                                                                                |  22.13 kB | 
+chunk-G5BFD7VN.js                                                                                   | -                                                                                                |  20.80 kB | 
+chunk-77VT2VSS.js                                                                                   | -                                                                                                |  19.97 kB | 
+chunk-TCG7EWMO.js                                                                                   | -                                                                                                |  19.23 kB | 
+chunk-OSEUOEXQ.js                                                                                   | -                                                                                                |  18.99 kB | 
+spec-app-users-components-force-password-change-force-password-change.component.js                  | spec-app-users-components-force-password-change-force-password-change.component                  |  18.88 kB | 
+spec-app-auth-components-forgot-password-forgot-password.component.js                               | spec-app-auth-components-forgot-password-forgot-password.component                               |  18.63 kB | 
+chunk-WNSEQ7LX.js                                                                                   | -                                                                                                |  18.39 kB | 
+chunk-WYL7P4AO.js                                                                                   | -                                                                                                |  16.00 kB | 
+chunk-HP4BAI2R.js                                                                                   | -                                                                                                |  15.95 kB | 
+spec-app-users-components-account-management-account-management.js                                  | spec-app-users-components-account-management-account-management                                  |  14.94 kB | 
+chunk-QON4K2NN.js                                                                                   | -                                                                                                |  14.47 kB | 
+chunk-XPQ7IJB3.js                                                                                   | -                                                                                                |  14.37 kB | 
+chunk-EJF754GH.js                                                                                   | -                                                                                                |  14.07 kB | 
+spec-app-products-components-product-form-product-form-error-handling.js                            | spec-app-products-components-product-form-product-form-error-handling                            |  13.94 kB | 
+spec-app-app.component.js                                                                           | spec-app-app.component                                                                           |  13.63 kB | 
+chunk-R6ZQRTA7.js                                                                                   | -                                                                                                |  13.41 kB | 
+spec-app-products-components-products-products.js                                                   | spec-app-products-components-products-products                                                   |  12.57 kB | 
+spec-app-settings-components-custom-field-list-custom-field-list.js                                 | spec-app-settings-components-custom-field-list-custom-field-list                                 |  12.01 kB | 
+chunk-ITILPNFI.js                                                                                   | -                                                                                                |  11.40 kB | 
+spec-app-products-components-product-form-product-form-create.js                                    | spec-app-products-components-product-form-product-form-create                                    |  10.76 kB | 
+spec-app-products-product-ingestion-product-ingestion.js                                            | spec-app-products-product-ingestion-product-ingestion                                            |  10.53 kB | 
+chunk-T4YQX6XI.js                                                                                   | -                                                                                                |  10.48 kB | 
+chunk-MBSLOKQ5.js                                                                                   | -                                                                                                |   9.98 kB | 
+chunk-77EHEHX6.js                                                                                   | -                                                                                                |   9.44 kB | 
+spec-app-users-components-user-bulk-import-dialog-user-bulk-import-dialog.js                        | spec-app-users-components-user-bulk-import-dialog-user-bulk-import-dialog                        |   9.00 kB | 
+spec-app-users-components-user-list-user-list.js                                                    | spec-app-users-components-user-list-user-list                                                    |   8.37 kB | 
+spec-app-users-components-user-list-user-list-ux.js                                                 | spec-app-users-components-user-list-user-list-ux                                                 |   8.12 kB | 
+spec-app-products-components-product-form-product-form-advanced-error-handling.js                   | spec-app-products-components-product-form-product-form-advanced-error-handling                   |   8.07 kB | 
+spec-app-products-components-product-scanner-product-scanner.component.js                           | spec-app-products-components-product-scanner-product-scanner.component                           |   7.82 kB | 
+spec-app-products-components-product-form-product-form-edit.js                                      | spec-app-products-components-product-form-product-form-edit                                      |   7.76 kB | 
+chunk-XE6M6P2I.js                                                                                   | -                                                                                                |   7.68 kB | 
+spec-app-products-services-product.js                                                               | spec-app-products-services-product                                                               |   7.65 kB | 
+spec-app-users-components-user-create-modal-user-create-modal-ux.js                                 | spec-app-users-components-user-create-modal-user-create-modal-ux                                 |   7.55 kB | 
+spec-app-products-components-product-form-product-form-image.js                                     | spec-app-products-components-product-form-product-form-image                                     |   7.21 kB | 
+chunk-6CU5VAJP.js                                                                                   | -                                                                                                |   7.19 kB | 
+spec-app-users-services-user.service.js                                                             | spec-app-users-services-user.service                                                             |   7.08 kB | 
+spec-app-products-components-product-form-product-form-image-gallery.component.js                   | spec-app-products-components-product-form-product-form-image-gallery.component                   |   7.06 kB | 
+spec-app-marketing-components-quick-post-dialog-quick-post-dialog.component.js                      | spec-app-marketing-components-quick-post-dialog-quick-post-dialog.component                      |   6.80 kB | 
+spec-app-products-components-product-form-product-form-edge-cases.js                                | spec-app-products-components-product-form-product-form-edge-cases                                |   6.75 kB | 
+chunk-MTE7AV2A.js                                                                                   | -                                                                                                |   6.02 kB | 
+chunk-WIQRK4KW.js                                                                                   | -                                                                                                |   5.86 kB | 
+chunk-TDDHO7M7.js                                                                                   | -                                                                                                |   5.85 kB | 
+chunk-GGQKIBUR.js                                                                                   | -                                                                                                |   5.83 kB | 
+spec-app-shared-components-image-dialog-image-dialog.js                                             | spec-app-shared-components-image-dialog-image-dialog                                             |   5.74 kB | 
+chunk-BO4IISWR.js                                                                                   | -                                                                                                |   5.73 kB | 
+chunk-LN3R4WPD.js                                                                                   | -                                                                                                |   5.65 kB | 
+chunk-73VDDOLD.js                                                                                   | -                                                                                                |   5.00 kB | 
+spec-app-shared-directives-infinite-scroll.directive.js                                             | spec-app-shared-directives-infinite-scroll.directive                                             |   4.97 kB | 
+spec-app-users-services-bulk-import.service.js                                                      | spec-app-users-services-bulk-import.service                                                      |   4.82 kB | 
+chunk-NXYRM5NR.js                                                                                   | -                                                                                                |   4.47 kB | 
+spec-app-products-components-product-details-dialog-product-details-dialog.component.js             | spec-app-products-components-product-details-dialog-product-details-dialog.component             |   4.26 kB | 
+spec-app-marketing-components-quick-post-detail-dialog-quick-post-detail-dialog.component.js        | spec-app-marketing-components-quick-post-detail-dialog-quick-post-detail-dialog.component        |   4.23 kB | 
+spec-app-users-components-password-reset-dialog-password-reset-dialog.js                            | spec-app-users-components-password-reset-dialog-password-reset-dialog                            |   4.21 kB | 
+chunk-HI7Z4XWC.js                                                                                   | -                                                                                                |   4.15 kB | 
+spec-app-products-components-product-variants-product-variants.js                                   | spec-app-products-components-product-variants-product-variants                                   |   3.99 kB | 
+spec-app-products-components-batch-action-toolbar-batch-action-toolbar.js                           | spec-app-products-components-batch-action-toolbar-batch-action-toolbar                           |   3.98 kB | 
+spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component.js           | spec-app-suppliers-purchase-orders-quick-product-dialog-quick-product-dialog.component           |   3.91 kB | 
+spec-app-products-components-product-filters-product-filters.js                                     | spec-app-products-components-product-filters-product-filters                                     |   3.88 kB | 
+spec-app-products-components-stock-history-dialog-stock-history-dialog.component.js                 | spec-app-products-components-stock-history-dialog-stock-history-dialog.component                 |   3.79 kB | 
+chunk-JANSP4RD.js                                                                                   | -                                                                                                |   3.66 kB | 
+chunk-73JVGX6Y.js                                                                                   | -                                                                                                |   3.65 kB | 
+spec-app-products-services-batch-operations.service.js                                              | spec-app-products-services-batch-operations.service                                              |   3.58 kB | 
+spec-app-products-components-pagination-pagination.js                                               | spec-app-products-components-pagination-pagination                                               |   3.57 kB | 
+spec-app-products-components-stock-adjustment-dialog-stock-adjustment-dialog.js                     | spec-app-products-components-stock-adjustment-dialog-stock-adjustment-dialog                     |   3.56 kB | 
+spec-app-suppliers-purchase-orders-cost-allocation-dialog-cost-allocation-dialog.component.js       | spec-app-suppliers-purchase-orders-cost-allocation-dialog-cost-allocation-dialog.component       |   3.55 kB | 
+spec-app-suppliers-purchase-orders-receiving-dialog-receiving-dialog.component.js                   | spec-app-suppliers-purchase-orders-receiving-dialog-receiving-dialog.component                   |   3.47 kB | 
+chunk-DOB37P2C.js                                                                                   | -                                                                                                |   3.45 kB | 
+spec-app-settings-components-tabs-ai-tab.component.js                                               | spec-app-settings-components-tabs-ai-tab.component                                               |   3.43 kB | 
+chunk-JGOXSBDG.js                                                                                   | -                                                                                                |   3.35 kB | 
+chunk-S3NIZ4U2.js                                                                                   | -                                                                                                |   3.35 kB | 
+chunk-MQICMSR3.js                                                                                   | -                                                                                                |   3.01 kB | 
+spec-app-products-pages-product-dashboard-product-dashboard.component.js                            | spec-app-products-pages-product-dashboard-product-dashboard.component                            |   2.82 kB | 
+chunk-7HYHBWIQ.js                                                                                   | -                                                                                                |   2.82 kB | 
+spec-app-products-services-product-comparison.service.js                                            | spec-app-products-services-product-comparison.service                                            |   2.79 kB | 
+spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component.js             | spec-app-dashboard-widgets-inventory-health-widget-inventory-health-widget.component             |   2.63 kB | 
+spec-app-dashboard-widgets-low-stock-list-low-stock-list.component.js                               | spec-app-dashboard-widgets-low-stock-list-low-stock-list.component                               |   2.56 kB | 
+spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component.js                         | spec-app-suppliers-pages-supplier-dashboard-supplier-dashboard.component                         |   2.55 kB | 
+spec-app-settings-components-change-log-dialog-change-log-dialog.js                                 | spec-app-settings-components-change-log-dialog-change-log-dialog                                 |   2.55 kB | 
+chunk-GKBZH27Q.js                                                                                   | -                                                                                                |   2.48 kB | 
+chunk-GW4XGJCS.js                                                                                   | -                                                                                                |   2.45 kB | 
+chunk-LF6RV7CL.js                                                                                   | -                                                                                                |   2.31 kB | 
+spec-app-suppliers-purchase-orders-supplier-selection-dialog-supplier-selection-dialog.component.js | spec-app-suppliers-purchase-orders-supplier-selection-dialog-supplier-selection-dialog.component |   2.28 kB | 
+spec-app-products-components-product-details-dialog-image-preview-dialog.component.js               | spec-app-products-components-product-details-dialog-image-preview-dialog.component               |   2.22 kB | 
+spec-app-suppliers-supplier-product-manager-supplier-product-manager.component.js                   | spec-app-suppliers-supplier-product-manager-supplier-product-manager.component                   |   2.19 kB | 
+spec-app-shared-components-date-range-presets-date-range-presets.component.js                       | spec-app-shared-components-date-range-presets-date-range-presets.component                       |   2.18 kB | 
+chunk-H5RVQ2HP.js                                                                                   | -                                                                                                |   2.17 kB | 
+chunk-SFJ6U3II.js                                                                                   | -                                                                                                |   2.16 kB | 
+spec-app-users-users.js                                                                             | spec-app-users-users                                                                             |   2.02 kB | 
+spec-app-dashboard-widgets-stat-card-stat-card.component.js                                         | spec-app-dashboard-widgets-stat-card-stat-card.component                                         |   1.96 kB | 
+chunk-7RTG6RIL.js                                                                                   | -                                                                                                |   1.81 kB | 
+chunk-ZZYKZ2HF.js                                                                                   | -                                                                                                |   1.69 kB | 
+spec-app-core-components-sidenav-sidenav.js                                                         | spec-app-core-components-sidenav-sidenav                                                         |   1.64 kB | 
+spec-app-shared-components-status-filter-status-filter.component.js                                 | spec-app-shared-components-status-filter-status-filter.component                                 |   1.48 kB | 
+spec-app-settings-components-custom-field-dialog-custom-field-dialog.js                             | spec-app-settings-components-custom-field-dialog-custom-field-dialog                             |   1.43 kB | 
+chunk-GEWRVAOP.js                                                                                   | -                                                                                                |   1.38 kB | 
+chunk-TRPV7GQW.js                                                                                   | -                                                                                                |   1.33 kB | 
+init-testbed.js                                                                                     | init-testbed                                                                                     |   1.25 kB | 
+spec-app-shared-components-marketplace-status-marketplace-status.component.js                       | spec-app-shared-components-marketplace-status-marketplace-status.component                       |   1.20 kB | 
+spec-app-core-components-header-header.js                                                           | spec-app-core-components-header-header                                                           |   1.09 kB | 
+spec-app-auth-guards-auth-guard.js                                                                  | spec-app-auth-guards-auth-guard                                                                  |   1.00 kB | 
+spec-app-shared-components-ai-search-bar-ai-search-bar.js                                           | spec-app-shared-components-ai-search-bar-ai-search-bar                                           | 964 bytes | 
+spec-app-auth-interceptors-auth-interceptor.js                                                      | spec-app-auth-interceptors-auth-interceptor                                                      | 905 bytes | 
+spec-app-suppliers-suppliers.service.js                                                             | spec-app-suppliers-suppliers.service                                                             | 732 bytes | 
+chunk-VH236B3L.js                                                                                   | -                                                                                                | 703 bytes | 
+spec-app-core-services-auth.service.js                                                              | spec-app-core-services-auth.service                                                              | 672 bytes | 
+spec-app-marketplaces-marketplaces.js                                                               | spec-app-marketplaces-marketplaces                                                               | 616 bytes | 
+spec-app-core-services-hardware.service.js                                                          | spec-app-core-services-hardware.service                                                          | 582 bytes | 
+spec-app-shared-pipes-safe-url-pipe.js                                                              | spec-app-shared-pipes-safe-url-pipe                                                              | 550 bytes | 
+chunk-2Y7KLMLV.js                                                                                   | -                                                                                                | 345 bytes | 
+polyfills.js                                                                                        | polyfills                                                                                        | 121 bytes | 
+
+                                                                                                    | Initial total                                                                                    |   3.16 MB
+
+Lazy chunk files                                                                                    | Names                                                                                            |  Raw size
+chunk-YRBVWQEV.js                                                                                   | po-ingest-dialog-component                                                                       |  65.36 kB | 
+chunk-65GOJGKZ.js                                                                                   | pending-sync-dialog                                                                              |  40.25 kB | 
+chunk-XNSJLYXA.js                                                                                   | product-scanner-component                                                                        | 424 bytes | 
+chunk-LVXU47VE.js                                                                                   | change-log-dialog                                                                                | 332 bytes | 
+
+Application bundle generation complete. [26.030 seconds] - 2026-04-25T09:29:21.731Z
+
+
+[1m[46m RUN [49m[22m [36mv4.0.15 [39m[90m/home/leog/fulcrum/frontend[39m
+
+ [31m❯[39m [30m[43m frontend [49m[39m src/app/products/components/product-details-dialog/image-preview-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 232[2mms[22m[39m
+     [32m✓[39m should create[32m 157[2mms[22m[39m
+     [32m✓[39m should display the image with correct src[32m 27[2mms[22m[39m
+[31m     [31m×[31m should close the dialog when close button is clicked[39m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3656[2mms[22m[39m
+     [33m[2m✓[22m[39m should create [33m 916[2mms[22m[39m
+     [33m[2m✓[22m[39m should load users on initialization [33m 662[2mms[22m[39m
+     [33m[2m✓[22m[39m should apply filters correctly [33m 536[2mms[22m[39m
+     [33m[2m✓[22m[39m should clear filters [33m 460[2mms[22m[39m
+     [33m[2m✓[22m[39m should deactivate user [33m 503[2mms[22m[39m
+     [33m[2m✓[22m[39m should permanently delete user [33m 577[2mms[22m[39m
+[90mstderr[2m | src/app/users/components/user-list/user-list-ux.spec.ts[2m > [22m[2mUserList - UX Tests[2m > [22m[2mshould handle error when loading users
+[22m[39mError loading users: { error: [32m'Network error'[39m }
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-list/user-list-ux.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 4413[2mms[22m[39m
+     [33m[2m✓[22m[39m should show loading indicator when loading users [33m 892[2mms[22m[39m
+     [33m[2m✓[22m[39m should hide loading indicator when not loading [33m 537[2mms[22m[39m
+     [33m[2m✓[22m[39m should apply filters correctly [33m 343[2mms[22m[39m
+     [33m[2m✓[22m[39m should clear filters properly [33m 327[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle tooltips for user information [33m 332[2mms[22m[39m
+     [33m[2m✓[22m[39m should navigate to audit logs page when button is clicked [33m 320[2mms[22m[39m
+     [33m[2m✓[22m[39m should open user creation modal when button is clicked [33m 383[2mms[22m[39m
+     [33m[2m✓[22m[39m should refresh user list after adding a new user [33m 391[2mms[22m[39m
+     [33m[2m✓[22m[39m should handle error when loading users [33m 404[2mms[22m[39m
+     [33m[2m✓[22m[39m should have responsive design elements [33m 481[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/audit-log-list/audit-log-list.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1349[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-dialog/quick-post-dialog.component.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 2291[2mms[22m[39m
+     [33m[2m✓[22m[39m should create [33m 467[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould create
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould process image via AI when enabled
+[22m[39m[Scanner] Closing dialog with result: {
+  name: [32m'Test Product'[39m,
+  description: [32m'Desc'[39m,
+  exists: [33mfalse[39m,
+  imageFile: File {
+    type: [32m'image/jpeg'[39m,
+    lastModified: [33m1777109374427[39m,
+    name: [32m'test.jpg'[39m,
+    [[32mSymbol(buffer)[39m]: <Buffer >
+  }
+}
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould process image via AI when enabled
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould handle existing product detection
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould perform barcode lookup
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould handle barcode not found
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould handle drag events
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould handle file drop with image
+[22m[39mStopping native barcode scanner...
+
+[90mstdout[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts[2m > [22m[2mProductScannerComponent[2m > [22m[2mshould reject non-image file drop
+[22m[39mStopping native barcode scanner...
+
+[90mstderr[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstderr[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstderr[2m | src/app/products/components/product-scanner/product-scanner.component.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-scanner/product-scanner.component.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 837[2mms[22m[39m
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-wizard/campaign-wizard.component.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1274[2mms[22m[39m
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
+[22m[39mUserForm: Calling createUser
+UserForm: createUser success
+
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould submit form for new user
+[22m[39mUserForm: Navigation complete
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-list/product-list.spec.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 6767[2mms[22m[39m
+     [33m[2m✓[22m[39m should create the component [33m 952[2mms[22m[39m
+     [33m[2m✓[22m[39m should call getProducts on init and subscribe to products$ [33m 674[2mms[22m[39m
+       [33m[2m✓[22m[39m should open confirmation dialog [33m 649[2mms[22m[39m
+       [33m[2m✓[22m[39m should call productService.deleteProduct if dialog is confirmed [33m 668[2mms[22m[39m
+       [33m[2m✓[22m[39m should NOT call productService.deleteProduct if dialog is dismissed [33m 437[2mms[22m[39m
+       [33m[2m✓[22m[39m should get primary image when primary image exists [33m 390[2mms[22m[39m
+       [33m[2m✓[22m[39m should get first image when no primary image exists [33m 414[2mms[22m[39m
+       [33m[2m✓[22m[39m should return placeholder when no images exist [33m 412[2mms[22m[39m
+       [33m[2m✓[22m[39m should calculate stock correctly for product without default location (sum all) [33m 320[2mms[22m[39m
+       [33m[2m✓[22m[39m should return 0 stock for product with no inventory items [33m 343[2mms[22m[39m
+       [33m[2m✓[22m[39m should display stock count in product card [33m 359[2mms[22m[39m
+       [33m[2m✓[22m[39m should load products with pagination [33m 328[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould create
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
+[22m[39mUserForm: Calling createUser
+UserForm: createUser error
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts[2m > [22m[2mUserForm[2m > [22m[2mCreate Mode[2m > [22m[2mshould handle form submission error
+[22m[39mError creating user: { error: { detail: [32m'Email already exists'[39m } }
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
+[22m[39mLoading categories and brands
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstderr[2m | src/app/users/components/user-form/user-form.spec.ts
+[22m[39mError accessing camera TypeError: Cannot read properties of undefined (reading 'getUserMedia')
+    at _ProductScannerComponent.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:159:56[90m)[39m
+    at Generator.next (<anonymous>)
+    at [90m/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:97:61
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at __async [90m(/home/leog/fulcrum/frontend/[39mchunk-LN3R4WPD.js:81:10[90m)[39m
+    at _ProductScannerComponent.startCamera [90m(/home/leog/fulcrum/frontend/[39mchunk-MOQW7PZZ.js:614:49[90m)[39m
+    at Timeout.<anonymous> [90m(/home/leog/fulcrum/frontend/[39msrc/app/products/components/product-scanner/product-scanner.component.ts:116:22[90m)[39m
+    at Timeout.timer [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:1809:37[90m)[39m
+    at _ZoneDelegate.invokeTask [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:431:33[90m)[39m
+    at AsyncStackTaggingZoneSpec.onInvokeTask [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4m@angular/core[24m/fesm2022/_untracked-chunk.mjs:2337:22[90m)[39m
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when filter properties change
+[22m[39mFilters changed: { category: [32m'Electronics'[39m }
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-form/user-form.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1211[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersChanged event when multiple filters are applied
+[22m[39mFilters changed: {
+  category: [32m'Electronics'[39m,
+  brand: [32m'Brand A'[39m,
+  min_price: [33m10[39m,
+  max_price: [33m100[39m
+}
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould emit filtersCleared event when filters are cleared
+[22m[39mFilters changed: {}
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould have default filter values
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
+[22m[39mLoading categories and brands
+
+[90mstdout[2m | src/app/products/components/product-filters/product-filters.spec.ts[2m > [22m[2mProductFiltersComponent[2m > [22m[2mshould update filters when search query changes
+[22m[39mFilters changed: { search_term: [32m'test product'[39m }
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-filters/product-filters.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 1082[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/user-create-modal/user-create-modal-ux.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1211[2mms[22m[39m
+[90mstdout[2m | src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.spec.ts[2m > [22m[2mPurchaseOrderEditComponent[2m > [22m[2mshould unpack bundle and add components recursively
+[22m[39mhandleProductAutofill started for [33m99[39m
+handleProductAutofill started for [33m101[39m
+handleProductAutofill started for [33m102[39m
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 732[2mms[22m[39m
+     [33m[2m✓[22m[39m should unpack bundle and add components recursively [33m 440[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-variants/product-variants.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 774[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-form/product-form-edge-cases.spec.ts[2m > [22m[2mProductForm: Edge Cases[2m > [22m[2mform validation edge cases[2m > [22m[2mshould not submit invalid form
+[22m[39mProductForm: ngOnInit started
+ProductForm: Route mode
+ProductForm: initializeRouteMode
+ProductForm: calling initializeForm
+ProductForm: initializeForm next
+ProductForm: initializeForm complete
+
+[90mstdout[2m | src/app/products/components/product-form/product-form-edge-cases.spec.ts[2m > [22m[2mProductForm: Edge Cases[2m > [22m[2mform validation edge cases[2m > [22m[2mshould handle cancellation without unsaved changes
+[22m[39mProductForm: ngOnInit started
+ProductForm: Route mode
+ProductForm: initializeRouteMode
+ProductForm: calling initializeForm
+ProductForm: initializeForm next
+ProductForm: initializeForm complete
+
+[90mstdout[2m | src/app/products/components/product-form/product-form-edge-cases.spec.ts[2m > [22m[2mProductForm: Edge Cases[2m > [22m[2mform validation edge cases[2m > [22m[2mshould maintain proper isDirty state
+[22m[39mProductForm: ngOnInit started
+ProductForm: Route mode
+ProductForm: initializeRouteMode
+ProductForm: calling initializeForm
+ProductForm: initializeForm next
+ProductForm: initializeForm complete
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-edge-cases.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 917[2mms[22m[39m
+       [33m[2m✓[22m[39m should not submit invalid form [33m 469[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-comparison/product-comparison.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 764[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/account-management/account-management.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 372[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-list/campaign-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 669[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/expenses/components/expense-dialog/expense-dialog.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 382[2mms[22m[39m
+[90mstderr[2m | src/app/shared/components/image-dialog/image-dialog.spec.ts[2m > [22m[2mImageDialogComponent[2m > [22m[2msave functionality[2m > [22m[2mshould show error notification when saving fails
+[22m[39mError updating image: Error occurred
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/image-dialog/image-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 325[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/batch-action-toolbar/batch-action-toolbar.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 285[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/enhanced-image-management/enhanced-image-management.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 518[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-adjustment-dialog/stock-adjustment-dialog.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 307[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-calendar/campaign-calendar.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 414[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-list/supplier-list.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 297[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-form/product-form-image.spec.ts[2m > [22m[2mProductForm: Image Management[2m > [22m[2mimage handling[2m > [22m[2mshould format image URL correctly
+[22m[39mProductForm: ngOnInit started
+ProductForm: Route mode
+ProductForm: initializeRouteMode
+ProductForm: calling initializeForm
+ProductForm: initializeForm next
+ProductForm: initializeForm complete
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 336[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-details-dialog/product-details-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 314[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/connector-settings/connector-settings.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 292[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/quick-product-dialog/quick-product-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 405[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/quick-post-detail-dialog/quick-post-detail-dialog.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 169[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/stock-history-dialog/stock-history-dialog.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 233[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/change-log-dialog/change-log-dialog.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 292[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/receiving-dialog/receiving-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 210[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/tabs/ai-tab.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 325[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 186[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/ai-prompt-preview/ai-prompt-preview.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 262[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 142[2mms[22m[39m
+[90mstdout[2m | src/app/products/components/product-form/product-form-image-gallery.component.spec.ts[2m > [22m[2mProductFormImageGalleryComponent[2m > [22m[2mshould reorder images and call backend when onImageReorder is called with productId
+[22m[39mImage order updated successfully
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-image-gallery.component.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/password-reset-dialog/password-reset-dialog.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 334[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/pages/dashboard/dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 175[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/pages/product-dashboard/product-dashboard.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/components/pagination/pagination.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketing/components/campaign-detail/campaign-detail.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 108[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/user.service.spec.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/components/force-password-change/force-password-change.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 124[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/reset-password/reset-password.component.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 147[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/inventory-health-widget/inventory-health-widget.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/date-range-presets/date-range-presets.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/low-stock-list/low-stock-list.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/forgot-password/forgot-password.component.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/header/header.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/custom-field-dialog/custom-field-dialog.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/services/bulk-import.service.spec.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/product-ingestion/product-ingestion.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 35[2mms[22m[39m
+Error: connect ECONNREFUSED 127.0.0.1:3000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 3000
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/assets/wasm/index.js": connect ECONNREFUSED 127.0.0.1:3000
+    at Fetch.onError (file:///home/leog/fulcrum/frontend/node_modules/happy-dom/lib/fetch/Fetch.js:384:21)
+    at ClientRequest.emit (node:events:524:28)
+    at emitErrorEvent (node:_http_client:101:11)
+    at Socket.socketErrorListener (node:_http_client:504:5)
+    at Socket.emit (node:events:524:28)
+    at emitErrorNT (node:internal/streams/destroy:169:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+    at processTicksAndRejections (node:internal/process/task_queues:82:21)
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/supplier-product-manager/supplier-product-manager.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/pages/supplier-dashboard/supplier-dashboard.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/status-filter/status-filter.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-detail/marketplace-detail.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component.spec.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+[90mstderr[2m | Object.api.onUnhandledError (/home/leog/fulcrum/frontend/node_modules/zone.js/fesm2015/zone.js:2316:29)
+[22m[39mReferenceError: __dirname is not defined
+    at n (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:3668)
+    at eval (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:9716)
+    at Generator.next (<anonymous>)
+    at eval (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:321)
+    at new ZoneAwarePromise [90m(/home/leog/fulcrum/frontend/[39mnode_modules/[4mzone.js[24m/fesm2015/zone.js:2701:25[90m)[39m
+    at e (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:66)
+    at eval (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:9668)
+    at Module.E [as setModuleArgs] (https://cdn.jsdelivr.net/npm/ngx-scanner-qrcode@1.7.6/wasm/index.js:2:9773)
+    at END [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4mngx-scanner-qrcode[24m/fesm2022/ngx-scanner-qrcode.mjs:774:34[90m)[39m
+    at L [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4mngx-scanner-qrcode[24m/fesm2022/ngx-scanner-qrcode.mjs:780:36[90m)[39m
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/product-comparison.service.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+Error: connect ECONNREFUSED 127.0.0.1:3000
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 3000
+}
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/dashboard/widgets/stat-card/stat-card.component.spec.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+[90mstderr[2m | src/app/app.component.spec.ts
+[22m[39mFailed to load store settings HttpErrorResponse {
+  headers: HttpHeaders {
+    headers: Map(0) {},
+    normalizedNames: Map(0) {},
+    lazyInit: [90mundefined[39m,
+    lazyUpdate: [1mnull[22m
+  },
+  status: [33m0[39m,
+  statusText: [32m'Unknown Error'[39m,
+  url: [32m'/api/v1/inventory-settings/store'[39m,
+  ok: [33mfalse[39m,
+  type: [90mundefined[39m,
+  redirected: [90mundefined[39m,
+  responseType: [90mundefined[39m,
+  name: [32m'HttpErrorResponse'[39m,
+  message: [32m'Http failure response for /api/v1/inventory-settings/store: 0 Unknown Error'[39m,
+  error: ErrorEvent {
+    NONE: [33m0[39m,
+    CAPTURING_PHASE: [33m1[39m,
+    AT_TARGET: [33m2[39m,
+    BUBBLING_PHASE: [33m3[39m,
+    detail: [33m0[39m,
+    layerX: [33m0[39m,
+    layerY: [33m0[39m,
+    pageX: [33m0[39m,
+    pageY: [33m0[39m,
+    view: [1mnull[22m,
+    message: [32m'Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/api/v1/inventory-settings/store": connect ECONNREFUSED 127.0.0.1:3000'[39m,
+    filename: [32m''[39m,
+    lineno: [33m0[39m,
+    colno: [33m0[39m,
+    error: DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/api/v1/inventory-settings/store": connect ECONNREFUSED 127.0.0.1:3000
+        at Fetch.onError [90m(file:///home/leog/fulcrum/frontend/[39mnode_modules/[4mhappy-dom[24m/lib/fetch/Fetch.js:384:21[90m)[39m
+    [90m    at ClientRequest.emit (node:events:524:28)[39m
+    [90m    at emitErrorEvent (node:_http_client:101:11)[39m
+    [90m    at Socket.socketErrorListener (node:_http_client:504:5)[39m
+    [90m    at Socket.emit (node:events:524:28)[39m
+    [90m    at emitErrorNT (node:internal/streams/destroy:169:8)[39m
+    [90m    at emitErrorCloseNT (node:internal/streams/destroy:128:3)[39m
+    [90m    at processTicksAndRejections (node:internal/process/task_queues:82:21)[39m,
+    [[32mSymbol(composed)[39m]: [33mfalse[39m,
+    [[32mSymbol(bubbles)[39m]: [33mfalse[39m,
+    [[32mSymbol(cancelable)[39m]: [33mfalse[39m,
+    [[32mSymbol(defaultPrevented)[39m]: [33mfalse[39m,
+    [[32mSymbol(eventPhase)[39m]: [33m2[39m,
+    [[32mSymbol(timeStamp)[39m]: [33m20971.767633[39m,
+    [[32mSymbol(type)[39m]: [32m'error'[39m,
+    [[32mSymbol(immediatePropagationStopped)[39m]: [33mfalse[39m,
+    [[32mSymbol(propagationStopped)[39m]: [33mfalse[39m,
+    [[32mSymbol(target)[39m]: XMLHttpRequest [EventTarget] {
+      onloadstart: [1mnull[22m,
+      onprogress: [1mnull[22m,
+      onabort: [1mnull[22m,
+      onerror: [1mnull[22m,
+      onload: [1mnull[22m,
+      ontimeout: [1mnull[22m,
+      onloadend: [1mnull[22m,
+      upload: [36m[XMLHttpRequestUpload [EventTarget]][39m,
+      withCredentials: [33mfalse[39m,
+      __zone_symbol__xhrSync: [33mfalse[39m,
+      __zone_symbol__xhrURL: [32m'/api/v1/inventory-settings/store'[39m,
+      __zone_symbol__loadfalse: [36m[Array][39m,
+      __zone_symbol__errorfalse: [36m[Array][39m,
+      __zone_symbol__timeoutfalse: [36m[Array][39m,
+      __zone_symbol__abortfalse: [36m[Array][39m,
+      __zone_symbol__xhrScheduled: [33mtrue[39m,
+      __zone_symbol__xhrErrorBeforeScheduled: [33mfalse[39m,
+      __zone_symbol__xhrListener: [36m[Function (anonymous)][39m,
+      __zone_symbol__xhrTask: [36m[ZoneTask][39m,
+      [[32mSymbol(listeners)[39m]: [36m[Object][39m,
+      [[32mSymbol(listenerOptions)[39m]: [36m[Object][39m
+    },
+    [[32mSymbol(currentTarget)[39m]: XMLHttpRequest [EventTarget] {
+      onloadstart: [1mnull[22m,
+      onprogress: [1mnull[22m,
+      onabort: [1mnull[22m,
+      onerror: [1mnull[22m,
+      onload: [1mnull[22m,
+      ontimeout: [1mnull[22m,
+      onloadend: [1mnull[22m,
+      upload: [36m[XMLHttpRequestUpload [EventTarget]][39m,
+      withCredentials: [33mfalse[39m,
+      __zone_symbol__xhrSync: [33mfalse[39m,
+      __zone_symbol__xhrURL: [32m'/api/v1/inventory-settings/store'[39m,
+      __zone_symbol__loadfalse: [36m[Array][39m,
+      __zone_symbol__errorfalse: [36m[Array][39m,
+      __zone_symbol__timeoutfalse: [36m[Array][39m,
+      __zone_symbol__abortfalse: [36m[Array][39m,
+      __zone_symbol__xhrScheduled: [33mtrue[39m,
+      __zone_symbol__xhrErrorBeforeScheduled: [33mfalse[39m,
+      __zone_symbol__xhrListener: [36m[Function (anonymous)][39m,
+      __zone_symbol__xhrTask: [36m[ZoneTask][39m,
+      [[32mSymbol(listeners)[39m]: [36m[Object][39m,
+      [[32mSymbol(listenerOptions)[39m]: [36m[Object][39m
+    },
+    [[32mSymbol(isInPassiveEventListener)[39m]: [33mfalse[39m
+  }
+}
+
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/app.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/components/login/login.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/ai-search-bar/ai-search-bar.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/products/services/batch-operations.service.spec.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/settings/settings.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/settings/components/custom-field-list/custom-field-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/pages/marketplace-list/marketplace-list.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/users/users.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/components/marketplace-status/marketplace-status.component.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/components/sidenav/sidenav.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/hardware.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/directives/infinite-scroll.directive.spec.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/suppliers/suppliers.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/core/services/auth.service.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/shared/pipes/safe-url-pipe.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/interceptors/auth-interceptor.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/marketplaces/marketplaces.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[43m frontend [49m[39m src/app/auth/guards/auth-guard.spec.ts [2m([22m[2m1 test[22m[2m)[22m[32m 1[2mms[22m[39m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-advanced-error-handling.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/suppliers/supplier-detail/supplier-detail.component.spec.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-create.spec.ts [2m([22m[2m8 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-edit.spec.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/product-form/product-form-error-handling.spec.ts [2m([22m[2m5 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.spec.ts [2m([22m[2m12 tests[22m[2m | [22m[33m12 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[43m frontend [49m[39m src/app/products/components/products/products.spec.ts [2m([22m[2m2 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m [30m[43m frontend [49m[39m src/app/products/components/product-details-dialog/image-preview-dialog.component.spec.ts[2m > [22mImagePreviewDialogComponent[2m > [22mshould close the dialog when close button is clicked
+[31m[1mTypeError[22m: Cannot read properties of null (reading 'click')[39m
+[36m [2m❯[22m src/app/products/components/product-details-dialog/image-preview-dialog.component.spec.ts:[2m45:14[22m[39m
+    [90m 43| [39m  [34mit[39m([32m'should close the dialog when close button is clicked'[39m[33m,[39m () [33m=>[39m {
+    [90m 44| [39m    const closeBtn = fixture.nativeElement.querySelector('.close-butto…
+    [90m 45| [39m    closeBtn[33m.[39m[34mclick[39m()[33m;[39m
+    [90m   | [39m             [31m^[39m
+    [90m 46| [39m    [34mexpect[39m(mockDialogRef[33m.[39mclose)[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m 47| [39m  })[33m;[39m
+[90m [2m❯[22m new ZoneAwarePromise node_modules/zone.js/fesm2015/zone.js:[2m2701:25[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m78 passed[39m[22m[2m | [22m[33m7 skipped[39m[90m (86)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m336 passed[39m[22m[2m | [22m[33m27 skipped[39m[90m (370)[39m
+[2m   Start at [22m 03:29:22
+[2m   Duration [22m 21.66s[2m (transform 6.22s, setup 3.80s, import 19.27s, tests 36.71s, environment 65.32s)[22m
+

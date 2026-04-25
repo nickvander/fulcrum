@@ -3,8 +3,8 @@
 ## Goal
 
 Implement a staged sync workflow where changes from Google Sheets are **queued
-for review** rather than applied immediately. This provides data integrity and
-a full audit trail showing whether price changes came from Sheets or direct edits.
+for review** rather than applied immediately. This provides data integrity and a
+full audit trail showing whether price changes came from Sheets or direct edits.
 
 ---
 
@@ -119,4 +119,5 @@ docker compose exec backend python -m pytest tests/api/v1/test_safe_sync.py -v
 2. After push, changes appear in Settings → Integrations → Pending
 3. Approve changes → Product prices update
 4. Check Change Log → Approved changes show `source="sheets_import"`
-5. Edit product directly in Fulcrum → Check Change Log shows `source="direct_edit"`
+5. Edit product directly in Fulcrum → Check Change Log shows
+   `source="direct_edit"`

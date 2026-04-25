@@ -87,5 +87,6 @@ prompts/
 ```
 
 **API Endpoints:**
+
 - `GET /tone-presets` - Returns tone presets (prompts loaded from .md files)
 - `GET /channel-guidelines/{channel}` - Returns channel-specific guidelines

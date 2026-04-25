@@ -1,6 +1,8 @@
 ---
 name: Documentation Update
-description: Maintain Fulcrum's documentation hub in /docs and update progress tracking files.
+description:
+  Maintain Fulcrum's documentation hub in /docs and update progress tracking
+  files.
 ---
 
 # Documentation Update Skill
@@ -11,6 +13,7 @@ single source of truth for project documentation.
 ## When to Use This Skill
 
 Use this skill when:
+
 - Adding documentation for a new feature.
 - Updating existing guides after changes.
 - Managing progress logs in `work/`.
@@ -42,16 +45,17 @@ work/
 
 ### Step 1: Determine Location
 
-| Content Type | Directory |
-|-------------|-----------|
-| Initial setup, installation | `docs/source/getting-started/` |
-| Step-by-step how-tos | `docs/source/guides/` |
-| Architecture, design decisions | `docs/source/explanation/` |
-| API specs, configuration | `docs/source/reference/` |
+| Content Type                   | Directory                      |
+| ------------------------------ | ------------------------------ |
+| Initial setup, installation    | `docs/source/getting-started/` |
+| Step-by-step how-tos           | `docs/source/guides/`          |
+| Architecture, design decisions | `docs/source/explanation/`     |
+| API specs, configuration       | `docs/source/reference/`       |
 
 ### Step 2: Create the File
 
 For RST files:
+
 ```rst
 <Topic Title>
 =============
@@ -65,6 +69,7 @@ Content...
 ```
 
 For Markdown files (user guides):
+
 ```markdown
 # Topic Title
 
@@ -78,6 +83,7 @@ Content...
 ### Step 3: Add to Index
 
 Update `docs/source/<directory>/index.rst`:
+
 ```rst
 .. toctree::
    :maxdepth: 2
@@ -101,11 +107,12 @@ make html
 ### work/current/PROGRESS.md
 
 **Format:**
+
 ```markdown
 # Progress Log
 
-**Status:** In Progress | Ready for next phase
-**Current Phase:** <ID>-<feature-slug> | —
+**Status:** In Progress | Ready for next phase **Current Phase:**
+<ID>-<feature-slug> | —
 
 ## Current Work
 
@@ -164,12 +171,14 @@ npm run format:md
 ### GEMINI.md
 
 Update when:
+
 - New development principles established
 - Tech stack changes
 - New troubleshooting solutions discovered
 - Workflow commands change
 
 **Sections:**
+
 - Goal, Tech Stack, Localization
 - Development Principles (8 principles)
 - Project Structure, Key Commands
@@ -179,6 +188,7 @@ Update when:
 ### README.md
 
 Update when:
+
 - Major features added
 - Setup instructions change
 - New prerequisites required
@@ -186,6 +196,7 @@ Update when:
 ### User Guides (docs/guides/)
 
 Existing guides:
+
 - `google-sheets-integration.md` - Google Sheets sync
 - `backend-setup.md` - Backend installation
 - `frontend-setup.md` - Frontend installation

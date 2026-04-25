@@ -1,12 +1,14 @@
 # Instagram Platform Guidelines
 
 ## Caption Structure
+
 - Hook in first line (appears in preview)
 - Main content with line breaks for readability
 - Call-to-action (comment, save, share)
 - Hashtag block at the end
 
 ## Hashtag Strategy
+
 - Use 5-10 hashtags for optimal reach
 - Mix of:
   - 2-3 high-volume hashtags (1M+ posts)
@@ -15,6 +17,7 @@
 - Can be placed in caption or first comment
 
 ## Best Practices
+
 - Use line breaks (↵) for scannability
 - Emojis encouraged throughout
 - Ask questions to drive comments
@@ -22,6 +25,7 @@
 - Use storytelling format when possible
 
 ## Example Format
+
 ```
 [Hook line that grabs attention] 🎯
 

@@ -20,23 +20,23 @@ docker compose exec backend python -m src.scripts.seed_full
 **Recommended for fresh installs.** This script orchestrates the seeding of:
 
 - **Users**:
-    - `admin@example.com` (Password: `SecurePass123!`) - **Superuser**
+  - `admin@example.com` (Password: `SecurePass123!`) - **Superuser**
 - **Products**:
-    - 30+ items across Electronics, Fashion, Home, Sports
+  - 30+ items across Electronics, Fashion, Home, Sports
 - **Suppliers**:
-    - Global Electronics Ltd
-    - Fashion Forward Inc
-    - Home Essentials Co
+  - Global Electronics Ltd
+  - Fashion Forward Inc
+  - Home Essentials Co
 - **Purchase Orders**:
-    - 1 Completed PO ($5,000)
-    - 1 Draft PO ($1,200.50)
+  - 1 Completed PO ($5,000)
+  - 1 Draft PO ($1,200.50)
 - **Expenses**:
-    - Office Supplies (One-time)
-    - Software Subscription (Recurring Monthly)
+  - Office Supplies (One-time)
+  - Software Subscription (Recurring Monthly)
 - **Marketing**:
-    - **Connectors**: Instagram, Newsletter Service
-    - **Campaign**: "Summer Sale 2025" (Scheduled)
-    - **Events**: Teaser Post (IG), Launch Blast (Email)
+  - **Connectors**: Instagram, Newsletter Service
+  - **Campaign**: "Summer Sale 2025" (Scheduled)
+  - **Events**: Teaser Post (IG), Launch Blast (Email)
 
 ```bash
 # From Docker
@@ -49,12 +49,14 @@ Seeds the database with 30+ realistic products from various categories, complete
 with product images from Unsplash CDN.
 
 **Categories included:**
+
 - Electronics (headphones, laptops, cameras)
 - Home & Garden (furniture, kitchen items)
 - Fashion (accessories, apparel)
 - Sports & Outdoors (equipment, gear)
 
 **What gets seeded:**
+
 - Product names with realistic descriptions
 - SKUs and barcodes
 - Prices and cost prices

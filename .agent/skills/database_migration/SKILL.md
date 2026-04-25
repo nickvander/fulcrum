@@ -1,6 +1,8 @@
 ---
 name: Database Migration
-description: Safely handle database schema changes using Alembic, including troubleshooting common migration issues.
+description:
+  Safely handle database schema changes using Alembic, including troubleshooting
+  common migration issues.
 ---
 
 # Database Migration Skill
@@ -11,6 +13,7 @@ manage schema changes using Alembic.
 ## When to Use This Skill
 
 Use this skill when:
+
 - Adding new tables or columns.
 - Modifying existing schema.
 - Troubleshooting migration errors.
@@ -24,6 +27,7 @@ Use this skill when:
 Edit the SQLAlchemy model in `backend/src/models/`.
 
 **Model Pattern:**
+
 ```python
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Boolean, Float, Text
 from sqlalchemy.orm import relationship
@@ -35,13 +39,14 @@ class EntityName(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 ```
 
 **Register in `models/__init__.py`:**
+
 ```python
 from .entity import EntityName  # noqa: F401
 ```
@@ -54,9 +59,11 @@ docker compose exec backend alembic revision --autogenerate -m "add entity_names
 
 ### Step 3: Review Migration File
 
-**CRITICAL**: Always inspect the generated file in `backend/src/alembic/versions/`.
+**CRITICAL**: Always inspect the generated file in
+`backend/src/alembic/versions/`.
 
 **Check for:**
+
 - Correct `upgrade()` operations (CREATE TABLE, ADD COLUMN).
 - Correct `downgrade()` operations (DROP TABLE, DROP COLUMN).
 - No unintended changes to other tables.
@@ -87,8 +94,8 @@ docker compose exec backend python -m pytest
 **Solution - Squash Migrations:**
 
 1. Read all existing migration files in `backend/src/alembic/versions/`.
-2. Create a new file (e.g., `0001_squashed.py`) combining all `upgrade()`
-   and `downgrade()` logic.
+2. Create a new file (e.g., `0001_squashed.py`) combining all `upgrade()` and
+   `downgrade()` logic.
 3. Delete all old migration files.
 4. Reset the database:
    ```bash

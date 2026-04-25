@@ -122,10 +122,11 @@ code changes. Workflows are triggered on every `push` and `pull_request` to the
 In addition to the CI pipeline, this project uses git hooks to enforce code
 quality before commits and pushes:
 
-- **pre-commit hook:** Runs fast backend tests, linter, and i18n validation to catch issues early
-  in the development process.
-- **pre-push hook:** Runs the full CI test suite (backend, frontend, linting, and i18n validation) to ensure all code passes comprehensive tests before being pushed to
-  the repository.
+- **pre-commit hook:** Runs fast backend tests, linter, and i18n validation to
+  catch issues early in the development process.
+- **pre-push hook:** Runs the full CI test suite (backend, frontend, linting,
+  and i18n validation) to ensure all code passes comprehensive tests before
+  being pushed to the repository.
 
 ### 1. Linting (`ci-lint.yml`)
 

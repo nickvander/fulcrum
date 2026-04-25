@@ -72,15 +72,17 @@ AI-powered content creation for social media marketing.
 
 - **Tone Presets:** Professional, Casual, Viral/Hype, Luxury, or Custom
 - **Editable Prompts:** Pre-filled based on tone, fully customizable
-- **Image Generation:** Creates product images using Gemini's native image output
-- **Draft Persistence:** AI metadata (tone, prompt, model) saved in `content_json`
+- **Image Generation:** Creates product images using Gemini's native image
+  output
+- **Draft Persistence:** AI metadata (tone, prompt, model) saved in
+  `content_json`
 
 **API Endpoints:**
 
-| Endpoint                         | Method | Description                  |
-| -------------------------------- | ------ | ---------------------------- |
-| `/api/v1/marketing/tone-presets` | GET    | List available tone presets  |
-| `/api/v1/marketing/generate-content` | POST | Generate content via AI agents |
+| Endpoint                             | Method | Description                    |
+| ------------------------------------ | ------ | ------------------------------ |
+| `/api/v1/marketing/tone-presets`     | GET    | List available tone presets    |
+| `/api/v1/marketing/generate-content` | POST   | Generate content via AI agents |
 
 **`content_json` Schema:**
 
@@ -99,8 +101,8 @@ Generate product descriptions automatically using AI.
 
 **API Endpoint:**
 
-| Endpoint                         | Method | Description                  |
-| -------------------------------- | ------ | ---------------------------- |
+| Endpoint                          | Method | Description                  |
+| --------------------------------- | ------ | ---------------------------- |
 | `/api/v1/ai/generate-description` | POST   | Generate product description |
 
 **Request:**
@@ -138,10 +140,10 @@ against existing Purchase Orders.
 
 **API Endpoints:**
 
-| Endpoint | Method | Description |
-| --------------------------------------- | ------ | -------------------------------------- |
-| `/api/v1/purchase-orders/parse-document` | POST | **Unified** - Parse and smart-match PO |
-| `/api/v1/purchase-orders/{id}/invoices/parse-and-match` | POST | Parse invoice for specific PO (deprecated) |
+| Endpoint                                                | Method | Description                                |
+| ------------------------------------------------------- | ------ | ------------------------------------------ |
+| `/api/v1/purchase-orders/parse-document`                | POST   | **Unified** - Parse and smart-match PO     |
+| `/api/v1/purchase-orders/{id}/invoices/parse-and-match` | POST   | Parse invoice for specific PO (deprecated) |
 
 **Unified Endpoint Behavior:**
 
@@ -151,7 +153,8 @@ PO or match against an existing one:
 - `mode: "create"` - No matching PO found, use extracted data to create new PO
 - `mode: "match"` - Found matching PO by vendor + items, returns comparison
 
-**Request:** Multipart form with `file` field, optional `target_po_id` query param
+**Request:** Multipart form with `file` field, optional `target_po_id` query
+param
 
 **Supported File Types:** PDF, PNG, JPG, JPEG, HTML, TXT
 
@@ -186,9 +189,7 @@ PO or match against an existing one:
 {
   "mode": "create",
   "vendor_name": "New Supplier Co",
-  "items": [
-    { "sku": "PROD-001", "description": "Widget A", "quantity": 10 }
-  ],
+  "items": [{ "sku": "PROD-001", "description": "Widget A", "quantity": 10 }],
   "confidence": 0.92
 }
 ```
@@ -202,15 +203,14 @@ PO or match against an existing one:
 
 ---
 
-
 ## Supported Providers
 
-| Provider   | Default Model               | API Key Source                |
-|------------|------------------------------|-------------------------------|
-| Google Gemini | gemini-3.0-flash            | [AI Studio](https://aistudio.google.com/) |
-| OpenAI     | gpt-4o                      | [OpenAI](https://platform.openai.com/) |
-| Anthropic  | claude-3-5-sonnet-20240620  | [Anthropic](https://console.anthropic.com/) |
-| Qwen       | qwen-vl-max                 | [DashScope](https://dashscope.console.aliyun.com/) |
+| Provider      | Default Model              | API Key Source                                     |
+| ------------- | -------------------------- | -------------------------------------------------- |
+| Google Gemini | gemini-3.0-flash           | [AI Studio](https://aistudio.google.com/)          |
+| OpenAI        | gpt-4o                     | [OpenAI](https://platform.openai.com/)             |
+| Anthropic     | claude-3-5-sonnet-20240620 | [Anthropic](https://console.anthropic.com/)        |
+| Qwen          | qwen-vl-max                | [DashScope](https://dashscope.console.aliyun.com/) |
 
 ---
 
@@ -246,11 +246,11 @@ graph TD
     A -->|Step 1| B[ResearchAgent]:::agent
     A -->|Step 2| C[ContentAgent]:::agent
     A -->|Step 3| D[ImageAgent]:::agent
-    
+
     B --> E[Trends & Hashtags]:::output
     C --> F[Post Text]:::output
     D --> G[Product Image]:::output
-    
+
     subgraph "Platform-Aware"
         C
         B
@@ -259,8 +259,10 @@ graph TD
 
 **Flow:**
 
-1. **ResearchAgent** - Searches trends, hashtags, and viral angles for the product
-2. **ContentAgent** - Writes platform-specific content (Twitter: 280 chars + hashtags, Instagram: longer + more hashtags)
+1. **ResearchAgent** - Searches trends, hashtags, and viral angles for the
+   product
+2. **ContentAgent** - Writes platform-specific content (Twitter: 280 chars +
+   hashtags, Instagram: longer + more hashtags)
 3. **ImageAgent** - Generates product images using Gemini's native image output
 
 ### Directory Structure
@@ -290,13 +292,13 @@ backend/src/services/adk/
 
 ### Available Tools
 
-| Tool | Used By | Description |
-|------|---------|-------------|
-| `SearchTool` | VisionAgent | Web search for product specs |
-| `FulcrumProductTool` | VisionAgent | Check if product exists in DB |
-| `InventoryTool` | Future agents | Stock level queries |
-| `SupplierTool` | Future agents | Find suppliers |
-| `PricingTool` | Future agents | Margin calculations |
+| Tool                 | Used By       | Description                   |
+| -------------------- | ------------- | ----------------------------- |
+| `SearchTool`         | VisionAgent   | Web search for product specs  |
+| `FulcrumProductTool` | VisionAgent   | Check if product exists in DB |
+| `InventoryTool`      | Future agents | Stock level queries           |
+| `SupplierTool`       | Future agents | Find suppliers                |
+| `PricingTool`        | Future agents | Margin calculations           |
 
 ---
 

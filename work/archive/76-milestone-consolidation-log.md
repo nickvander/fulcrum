@@ -1,6 +1,7 @@
 # Work Log: Milestone 1 Completion & Milestone 2
 
 ## Status
+
 - [/] Finalize Milestone 1
   - [x] Add `order` column to `ProductImage`
   - [x] Implement reorder API

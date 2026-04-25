@@ -166,4 +166,3 @@ Translation files are located in `frontend/src/assets/i18n/`:
 1. Add the key to both `en.json` and `es-MX.json`
 2. Use consistent naming: `module.keyName` (camelCase for key names)
 3. Test both languages using **Settings → General → Language** selector
-

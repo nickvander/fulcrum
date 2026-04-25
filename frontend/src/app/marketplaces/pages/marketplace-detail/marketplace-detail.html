@@ -31,7 +31,7 @@
                     <mat-header-cell *matHeaderCellDef> {{ t('marketing.productEntity') }} </mat-header-cell>
                     <mat-cell *matCellDef="let listing">
                         <div class="product-info">
-                            <span class="product-id">Product #{{ listing.product_id }}</span>
+                            <span class="product-id">{{ listing.product_name || ('Product #' + listing.product_id) }}</span>
                             <span class="external-id">{{ t('marketing.marketplaceRef') }}: {{
                                 listing.external_listing_id || 'N/A' }}</span>
                         </div>
@@ -69,7 +69,15 @@
                 <ng-container matColumnDef="price">
                     <mat-header-cell *matHeaderCellDef> {{ t('marketing.marketplacePrice') }} </mat-header-cell>
                     <mat-cell *matCellDef="let listing">
-                        <span class="price-value">{{ listing.marketplace_price | currency:'USD' }}</span>
+                        <div class="price-container">
+                            <span class="price-value">{{ listing.marketplace_price | currency:'MXN':'symbol-narrow' }}</span>
+                            @if (listing.original_price && listing.original_price > listing.marketplace_price) {
+                            <div class="promo-info">
+                                <span class="original-price">{{ listing.original_price | currency:'MXN':'symbol-narrow' }}</span>
+                                <span class="discount-badge">-{{ listing.discount_percentage }}%</span>
+                            </div>
+                            }
+                        </div>
                     </mat-cell>
                 </ng-container>
 

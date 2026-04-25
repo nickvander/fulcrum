@@ -1,6 +1,8 @@
 ---
 name: Backend Feature Development
-description: Implement backend features from database model to API endpoint, following Fulcrum's Repository Pattern.
+description:
+  Implement backend features from database model to API endpoint, following
+  Fulcrum's Repository Pattern.
 ---
 
 # Backend Feature Development Skill
@@ -11,6 +13,7 @@ new features following the project's Repository Pattern and coding conventions.
 ## When to Use This Skill
 
 Use this skill when the user wants to:
+
 - Add a new database model.
 - Create new API endpoints.
 - Implement business logic in the service layer.

@@ -19,16 +19,34 @@
             <div class="view-layout">
                 <!-- Hero Section: Image + Key Stats -->
                 <div class="hero-section">
-                    <div class="product-image">
-                        @if (getPrimaryImage()) {
-                        <img [src]="getImageUrl(getPrimaryImage())" alt="Product" (error)="onImageError($event)">
-                        } @else {
-                        <div class="no-image">
-                            <mat-icon>image</mat-icon>
+                    <div class="product-image-container">
+                        <div class="product-image" (click)="openImagePreview()" [matTooltip]="t('products.clickToPreview') || 'Click to preview'">
+                            @if (getActiveImage()) {
+                            <img [src]="getImageUrl(getActiveImage())" alt="Product" (error)="onImageError($event)">
+                            <div class="preview-overlay">
+                                <mat-icon>fullscreen</mat-icon>
+                            </div>
+                            } @else {
+                            <div class="no-image">
+                                <mat-icon>image</mat-icon>
+                            </div>
+                            }
+                            @if (product.is_bundle) {
+                            <span class="bundle-badge"><mat-icon>inventory_2</mat-icon> {{ t('products.bundle') }}</span>
+                            }
                         </div>
-                        }
-                        @if (product.is_bundle) {
-                        <span class="bundle-badge"><mat-icon>inventory_2</mat-icon> {{ t('products.bundle') }}</span>
+                        
+                        <!-- Thumbnail Gallery -->
+                        @if (product.images && product.images.length > 1) {
+                        <div class="image-gallery-container">
+                            <div class="image-gallery">
+                                @for (img of product.images; track $index) {
+                                <div class="thumb-wrapper" [class.active]="selectedImageIndex === $index" (click)="selectImage($index)">
+                                    <img [src]="getImageUrl(img.image_path)" (error)="onImageError($event)">
+                                </div>
+                                }
+                            </div>
+                        </div>
                         }
                     </div>
 
@@ -39,7 +57,17 @@
                         </div>
                         <div class="stat-pill price">
                             <span class="label">{{ t('common.price') }}</span>
-                            <span class="value">{{ product.default_resale_price | currency }}</span>
+                            <div class="price-stack">
+                                @if (getBestMarketplacePromo(); as promo) {
+                                <span class="value promo-price">{{ promo.marketplace_price | currency }}</span>
+                                <div class="promo-hint">
+                                    <span class="original">{{ promo.original_price | currency }}</span>
+                                    <span class="discount">-{{ promo.discount_percentage }}%</span>
+                                </div>
+                                } @else {
+                                <span class="value">{{ product.default_resale_price | currency }}</span>
+                                }
+                            </div>
                         </div>
                         <div class="stat-pill cost">
                             <span class="label">{{ t('products.avgCost') }}</span>
@@ -216,16 +244,47 @@
                     @if (showMarketplaces) {
                     <div class="marketplace-chips">
                         @for (listing of getUniqueMarketplaceListings(); track listing.marketplace_id) {
+                        @if (listing.listing_url) {
+                        <a [href]="listing.listing_url" target="_blank" class="mp-chip-link">
+                            <div class="mp-chip" [class.active]="listing.status === 'active'"
+                                [class.pending]="listing.status === 'pending'" [class.error]="listing.status === 'error'">
+                                @if (getMarketplaceLogo(listing)) {
+                                <img [src]="getMarketplaceLogo(listing)" class="mp-logo">
+                                } @else {
+                                <mat-icon>store</mat-icon>
+                                }
+                                <div class="mp-info">
+                                    <span class="mp-name">{{ getMarketplaceName(listing) }}</span>
+                                    <div class="mp-pricing">
+                                        <span class="mp-price">{{ listing.marketplace_price | currency:'MXN':'symbol-narrow' }}</span>
+                                        @if (listing.original_price) {
+                                        <span class="mp-discount">-{{ listing.discount_percentage }}%</span>
+                                        }
+                                    </div>
+                                </div>
+                                <span class="status">{{ listing.status }}</span>
+                            </div>
+                        </a>
+                        } @else {
                         <div class="mp-chip" [class.active]="listing.status === 'active'"
                             [class.pending]="listing.status === 'pending'" [class.error]="listing.status === 'error'">
-                            @if (getMarketplaceLogo(listing.marketplace_id)) {
-                            <img [src]="getMarketplaceLogo(listing.marketplace_id)" class="mp-logo">
+                            @if (getMarketplaceLogo(listing)) {
+                            <img [src]="getMarketplaceLogo(listing)" class="mp-logo">
                             } @else {
                             <mat-icon>store</mat-icon>
                             }
-                            <span>{{ getMarketplaceName(listing.marketplace_id) }}</span>
+                            <div class="mp-info">
+                                <span class="mp-name">{{ getMarketplaceName(listing) }}</span>
+                                <div class="mp-pricing">
+                                    <span class="mp-price">{{ listing.marketplace_price | currency:'MXN':'symbol-narrow' }}</span>
+                                    @if (listing.original_price) {
+                                    <span class="mp-discount">-{{ listing.discount_percentage }}%</span>
+                                    }
+                                </div>
+                            </div>
                             <span class="status">{{ listing.status }}</span>
                         </div>
+                        }
                         }
                     </div>
                     <button mat-stroked-button color="primary" class="add-listing-btn" (click)="openListingDialog()">

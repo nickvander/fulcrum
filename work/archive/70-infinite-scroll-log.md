@@ -41,8 +41,9 @@ lists, and make infinite scroll a user-accessible option.
 - Surveyed 5 list components: `product-list`, `supplier-list`,
   `purchase-order-list`, `expense-list`, `campaign-list`
 - All use 10 as default page size (except products which uses class variable)
-- Renamed archive files: `68-frontend-cleanup.md` → `68-frontend-cleanup-plan.md`
-  and `68-PROGRESS.md` → `68-frontend-cleanup-log.md`
+- Renamed archive files: `68-frontend-cleanup.md` →
+  `68-frontend-cleanup-plan.md` and `68-PROGRESS.md` →
+  `68-frontend-cleanup-log.md`
 
 **Implementation Completed:**
 
@@ -52,6 +53,7 @@ lists, and make infinite scroll a user-accessible option.
 - Added `MatSlideToggleModule` for toggle in pagination area
 - Updated `product-list.html` to integrate infinite scroll toggle with paginator
 - Added pagination-area SCSS styles for clean UI
-- Updated all 5 list components to use pageSize=25 with options [10, 25, 50, 100]
+- Updated all 5 list components to use pageSize=25 with options [10, 25, 50,
+  100]
 - Removed old directive from products module
 - Build and serve verified successfully

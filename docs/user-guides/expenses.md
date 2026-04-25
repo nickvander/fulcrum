@@ -95,6 +95,7 @@ The system includes AI-powered tools to simplify expense entry.
 ### Attaching Receipts
 
 You can also attach receipt files to existing expenses:
+
 1. Edit an expense.
 2. Drop files to attach them for record-keeping.
 
