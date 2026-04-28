@@ -3,6 +3,7 @@ export interface SupplierProduct {
     product_id: number;
     supplier_id: number;
     supplier_sku?: string;
+    supplier_product_name?: string;
     cost_price: number;
     is_primary: boolean;
     lead_time_days?: number;

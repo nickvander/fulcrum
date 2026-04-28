@@ -23,6 +23,7 @@ class SupplierProduct(Base):
     
     # Supplier-specific product info
     supplier_sku = Column(String, nullable=True, index=True)  # Supplier's product code
+    supplier_product_name = Column(String, nullable=True)     # Literal name used by supplier
     cost_price = Column(Float, default=0.0)  # Price from this supplier
     
     # Relationship metadata

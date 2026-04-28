@@ -16,9 +16,14 @@
         display: flex;
         align-items: center;
         gap: 16px;
+        min-width: 0;
+        flex: 1;
 
         h1 {
             margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 
@@ -57,48 +62,193 @@
 
 .item-row {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    margin-bottom: 12px;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
     background: var(--bg-app);
-    padding: 12px;
-    border-radius: 4px;
+    padding: 16px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
+    overflow: hidden;
+    max-width: 100%;
 
-    .product-field {
-        flex: 3;
+    .main-row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        width: 100%;
+
+        .product-field-group {
+            flex: 3;
+            display: flex;
+            gap: 12px;
+            min-width: 0;
+
+            .product-field {
+                flex: 2;
+                min-width: 0;
+            }
+
+            .variant-field {
+                flex: 1;
+                min-width: 150px;
+            }
+        }
+
+        .field-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 8px;
+        }
+
+        .qty-field {
+            flex: 1;
+            min-width: 100px;
+            max-width: 150px;
+        }
+
+        .cost-field {
+            flex: 1;
+            min-width: 120px;
+            max-width: 200px;
+        }
     }
 
-    .qty-field {
-        flex: 1;
-        max-width: 120px;
-    }
+    .variant-distribution-container {
+        margin-left: 24px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 8px;
+        border: 1px dashed var(--border-color);
+        
+        .variant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            
+            h4 {
+                margin: 0;
+                font-weight: 500;
+                color: var(--text-primary);
+            }
+            
+            .distribution-status {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                
+                &.valid {
+                    color: var(--success-color, #4caf50);
+                    mat-icon { color: var(--success-color, #4caf50); }
+                }
+                &.invalid {
+                    color: var(--warn-color, #f44336);
+                    mat-icon { color: var(--warn-color, #f44336); }
+                }
+                
+                mat-icon {
+                    font-size: 18px;
+                    width: 18px;
+                    height: 18px;
+                }
+            }
+        }
 
-    .cost-field {
-        flex: 1;
-        max-width: 150px;
-    }
+        .variant-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
 
-    button {
-        margin-top: 8px;
+            .variant-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 16px;
+                background: var(--bg-card);
+                border-radius: 4px;
+                border: 1px solid var(--border-color);
+
+                .variant-info {
+                    display: flex;
+                    flex-direction: column;
+                    
+                    .v-name {
+                        font-weight: 500;
+                        color: var(--text-primary);
+                    }
+                    .v-sku {
+                        font-size: 12px;
+                        color: var(--text-secondary);
+                    }
+                }
+
+                .v-qty {
+                    width: 120px;
+                    margin-bottom: -1.25em; // counteract mat-form-field bottom padding
+                }
+            }
+        }
     }
 }
 
 .product-option {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 40px 1fr auto auto; // Added space for thumb
+    align-items: center;
     width: 100%;
+    gap: 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    .product-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: #f5f5f5;
+        border: 1px solid var(--border-color);
+    }
+
+    strong {
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.3;
+    }
 
     .sku {
         color: var(--text-secondary);
-        font-size: 0.9em;
-        margin-left: 8px;
+        font-size: 0.8em;
+        white-space: nowrap;
+        opacity: 0.8;
     }
 
     .price {
-        font-weight: bold;
-        margin-left: auto;
+        font-weight: 500;
+        color: var(--success-color);
+        white-space: nowrap;
+        text-align: right;
+        min-width: 70px;
     }
+}
+
+// Make the autocomplete panel wider than the input if necessary
+:host ::ng-deep .mat-mdc-autocomplete-panel {
+    min-width: 450px !important; 
+    max-width: 600px !important;
+}
+
+.extracted-name-hint {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 /* Costs Section */

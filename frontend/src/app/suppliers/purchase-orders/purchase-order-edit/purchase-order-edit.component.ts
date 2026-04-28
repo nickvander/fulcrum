@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
+import { environment } from '../../../../environments/environment';
 import { Product } from '../../../products/models/product.model';
 import { SuppliersService, DocumentParseResult } from '../../suppliers.service';
 import { ProductService } from '../../../products/services/product';
@@ -88,6 +89,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   // Product autocomplete
   productSearchControls: FormControl[] = [];
   filteredProducts$: Observable<Product[]>[] = [];
+  selectedProducts: (Product | null)[] = []; // Track full product objects per row for variants
   private destroy$ = new Subject<void>();
   currentLang: string;
 
@@ -311,7 +313,42 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       this.filteredProducts$ = [];
 
       if (po.items) {
+        const groupedMap = new Map<string, any>();
         po.items.forEach(item => {
+          // Group by product_id and unit_cost if it's a variant
+          if (item.variant_id) {
+             const key = `${item.product_id}_${item.unit_cost}`;
+             if (!groupedMap.has(key)) {
+                groupedMap.set(key, {
+                   ...item,
+                   variant_id: null, // Clear variant_id on parent
+                   quantity_ordered: item.quantity_ordered,
+                   variant_distributions: [{
+                      variant_id: item.variant_id,
+                      name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || `Variant #${item.variant_id}`,
+                      sku: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.sku || '',
+                      quantity: item.quantity_ordered,
+                      unit_cost: item.unit_cost
+                   }]
+                });
+             } else {
+                const parent = groupedMap.get(key);
+                parent.quantity_ordered += item.quantity_ordered;
+                parent.variant_distributions.push({
+                   variant_id: item.variant_id,
+                   name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || `Variant #${item.variant_id}`,
+                   sku: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.sku || '',
+                   quantity: item.quantity_ordered,
+                   unit_cost: item.unit_cost
+                });
+             }
+          } else {
+             // Not a variant, just keep it separate
+             groupedMap.set(`item_${item.id || Math.random()}`, item);
+          }
+        });
+
+        Array.from(groupedMap.values()).forEach(item => {
           this.addLineItem(item);
         });
       }
@@ -365,14 +402,39 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     const itemGroup = this.fb.group({
       product_id: [item?.product_id || null, Validators.required],
+      variant_id: [item?.variant_id || null],
       product_name: [item?.product_name || item?.product?.name || ''],
-      quantity_ordered: [item?.quantity_ordered || 1, [Validators.required, Validators.min(1)]],
-      unit_cost: [item?.unit_cost || 0, [Validators.required, Validators.min(0)]]
+      supplier_product_name: [item?.supplier_product_name || ''],
+      quantity_ordered: [item?.quantity_ordered || 1, [Validators.required, Validators.min(0)]],
+      unit_cost: [item?.unit_cost || 0, [Validators.required, Validators.min(0)]],
+      show_variants: [item?.variant_distributions?.length > 0 ? true : false],
+      target_quantity: [item?.quantity_ordered || 1],
+      variant_distributions: this.fb.array([])
     });
+
+    if (item?.variant_distributions) {
+      const distArray = itemGroup.get('variant_distributions') as FormArray;
+      item.variant_distributions.forEach((dist: any) => {
+        distArray.push(this.fb.group({
+          variant_id: [dist.variant_id],
+          name: [dist.name],
+          sku: [dist.sku],
+          quantity: [dist.quantity || 0, [Validators.min(0)]],
+          unit_cost: [dist.unit_cost || item.unit_cost]
+        }));
+      });
+    }
+
     this.items.push(itemGroup);
+    this.selectedProducts.push(item?.product || null);
 
     // Setup autocomplete for this line
-    const searchControl = new FormControl(item?.product_name || item?.product?.name || '');
+    // If it's an extracted item without a product_id, leave the search blank so the user can search easily.
+    const initialSearchText = (item?.supplier_product_name && !item?.product_id) 
+      ? '' 
+      : (item?.product_name || item?.product?.name || '');
+      
+    const searchControl = new FormControl(initialSearchText);
     this.productSearchControls.push(searchControl);
 
     // Use getProducts with name filter for search
@@ -387,8 +449,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         if (!searchTerm || searchTerm.length < 2) {
           return of([]);
         }
-        // Use getProducts with name filter
-        return this.productService.getProducts(1, 20, { name: searchTerm }).pipe(
+        // Use getProducts with q filter
+        return this.productService.getProducts(1, 20, { q: searchTerm }).pipe(
           map(response => response.data || []),
           catchError(() => of([]))
         );
@@ -406,13 +468,111 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
   selectProduct(product: Product, index: number): void {
     const itemGroup = this.items.at(index) as FormGroup;
-    itemGroup.patchValue({
+    this.selectedProducts[index] = product;
+    
+    // Only update unit_cost if it's currently empty or 0, 
+    // to avoid wiping out extracted costs from invoices.
+    const currentCost = itemGroup.get('unit_cost')?.value;
+    const patchData: any = {
       product_id: product.id,
-      product_name: product.name,
-      unit_cost: product.cost_price || 0
-    });
+      variant_id: null, // Clear variant when product changes
+      product_name: product.name
+    };
+    
+    if (!currentCost || currentCost === 0) {
+      patchData.unit_cost = product.cost_price || 0;
+    }
+
+    itemGroup.patchValue(patchData);
+    
     // Update the search control to show selected product name
     this.productSearchControls[index].setValue(product.name, { emitEvent: false });
+  }
+
+  toggleVariantDistribution(index: number): void {
+    const itemGroup = this.items.at(index) as FormGroup;
+    const showVariants = itemGroup.get('show_variants')?.value;
+    const product = this.selectedProducts[index];
+
+    if (!showVariants && product && product.variants) {
+      // Expanding for the first time or toggling open
+      const distArray = itemGroup.get('variant_distributions') as FormArray;
+      if (distArray.length === 0) {
+        // Initialize distributions if empty
+        product.variants.forEach(variant => {
+          distArray.push(this.fb.group({
+            variant_id: [variant.id],
+            name: [variant.name],
+            sku: [variant.sku],
+            quantity: [0, [Validators.min(0)]],
+            unit_cost: [variant.price || itemGroup.get('unit_cost')?.value]
+          }));
+        });
+        // Set target quantity to current quantity
+        itemGroup.patchValue({ target_quantity: itemGroup.get('quantity_ordered')?.value });
+      }
+    }
+    
+    itemGroup.patchValue({ show_variants: !showVariants });
+  }
+
+  getVariantTotal(index: number): number {
+    const itemGroup = this.items.at(index) as FormGroup;
+    const distArray = itemGroup.get('variant_distributions') as FormArray;
+    return distArray.controls.reduce((sum, dist) => sum + (dist.get('quantity')?.value || 0), 0);
+  }
+
+  isDistributionValid(index: number): boolean {
+    const itemGroup = this.items.at(index) as FormGroup;
+    const target = itemGroup.get('target_quantity')?.value || 0;
+    return this.getVariantTotal(index) === target;
+  }
+
+  flattenItemsForBackend(items: any[]): any[] {
+    const flatItems: any[] = [];
+    items.forEach(item => {
+      if (item.show_variants && item.variant_distributions && item.variant_distributions.length > 0) {
+        // Add distributed variants
+        let hasDist = false;
+        item.variant_distributions.forEach((dist: any) => {
+          if (dist.quantity > 0) {
+            hasDist = true;
+            flatItems.push({
+              product_id: item.product_id,
+              variant_id: dist.variant_id,
+              quantity_ordered: dist.quantity,
+              unit_cost: dist.unit_cost,
+              supplier_product_name: item.supplier_product_name
+            });
+          }
+        });
+        // If they toggled it open but assigned 0 to everything, fallback to main item
+        if (!hasDist) {
+          flatItems.push({
+            product_id: item.product_id,
+            variant_id: item.variant_id,
+            quantity_ordered: item.quantity_ordered,
+            unit_cost: item.unit_cost,
+            supplier_product_name: item.supplier_product_name
+          });
+        }
+      } else {
+        flatItems.push({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity_ordered: item.quantity_ordered,
+          unit_cost: item.unit_cost,
+          supplier_product_name: item.supplier_product_name
+        });
+      }
+    });
+    return flatItems;
+  }
+
+  getImageUrl(imagePath: string | undefined): string {
+    if (!imagePath) return 'assets/images/placeholder-product.png';
+    if (imagePath.startsWith('http')) return imagePath;
+    return `${environment.apiUrl}/uploads/product_images/${imagePath}`;
   }
 
   displayProductFn(product: Product | string): string {
@@ -499,11 +659,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       shipping_cost: formValue.shipping_cost,
       tax_amount: formValue.import_cost,
       other_costs: formValue.other_costs,
-      items: formValue.items.map((item: any) => ({
-        product_id: item.product_id,
-        quantity_ordered: item.quantity_ordered,
-        unit_cost: item.unit_cost
-      })),
+      items: this.flattenItemsForBackend(formValue.items),
       payment_status: formValue.payment_status,
       payment_method: formValue.payment_method,
       paid_by_user_id: formValue.paid_by_user_id,
@@ -590,11 +746,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       custom_payer_name: formValue.custom_payer_name,
       ordered_at: formValue.ordered_at,
       received_at: formValue.received_at,
-      items: formValue.items.map((item: any) => ({
-        product_id: item.product_id,
-        quantity_ordered: item.quantity_ordered,
-        unit_cost: item.unit_cost
-      }))
+      items: this.flattenItemsForBackend(formValue.items),
     };
     return this.suppliersService.updatePurchaseOrder(this.poId, updateData);
   }
@@ -892,18 +1044,13 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
   onParseAndMatchSelected(event: any): void {
     const file = event.target.files[0];
-    if (!file || !this.poId) return;
+    if (!file) return;
     event.target.value = ''; // Reset input
     this.parseAndMatchInvoice(file);
   }
 
   parseAndMatchInvoice(file: File): void {
-    // When creating new PO with AI enabled, allow extraction
-    if (!this.poId && !this.aiEnabled) {
-      this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.saveFirst'),
-        this.translocoService.translate('common.close'), { duration: 3000 });
-      return;
-    }
+    // Allow parsing in create mode - traditional parser works without AI
 
     this.isParsingInvoice = true;
 
@@ -1013,54 +1160,91 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     let changesApplied = false;
 
     // Try to match and set supplier
-    if (result.vendor_name && this.suppliers.length > 0) {
+    if (result.vendor_name) {
+      const vendorLower = result.vendor_name.toLowerCase();
       const matchedSupplier = this.suppliers.find(s =>
-        s.name.toLowerCase().includes(result.vendor_name!.toLowerCase()) ||
-        result.vendor_name!.toLowerCase().includes(s.name.toLowerCase())
+        s.name.toLowerCase().includes(vendorLower) ||
+        vendorLower.includes(s.name.toLowerCase())
       );
-      if (matchedSupplier && !this.poForm.get('supplierId')?.value) {
-        this.poForm.patchValue({ supplierId: matchedSupplier.id });
+      
+      if (matchedSupplier && !this.poForm.get('supplier_id')?.value) {
+        this.poForm.patchValue({ supplier_id: matchedSupplier.id });
         this.snackBar.open(
           this.translocoService.translate('purchaseOrders.messages.autoSelectedSupplier', { name: matchedSupplier.name }),
           this.translocoService.translate('common.close'),
           { duration: 3000 }
         );
         changesApplied = true;
+      } else if (!matchedSupplier && !this.poForm.get('supplier_id')?.value) {
+        // Auto-create the actual seller if it doesn't exist
+        this.suppliersService.createSupplier({ name: result.vendor_name }).subscribe(newSupplier => {
+          this.suppliers.push(newSupplier);
+          this.poForm.patchValue({ supplier_id: newSupplier.id });
+          this.snackBar.open(
+            `Auto-created and selected new supplier: ${newSupplier.name}`,
+            this.translocoService.translate('common.close'),
+            { duration: 3000 }
+          );
+        });
+        changesApplied = true; // Mark as changed since it will update asynchronously
       }
     }
 
     // Set currency if extracted
-    if (result.currency && result.currency !== 'USD') {
+    if (result.currency) {
       this.poForm.patchValue({ currency: result.currency });
     }
 
     // Set shipping cost
     if (result.shipping_cost > 0) {
-      this.poForm.patchValue({ shippingCost: result.shipping_cost });
+      this.poForm.patchValue({ shipping_cost: result.shipping_cost });
       changesApplied = true;
     }
 
     // Set tax amount
     if (result.tax_amount > 0) {
-      this.poForm.patchValue({ taxAmount: result.tax_amount });
+      this.poForm.patchValue({ import_cost: result.tax_amount });
       changesApplied = true;
     }
 
     // Add extracted items to the form
     if (result.items && result.items.length > 0) {
+      // Clear the default empty line item before adding extracted ones
+      if (this.items.length === 1 && !this.items.at(0).get('product_id')?.value) {
+        this.removeItem(0);
+      }
+
       for (const item of result.items) {
-        // Add item to form - will have product_id if matched
-        this.addLineItem({
+        const lineItemData: any = {
           product_id: item.matched_product_id || null,
-          product_name: item.description || item.sku || '',
+          product_name: item.matched_product_id ? (item.description || item.sku || '') : '', 
+          supplier_product_name: item.description || item.sku || '',
           quantity_ordered: item.quantity,
           unit_cost: item.unit_cost
-        });
+        };
+        this.addLineItem(lineItemData);
         changesApplied = true;
+
+        // If backend matched a product, auto-select it in the search control
+        if (item.matched_product_id) {
+          const idx = this.items.length - 1;
+          this.productService.getProductById(item.matched_product_id).subscribe(product => {
+            if (product) {
+              this.selectProduct(product, idx);
+            }
+          });
+        }
       }
     }
 
-    if (!changesApplied) {
+    if (changesApplied) {
+      const itemCount = result.items?.length || 0;
+      this.snackBar.open(
+        `Extracted ${itemCount} item(s) from document`,
+        this.translocoService.translate('common.close'),
+        { duration: 4000 }
+      );
+    } else {
       this.snackBar.open(
         this.translocoService.translate('purchaseOrders.invoiceMatching.noPoMatch'),
         this.translocoService.translate('common.close'),
@@ -1074,7 +1258,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     event.preventDefault();
     event.stopPropagation();
     // Allow drag when we have poId OR when AI is enabled for create flow
-    if ((this.poId || this.aiEnabled) && !this.isParsingInvoice) {
+    if (!this.isParsingInvoice) {
       this.isDraggingInvoice = true;
     }
   }
@@ -1091,7 +1275,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     this.isDraggingInvoice = false;
 
     // Allow drop when we have poId OR when AI is enabled for create flow
-    if ((!this.poId && !this.aiEnabled) || this.isParsingInvoice) return;
+    if (this.isParsingInvoice) return;
 
     const files = event.dataTransfer?.files;
     if (files?.length) {

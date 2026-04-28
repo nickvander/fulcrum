@@ -24,6 +24,9 @@ slowapi
 ruff
 testcontainers[postgres,redis]
 aiosmtplib
+pymupdf
+beautifulsoup4
+lxml
 
 # AI & Agents
 google-adk
