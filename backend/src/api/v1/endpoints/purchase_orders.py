@@ -332,7 +332,7 @@ def apply_cost_allocation(
 
 # --- Invoice Management Endpoints ---
 # Security: Allowed file types and max size
-ALLOWED_INVOICE_TYPES = {'.pdf', '.png', '.jpg', '.jpeg'}
+ALLOWED_INVOICE_TYPES = {'.pdf', '.png', '.jpg', '.jpeg', '.avif'}
 MAX_INVOICE_SIZE = 10 * 1024 * 1024  # 10MB
 INVOICE_UPLOAD_DIR = "uploads/invoices"
 
@@ -503,7 +503,7 @@ async def parse_document(
     from src.crud.crud_store_settings import store_settings as crud_store_settings
     
     # Validate file type
-    allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.html', '.htm', '.txt'}
+    allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.avif', '.html', '.htm', '.txt'}
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in allowed_types:
         raise HTTPException(
@@ -522,29 +522,77 @@ async def parse_document(
         '.png': 'image/png',
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
+        '.avif': 'image/avif',
         '.html': 'text/html',
         '.htm': 'text/html',
         '.txt': 'text/plain'
     }
     mime_type = mime_map.get(file_ext, 'text/plain')
     
+    from src.services.purchase_order_ingestion_service import po_ingestion_service
+    
     # Get store settings for AI config
     settings = crud_store_settings.get_settings(db)
-    if not settings or not settings.ai_enabled:
+    ai_enabled = settings.ai_enabled if settings else False
+    
+    extraction_result = {}
+    
+    # 1. Try traditional parsing first for text-based documents (PDF, HTML, TXT)
+    if file_ext in ('.pdf', '.html', '.htm', '.txt'):
+        try:
+            traditional_data = po_ingestion_service.ingest_file(file.filename, content)
+            # If we got meaningful data (especially items), use it
+            if traditional_data.confidence_score > 0.4 or not ai_enabled:
+                extraction_result = {
+                    "vendor_name": traditional_data.supplier_name,
+                    "po_number": traditional_data.po_number,
+                    "invoice_number": traditional_data.po_number,
+                    "invoice_date": traditional_data.po_date.strftime("%Y-%m-%d") if traditional_data.po_date else None,
+                    "currency": traditional_data.currency,
+                    "items": [
+                        {
+                            "sku": item.sku,
+                            "description": item.description,
+                            "quantity": item.quantity,
+                            "unit_cost": item.unit_cost,
+                            "line_total": item.line_total
+                        } for item in traditional_data.items
+                    ],
+                    "subtotal": traditional_data.subtotal,
+                    "shipping_cost": traditional_data.shipping_cost,
+                    "tax_amount": traditional_data.tax_amount,
+                    "total_amount": traditional_data.total_amount,
+                    "confidence": traditional_data.confidence_score,
+                    "extraction_method": traditional_data.extraction_method
+                }
+        except Exception as e:
+            print(f"[parse_document] Traditional parsing failed: {e}")
+            if not ai_enabled:
+                raise HTTPException(status_code=500, detail=f"Traditional parsing failed: {str(e)}")
+    
+    # 2. Use AI if traditional parsing failed/low confidence AND AI is enabled
+    # Also use AI for images (AVIF, PNG, JPG)
+    if (not extraction_result or extraction_result.get("confidence", 0) < 0.6) and ai_enabled:
+        # Initialize ADK manager and orchestrator
+        adk_manager = ADKManager(db)
+        orchestrator = AgentOrchestrator(adk_manager)
+        
+        # Parse document using AI
+        ai_result = await orchestrator.parse_invoice(content, mime_type)
+        
+        if "error" not in ai_result:
+            # If AI result is better (higher confidence or more items), merge/use it
+            if not extraction_result or ai_result.get("confidence", 0) > extraction_result.get("confidence", 0):
+                extraction_result = ai_result
+                extraction_result["extraction_method"] = "ai"
+        elif not extraction_result:
+             raise HTTPException(status_code=500, detail=ai_result["error"])
+    
+    if not extraction_result:
         raise HTTPException(
             status_code=400, 
-            detail="AI features are disabled in Settings. Enable AI to use document parsing."
+            detail="Could not extract data from document and AI is disabled."
         )
-    
-    # Initialize ADK manager and orchestrator
-    adk_manager = ADKManager(db)
-    orchestrator = AgentOrchestrator(adk_manager)
-    
-    # Parse document using AI
-    extraction_result = await orchestrator.parse_invoice(content, mime_type)
-    
-    if "error" in extraction_result:
-        raise HTTPException(status_code=500, detail=extraction_result["error"])
     
     # Extract document data
     extracted_items = extraction_result.get("items", []) or extraction_result.get("line_items", [])
@@ -730,6 +778,60 @@ async def parse_document(
         )
     else:
         # Mode: CREATE
+        # Try to fuzzy-match extracted items to existing products
+        from src.crud.crud_product import product as crud_product
+        from src.crud.crud_supplier_product import supplier_product as crud_sp
+        from src.crud.crud_supplier import supplier as crud_supplier
+
+        all_products = crud_product.get_multi(db=db, limit=500)
+        
+        # Determine if we matched a supplier from doc_vendor
+        matched_supplier_id = None
+        if doc_vendor:
+            all_suppliers = crud_supplier.get_multi(db=db, limit=500)
+            vendor_lower = doc_vendor.lower()
+            for s in all_suppliers:
+                if vendor_lower in s.name.lower() or s.name.lower() in vendor_lower:
+                    matched_supplier_id = s.id
+                    break
+
+        # Load supplier specific products if we have a matched supplier
+        supplier_products = []
+        if matched_supplier_id:
+            supplier_products = crud_sp.get_by_supplier(db=db, supplier_id=matched_supplier_id)
+        
+        for item in items:
+            best_product_id = None
+            best_score = 0.0
+            
+            # First, try to match against learned supplier_product_names
+            if supplier_products and item.description:
+                for sp in supplier_products:
+                    if sp.supplier_product_name:
+                        score = similarity(item.description, sp.supplier_product_name)
+                        if score > best_score:
+                            best_score = score
+                            best_product_id = sp.product_id
+
+            # If still not confident, check all products (fallback)
+            if best_score < 0.6:
+                for product in all_products:
+                    # Try description vs product name
+                    score = similarity(item.description, product.name or "")
+                    if score > best_score:
+                        best_score = score
+                        best_product_id = product.id
+                    
+                    # Also try SKU match (exact)
+                    if item.sku and product.sku:
+                        if item.sku.upper() == product.sku.upper():
+                            best_product_id = product.id
+                            best_score = 1.0
+                            break
+            
+            if best_score > 0.4 and best_product_id:
+                item.matched_product_id = best_product_id
+        
         return DocumentParseResult(
             mode="create",
             vendor_name=doc_vendor,

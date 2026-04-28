@@ -58,33 +58,60 @@
                 <h3>{{ t('purchaseOrders.sections.products') }}</h3>
                 <div formArrayName="items">
                     <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
+                        <div class="main-row">
+                            <div class="product-field-group">
+                            <mat-form-field appearance="fill" class="product-field">
+                                <mat-label>{{ t('products.productName') }}</mat-label>
+                                <input matInput [formControl]="productSearchControls[i]" [matAutocomplete]="productAuto"
+                                    [placeholder]="t('common.placeholders.typeToSearch')" autocomplete="off">
+                                <mat-autocomplete #productAuto="matAutocomplete" [displayWith]="displayProductFn"
+                                    (optionSelected)="selectProduct($event.option.value, i)">
+                                    <mat-option *ngFor="let product of (filteredProducts$[i] | async)" [value]="product">
+                                        <div class="product-option">
+                                            <img [src]="getImageUrl(product.primary_image?.image_path)" class="product-thumb"
+                                                (error)="$any($event.target).src = 'assets/images/placeholder-product.png'">
+                                            <strong>{{ product.name }}</strong>
+                                            <span class="sku">{{ t('products.sku') }}: {{ product.sku }}</span>
+                                            <span class="price">${{ product.cost_price | number:'1.2-2' }}</span>
+                                        </div>
+                                    </mat-option>
+                                </mat-autocomplete>
+                                <div matSuffix class="field-actions">
+                                    <button mat-icon-button type="button" (click)="openQuickAddProduct(i)"
+                                        [matTooltip]="t('products.addProduct')">
+                                        <mat-icon>add_circle</mat-icon>
+                                    </button>
+                                    <button mat-icon-button type="button" *ngIf="selectedProducts[i]?.variants?.length" 
+                                        (click)="toggleVariantDistribution(i)" [color]="item.get('show_variants')?.value ? 'primary' : ''"
+                                        [matTooltip]="item.get('show_variants')?.value ? 'Hide variants' : 'Distribute across variants'">
+                                        <mat-icon>call_split</mat-icon>
+                                    </button>
+                                </div>
+                                <mat-hint align="end" *ngIf="item.get('product_id')?.value">
+                                    ID: {{ item.get('product_id')?.value }}
+                                </mat-hint>
+                                <mat-hint *ngIf="item.get('supplier_product_name')?.value" class="extracted-name-hint" [style.color]="item.get('product_id')?.value ? 'var(--text-secondary)' : 'var(--warning-color, #f57c00)'">
+                                    <mat-icon style="font-size: 14px; height: 14px; width: 14px; vertical-align: middle;" *ngIf="!item.get('product_id')?.value">info</mat-icon>
+                                    {{ item.get('product_id')?.value ? 'Original:' : 'Map to existing or create new:' }} "{{ item.get('supplier_product_name')?.value }}"
+                                </mat-hint>
+                            </mat-form-field>
 
-                        <mat-form-field appearance="fill" class="product-field">
-                            <mat-label>{{ t('products.productName') }}</mat-label>
-                            <input matInput [formControl]="productSearchControls[i]" [matAutocomplete]="productAuto"
-                                [placeholder]="t('common.placeholders.typeToSearch')" autocomplete="off">
-                            <mat-autocomplete #productAuto="matAutocomplete" [displayWith]="displayProductFn"
-                                (optionSelected)="selectProduct($event.option.value, i)">
-                                <mat-option *ngFor="let product of (filteredProducts$[i] | async)" [value]="product">
-                                    <div class="product-option">
-                                        <strong>{{ product.name }}</strong>
-                                        <span class="sku">{{ t('products.sku') }}: {{ product.sku }}</span>
-                                        <span class="price">${{ product.cost_price | number:'1.2-2' }}</span>
-                                    </div>
-                                </mat-option>
-                            </mat-autocomplete>
-                            <button mat-icon-button matSuffix type="button" (click)="openQuickAddProduct(i)"
-                                [matTooltip]="t('products.addProduct')">
-                                <mat-icon>add_circle</mat-icon>
-                            </button>
-                            <mat-hint *ngIf="item.get('product_id')?.value">
-                                ID: {{ item.get('product_id')?.value }}
-                            </mat-hint>
-                        </mat-form-field>
+                            <mat-form-field appearance="fill" class="variant-field" *ngIf="selectedProducts[i]?.variants?.length && !item.get('show_variants')?.value">
+                                <mat-label>Variant</mat-label>
+                                <mat-select formControlName="variant_id">
+                                    <mat-option [value]="null">No variant</mat-option>
+                                    <mat-option *ngFor="let v of selectedProducts[i]?.variants" [value]="v.id">
+                                        {{ v.name }} ({{ v.sku }})
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                        </div>
 
                         <mat-form-field appearance="fill" class="qty-field">
-                            <mat-label>{{ t('common.quantity') }}</mat-label>
-                            <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off">
+                            <mat-label *ngIf="!item.get('show_variants')?.value">{{ t('common.quantity') }}</mat-label>
+                            <mat-label *ngIf="item.get('show_variants')?.value">Target Qty</mat-label>
+                            <!-- If distributing, tie the main input to target_quantity instead of quantity_ordered so we don't break simple binding, wait, let's keep quantity_ordered for both, but use it as target if distributing -->
+                            <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off" (change)="item.get('target_quantity')?.setValue(item.get('quantity_ordered')?.value)">
                         </mat-form-field>
 
                         <mat-form-field appearance="fill" class="cost-field">
@@ -104,6 +131,31 @@
                             [disabled]="isLocked">
                             <mat-icon>delete</mat-icon>
                         </button>
+                        </div>
+                        
+                        <!-- Nested Variant Distribution Section -->
+                        <div class="variant-distribution-container" *ngIf="item.get('show_variants')?.value">
+                            <div class="variant-header">
+                                <h4>Variant Distribution</h4>
+                                <span class="distribution-status" [class.valid]="isDistributionValid(i)" [class.invalid]="!isDistributionValid(i)">
+                                    Assigned: {{ getVariantTotal(i) }} / Total: {{ item.get('target_quantity')?.value }}
+                                    <mat-icon *ngIf="isDistributionValid(i)">check_circle</mat-icon>
+                                    <mat-icon *ngIf="!isDistributionValid(i)">error</mat-icon>
+                                </span>
+                            </div>
+                            <div class="variant-list" formArrayName="variant_distributions">
+                                <div class="variant-row" *ngFor="let dist of $any(item.get('variant_distributions')).controls; let vIndex=index" [formGroupName]="vIndex">
+                                    <div class="variant-info">
+                                        <span class="v-name">{{ dist.get('name').value }}</span>
+                                        <span class="v-sku">{{ dist.get('sku').value }}</span>
+                                    </div>
+                                    <mat-form-field appearance="outline" class="v-qty">
+                                        <mat-label>Qty</mat-label>
+                                        <input matInput type="number" formControlName="quantity" min="0" autocomplete="off">
+                                    </mat-form-field>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <button mat-button type="button" (click)="addLineItem()" [disabled]="isLocked">
@@ -213,23 +265,21 @@
                 <!-- Consolidated Drop Zone (works with or without AI) -->
                 <div class="invoice-drop-zone" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
                     (drop)="onInvoiceDrop($event)" (click)="parseInput.click()" [class.drag-over]="isDraggingInvoice"
-                    [class.disabled]="!poId && !aiEnabled" [class.parsing]="isParsingInvoice">
+                    [class.parsing]="isParsingInvoice">
                     <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none"
-                        accept=".pdf,.jpg,.jpeg,.png">
+                        accept=".pdf,.jpg,.jpeg,.png,.avif">
                     <input type="file" #parseInput (change)="onParseAndMatchSelected($event)" style="display: none"
-                        accept=".pdf,.jpg,.jpeg,.png,.html,.htm,.txt">
+                        accept=".pdf,.jpg,.jpeg,.png,.avif,.html,.htm,.txt">
 
                     <ng-container *ngIf="!isParsingInvoice">
                         <mat-icon>cloud_upload</mat-icon>
                         <span class="drop-text">
                             <ng-container *ngIf="poId">{{ t('purchaseOrders.invoiceMatching.dropOrClick')
                                 }}</ng-container>
-                            <ng-container *ngIf="!poId && aiEnabled">{{
+                            <ng-container *ngIf="!poId">{{
                                 t('purchaseOrders.invoiceMatching.dropToExtract') }}</ng-container>
-                            <ng-container *ngIf="!poId && !aiEnabled">{{ t('purchaseOrders.messages.saveFirst')
-                                }}</ng-container>
                         </span>
-                        <span class="file-types" *ngIf="poId || aiEnabled">PDF, Images, HTML</span>
+                        <span class="file-types">PDF, Images (JPG, PNG, AVIF), HTML</span>
                         <span class="ai-badge" *ngIf="aiEnabled">
                             <mat-icon>auto_awesome</mat-icon>
                             {{ t('products.aiPowered') }}

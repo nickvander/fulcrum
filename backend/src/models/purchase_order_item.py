@@ -8,6 +8,7 @@ class PurchaseOrderItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     po_id = Column(Integer, ForeignKey("purchase_orders.id", ondelete="CASCADE"))
     product_id = Column(Integer, ForeignKey("products.id"))
+    variant_id = Column(Integer, ForeignKey("product_variants.id"), nullable=True)
     
     quantity_ordered = Column(Float, default=0.0)
     quantity_received = Column(Float, default=0.0)
@@ -24,4 +25,5 @@ class PurchaseOrderItem(Base):
 
     purchase_order = relationship("PurchaseOrder", back_populates="items")
     product = relationship("Product")
+    variant = relationship("ProductVariant")
 

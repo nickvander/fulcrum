@@ -9,6 +9,7 @@ from datetime import datetime
 class SupplierProductBase(BaseModel):
     """Base schema for supplier-product relationship."""
     supplier_sku: Optional[str] = None
+    supplier_product_name: Optional[str] = None
     cost_price: float = 0.0
     is_primary: bool = False
     lead_time_days: Optional[int] = None
@@ -25,6 +26,7 @@ class SupplierProductCreate(SupplierProductBase):
 class SupplierProductUpdate(BaseModel):
     """Schema for updating a supplier-product relationship."""
     supplier_sku: Optional[str] = None
+    supplier_product_name: Optional[str] = None
     cost_price: Optional[float] = None
     is_primary: Optional[bool] = None
     lead_time_days: Optional[int] = None

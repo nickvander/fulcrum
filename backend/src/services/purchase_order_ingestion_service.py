@@ -55,14 +55,14 @@ class POIngestionService:
     # Common patterns for field extraction
     PATTERNS = {
         "po_number": [
+            r"(?:Order number|Orden de compra|Receipt)\s*[\s\S]{0,100}#([A-Z0-9\-]+)",
             r"(?:PO|P\.O\.|Purchase Order|Order)[\s#:]*([A-Z0-9\-]+)",
             r"(?:Número|Orden de Compra|OC)[\s#:]*([A-Z0-9\-]+)",
-            r"Document\s*#?:?\s*([A-Z0-9\-]+)",
         ],
         "date": [
+            r"(?:Order date|Fecha de orden|Issue Date)\s*[\s\S]{0,100}\n?([\d\w\s,]+?)(?:\s\([A-Z]+\))?(?:\n|$)",
             r"(?:Date|Fecha|Issue Date)[\s:]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})",
             r"(?:Date|Fecha)[\s:]*([A-Z][a-z]+\s+\d{1,2},?\s+\d{4})",
-            r"(\d{4}-\d{2}-\d{2})",
         ],
         "currency": [
             r"(?:Currency|Moneda)[\s:]*([A-Z]{3})",
@@ -74,17 +74,22 @@ class POIngestionService:
             r"(Due on Receipt)",
         ],
         "subtotal": [
-            r"(?:Subtotal|Sub[\s-]?total)[\s:$]*([0-9,]+\.?\d*)",
+            r"(?:Subtotal|Sub[\s-]?total)(?:\s*\(excl\. tax\))?[\s:$]*\n?(?:[A-Z]{3}\s*)?([0-9,]+\.?\d*)",
         ],
         "shipping": [
-            r"(?:Shipping|Freight|Envío|Shipping & Handling)[\s:$]*([0-9,]+\.?\d*)",
+            r"(?:Shipping|Freight|Envío|Shipping fee|Shipping & Handling)[\s:$]*\n?(?:[A-Z]{3}\s*)?([0-9,]+\.?\d*)",
         ],
         "tax": [
-            r"(?:Tax|IVA|Sales Tax)(?:\s*\([^)]+\))?[\s:$]*([0-9,]+\.?\d*)",
+            r"(?:Tax|IVA|Sales Tax)(?:\s*\([^)]+\))?[\s:$]*\n?(?:[A-Z]{3}\s*)?([0-9,]+\.?\d*)",
         ],
         "total": [
-            r"(?:Grand Total|Total|Total Due)[\s:$]*([0-9,]+\.?\d*)",
+            r"(?:Grand Total|Total|Total Due|Order total|Importe Total)[\s:$]*\n?(?:[A-Z]{3}\s*)?([0-9,]+\.?\d*)",
         ],
+        "supplier": [
+            r"Sold by\s+([\s\S]+?)\s+Ship to",
+            r"(?:Supplier|Vendor|Seller|Vendedor|Proveedor)[\s:]*([A-Za-z0-9\s\.\,\-]+)",
+            r"(?:From|De)[\s:]*([A-Za-z0-9\s\.\,\-]+)",
+        ]
     }
 
     def __init__(self, ai_enabled: bool = False, ai_service=None):
@@ -213,6 +218,13 @@ class POIngestionService:
         confidence = 0.0
         warnings = []
 
+        # Extract Supplier
+        supplier = self._find_first_match(text, self.PATTERNS["supplier"])
+        if supplier:
+            # Clean up: take first line only if multiline block
+            result.supplier_name = supplier.strip().split('\n')[0]
+            confidence += 0.1
+
         # Extract PO Number
         po_number = self._find_first_match(text, self.PATTERNS["po_number"])
         if po_number:
@@ -261,16 +273,17 @@ class POIngestionService:
         else:
             warnings.append("Could not extract line items automatically.")
 
-        # Try to identify supplier from first lines
-        lines = text.strip().split("\n")
-        if lines:
-            # First non-empty line is often the company name
-            for line in lines[:5]:
-                cleaned = line.strip()
-                if cleaned and len(cleaned) > 3 and not cleaned.startswith(("=", "-", "*")):
-                    result.supplier_name = cleaned
-                    confidence += 0.1
-                    break
+        # Try to identify supplier from first lines IF not already found
+        if not result.supplier_name:
+            lines = text.strip().split("\n")
+            if lines:
+                # First non-empty line is often the company name
+                for line in lines[:5]:
+                    cleaned = line.strip()
+                    if cleaned and len(cleaned) > 3 and not cleaned.startswith(("=", "-", "*", "#")):
+                        result.supplier_name = cleaned
+                        confidence += 0.05
+                        break
 
         result.confidence_score = min(confidence, 1.0)
         result.warnings = warnings
@@ -349,36 +362,81 @@ class POIngestionService:
     def _extract_line_items_from_text(self, text: str) -> List[ExtractedLineItem]:
         """
         Extract line items from plain text using pattern matching.
-        Looks for lines with SKU-like codes followed by description, quantity, and prices.
         """
         items = []
         
-        # Pattern for structured line items: SKU, Description, Qty, Price, Total
-        # Examples:
-        # ELEC-LAPTOP-001   Pro Laptop 15"   10   $899.99   $8,999.90
-        # SKU: APP-DRESS-BLK
-        line_patterns = [
-            # SKU pattern followed by description, qty, prices
-            r"([A-Z]{2,}[\-][A-Z0-9\-]+)\s+(.+?)\s+(\d+)\s+\$?([\d,]+\.?\d*)\s+\$?([\d,]+\.?\d*)",
-            # Table-like format with explicit columns
-            r"<td>([A-Z0-9\-]+)</td>.+?<td>(.+?)</td>.+?<td>(\d+)</td>.+?<td>\$?([\d,]+\.?\d*)</td>",
-        ]
+        # 1. Vertical Blocks (Alibaba/Modern Style)
+        # Sequence: Description (multiline), Quantity, Unit Price, Total
+        # Use a more specific header to avoid matching totals at the bottom
+        items_section = re.search(r"(?:Order details|Item\nQuantity)\s*[\s\S]+?Amount\s*\n([\s\S]+?)\s+(?:Items total|Payment details|Order total|Subtotal|Resumen)", text, re.IGNORECASE)
+        if items_section:
+            section_text = items_section.group(1).strip()
+            # print(f"DEBUG: Parsed section text: {section_text[:100]}...") # Helpful for docker logs
+            lines = [l.strip() for l in section_text.split('\n') if l.strip()]
+            
+            last_item_end_idx = -1
+            for i, line in enumerate(lines):
+                # Look for a quantity-like line (numeric only, no currency)
+                if re.match(r"^[0-9,]+\.?\d*$", line) and not any(c in line for c in "USDMXNEUR"):
+                    # Everything since the last item end is the description
+                    desc_lines = lines[last_item_end_idx + 1 : i]
+                    # Filter out any headers that might be at the start
+                    desc_lines = [l for l in desc_lines if l.lower() not in 
+                                ["item", "description", "quantity", "amount", "unit price", "order details"]]
+                    
+                    if desc_lines:
+                        qty = self._parse_amount(line)
+                        price = 0.0
+                        total = 0.0
+                        
+                        # Unit price usually follows quantity
+                        k = i + 1
+                        if k < len(lines) and any(c in lines[k] for c in "USDMXNEUR"):
+                            price = self._parse_amount(lines[k])
+                            k += 1
+                        # Line total follows unit price
+                        if k < len(lines) and any(c in lines[k] for c in "USDMXNEUR"):
+                            total = self._parse_amount(lines[k])
+                            k += 1
+                        
+                        items.append(ExtractedLineItem(
+                            description=" ".join(desc_lines),
+                            quantity=qty, unit_cost=price, line_total=total
+                        ))
+                        last_item_end_idx = k - 1
 
-        for pattern in line_patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE | re.MULTILINE)
-            for match in matches:
-                if len(match) >= 5:
-                    item = ExtractedLineItem(
-                        sku=match[0].strip(),
-                        description=match[1].strip(),
-                        quantity=self._parse_amount(match[2]),
-                        unit_cost=self._parse_amount(match[3]),
-                        line_total=self._parse_amount(match[4])
-                    )
-                    if item.description and item.quantity > 0:
-                        items.append(item)
+        # 2. SKU, Description, Qty, Price, Total (Horizontal Table)
+        if not items:
+            sku_desc_qty_price_total = r"([A-Z0-9]{3,}[\-][A-Z0-9\-]+)\s+(.+?)\s+(\d+(?:\.\d+)?)\s+\$?([0-9,]+\.?\d*)\s+\$?([0-9,]+\.?\d*)"
+            matches = re.findall(sku_desc_qty_price_total, text, re.IGNORECASE | re.MULTILINE)
+            for m in matches:
+                items.append(ExtractedLineItem(
+                    sku=m[0].strip(), description=m[1].strip(),
+                    quantity=self._parse_amount(m[2]), unit_cost=self._parse_amount(m[3]),
+                    line_total=self._parse_amount(m[4])
+                ))
 
-        return items
+        # 3. Index, Description, Unit Price, Qty, Total (Horizontal Table style 2)
+        if not items:
+            index_desc_price_qty_total = r"(\d+)\s+([A-Za-z0-9\s\-\.\(\)\/]{5,100})\s+\$?([0-9,]+\.?\d*)\s+(\d+(?:\.\d+)?)\s+\$?([0-9,]+\.?\d*)"
+            matches = re.findall(index_desc_price_qty_total, text, re.IGNORECASE | re.MULTILINE)
+            for m in matches:
+                items.append(ExtractedLineItem(
+                    description=m[1].strip(), unit_cost=self._parse_amount(m[2]),
+                    quantity=self._parse_amount(m[3]), line_total=self._parse_amount(m[4])
+                ))
+
+        # Filter out duplicates or invalid items
+        seen_items = set()
+        unique_items = []
+        for item in items:
+            # Use desc + qty + cost for uniqueness to allow multiple entries of same product
+            item_key = (item.description, item.quantity, item.unit_cost)
+            if item.description and item.quantity > 0 and item_key not in seen_items:
+                unique_items.append(item)
+                seen_items.add(item_key)
+
+        return unique_items
 
     def _find_first_match(self, text: str, patterns: List[str]) -> Optional[str]:
         """Find the first matching pattern in text."""

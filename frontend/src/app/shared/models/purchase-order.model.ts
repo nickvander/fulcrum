@@ -9,16 +9,24 @@ export enum PurchaseOrderStatus {
 export interface PurchaseOrderItem {
     id?: number;
     product_id: number;
+    variant_id?: number;
     product_name?: string; // Enriched in frontend if needed
     product?: {
         id: number;
         name: string;
         sku: string;
         images?: any[];
+        variants?: any[];
+    };
+    variant?: {
+        id: number;
+        name: string;
+        sku: string;
     };
     quantity_ordered: number;
     quantity_received?: number;
     unit_cost: number;
+    supplier_product_name?: string;
 }
 
 export interface PurchaseOrder {

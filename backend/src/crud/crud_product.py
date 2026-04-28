@@ -24,7 +24,8 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         query = db.query(self.model).options(
             joinedload(self.model.images),
             joinedload(self.model.marketplace_listings),
-            joinedload(self.model.inventory_items)
+            joinedload(self.model.inventory_items),
+            joinedload(self.model.variants)
         )
         
         # Apply filters if provided
@@ -74,7 +75,8 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
         query = db.query(self.model).options(
             joinedload(self.model.images),
             joinedload(self.model.marketplace_listings),
-            joinedload(self.model.inventory_items)
+            joinedload(self.model.inventory_items),
+            joinedload(self.model.variants)
         )
         
         # Apply filters if provided

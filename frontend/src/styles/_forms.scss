@@ -246,6 +246,16 @@ mat-form-field {
         color: var(--text-main) !important;
         // Ensure caret color matches text
         caret-color: var(--text-main);
+
+        &::placeholder {
+            color: var(--text-secondary) !important;
+            opacity: 0.8;
+        }
+    }
+
+    // Ensure the search icon is visible
+    .mat-icon {
+        color: var(--text-secondary) !important;
     }
 }
 
@@ -254,5 +264,14 @@ mat-form-field {
 :host-context(.dark-theme) .search-field-compact {
     input {
         color: #f1f5f9 !important; // Explicit slate-100 fallback
+
+        &::placeholder {
+            color: #94a3b8 !important; // Slate-400 for readable placeholder
+            opacity: 1;
+        }
+    }
+
+    .mat-icon {
+        color: #94a3b8 !important;
     }
 }

@@ -32,7 +32,9 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
         # Update total (simple logic, likely needs improvement later)
         db_obj.total_amount = total_amount
         db.add(db_obj)
-        
+        # Check if we should update supplier details (Auto-Association & Lead Time)
+        self._update_supplier_products(db, db_obj, items_data)
+
         db.commit()
         db.refresh(db_obj)
         return db_obj
@@ -85,56 +87,59 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
             
     
         # Check if we should update supplier details (Auto-Association & Lead Time)
-        self._update_supplier_products(db, db_obj)
+        self._update_supplier_products(db, db_obj, items_data)
         
         return db_obj
 
-    def _update_supplier_products(self, db: Session, po: PurchaseOrder):
+    def _update_supplier_products(self, db: Session, po: PurchaseOrder, items_data: list = None):
         """
         Auto-associates products with supplier and updates lead times/costs upon receipt.
         """
-        # Only proceed if we have a valid received date or completed status implying receipt
-        # We rely on received_at being set for lead time, but we can do association on any update if we want.
-        # Let's restrict to when we have items and it's not Draft.
-        if not po.items or po.status == "draft":
+        if not items_data or po.status == "draft":
             return
 
         # Calculate lead time if dates exist
         lead_time_days = None
         if po.ordered_at and po.received_at:
             delta = po.received_at - po.ordered_at
-            # Ensure non-negative and at least 1 day if same day? 
-            # delta.days gives full days. If same day, 0.
             lead_time_days = max(0, delta.days)
 
         from src.crud.crud_supplier_product import supplier_product as crud_sp
         from src.schemas.supplier_product import SupplierProductCreate
 
-        for item in po.items:
+        for item in items_data:
+            # Handle dict or object
+            i_prod_id = item.get("product_id") if isinstance(item, dict) else item.product_id
+            i_cost = item.get("unit_cost") if isinstance(item, dict) else item.unit_cost
+            i_name = item.get("supplier_product_name") if isinstance(item, dict) else getattr(item, 'supplier_product_name', None)
+
             # Check for existing association
             existing_sp = crud_sp.get_by_product_and_supplier(
-                db, product_id=item.product_id, supplier_id=po.supplier_id
+                db, product_id=i_prod_id, supplier_id=po.supplier_id
             )
 
             if existing_sp:
                 # Update logic
                 update_data = {}
-                # Update cost if different (simple logic: assume latest PO is current cost)
-                if item.unit_cost > 0 and abs(existing_sp.cost_price - item.unit_cost) > 0.001:
-                    update_data["cost_price"] = item.unit_cost
+                if i_cost > 0 and abs(existing_sp.cost_price - i_cost) > 0.001:
+                    update_data["cost_price"] = i_cost
                 
-                # Update lead time if calculated
                 if lead_time_days is not None:
                      update_data["lead_time_days"] = lead_time_days
+                
+                # Update supplier product name if we have a new one
+                if i_name and existing_sp.supplier_product_name != i_name:
+                    update_data["supplier_product_name"] = i_name
                 
                 if update_data:
                     crud_sp.update(db, db_obj=existing_sp, obj_in=update_data)
             else:
                 # Create new association
                 sp_in = SupplierProductCreate(
-                    product_id=item.product_id,
+                    product_id=i_prod_id,
                     supplier_id=po.supplier_id,
-                    cost_price=item.unit_cost,
+                    supplier_product_name=i_name,
+                    cost_price=i_cost,
                     lead_time_days=lead_time_days if lead_time_days is not None else 0,
                     is_primary=False,
                     min_order_qty=1.0 # Default
