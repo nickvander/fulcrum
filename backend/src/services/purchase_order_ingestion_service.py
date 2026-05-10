@@ -372,7 +372,7 @@ class POIngestionService:
         if items_section:
             section_text = items_section.group(1).strip()
             # print(f"DEBUG: Parsed section text: {section_text[:100]}...") # Helpful for docker logs
-            lines = [l.strip() for l in section_text.split('\n') if l.strip()]
+            lines = [line.strip() for line in section_text.split('\n') if line.strip()]
             
             last_item_end_idx = -1
             for i, line in enumerate(lines):
@@ -381,7 +381,7 @@ class POIngestionService:
                     # Everything since the last item end is the description
                     desc_lines = lines[last_item_end_idx + 1 : i]
                     # Filter out any headers that might be at the start
-                    desc_lines = [l for l in desc_lines if l.lower() not in 
+                    desc_lines = [line for line in desc_lines if line.lower() not in 
                                 ["item", "description", "quantity", "amount", "unit price", "order details"]]
                     
                     if desc_lines:

@@ -9,7 +9,7 @@ from src.models.marketplace import MarketplaceListing
 
 from src.schemas.marketplace_credential import MarketplaceCredentialCreate
 from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, AsyncMock
 from src.services.marketplaces.base import ListingData
 
 @pytest.mark.db

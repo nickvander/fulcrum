@@ -95,6 +95,9 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
         """
         Auto-associates products with supplier and updates lead times/costs upon receipt.
         """
+        if items_data is None:
+            items_data = po.items
+
         if not items_data or po.status == "draft":
             return
 

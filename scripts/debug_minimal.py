@@ -1,11 +1,13 @@
 import re
 
 def parse_amount(value):
-    if not value: return 0.0
+    if not value:
+        return 0.0
     try:
         cleaned = re.sub(r"[^\d.]", "", value.replace(",", ""))
         return float(cleaned) if cleaned else 0.0
-    except: return 0.0
+    except ValueError:
+        return 0.0
 
 text = """Hot Sale Silicone Coffee Machine Pads Separated 
 Design Heat Resistant Multi-Sizes Silicone Kitchen 
@@ -14,7 +16,7 @@ Drain Baking Mats
 USD 2.3000
 USD 276.00"""
 
-lines = [l.strip() for l in text.split('\n') if l.strip()]
+lines = [line.strip() for line in text.split('\n') if line.strip()]
 print(f"Lines: {lines}")
 
 i = 3 # 120.00
@@ -29,7 +31,8 @@ while j >= 0:
     amt = parse_amount(prev_line)
     is_header = prev_line.lower() in ["item", "amount"]
     print(f"  Prev: {prev_line}, Amt: {amt}, Header: {is_header}")
-    if amt > 0 or is_header: break
+    if amt > 0 or is_header:
+        break
     desc_lines.insert(0, prev_line)
     j -= 1
 

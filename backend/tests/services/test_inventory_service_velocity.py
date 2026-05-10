@@ -121,26 +121,7 @@ def test_auto_associate_supplier_product(db: Session):
             PurchaseOrderItemCreate(product_id=product.id, quantity_ordered=10, unit_cost=15.0)
         ]
     )
-    po = crud_purchase_order.purchase_order.create_with_items(db, obj_in=po_in)
-    
-    # Verify no association yet (logic only runs on update currently in crud_po, or distinct call)
-    # logic runs in 'update' if we passed items, OR if we call _update_supplier_products
-    # Our usage pattern is "Receive" which calls update.
-    
-    sp = crud_supplier_product.supplier_product.get_by_product_and_supplier(db, product_id=product.id, supplier_id=supplier.id)
-    # It might create it if your crud create calls it? No, create_with_items does not call _update_supplier_products in logic I wrote
-    # But wait, I only modified 'update' method.
-    assert sp is None 
-    
-    # Now simulate Receiving (Update PO)
-    # We used "ordered", now update to "partially_received" or just trigger update
-    # Note: _update_supplier_products checks for items and checks status != DRAFT.
-    
-    # The logic I added:
-    # if not po.items or po.status == "draft": return
-    
-    # Since status is "ordered", check if update triggers it.
-    crud_purchase_order.purchase_order.update(db, db_obj=po, obj_in={"status": "partially_received"})
+    crud_purchase_order.purchase_order.create_with_items(db, obj_in=po_in)
     
     sp = crud_supplier_product.supplier_product.get_by_product_and_supplier(db, product_id=product.id, supplier_id=supplier.id)
     assert sp is not None
