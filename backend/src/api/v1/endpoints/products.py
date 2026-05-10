@@ -1,6 +1,8 @@
 import os
 from typing import List, Dict, Any
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response, Body
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.api import dependencies
@@ -13,6 +15,105 @@ from src.tasks import generate_product_embedding
 
 router = APIRouter()
 
+
+def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 30) -> None:
+    """
+    Populate computed list metrics with batched aggregate queries.
+    """
+    product_ids = [p.id for p in products]
+    if not product_ids:
+        return
+
+    from src.models.inventory import InventoryItem
+    from src.models.order import SalesOrder, SalesOrderItem
+    from src.models.product_inventory_settings import ProductInventorySettings
+    from src.models.store_settings import StoreSettings
+    from src.models.marketing import Campaign, CampaignStatus, campaign_products
+
+    stock_rows = (
+        db.query(
+            InventoryItem.product_id,
+            func.coalesce(func.sum(InventoryItem.quantity), 0).label("stock_quantity"),
+        )
+        .filter(InventoryItem.product_id.in_(product_ids))
+        .group_by(InventoryItem.product_id)
+        .all()
+    )
+    stock_by_product = {row.product_id: int(row.stock_quantity or 0) for row in stock_rows}
+
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    sales_rows = (
+        db.query(
+            SalesOrderItem.product_id,
+            func.coalesce(func.sum(SalesOrderItem.quantity), 0).label("quantity_sold"),
+        )
+        .join(SalesOrder, SalesOrderItem.order_id == SalesOrder.id)
+        .filter(
+            SalesOrderItem.product_id.in_(product_ids),
+            SalesOrder.created_at >= cutoff_date,
+            SalesOrder.status.in_(["COMPLETED", "SHIPPED"]),
+        )
+        .group_by(SalesOrderItem.product_id)
+        .all()
+    )
+    quantity_sold_by_product = {
+        row.product_id: float(row.quantity_sold or 0) for row in sales_rows
+    }
+
+    threshold_rows = (
+        db.query(ProductInventorySettings)
+        .filter(ProductInventorySettings.product_id.in_(product_ids))
+        .all()
+    )
+    thresholds_by_product = {row.product_id: row for row in threshold_rows}
+
+    store_settings = db.query(StoreSettings).first()
+    default_low_inventory_days = (
+        store_settings.low_inventory_days_default if store_settings else 30
+    )
+    default_low_stock_quantity = (
+        store_settings.low_stock_quantity_default if store_settings else 10
+    )
+
+    campaign_rows = (
+        db.query(
+            campaign_products.c.product_id,
+            func.count(Campaign.id).label("active_campaign_count"),
+        )
+        .join(Campaign, Campaign.id == campaign_products.c.campaign_id)
+        .filter(
+            campaign_products.c.product_id.in_(product_ids),
+            Campaign.status == CampaignStatus.ACTIVE.value,
+        )
+        .group_by(campaign_products.c.product_id)
+        .all()
+    )
+    active_campaigns_by_product = {
+        row.product_id: int(row.active_campaign_count or 0) for row in campaign_rows
+    }
+
+    for product in products:
+        stock_quantity = stock_by_product.get(product.id, 0)
+        quantity_sold = quantity_sold_by_product.get(product.id, 0.0)
+        sales_velocity = quantity_sold / float(days)
+        thresholds = thresholds_by_product.get(product.id)
+
+        product.sales_velocity = sales_velocity
+        product.days_of_inventory = (
+            999.0 if sales_velocity <= 0 else float(stock_quantity) / sales_velocity
+        )
+        product.low_inventory_threshold = (
+            thresholds.low_inventory_days_threshold
+            if thresholds and thresholds.low_inventory_days_threshold is not None
+            else default_low_inventory_days
+        )
+        product.low_stock_quantity_threshold = (
+            thresholds.low_stock_quantity_threshold
+            if thresholds and thresholds.low_stock_quantity_threshold is not None
+            else default_low_stock_quantity
+        )
+        product.stock_quantity = stock_quantity
+        product.active_campaign_count = active_campaigns_by_product.get(product.id, 0)
 
 
 @router.get("/{product_id}/purchase-history", response_model=List[product_schema.ProductPurchaseHistory])
@@ -117,32 +218,8 @@ def read_products(
     if max_price is not None:
         filters['max_price'] = max_price
         
-    print(f"DEBUG: read_products filters={filters}, is_bundle={is_bundle}")
     products = crud_product.product.get_multi_paginated(db, skip=skip, limit=limit, filters=filters)
-    
-    # Calculate metrics for each product in the list
-    from src.services.inventory_service import inventory_service
-    from src.models.marketing import Campaign, CampaignStatus
-    
-    # Pre-fetch active campaign counts in a single query if possible, or per product
-    # For simplicity in this iteration, we'll do it per product (consider optimizing if slow)
-    for p in products["data"]:
-        p.sales_velocity = inventory_service.calculate_sales_velocity(db, p.id)
-        p.days_of_inventory = inventory_service.calculate_days_of_inventory(db, p.id)
-        p.low_inventory_threshold = inventory_service.get_effective_low_inventory_threshold(db, p.id)
-        p.low_stock_quantity_threshold = inventory_service.get_effective_low_stock_quantity_threshold(db, p.id)
-        p.stock_quantity = inventory_service.get_total_stock_quantity(db, p.id)
-        
-        # Count active campaigns
-        active_campaigns = (
-            db.query(Campaign)
-            .join(Campaign.products)
-            .filter(Campaign.products.any(id=p.id))
-            .filter(Campaign.status == CampaignStatus.ACTIVE.value)
-            .count()
-        )
-        p.active_campaign_count = active_campaigns
-        
+    _hydrate_product_list_metrics(db, products["data"])
     return products
 
 
@@ -595,4 +672,3 @@ def get_product_variants(
     # We can use the relationship if it's eagerly loaded or lazy loading (if session active).
     # To be safe and efficient, we can check if they are loaded or query them directly.
     return product.variants
-

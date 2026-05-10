@@ -9,7 +9,6 @@ import argparse
 import json
 import os
 import sys
-import mimetypes
 from pathlib import Path
 
 try:
@@ -90,8 +89,10 @@ def print_summary(data):
     
     if shipping > 0 or tax > 0:
         print(f"  {'Subtotal:':<68} {subtotal:>10.2f}")
-        if shipping > 0: print(f"  {'Shipping:':<68} {shipping:>10.2f}")
-        if tax > 0: print(f"  {'Tax:':<68} {tax:>10.2f}")
+        if shipping > 0:
+            print(f"  {'Shipping:':<68} {shipping:>10.2f}")
+        if tax > 0:
+            print(f"  {'Tax:':<68} {tax:>10.2f}")
         print("-" * 85)
         
     print(f"  {'TOTAL EXTRACTED AMOUNT:':<68} {total_amount:>10.2f}")

@@ -1,6 +1,6 @@
 import re
-from dataclasses import dataclass, field
-from typing import Optional, List
+from dataclasses import dataclass
+from typing import Optional
 
 @dataclass
 class ExtractedLineItem:
@@ -11,11 +11,13 @@ class ExtractedLineItem:
     line_total: float = 0.0
 
 def parse_amount(value):
-    if not value: return 0.0
+    if not value:
+        return 0.0
     try:
         cleaned = re.sub(r"[^\d.]", "", value.replace(",", ""))
         return float(cleaned) if cleaned else 0.0
-    except: return 0.0
+    except ValueError:
+        return 0.0
 
 text = """Item
 Quantity
@@ -41,7 +43,7 @@ USD 0.4000
 USD 1,280.00
 """
 
-lines = [l.strip() for l in text.split('\n') if l.strip()]
+lines = [line.strip() for line in text.split('\n') if line.strip()]
 items = []
 
 i = 0

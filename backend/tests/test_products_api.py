@@ -2,8 +2,10 @@ from fastapi.testclient import TestClient
 from src.models.product import Product, ProductImage
 import pytest
 from sqlalchemy.orm import Session
+from sqlalchemy import event
 import io
 import os
+from datetime import datetime
 
 from unittest.mock import patch
 from src.config import settings
@@ -90,6 +92,113 @@ def test_search_products_stock_filter(client: TestClient, db: Session, test_prod
     assert response.status_code == 200
     data = response.json().get("data", [])
     assert test_product.id not in [p["id"] for p in data]
+
+
+@pytest.mark.db
+def test_product_list_uses_batched_computed_metrics(
+    client: TestClient, db: Session, test_product: Product, test_admin_user
+):
+    """
+    Product list responses should include computed metrics populated from bulk queries.
+    """
+    from src.models.inventory import InventoryItem
+    from src.models.order import SalesOrder, SalesOrderItem, OrderSource
+    from src.models.product_inventory_settings import ProductInventorySettings
+    from src.models.store_settings import StoreSettings
+    from src.models.marketing import Campaign, CampaignStatus
+
+    db.add(StoreSettings(low_inventory_days_default=45, low_stock_quantity_default=7))
+    db.add(InventoryItem(product_id=test_product.id, quantity=10, location="default"))
+    db.add(
+        ProductInventorySettings(
+            product_id=test_product.id,
+            low_inventory_days_threshold=12,
+            low_stock_quantity_threshold=3,
+        )
+    )
+
+    order = SalesOrder(
+        status="COMPLETED",
+        total_price=100.0,
+        created_at=datetime.utcnow(),
+        source=OrderSource.FULCRUM,
+        external_order_id="BATCH-METRICS-ORDER",
+    )
+    db.add(order)
+    db.flush()
+    db.add(
+        SalesOrderItem(
+            order_id=order.id,
+            product_id=test_product.id,
+            quantity=15,
+            price_per_unit=10.0,
+        )
+    )
+
+    campaign = Campaign(
+        user_id=test_admin_user.id,
+        name="Active Campaign",
+        status=CampaignStatus.ACTIVE.value,
+    )
+    campaign.products.append(test_product)
+    db.add(campaign)
+    db.commit()
+
+    response = client.get("/api/v1/products/")
+    assert response.status_code == 200
+    listed_product = next(
+        item for item in response.json()["data"] if item["id"] == test_product.id
+    )
+
+    assert listed_product["stock_quantity"] == 10
+    assert listed_product["sales_velocity"] == 0.5
+    assert listed_product["days_of_inventory"] == 20.0
+    assert listed_product["low_inventory_threshold"] == 12
+    assert listed_product["low_stock_quantity_threshold"] == 3
+    assert listed_product["active_campaign_count"] == 1
+
+
+@pytest.mark.db
+def test_product_list_query_count_stays_bounded(
+    client: TestClient, db: Session, test_product: Product
+):
+    """
+    Product list should avoid per-product metric queries as page size grows.
+    """
+    from src.schemas.product import ProductCreate
+    from src.crud import crud_product
+    from src.models.inventory import InventoryItem
+
+    for index in range(5):
+        product = crud_product.product.create(
+            db=db,
+            obj_in=ProductCreate(
+                name=f"Query Count Product {index}",
+                sku=f"QUERY-COUNT-{index}",
+                default_resale_price=10.0,
+                cost_price=5.0,
+            ),
+        )
+        db.add(InventoryItem(product_id=product.id, quantity=index + 1, location="default"))
+
+    db.add(InventoryItem(product_id=test_product.id, quantity=10, location="default"))
+    db.commit()
+
+    statements = []
+
+    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+    event.listen(db.bind, "before_cursor_execute", before_cursor_execute)
+    try:
+        response = client.get("/api/v1/products/?limit=100")
+    finally:
+        event.remove(db.bind, "before_cursor_execute", before_cursor_execute)
+
+    assert response.status_code == 200
+    assert len(response.json()["data"]) >= 6
+    assert len(statements) <= 20
+
 
 @pytest.mark.db
 def test_update_product(client: TestClient, test_product: Product, admin_headers: dict):
