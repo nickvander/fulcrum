@@ -1,11 +1,28 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload, selectinload
 from src.crud.base import CRUDBase
 from src.models.product import Product, BundleComponent
 from src.schemas.product import ProductCreate, ProductUpdate
 from typing import List, Any
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
+    def _list_loader_options(self):
+        return (
+            selectinload(self.model.images),
+            selectinload(self.model.marketplace_listings),
+            selectinload(self.model.inventory_items),
+            selectinload(self.model.inventory_adjustments),
+            selectinload(self.model.custom_fields),
+            selectinload(self.model.variants),
+            selectinload(self.model.bundle_components)
+            .selectinload(BundleComponent.component)
+            .selectinload(Product.inventory_items),
+            selectinload(self.model.part_of_bundles)
+            .selectinload(BundleComponent.bundle)
+            .selectinload(Product.inventory_items),
+        )
+
     def get(self, db: Session, id: int) -> Product | None:
         return db.query(self.model).options(
             joinedload(self.model.images),
@@ -21,11 +38,7 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100, filters: dict = {}
     ) -> List[Product]:
-        query = db.query(self.model).options(
-            joinedload(self.model.images),
-            joinedload(self.model.marketplace_listings),
-            joinedload(self.model.inventory_items)
-        )
+        query = db.query(self.model).options(*self._list_loader_options())
         
         # Apply filters if provided
         if filters:
@@ -70,12 +83,7 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def get_multi_paginated(
         self, db: Session, *, skip: int = 0, limit: int = 10, filters: dict = {}
     ) -> dict:
-        print(f"DEBUG: get_multi_paginated called with filters={filters}")
-        query = db.query(self.model).options(
-            joinedload(self.model.images),
-            joinedload(self.model.marketplace_listings),
-            joinedload(self.model.inventory_items)
-        )
+        query = db.query(self.model).options(*self._list_loader_options())
         
         # Apply filters if provided
         if filters:
@@ -98,10 +106,9 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
                      from src.models.inventory import InventoryItem
                      from sqlalchemy import func
                      subquery = (
-                         db.query(InventoryItem.product_id)
+                         select(InventoryItem.product_id)
                          .group_by(InventoryItem.product_id)
                          .having(func.sum(InventoryItem.quantity) >= value)
-                         .subquery()
                      )
                      query = query.filter(self.model.id.in_(subquery))
                 elif field == 'max_stock':
@@ -114,10 +121,9 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
                      
                      # First, get products with inventory > value
                      subquery_exceed = (
-                         db.query(InventoryItem.product_id)
+                         select(InventoryItem.product_id)
                          .group_by(InventoryItem.product_id)
                          .having(func.sum(InventoryItem.quantity) > value)
-                         .subquery()
                      )
                      # Filter OUT those products
                      query = query.filter(self.model.id.not_in(subquery_exceed))
