@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardStatsService } from '../../services/dashboard-stats.service';
+import { OnboardingService } from '../../services/onboarding.service';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,6 +18,7 @@ describe('DashboardComponent', () => {
     let component: DashboardComponent;
     let fixture: ComponentFixture<DashboardComponent>;
     let statsServiceMock: any;
+    let onboardingServiceMock: any;
 
     beforeEach(async () => {
         statsServiceMock = {
@@ -28,6 +30,26 @@ describe('DashboardComponent', () => {
                 lowStockProducts: [],
                 totalInventoryValue: 50000,
                 stockHealthPercentage: 5
+            }))
+        };
+        onboardingServiceMock = {
+            getStatus: vi.fn().mockReturnValue(of({
+                complete: false,
+                completed_required: 1,
+                total_required: 2,
+                steps: [
+                    {
+                        key: 'products',
+                        label: 'Products',
+                        description: 'Add products',
+                        complete: false,
+                        optional: false,
+                        warning: true,
+                        action_label: 'Add products',
+                        route: '/products',
+                        count: 0
+                    }
+                ]
             }))
         };
 
@@ -47,7 +69,8 @@ describe('DashboardComponent', () => {
                 })
             ],
             providers: [
-                { provide: DashboardStatsService, useValue: statsServiceMock }
+                { provide: DashboardStatsService, useValue: statsServiceMock },
+                { provide: OnboardingService, useValue: onboardingServiceMock }
             ],
             schemas: [CUSTOM_ELEMENTS_SCHEMA]
         })
@@ -64,5 +87,9 @@ describe('DashboardComponent', () => {
 
     it('should fetch stats on init', () => {
         expect(statsServiceMock.getStats).toHaveBeenCalled();
+    });
+
+    it('should fetch onboarding status on init', () => {
+        expect(onboardingServiceMock.getStatus).toHaveBeenCalled();
     });
 });

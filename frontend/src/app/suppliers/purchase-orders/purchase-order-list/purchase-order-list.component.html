@@ -97,11 +97,14 @@
             <ng-template #tableContent>
                 <ng-container *ngIf="dataSource.data.length === 0; else showTable">
                     <div class="empty-state">
-                        <mat-icon class="empty-icon">inventory_2</mat-icon>
-                        <h3>{{ t('common.noResults') }}</h3>
-                        <p>{{ t('purchaseOrders.createPO') }}</p>
+                        <mat-icon class="empty-icon">receipt_long</mat-icon>
+                        <h3>Start your purchasing workflow</h3>
+                        <p>Create a PO manually or import a supplier PDF/image. Confirmed items can receive stock into internal inventory with an audit trail.</p>
                         <button mat-raised-button color="primary" (click)="createPurchaseOrder()">
                             <mat-icon>add</mat-icon> {{ t('purchaseOrders.createPO') }}
+                        </button>
+                        <button mat-stroked-button color="primary" (click)="openIngestDialog()">
+                            <mat-icon>upload_file</mat-icon> {{ t('purchaseOrders.importPo') }}
                         </button>
                     </div>
                 </ng-container>

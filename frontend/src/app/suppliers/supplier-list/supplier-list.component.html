@@ -50,10 +50,13 @@
                 <ng-container *ngIf="dataSource.data.length === 0; else showTable">
                     <div class="empty-state">
                         <mat-icon class="empty-icon">business</mat-icon>
-                        <h3>{{ t('suppliers.noSuppliers') }}</h3>
-                        <p>{{ t('suppliers.startAdding') }}</p>
+                        <h3>Add your first supplier</h3>
+                        <p>Suppliers make PO imports, learned SKU mappings, lead times, and receiving history easier to trust.</p>
                         <button mat-raised-button color="primary" (click)="createSupplier()">
                             <mat-icon>add</mat-icon> {{ t('suppliers.addSupplier') }}
+                        </button>
+                        <button mat-stroked-button color="primary" routerLink="/suppliers/po">
+                            <mat-icon>receipt_long</mat-icon> Purchase orders
                         </button>
                     </div>
                 </ng-container>

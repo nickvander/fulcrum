@@ -22,6 +22,7 @@ from src.api.v1.endpoints import (
     marketing,
     marketing_ai,
     integrations,
+    onboarding,
 )
 
 api_router = APIRouter()
@@ -46,5 +47,5 @@ api_router.include_router(expenses.router, prefix="/expenses", tags=["expenses"]
 api_router.include_router(marketing.router, prefix="/marketing", tags=["marketing"])
 api_router.include_router(marketing_ai.router, prefix="/marketing", tags=["marketing-ai"])
 api_router.include_router(integrations.router, prefix="/integrations", tags=["integrations"])
-
+api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboarding"])
 

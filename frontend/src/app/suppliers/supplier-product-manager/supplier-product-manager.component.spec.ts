@@ -6,6 +6,7 @@ import { of } from 'rxjs';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('SupplierProductManagerComponent', () => {
     let component: SupplierProductManagerComponent;
@@ -23,7 +24,8 @@ describe('SupplierProductManagerComponent', () => {
                 SupplierProductManagerComponent,
                 MatTableModule,
                 MatButtonModule,
-                MatIconModule
+                MatIconModule,
+                RouterTestingModule
             ],
             providers: [
                 { provide: SuppliersService, useValue: suppliersServiceMock }

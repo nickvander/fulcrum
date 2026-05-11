@@ -133,6 +133,11 @@
     p {
         margin: 0 0 20px;
         color: #888;
+        max-width: 460px;
+    }
+
+    button + button {
+        margin-left: 8px;
     }
 }
 

@@ -29,15 +29,18 @@ import { SuppliersService } from '../../suppliers.service';
 export class ReceivingDialogComponent implements OnInit {
     receivingForm: FormGroup;
     po: PurchaseOrder;
+    mode: 'receive' | 'correct';
 
     constructor(
         private fb: FormBuilder,
         private suppliersService: SuppliersService,
         public dialogRef: MatDialogRef<ReceivingDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { po: PurchaseOrder }
+        @Inject(MAT_DIALOG_DATA) public data: { po: PurchaseOrder, mode?: 'receive' | 'correct' }
     ) {
         this.po = data.po;
+        this.mode = data.mode || 'receive';
         this.receivingForm = this.fb.group({
+            reason: ['Receiving correction'],
             items: this.fb.array([])
         });
     }
@@ -67,9 +70,21 @@ export class ReceivingDialogComponent implements OnInit {
                 product_name: [item.product?.name || item.product_name || `Product #${item.product_id}`],
                 quantity_ordered: [item.quantity_ordered],
                 quantity_received_so_far: [item.quantity_received || 0],
-                quantity_to_receive: [remaining, [Validators.min(0)]]
+                quantity_to_receive: [this.mode === 'receive' ? remaining : 0, [Validators.min(0)]]
             }));
         });
+    }
+
+    title(): string {
+        return this.mode === 'correct' ? `Correct Receiving - PO #${this.po.id}` : `Receive Items - PO #${this.po.id}`;
+    }
+
+    quantityLabel(): string {
+        return this.mode === 'correct' ? 'Reverse Received' : 'Receive Now';
+    }
+
+    submitLabel(): string {
+        return this.mode === 'correct' ? 'Apply Correction' : 'Receive';
     }
 
     getImageUrl(product: any): string | null {
@@ -116,22 +131,26 @@ export class ReceivingDialogComponent implements OnInit {
     onSubmit(): void {
         if (this.receivingForm.valid) {
             const formValue = this.receivingForm.value;
-            const itemsToReceive = formValue.items
+            const itemsToSubmit = formValue.items
                 .filter((item: any) => item.quantity_to_receive > 0)
                 .map((item: any) => ({
                     po_item_id: item.po_item_id,
                     product_id: item.product_id,
                     variant_id: item.variant_id,
-                    quantity: item.quantity_to_receive
+                    quantity: item.quantity_to_receive,
+                    reason: this.mode === 'correct' ? formValue.reason : undefined
                 }));
 
-            if (itemsToReceive.length === 0) {
-                // Nothing to receive
+            if (itemsToSubmit.length === 0) {
                 this.dialogRef.close();
                 return;
             }
 
-            this.suppliersService.receivePurchaseOrderItems(this.po.id, itemsToReceive)
+            const request$ = this.mode === 'correct'
+                ? this.suppliersService.correctReceivedPurchaseOrderItems(this.po.id, itemsToSubmit)
+                : this.suppliersService.receivePurchaseOrderItems(this.po.id, itemsToSubmit);
+
+            request$
                 .subscribe({
                     next: (updatedPo) => {
                         this.dialogRef.close(updatedPo);

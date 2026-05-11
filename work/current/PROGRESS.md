@@ -1,6 +1,6 @@
 # Progress Log
 
-**Status:** Ready for customer onboarding sprint **Current Phase:** Phase 7 -
+**Status:** Onboarding checklist and correction flow implemented **Current Phase:** Phase 7 -
 Operational Reliability & Growth
 
 ## Current Work
@@ -15,12 +15,12 @@ Operational Reliability & Growth
 
 ## Next Session Starting Point
 
-- Build the onboarding checklist/setup-health workflow first.
-- Start with a backend `/api/v1/onboarding/status` endpoint, then add a
-  dashboard or settings panel that routes users to Products, Suppliers,
-  Purchase Orders, and Marketplace Settings.
-- Keep old quick wins in `work/future/`; they are useful later but not the
-  cleanest next step for onboarding customers.
+- Add optional demo workspace/sample data creation for trial customers.
+- Add supplier document import review queue before PO/stock writes.
+- Add launch readiness report for setup health, unresolved imports, test data,
+  stock health, and marketplace credential status.
+- Keep old quick wins in `work/future/`; they are useful later but secondary to
+  onboarding customers safely.
 
 ## Recent Archive
 

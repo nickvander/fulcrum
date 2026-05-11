@@ -12,6 +12,12 @@
                 (click)="openReceivingDialog()">
                 {{ t('purchaseOrders.actions.receiveItems') }}
             </button>
+            <button mat-stroked-button color="warn" *ngIf="canCorrectReceiving()"
+                (click)="openReceivingCorrectionDialog()"
+                matTooltip="Reverse received quantity while keeping an inventory audit trail">
+                <mat-icon>history</mat-icon>
+                Correct Receiving
+            </button>
         </div>
 
         <form [formGroup]="poForm" (ngSubmit)="onSubmit()" autocomplete="off">

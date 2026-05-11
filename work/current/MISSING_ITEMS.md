@@ -2,14 +2,16 @@
 
 ## High Priority
 
-- [ ] Customer onboarding checklist/setup-health workflow
+- [x] Customer onboarding checklist/setup-health workflow
       - Show store, products, suppliers, PO, inventory movement, supplier alias,
         and marketplace credential readiness.
       - Provide direct actions to complete missing setup.
-- [ ] Customer-ready empty states for Products, Suppliers, Purchase Orders, and
+- [x] Customer-ready empty states for Products, Suppliers, Purchase Orders, and
       Supplier detail Products tab.
-- [ ] Receiving correction/reversal flow so onboarding users can fix stock
+- [x] Receiving correction/reversal flow so onboarding users can fix stock
       mistakes without editing history silently.
+- [ ] Launch readiness report for setup health, unresolved imports, test data,
+      stock health, and marketplace credential status.
 
 ## Medium Priority
 

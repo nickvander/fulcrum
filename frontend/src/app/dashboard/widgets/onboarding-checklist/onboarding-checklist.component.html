@@ -1,0 +1,35 @@
+<section class="onboarding-panel" *ngIf="status">
+    <div class="panel-header">
+        <div>
+            <p class="eyebrow">Customer setup</p>
+            <h2>Onboarding checklist</h2>
+            <p class="subtitle">
+                Confirm the operational basics before importing documents or connecting channels.
+            </p>
+        </div>
+        <div class="progress-summary" [class.complete]="status.complete">
+            <span>{{ status.completed_required }}/{{ status.total_required }}</span>
+            <small>required done</small>
+        </div>
+    </div>
+
+    <mat-progress-bar mode="determinate" [value]="progressValue()"></mat-progress-bar>
+
+    <div class="steps">
+        <article class="step" *ngFor="let step of status.steps; trackBy: trackStep"
+            [class.done]="step.complete" [class.optional]="step.optional" [class.warning]="step.warning">
+            <mat-icon class="state-icon">{{ stateIcon(step) }}</mat-icon>
+            <div class="step-copy">
+                <div class="step-title-row">
+                    <h3>{{ step.label }}</h3>
+                    <span class="count-pill" *ngIf="step.count">{{ step.count }}</span>
+                    <span class="optional-pill" *ngIf="step.optional">Optional</span>
+                </div>
+                <p>{{ step.description }}</p>
+            </div>
+            <a mat-stroked-button color="primary" [routerLink]="step.route">
+                {{ step.action_label }}
+            </a>
+        </article>
+    </div>
+</section>

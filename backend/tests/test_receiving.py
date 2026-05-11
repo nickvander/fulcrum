@@ -129,6 +129,81 @@ def test_receive_items_targets_exact_po_line(client: TestClient, db: Session, te
     assert inventory is not None
     assert inventory.quantity == 3
 
+
+def test_receive_correction_reverses_stock_and_po_line(
+    client: TestClient, db: Session, test_product, test_supplier, admin_headers
+):
+    po_data = {
+        "supplier_id": test_supplier.id,
+        "status": "ordered",
+        "currency": "USD",
+        "items": [
+            {"product_id": test_product.id, "quantity_ordered": 10, "unit_cost": 50.0},
+        ],
+    }
+    response = client.post("/api/v1/purchase-orders/", json=po_data, headers=admin_headers)
+    assert response.status_code == 200
+    po = response.json()
+    po_item = po["items"][0]
+
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive",
+        json=[{"po_item_id": po_item["id"], "product_id": test_product.id, "quantity": 5}],
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive-correction",
+        json=[
+            {
+                "po_item_id": po_item["id"],
+                "product_id": test_product.id,
+                "quantity": 2,
+                "reason": "Counted damaged cartons twice",
+            }
+        ],
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    corrected_item = response.json()["items"][0]
+    assert corrected_item["quantity_received"] == 3
+    assert response.json()["status"] == "partially_received"
+
+    inventory = db.query(InventoryItem).filter(InventoryItem.product_id == test_product.id).first()
+    assert inventory is not None
+    assert inventory.quantity == 3
+
+
+def test_receive_correction_cannot_exceed_received_quantity(
+    client: TestClient, test_product, test_supplier, admin_headers
+):
+    response = client.post(
+        "/api/v1/purchase-orders/",
+        json={
+            "supplier_id": test_supplier.id,
+            "status": "ordered",
+            "currency": "USD",
+            "items": [
+                {"product_id": test_product.id, "quantity_ordered": 10, "unit_cost": 50.0},
+            ],
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    po = response.json()
+    po_item = po["items"][0]
+
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive-correction",
+        json=[{"po_item_id": po_item["id"], "product_id": test_product.id, "quantity": 1}],
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 400
+    assert "only 0" in response.json()["detail"]
+
 def test_adjust_stock_api(client: TestClient, db: Session, test_product):
     # This test also needs auth, skipping manual setup for brevity and focusing on workflow above first
     pass

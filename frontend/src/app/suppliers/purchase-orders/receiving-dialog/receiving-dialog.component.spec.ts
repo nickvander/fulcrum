@@ -27,7 +27,8 @@ describe('ReceivingDialogComponent', () => {
 
     beforeEach(async () => {
         suppliersServiceMock = {
-            receivePurchaseOrderItems: vi.fn()
+            receivePurchaseOrderItems: vi.fn(),
+            correctReceivedPurchaseOrderItems: vi.fn()
         };
         dialogRefMock = {
             close: vi.fn()
@@ -76,6 +77,20 @@ describe('ReceivingDialogComponent', () => {
         component.onSubmit();
         expect(suppliersServiceMock.receivePurchaseOrderItems).toHaveBeenCalledWith(1, [
             { po_item_id: 11, product_id: 101, variant_id: null, quantity: 2 }
+        ]);
+        expect(dialogRefMock.close).toHaveBeenCalled();
+    });
+
+    it('should submit receiving corrections in correction mode', () => {
+        component.mode = 'correct';
+        component.receivingForm.patchValue({ reason: 'Counted twice' });
+        component.items.at(0).patchValue({ quantity_to_receive: 2 });
+        suppliersServiceMock.correctReceivedPurchaseOrderItems.mockReturnValue(of({} as any));
+
+        component.onSubmit();
+
+        expect(suppliersServiceMock.correctReceivedPurchaseOrderItems).toHaveBeenCalledWith(1, [
+            { po_item_id: 11, product_id: 101, variant_id: null, quantity: 2, reason: 'Counted twice' }
         ]);
         expect(dialogRefMock.close).toHaveBeenCalled();
     });
