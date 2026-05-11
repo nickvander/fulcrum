@@ -1,0 +1,12 @@
+Supplier: Alibaba Launch Supplier
+Order #ALI-READY-1001
+Order date 05/11/2026
+Currency USD
+
+SKU Description Qty Unit Price Total
+ALI-DEMO-WIDGET-001 Alibaba Demo Starter Widget 5 $12.50 $62.50
+
+Subtotal $62.50
+Shipping $8.00
+Tax $0.00
+Grand Total $70.50

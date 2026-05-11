@@ -16,6 +16,7 @@ from .product_template import ProductTemplate
 from .purchase_order import PurchaseOrder
 from .purchase_order_item import PurchaseOrderItem
 from .supplier_invoice import SupplierInvoice
+from .supplier_document_import import SupplierDocumentImport
 from .supplier_product import SupplierProduct
 from .supplier_product_alias import SupplierProductAlias
 from .expense import Expense
@@ -62,6 +63,7 @@ __all__ = [
     "PurchaseOrder",
     "PurchaseOrderItem",
     "SupplierInvoice",
+    "SupplierDocumentImport",
     "SupplierProduct",
     "SupplierProductAlias",
     "Expense",

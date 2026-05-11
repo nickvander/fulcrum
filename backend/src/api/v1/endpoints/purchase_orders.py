@@ -14,6 +14,8 @@ from src.schemas import supplier_invoice as invoice_schema
 from src.services.purchase_order_service import purchase_order_service
 from src.api.dependencies import get_current_active_user
 from src.models.user import User
+from src.models.supplier import Supplier
+from src.models.supplier_document_import import SupplierDocumentImport
 
 router = APIRouter()
 
@@ -519,6 +521,218 @@ class DocumentParseResult(BaseModel):
     unmatched_po_items: List[dict] = []
     unmatched_invoice_items: List[dict] = []
     total_discrepancy: float = 0.0
+
+
+class SupplierDocumentImportRead(BaseModel):
+    id: int
+    file_name: str
+    content_type: str | None = None
+    source: str | None = None
+    status: str
+    mode: str
+    supplier_id: int | None = None
+    purchase_order_id: int | None = None
+    extracted_data: dict
+    warnings: List[str] = []
+    created_at: datetime
+    reviewed_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class SupplierDocumentImportApproveRequest(BaseModel):
+    supplier_id: int
+    currency: str = "USD"
+    shipping_cost: float = 0.0
+    tax_amount: float = 0.0
+    notes: str | None = None
+    items: List[ExtractedItem]
+
+
+class SupplierDocumentImportApproveResponse(BaseModel):
+    import_review: SupplierDocumentImportRead
+    purchase_order: po_schema.PurchaseOrder
+
+
+def _import_review_response(review: SupplierDocumentImport) -> SupplierDocumentImportRead:
+    return SupplierDocumentImportRead(
+        id=review.id,
+        file_name=review.file_name,
+        content_type=review.content_type,
+        source=review.source,
+        status=review.status,
+        mode=review.mode,
+        supplier_id=review.supplier_id,
+        purchase_order_id=review.purchase_order_id,
+        extracted_data=review.extracted_data or {},
+        warnings=review.warnings or [],
+        created_at=review.created_at,
+        reviewed_at=review.reviewed_at,
+    )
+
+
+def _find_supplier_id_for_vendor(db: Session, vendor_name: str | None) -> int | None:
+    if not vendor_name:
+        return None
+
+    vendor_lower = vendor_name.lower()
+    suppliers = db.query(Supplier).limit(500).all()
+    for supplier in suppliers:
+        supplier_lower = supplier.name.lower()
+        if vendor_lower in supplier_lower or supplier_lower in vendor_lower:
+            return supplier.id
+    return None
+
+
+@router.post("/imports/reviews", response_model=SupplierDocumentImportRead)
+async def create_supplier_document_import_review(
+    *,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    target_po_id: int | None = Query(None, description="Optional: PO ID to match against"),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Parse a supplier document and stage it for review before creating a PO or stock movement.
+    """
+    result = await parse_document(db=db, file=file, target_po_id=target_po_id)
+    extracted_data = result.model_dump(mode="json")
+    warnings = []
+
+    if result.mode == "match":
+        warnings.append("This document appears to match an existing PO. Review it there before receiving stock.")
+
+    unmatched_items = [
+        item for item in result.items
+        if not item.matched_product_id
+    ]
+    if unmatched_items:
+        warnings.append(f"{len(unmatched_items)} line item(s) need a Fulcrum product match before approval.")
+
+    review = SupplierDocumentImport(
+        file_name=file.filename or "supplier-document",
+        content_type=file.content_type,
+        status="pending",
+        mode=result.mode,
+        supplier_id=_find_supplier_id_for_vendor(db, result.vendor_name),
+        purchase_order_id=result.matched_po_id,
+        extracted_data=extracted_data,
+        warnings=warnings,
+        created_by_id=current_user.id,
+    )
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    return _import_review_response(review)
+
+
+@router.get("/imports/reviews", response_model=List[SupplierDocumentImportRead])
+def list_supplier_document_import_reviews(
+    *,
+    db: Session = Depends(get_db),
+    status: str | None = Query("pending"),
+    current_user: User = Depends(get_current_active_user),
+):
+    query = db.query(SupplierDocumentImport).order_by(
+        SupplierDocumentImport.created_at.desc(),
+        SupplierDocumentImport.id.desc(),
+    )
+    if status:
+        query = query.filter(SupplierDocumentImport.status == status)
+    return [_import_review_response(review) for review in query.limit(100).all()]
+
+
+@router.get("/imports/reviews/{review_id}", response_model=SupplierDocumentImportRead)
+def get_supplier_document_import_review(
+    *,
+    db: Session = Depends(get_db),
+    review_id: int,
+    current_user: User = Depends(get_current_active_user),
+):
+    review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Import review not found")
+    return _import_review_response(review)
+
+
+@router.post("/imports/reviews/{review_id}/approve", response_model=SupplierDocumentImportApproveResponse)
+def approve_supplier_document_import_review(
+    *,
+    db: Session = Depends(get_db),
+    review_id: int,
+    approval: SupplierDocumentImportApproveRequest,
+    current_user: User = Depends(get_current_active_user),
+):
+    review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Import review not found")
+    if review.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending import reviews can be approved")
+
+    matched_items = [
+        item for item in approval.items
+        if item.quantity > 0 and item.matched_product_id
+    ]
+    if not matched_items:
+        raise HTTPException(status_code=400, detail="At least one reviewed line item must be matched to a product")
+
+    po_in = po_schema.PurchaseOrderCreate(
+        supplier_id=approval.supplier_id,
+        status=po_schema.PurchaseOrderStatus.DRAFT,
+        currency=approval.currency,
+        shipping_cost=approval.shipping_cost,
+        tax_amount=approval.tax_amount,
+        notes=approval.notes or f"Created from supplier import review #{review.id}: {review.file_name}",
+        items=[
+            po_schema.PurchaseOrderItemCreate(
+                product_id=item.matched_product_id,
+                variant_id=item.matched_variant_id,
+                quantity_ordered=item.quantity,
+                unit_cost=item.unit_cost,
+                supplier_sku=item.sku,
+                supplier_product_name=item.description or item.sku,
+            )
+            for item in matched_items
+        ],
+    )
+    po = crud_purchase_order.purchase_order.create_with_items(db=db, obj_in=po_in)
+
+    review.status = "approved"
+    review.supplier_id = approval.supplier_id
+    review.purchase_order_id = po.id
+    review.reviewed_by_id = current_user.id
+    review.reviewed_at = datetime.now(timezone.utc)
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    po = crud_purchase_order.purchase_order.get(db=db, id=po.id)
+
+    return SupplierDocumentImportApproveResponse(
+        import_review=_import_review_response(review),
+        purchase_order=po,
+    )
+
+
+@router.post("/imports/reviews/{review_id}/reject", response_model=SupplierDocumentImportRead)
+def reject_supplier_document_import_review(
+    *,
+    db: Session = Depends(get_db),
+    review_id: int,
+    current_user: User = Depends(get_current_active_user),
+):
+    review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Import review not found")
+    if review.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending import reviews can be rejected")
+
+    review.status = "rejected"
+    review.reviewed_by_id = current_user.id
+    review.reviewed_at = datetime.now(timezone.utc)
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    return _import_review_response(review)
 
 
 @router.post("/parse-document", response_model=DocumentParseResult)

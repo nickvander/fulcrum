@@ -11,13 +11,18 @@
 - [x] Receiving correction/reversal flow so onboarding users can fix stock
       mistakes without editing history silently.
 - [x] Optional demo workspace/sample data for trial onboarding.
-- [ ] Launch readiness report for setup health, unresolved imports, test data,
+- [x] Launch readiness report for setup health, unresolved imports, test data,
       stock health, and marketplace credential status.
 
 ## Medium Priority
 
-- [ ] Supplier document review queue for imported Alibaba PDFs/images before PO
+- [x] Supplier document review queue for imported Alibaba PDFs/images before PO
       or stock updates.
+- [ ] Supplier import review polish:
+      - bulk reject/cleanup stale reviews
+      - one-click create supplier/product from unmatched import lines
+      - visual diff for uploaded invoice/packing-list documents that match an
+        existing PO
 - [ ] Marketplace allocation workflow before stock sync. Do not sync received
       internal stock directly to Amazon/MercadoLibre.
 - [ ] Sync approved listing/inventory allocations to actual marketplace APIs

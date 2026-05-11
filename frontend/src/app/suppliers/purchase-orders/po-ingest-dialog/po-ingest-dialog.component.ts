@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -13,8 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
 
-import { SuppliersService, PoIngestionResponse, ExtractedLineItem, DocumentParseResult } from '../../suppliers.service';
-import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
+import { SuppliersService, PoIngestionResponse, ExtractedLineItem, DocumentParseResult, SupplierDocumentImportReview } from '../../suppliers.service';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
@@ -64,6 +63,9 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     extractedData: PoIngestionResponse | null = null;
     editableItems: ExtractedLineItem[] = [];
     displayedColumns = ['sku', 'product', 'description', 'quantity', 'unit_cost', 'line_total', 'actions'];
+    importReviewId: number | null = null;
+    importedFileName = '';
+    reviewWarnings: string[] = [];
 
     // Form fields for header
     supplierName = '';
@@ -82,7 +84,8 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         private dialogRef: MatDialogRef<PoIngestDialogComponent, PoIngestDialogResult>,
         private suppliersService: SuppliersService,
         private productService: ProductService,
-        private settingsService: SettingsService
+        private settingsService: SettingsService,
+        @Optional() @Inject(MAT_DIALOG_DATA) private data?: { review?: SupplierDocumentImportReview }
     ) { }
 
     ngOnInit(): void {
@@ -93,6 +96,10 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         this.settingsService.storeSettings$.pipe(takeUntil(this.destroy$)).subscribe(settings => {
             this.aiEnabled = settings?.ai_config?.enabled || false;
         });
+
+        if (this.data?.review) {
+            this.loadImportReview(this.data.review);
+        }
     }
 
     ngOnDestroy(): void {
@@ -102,7 +109,10 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
 
     loadSuppliers(): void {
         this.suppliersService.getSuppliers(0, 500).subscribe({
-            next: (suppliers) => this.suppliers = suppliers,
+            next: (suppliers) => {
+                this.suppliers = suppliers;
+                this.matchDetectedSupplier();
+            },
             error: (err) => console.error('Failed to load suppliers', err)
         });
     }
@@ -169,14 +179,18 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         this.isProcessing = true;
         this.uploadError = null;
 
-        this.suppliersService.parseDocument(this.selectedFile).subscribe({
-            next: (response) => {
+        this.suppliersService.createImportReview(this.selectedFile).subscribe({
+            next: (review) => {
+                const response = review.extracted_data;
                 if (response.mode === 'match' && response.matched_po_id) {
                     this.uploadError = `This document appears to match existing ${response.matched_po_number}. Open that PO to receive stock instead.`;
                     this.isProcessing = false;
                     return;
                 }
 
+                this.importReviewId = review.id;
+                this.importedFileName = review.file_name;
+                this.reviewWarnings = review.warnings || [];
                 const normalized = this.toPoIngestionResponse(response);
                 this.extractedData = normalized;
                 this.populateFormFromExtraction(normalized);
@@ -188,6 +202,17 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.isProcessing = false;
             }
         });
+    }
+
+    private loadImportReview(review: SupplierDocumentImportReview): void {
+        this.importReviewId = review.id;
+        this.importedFileName = review.file_name;
+        this.reviewWarnings = review.warnings || [];
+        this.supplierId = review.supplier_id;
+        const normalized = this.toPoIngestionResponse(review.extracted_data);
+        this.extractedData = normalized;
+        this.populateFormFromExtraction(normalized);
+        this.step = 'preview';
     }
 
     private toPoIngestionResponse(data: DocumentParseResult): PoIngestionResponse {
@@ -223,16 +248,21 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         this.shippingCost = data.shipping_cost || 0;
         this.taxAmount = data.tax_amount || 0;
         this.editableItems = [...data.items];
+        this.matchDetectedSupplier();
+    }
 
-        // Try to match supplier
-        if (data.supplier_name) {
-            const match = this.suppliers.find(s =>
-                s.name.toLowerCase().includes(data.supplier_name!.toLowerCase()) ||
-                data.supplier_name!.toLowerCase().includes(s.name.toLowerCase())
-            );
-            if (match) {
-                this.supplierId = match.id;
-            }
+    private matchDetectedSupplier(): void {
+        if (this.supplierId || !this.supplierName || this.suppliers.length === 0) {
+            return;
+        }
+
+        const detectedName = this.supplierName.toLowerCase();
+        const match = this.suppliers.find(s =>
+            s.name.toLowerCase().includes(detectedName) ||
+            detectedName.includes(s.name.toLowerCase())
+        );
+        if (match) {
+            this.supplierId = match.id;
         }
     }
 
@@ -278,26 +308,24 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
 
         this.step = 'creating';
 
-        const poData: PurchaseOrderCreate = {
+        if (!this.importReviewId) {
+            this.uploadError = 'Please process or select an import review before approving.';
+            this.step = 'preview';
+            return;
+        }
+
+        const approval = {
             supplier_id: this.supplierId,
-            status: PurchaseOrderStatus.DRAFT,
             currency: this.currency,
-            notes: this.notes || `Imported from ${this.selectedFile?.name || 'document'}${unmatchedCount > 0 ? ` (${unmatchedCount} unmatched items excluded)` : ''}`,
+            notes: this.notes || `Imported from ${this.importedFileName || this.selectedFile?.name || 'document'}${unmatchedCount > 0 ? ` (${unmatchedCount} unmatched items excluded)` : ''}`,
             shipping_cost: this.shippingCost,
             tax_amount: this.taxAmount,
-            items: matchedItems.map(item => ({
-                product_id: item.matched_product_id!,
-                variant_id: item.matched_variant_id || undefined,
-                quantity_ordered: item.quantity,
-                unit_cost: item.unit_cost,
-                supplier_sku: item.sku || undefined,
-                supplier_product_name: item.description || item.sku || undefined
-            }))
+            items: matchedItems
         };
 
-        this.suppliersService.createPurchaseOrder(poData).subscribe({
-            next: (po) => {
-                this.dialogRef.close({ action: 'created', purchaseOrder: po });
+        this.suppliersService.approveImportReview(this.importReviewId, approval).subscribe({
+            next: (response) => {
+                this.dialogRef.close({ action: 'created', purchaseOrder: response.purchase_order });
             },
             error: (err) => {
                 this.uploadError = err.error?.detail || 'Failed to create Purchase Order.';

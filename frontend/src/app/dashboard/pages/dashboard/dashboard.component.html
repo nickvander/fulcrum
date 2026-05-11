@@ -15,6 +15,42 @@
                 [status]="onboardingStatus" [creatingDemo]="creatingDemoWorkspace"
                 (createDemoWorkspace)="createDemoWorkspace()" class="onboarding-widget"></app-onboarding-checklist>
 
+            <section class="readiness-panel" *ngIf="launchReadiness$ | async as launchReadiness"
+                [class.ready]="launchReadiness.status === 'ready'"
+                [class.blocked]="launchReadiness.status === 'blocked'"
+                [class.needs-attention]="launchReadiness.status === 'needs_attention'">
+                <div class="readiness-header">
+                    <div>
+                        <p class="eyebrow">Launch readiness</p>
+                        <h2>{{ launchReadiness.status === 'ready' ? 'Ready for customer onboarding' :
+                            launchReadiness.status === 'blocked' ? 'Launch blockers need attention' :
+                            'Review before go-live' }}</h2>
+                        <p>Check setup, supplier imports, demo data, and marketplace status before using Fulcrum as the source of truth.</p>
+                    </div>
+                    <div class="readiness-score">
+                        <span>{{ launchReadiness.summary.ready }}</span>
+                        <small>ready areas</small>
+                    </div>
+                </div>
+
+                <div class="readiness-grid">
+                    <article class="readiness-item" *ngFor="let section of launchReadiness.sections"
+                        [class.ready]="section.status === 'ready'"
+                        [class.needs-attention]="section.status === 'needs_attention'"
+                        [class.blocked]="section.status === 'blocked'"
+                        [class.optional]="section.status === 'optional'">
+                        <mat-icon>{{ readinessIcon(section) }}</mat-icon>
+                        <div>
+                            <h3>{{ section.label }}</h3>
+                            <p>{{ section.description }}</p>
+                        </div>
+                        <a mat-stroked-button color="primary" [routerLink]="section.route">
+                            {{ section.action_label }}
+                        </a>
+                    </article>
+                </div>
+            </section>
+
             <div class="dashboard-grid">
                 <app-stat-card [title]="t('dashboard.totalProducts')" [value]="stats.totalProducts" icon="inventory_2"
                     colorType="primary" link="/products" [tooltip]="t('dashboard.totalProducts')"></app-stat-card>

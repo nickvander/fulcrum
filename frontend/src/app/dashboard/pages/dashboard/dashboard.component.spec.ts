@@ -53,6 +53,27 @@ describe('DashboardComponent', () => {
                     }
                 ]
             })),
+            getLaunchReadiness: vi.fn().mockReturnValue(of({
+                status: 'blocked',
+                ready: false,
+                summary: {
+                    blocked: 1,
+                    needs_attention: 0,
+                    ready: 0,
+                    optional: 0
+                },
+                sections: [
+                    {
+                        key: 'setup',
+                        label: 'Setup',
+                        status: 'blocked',
+                        description: 'Required setup steps still need attention.',
+                        action_label: 'Review checklist',
+                        route: '/dashboard',
+                        metrics: {}
+                    }
+                ]
+            })),
             createDemoWorkspace: vi.fn().mockReturnValue(of({
                 created: true,
                 created_resources: ['product'],
@@ -107,6 +128,7 @@ describe('DashboardComponent', () => {
 
     it('should fetch onboarding status on init', () => {
         expect(onboardingServiceMock.getStatus).toHaveBeenCalled();
+        expect(onboardingServiceMock.getLaunchReadiness).toHaveBeenCalled();
     });
 
     it('should create a demo workspace and refresh dashboard data', async () => {

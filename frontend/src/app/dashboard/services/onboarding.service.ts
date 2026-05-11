@@ -31,6 +31,28 @@ export interface DemoWorkspaceResult {
     message: string;
 }
 
+export interface LaunchReadinessSection {
+    key: string;
+    label: string;
+    status: 'ready' | 'needs_attention' | 'blocked' | 'optional';
+    description: string;
+    action_label: string;
+    route: string;
+    metrics: Record<string, number>;
+}
+
+export interface LaunchReadinessReport {
+    status: 'ready' | 'needs_attention' | 'blocked';
+    ready: boolean;
+    summary: {
+        blocked: number;
+        needs_attention: number;
+        ready: number;
+        optional: number;
+    };
+    sections: LaunchReadinessSection[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
     private apiUrl = `${environment.apiUrl}/onboarding`;
@@ -43,5 +65,9 @@ export class OnboardingService {
 
     createDemoWorkspace(): Observable<DemoWorkspaceResult> {
         return this.http.post<DemoWorkspaceResult>(`${this.apiUrl}/demo-workspace`, {});
+    }
+
+    getLaunchReadiness(): Observable<LaunchReadinessReport> {
+        return this.http.get<LaunchReadinessReport>(`${this.apiUrl}/launch-readiness`);
     }
 }

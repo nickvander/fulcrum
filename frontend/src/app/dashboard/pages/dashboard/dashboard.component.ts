@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DashboardStats, DashboardStatsService } from '../../services/dashboard-stats.service';
 import { finalize, Observable } from 'rxjs';
-import { OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
+import { LaunchReadinessReport, LaunchReadinessSection, OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -38,6 +38,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 export class DashboardComponent implements OnInit {
     stats$!: Observable<DashboardStats>;
     onboardingStatus$!: Observable<OnboardingStatus>;
+    launchReadiness$!: Observable<LaunchReadinessReport>;
     creatingDemoWorkspace = false;
 
     constructor(
@@ -53,6 +54,7 @@ export class DashboardComponent implements OnInit {
     refresh(): void {
         this.stats$ = this.statsService.getStats();
         this.onboardingStatus$ = this.onboardingService.getStatus();
+        this.launchReadiness$ = this.onboardingService.getLaunchReadiness();
     }
 
     createDemoWorkspace(): void {
@@ -74,5 +76,12 @@ export class DashboardComponent implements OnInit {
                     );
                 }
             });
+    }
+
+    readinessIcon(section: LaunchReadinessSection): string {
+        if (section.status === 'ready') return 'check_circle';
+        if (section.status === 'needs_attention') return 'warning';
+        if (section.status === 'optional') return 'radio_button_unchecked';
+        return 'error';
     }
 }
