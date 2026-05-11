@@ -43,12 +43,21 @@ inventory.
    corrections.
 4. Add a supplier alias/mapping review queue:
    "Alibaba item name -> Fulcrum product/variant" with confidence and reuse.
-5. Add marketplace stock sync trigger after receiving:
-   product inventory should update internal stock first, then queue
-   MercadoLibre/Amazon inventory sync when credentials are configured.
+5. Add marketplace allocation planning, not automatic sync from receiving:
+   receiving must update Fulcrum internal inventory only. MercadoLibre/Amazon
+   quantities are decided later through a separate marketplace allocation
+   workflow because sellable marketplace quantity is not necessarily warehouse
+   quantity.
 
 ## UX Principle
 
 Receiving should always be a review-and-confirm action. The system can propose
 stock updates from a PDF/image, but users should see what will change before
-inventory and marketplace availability move.
+internal inventory changes.
+
+## Marketplace Inventory Boundary
+
+Do not queue MercadoLibre or Amazon stock updates as a side effect of receiving
+purchase order items. Marketplace availability is a separate business decision:
+users may reserve inventory, split quantities by channel, hold back damaged or
+unlisted stock, or decide not to expose newly received stock immediately.
