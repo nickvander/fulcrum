@@ -6,6 +6,17 @@
         </button> -->
     </div>
 
+    <div class="supplier-products-empty" *ngIf="supplierProducts.length === 0; else productTable">
+        <mat-icon>link</mat-icon>
+        <h4>No supplier products mapped yet</h4>
+        <p>Receive a purchase order or confirm an imported supplier item to link this supplier's SKU/name to a Fulcrum product.</p>
+        <button mat-stroked-button color="primary" [routerLink]="['/suppliers/po']">
+            <mat-icon>receipt_long</mat-icon>
+            Open purchase orders
+        </button>
+    </div>
+
+    <ng-template #productTable>
     <table mat-table [dataSource]="supplierProducts" class="mat-elevation-z0">
         <!-- Product Name Column -->
         <ng-container matColumnDef="product_name">
@@ -63,9 +74,6 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="clickable-row"
             (click)="navigateToProduct(row.product_id)"></tr>
 
-        <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="6">No products associated with this supplier yet. Receive a Purchase Order to
-                automatically link products.</td>
-        </tr>
     </table>
+    </ng-template>
 </div>

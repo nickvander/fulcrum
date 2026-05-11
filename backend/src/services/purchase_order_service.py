@@ -7,6 +7,32 @@ from src.models.inventory import InventoryItem
 from sqlalchemy.sql import func
 
 class PurchaseOrderService:
+    def _apply_receiving_status(self, db: Session, po):
+        all_fully_received = True
+        has_some_receipts = False
+
+        for item in po.items:
+            received = item.quantity_received or 0
+            ordered = item.quantity_ordered
+            if received > 0:
+                has_some_receipts = True
+
+            if received < ordered:
+                all_fully_received = False
+
+        new_status = po.status
+        if all_fully_received:
+            new_status = PurchaseOrderStatus.COMPLETED
+        elif has_some_receipts:
+            new_status = PurchaseOrderStatus.PARTIALLY_RECEIVED
+        elif po.status in (PurchaseOrderStatus.PARTIALLY_RECEIVED, PurchaseOrderStatus.COMPLETED):
+            new_status = PurchaseOrderStatus.ORDERED
+
+        if new_status != po.status:
+            crud_purchase_order.update(db=db, db_obj=po, obj_in={"status": new_status})
+
+        return po
+
     def transition_status(self, db: Session, po_id: int, new_status: PurchaseOrderStatus):
         po = crud_purchase_order.get(db=db, id=po_id)
         if not po:
@@ -139,30 +165,100 @@ class PurchaseOrderService:
         db.commit()
         db.refresh(po)
 
-        # Check PO Status
-        # Calculate if all items are fully received
-        all_fully_received = True
-        has_some_receipts = False
+        return self._apply_receiving_status(db, po)
 
-        for item in po.items:
+    def correct_received_items(self, db: Session, po_id: int, corrections: list, user=None):
+        """
+        Reverse receiving mistakes while preserving inventory audit history.
+        """
+        from src.services.inventory_service import inventory_service
+
+        po = crud_purchase_order.get(db=db, id=po_id)
+        if not po:
+            raise HTTPException(status_code=404, detail="Purchase Order not found")
+
+        if po.status == PurchaseOrderStatus.DRAFT:
+            raise HTTPException(status_code=400, detail="Cannot correct receiving for a Draft PO")
+
+        if po.status == PurchaseOrderStatus.CLOSED:
+            raise HTTPException(status_code=400, detail="Cannot correct receiving for a Closed PO")
+
+        po_items_by_id = {item.id: item for item in po.items}
+        po_items_by_product_variant = {
+            (item.product_id, item.variant_id): item for item in po.items
+        }
+
+        corrected_count = 0
+        for correction in corrections:
+            if isinstance(correction, dict):
+                po_item_id = correction.get("po_item_id")
+                pid = correction.get("product_id")
+                variant_id = correction.get("variant_id")
+                qty = correction.get("quantity")
+                reason = correction.get("reason")
+            else:
+                po_item_id = getattr(correction, "po_item_id", None)
+                pid = getattr(correction, "product_id", None)
+                variant_id = getattr(correction, "variant_id", None)
+                qty = getattr(correction, "quantity", None)
+                reason = getattr(correction, "reason", None)
+
+            if not pid or qty is None or qty <= 0:
+                continue
+
+            item = po_items_by_id.get(po_item_id) if po_item_id else None
+            if not item:
+                item = po_items_by_product_variant.get((pid, variant_id))
+            if not item and variant_id is None:
+                item = po_items_by_product_variant.get((pid, None))
+            if not item:
+                continue
+
             received = item.quantity_received or 0
-            ordered = item.quantity_ordered
-            if received > 0:
-                has_some_receipts = True
-            
-            if received < ordered:
-                all_fully_received = False
-        
-        new_status = po.status
-        if all_fully_received:
-            new_status = PurchaseOrderStatus.COMPLETED
-        elif has_some_receipts:
-            new_status = PurchaseOrderStatus.PARTIALLY_RECEIVED
-            
-        if new_status != po.status:
-             crud_purchase_order.update(db=db, db_obj=po, obj_in={"status": new_status})
-        
-        return po
+            if qty > received:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot reverse {qty} units for PO item {item.id}; only {received} received.",
+                )
+
+            current_stock_qty = (
+                db.query(func.sum(InventoryItem.quantity))
+                .filter(
+                    InventoryItem.product_id == item.product_id,
+                    InventoryItem.variant_id == item.variant_id,
+                )
+                .scalar()
+                or 0
+            )
+            if qty > current_stock_qty:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"Cannot reverse {qty} units for PO item {item.id}; "
+                        f"only {current_stock_qty} currently in stock."
+                    ),
+                )
+
+            item.quantity_received = received - qty
+            db.add(item)
+
+            correction_reason = reason or f"Receiving correction for PO #{po.id}"
+            inventory_service.adjust_stock(
+                db=db,
+                product_id=item.product_id,
+                adjustment=-qty,
+                variant_id=item.variant_id,
+                reason=correction_reason,
+                user_id=user.email if user else "system",
+            )
+            corrected_count += 1
+
+        if corrected_count == 0:
+            raise HTTPException(status_code=400, detail="No receiving corrections were submitted")
+
+        db.commit()
+        db.refresh(po)
+        return self._apply_receiving_status(db, po)
 
     def calculate_landed_costs(self, db: Session, po_id: int):
         """

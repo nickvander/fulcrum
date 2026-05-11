@@ -1,7 +1,20 @@
-<h2 mat-dialog-title>Receive Items - PO #{{po.id}}</h2>
+<h2 mat-dialog-title>{{ title() }}</h2>
 
 <mat-dialog-content class="receiving-content">
     <div [formGroup]="receivingForm" class="receiving-grid">
+        <div class="correction-note" *ngIf="mode === 'correct'">
+            <mat-icon>history</mat-icon>
+            <div>
+                <strong>Reverse a receiving mistake</strong>
+                <p>This reduces the PO received quantity and writes a negative inventory adjustment so the audit trail stays intact.</p>
+            </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="reason-field" *ngIf="mode === 'correct'">
+            <mat-label>Correction reason</mat-label>
+            <input matInput formControlName="reason" placeholder="Example: counted damaged cartons twice">
+        </mat-form-field>
+
         <div formArrayName="items" class="items-container">
             <div *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i" class="product-card">
 
@@ -58,7 +71,7 @@
                 <!-- Action Input -->
                 <div class="card-action">
                     <mat-form-field appearance="outline" class="receive-input">
-                        <mat-label>Receive Now</mat-label>
+                        <mat-label>{{ quantityLabel() }}</mat-label>
                         <input matInput type="number" formControlName="quantity_to_receive" min="0">
                         <span matSuffix>units</span>
                     </mat-form-field>
@@ -69,5 +82,5 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="receivingForm.invalid">Receive</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="receivingForm.invalid">{{ submitLabel() }}</button>
 </mat-dialog-actions>

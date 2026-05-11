@@ -32,6 +32,7 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
+    margin-top: 24px;
     margin-bottom: 32px;
 
     @media (max-width: 1200px) {
@@ -63,6 +64,10 @@
 .dashboard-widget {
     display: block; // Web components need block display
     height: 100%;
+}
+
+.onboarding-widget {
+    display: block;
 }
 
 .loading-container {

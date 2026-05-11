@@ -856,12 +856,37 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     this.suppliersService.getPurchaseOrder(this.poId).subscribe(po => {
       const dialogRef = this.dialog.open(ReceivingDialogComponent, {
         width: '800px',
-        data: { po: po }
+        data: { po: po, mode: 'receive' }
       });
 
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
           this.loadPurchaseOrder(this.poId!);
+        }
+      });
+    });
+  }
+
+  canCorrectReceiving(): boolean {
+    if (!this.isEditMode || !this.poId) return false;
+    const status = this.poForm.get('status')?.value;
+    if (status === PurchaseOrderStatus.DRAFT || status === PurchaseOrderStatus.ORDERED) return false;
+    return this.items.controls.some(item => Number(item.get('quantity_received')?.value || 0) > 0);
+  }
+
+  openReceivingCorrectionDialog(): void {
+    if (!this.poId) return;
+
+    this.suppliersService.getPurchaseOrder(this.poId).subscribe(po => {
+      const dialogRef = this.dialog.open(ReceivingDialogComponent, {
+        width: '800px',
+        data: { po: po, mode: 'correct' }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.loadPurchaseOrder(this.poId!);
+          this.snackBar.open('Receiving correction applied', 'Close', { duration: 3000 });
         }
       });
     });

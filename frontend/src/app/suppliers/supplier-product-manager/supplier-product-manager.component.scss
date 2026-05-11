@@ -25,3 +25,32 @@ h3 {
     font-weight: 500;
     color: #333;
 }
+
+.supplier-products-empty {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 28px;
+    text-align: center;
+    color: var(--text-secondary);
+
+    mat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 40px;
+        color: var(--text-hint);
+        margin-bottom: 8px;
+    }
+
+    h4 {
+        margin: 0 0 6px;
+        color: var(--text-main);
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 0 auto 16px;
+        max-width: 520px;
+        line-height: 1.4;
+    }
+}

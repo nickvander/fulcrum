@@ -25,6 +25,7 @@ empty account to usable inventory operations without support hand-holding.
 - Latest pushed commits:
   - `96a59b0` Learn supplier product aliases from confirmed POs
   - `1214757` Show learned aliases on supplier detail products
+  - `01814f8` Prepare onboarding readiness work plan
 
 ## Product Guardrails
 
@@ -120,3 +121,33 @@ questions by turning scattered setup steps into a visible path.
 - Browser smoke confirms a new customer can see what to do next.
 - Update this file with completed work and move it to `work/archive/` when done.
 
+## Completed This Session
+
+- Added backend `/api/v1/onboarding/status` setup-health endpoint.
+- Added dashboard onboarding checklist with required/optional states and direct
+  action routes.
+- Improved customer-ready empty states for:
+  - Products
+  - Suppliers
+  - Purchase Orders
+  - Supplier detail Products tab
+- Added PO receiving correction/reversal flow:
+  - User can reverse received quantities from a non-draft PO.
+  - PO line `quantity_received` is reduced.
+  - Internal inventory is reduced with an audit adjustment reason.
+  - Correction does not push anything to Amazon or MercadoLibre.
+- Live dummy correction transaction passed:
+  - received 5 units
+  - reversed 2 units
+  - PO received quantity became 3
+  - product stock became 3
+- Browser smoke passed after login with no post-login console errors:
+  - dashboard onboarding checklist visible
+  - PO correction action visible
+
+## Recommended Next Slice
+
+1. Add optional demo workspace/sample data creation for trial customers.
+2. Add import review queue for supplier PDFs/images before stock writes.
+3. Add a launch readiness report that summarizes setup, unresolved imports,
+   test data, stock health, and marketplace credential status.

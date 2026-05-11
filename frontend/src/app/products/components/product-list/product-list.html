@@ -140,10 +140,15 @@
       </div>
 
       @if (products.length === 0 && !isLoading) {
-      <app-empty-state icon="inventory_2" [title]="t('products.noProducts')" [description]="t('products.addProduct')">
-        <button mat-raised-button color="primary" routerLink="new">
+      <app-empty-state icon="inventory_2" title="Build your product catalog"
+        description="Add your first product manually, then connect suppliers and purchase orders so stock has a reliable source.">
+        <button mat-raised-button color="primary" type="button" (click)="onAddProduct()">
           <mat-icon>add</mat-icon>
           <span>{{ t('products.addProduct') }}</span>
+        </button>
+        <button mat-stroked-button color="primary" type="button" routerLink="/suppliers/po">
+          <mat-icon>upload_file</mat-icon>
+          <span>Import supplier PO</span>
         </button>
       </app-empty-state>
       }

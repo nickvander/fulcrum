@@ -59,6 +59,15 @@ class ReceiveItemRequest(BaseModel):
     quantity: float
 
 
+class ReceiveCorrectionRequest(BaseModel):
+    """A received quantity to reverse from a purchase order line."""
+    po_item_id: Optional[int] = None
+    product_id: int
+    variant_id: Optional[int] = None
+    quantity: float
+    reason: Optional[str] = None
+
+
 @router.post("/", response_model=po_schema.PurchaseOrder)
 def create_purchase_order(
     *,
@@ -156,6 +165,29 @@ def receive_items(
     """
     try:
         po = purchase_order_service.receive_items(db=db, po_id=id, received_items=received_items, user=current_user)
+        return po
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/{id}/receive-correction", response_model=po_schema.PurchaseOrder)
+def correct_received_items(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+    corrections: List[ReceiveCorrectionRequest],
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Reverse receiving mistakes for a Purchase Order.
+    Body: List of { "po_item_id"?: int, "product_id": int, "variant_id"?: int, "quantity": number, "reason"?: string }
+    """
+    try:
+        po = purchase_order_service.correct_received_items(
+            db=db, po_id=id, corrections=corrections, user=current_user
+        )
         return po
     except HTTPException as e:
         raise e

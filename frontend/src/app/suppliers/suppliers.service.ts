@@ -83,6 +83,13 @@ export class SuppliersService {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/receive`, items);
   }
 
+  correctReceivedPurchaseOrderItems(
+    id: number,
+    items: { po_item_id?: number | null, product_id: number, variant_id?: number | null, quantity: number, reason?: string | null }[]
+  ): Observable<PurchaseOrder> {
+    return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/receive-correction`, items);
+  }
+
   // --- Invoices ---
   getInvoices(poId: number): Observable<SupplierInvoice[]> {
     return this.http.get<SupplierInvoice[]>(`${this.apiUrl}/purchase-orders/${poId}/invoices`);
