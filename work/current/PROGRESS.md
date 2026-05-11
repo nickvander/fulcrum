@@ -8,6 +8,12 @@ Marketplace Integration Engine
 - [80-quick-wins-plan.md](./80-quick-wins-plan.md)
 - [82-po-receiving-to-inventory-workflow.md](./82-po-receiving-to-inventory-workflow.md)
 
+## Important Product Decision
+
+- PO receiving updates Fulcrum internal inventory only. Do not trigger
+  MercadoLibre/Amazon stock sync from receiving; marketplace quantities must be
+  allocated later in a separate channel-planning workflow.
+
 ## Recent Archive
 
 - [81-mercadolibre-deep-integration.md](../archive/81-mercadolibre-deep-integration.md) -
