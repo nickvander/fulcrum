@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session
 
 from src.database import get_db
 from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
+from src.crud.crud_supplier_product_alias import supplier_product_alias as crud_supplier_product_alias
 from src.crud.crud_product import product as crud_product
 from src.crud.crud_supplier import supplier as crud_supplier
 from src.schemas import supplier_product as sp_schema
+from src.schemas import supplier_product_alias as alias_schema
 
 router = APIRouter()
 
@@ -36,6 +38,12 @@ def get_suppliers_for_product(
         sp_dict = sp_schema.SupplierProduct.model_validate(sp).model_dump()
         sp_dict["product_name"] = product.name
         sp_dict["supplier_name"] = sp.supplier.name if sp.supplier else None
+        sp_dict["aliases"] = [
+            alias_schema.SupplierProductAlias.model_validate(alias)
+            for alias in crud_supplier_product_alias.get_active_by_supplier_and_product(
+                db=db, supplier_id=sp.supplier_id, product_id=sp.product_id
+            )
+        ]
         result.append(sp_schema.SupplierProductWithDetails(**sp_dict))
     
     return result
@@ -62,9 +70,81 @@ def get_products_for_supplier(
         sp_dict = sp_schema.SupplierProduct.model_validate(sp).model_dump()
         sp_dict["product_name"] = sp.product.name if sp.product else None
         sp_dict["supplier_name"] = supplier.name
+        sp_dict["aliases"] = [
+            alias_schema.SupplierProductAlias.model_validate(alias)
+            for alias in crud_supplier_product_alias.get_active_by_supplier_and_product(
+                db=db, supplier_id=sp.supplier_id, product_id=sp.product_id
+            )
+        ]
         result.append(sp_schema.SupplierProductWithDetails(**sp_dict))
     
     return result
+
+
+@router.get("/aliases", response_model=List[alias_schema.SupplierProductAlias])
+def read_supplier_product_aliases(
+    *,
+    db: Session = Depends(get_db),
+    supplier_id: int,
+) -> Any:
+    """
+    Read active learned aliases for a supplier.
+    """
+    supplier = crud_supplier.get(db=db, id=supplier_id)
+    if not supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+
+    return [
+        alias_schema.SupplierProductAlias.model_validate(alias)
+        for alias in crud_supplier_product_alias.get_active_by_supplier(db=db, supplier_id=supplier_id)
+    ]
+
+
+@router.post("/aliases", response_model=alias_schema.SupplierProductAlias)
+def create_supplier_product_alias(
+    *,
+    db: Session = Depends(get_db),
+    alias_in: alias_schema.SupplierProductAliasCreate,
+) -> Any:
+    """
+    Create or reactivate a learned supplier alias.
+    """
+    if not crud_supplier.get(db=db, id=alias_in.supplier_id):
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    if not crud_product.get(db=db, id=alias_in.product_id):
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    alias = crud_supplier_product_alias.upsert_learned_alias(
+        db=db,
+        supplier_id=alias_in.supplier_id,
+        product_id=alias_in.product_id,
+        variant_id=alias_in.variant_id,
+        alias_sku=alias_in.alias_sku,
+        alias_name=alias_in.alias_name,
+        source=alias_in.source,
+        confidence=alias_in.confidence,
+    )
+    if not alias:
+        raise HTTPException(status_code=400, detail="Alias SKU or name is required")
+
+    db.commit()
+    db.refresh(alias)
+    return alias_schema.SupplierProductAlias.model_validate(alias)
+
+
+@router.delete("/aliases/{id}", response_model=alias_schema.SupplierProductAlias)
+def delete_supplier_product_alias(
+    *,
+    db: Session = Depends(get_db),
+    id: int,
+) -> Any:
+    """
+    Undo a learned alias by deactivating it.
+    """
+    alias = crud_supplier_product_alias.deactivate(db=db, id=id)
+    if not alias:
+        raise HTTPException(status_code=404, detail="Supplier product alias not found")
+    return alias_schema.SupplierProductAlias.model_validate(alias)
 
 
 @router.post("/", response_model=sp_schema.SupplierProduct)

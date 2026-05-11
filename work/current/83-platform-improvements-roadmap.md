@@ -65,6 +65,17 @@ purchase order receiving, product inventory, or marketplace behavior.
 3. Build marketplace allocation planning as a separate channel workflow.
 4. Add dashboards and exports once the underlying states are reliable.
 
+## Completed This Round
+
+- Added supplier alias learning for confirmed PO/import mappings:
+  "Alibaba SKU/name -> Fulcrum product/variant."
+- Reuse learned aliases during future document parsing before fuzzy product
+  fallback, including variant matches when available.
+- Added supplier product review/undo for learned aliases so bad mappings can be
+  removed without deleting supplier-product history.
+- Preserved the marketplace guardrail: receiving and alias learning update
+  internal Fulcrum matching only, not Amazon or MercadoLibre stock allocation.
+
 ## Verification Standard
 
 - Backend focused tests for each changed workflow.

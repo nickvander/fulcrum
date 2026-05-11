@@ -17,6 +17,7 @@ from .purchase_order import PurchaseOrder
 from .purchase_order_item import PurchaseOrderItem
 from .supplier_invoice import SupplierInvoice
 from .supplier_product import SupplierProduct
+from .supplier_product_alias import SupplierProductAlias
 from .expense import Expense
 from .expense_receipt import ExpenseReceipt
 from .store_settings import StoreSettings
@@ -62,6 +63,7 @@ __all__ = [
     "PurchaseOrderItem",
     "SupplierInvoice",
     "SupplierProduct",
+    "SupplierProductAlias",
     "Expense",
     "ExpenseReceipt",
     "BundleComponent",

@@ -203,7 +203,8 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 quantity: item.quantity,
                 unit_cost: item.unit_cost,
                 line_total: item.line_total,
-                matched_product_id: item.matched_product_id
+                matched_product_id: item.matched_product_id,
+                matched_variant_id: item.matched_variant_id
             })),
             subtotal: data.subtotal,
             shipping_cost: data.shipping_cost,
@@ -286,8 +287,10 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
             tax_amount: this.taxAmount,
             items: matchedItems.map(item => ({
                 product_id: item.matched_product_id!,
+                variant_id: item.matched_variant_id || undefined,
                 quantity_ordered: item.quantity,
                 unit_cost: item.unit_cost,
+                supplier_sku: item.sku || undefined,
                 supplier_product_name: item.description || item.sku || undefined
             }))
         };
