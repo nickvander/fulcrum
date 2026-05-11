@@ -737,6 +737,11 @@ async def parse_document(
                     "po_item_id": best_match.id,
                     "po_description": best_match.product.name if best_match.product else None,
                     "po_quantity": best_match.quantity_ordered,
+                    "po_quantity_received": best_match.quantity_received or 0,
+                    "po_remaining_quantity": max(
+                        0,
+                        best_match.quantity_ordered - (best_match.quantity_received or 0),
+                    ),
                     "po_unit_cost": best_match.unit_cost,
                     "invoice_sku": item.sku,
                     "invoice_description": item.description,
@@ -763,6 +768,11 @@ async def parse_document(
                 "item_id": po_item.id,
                 "product_name": po_item.product.name if po_item.product else f"Product #{po_item.product_id}",
                 "quantity": po_item.quantity_ordered,
+                "quantity_received": po_item.quantity_received or 0,
+                "remaining_quantity": max(
+                    0,
+                    po_item.quantity_ordered - (po_item.quantity_received or 0),
+                ),
                 "unit_cost": po_item.unit_cost
             })
         
@@ -966,6 +976,8 @@ class InvoiceMatchItem(BaseModel):
     po_item_id: int | None = None
     po_description: str | None = None
     po_quantity: float | None = None
+    po_quantity_received: float | None = None
+    po_remaining_quantity: float | None = None
     po_unit_cost: float | None = None
     
     invoice_sku: str | None = None
@@ -1142,6 +1154,11 @@ async def parse_and_match_invoice(
                 po_item_id=best_match.id,
                 po_description=best_match.product.name if best_match.product else None,
                 po_quantity=best_match.quantity_ordered,
+                po_quantity_received=best_match.quantity_received or 0,
+                po_remaining_quantity=max(
+                    0,
+                    best_match.quantity_ordered - (best_match.quantity_received or 0),
+                ),
                 po_unit_cost=best_match.unit_cost,
                 invoice_sku=inv_sku,
                 invoice_description=inv_desc,
@@ -1169,6 +1186,11 @@ async def parse_and_match_invoice(
             "item_id": po_item.id,
             "product_name": po_item.product.name if po_item.product else f"Product #{po_item.product_id}",
             "quantity": po_item.quantity_ordered,
+            "quantity_received": po_item.quantity_received or 0,
+            "remaining_quantity": max(
+                0,
+                po_item.quantity_ordered - (po_item.quantity_received or 0),
+            ),
             "unit_cost": po_item.unit_cost
         })
     

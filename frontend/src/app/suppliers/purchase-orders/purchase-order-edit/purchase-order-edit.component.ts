@@ -1211,7 +1211,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         const ordered = Number(itemControl.get('quantity_ordered')?.value || 0);
         const received = Number(itemControl.get('quantity_received')?.value || 0);
         const remaining = Math.max(0, ordered - received);
-        const quantity = Math.min(Number(match.invoice_quantity), remaining);
+        const requestedQuantity = Number(match.receive_quantity ?? match.invoice_quantity ?? 0);
+        const quantity = Math.min(requestedQuantity, remaining);
 
         if (quantity <= 0) {
           return null;

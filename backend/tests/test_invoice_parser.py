@@ -49,6 +49,8 @@ class TestInvoiceMatchingEndpoint:
             po_item_id=1,
             po_description="Test Product",
             po_quantity=10.0,
+            po_quantity_received=4.0,
+            po_remaining_quantity=6.0,
             po_unit_cost=99.99,
             invoice_sku="SKU-001",
             invoice_description="Test Product",
@@ -62,6 +64,7 @@ class TestInvoiceMatchingEndpoint:
         
         assert item.match_status == "matched"
         assert item.confidence == 1.0
+        assert item.po_remaining_quantity == 6.0
     
     def test_invoice_match_result_schema(self):
         """Test InvoiceMatchResult schema validation."""
