@@ -12,7 +12,8 @@
 
         <ng-container *ngIf="stats$ | async as stats; else loading">
             <app-onboarding-checklist *ngIf="onboardingStatus$ | async as onboardingStatus"
-                [status]="onboardingStatus" class="onboarding-widget"></app-onboarding-checklist>
+                [status]="onboardingStatus" [creatingDemo]="creatingDemoWorkspace"
+                (createDemoWorkspace)="createDemoWorkspace()" class="onboarding-widget"></app-onboarding-checklist>
 
             <div class="dashboard-grid">
                 <app-stat-card [title]="t('dashboard.totalProducts')" [value]="stats.totalProducts" icon="inventory_2"

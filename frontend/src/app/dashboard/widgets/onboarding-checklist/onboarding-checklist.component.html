@@ -7,9 +7,17 @@
                 Confirm the operational basics before importing documents or connecting channels.
             </p>
         </div>
-        <div class="progress-summary" [class.complete]="status.complete">
-            <span>{{ status.completed_required }}/{{ status.total_required }}</span>
-            <small>required done</small>
+        <div class="panel-actions">
+            <button mat-stroked-button type="button" color="primary"
+                (click)="requestDemoWorkspace()" [disabled]="creatingDemo"
+                matTooltip="Create one sample supplier, product, purchase order, and receipt. No marketplace stock is changed.">
+                <mat-icon>{{ creatingDemo ? 'hourglass_top' : 'science' }}</mat-icon>
+                {{ creatingDemo ? 'Creating demo' : 'Create demo workspace' }}
+            </button>
+            <div class="progress-summary" [class.complete]="status.complete">
+                <span>{{ status.completed_required }}/{{ status.total_required }}</span>
+                <small>required done</small>
+            </div>
         </div>
     </div>
 

@@ -22,6 +22,23 @@
     }
 }
 
+.panel-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    button {
+        min-height: 40px;
+        white-space: nowrap;
+    }
+
+    mat-icon {
+        margin-right: 6px;
+    }
+}
+
 .eyebrow {
     margin: 0;
     color: var(--primary-color);
@@ -148,8 +165,15 @@
         grid-template-columns: 1fr;
     }
 
-    .panel-header {
+    .panel-header,
+    .panel-actions {
         flex-direction: column;
+    }
+
+    .panel-actions,
+    .panel-actions button,
+    .progress-summary {
+        width: 100%;
     }
 
     .step {
