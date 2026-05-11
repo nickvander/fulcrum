@@ -19,6 +19,10 @@ launch readiness and supplier import reviews.
   - supplier import queue rendering
   - opening a queued Alibaba sample import
   - approving a matched import into a draft PO
+- Repo handoff skill added at `.agent/skills/work_handoff/SKILL.md`.
+  - Note: `.agents/` is mounted read-only in this workspace, while the repo's
+    checked-in skills are under `.agent/skills/`.
+- Root-level stale logs and generated test-output files were removed.
 
 ## Best Next Features
 
