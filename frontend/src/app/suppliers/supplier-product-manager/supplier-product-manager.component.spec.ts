@@ -14,7 +14,8 @@ describe('SupplierProductManagerComponent', () => {
 
     beforeEach(async () => {
         suppliersServiceMock = {
-            getSupplierProducts: vi.fn().mockReturnValue(of([]))
+            getSupplierProducts: vi.fn().mockReturnValue(of([])),
+            deleteSupplierProductAlias: vi.fn().mockReturnValue(of({}))
         };
 
         await TestBed.configureTestingModule({
@@ -43,5 +44,21 @@ describe('SupplierProductManagerComponent', () => {
         component.supplierId = 1;
         component.ngOnInit();
         expect(suppliersServiceMock.getSupplierProducts).toHaveBeenCalledWith(1);
+    });
+
+    it('should remove a learned alias from the displayed supplier product', () => {
+        const supplierProduct: any = {
+            aliases: [
+                { id: 1, alias_name: 'Alibaba Widget' },
+                { id: 2, alias_name: 'Keep Me' }
+            ]
+        };
+        const event = { stopPropagation: vi.fn() } as any;
+
+        component.deleteAlias(event, supplierProduct, supplierProduct.aliases[0]);
+
+        expect(event.stopPropagation).toHaveBeenCalled();
+        expect(suppliersServiceMock.deleteSupplierProductAlias).toHaveBeenCalledWith(1);
+        expect(supplierProduct.aliases).toEqual([{ id: 2, alias_name: 'Keep Me' }]);
     });
 });

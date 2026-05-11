@@ -452,6 +452,7 @@ class ExtractedItem(BaseModel):
     unit_cost: float = 0.0
     line_total: float = 0.0
     matched_product_id: int | None = None
+    matched_variant_id: int | None = None
 
 
 class DocumentParseResult(BaseModel):
@@ -803,6 +804,7 @@ async def parse_document(
         # Try to fuzzy-match extracted items to existing products
         from src.crud.crud_product import product as crud_product
         from src.crud.crud_supplier_product import supplier_product as crud_sp
+        from src.crud.crud_supplier_product_alias import supplier_product_alias as crud_alias
         from src.crud.crud_supplier import supplier as crud_supplier
 
         all_products = crud_product.get_multi(db=db, limit=500)
@@ -819,21 +821,41 @@ async def parse_document(
 
         # Load supplier specific products if we have a matched supplier
         supplier_products = []
+        supplier_aliases = []
         if matched_supplier_id:
             supplier_products = crud_sp.get_by_supplier(db=db, supplier_id=matched_supplier_id)
+            supplier_aliases = crud_alias.get_active_by_supplier(db=db, supplier_id=matched_supplier_id)
         
         for item in items:
             best_product_id = None
+            best_variant_id = None
             best_score = 0.0
             
-            # First, try to match against learned supplier_product_names
-            if supplier_products and item.description:
+            # First, try to match against learned aliases approved by users.
+            if supplier_aliases:
+                item_sku = (item.sku or "").strip().lower()
+                item_desc = item.description or ""
+                for alias in supplier_aliases:
+                    score = 0.0
+                    if item_sku and alias.normalized_sku and item_sku == alias.normalized_sku:
+                        score = 1.0
+                    elif item_desc and alias.normalized_name:
+                        score = similarity(item_desc, alias.alias_name or alias.normalized_name)
+
+                    if score > best_score:
+                        best_score = score
+                        best_product_id = alias.product_id
+                        best_variant_id = alias.variant_id
+
+            # Then try the canonical supplier_product_name.
+            if supplier_products and item.description and best_score < 0.9:
                 for sp in supplier_products:
                     if sp.supplier_product_name:
                         score = similarity(item.description, sp.supplier_product_name)
                         if score > best_score:
                             best_score = score
                             best_product_id = sp.product_id
+                            best_variant_id = None
 
             # If still not confident, check all products (fallback)
             if best_score < 0.6:
@@ -843,16 +865,19 @@ async def parse_document(
                     if score > best_score:
                         best_score = score
                         best_product_id = product.id
+                        best_variant_id = None
                     
                     # Also try SKU match (exact)
                     if item.sku and product.sku:
                         if item.sku.upper() == product.sku.upper():
                             best_product_id = product.id
+                            best_variant_id = None
                             best_score = 1.0
                             break
             
             if best_score > 0.4 and best_product_id:
                 item.matched_product_id = best_product_id
+                item.matched_variant_id = best_variant_id
         
         return DocumentParseResult(
             mode="create",
@@ -879,6 +904,7 @@ class ExtractedLineItemResponse(BaseModel):
     unit_cost: float = 0.0
     line_total: float = 0.0
     matched_product_id: int | None = None
+    matched_variant_id: int | None = None
 
 
 class POIngestionResponse(BaseModel):

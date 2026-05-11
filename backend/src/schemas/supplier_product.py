@@ -1,9 +1,10 @@
 """
 Pydantic schemas for SupplierProduct.
 """
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
+from src.schemas.supplier_product_alias import SupplierProductAlias
 
 
 class SupplierProductBase(BaseModel):
@@ -50,3 +51,4 @@ class SupplierProductWithDetails(SupplierProduct):
     """Extended schema with product and supplier names for display."""
     product_name: Optional[str] = None
     supplier_name: Optional[str] = None
+    aliases: list[SupplierProductAlias] = Field(default_factory=list)

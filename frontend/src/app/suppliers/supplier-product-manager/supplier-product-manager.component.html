@@ -23,6 +23,24 @@
             <td mat-cell *matCellDef="let element"> {{element.supplier_sku || '-'}} </td>
         </ng-container>
 
+        <!-- Learned Aliases Column -->
+        <ng-container matColumnDef="aliases">
+            <th mat-header-cell *matHeaderCellDef> Learned Aliases </th>
+            <td mat-cell *matCellDef="let element" (click)="$event.stopPropagation()">
+                <mat-chip-set *ngIf="element.aliases?.length; else noAliases" aria-label="Learned supplier aliases">
+                    <mat-chip *ngFor="let alias of element.aliases"
+                        [matTooltip]="(alias.alias_name || alias.alias_sku || '') + (alias.variant_name ? ' -> ' + alias.variant_name : '')">
+                        <span>{{ aliasLabel(alias) }}</span>
+                        <button matChipRemove type="button" (click)="deleteAlias($event, element, alias)"
+                            [matTooltip]="'Remove learned mapping'">
+                            <mat-icon>cancel</mat-icon>
+                        </button>
+                    </mat-chip>
+                </mat-chip-set>
+                <ng-template #noAliases>-</ng-template>
+            </td>
+        </ng-container>
+
         <!-- Cost Column -->
         <ng-container matColumnDef="cost_price">
             <th mat-header-cell *matHeaderCellDef> Cost </th>
@@ -46,7 +64,7 @@
             (click)="navigateToProduct(row.product_id)"></tr>
 
         <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" colspan="5">No products associated with this supplier yet. Receive a Purchase Order to
+            <td class="mat-cell" colspan="6">No products associated with this supplier yet. Receive a Purchase Order to
                 automatically link products.</td>
         </tr>
     </table>

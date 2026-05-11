@@ -26,6 +26,7 @@ export interface PurchaseOrderItem {
     quantity_ordered: number;
     quantity_received?: number;
     unit_cost: number;
+    supplier_sku?: string;
     supplier_product_name?: string;
 }
 

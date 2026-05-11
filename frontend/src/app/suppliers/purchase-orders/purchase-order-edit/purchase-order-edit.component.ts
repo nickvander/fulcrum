@@ -405,6 +405,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       product_id: [item?.product_id || null, Validators.required],
       variant_id: [item?.variant_id || null],
       product_name: [item?.product_name || item?.product?.name || ''],
+      supplier_sku: [item?.supplier_sku || ''],
       supplier_product_name: [item?.supplier_product_name || ''],
       quantity_ordered: [item?.quantity_ordered || 1, [Validators.required, Validators.min(0)]],
       quantity_received: [item?.quantity_received || 0],
@@ -544,6 +545,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
               variant_id: dist.variant_id,
               quantity_ordered: dist.quantity,
               unit_cost: dist.unit_cost,
+              supplier_sku: item.supplier_sku,
               supplier_product_name: item.supplier_product_name
             });
           }
@@ -555,6 +557,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             variant_id: item.variant_id,
             quantity_ordered: item.quantity_ordered,
             unit_cost: item.unit_cost,
+            supplier_sku: item.supplier_sku,
             supplier_product_name: item.supplier_product_name
           });
         }
@@ -564,6 +567,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           variant_id: item.variant_id,
           quantity_ordered: item.quantity_ordered,
           unit_cost: item.unit_cost,
+          supplier_sku: item.supplier_sku,
           supplier_product_name: item.supplier_product_name
         });
       }
@@ -1315,7 +1319,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       for (const item of result.items) {
         const lineItemData: any = {
           product_id: item.matched_product_id || null,
+          variant_id: item.matched_variant_id || null,
           product_name: item.matched_product_id ? (item.description || item.sku || '') : '', 
+          supplier_sku: item.sku || '',
           supplier_product_name: item.description || item.sku || '',
           quantity_ordered: item.quantity,
           unit_cost: item.unit_cost
@@ -1329,6 +1335,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           this.productService.getProductById(item.matched_product_id).subscribe(product => {
             if (product) {
               this.selectProduct(product, idx);
+              if (item.matched_variant_id) {
+                this.items.at(idx).patchValue({ variant_id: item.matched_variant_id });
+              }
             }
           });
         }

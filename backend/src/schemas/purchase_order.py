@@ -31,6 +31,7 @@ class PurchaseOrderItemBase(BaseModel):
     variant_id: Optional[int] = None
     quantity_ordered: float = 0.0
     unit_cost: float = 0.0
+    supplier_sku: Optional[str] = None
     supplier_product_name: Optional[str] = None
 
 class PurchaseOrderItemCreate(PurchaseOrderItemBase):

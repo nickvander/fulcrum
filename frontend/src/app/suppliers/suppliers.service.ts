@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Supplier, SupplierCreate } from '../shared/models/supplier.model';
+import { SupplierProductAlias } from '../shared/models/supplier-product.model';
 import { PurchaseOrder, PurchaseOrderCreate, PurchaseOrderStatus } from '../shared/models/purchase-order.model';
 
 export interface SupplierInvoice {
@@ -119,6 +120,16 @@ export class SuppliersService {
     return this.http.delete(`${this.apiUrl}/purchase-orders/invoices/${invoiceId}`);
   }
 
+  getSupplierProductAliases(supplierId: number): Observable<SupplierProductAlias[]> {
+    return this.http.get<SupplierProductAlias[]>(`${this.apiUrl}/supplier-products/aliases`, {
+      params: { supplier_id: supplierId }
+    });
+  }
+
+  deleteSupplierProductAlias(aliasId: number): Observable<SupplierProductAlias> {
+    return this.http.delete<SupplierProductAlias>(`${this.apiUrl}/supplier-products/aliases/${aliasId}`);
+  }
+
   getInvoiceFileUrl(filePath: string): string {
     return `${this.apiUrl.replace('/api/v1', '')}/${filePath}`;
   }
@@ -160,6 +171,7 @@ export interface ExtractedLineItem {
   unit_cost: number;
   line_total: number;
   matched_product_id?: number | null;
+  matched_variant_id?: number | null;
 }
 
 export interface PoIngestionResponse {
@@ -217,6 +229,7 @@ export interface ExtractedItem {
   unit_cost: number;
   line_total: number;
   matched_product_id?: number | null;
+  matched_variant_id?: number | null;
 }
 
 export interface DocumentParseResult {

@@ -154,12 +154,15 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
             lead_time_days = max(0, delta.days)
 
         from src.crud.crud_supplier_product import supplier_product as crud_sp
+        from src.crud.crud_supplier_product_alias import supplier_product_alias as crud_alias
         from src.schemas.supplier_product import SupplierProductCreate
 
         for item in items_data:
             # Handle dict or object
             i_prod_id = item.get("product_id") if isinstance(item, dict) else item.product_id
+            i_variant_id = item.get("variant_id") if isinstance(item, dict) else getattr(item, "variant_id", None)
             i_cost = item.get("unit_cost") if isinstance(item, dict) else item.unit_cost
+            i_sku = item.get("supplier_sku") if isinstance(item, dict) else getattr(item, "supplier_sku", None)
             i_name = item.get("supplier_product_name") if isinstance(item, dict) else getattr(item, 'supplier_product_name', None)
 
             # Check for existing association
@@ -194,5 +197,17 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
                     min_order_qty=1.0 # Default
                 )
                 crud_sp.create(db, obj_in=sp_in)
+
+            if i_name or i_sku:
+                crud_alias.upsert_learned_alias(
+                    db,
+                    supplier_id=po.supplier_id,
+                    product_id=i_prod_id,
+                    variant_id=i_variant_id,
+                    alias_sku=i_sku,
+                    alias_name=i_name,
+                    source="po_confirmation",
+                    confidence=1.0,
+                )
 
 purchase_order = CRUDPurchaseOrder(PurchaseOrder)
