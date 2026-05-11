@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, distinctUntilChanged, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface AppSettings {
   ai_provider: string;
@@ -48,9 +49,20 @@ export class SettingsService {
   private readonly _storeSettings = new BehaviorSubject<StoreSettings | null>(null);
   readonly storeSettings$ = this._storeSettings.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     this.loadSettings();
-    this.loadStoreSettings(); // Load global settings on init
+    this.authService.isLoggedIn$()
+      .pipe(distinctUntilChanged())
+      .subscribe(isLoggedIn => {
+        if (isLoggedIn) {
+          this.loadStoreSettings();
+        } else {
+          this._storeSettings.next(null);
+        }
+      });
   }
 
   loadSettings(): AppSettings | null {
@@ -79,6 +91,10 @@ export class SettingsService {
   // Store Settings (Backend)
 
   loadStoreSettings(): void {
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
+
     this.http.get<StoreSettings>(`${this.apiUrl}/store`).subscribe({
       next: (settings) => this._storeSettings.next(settings),
       error: (err) => console.error('Failed to load store settings', err)
