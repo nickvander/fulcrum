@@ -13,7 +13,7 @@ from unittest.mock import patch, AsyncMock
 from src.services.marketplaces.base import ListingData
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_import_listings_auto_mapping(db: Session, test_admin_user):
     # Setup: Create Marketplace and a Product with a specific SKU
     m_in = MarketplaceCreate(name="Amazon", api_base_url="https://api.amazon.com")
@@ -62,7 +62,7 @@ async def test_import_listings_auto_mapping(db: Session, test_admin_user):
     assert listing.external_listing_id == "AMZ-STUB-ASIN-001"
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_import_listings_auto_create_shell(db: Session, test_admin_user):
     # Setup: Create Marketplace only, no matching product
     m_in = MarketplaceCreate(name="MercadoLibre", api_base_url="https://api.mercadolibre.com")

@@ -10,7 +10,7 @@ from src.schemas.marketplace import MarketplaceCreate
 from src.crud.crud_marketplace import marketplace as crud_m
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_valid_access_token_no_refresh(db: Session, test_admin_user):
     # Setup: Create marketplace and credential that is NOT expired
     m_in = MarketplaceCreate(name="Amazon", api_base_url="https://api.amazon.com")
@@ -28,7 +28,7 @@ async def test_get_valid_access_token_no_refresh(db: Session, test_admin_user):
     assert token == "valid-token"
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_valid_access_token_with_refresh(db: Session, test_admin_user):
     # Setup: Create marketplace and credential that IS expired
     m_in = MarketplaceCreate(name="MercadoLibre", api_base_url="https://api.mercadolibre.com")

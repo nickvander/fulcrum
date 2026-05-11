@@ -52,7 +52,7 @@ def test_users(ml_access_token):
 
 @pytest.mark.integration
 @pytest.mark.integration_ml
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_live_lifecycle(db: Session, ml_access_token, test_users, test_admin_user):
     # 1. Setup Marketplace & Credential in Fulcrum
     # --------------------------------------------

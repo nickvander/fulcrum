@@ -1,10 +1,46 @@
-from sqlalchemy.orm import Session
+from typing import Any
+
+from sqlalchemy.orm import Session, selectinload
 from src.crud.base import CRUDBase
+from src.models.product import Product
 from src.models.purchase_order import PurchaseOrder
 from src.models.purchase_order_item import PurchaseOrderItem
 from src.schemas.purchase_order import PurchaseOrderCreate, PurchaseOrderUpdate
 
 class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrderUpdate]):
+    def _read_loader_options(self):
+        return (
+            selectinload(self.model.items)
+            .selectinload(PurchaseOrderItem.product)
+            .selectinload(Product.images),
+            selectinload(self.model.items)
+            .selectinload(PurchaseOrderItem.product)
+            .selectinload(Product.variants),
+            selectinload(self.model.supplier),
+            selectinload(self.model.invoices),
+            selectinload(self.model.paid_by_user),
+        )
+
+    def get(self, db: Session, id: Any) -> PurchaseOrder | None:
+        return (
+            db.query(self.model)
+            .options(*self._read_loader_options())
+            .filter(self.model.id == id)
+            .first()
+        )
+
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> list[PurchaseOrder]:
+        return (
+            db.query(self.model)
+            .options(*self._read_loader_options())
+            .order_by(self.model.created_at.desc(), self.model.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
     def create_with_items(self, db: Session, *, obj_in: PurchaseOrderCreate) -> PurchaseOrder:
         # Separate items from PO data
         items_data = obj_in.items

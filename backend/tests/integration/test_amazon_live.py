@@ -30,7 +30,7 @@ def amazon_creds():
 
 @pytest.mark.integration
 @pytest.mark.integration_amazon
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_amazon_sync_lifecycle(db: Session, amazon_creds, test_admin_user):
     # 1. Setup Marketplace with Sandbox config
     # ----------------------------------------

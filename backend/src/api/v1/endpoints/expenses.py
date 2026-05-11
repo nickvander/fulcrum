@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
 from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 
@@ -33,46 +34,81 @@ def get_expense_summary(
     """
     Get expense summary for a time period.
     """
-    query = db.query(ExpenseModel)
+    filters = []
     
     if start_date:
-        query = query.filter(ExpenseModel.date >= start_date)
+        filters.append(ExpenseModel.date >= start_date)
     if end_date:
-        query = query.filter(ExpenseModel.date <= end_date)
-    
-    expenses = query.all()
-    
-    # Calculate totals
-    total_amount = sum(e.amount for e in expenses)
-    
-    # Group by category
-    by_category: dict[str, float] = {}
-    for e in expenses:
-        by_category[e.category] = by_category.get(e.category, 0) + e.amount
-    
-    # Group by type (one_time vs recurring)
-    by_type: dict[str, float] = {"one_time": 0, "recurring": 0}
-    for e in expenses:
-        expense_type = e.expense_type or "one_time"
-        by_type[expense_type] = by_type.get(expense_type, 0) + e.amount
-    
-    # Group by user/contributor
-    by_user: dict[str, float] = {}
-    unreimbursed_total = 0.0
-    for e in expenses:
-        # Use paid_by_name if set, otherwise try to get user name
-        user_name = e.paid_by_name or "Company"
-        by_user[user_name] = by_user.get(user_name, 0) + e.amount
-        if not e.is_reimbursed and (e.paid_by_user_id or e.paid_by_name):
-            unreimbursed_total += e.amount
+        filters.append(ExpenseModel.date <= end_date)
+
+    summary_query = db.query(
+        func.coalesce(func.sum(ExpenseModel.amount), 0.0).label("total_amount"),
+        func.count(ExpenseModel.id).label("count"),
+        func.coalesce(
+            func.sum(
+                case(
+                    (
+                        (~ExpenseModel.is_reimbursed)
+                        & (
+                            ExpenseModel.paid_by_user_id.isnot(None)
+                            | ExpenseModel.paid_by_name.isnot(None)
+                        ),
+                        ExpenseModel.amount,
+                    ),
+                    else_=0.0,
+                )
+            ),
+            0.0,
+        ).label("unreimbursed_total"),
+    )
+    if filters:
+        summary_query = summary_query.filter(*filters)
+    summary = summary_query.one()
+
+    category_query = db.query(
+        ExpenseModel.category,
+        func.coalesce(func.sum(ExpenseModel.amount), 0.0),
+    )
+    type_query = db.query(
+        func.coalesce(ExpenseModel.expense_type, "one_time"),
+        func.coalesce(func.sum(ExpenseModel.amount), 0.0),
+    )
+    user_query = db.query(
+        func.coalesce(ExpenseModel.paid_by_name, "Company"),
+        func.coalesce(func.sum(ExpenseModel.amount), 0.0),
+    )
+    if filters:
+        category_query = category_query.filter(*filters)
+        type_query = type_query.filter(*filters)
+        user_query = user_query.filter(*filters)
+
+    by_category = {
+        category: float(amount or 0.0)
+        for category, amount in category_query.group_by(ExpenseModel.category).all()
+    }
+    by_type = {"one_time": 0.0, "recurring": 0.0}
+    by_type.update(
+        {
+            expense_type: float(amount or 0.0)
+            for expense_type, amount in type_query.group_by(
+                func.coalesce(ExpenseModel.expense_type, "one_time")
+            ).all()
+        }
+    )
+    by_user = {
+        user_name: float(amount or 0.0)
+        for user_name, amount in user_query.group_by(
+            func.coalesce(ExpenseModel.paid_by_name, "Company")
+        ).all()
+    }
     
     return expense_schema.ExpenseSummary(
-        total_amount=total_amount,
+        total_amount=float(summary.total_amount or 0.0),
         by_category=by_category,
         by_type=by_type,
         by_user=by_user,
-        unreimbursed_total=unreimbursed_total,
-        count=len(expenses)
+        unreimbursed_total=float(summary.unreimbursed_total or 0.0),
+        count=int(summary.count or 0)
     )
 
 @router.get("/categories", response_model=List[str])
@@ -320,4 +356,3 @@ async def parse_receipt(
         raise HTTPException(status_code=500, detail=result["error"])
         
     return result
-
