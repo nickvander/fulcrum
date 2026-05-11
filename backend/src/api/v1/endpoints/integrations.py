@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List, Literal
 from pydantic import BaseModel
 from datetime import datetime
+from collections import defaultdict
 import csv
 import io
 import json
@@ -633,16 +634,23 @@ async def list_pending_sync(
     batches = db.query(SyncBatch).filter(
         SyncBatch.status == "pending"
     ).order_by(SyncBatch.created_at.desc()).all()
-    
+
+    batch_ids = [batch.id for batch in batches]
+    changes_by_batch: dict[int, list[PendingSyncChange]] = defaultdict(list)
+    if batch_ids:
+        pending_changes = db.query(PendingSyncChange).filter(
+            PendingSyncChange.batch_id.in_(batch_ids),
+            PendingSyncChange.status == "pending",
+        ).all()
+        for change in pending_changes:
+            changes_by_batch[change.batch_id].append(change)
+
     batch_list = []
     total_pending = 0
     
     for batch in batches:
-        changes = db.query(PendingSyncChange).filter(
-            PendingSyncChange.batch_id == batch.id,
-            PendingSyncChange.status == "pending"
-        ).all()
-        
+        changes = changes_by_batch[batch.id]
+
         batch_info = PendingBatchInfo(
             id=batch.id,
             source=batch.source,
@@ -987,4 +995,3 @@ async def get_user_from_api_key(
     
     # Return the user
     return db.query(User).filter(User.id == db_key.user_id).first()
-

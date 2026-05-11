@@ -144,6 +144,13 @@ def client(db: Session):
     with TestClient(app) as c:
         yield c
 
+
+@pytest.fixture
+def anyio_backend():
+    """Run async tests on asyncio only."""
+    return "asyncio"
+
+
 @pytest.fixture(scope="function")
 def test_product(db: Session) -> Product:
     """
@@ -309,4 +316,3 @@ def staged_sync_batch(db: Session, test_admin_user: models.User, test_product: P
     db.flush()
     
     return batch.id
-

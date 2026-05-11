@@ -2,7 +2,7 @@
 API endpoints for managing marketplaces.
 """
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Dict
 
 from src.api import dependencies
@@ -25,13 +25,6 @@ def read_marketplaces(
 ):
     return crud_marketplace.marketplace.get_multi(db, skip=skip, limit=limit)
 
-@router.get("/{marketplace_id}", response_model=marketplace_schema.Marketplace)
-def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
-    db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
-    if db_marketplace is None:
-        raise HTTPException(status_code=404, detail="Marketplace not found")
-    return db_marketplace
-
 @router.get("/listings/")
 def read_marketplace_listings(
     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
@@ -40,11 +33,17 @@ def read_marketplace_listings(
     Retrieve all product listings across marketplaces.
     """
     from src.models.marketplace import MarketplaceListing as ModelListing
-    listings = db.query(ModelListing).offset(skip).limit(limit).all()
-    
-    result = []
-    for listing in listings:
-        result.append({
+
+    listings = (
+        db.query(ModelListing)
+        .options(joinedload(ModelListing.product))
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
             "id": listing.id,
             "product_id": listing.product_id,
             "marketplace_id": listing.marketplace_id,
@@ -55,9 +54,21 @@ def read_marketplace_listings(
             "marketplace_price": listing.marketplace_price,
             "original_price": listing.original_price,
             "discount_percentage": listing.discount_percentage,
-            "product_name": listing.product.name if listing.product else f"Product #{listing.product_id}"
-        })
-    return result
+            "product_name": (
+                listing.product.name
+                if listing.product
+                else f"Product #{listing.product_id}"
+            ),
+        }
+        for listing in listings
+    ]
+
+@router.get("/{marketplace_id}", response_model=marketplace_schema.Marketplace)
+def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
+    db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
+    if db_marketplace is None:
+        raise HTTPException(status_code=404, detail="Marketplace not found")
+    return db_marketplace
 
 @router.post("/listings/", response_model=marketplace_schema.MarketplaceListing)
 async def create_marketplace_listing(

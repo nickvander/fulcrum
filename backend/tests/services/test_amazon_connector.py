@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 from src.services.marketplaces.amazon import AmazonConnector
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_amazon_get_auth_url():
 
     connector = AmazonConnector()
@@ -13,7 +13,7 @@ async def test_amazon_get_auth_url():
         assert "version=beta" in url
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_amazon_exchange_code():
     connector = AmazonConnector()
     mock_response = {
@@ -35,7 +35,7 @@ async def test_amazon_exchange_code():
         assert tokens["refresh_token"] == "Atzr|..."
 
 @pytest.mark.db
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_amazon_refresh_token():
     connector = AmazonConnector()
     mock_response = {
