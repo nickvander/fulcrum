@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -7,6 +8,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { TranslocoModule } from '@ngneat/transloco';
 import { InvoiceMatchResult, InvoiceMatchItem } from '../../suppliers.service';
 
@@ -20,6 +23,7 @@ export interface InvoiceMatchDialogData {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
@@ -27,6 +31,8 @@ export interface InvoiceMatchDialogData {
     MatChipsModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule,
     TranslocoModule
   ],
   template: `
@@ -76,7 +82,12 @@ export interface InvoiceMatchDialogData {
             <td mat-cell *matCellDef="let item">
               <div class="item-desc">
                 <span>{{ item.po_description || 'N/A' }}</span>
-                <small>Qty: {{ item.po_quantity | number:'1.0-0' }} @ {{ item.po_unit_cost | currency }}</small>
+                <small>
+                  {{ t('purchaseOrders.invoiceMatching.ordered') }}: {{ item.po_quantity | number:'1.0-0' }}
+                  | {{ t('purchaseOrders.invoiceMatching.received') }}: {{ (item.po_quantity_received || 0) | number:'1.0-0' }}
+                  | {{ t('purchaseOrders.invoiceMatching.remaining') }}: {{ getRemainingQuantity(item) | number:'1.0-0' }}
+                  @ {{ item.po_unit_cost | currency }}
+                </small>
               </div>
             </td>
           </ng-container>
@@ -92,6 +103,36 @@ export interface InvoiceMatchDialogData {
                   Qty: {{ item.invoice_quantity | number:'1.0-0' }} @ {{ item.invoice_unit_cost | currency }}
                 </small>
               </div>
+            </td>
+          </ng-container>
+
+          <!-- Receiving Column -->
+          <ng-container matColumnDef="receiving">
+            <th mat-header-cell *matHeaderCellDef>{{ t('purchaseOrders.invoiceMatching.receiving') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <mat-form-field
+                  class="receive-field"
+                  appearance="outline"
+                  *ngIf="canReceiveItem(item); else notReceivable">
+                <mat-label>{{ t('purchaseOrders.invoiceMatching.receiveQty') }}</mat-label>
+                <input
+                    matInput
+                    type="number"
+                    min="0"
+                    [max]="getRemainingQuantity(item)"
+                    step="any"
+                    [(ngModel)]="item.receive_quantity"
+                    (blur)="clampReceiveQuantity(item)">
+                <mat-hint>
+                  {{ t('purchaseOrders.invoiceMatching.remaining') }}:
+                  {{ getRemainingQuantity(item) | number:'1.0-0' }}
+                </mat-hint>
+              </mat-form-field>
+              <ng-template #notReceivable>
+                <span class="complete-text">
+                  {{ item.po_item_id ? t('purchaseOrders.invoiceMatching.complete') : '-' }}
+                </span>
+              </ng-template>
             </td>
           </ng-container>
 
@@ -223,6 +264,20 @@ export interface InvoiceMatchDialogData {
       color: #e65100;
       font-size: 12px;
     }
+
+    .receive-field {
+      width: 112px;
+      margin-top: 6px;
+    }
+
+    .receive-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      min-height: 18px;
+    }
+
+    .complete-text {
+      color: #666;
+      font-size: 12px;
+    }
     
     .ok-icon {
       color: #4caf50;
@@ -264,12 +319,14 @@ export interface InvoiceMatchDialogData {
   `]
 })
 export class InvoiceMatchDialogComponent {
-  displayedColumns = ['status', 'po_desc', 'invoice_desc', 'discrepancy'];
+  displayedColumns = ['status', 'po_desc', 'invoice_desc', 'receiving', 'discrepancy'];
 
   constructor(
     public dialogRef: MatDialogRef<InvoiceMatchDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: InvoiceMatchDialogData
-  ) { }
+  ) {
+    this.initializeReceiveQuantities();
+  }
 
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
@@ -299,7 +356,42 @@ export class InvoiceMatchDialogComponent {
 
   getReceivableMatchCount(): number {
     return (this.data.matchResult.matches || []).filter(
-      (match) => !!match.po_item_id && match.match_status !== 'unmatched' && match.invoice_quantity > 0
+      (match) => this.canReceiveItem(match) && Number(match.receive_quantity || 0) > 0
     ).length;
+  }
+
+  canReceiveItem(item: InvoiceMatchItem): boolean {
+    return !!item.po_item_id
+      && item.match_status !== 'unmatched'
+      && Number(item.invoice_quantity || 0) > 0
+      && this.getRemainingQuantity(item) > 0;
+  }
+
+  getRemainingQuantity(item: InvoiceMatchItem): number {
+    if (item.po_remaining_quantity !== null && item.po_remaining_quantity !== undefined) {
+      return Math.max(0, Number(item.po_remaining_quantity) || 0);
+    }
+
+    const ordered = Number(item.po_quantity || 0);
+    const received = Number(item.po_quantity_received || 0);
+    return Math.max(0, ordered - received);
+  }
+
+  clampReceiveQuantity(item: InvoiceMatchItem): void {
+    const remaining = this.getRemainingQuantity(item);
+    const requested = Number(item.receive_quantity || 0);
+    item.receive_quantity = Math.min(Math.max(requested, 0), remaining);
+  }
+
+  private initializeReceiveQuantities(): void {
+    for (const item of this.data.matchResult.matches || []) {
+      if (!this.canReceiveItem(item)) {
+        item.receive_quantity = 0;
+        continue;
+      }
+
+      const invoiceQuantity = Number(item.invoice_quantity || 0);
+      item.receive_quantity = Math.min(invoiceQuantity, this.getRemainingQuantity(item));
+    }
   }
 }

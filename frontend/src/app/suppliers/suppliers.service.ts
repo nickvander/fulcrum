@@ -183,12 +183,15 @@ export interface InvoiceMatchItem {
   po_item_id: number | null;
   po_description: string | null;
   po_quantity: number | null;
+  po_quantity_received?: number | null;
+  po_remaining_quantity?: number | null;
   po_unit_cost: number | null;
   invoice_sku: string | null;
   invoice_description: string;
   invoice_quantity: number;
   invoice_unit_cost: number;
   invoice_line_total: number;
+  receive_quantity?: number | null;
   match_status: 'matched' | 'quantity_diff' | 'price_diff' | 'quantity_price_diff' | 'unmatched';
   confidence: number;
   discrepancy_details: string | null;
