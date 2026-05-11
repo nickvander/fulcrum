@@ -1,6 +1,6 @@
 # Progress Log
 
-**Status:** Onboarding checklist and correction flow implemented **Current Phase:** Phase 7 -
+**Status:** Onboarding checklist, correction flow, and demo workspace implemented **Current Phase:** Phase 7 -
 Operational Reliability & Growth
 
 ## Current Work
@@ -15,10 +15,10 @@ Operational Reliability & Growth
 
 ## Next Session Starting Point
 
-- Add optional demo workspace/sample data creation for trial customers.
 - Add supplier document import review queue before PO/stock writes.
 - Add launch readiness report for setup health, unresolved imports, test data,
   stock health, and marketplace credential status.
+- Add demo-data cleanup warning/path before customers go live.
 - Keep old quick wins in `work/future/`; they are useful later but secondary to
   onboarding customers safely.
 

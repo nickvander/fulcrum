@@ -10,6 +10,8 @@ empty account to usable inventory operations without support hand-holding.
 ## Current Baseline
 
 - Backend and frontend were launched locally after the supplier alias work.
+- Customer onboarding checklist, empty states, receiving correction/reversal,
+  and demo workspace creation are now implemented.
 - Dummy API transaction passed:
   - created supplier
   - created product
@@ -23,6 +25,7 @@ empty account to usable inventory operations without support hand-holding.
   - purchase order import dialog
   - supplier detail Products tab shows learned alias chip
 - Latest pushed commits:
+  - `109287f` Add onboarding checklist and receiving corrections
   - `96a59b0` Learn supplier product aliases from confirmed POs
   - `1214757` Show learned aliases on supplier detail products
   - `01814f8` Prepare onboarding readiness work plan
@@ -88,29 +91,23 @@ questions by turning scattered setup steps into a visible path.
 
 ## Next Best Features After Checklist
 
-1. Sample data or guided demo mode
-   - Add an explicit "Create demo workspace" action for trial customers.
-   - Seed a sample supplier, product, PO, and stock movement.
-   - Must be clearly reversible or marked as demo data.
-
-2. Import review queue
+1. Import review queue
    - Queue imported supplier PDFs/images before they become POs or stock.
    - Show match confidence, learned aliases, proposed product/variant, and
      discrepancy warnings.
    - Keep direct PO creation working.
 
-3. Receiving correction flow
-   - Add a correction/reversal action for receiving mistakes.
-   - Preserve stock movement audit history instead of silently editing received
-     quantities.
+2. Launch readiness report
+   - One page that summarizes products, suppliers, stock, POs, credentials,
+     unresolved import matches, and test/dummy data warnings.
 
-4. Marketplace connection health
+3. Marketplace connection health
    - Show credential state, last sync attempt, missing scopes, and errors.
    - Keep inventory allocation separate from raw stock receiving.
 
-5. Launch readiness report
-   - One page that summarizes products, suppliers, stock, POs, credentials,
-     unresolved import matches, and test/dummy data warnings.
+4. Demo data cleanup guardrails
+   - Add a visible warning when demo data exists.
+   - Provide a guided cleanup path before a customer goes live.
 
 ## Definition of Done for the Next Session
 
@@ -144,10 +141,22 @@ questions by turning scattered setup steps into a visible path.
 - Browser smoke passed after login with no post-login console errors:
   - dashboard onboarding checklist visible
   - PO correction action visible
+- Added protected `POST /api/v1/onboarding/demo-workspace` action:
+  - Creates a clearly marked demo store setting, Alibaba supplier, product, PO,
+    learned alias, and inventory receipt.
+  - Runs through real PO receiving so internal inventory and audit history are
+    exercised.
+  - Is idempotent; clicking again does not duplicate stock.
+  - Does not create marketplace credentials or sync marketplace stock.
+- Added dashboard "Create demo workspace" action with refresh and success/error
+  feedback.
+- Focused tests passed:
+  - backend onboarding API, including demo workspace idempotency
+  - dashboard component demo workspace action
 
 ## Recommended Next Slice
 
-1. Add optional demo workspace/sample data creation for trial customers.
-2. Add import review queue for supplier PDFs/images before stock writes.
-3. Add a launch readiness report that summarizes setup, unresolved imports,
+1. Add import review queue for supplier PDFs/images before stock writes.
+2. Add a launch readiness report that summarizes setup, unresolved imports,
    test data, stock health, and marketplace credential status.
+3. Add a demo-data cleanup warning/path before customers go live.

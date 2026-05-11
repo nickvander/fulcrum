@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { DashboardStats, DashboardStatsService } from '../../services/dashboard-stats.service';
-import { Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { StatCardComponent } from '../../widgets/stat-card/stat-card.component';
 import { LowStockListWidgetComponent } from '../../widgets/low-stock-list/low-stock-list.component';
 import { InventoryHealthWidgetComponent } from '../../widgets/inventory-health-widget/inventory-health-widget.component';
@@ -24,6 +25,7 @@ import { TranslocoModule } from '@ngneat/transloco';
         MatButtonModule,
         MatIconModule,
         MatTooltipModule,
+        MatSnackBarModule,
         MatProgressSpinnerModule,
         StatCardComponent,
         LowStockListWidgetComponent,
@@ -36,10 +38,12 @@ import { TranslocoModule } from '@ngneat/transloco';
 export class DashboardComponent implements OnInit {
     stats$!: Observable<DashboardStats>;
     onboardingStatus$!: Observable<OnboardingStatus>;
+    creatingDemoWorkspace = false;
 
     constructor(
         private statsService: DashboardStatsService,
-        private onboardingService: OnboardingService
+        private onboardingService: OnboardingService,
+        private snackBar: MatSnackBar
     ) { }
 
     ngOnInit(): void {
@@ -49,5 +53,26 @@ export class DashboardComponent implements OnInit {
     refresh(): void {
         this.stats$ = this.statsService.getStats();
         this.onboardingStatus$ = this.onboardingService.getStatus();
+    }
+
+    createDemoWorkspace(): void {
+        if (this.creatingDemoWorkspace) return;
+
+        this.creatingDemoWorkspace = true;
+        this.onboardingService.createDemoWorkspace()
+            .pipe(finalize(() => this.creatingDemoWorkspace = false))
+            .subscribe({
+                next: (result) => {
+                    this.snackBar.open(result.message, 'Close', { duration: 5000 });
+                    this.refresh();
+                },
+                error: () => {
+                    this.snackBar.open(
+                        'Demo workspace could not be created. Please try again.',
+                        'Close',
+                        { duration: 5000 }
+                    );
+                }
+            });
     }
 }

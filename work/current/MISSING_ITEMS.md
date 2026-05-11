@@ -10,6 +10,7 @@
       Supplier detail Products tab.
 - [x] Receiving correction/reversal flow so onboarding users can fix stock
       mistakes without editing history silently.
+- [x] Optional demo workspace/sample data for trial onboarding.
 - [ ] Launch readiness report for setup health, unresolved imports, test data,
       stock health, and marketplace credential status.
 
@@ -25,5 +26,5 @@
 
 ## Future
 
-- [ ] Optional demo workspace/sample data for trial onboarding
+- [ ] Demo-data cleanup warning/path before customer go-live
 - [ ] Enhance Marketplace Status UI with sync indicators

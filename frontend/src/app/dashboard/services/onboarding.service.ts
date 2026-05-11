@@ -22,6 +22,15 @@ export interface OnboardingStatus {
     steps: OnboardingStep[];
 }
 
+export interface DemoWorkspaceResult {
+    created: boolean;
+    created_resources: string[];
+    supplier_id: number;
+    product_id: number;
+    purchase_order_id: number;
+    message: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
     private apiUrl = `${environment.apiUrl}/onboarding`;
@@ -30,5 +39,9 @@ export class OnboardingService {
 
     getStatus(): Observable<OnboardingStatus> {
         return this.http.get<OnboardingStatus>(`${this.apiUrl}/status`);
+    }
+
+    createDemoWorkspace(): Observable<DemoWorkspaceResult> {
+        return this.http.post<DemoWorkspaceResult>(`${this.apiUrl}/demo-workspace`, {});
     }
 }
