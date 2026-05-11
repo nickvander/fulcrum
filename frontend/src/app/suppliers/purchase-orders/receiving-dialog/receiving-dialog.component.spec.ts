@@ -21,7 +21,7 @@ describe('ReceivingDialogComponent', () => {
     const mockPO = {
         id: 1,
         items: [
-            { product_id: 101, quantity_ordered: 10, quantity_received: 5 }
+            { id: 11, product_id: 101, variant_id: null, quantity_ordered: 10, quantity_received: 5 }
         ]
     };
 
@@ -74,7 +74,9 @@ describe('ReceivingDialogComponent', () => {
         suppliersServiceMock.receivePurchaseOrderItems.mockReturnValue(of({} as any));
 
         component.onSubmit();
-        expect(suppliersServiceMock.receivePurchaseOrderItems).toHaveBeenCalledWith(1, [{ product_id: 101, quantity: 2 }]);
+        expect(suppliersServiceMock.receivePurchaseOrderItems).toHaveBeenCalledWith(1, [
+            { po_item_id: 11, product_id: 101, variant_id: null, quantity: 2 }
+        ]);
         expect(dialogRefMock.close).toHaveBeenCalled();
     });
 });

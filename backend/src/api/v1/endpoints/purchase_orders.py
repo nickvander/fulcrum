@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Optional
 import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
@@ -49,6 +49,14 @@ class ApplyCostsRequest(BaseModel):
     """Request to apply costs to PO items."""
     confirm: bool = True  # Must be True to apply
     excluded_items: List[int] = []  # IDs of items to exclude from allocation
+
+
+class ReceiveItemRequest(BaseModel):
+    """A line item quantity to receive into inventory."""
+    po_item_id: Optional[int] = None
+    product_id: int
+    variant_id: Optional[int] = None
+    quantity: float
 
 
 @router.post("/", response_model=po_schema.PurchaseOrder)
@@ -139,13 +147,12 @@ def receive_items(
     *,
     db: Session = Depends(get_db),
     id: int,
-
-    received_items: List[dict],  # Ideally define a schema for this
+    received_items: List[ReceiveItemRequest],
     current_user: User = Depends(get_current_active_user),
 ):
     """
     Receive items for a Purchase Order.
-    Body: List of { "product_id": int, "quantity": int }
+    Body: List of { "po_item_id"?: int, "product_id": int, "variant_id"?: int, "quantity": number }
     """
     try:
         po = purchase_order_service.receive_items(db=db, po_id=id, received_items=received_items, user=current_user)
@@ -542,7 +549,12 @@ async def parse_document(
         try:
             traditional_data = po_ingestion_service.ingest_file(file.filename, content)
             # If we got meaningful data (especially items), use it
-            if traditional_data.confidence_score > 0.4 or not ai_enabled:
+            has_traditional_data = (
+                bool(traditional_data.items)
+                or bool(traditional_data.supplier_name)
+                or traditional_data.total_amount > 0
+            )
+            if has_traditional_data:
                 extraction_result = {
                     "vendor_name": traditional_data.supplier_name,
                     "po_number": traditional_data.po_number,
@@ -591,7 +603,7 @@ async def parse_document(
     if not extraction_result:
         raise HTTPException(
             status_code=400, 
-            detail="Could not extract data from document and AI is disabled."
+            detail="Could not extract readable order data. Text PDFs/HTML can be parsed without AI; scanned PDFs and images need AI/OCR enabled in Settings."
         )
     
     # Extract document data

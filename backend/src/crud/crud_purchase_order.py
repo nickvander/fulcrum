@@ -58,6 +58,7 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
                 db_item = PurchaseOrderItem(
                     po_id=db_obj.id,
                     product_id=item_in.product_id,
+                    variant_id=item_in.variant_id,
                     quantity_ordered=item_in.quantity_ordered,
                     unit_cost=item_in.unit_cost,
                     base_cost=item_in.unit_cost # Initialize base cost
@@ -103,12 +104,14 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
             for item in items_data:
                 # Handle dict or object
                 i_prod_id = item.get("product_id") if isinstance(item, dict) else item.product_id
+                i_variant_id = item.get("variant_id") if isinstance(item, dict) else item.variant_id
                 i_qty = item.get("quantity_ordered") if isinstance(item, dict) else item.quantity_ordered
                 i_cost = item.get("unit_cost") if isinstance(item, dict) else item.unit_cost
                 
                 db_item = PurchaseOrderItem(
                     po_id=db_obj.id,
                     product_id=i_prod_id,
+                    variant_id=i_variant_id,
                     quantity_ordered=i_qty,
                     unit_cost=i_cost,
                     base_cost=i_cost # Initialize base cost
@@ -134,7 +137,14 @@ class CRUDPurchaseOrder(CRUDBase[PurchaseOrder, PurchaseOrderCreate, PurchaseOrd
         if items_data is None:
             items_data = po.items
 
-        if not items_data or po.status == "draft":
+        if not items_data:
+            return
+
+        has_supplier_names = any(
+            (item.get("supplier_product_name") if isinstance(item, dict) else getattr(item, "supplier_product_name", None))
+            for item in items_data
+        )
+        if po.status == "draft" and not has_supplier_names:
             return
 
         # Calculate lead time if dates exist

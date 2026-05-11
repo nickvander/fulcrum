@@ -11,6 +11,7 @@ export interface SupplierInvoice {
   invoice_number: string | null;
   invoice_date: string | null;
   file_path: string | null;
+  parsed_data?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -74,7 +75,10 @@ export class SuppliersService {
     return this.http.put<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}`, po);
   }
 
-  receivePurchaseOrderItems(id: number, items: { product_id: number, quantity: number }[]): Observable<PurchaseOrder> {
+  receivePurchaseOrderItems(
+    id: number,
+    items: { po_item_id?: number | null, product_id: number, variant_id?: number | null, quantity: number }[]
+  ): Observable<PurchaseOrder> {
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/purchase-orders/${id}/receive`, items);
   }
 

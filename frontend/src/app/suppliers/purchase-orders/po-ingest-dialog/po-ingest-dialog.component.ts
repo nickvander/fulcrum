@@ -13,7 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
 
-import { SuppliersService, PoIngestionResponse, ExtractedLineItem } from '../../suppliers.service';
+import { SuppliersService, PoIngestionResponse, ExtractedLineItem, DocumentParseResult } from '../../suppliers.service';
 import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
@@ -146,7 +146,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     }
 
     selectFile(file: File): void {
-        const allowedTypes = ['.pdf', '.html', '.htm', '.txt'];
+        const allowedTypes = ['.pdf', '.png', '.jpg', '.jpeg', '.avif', '.html', '.htm', '.txt'];
         const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
         if (!allowedTypes.includes(ext)) {
@@ -169,10 +169,17 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         this.isProcessing = true;
         this.uploadError = null;
 
-        this.suppliersService.ingestPurchaseOrder(this.selectedFile, false).subscribe({
+        this.suppliersService.parseDocument(this.selectedFile).subscribe({
             next: (response) => {
-                this.extractedData = response;
-                this.populateFormFromExtraction(response);
+                if (response.mode === 'match' && response.matched_po_id) {
+                    this.uploadError = `This document appears to match existing ${response.matched_po_number}. Open that PO to receive stock instead.`;
+                    this.isProcessing = false;
+                    return;
+                }
+
+                const normalized = this.toPoIngestionResponse(response);
+                this.extractedData = normalized;
+                this.populateFormFromExtraction(normalized);
                 this.step = 'preview';
                 this.isProcessing = false;
             },
@@ -181,6 +188,31 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.isProcessing = false;
             }
         });
+    }
+
+    private toPoIngestionResponse(data: DocumentParseResult): PoIngestionResponse {
+        return {
+            supplier_name: data.vendor_name,
+            po_number: data.po_number,
+            po_date: data.document_date,
+            currency: data.currency,
+            payment_terms: null,
+            items: data.items.map(item => ({
+                sku: item.sku,
+                description: item.description,
+                quantity: item.quantity,
+                unit_cost: item.unit_cost,
+                line_total: item.line_total,
+                matched_product_id: item.matched_product_id
+            })),
+            subtotal: data.subtotal,
+            shipping_cost: data.shipping_cost,
+            tax_amount: data.tax_amount,
+            total_amount: data.total_amount,
+            extraction_method: 'document-parser',
+            confidence_score: data.confidence,
+            warnings: []
+        };
     }
 
     populateFormFromExtraction(data: PoIngestionResponse): void {
@@ -255,7 +287,8 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
             items: matchedItems.map(item => ({
                 product_id: item.matched_product_id!,
                 quantity_ordered: item.quantity,
-                unit_cost: item.unit_cost
+                unit_cost: item.unit_cost,
+                supplier_product_name: item.description || item.sku || undefined
             }))
         };
 

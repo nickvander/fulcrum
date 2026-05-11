@@ -91,6 +91,44 @@ def test_receive_items_workflow(client: TestClient, db: Session, test_product, t
     db.refresh(inventory)
     assert inventory.quantity == 10
 
+
+def test_receive_items_targets_exact_po_line(client: TestClient, db: Session, test_product, test_supplier, admin_headers):
+    po_data = {
+        "supplier_id": test_supplier.id,
+        "status": "ordered",
+        "currency": "USD",
+        "items": [
+            {"product_id": test_product.id, "quantity_ordered": 10, "unit_cost": 50.0},
+            {"product_id": test_product.id, "quantity_ordered": 4, "unit_cost": 45.0},
+        ],
+    }
+    response = client.post("/api/v1/purchase-orders/", json=po_data, headers=admin_headers)
+    assert response.status_code == 200
+    po = response.json()
+    target_item = po["items"][1]
+
+    receive_payload = [
+        {
+            "po_item_id": target_item["id"],
+            "product_id": test_product.id,
+            "quantity": 3,
+        }
+    ]
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive",
+        json=receive_payload,
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    received_items = {item["id"]: item for item in response.json()["items"]}
+    assert received_items[target_item["id"]]["quantity_received"] == 3
+    assert received_items[po["items"][0]["id"]]["quantity_received"] == 0
+
+    inventory = db.query(InventoryItem).filter(InventoryItem.product_id == test_product.id).first()
+    assert inventory is not None
+    assert inventory.quantity == 3
+
 def test_adjust_stock_api(client: TestClient, db: Session, test_product):
     # This test also needs auth, skipping manual setup for brevity and focusing on workflow above first
     pass
