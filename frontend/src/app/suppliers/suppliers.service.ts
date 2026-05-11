@@ -158,6 +158,35 @@ export class SuppliersService {
     return this.http.post<DocumentParseResult>(`${this.apiUrl}/purchase-orders/parse-document`, formData, { params });
   }
 
+  createImportReview(file: File, targetPoId?: number): Observable<SupplierDocumentImportReview> {
+    const formData = new FormData();
+    formData.append('file', file);
+    let params = new HttpParams();
+    if (targetPoId) {
+      params = params.set('target_po_id', targetPoId.toString());
+    }
+    return this.http.post<SupplierDocumentImportReview>(`${this.apiUrl}/purchase-orders/imports/reviews`, formData, { params });
+  }
+
+  getImportReviews(status: string | null = 'pending'): Observable<SupplierDocumentImportReview[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    return this.http.get<SupplierDocumentImportReview[]>(`${this.apiUrl}/purchase-orders/imports/reviews`, { params });
+  }
+
+  approveImportReview(reviewId: number, approval: SupplierDocumentImportApproveRequest): Observable<SupplierDocumentImportApproveResponse> {
+    return this.http.post<SupplierDocumentImportApproveResponse>(
+      `${this.apiUrl}/purchase-orders/imports/reviews/${reviewId}/approve`,
+      approval
+    );
+  }
+
+  rejectImportReview(reviewId: number): Observable<SupplierDocumentImportReview> {
+    return this.http.post<SupplierDocumentImportReview>(`${this.apiUrl}/purchase-orders/imports/reviews/${reviewId}/reject`, {});
+  }
+
   /** @deprecated Use parseDocument instead */
   ingestPurchaseOrder(file: File, useAi: boolean = false): Observable<PoIngestionResponse> {
     const formData = new FormData();
@@ -264,4 +293,33 @@ export interface DocumentParseResult {
   unmatched_po_items: any[];
   unmatched_invoice_items: any[];
   total_discrepancy: number;
+}
+
+export interface SupplierDocumentImportReview {
+  id: number;
+  file_name: string;
+  content_type: string | null;
+  source: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  mode: 'create' | 'match';
+  supplier_id: number | null;
+  purchase_order_id: number | null;
+  extracted_data: DocumentParseResult;
+  warnings: string[];
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export interface SupplierDocumentImportApproveRequest {
+  supplier_id: number;
+  currency: string;
+  shipping_cost: number;
+  tax_amount: number;
+  notes?: string | null;
+  items: ExtractedItem[];
+}
+
+export interface SupplierDocumentImportApproveResponse {
+  import_review: SupplierDocumentImportReview;
+  purchase_order: PurchaseOrder;
 }

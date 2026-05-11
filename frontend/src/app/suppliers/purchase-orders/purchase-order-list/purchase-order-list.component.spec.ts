@@ -27,7 +27,8 @@ describe('PurchaseOrderListComponent', () => {
 
   const suppliersServiceMock = {
     getSuppliers: () => of([]),
-    getPurchaseOrders: () => of([])
+    getPurchaseOrders: () => of([]),
+    getImportReviews: () => of([])
   };
 
   beforeEach(async () => {

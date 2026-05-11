@@ -41,6 +41,41 @@
             </app-stat-card>
         </div>
 
+        <section class="import-review-panel" *ngIf="importReviews.length > 0">
+            <div class="review-panel-header">
+                <div>
+                    <p class="eyebrow">Supplier import queue</p>
+                    <h2>{{ importReviews.length }} document{{ importReviews.length === 1 ? '' : 's' }} waiting for review</h2>
+                    <p>Approve product matches to create draft POs. Internal stock only changes later when those POs are received.</p>
+                </div>
+                <button mat-stroked-button color="primary" (click)="openIngestDialog()">
+                    <mat-icon>upload_file</mat-icon>
+                    Add document
+                </button>
+            </div>
+
+            <div class="review-list">
+                <article class="review-card" *ngFor="let review of importReviews" (click)="reviewImport(review)">
+                    <div class="review-icon">
+                        <mat-icon>{{ review.mode === 'match' ? 'rule' : 'description' }}</mat-icon>
+                    </div>
+                    <div class="review-main">
+                        <h3>{{ review.file_name }}</h3>
+                        <p>{{ getReviewVendor(review) }} · {{ getReviewItemCount(review) }} item{{ getReviewItemCount(review) === 1 ? '' : 's' }} · {{ review.created_at | date:'mediumDate':undefined:currentLang }}</p>
+                        <span class="review-warning" *ngIf="review.warnings.length">{{ review.warnings[0] }}</span>
+                    </div>
+                    <div class="review-actions">
+                        <button mat-stroked-button color="primary" (click)="reviewImport(review); $event.stopPropagation()">
+                            Review
+                        </button>
+                        <button mat-icon-button color="warn" (click)="rejectImport(review, $event)" matTooltip="Reject import">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
         <!-- Filters -->
         <mat-card class="filter-card">
             <mat-card-content>

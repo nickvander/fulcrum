@@ -106,6 +106,50 @@
   margin-bottom: 16px;
 }
 
+.review-context,
+.review-warnings {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid var(--border-color, #d0d5dd);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background: var(--bg-surface-alt, #fafbfc);
+
+  mat-icon {
+    color: var(--primary-color, #3f51b5);
+    flex: 0 0 auto;
+  }
+
+  strong {
+    display: block;
+    color: var(--text-main, #1f2937);
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary, #4b5563);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
+.review-warnings {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+
+  mat-icon {
+    color: #b45309;
+  }
+
+  p + p {
+    margin-top: 4px;
+  }
+}
+
 .header-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

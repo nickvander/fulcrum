@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PurchaseOrder, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
-import { SuppliersService } from '../../suppliers.service';
+import { SuppliersService, SupplierDocumentImportReview } from '../../suppliers.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
@@ -64,6 +64,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
 
   purchaseOrders: PurchaseOrder[] = [];
   filteredOrders: PurchaseOrder[] = [];
+  importReviews: SupplierDocumentImportReview[] = [];
   suppliers: Supplier[] = [];
   supplierMap: Map<number, Supplier> = new Map();
   displayedColumns: string[] = ['id', 'supplier', 'status', 'total', 'created_at', 'actions'];
@@ -147,12 +148,14 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     // Load both POs and suppliers in parallel
     forkJoin({
       pos: this.suppliersService.getPurchaseOrders(),
-      suppliers: this.suppliersService.getSuppliers()
+      suppliers: this.suppliersService.getSuppliers(),
+      importReviews: this.suppliersService.getImportReviews()
     }).subscribe({
-      next: ({ pos, suppliers }) => {
+      next: ({ pos, suppliers, importReviews }) => {
         this.suppliers = suppliers;
         this.supplierMap = new Map(suppliers.map(s => [s.id, s]));
         this.purchaseOrders = pos;
+        this.importReviews = importReviews;
 
         // Update supplier name if ID was set from query params
         if (this.selectedSupplierId) {
@@ -291,6 +294,39 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
         }
       });
     });
+  }
+
+  reviewImport(review: SupplierDocumentImportReview): void {
+    import('../po-ingest-dialog/po-ingest-dialog.component').then(m => {
+      const dialogRef = this.dialog.open(m.PoIngestDialogComponent, {
+        width: '900px',
+        maxHeight: '90vh',
+        disableClose: true,
+        data: { review }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result?.action === 'created') {
+          this.loadData();
+        }
+      });
+    });
+  }
+
+  rejectImport(review: SupplierDocumentImportReview, event: Event): void {
+    event.stopPropagation();
+    this.suppliersService.rejectImportReview(review.id).subscribe({
+      next: () => this.loadData(),
+      error: (err) => console.error('Failed to reject import review', err)
+    });
+  }
+
+  getReviewItemCount(review: SupplierDocumentImportReview): number {
+    return review.extracted_data?.items?.length || 0;
+  }
+
+  getReviewVendor(review: SupplierDocumentImportReview): string {
+    return review.extracted_data?.vendor_name || 'Unknown supplier';
   }
 
   getStatusColor(status: PurchaseOrderStatus): string {

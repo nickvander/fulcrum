@@ -5,6 +5,7 @@ from src.models.product import Product
 from src.models.purchase_order import PurchaseOrder
 from src.models.store_settings import StoreSettings
 from src.models.supplier import Supplier
+from src.models.supplier_document_import import SupplierDocumentImport
 from src.models.supplier_product import SupplierProduct
 from src.models.supplier_product_alias import SupplierProductAlias
 
@@ -117,3 +118,33 @@ def test_demo_workspace_does_not_duplicate_stock(client, db, admin_headers):
 
     assert inventory.quantity == 5
     assert db.query(PurchaseOrder).filter(PurchaseOrder.notes.like("Fulcrum demo workspace%")).count() == 1
+
+
+def test_launch_readiness_reports_pending_supplier_imports(client, db):
+    supplier = Supplier(name="Readiness Supplier", currency="USD")
+    product = Product(name="Readiness Product", sku="READY-1")
+    db.add_all([StoreSettings(store_name="Ready Store"), supplier, product])
+    db.commit()
+    db.refresh(supplier)
+    db.refresh(product)
+
+    db.add(
+        SupplierDocumentImport(
+            file_name="alibaba-ready.pdf",
+            content_type="application/pdf",
+            status="pending",
+            mode="create",
+            extracted_data={"items": []},
+            warnings=["Needs product match"],
+        )
+    )
+    db.commit()
+
+    response = client.get("/api/v1/onboarding/launch-readiness")
+
+    assert response.status_code == 200
+    report = response.json()
+    sections = {section["key"]: section for section in report["sections"]}
+    assert report["status"] in {"blocked", "needs_attention"}
+    assert sections["supplier_documents"]["status"] == "needs_attention"
+    assert sections["supplier_documents"]["metrics"]["pending_imports"] == 1

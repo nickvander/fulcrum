@@ -13,6 +13,7 @@ from src.models.product import Product
 from src.models.purchase_order import PurchaseOrder
 from src.models.store_settings import StoreSettings
 from src.models.supplier import Supplier
+from src.models.supplier_document_import import SupplierDocumentImport
 from src.models.supplier_product import SupplierProduct
 from src.models.supplier_product_alias import SupplierProductAlias
 from src.models.user import User
@@ -299,4 +300,123 @@ def create_demo_workspace(
             if created_resources
             else "Demo workspace already exists. No duplicate stock was added."
         ),
+    }
+
+
+@router.get("/launch-readiness")
+def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
+    """
+    Summarize whether a workspace is ready for customer go-live.
+    """
+    status = read_onboarding_status(db)
+    steps_by_key = {step["key"]: step for step in status["steps"]}
+
+    product_count = steps_by_key["products"]["count"]
+    supplier_count = steps_by_key["suppliers"]["count"]
+    po_count = steps_by_key["purchase_orders"]["count"]
+    inventory_movement_count = steps_by_key["inventory"]["count"]
+    marketplace_count = steps_by_key["marketplaces"]["count"]
+
+    pending_import_count = (
+        db.query(func.count(SupplierDocumentImport.id))
+        .filter(SupplierDocumentImport.status == "pending")
+        .scalar()
+        or 0
+    )
+    demo_product_count = (
+        db.query(func.count(Product.id))
+        .filter(Product.sku == DEMO_PRODUCT_SKU)
+        .scalar()
+        or 0
+    )
+    demo_supplier_count = (
+        db.query(func.count(Supplier.id))
+        .filter(Supplier.name == DEMO_SUPPLIER_NAME)
+        .scalar()
+        or 0
+    )
+    demo_po_count = (
+        db.query(func.count(PurchaseOrder.id))
+        .filter(PurchaseOrder.notes == DEMO_PO_NOTES)
+        .scalar()
+        or 0
+    )
+    demo_data_count = demo_product_count + demo_supplier_count + demo_po_count
+
+    sections = [
+        {
+            "key": "setup",
+            "label": "Setup",
+            "status": "ready" if status["complete"] else "blocked",
+            "description": "Required onboarding steps are complete." if status["complete"] else "Required setup steps still need attention.",
+            "action_label": "Review checklist",
+            "route": "/dashboard",
+            "metrics": {
+                "completed_required": status["completed_required"],
+                "total_required": status["total_required"],
+            },
+        },
+        {
+            "key": "inventory",
+            "label": "Inventory",
+            "status": "ready" if product_count and inventory_movement_count else "blocked",
+            "description": "Products and audited inventory movement exist." if product_count and inventory_movement_count else "Create products and receive or adjust stock before launch.",
+            "action_label": "Open products",
+            "route": "/products",
+            "metrics": {
+                "products": product_count,
+                "inventory_movements": inventory_movement_count,
+            },
+        },
+        {
+            "key": "supplier_documents",
+            "label": "Supplier documents",
+            "status": "ready" if pending_import_count == 0 else "needs_attention",
+            "description": "No supplier document imports are waiting for review." if pending_import_count == 0 else "Review pending supplier document imports before they become purchase orders.",
+            "action_label": "Open PO imports",
+            "route": "/suppliers/po",
+            "metrics": {
+                "pending_imports": pending_import_count,
+                "purchase_orders": po_count,
+                "suppliers": supplier_count,
+            },
+        },
+        {
+            "key": "demo_data",
+            "label": "Demo data",
+            "status": "ready" if demo_data_count == 0 else "needs_attention",
+            "description": "No demo records were detected." if demo_data_count == 0 else "Demo records exist. Review or remove them before using Fulcrum as the source of truth.",
+            "action_label": "Review demo PO",
+            "route": "/suppliers/po",
+            "metrics": {
+                "demo_records": demo_data_count,
+            },
+        },
+        {
+            "key": "marketplaces",
+            "label": "Marketplace connections",
+            "status": "optional" if marketplace_count == 0 else "ready",
+            "description": "Marketplace credentials are configured." if marketplace_count else "Optional for launch. Connect channels after internal inventory is reliable.",
+            "action_label": "Open marketplaces",
+            "route": "/marketplaces",
+            "metrics": {
+                "credentials": marketplace_count,
+            },
+        },
+    ]
+
+    blocking = [section for section in sections if section["status"] == "blocked"]
+    needs_attention = [section for section in sections if section["status"] == "needs_attention"]
+    overall_status = "blocked" if blocking else "needs_attention" if needs_attention else "ready"
+
+    return {
+        "status": overall_status,
+        "ready": overall_status == "ready",
+        "summary": {
+            "blocked": len(blocking),
+            "needs_attention": len(needs_attention),
+            "ready": sum(1 for section in sections if section["status"] == "ready"),
+            "optional": sum(1 for section in sections if section["status"] == "optional"),
+        },
+        "sections": sections,
     }

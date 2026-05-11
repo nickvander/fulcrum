@@ -42,6 +42,14 @@
 
         <!-- Step 2: Preview -->
         <div *ngIf="step === 'preview'" class="preview-step">
+            <div class="review-context" *ngIf="importReviewId">
+                <mat-icon>fact_check</mat-icon>
+                <div>
+                    <strong>Import review #{{ importReviewId }}</strong>
+                    <p>Confirm the supplier and Fulcrum product matches before creating a draft PO. Stock is not changed until the PO is received.</p>
+                </div>
+            </div>
+
             <!-- Confidence Badge -->
             <div class="confidence-badge" [ngClass]="getConfidenceColor()" *ngIf="extractedData">
                 <mat-icon>{{ extractedData.confidence_score >= 0.7 ? 'verified' : 'info' }}</mat-icon>
@@ -50,6 +58,14 @@
             </div>
 
             <!-- Warnings -->
+            <div *ngIf="reviewWarnings.length" class="review-warnings">
+                <mat-icon>priority_high</mat-icon>
+                <div>
+                    <strong>Needs review</strong>
+                    <p *ngFor="let warn of reviewWarnings">{{ warn }}</p>
+                </div>
+            </div>
+
             <div *ngIf="extractedData?.warnings?.length" class="warnings">
                 <mat-chip-set>
                     <mat-chip *ngFor="let warn of extractedData!.warnings" color="warn">
@@ -194,7 +210,7 @@
         <button *ngIf="step === 'preview'" mat-raised-button color="primary"
             [disabled]="!supplierId || editableItems.length === 0" (click)="createPurchaseOrder()">
             <mat-icon>add_shopping_cart</mat-icon>
-            {{ t('purchaseOrders.createPo') }}
+            Approve & create PO
         </button>
     </mat-dialog-actions>
 </ng-container>

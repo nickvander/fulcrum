@@ -153,10 +153,31 @@ questions by turning scattered setup steps into a visible path.
 - Focused tests passed:
   - backend onboarding API, including demo workspace idempotency
   - dashboard component demo workspace action
+- Added backend `/api/v1/onboarding/launch-readiness` report:
+  - summarizes setup, inventory, supplier document imports, demo data, and
+    marketplace credential status
+  - flags unresolved supplier imports before customer go-live
+  - keeps marketplace credentials optional and does not imply stock sync
+- Added supplier document import review queue:
+  - stores uploaded supplier PDF/image/text parse results as pending reviews
+  - shows pending reviews on the Purchase Orders page before the PO table
+  - reopens pending reviews with extracted items, confidence, warnings, and
+    editable Fulcrum product matches
+  - approval creates a draft PO only; internal inventory is not changed until
+    normal PO receiving
+  - reject action removes bad imports from the queue without creating a PO
+  - extracted vendor names now preselect an existing supplier when possible
+- Added sample artifact:
+  - `backend/samples/purchase_orders/alibaba_import_review_sample.txt`
+- Added focused backend tests for:
+  - launch readiness pending import reporting
+  - supplier import review creation/listing/rejection
+  - review approval creating a draft PO without inventory adjustment
 
 ## Recommended Next Slice
 
-1. Add import review queue for supplier PDFs/images before stock writes.
-2. Add a launch readiness report that summarizes setup, unresolved imports,
-   test data, stock health, and marketplace credential status.
-3. Add a demo-data cleanup warning/path before customers go live.
+1. Add demo-data cleanup guardrails before customers go live.
+2. Add one-click create/match assistance for unmatched supplier import lines.
+3. Add marketplace allocation planning separate from raw internal stock.
+4. Add import review history filters so approved/rejected documents remain
+   auditable without cluttering the active queue.

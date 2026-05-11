@@ -1,11 +1,11 @@
 # Progress Log
 
-**Status:** Onboarding checklist, correction flow, and demo workspace implemented **Current Phase:** Phase 7 -
-Operational Reliability & Growth
+**Status:** Launch readiness and supplier import review queue implemented **Current Phase:** Phase 7 -
+Customer Onboarding Reliability
 
 ## Current Work
 
-- [84-customer-onboarding-readiness.md](./84-customer-onboarding-readiness.md)
+- [85-customer-onboarding-next.md](./85-customer-onboarding-next.md)
 
 ## Important Product Decision
 
@@ -15,15 +15,19 @@ Operational Reliability & Growth
 
 ## Next Session Starting Point
 
-- Add supplier document import review queue before PO/stock writes.
-- Add launch readiness report for setup health, unresolved imports, test data,
-  stock health, and marketplace credential status.
 - Add demo-data cleanup warning/path before customers go live.
+- Add one-click product/supplier alias creation for unmatched supplier import
+  lines.
+- Add import review history filters for approved/rejected documents.
+- Start marketplace allocation planning as a separate workflow from receiving.
 - Keep old quick wins in `work/future/`; they are useful later but secondary to
   onboarding customers safely.
 
 ## Recent Archive
 
+- [84-customer-onboarding-readiness.md](../archive/84-customer-onboarding-readiness.md) -
+  Launch readiness report, supplier import review queue, Alibaba sample import,
+  and draft PO approval smoke
 - [83-platform-improvements-roadmap.md](../archive/83-platform-improvements-roadmap.md) -
   Supplier alias learning, review/undo, live dummy PO transaction, and
   marketplace allocation guardrails

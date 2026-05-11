@@ -70,9 +70,139 @@
     display: block;
 }
 
+.readiness-panel {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg, #fff);
+    padding: 20px;
+    margin: 24px 0 8px;
+
+    &.ready {
+        border-color: rgba(76, 175, 80, 0.45);
+    }
+
+    &.blocked {
+        border-color: rgba(244, 67, 54, 0.45);
+    }
+}
+
+.readiness-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 18px;
+
+    .eyebrow {
+        margin: 0 0 6px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0;
+    }
+
+    h2 {
+        margin: 0;
+        color: var(--text-main);
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 6px 0 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+        max-width: 760px;
+    }
+}
+
+.readiness-score {
+    display: grid;
+    place-items: center;
+    min-width: 104px;
+    min-height: 78px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-surface-alt, #fafbfc);
+
+    span {
+        color: var(--text-main);
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    small {
+        color: var(--text-secondary);
+        font-size: 12px;
+    }
+}
+
+.readiness-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.readiness-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+
+    mat-icon {
+        color: var(--text-secondary);
+    }
+
+    &.ready mat-icon {
+        color: #2e7d32;
+    }
+
+    &.blocked mat-icon {
+        color: #c62828;
+    }
+
+    &.needs-attention mat-icon {
+        color: #b45309;
+    }
+
+    h3 {
+        margin: 0;
+        color: var(--text-main);
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    p {
+        margin: 4px 0 0;
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.4;
+    }
+}
+
 .loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 400px;
+}
+
+@media (max-width: 900px) {
+    .readiness-header,
+    .readiness-item {
+        grid-template-columns: 1fr;
+    }
+
+    .readiness-header {
+        flex-direction: column;
+    }
+
+    .readiness-grid {
+        grid-template-columns: 1fr;
+    }
 }
