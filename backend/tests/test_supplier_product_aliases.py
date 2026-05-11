@@ -56,3 +56,29 @@ def test_supplier_alias_can_be_deactivated_for_undo(db, test_product, alias_supp
     assert deactivated is not None
     assert deactivated.is_active is False
     assert crud_alias.get_active_by_supplier(db=db, supplier_id=alias_supplier.id) == []
+
+
+def test_supplier_products_endpoint_includes_aliases(client, db, test_product, alias_supplier):
+    crud_purchase_order.create_with_items(
+        db=db,
+        obj_in=PurchaseOrderCreate(
+            supplier_id=alias_supplier.id,
+            currency="USD",
+            items=[
+                PurchaseOrderItemCreate(
+                    product_id=test_product.id,
+                    quantity_ordered=1,
+                    unit_cost=9.0,
+                    supplier_sku="ALI-REVIEW-1",
+                    supplier_product_name="Alibaba Review Widget",
+                )
+            ],
+        ),
+    )
+
+    response = client.get(f"/api/v1/suppliers/{alias_supplier.id}/products")
+
+    assert response.status_code == 200
+    supplier_products = response.json()
+    assert supplier_products[0]["aliases"][0]["alias_sku"] == "ALI-REVIEW-1"
+    assert supplier_products[0]["aliases"][0]["alias_name"] == "Alibaba Review Widget"
