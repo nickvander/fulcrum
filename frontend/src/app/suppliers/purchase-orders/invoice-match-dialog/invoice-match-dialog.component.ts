@@ -150,6 +150,12 @@ export interface InvoiceMatchDialogData {
           <mat-icon>check_circle</mat-icon>
           {{ t('purchaseOrders.invoiceMatching.applyValues') }}
         </button>
+        <button mat-raised-button color="accent" (click)="receiveMatchedItems()"
+            [disabled]="getReceivableMatchCount() === 0"
+            [matTooltip]="t('purchaseOrders.invoiceMatching.receiveTooltip')">
+          <mat-icon>inventory_2</mat-icon>
+          {{ t('purchaseOrders.invoiceMatching.receiveMatched') }}
+        </button>
       </mat-dialog-actions>
     </ng-container>
   `,
@@ -283,5 +289,17 @@ export class InvoiceMatchDialogComponent {
       matchResult: this.data.matchResult
     });
   }
-}
 
+  receiveMatchedItems(): void {
+    this.dialogRef.close({
+      action: 'receive',
+      matchResult: this.data.matchResult
+    });
+  }
+
+  getReceivableMatchCount(): number {
+    return (this.data.matchResult.matches || []).filter(
+      (match) => !!match.po_item_id && match.match_status !== 'unmatched' && match.invoice_quantity > 0
+    ).length;
+  }
+}

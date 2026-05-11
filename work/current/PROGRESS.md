@@ -6,6 +6,7 @@ Marketplace Integration Engine
 ## Current Work
 
 - [80-quick-wins-plan.md](./80-quick-wins-plan.md)
+- [82-po-receiving-to-inventory-workflow.md](./82-po-receiving-to-inventory-workflow.md)
 
 ## Recent Archive
 

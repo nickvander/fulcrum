@@ -401,11 +401,13 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     const index = this.items.length;
 
     const itemGroup = this.fb.group({
+      id: [item?.id || null],
       product_id: [item?.product_id || null, Validators.required],
       variant_id: [item?.variant_id || null],
       product_name: [item?.product_name || item?.product?.name || ''],
       supplier_product_name: [item?.supplier_product_name || ''],
       quantity_ordered: [item?.quantity_ordered || 1, [Validators.required, Validators.min(0)]],
+      quantity_received: [item?.quantity_received || 0],
       unit_cost: [item?.unit_cost || 0, [Validators.required, Validators.min(0)]],
       show_variants: [item?.variant_distributions?.length > 0 ? true : false],
       target_quantity: [item?.quantity_ordered || 1],
@@ -828,11 +830,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         shipping_cost: formValue.shipping_cost,
         tax_amount: formValue.import_cost,
         other_costs: formValue.other_costs,
-        items: formValue.items.map((item: any) => ({
-          product_id: item.product_id,
-          quantity_ordered: item.quantity_ordered,
-          unit_cost: item.unit_cost
-        })),
+        items: this.flattenItemsForBackend(formValue.items),
         payment_status: formValue.payment_status,
         payment_method: formValue.payment_method,
         paid_by_user_id: formValue.paid_by_user_id,
@@ -1001,19 +999,23 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  private uploadFileInternal(file: File): void {
+  private uploadFileInternal(file: File, showToast = true): void {
     if (file.size > 10 * 1024 * 1024) {
       this.snackBar.open('File too large. Max 10MB.', 'Close', { duration: 3000 });
       return;
     }
     this.suppliersService.uploadInvoice(this.poId!, file).subscribe({
       next: () => {
-        this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
+        if (showToast) {
+          this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
+        }
         this.loadInvoices();
       },
       error: (err) => {
         console.error('Upload failed', err);
-        this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
+        if (showToast) {
+          this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
+        }
       }
     });
   }
@@ -1038,8 +1040,21 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     });
   }
 
-  getInvoiceFileUrl(path: string): string {
+  getInvoiceFileUrl(path: string | null): string {
+    if (!path) return '#';
     return this.suppliersService.getInvoiceFileUrl(path);
+  }
+
+  getInvoiceDisplayName(invoice: SupplierInvoice): string {
+    if (invoice.invoice_number) {
+      return invoice.invoice_number;
+    }
+
+    if (invoice.file_path) {
+      return invoice.file_path.split('/').pop() || 'Invoice';
+    }
+
+    return 'Invoice';
   }
 
   onParseAndMatchSelected(event: any): void {
@@ -1082,6 +1097,10 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             return;
           }
 
+          if (this.poId) {
+            this.uploadFileInternal(file, false);
+          }
+
           // Matched this PO - show comparison dialog
           const dialogRef = this.dialog.open(InvoiceMatchDialogComponent, {
             width: '900px',
@@ -1104,6 +1123,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           dialogRef.afterClosed().subscribe((dialogResult) => {
             if (dialogResult?.action === 'apply') {
               this.applyInvoiceValuesToItems(dialogResult.matchResult);
+            } else if (dialogResult?.action === 'receive') {
+              this.receiveMatchedInvoiceItems(dialogResult.matchResult);
             }
           });
         } else {
@@ -1120,6 +1141,15 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
   }
 
   private applyInvoiceValuesToItems(matchResult: any): void {
+    if (this.isLocked) {
+      this.snackBar.open(
+        this.translocoService.translate('purchaseOrders.invoiceMatching.unlockToApply'),
+        this.translocoService.translate('common.close'),
+        { duration: 4000 }
+      );
+      return;
+    }
+
     // Apply matched invoice values to PO items
     let updatedCount = 0;
 
@@ -1132,9 +1162,18 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
         if (itemIndex >= 0) {
           const item = this.items.at(itemIndex);
-          // Update unit cost from invoice
-          if (match.invoice_unit_cost && match.invoice_unit_cost !== item.get('unitCost')?.value) {
-            item.patchValue({ unitCost: match.invoice_unit_cost });
+          const updates: any = {};
+
+          if (match.invoice_unit_cost && match.invoice_unit_cost !== item.get('unit_cost')?.value) {
+            updates.unit_cost = match.invoice_unit_cost;
+          }
+
+          if (match.invoice_quantity && match.invoice_quantity !== item.get('quantity_ordered')?.value) {
+            updates.quantity_ordered = match.invoice_quantity;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            item.patchValue(updates);
             updatedCount++;
           }
         }
@@ -1154,6 +1193,64 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         { duration: 3000 }
       );
     }
+  }
+
+  private receiveMatchedInvoiceItems(matchResult: any): void {
+    if (!this.poId) return;
+
+    const itemsToReceive = (matchResult.matches || [])
+      .map((match: any) => {
+        const itemControl = this.items.controls.find(
+          (ctrl) => ctrl.get('id')?.value === match.po_item_id
+        );
+
+        if (!itemControl || !match.invoice_quantity || match.match_status === 'unmatched') {
+          return null;
+        }
+
+        const ordered = Number(itemControl.get('quantity_ordered')?.value || 0);
+        const received = Number(itemControl.get('quantity_received')?.value || 0);
+        const remaining = Math.max(0, ordered - received);
+        const quantity = Math.min(Number(match.invoice_quantity), remaining);
+
+        if (quantity <= 0) {
+          return null;
+        }
+
+        return {
+          po_item_id: itemControl.get('id')?.value,
+          product_id: itemControl.get('product_id')?.value,
+          variant_id: itemControl.get('variant_id')?.value,
+          quantity
+        };
+      })
+      .filter((item: any) => !!item);
+
+    if (itemsToReceive.length === 0) {
+      this.snackBar.open(
+        this.translocoService.translate('purchaseOrders.invoiceMatching.noReceivableItems'),
+        this.translocoService.translate('common.close'),
+        { duration: 4000 }
+      );
+      return;
+    }
+
+    this.suppliersService.receivePurchaseOrderItems(this.poId, itemsToReceive).subscribe({
+      next: () => {
+        this.snackBar.open(
+          this.translocoService.translate('purchaseOrders.invoiceMatching.receivedItems', {
+            count: itemsToReceive.length
+          }),
+          this.translocoService.translate('common.close'),
+          { duration: 4000 }
+        );
+        this.loadPurchaseOrder(this.poId!);
+      },
+      error: (err) => {
+        const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.invoiceMatching.receiveFailed');
+        this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
+      }
+    });
   }
 
   private populateFormFromExtraction(result: DocumentParseResult): void {

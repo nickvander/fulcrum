@@ -19,6 +19,10 @@
                             }}</h3>
                         <span class="product-sku" *ngIf="po.items[i].product?.sku">SKU: {{ po.items[i].product?.sku
                             }}</span>
+                        <span class="variant-chip" *ngIf="getVariantName(po.items[i])">
+                            {{ getVariantName(po.items[i]) }}
+                            <span *ngIf="getVariantSku(po.items[i])">({{ getVariantSku(po.items[i]) }})</span>
+                        </span>
                     </div>
                 </div>
 

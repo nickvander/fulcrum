@@ -47,21 +47,40 @@ class PurchaseOrderService:
 
         updated_items_count = 0
 
-        # Map current items for easy lookup
-        po_items_map = {item.product_id: item for item in po.items}
+        # Map current items for exact lookup. PO lines can repeat the same product
+        # for variants or different costs, so prefer po_item_id when the client has it.
+        po_items_by_id = {item.id: item for item in po.items}
+        po_items_by_product_variant = {
+            (item.product_id, item.variant_id): item for item in po.items
+        }
 
         for receive_data in received_items:
-            pid = receive_data.get("product_id") or receive_data.product_id
-            qty = receive_data.get("quantity") or receive_data.quantity
+            if isinstance(receive_data, dict):
+                po_item_id = receive_data.get("po_item_id")
+                pid = receive_data.get("product_id")
+                variant_id = receive_data.get("variant_id")
+                qty = receive_data.get("quantity")
+            else:
+                po_item_id = getattr(receive_data, "po_item_id", None)
+                pid = getattr(receive_data, "product_id", None)
+                variant_id = getattr(receive_data, "variant_id", None)
+                qty = getattr(receive_data, "quantity", None)
             
-            if not pid or not qty:
+            if not pid or qty is None or qty <= 0:
                 continue
 
-            item = po_items_map.get(pid)
+            item = po_items_by_id.get(po_item_id) if po_item_id else None
+            if not item:
+                item = po_items_by_product_variant.get((pid, variant_id))
+            if not item and variant_id is None:
+                item = po_items_by_product_variant.get((pid, None))
             if not item:
                 # Warning: Item not in PO? For now, skip or error.
                 # Strictly only allow receiving items that are on the PO.
                 continue
+
+            pid = item.product_id
+            variant_id = item.variant_id
             
             # Update PO Item
             # Ideally validation checks delta vs ordered, but allow over-receiving for flexibility
@@ -110,6 +129,7 @@ class PurchaseOrderService:
                 db=db,
                 product_id=pid,
                 adjustment=qty,
+                variant_id=item.variant_id,
                 reason=f"Received PO #{po.id}",
 
                 user_id=user.email if user else "system" 

@@ -12,6 +12,7 @@ class InventoryService:
         db: Session,
         product_id: int,
         adjustment: int,
+        variant_id: Optional[int] = None,
         reason: Optional[str] = None,
         location: str = "default",
         user_id: Optional[str] = "system"
@@ -24,6 +25,7 @@ class InventoryService:
         # 1. Create audit log
         inventory_adjustment = InventoryAdjustment(
             product_id=product_id,
+            variant_id=variant_id,
             adjustment=adjustment,
             reason=reason,
             timestamp=datetime.utcnow(),
@@ -34,6 +36,7 @@ class InventoryService:
         # 2. Get existing stock record
         existing_inventory = db.query(InventoryItem).filter(
             InventoryItem.product_id == product_id,
+            InventoryItem.variant_id == variant_id,
             InventoryItem.location == location
         ).first()
 
@@ -47,6 +50,7 @@ class InventoryService:
         else:
             final_item = InventoryItem(
                 product_id=product_id,
+                variant_id=variant_id,
                 quantity=new_qty,
                 location=location
             )

@@ -59,8 +59,12 @@ export class ReceivingDialogComponent implements OnInit {
             const remaining = Math.max(0, item.quantity_ordered - (item.quantity_received || 0));
 
             this.items.push(this.fb.group({
+                po_item_id: [item.id || null],
                 product_id: [item.product_id],
-                product_name: [item.product_id], // todo: need product name lookup or enrichment
+                variant_id: [item.variant_id || null],
+                variant_name: [item.variant?.name || null],
+                variant_sku: [item.variant?.sku || null],
+                product_name: [item.product?.name || item.product_name || `Product #${item.product_id}`],
                 quantity_ordered: [item.quantity_ordered],
                 quantity_received_so_far: [item.quantity_received || 0],
                 quantity_to_receive: [remaining, [Validators.min(0)]]
@@ -95,6 +99,16 @@ export class ReceivingDialogComponent implements OnInit {
         return path;
     }
 
+    getVariantName(item: PurchaseOrderItem): string | null {
+        if (!item.variant_id || !item.product?.variants?.length) return null;
+        return item.product.variants.find((variant: any) => variant.id === item.variant_id)?.name || null;
+    }
+
+    getVariantSku(item: PurchaseOrderItem): string | null {
+        if (!item.variant_id || !item.product?.variants?.length) return null;
+        return item.product.variants.find((variant: any) => variant.id === item.variant_id)?.sku || null;
+    }
+
     onCancel(): void {
         this.dialogRef.close();
     }
@@ -105,7 +119,9 @@ export class ReceivingDialogComponent implements OnInit {
             const itemsToReceive = formValue.items
                 .filter((item: any) => item.quantity_to_receive > 0)
                 .map((item: any) => ({
+                    po_item_id: item.po_item_id,
                     product_id: item.product_id,
+                    variant_id: item.variant_id,
                     quantity: item.quantity_to_receive
                 }));
 

@@ -17,9 +17,9 @@
                 (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
                 <mat-icon class="upload-icon">cloud_upload</mat-icon>
                 <p>{{ t('purchaseOrders.dropFileHere') }}</p>
-                <p class="hint">{{ t('purchaseOrders.supportedFormats') }}: PDF, HTML, TXT</p>
+                <p class="hint">{{ t('purchaseOrders.supportedFormats') }}: PDF, JPG, PNG, AVIF, HTML, TXT</p>
 
-                <input type="file" #fileInput hidden accept=".pdf,.html,.htm,.txt" (change)="onFileSelected($event)">
+                <input type="file" #fileInput hidden accept=".pdf,.jpg,.jpeg,.png,.avif,.html,.htm,.txt" (change)="onFileSelected($event)">
                 <button mat-stroked-button color="primary" (click)="fileInput.click()">
                     <mat-icon>folder_open</mat-icon>
                     {{ t('purchaseOrders.browseFiles') }}
