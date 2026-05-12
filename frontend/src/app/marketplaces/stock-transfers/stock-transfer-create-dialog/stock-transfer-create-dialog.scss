@@ -1,0 +1,83 @@
+.create-dialog {
+  min-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+
+  .dest-field {
+    flex: 1;
+  }
+  .notes-field {
+    flex: 2;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.product-results {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+}
+
+.product-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .product-name {
+    flex: 1;
+  }
+
+  code {
+    font-size: 0.8rem;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+}
+
+.empty-text {
+  padding: 16px;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  margin: 0;
+}
+
+.selected-table {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.product-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  code {
+    font-size: 0.75rem;
+    align-self: flex-start;
+  }
+}
+
+.qty-field {
+  width: 100px;
+}

@@ -1,0 +1,109 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>{{ t('stockTransfers.createDialog.title') }}</h2>
+  <mat-dialog-content class="create-dialog">
+    <div class="form-row">
+      <mat-form-field appearance="outline" class="dest-field">
+        <mat-label>{{ t('stockTransfers.createDialog.destination') }}</mat-label>
+        <mat-select [(ngModel)]="destLocation" data-testid="dest-location-select">
+          @for (option of destChoices; track option.value) {
+            <mat-option [value]="option.value">{{ t(option.labelKey) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="notes-field">
+        <mat-label>{{ t('stockTransfers.createDialog.notesLabel') }}</mat-label>
+        <input matInput [(ngModel)]="notes" data-testid="notes-input" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ t('stockTransfers.createDialog.searchProducts') }}</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        placeholder="{{ t('stockTransfers.createDialog.searchPlaceholder') }}"
+        data-testid="product-search"
+      />
+    </mat-form-field>
+
+    <div class="product-results" data-testid="product-results">
+      @if (filteredProducts.length === 0) {
+        <p class="empty-text">{{ t('stockTransfers.createDialog.noMatches') }}</p>
+      } @else {
+        @for (product of filteredProducts; track product.id) {
+          <button
+            type="button"
+            class="product-row"
+            (click)="add(product)"
+            [attr.data-testid]="'product-pick-' + product.id"
+          >
+            <mat-icon>add</mat-icon>
+            <span class="product-name">{{ product.name }}</span>
+            @if (product.sku) {
+              <code>{{ product.sku }}</code>
+            }
+          </button>
+        }
+      }
+    </div>
+
+    @if (selected.length > 0) {
+      <h3>{{ t('stockTransfers.createDialog.selected') }}</h3>
+      <table mat-table [dataSource]="selected" class="selected-table" data-testid="selected-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.createDialog.col.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="product-cell">
+              <span>{{ row.productName }}</span>
+              @if (row.sku) {
+                <code>{{ row.sku }}</code>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="qty">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.createDialog.col.qty') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
+              <input
+                matInput
+                type="number"
+                min="1"
+                [ngModel]="row.qtyPlanned"
+                (ngModelChange)="updateQty(row, $event)"
+                [attr.data-testid]="'qty-input-' + row.productId"
+              />
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="warn" (click)="remove(row)" [attr.aria-label]="t('common.remove')">
+              <mat-icon>close</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="selectedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: selectedColumns"></tr>
+      </table>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">{{ t('common.cancel') }}</button>
+    <button
+      mat-flat-button
+      color="primary"
+      [disabled]="!canSave()"
+      (click)="save()"
+      data-testid="save-transfer-button"
+    >
+      {{ t('stockTransfers.createDialog.save') }}
+    </button>
+  </mat-dialog-actions>
+</ng-container>

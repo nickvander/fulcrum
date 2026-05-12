@@ -4,6 +4,7 @@
         "cancel": "Cancelar",
         "close": "Cerrar",
         "delete": "Eliminar",
+        "remove": "Quitar",
         "edit": "Editar",
         "add": "Agregar",
         "create": "Crear",
@@ -95,6 +96,8 @@
         "suppliers": "Proveedores",
         "expenses": "Gastos",
         "marketplaces": "Mercados",
+        "marketplaceChannels": "Canales",
+        "stockTransfers": "Transferencias de stock",
         "marketing": "Marketing",
         "management": "Administración",
         "users": "Usuarios",
@@ -675,6 +678,87 @@
         "start": "Inicio",
         "end": "Fin",
         "to": "a"
+    },
+    "stockTransfers": {
+        "title": "Transferencias de stock",
+        "subtitle": "Envía inventario a las bodegas de MercadoLibre Full o Amazon FBA.",
+        "newTransfer": "Nueva transferencia",
+        "view": "Ver",
+        "backToList": "Volver a transferencias",
+        "empty": {
+            "title": "Aún no hay transferencias",
+            "subtitle": "Crea una transferencia cuando quieras enviar inventario a una bodega de marketplace."
+        },
+        "cols": {
+            "id": "ID",
+            "status": "Estado",
+            "route": "Ruta",
+            "units": "Recibidas / Planeadas",
+            "createdAt": "Creada"
+        },
+        "filter": {
+            "all": "Todas",
+            "draft": "Borrador",
+            "shipped": "Enviada",
+            "partially_received": "Parcial",
+            "received": "Recibida",
+            "cancelled": "Cancelada"
+        },
+        "status": {
+            "draft": "Borrador",
+            "shipped": "Enviada",
+            "partially_received": "Recibida parcial",
+            "received": "Recibida",
+            "cancelled": "Cancelada"
+        },
+        "locations": {
+            "internal": "Bodega propia",
+            "mlFull": "MercadoLibre Full",
+            "amazonFba": "Amazon FBA"
+        },
+        "createDialog": {
+            "title": "Nueva transferencia de stock",
+            "destination": "Destino",
+            "notesLabel": "Notas (opcional)",
+            "searchProducts": "Buscar productos",
+            "searchPlaceholder": "Filtra por nombre o SKU",
+            "selected": "Productos seleccionados",
+            "noMatches": "Sin coincidencias",
+            "save": "Crear borrador",
+            "col": {
+                "product": "Producto",
+                "qty": "Unidades"
+            }
+        },
+        "receiveDialog": {
+            "title": "Recibir transferencia #{{id}}",
+            "subtitle": "Captura las cantidades confirmadas por la bodega de destino.",
+            "confirm": "Registrar recepción",
+            "col": {
+                "shipped": "Enviadas",
+                "alreadyReceived": "Recibidas",
+                "toReceive": "Recibir ahora"
+            }
+        },
+        "actions": {
+            "ship": "Marcar enviada",
+            "receive": "Recibir productos",
+            "cancel": "Cancelar borrador"
+        },
+        "detail": {
+            "title": "Transferencia #{{id}}",
+            "unitsPlanned": "Unidades planeadas",
+            "unitsReceived": "Unidades recibidas",
+            "shippedAt": "Enviada",
+            "receivedAt": "Recibida",
+            "notFound": "Transferencia no encontrada.",
+            "col": {
+                "product": "Producto",
+                "planned": "Planeada",
+                "shipped": "Enviada",
+                "received": "Recibida"
+            }
+        }
     },
     "marketplaces": {
         "title": "Mercados",

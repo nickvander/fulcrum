@@ -44,10 +44,24 @@
           </div>
         </mat-expansion-panel>
 
-        <a routerLink="/marketplaces" routerLinkActive="active" class="nav-item">
-          <mat-icon>store</mat-icon>
-          <span>{{ t('nav.marketplaces') }}</span>
-        </a>
+        <mat-expansion-panel class="nav-expansion" [expanded]="marketplacesExpanded"
+          (opened)="marketplacesExpanded = true" (closed)="marketplacesExpanded = false">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>store</mat-icon>
+              <span>{{ t('nav.marketplaces') }}</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="sub-nav">
+            <a routerLink="/marketplaces" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+              class="sub-nav-item">
+              <span>{{ t('nav.marketplaceChannels') }}</span>
+            </a>
+            <a routerLink="/marketplaces/transfers" routerLinkActive="active" class="sub-nav-item">
+              <span>{{ t('nav.stockTransfers') }}</span>
+            </a>
+          </div>
+        </mat-expansion-panel>
 
         <a routerLink="/marketing" routerLinkActive="active" class="nav-item">
           <mat-icon>campaign</mat-icon>

@@ -1,0 +1,109 @@
+from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+
+from src.api.dependencies import get_current_active_user
+from src.crud.crud_stock_transfer import stock_transfer as crud_stock_transfer
+from src.database import get_db
+from src.models.user import User
+from src.schemas import stock_transfer as st_schema
+from src.services.stock_transfer_service import stock_transfer_service
+
+router = APIRouter()
+
+
+@router.post("/", response_model=st_schema.StockTransfer)
+def create_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_in: st_schema.StockTransferCreate,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return stock_transfer_service.create_draft(
+        db=db, transfer_in=transfer_in, user=current_user
+    )
+
+
+@router.get("/", response_model=List[st_schema.StockTransfer])
+def list_stock_transfers(
+    *,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return crud_stock_transfer.get_multi(db=db, skip=skip, limit=limit, status=status)
+
+
+@router.get("/{transfer_id}", response_model=st_schema.StockTransfer)
+def read_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    transfer = crud_stock_transfer.get(db=db, id=transfer_id)
+    if not transfer:
+        raise HTTPException(status_code=404, detail="Stock transfer not found")
+    return transfer
+
+
+@router.put("/{transfer_id}", response_model=st_schema.StockTransfer)
+def update_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    transfer_in: st_schema.StockTransferUpdate,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return stock_transfer_service.update_draft(
+        db=db, transfer_id=transfer_id, transfer_in=transfer_in
+    )
+
+
+@router.post("/{transfer_id}/ship", response_model=st_schema.StockTransfer)
+def ship_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return stock_transfer_service.ship(db=db, transfer_id=transfer_id, user=current_user)
+
+
+@router.post("/{transfer_id}/receive", response_model=st_schema.StockTransfer)
+def receive_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    received_items: List[st_schema.StockTransferReceiveItem],
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return stock_transfer_service.receive_items(
+        db=db,
+        transfer_id=transfer_id,
+        received_items=received_items,
+        user=current_user,
+    )
+
+
+@router.post("/{transfer_id}/cancel", response_model=st_schema.StockTransfer)
+def cancel_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return stock_transfer_service.cancel(db=db, transfer_id=transfer_id)
+
+
+@router.delete("/{transfer_id}")
+def delete_stock_transfer(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    stock_transfer_service.delete_draft(db=db, transfer_id=transfer_id)
+    return {"deleted": transfer_id}

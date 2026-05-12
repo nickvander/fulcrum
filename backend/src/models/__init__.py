@@ -15,6 +15,7 @@ from .product_template import ProductTemplate
 
 from .purchase_order import PurchaseOrder
 from .purchase_order_item import PurchaseOrderItem
+from .stock_transfer import StockTransfer, StockTransferItem, StockTransferStatus
 from .supplier_invoice import SupplierInvoice
 from .supplier_document_import import SupplierDocumentImport
 from .supplier_product import SupplierProduct
@@ -62,6 +63,9 @@ __all__ = [
     "ProductTemplate",
     "PurchaseOrder",
     "PurchaseOrderItem",
+    "StockTransfer",
+    "StockTransferItem",
+    "StockTransferStatus",
     "SupplierInvoice",
     "SupplierDocumentImport",
     "SupplierProduct",

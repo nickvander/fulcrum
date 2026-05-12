@@ -13,6 +13,7 @@ from src.api.v1.endpoints import (
     audit_logs,
     bulk_users,
     purchase_orders,
+    stock_transfers,
     supplier_products,
     marketplace_credentials,
     webhooks,
@@ -42,6 +43,7 @@ api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
 api_router.include_router(custom_fields.router, prefix="/custom-fields", tags=["custom-fields"])
 api_router.include_router(product_templates.router, prefix="/product-templates", tags=["product-templates"])
 api_router.include_router(purchase_orders.router, prefix="/purchase-orders", tags=["purchase-orders"])
+api_router.include_router(stock_transfers.router, prefix="/stock-transfers", tags=["stock-transfers"])
 api_router.include_router(supplier_products.router, prefix="/supplier-products", tags=["supplier-products"])
 api_router.include_router(expenses.router, prefix="/expenses", tags=["expenses"])
 api_router.include_router(marketing.router, prefix="/marketing", tags=["marketing"])

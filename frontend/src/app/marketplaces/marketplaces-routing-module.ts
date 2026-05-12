@@ -5,9 +5,13 @@ import { MarketplaceDetailComponent } from './pages/marketplace-detail/marketpla
 import { MarketplaceSettingsComponent } from './pages/marketplace-settings/marketplace-settings';
 
 import { MarketplaceCallbackComponent } from './pages/marketplace-callback/marketplace-callback';
+import { StockTransferListComponent } from './stock-transfers/stock-transfer-list/stock-transfer-list';
+import { StockTransferDetailComponent } from './stock-transfers/stock-transfer-detail/stock-transfer-detail';
 
 const routes: Routes = [
   { path: '', component: MarketplaceListComponent },
+  { path: 'transfers', component: StockTransferListComponent },
+  { path: 'transfers/:id', component: StockTransferDetailComponent },
   { path: 'settings/:type', component: MarketplaceSettingsComponent },
   { path: ':type/callback', component: MarketplaceCallbackComponent },
   { path: ':id', component: MarketplaceDetailComponent }
