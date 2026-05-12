@@ -7,8 +7,22 @@ from sqlalchemy.sql import func
 
 from src.crud.crud_stock_transfer import stock_transfer as crud_stock_transfer
 from src.models.inventory import InventoryItem
-from src.models.stock_transfer import StockTransfer, StockTransferStatus
+from src.models.marketplace import Marketplace, MarketplaceListing
+from src.models.stock_transfer import (
+    LOCATION_AMAZON_FBA,
+    LOCATION_ML_FULL,
+    StockTransfer,
+    StockTransferStatus,
+)
 from src.schemas.stock_transfer import StockTransferCreate, StockTransferUpdate
+
+
+# Map destination-location string to the marketplace name expected by
+# MarketplaceService.get_connector().
+_LOCATION_TO_MARKETPLACE = {
+    LOCATION_ML_FULL: "MercadoLibre",
+    LOCATION_AMAZON_FBA: "Amazon",
+}
 
 
 _EDITABLE_STATUSES = {StockTransferStatus.DRAFT.value}
@@ -89,7 +103,20 @@ class StockTransferService:
 
         return transfer
 
-    def ship(self, db: Session, *, transfer_id: int, user=None) -> StockTransfer:
+    def ship(
+        self,
+        db: Session,
+        *,
+        transfer_id: int,
+        user=None,
+        push_to_marketplace: bool = False,
+    ) -> StockTransfer:
+        """
+        Move stock from the source location to in-transit by marking the
+        transfer as SHIPPED. When ``push_to_marketplace=True`` and the
+        destination is a marketplace fulfillment warehouse, reserve an
+        inbound shipment with the marketplace and store the external id.
+        """
         from src.services.inventory_service import inventory_service
 
         transfer = self._get_or_404(db, transfer_id)
@@ -141,10 +168,225 @@ class StockTransferService:
 
         transfer.status = StockTransferStatus.SHIPPED.value
         transfer.shipped_at = datetime.now(timezone.utc)
+
+        if push_to_marketplace:
+            marketplace_name = _LOCATION_TO_MARKETPLACE.get(transfer.dest_location)
+            if marketplace_name:
+                inbound_id = self._create_marketplace_inbound(
+                    db,
+                    transfer=transfer,
+                    user=user,
+                    marketplace_name=marketplace_name,
+                )
+                if inbound_id:
+                    transfer.external_inbound_id = inbound_id
+
         db.add(transfer)
         db.commit()
         db.refresh(transfer)
         return transfer
+
+    def _create_marketplace_inbound(
+        self,
+        db: Session,
+        *,
+        transfer: StockTransfer,
+        user,
+        marketplace_name: str,
+    ) -> Optional[str]:
+        """
+        Call the marketplace connector to create an inbound shipment.
+        Returns the external inbound id, or None when the marketplace is not
+        configured / no credentials are available (so callers can fall back
+        to the manual workflow).
+        """
+        import asyncio
+
+        from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+        from src.services.marketplace_service import marketplace_service
+        from src.services.marketplaces.base import InboundShipmentItem
+
+        marketplace = (
+            db.query(Marketplace).filter(Marketplace.name == marketplace_name).first()
+        )
+        if not marketplace:
+            return None
+
+        user_id = getattr(user, "id", None)
+        token: Optional[str] = None
+        if user_id:
+            cred = crud_cred.get_by_marketplace(
+                db, user_id=user_id, marketplace_id=marketplace.id
+            )
+            if cred:
+                try:
+                    token = asyncio.run(
+                        marketplace_service.get_valid_access_token(db, cred.id)
+                    )
+                except Exception:
+                    token = None
+
+        try:
+            connector = marketplace_service.get_connector(marketplace.name)
+        except Exception:
+            return None
+
+        items_payload = []
+        for item in transfer.items:
+            listing = (
+                db.query(MarketplaceListing)
+                .filter(
+                    MarketplaceListing.product_id == item.product_id,
+                    MarketplaceListing.marketplace_id == marketplace.id,
+                )
+                .first()
+            )
+            items_payload.append(
+                InboundShipmentItem(
+                    external_listing_id=listing.external_listing_id if listing else None,
+                    sku=item.product.sku if item.product else None,
+                    title=item.product.name if item.product else None,
+                    quantity=item.qty_planned,
+                )
+            )
+
+        try:
+            result = asyncio.run(
+                connector.create_inbound_shipment(items_payload, access_token=token)
+            )
+        except Exception as exc:  # pragma: no cover - logged + non-fatal
+            print(f"[stock-transfer] inbound shipment failed: {exc}")
+            return None
+        return result.external_inbound_id
+
+    def sync_marketplace_listings(
+        self,
+        db: Session,
+        *,
+        transfer_id: int,
+        user=None,
+    ) -> dict:
+        """
+        After a transfer reaches RECEIVED, push the resulting destination-
+        location stock to every MarketplaceListing for the products involved.
+        Returns a summary of which listings were updated and any that need
+        to be created manually.
+        """
+        import asyncio
+
+        from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+        from src.services.marketplace_service import marketplace_service
+
+        transfer = self._get_or_404(db, transfer_id)
+        marketplace_name = _LOCATION_TO_MARKETPLACE.get(transfer.dest_location)
+        if not marketplace_name:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Destination '{transfer.dest_location}' is not a known "
+                    f"marketplace fulfillment location"
+                ),
+            )
+        marketplace = (
+            db.query(Marketplace).filter(Marketplace.name == marketplace_name).first()
+        )
+        if not marketplace:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Marketplace '{marketplace_name}' is not configured",
+            )
+
+        user_id = getattr(user, "id", None)
+        token: Optional[str] = None
+        if user_id:
+            cred = crud_cred.get_by_marketplace(
+                db, user_id=user_id, marketplace_id=marketplace.id
+            )
+            if cred:
+                try:
+                    token = asyncio.run(
+                        marketplace_service.get_valid_access_token(db, cred.id)
+                    )
+                except Exception:
+                    token = None
+
+        try:
+            connector = marketplace_service.get_connector(marketplace.name)
+        except Exception as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Marketplace connector unavailable: {exc}",
+            )
+
+        summary = {"updated": [], "missing_listings": []}
+        for item in transfer.items:
+            qty_at_dest = (
+                db.query(func.coalesce(func.sum(InventoryItem.quantity), 0))
+                .filter(
+                    InventoryItem.product_id == item.product_id,
+                    InventoryItem.variant_id == item.variant_id,
+                    InventoryItem.location == transfer.dest_location,
+                )
+                .scalar()
+                or 0
+            )
+
+            listing = (
+                db.query(MarketplaceListing)
+                .filter(
+                    MarketplaceListing.product_id == item.product_id,
+                    MarketplaceListing.marketplace_id == marketplace.id,
+                )
+                .first()
+            )
+
+            if not listing or not listing.external_listing_id:
+                summary["missing_listings"].append(
+                    {
+                        "product_id": item.product_id,
+                        "qty_to_publish": int(qty_at_dest),
+                    }
+                )
+                continue
+
+            try:
+                ok = asyncio.run(
+                    connector.sync_inventory(
+                        listing.external_listing_id,
+                        int(qty_at_dest),
+                        access_token=token,
+                    )
+                )
+            except Exception as exc:
+                listing.sync_status = "ERROR"
+                listing.error_message = str(exc)[:500]
+                db.add(listing)
+                summary["updated"].append(
+                    {
+                        "product_id": item.product_id,
+                        "external_listing_id": listing.external_listing_id,
+                        "qty": int(qty_at_dest),
+                        "ok": False,
+                        "error": str(exc)[:200],
+                    }
+                )
+                continue
+
+            listing.available_quantity = int(qty_at_dest)
+            listing.sync_status = "SYNCED" if ok else "ERROR"
+            listing.error_message = None if ok else "sync_inventory returned False"
+            db.add(listing)
+            summary["updated"].append(
+                {
+                    "product_id": item.product_id,
+                    "external_listing_id": listing.external_listing_id,
+                    "qty": int(qty_at_dest),
+                    "ok": bool(ok),
+                }
+            )
+
+        db.commit()
+        return summary
 
     def receive_items(
         self,

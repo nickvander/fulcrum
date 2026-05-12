@@ -742,8 +742,10 @@
         },
         "actions": {
             "ship": "Mark shipped",
+            "shipWithMarketplace": "Ship + reserve inbound",
             "receive": "Receive items",
-            "cancel": "Cancel draft"
+            "cancel": "Cancel draft",
+            "syncListings": "Push qty to listings"
         },
         "detail": {
             "title": "Stock transfer #{{id}}",
@@ -751,7 +753,10 @@
             "unitsReceived": "Units received",
             "shippedAt": "Shipped",
             "receivedAt": "Received",
+            "externalInboundId": "Marketplace inbound id",
             "notFound": "Stock transfer not found.",
+            "lastSync": "Last listing-quantity push",
+            "missingListings": "{{count}} product(s) have no marketplace listing yet — create those listings before they will sync.",
             "col": {
                 "product": "Product",
                 "planned": "Planned",

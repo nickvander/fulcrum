@@ -1,8 +1,8 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 import asyncio
 import httpx
 from src.config import settings
-from .base import BaseMarketplaceConnector
+from .base import BaseMarketplaceConnector, InboundShipmentItem, InboundShipmentResult
 
 class MercadoLibreConnector(BaseMarketplaceConnector):
     """
@@ -254,3 +254,85 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         Fetches listing status via GET /items/{item_id}.
         """
         return "active"
+
+    INBOUND_PATH = "/fbm/inbound/shipments"
+
+    async def create_inbound_shipment(
+        self,
+        items: List[InboundShipmentItem],
+        access_token: Optional[str] = None,
+    ) -> InboundShipmentResult:
+        """
+        Creates an inbound shipment to a MercadoLibre Full warehouse.
+
+        Without a token (or with a stub token), returns a deterministic stub so
+        development/test environments can exercise the workflow end-to-end
+        without hitting the live API.
+        """
+        if not access_token or access_token.startswith("STUB"):
+            stub_id = "ML-FULL-STUB-" + "-".join(
+                str(item.quantity) for item in items[:3]
+            )
+            return InboundShipmentResult(
+                external_inbound_id=stub_id,
+                status="pending",
+                label_url=None,
+                detail_url=None,
+                raw_data={"stub": True, "items": [i.model_dump() for i in items]},
+            )
+
+        payload = {
+            "site_id": self.SITE_ID,
+            "items": [
+                {
+                    "item_id": item.external_listing_id,
+                    "sku": item.sku,
+                    "title": item.title,
+                    "quantity": item.quantity,
+                }
+                for item in items
+            ],
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.API_URL}{self.INBOUND_PATH}",
+                json=payload,
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return InboundShipmentResult(
+                external_inbound_id=str(data.get("id") or data.get("shipment_id") or ""),
+                status=data.get("status", "pending"),
+                label_url=data.get("label_url") or data.get("shipping_label_url"),
+                detail_url=data.get("detail_url"),
+                raw_data=data,
+            )
+
+    async def get_inbound_shipment_status(
+        self,
+        external_inbound_id: str,
+        access_token: Optional[str] = None,
+    ) -> InboundShipmentResult:
+        """Polls an existing inbound shipment for its current status."""
+        if not access_token or access_token.startswith("STUB") or external_inbound_id.startswith("ML-FULL-STUB-"):
+            return InboundShipmentResult(
+                external_inbound_id=external_inbound_id,
+                status="pending",
+                raw_data={"stub": True},
+            )
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_URL}{self.INBOUND_PATH}/{external_inbound_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response.raise_for_status()
+            data = response.json()
+            return InboundShipmentResult(
+                external_inbound_id=external_inbound_id,
+                status=data.get("status", "pending"),
+                label_url=data.get("label_url"),
+                detail_url=data.get("detail_url"),
+                raw_data=data,
+            )

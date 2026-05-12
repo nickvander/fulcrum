@@ -67,9 +67,39 @@ def ship_stock_transfer(
     *,
     db: Session = Depends(get_db),
     transfer_id: int,
+    push_to_marketplace: bool = Query(
+        False,
+        description=(
+            "When true and the destination is ml-full / amazon-fba, also "
+            "create an inbound shipment via the marketplace's API and store "
+            "the resulting external_inbound_id."
+        ),
+    ),
     current_user: User = Depends(get_current_active_user),
 ) -> Any:
-    return stock_transfer_service.ship(db=db, transfer_id=transfer_id, user=current_user)
+    return stock_transfer_service.ship(
+        db=db,
+        transfer_id=transfer_id,
+        user=current_user,
+        push_to_marketplace=push_to_marketplace,
+    )
+
+
+@router.post("/{transfer_id}/sync-listings")
+def sync_stock_transfer_listings(
+    *,
+    db: Session = Depends(get_db),
+    transfer_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Push the destination-location quantity to every MarketplaceListing for
+    products in this transfer. Typically called after a transfer reaches
+    RECEIVED to update the marketplace's published inventory.
+    """
+    return stock_transfer_service.sync_marketplace_listings(
+        db=db, transfer_id=transfer_id, user=current_user
+    )
 
 
 @router.post("/{transfer_id}/receive", response_model=st_schema.StockTransfer)

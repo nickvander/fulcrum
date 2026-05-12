@@ -42,6 +42,7 @@ class MarketplaceListing(Base):
     marketplace_price = Column(Float, nullable=True)
     original_price = Column(Float, nullable=True)
     discount_percentage = Column(Float, nullable=True)
+    available_quantity = Column(Integer, nullable=True)
     error_message = Column(String, nullable=True)
     metadata_json = Column(JSON, nullable=True) # Renamed to avoid reserved word 'metadata'
 

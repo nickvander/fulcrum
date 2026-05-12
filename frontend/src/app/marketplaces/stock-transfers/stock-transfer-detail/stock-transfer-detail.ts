@@ -11,7 +11,13 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@ngneat/transloco';
 
-import { StockTransfer, StockTransferService } from '../stock-transfer.service';
+import {
+  STOCK_LOCATION_AMAZON_FBA,
+  STOCK_LOCATION_ML_FULL,
+  StockTransfer,
+  StockTransferService,
+  SyncListingsResult,
+} from '../stock-transfer.service';
 import { ReceiveTransferDialogComponent } from '../receive-transfer-dialog/receive-transfer-dialog';
 
 @Component({
@@ -37,6 +43,7 @@ export class StockTransferDetailComponent implements OnInit {
   transfer: StockTransfer | null = null;
   loading = false;
   acting = false;
+  lastSync: SyncListingsResult | null = null;
   readonly columns = ['product', 'qty_planned', 'qty_shipped', 'qty_received'];
 
   constructor(
@@ -69,16 +76,19 @@ export class StockTransferDetailComponent implements OnInit {
     });
   }
 
-  ship(): void {
+  ship(pushToMarketplace = false): void {
     if (!this.transfer || this.acting) {
       return;
     }
     this.acting = true;
-    this.service.ship(this.transfer.id).subscribe({
+    this.service.ship(this.transfer.id, pushToMarketplace).subscribe({
       next: updated => {
         this.transfer = updated;
         this.acting = false;
-        this.snackBar.open('Marked as shipped', 'Close', { duration: 3000 });
+        const message = pushToMarketplace
+          ? 'Shipped and inbound shipment reserved'
+          : 'Marked as shipped';
+        this.snackBar.open(message, 'Close', { duration: 3000 });
       },
       error: err => {
         this.acting = false;
@@ -86,6 +96,55 @@ export class StockTransferDetailComponent implements OnInit {
         this.snackBar.open(detail, 'Close', { duration: 5000 });
       },
     });
+  }
+
+  syncListings(): void {
+    if (!this.transfer || this.acting) {
+      return;
+    }
+    this.acting = true;
+    this.service.syncListings(this.transfer.id).subscribe({
+      next: summary => {
+        this.acting = false;
+        this.lastSync = summary;
+        const okCount = summary.updated.filter(u => u.ok).length;
+        const total = summary.updated.length;
+        const missing = summary.missing_listings.length;
+        const parts: string[] = [];
+        if (total > 0) {
+          parts.push(`${okCount}/${total} listings synced`);
+        }
+        if (missing > 0) {
+          parts.push(`${missing} need a listing`);
+        }
+        this.snackBar.open(parts.join(' · ') || 'Nothing to sync', 'Close', {
+          duration: 4000,
+        });
+      },
+      error: err => {
+        this.acting = false;
+        const detail = err?.error?.detail || 'Sync failed';
+        this.snackBar.open(detail, 'Close', { duration: 5000 });
+      },
+    });
+  }
+
+  isMarketplaceDestination(): boolean {
+    return (
+      !!this.transfer &&
+      (this.transfer.dest_location === STOCK_LOCATION_ML_FULL ||
+        this.transfer.dest_location === STOCK_LOCATION_AMAZON_FBA)
+    );
+  }
+
+  canSyncListings(): boolean {
+    return (
+      !!this.transfer &&
+      this.isMarketplaceDestination() &&
+      (this.transfer.status === 'received' ||
+        this.transfer.status === 'partially_received') &&
+      !this.acting
+    );
   }
 
   openReceive(): void {

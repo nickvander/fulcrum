@@ -50,6 +50,14 @@ describe('StockTransferDetailComponent', () => {
       ship: vi.fn().mockReturnValue(of(transfer({ status: 'shipped' }))),
       cancel: vi.fn().mockReturnValue(of(transfer({ status: 'cancelled' }))),
       delete: vi.fn().mockReturnValue(of({ deleted: 42 })),
+      syncListings: vi.fn().mockReturnValue(
+        of({
+          updated: [
+            { product_id: 7, external_listing_id: 'MLM-1', qty: 8, ok: true },
+          ],
+          missing_listings: [],
+        }),
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -99,7 +107,36 @@ describe('StockTransferDetailComponent', () => {
 
   it('ships the transfer when ship() is called', () => {
     component.ship();
-    expect(service.ship).toHaveBeenCalledWith(42);
+    expect(service.ship).toHaveBeenCalledWith(42, false);
     expect(component.transfer?.status).toBe('shipped');
+  });
+
+  it('passes push_to_marketplace=true when ship(true) is called', () => {
+    component.ship(true);
+    expect(service.ship).toHaveBeenCalledWith(42, true);
+  });
+
+  it('only shows the sync action for marketplace destinations in received state', () => {
+    component.transfer = transfer({ status: 'received' });
+    expect(component.canSyncListings()).toBe(true);
+
+    component.transfer = transfer({ status: 'received', dest_location: 'other' });
+    expect(component.canSyncListings()).toBe(false);
+
+    component.transfer = transfer({ status: 'draft' });
+    expect(component.canSyncListings()).toBe(false);
+  });
+
+  it('records the last sync result and surfaces missing listings', () => {
+    service.syncListings.mockReturnValue(
+      of({
+        updated: [],
+        missing_listings: [{ product_id: 7, qty_to_publish: 4 }],
+      }),
+    );
+    component.transfer = transfer({ status: 'received' });
+    component.syncListings();
+    expect(service.syncListings).toHaveBeenCalledWith(42);
+    expect(component.lastSync?.missing_listings.length).toBe(1);
   });
 });

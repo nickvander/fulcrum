@@ -742,8 +742,10 @@
         },
         "actions": {
             "ship": "Marcar enviada",
+            "shipWithMarketplace": "Enviar + reservar inbound",
             "receive": "Recibir productos",
-            "cancel": "Cancelar borrador"
+            "cancel": "Cancelar borrador",
+            "syncListings": "Enviar cantidad a listados"
         },
         "detail": {
             "title": "Transferencia #{{id}}",
@@ -751,7 +753,10 @@
             "unitsReceived": "Unidades recibidas",
             "shippedAt": "Enviada",
             "receivedAt": "Recibida",
+            "externalInboundId": "ID inbound del marketplace",
             "notFound": "Transferencia no encontrada.",
+            "lastSync": "Última sincronización de cantidad",
+            "missingListings": "{{count}} producto(s) aún no tienen listado en el marketplace — créalos antes de poder sincronizar.",
             "col": {
                 "product": "Producto",
                 "planned": "Planeada",
