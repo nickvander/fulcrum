@@ -20,6 +20,26 @@ class ListingData(BaseModel):
     available_quantity: Optional[int] = None
     raw_data: Dict[str, Any] = {}
 
+class InboundShipmentItem(BaseModel):
+    """A single line item destined for a marketplace fulfillment warehouse."""
+    external_listing_id: Optional[str] = None  # marketplace's item ID, if already listed
+    sku: Optional[str] = None
+    title: Optional[str] = None
+    quantity: int
+
+
+class InboundShipmentResult(BaseModel):
+    """
+    Result of creating an inbound shipment (i.e. transferring stock to a
+    marketplace fulfillment warehouse like ML Full or Amazon FBA).
+    """
+    external_inbound_id: str
+    status: str = "pending"
+    label_url: Optional[str] = None
+    detail_url: Optional[str] = None
+    raw_data: Dict[str, Any] = {}
+
+
 class BaseMarketplaceConnector(ABC):
     """
     Abstract Base Class for all marketplace integrations (Amazon, MercadoLibre, etc.)
@@ -64,3 +84,32 @@ class BaseMarketplaceConnector(ABC):
     async def get_listing_status(self, external_id: str, access_token: Optional[str] = None) -> str:
         """Fetches the current status of a listing from the marketplace."""
         pass
+
+    async def create_inbound_shipment(
+        self,
+        items: List[InboundShipmentItem],
+        access_token: Optional[str] = None,
+    ) -> InboundShipmentResult:
+        """
+        Reserves an inbound shipment to the marketplace's fulfillment warehouse
+        (e.g. MercadoLibre Full, Amazon FBA). Returns the marketplace's inbound
+        shipment id plus shipping-label URL.
+
+        Default is a no-op stub so connectors that don't yet support inbound
+        shipments still satisfy the interface.
+        """
+        return InboundShipmentResult(
+            external_inbound_id="UNSUPPORTED",
+            status="unsupported",
+        )
+
+    async def get_inbound_shipment_status(
+        self,
+        external_inbound_id: str,
+        access_token: Optional[str] = None,
+    ) -> InboundShipmentResult:
+        """Polls the marketplace for the receipt status of an inbound shipment."""
+        return InboundShipmentResult(
+            external_inbound_id=external_inbound_id,
+            status="unsupported",
+        )

@@ -72,6 +72,24 @@ export interface StockTransferReceiveLine {
   quantity: number;
 }
 
+export interface SyncListingsUpdated {
+  product_id: number;
+  external_listing_id: string;
+  qty: number;
+  ok: boolean;
+  error?: string;
+}
+
+export interface SyncListingsMissing {
+  product_id: number;
+  qty_to_publish: number;
+}
+
+export interface SyncListingsResult {
+  updated: SyncListingsUpdated[];
+  missing_listings: SyncListingsMissing[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class StockTransferService {
   private apiUrl = `${environment.apiUrl}/stock-transfers`;
@@ -98,8 +116,16 @@ export class StockTransferService {
     return this.http.put<StockTransfer>(`${this.apiUrl}/${id}`, payload);
   }
 
-  ship(id: number): Observable<StockTransfer> {
-    return this.http.post<StockTransfer>(`${this.apiUrl}/${id}/ship`, {});
+  ship(id: number, pushToMarketplace = false): Observable<StockTransfer> {
+    let params = new HttpParams();
+    if (pushToMarketplace) {
+      params = params.set('push_to_marketplace', 'true');
+    }
+    return this.http.post<StockTransfer>(`${this.apiUrl}/${id}/ship`, {}, { params });
+  }
+
+  syncListings(id: number): Observable<SyncListingsResult> {
+    return this.http.post<SyncListingsResult>(`${this.apiUrl}/${id}/sync-listings`, {});
   }
 
   receive(id: number, lines: StockTransferReceiveLine[]): Observable<StockTransfer> {

@@ -51,6 +51,13 @@
               <span>{{ transfer.notes }}</span>
             </div>
           }
+
+          @if (transfer.external_inbound_id) {
+            <div class="external-id" data-testid="external-inbound-id">
+              <strong>{{ t('stockTransfers.detail.externalInboundId') }}:</strong>
+              <code>{{ transfer.external_inbound_id }}</code>
+            </div>
+          }
         </mat-card-content>
       </mat-card>
 
@@ -59,12 +66,36 @@
           <button
             mat-flat-button
             color="primary"
-            (click)="ship()"
+            (click)="ship(false)"
             [disabled]="acting"
             data-testid="ship-button"
           >
             <mat-icon>local_shipping</mat-icon>
             {{ t('stockTransfers.actions.ship') }}
+          </button>
+          @if (isMarketplaceDestination()) {
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="ship(true)"
+              [disabled]="acting"
+              data-testid="ship-with-marketplace-button"
+            >
+              <mat-icon>cloud_upload</mat-icon>
+              {{ t('stockTransfers.actions.shipWithMarketplace') }}
+            </button>
+          }
+        }
+        @if (canSyncListings()) {
+          <button
+            mat-stroked-button
+            color="primary"
+            (click)="syncListings()"
+            [disabled]="acting"
+            data-testid="sync-listings-button"
+          >
+            <mat-icon>sync</mat-icon>
+            {{ t('stockTransfers.actions.syncListings') }}
           </button>
         }
         @if (canReceive()) {
@@ -92,6 +123,32 @@
           </button>
         }
       </div>
+
+      @if (lastSync) {
+        <mat-card class="sync-summary" data-testid="last-sync-summary">
+          <mat-card-content>
+            <h3>{{ t('stockTransfers.detail.lastSync') }}</h3>
+            @if (lastSync.updated.length > 0) {
+              <ul class="sync-list">
+                @for (entry of lastSync.updated; track entry.external_listing_id) {
+                  <li [class.sync-error]="!entry.ok">
+                    <code>{{ entry.external_listing_id }}</code>
+                    → {{ entry.qty }}
+                    @if (!entry.ok) {
+                      <span class="error-text">({{ entry.error || 'failed' }})</span>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            @if (lastSync.missing_listings.length > 0) {
+              <p class="missing-warning">
+                {{ t('stockTransfers.detail.missingListings', { count: lastSync.missing_listings.length }) }}
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
 
       <table mat-table [dataSource]="transfer.items" class="items-table" data-testid="items-table">
         <ng-container matColumnDef="product">

@@ -28,6 +28,7 @@ class MarketplaceListingBase(BaseModel):
     marketplace_price: Optional[float] = None
     original_price: Optional[float] = None
     discount_percentage: Optional[float] = None
+    available_quantity: Optional[int] = None
     error_message: Optional[str] = None
     metadata_json: Optional[Dict[str, Any]] = None
 
