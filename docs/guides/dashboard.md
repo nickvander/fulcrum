@@ -45,6 +45,26 @@ have fallen below the availability threshold.
 - **Priority**: Products are listed to allow immediate procurement action.
 - **Details**: Shows Product Name, SKU, and Current Quantity.
 
+## Launch Readiness
+
+The dashboard includes a launch-readiness panel for customer onboarding and
+go-live checks. It summarizes required setup, inventory movement, pending
+supplier document imports, marketplace connection status, and demo data.
+
+### Demo Data Guardrail
+
+When the optional demo workspace has been created, the readiness panel lists
+each detected demo record before go-live, including the demo store marker,
+supplier, product, purchase order, inventory receipt, supplier-product link, and
+learned alias records.
+
+The **Clean up demo data** action removes only records that still match the
+Fulcrum demo fingerprints. Cleanup is automatically blocked when those records
+appear to have customer activity, such as non-demo purchase orders, sales,
+marketplace listings, expenses, custom product setup, supplier document import
+reviews, or learned aliases outside the demo mapping. When cleanup is blocked,
+the panel shows the reason so the user can review the affected records manually.
+
 ## Technical Implementation
 
 ### Widgets

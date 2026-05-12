@@ -13,6 +13,10 @@
 - [x] Optional demo workspace/sample data for trial onboarding.
 - [x] Launch readiness report for setup health, unresolved imports, test data,
       stock health, and marketplace credential status.
+- [x] Demo-data cleanup warning/path before customer go-live.
+      - Lists exact demo records in launch readiness.
+      - Cleans only records that still match demo fingerprints.
+      - Blocks cleanup when demo records have customer-linked activity.
 
 ## Medium Priority
 
@@ -20,7 +24,8 @@
       or stock updates.
 - [ ] Supplier import review polish:
       - bulk reject/cleanup stale reviews
-      - one-click create supplier/product from unmatched import lines
+      - [x] one-click create product / learn supplier alias from unmatched import
+        lines
       - visual diff for uploaded invoice/packing-list documents that match an
         existing PO
 - [ ] Marketplace allocation workflow before stock sync. Do not sync received
@@ -31,5 +36,4 @@
 
 ## Future
 
-- [ ] Demo-data cleanup warning/path before customer go-live
 - [ ] Enhance Marketplace Status UI with sync indicators

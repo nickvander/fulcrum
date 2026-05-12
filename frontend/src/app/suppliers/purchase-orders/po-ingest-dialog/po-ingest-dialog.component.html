@@ -134,6 +134,9 @@
                                 {{ p.sku }} - {{ p.name }}
                             </mat-option>
                         </mat-select>
+                        <small class="matched-product" *ngIf="item.matched_product_id">
+                            {{ getProductLabel(item.matched_product_id) }}
+                        </small>
                     </td>
                 </ng-container>
 
@@ -169,10 +172,26 @@
                 <ng-container matColumnDef="actions">
                     <th mat-header-cell *matHeaderCellDef></th>
                     <td mat-cell *matCellDef="let item; let i = index">
-                        <button mat-icon-button color="warn" (click)="removeItem(i)"
-                            [matTooltip]="t('purchaseOrders.removeItem')">
-                            <mat-icon>delete</mat-icon>
-                        </button>
+                        <div class="line-actions">
+                            <button mat-stroked-button color="primary" type="button"
+                                *ngIf="!item.matched_product_id"
+                                [disabled]="assistingItemIndex === i || !supplierId || !importReviewId"
+                                (click)="createProductForItem(item, i)">
+                                <mat-icon>{{ assistingItemIndex === i ? 'hourglass_top' : 'add_box' }}</mat-icon>
+                                Create product
+                            </button>
+                            <button mat-stroked-button color="accent" type="button"
+                                *ngIf="item.matched_product_id"
+                                [disabled]="assistingItemIndex === i || !supplierId || !importReviewId"
+                                (click)="learnAliasForItem(item, i)">
+                                <mat-icon>{{ assistingItemIndex === i ? 'hourglass_top' : 'link' }}</mat-icon>
+                                Learn alias
+                            </button>
+                            <button mat-icon-button color="warn" (click)="removeItem(i)"
+                                [matTooltip]="t('purchaseOrders.removeItem')">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
                     </td>
                 </ng-container>
 

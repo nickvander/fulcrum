@@ -159,7 +159,42 @@
 
 .items-table {
   width: 100%;
+  table-layout: fixed;
   margin-bottom: 16px;
+
+  th,
+  td {
+    padding: 8px 10px;
+    vertical-align: top;
+  }
+
+  .mat-column-sku {
+    width: 132px;
+  }
+
+  .mat-column-product {
+    width: 226px;
+  }
+
+  .mat-column-description {
+    width: 232px;
+  }
+
+  .mat-column-quantity {
+    width: 86px;
+  }
+
+  .mat-column-unit_cost {
+    width: 100px;
+  }
+
+  .mat-column-line_total {
+    width: 96px;
+  }
+
+  .mat-column-actions {
+    width: 178px;
+  }
 
   .unmatched {
     color: #f9a825;
@@ -168,6 +203,8 @@
 
   .inline-input {
     width: 80px;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 4px 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -187,6 +224,38 @@
       width: 200px;
       text-align: left;
     }
+  }
+}
+
+.product-select {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.matched-product {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary, #4b5563);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.line-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 0;
+
+  button[mat-stroked-button] {
+    min-width: 120px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+
+  mat-icon {
+    margin-right: 4px;
   }
 }
 

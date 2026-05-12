@@ -282,7 +282,8 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   openIngestDialog(): void {
     import('../po-ingest-dialog/po-ingest-dialog.component').then(m => {
       const dialogRef = this.dialog.open(m.PoIngestDialogComponent, {
-        width: '800px',
+        width: '96vw',
+        maxWidth: '1180px',
         maxHeight: '90vh',
         disableClose: true
       });
@@ -299,7 +300,8 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   reviewImport(review: SupplierDocumentImportReview): void {
     import('../po-ingest-dialog/po-ingest-dialog.component').then(m => {
       const dialogRef = this.dialog.open(m.PoIngestDialogComponent, {
-        width: '900px',
+        width: '96vw',
+        maxWidth: '1180px',
         maxHeight: '90vh',
         disableClose: true,
         data: { review }

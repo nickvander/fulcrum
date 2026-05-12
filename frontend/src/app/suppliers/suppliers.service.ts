@@ -187,6 +187,28 @@ export class SuppliersService {
     return this.http.post<SupplierDocumentImportReview>(`${this.apiUrl}/purchase-orders/imports/reviews/${reviewId}/reject`, {});
   }
 
+  createProductFromImportReviewItem(
+    reviewId: number,
+    itemIndex: number,
+    request: SupplierDocumentImportCreateProductRequest
+  ): Observable<SupplierDocumentImportAssistResponse> {
+    return this.http.post<SupplierDocumentImportAssistResponse>(
+      `${this.apiUrl}/purchase-orders/imports/reviews/${reviewId}/items/${itemIndex}/create-product`,
+      request
+    );
+  }
+
+  learnAliasFromImportReviewItem(
+    reviewId: number,
+    itemIndex: number,
+    request: SupplierDocumentImportLearnAliasRequest
+  ): Observable<SupplierDocumentImportAssistResponse> {
+    return this.http.post<SupplierDocumentImportAssistResponse>(
+      `${this.apiUrl}/purchase-orders/imports/reviews/${reviewId}/items/${itemIndex}/learn-alias`,
+      request
+    );
+  }
+
   /** @deprecated Use parseDocument instead */
   ingestPurchaseOrder(file: File, useAi: boolean = false): Observable<PoIngestionResponse> {
     const formData = new FormData();
@@ -322,4 +344,26 @@ export interface SupplierDocumentImportApproveRequest {
 export interface SupplierDocumentImportApproveResponse {
   import_review: SupplierDocumentImportReview;
   purchase_order: PurchaseOrder;
+}
+
+export interface SupplierDocumentImportCreateProductRequest {
+  supplier_id: number;
+  name?: string | null;
+  sku?: string | null;
+  default_resale_price?: number | null;
+  create_alias?: boolean;
+}
+
+export interface SupplierDocumentImportLearnAliasRequest {
+  supplier_id: number;
+  product_id: number;
+  variant_id?: number | null;
+  alias_sku?: string | null;
+  alias_name?: string | null;
+}
+
+export interface SupplierDocumentImportAssistResponse {
+  import_review: SupplierDocumentImportReview;
+  product: import('../products/models/product.model').Product | null;
+  alias: SupplierProductAlias | null;
 }

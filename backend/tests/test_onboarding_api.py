@@ -3,6 +3,7 @@ import pytest
 from src.models.inventory import InventoryAdjustment, InventoryItem
 from src.models.product import Product
 from src.models.purchase_order import PurchaseOrder
+from src.models.purchase_order_item import PurchaseOrderItem
 from src.models.store_settings import StoreSettings
 from src.models.supplier import Supplier
 from src.models.supplier_document_import import SupplierDocumentImport
@@ -118,6 +119,86 @@ def test_demo_workspace_does_not_duplicate_stock(client, db, admin_headers):
 
     assert inventory.quantity == 5
     assert db.query(PurchaseOrder).filter(PurchaseOrder.notes.like("Fulcrum demo workspace%")).count() == 1
+
+
+def test_demo_data_report_lists_cleanup_records(client, admin_headers):
+    client.post("/api/v1/onboarding/demo-workspace", headers=admin_headers)
+
+    response = client.get("/api/v1/onboarding/demo-data")
+
+    assert response.status_code == 200
+    report = response.json()
+    assert report["has_demo_data"] is True
+    assert report["cleanup_available"] is True
+    record_types = {record["type"] for record in report["records"]}
+    assert "Supplier" in record_types
+    assert "Product" in record_types
+    assert "Purchase order" in record_types
+    assert "Inventory" in record_types
+
+    readiness_response = client.get("/api/v1/onboarding/launch-readiness")
+    sections = {section["key"]: section for section in readiness_response.json()["sections"]}
+    assert sections["demo_data"]["status"] == "needs_attention"
+    assert sections["demo_data"]["cleanup_available"] is True
+    assert sections["demo_data"]["records"]
+
+
+def test_demo_data_cleanup_removes_only_seeded_records(client, db, admin_headers):
+    client.post("/api/v1/onboarding/demo-workspace", headers=admin_headers)
+
+    response = client.post(
+        "/api/v1/onboarding/demo-data/cleanup",
+        headers=admin_headers,
+        json={"confirm": True},
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["cleaned"] is True
+    assert result["has_demo_data"] is False
+    assert "product and demo inventory" in result["removed_records"]
+    assert db.query(Product).filter(Product.sku == "DEMO-STARTER-WIDGET").count() == 0
+    assert (
+        db.query(Supplier)
+        .filter(Supplier.email == "demo-alibaba-supplier@fulcrum-demo.com")
+        .count()
+        == 0
+    )
+    assert db.query(PurchaseOrder).filter(PurchaseOrder.notes.like("Fulcrum demo workspace%")).count() == 0
+    assert db.query(InventoryItem).count() == 0
+    assert db.query(InventoryAdjustment).count() == 0
+    assert db.query(SupplierProductAlias).count() == 0
+    assert db.query(SupplierProduct).count() == 0
+
+
+def test_demo_data_cleanup_blocks_when_demo_product_has_customer_links(client, db, admin_headers):
+    client.post("/api/v1/onboarding/demo-workspace", headers=admin_headers)
+    product = db.query(Product).filter(Product.sku == "DEMO-STARTER-WIDGET").one()
+    supplier = db.query(Supplier).filter(Supplier.email == "demo-alibaba-supplier@fulcrum-demo.com").one()
+    extra_po = PurchaseOrder(supplier_id=supplier.id, status="ordered", currency="USD")
+    db.add(extra_po)
+    db.commit()
+    db.refresh(extra_po)
+    db.add(
+        PurchaseOrderItem(
+            po_id=extra_po.id,
+            product_id=product.id,
+            quantity_ordered=1,
+            unit_cost=99,
+        )
+    )
+    db.commit()
+
+    response = client.post(
+        "/api/v1/onboarding/demo-data/cleanup",
+        headers=admin_headers,
+        json={"confirm": True},
+    )
+
+    assert response.status_code == 409
+    detail = response.json()["detail"]
+    assert "non-demo purchase orders" in " ".join(detail["blocked_reasons"])
+    assert db.query(Product).filter(Product.sku == "DEMO-STARTER-WIDGET").count() == 1
 
 
 def test_launch_readiness_reports_pending_supplier_imports(client, db):

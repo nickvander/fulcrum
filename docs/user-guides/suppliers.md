@@ -137,6 +137,22 @@ Fulcrum offers two ways to create Purchase Orders from supplier documents:
    └─> Mark as Received → Inventory updated
 ```
 
+### Import Review Match Assistance
+
+Imported supplier documents are staged in a review queue before they create a
+draft PO. If a supplier line item is unmatched, use the review dialog to resolve
+it before approval:
+
+- **Create product** creates a new Fulcrum product from the supplier line, links
+  it to the selected supplier, learns the supplier SKU/name as an alias, and
+  marks that review line as matched.
+- **Learn alias** is available after selecting an existing Fulcrum product. It
+  saves the supplier SKU/name as a learned alias for future imports and marks
+  the current review line as matched.
+
+Approving an import review still creates a draft PO only. Inventory changes only
+after the PO is received.
+
 ## Linking Products to Suppliers
 
 You can associate products with specific suppliers for reorder tracking:

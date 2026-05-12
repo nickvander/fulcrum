@@ -1,6 +1,6 @@
 # Progress Log
 
-**Status:** Launch readiness and supplier import review queue implemented **Current Phase:** Phase 7 -
+**Status:** Launch readiness, supplier import review queue, demo cleanup guardrail, and import match assistance implemented **Current Phase:** Phase 7 -
 Customer Onboarding Reliability
 
 ## Current Work
@@ -13,11 +13,28 @@ Customer Onboarding Reliability
   MercadoLibre/Amazon stock sync from receiving; marketplace quantities must be
   allocated later in a separate channel-planning workflow.
 
+## Latest Slice
+
+- Added launch-readiness demo record details for store marker, supplier,
+  product, PO, inventory, supplier-product link, and learned alias records.
+- Added guarded demo cleanup API that removes only known demo fingerprints and
+  blocks when demo product/supplier/PO rows have customer-linked activity.
+- Added dashboard demo-record guardrail with confirmation-based cleanup.
+- Documented launch-readiness demo cleanup in the dashboard guide.
+- Added import-review match assistance:
+  - create a Fulcrum product from an unmatched supplier line
+  - learn a supplier SKU/name alias for an existing Fulcrum product
+  - persist assisted matches back to the pending review
+- Documented import-review match assistance in the suppliers guide.
+- Verified focused backend onboarding/import-review tests, touched frontend
+  specs, and Angular production build.
+
 ## Next Session Starting Point
 
-- Add demo-data cleanup warning/path before customers go live.
 - Add one-click product/supplier alias creation for unmatched supplier import
-  lines.
+- Add bulk reject/cleanup for stale import reviews.
+- Add visual diff for uploaded invoice/packing-list documents that match an
+  existing PO.
 - Add import review history filters for approved/rejected documents.
 - Start marketplace allocation planning as a separate workflow from receiving.
 - Keep old quick wins in `work/future/`; they are useful later but secondary to
