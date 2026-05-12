@@ -28,10 +28,16 @@
         lines
       - visual diff for uploaded invoice/packing-list documents that match an
         existing PO
-- [ ] Marketplace allocation workflow before stock sync. Do not sync received
+- [x] Marketplace allocation workflow before stock sync. Do not sync received
       internal stock directly to Amazon/MercadoLibre.
-- [ ] Sync approved listing/inventory allocations to actual marketplace APIs
+      - Implemented in `86-marketplace-allocation-workflow.md` (Slices 1-3).
+      - Stock-transfer model + allocation planner replace any implicit sync
+        from PO receiving.
+- [x] Sync approved listing/inventory allocations to actual marketplace APIs
       (Amazon SP-API, MercadoLibre API)
+      - MercadoLibre Full inbound shipment + listing-quantity sync wired up
+        in Slice 2 with a stub fallback. First live token will exercise the
+        real API path.
 - [ ] OAuth token refresh handling improvements
 
 ## Future
