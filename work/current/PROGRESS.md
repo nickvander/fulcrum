@@ -5,6 +5,7 @@ Customer Onboarding Reliability
 
 ## Current Work
 
+- [86-marketplace-allocation-workflow.md](./86-marketplace-allocation-workflow.md)
 - [85-customer-onboarding-next.md](./85-customer-onboarding-next.md)
 
 ## Important Product Decision
@@ -14,6 +15,15 @@ Customer Onboarding Reliability
   allocated later in a separate channel-planning workflow.
 
 ## Latest Slice
+
+- Implemented the full marketplace allocation workflow (Slices 1-3):
+  stock-transfer model with explicit DRAFT → SHIPPED → RECEIVED state
+  machine, MercadoLibre Full inbound-shipment integration with stub
+  fallback, listing-quantity push, allocation planner that bundles draft
+  transfers per destination, and a reconciliation report for shrinkage.
+- See `86-marketplace-allocation-workflow.md` for the full breakdown.
+- Verified: 38 backend tests + 35 frontend vitest specs + production
+  Angular build green.
 
 - Added launch-readiness demo record details for store marker, supplier,
   product, PO, inventory, supplier-product link, and learned alias records.
