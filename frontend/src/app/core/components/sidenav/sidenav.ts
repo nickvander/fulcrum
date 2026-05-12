@@ -36,6 +36,7 @@ import { SettingsService, AppSettings } from '../../services/settings.service';
 export class Sidenav implements OnInit {
   isAdmin$!: Observable<boolean>;
   purchasingExpanded = true;
+  marketplacesExpanded = false;
   currentUser$!: Observable<User | null>;
   currentTheme: 'light' | 'dark' = 'light';
   currentLang: 'en' | 'es-MX' = 'en';

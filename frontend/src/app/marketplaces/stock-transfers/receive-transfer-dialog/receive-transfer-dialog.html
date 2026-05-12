@@ -1,0 +1,58 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>
+    {{ t('stockTransfers.receiveDialog.title', { id: data.transfer.id }) }}
+  </h2>
+  <mat-dialog-content>
+    <p class="dialog-subtitle">{{ t('stockTransfers.receiveDialog.subtitle') }}</p>
+
+    <table mat-table [dataSource]="rows" class="receive-table" data-testid="receive-table">
+      <ng-container matColumnDef="product">
+        <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.createDialog.col.product') }}</th>
+        <td mat-cell *matCellDef="let row">{{ row.productName }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="shipped">
+        <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.receiveDialog.col.shipped') }}</th>
+        <td mat-cell *matCellDef="let row">{{ row.qtyShipped }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="received">
+        <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.receiveDialog.col.alreadyReceived') }}</th>
+        <td mat-cell *matCellDef="let row">{{ row.qtyReceived }} / {{ row.qtyShipped }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="toReceive">
+        <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.receiveDialog.col.toReceive') }}</th>
+        <td mat-cell *matCellDef="let row">
+          <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
+            <input
+              matInput
+              type="number"
+              min="0"
+              [max]="row.remaining"
+              [ngModel]="row.toReceive"
+              (ngModelChange)="updateToReceive(row, $event)"
+              [attr.data-testid]="'receive-input-' + row.transferItemId"
+            />
+          </mat-form-field>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()">{{ t('common.cancel') }}</button>
+    <button
+      mat-flat-button
+      color="primary"
+      [disabled]="!canSave()"
+      (click)="save()"
+      data-testid="confirm-receive-button"
+    >
+      {{ t('stockTransfers.receiveDialog.confirm') }}
+    </button>
+  </mat-dialog-actions>
+</ng-container>

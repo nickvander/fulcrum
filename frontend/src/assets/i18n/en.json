@@ -4,6 +4,7 @@
         "cancel": "Cancel",
         "close": "Close",
         "delete": "Delete",
+        "remove": "Remove",
         "edit": "Edit",
         "add": "Add",
         "create": "Create",
@@ -95,6 +96,8 @@
         "suppliers": "Suppliers",
         "expenses": "Expenses",
         "marketplaces": "Marketplaces",
+        "marketplaceChannels": "Channels",
+        "stockTransfers": "Stock Transfers",
         "marketing": "Marketing",
         "management": "Management",
         "users": "Users",
@@ -675,6 +678,87 @@
         "start": "Start",
         "end": "End",
         "to": "to"
+    },
+    "stockTransfers": {
+        "title": "Stock Transfers",
+        "subtitle": "Send inventory to MercadoLibre Full or Amazon FBA warehouses.",
+        "newTransfer": "New Transfer",
+        "view": "View",
+        "backToList": "Back to transfers",
+        "empty": {
+            "title": "No transfers yet",
+            "subtitle": "Create a transfer when you're ready to send inventory to a marketplace warehouse."
+        },
+        "cols": {
+            "id": "ID",
+            "status": "Status",
+            "route": "Route",
+            "units": "Received / Planned",
+            "createdAt": "Created"
+        },
+        "filter": {
+            "all": "All",
+            "draft": "Draft",
+            "shipped": "Shipped",
+            "partially_received": "Partial",
+            "received": "Received",
+            "cancelled": "Cancelled"
+        },
+        "status": {
+            "draft": "Draft",
+            "shipped": "Shipped",
+            "partially_received": "Partially received",
+            "received": "Received",
+            "cancelled": "Cancelled"
+        },
+        "locations": {
+            "internal": "Internal warehouse",
+            "mlFull": "MercadoLibre Full",
+            "amazonFba": "Amazon FBA"
+        },
+        "createDialog": {
+            "title": "New stock transfer",
+            "destination": "Destination",
+            "notesLabel": "Notes (optional)",
+            "searchProducts": "Search products",
+            "searchPlaceholder": "Filter by name or SKU",
+            "selected": "Selected items",
+            "noMatches": "No products match",
+            "save": "Create draft",
+            "col": {
+                "product": "Product",
+                "qty": "Units"
+            }
+        },
+        "receiveDialog": {
+            "title": "Receive transfer #{{id}}",
+            "subtitle": "Enter the quantities confirmed by the destination warehouse.",
+            "confirm": "Record receipt",
+            "col": {
+                "shipped": "Shipped",
+                "alreadyReceived": "Received",
+                "toReceive": "Receive now"
+            }
+        },
+        "actions": {
+            "ship": "Mark shipped",
+            "receive": "Receive items",
+            "cancel": "Cancel draft"
+        },
+        "detail": {
+            "title": "Stock transfer #{{id}}",
+            "unitsPlanned": "Units planned",
+            "unitsReceived": "Units received",
+            "shippedAt": "Shipped",
+            "receivedAt": "Received",
+            "notFound": "Stock transfer not found.",
+            "col": {
+                "product": "Product",
+                "planned": "Planned",
+                "shipped": "Shipped",
+                "received": "Received"
+            }
+        }
     },
     "marketplaces": {
         "title": "Marketplaces",

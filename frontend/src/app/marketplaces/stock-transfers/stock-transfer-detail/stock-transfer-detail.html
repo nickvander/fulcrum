@@ -1,0 +1,126 @@
+<ng-container *transloco="let t">
+  <div class="stock-transfer-detail">
+    <a routerLink="/marketplaces/transfers" class="back-link">
+      <mat-icon>arrow_back</mat-icon>
+      {{ t('stockTransfers.backToList') }}
+    </a>
+
+    @if (loading) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (transfer) {
+      <div class="detail-header">
+        <div>
+          <h1>{{ t('stockTransfers.detail.title', { id: transfer.id }) }}</h1>
+          <p class="route-line">
+            <code>{{ transfer.source_location }}</code>
+            <mat-icon>east</mat-icon>
+            <code>{{ transfer.dest_location }}</code>
+          </p>
+        </div>
+        <mat-chip highlighted data-testid="transfer-status">
+          {{ t('stockTransfers.status.' + transfer.status) }}
+        </mat-chip>
+      </div>
+
+      <mat-card class="summary-card">
+        <mat-card-content>
+          <div class="stat-grid">
+            <div class="stat">
+              <span class="stat-label">{{ t('stockTransfers.detail.unitsPlanned') }}</span>
+              <span class="stat-value">{{ totalPlanned() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">{{ t('stockTransfers.detail.unitsReceived') }}</span>
+              <span class="stat-value">{{ totalReceived() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">{{ t('stockTransfers.detail.shippedAt') }}</span>
+              <span class="stat-value">{{ transfer.shipped_at ? (transfer.shipped_at | date) : '—' }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">{{ t('stockTransfers.detail.receivedAt') }}</span>
+              <span class="stat-value">{{ transfer.received_at ? (transfer.received_at | date) : '—' }}</span>
+            </div>
+          </div>
+
+          @if (transfer.notes) {
+            <div class="notes">
+              <strong>{{ t('stockTransfers.createDialog.notesLabel') }}:</strong>
+              <span>{{ transfer.notes }}</span>
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <div class="actions-bar">
+        @if (canShip()) {
+          <button
+            mat-flat-button
+            color="primary"
+            (click)="ship()"
+            [disabled]="acting"
+            data-testid="ship-button"
+          >
+            <mat-icon>local_shipping</mat-icon>
+            {{ t('stockTransfers.actions.ship') }}
+          </button>
+        }
+        @if (canReceive()) {
+          <button
+            mat-flat-button
+            color="primary"
+            (click)="openReceive()"
+            [disabled]="acting"
+            data-testid="open-receive-button"
+          >
+            <mat-icon>inventory</mat-icon>
+            {{ t('stockTransfers.actions.receive') }}
+          </button>
+        }
+        @if (canCancel()) {
+          <button mat-stroked-button color="warn" (click)="cancelTransfer()" [disabled]="acting">
+            <mat-icon>cancel</mat-icon>
+            {{ t('stockTransfers.actions.cancel') }}
+          </button>
+        }
+        @if (canDelete()) {
+          <button mat-stroked-button (click)="deleteTransfer()" [disabled]="acting">
+            <mat-icon>delete</mat-icon>
+            {{ t('common.delete') }}
+          </button>
+        }
+      </div>
+
+      <table mat-table [dataSource]="transfer.items" class="items-table" data-testid="items-table">
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.product') }}</th>
+          <td mat-cell *matCellDef="let item">
+            {{ item.product?.name || ('Product #' + item.product_id) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="qty_planned">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.planned') }}</th>
+          <td mat-cell *matCellDef="let item">{{ item.qty_planned }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="qty_shipped">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.shipped') }}</th>
+          <td mat-cell *matCellDef="let item">{{ item.qty_shipped }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="qty_received">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.received') }}</th>
+          <td mat-cell *matCellDef="let item">{{ item.qty_received }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    } @else {
+      <p class="empty-text">{{ t('stockTransfers.detail.notFound') }}</p>
+    }
+  </div>
+</ng-container>

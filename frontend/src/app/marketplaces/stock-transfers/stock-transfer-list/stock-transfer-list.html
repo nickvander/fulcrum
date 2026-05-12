@@ -1,0 +1,90 @@
+<ng-container *transloco="let t">
+  <div class="stock-transfer-list">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('stockTransfers.title') }}</h1>
+        <p>{{ t('stockTransfers.subtitle') }}</p>
+      </div>
+      <button
+        mat-flat-button
+        color="primary"
+        data-testid="new-transfer-button"
+        (click)="openCreate()"
+      >
+        <mat-icon>add</mat-icon>
+        {{ t('stockTransfers.newTransfer') }}
+      </button>
+    </div>
+
+    <mat-tab-group (selectedIndexChange)="onFilterChange($event)" animationDuration="0ms">
+      @for (filter of statusFilters; track filter.key) {
+        <mat-tab [label]="t('stockTransfers.filter.' + filter.key)"></mat-tab>
+      }
+    </mat-tab-group>
+
+    @if (loading) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (transfers.length === 0) {
+      <div class="empty-state" data-testid="empty-state">
+        <mat-icon>local_shipping</mat-icon>
+        <h2>{{ t('stockTransfers.empty.title') }}</h2>
+        <p>{{ t('stockTransfers.empty.subtitle') }}</p>
+        <button mat-flat-button color="primary" (click)="openCreate()">
+          <mat-icon>add</mat-icon>
+          {{ t('stockTransfers.newTransfer') }}
+        </button>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="transfers" class="transfers-table" data-testid="transfers-table">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.id') }}</th>
+          <td mat-cell *matCellDef="let t">#{{ t.id }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.status') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-chip [color]="statusColor(row.status)" highlighted>
+              {{ t('stockTransfers.status.' + row.status) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="route">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.route') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <code>{{ row.source_location }}</code>
+            <mat-icon class="route-arrow">east</mat-icon>
+            <code>{{ row.dest_location }}</code>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="units">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.units') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="units-cell">{{ unitsReceived(row) }} / {{ unitsPlanned(row) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="created_at">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.createdAt') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.created_at | date: 'mediumDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-button color="primary" (click)="view(row)">
+              {{ t('stockTransfers.view') }}
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" (click)="view(row)"></tr>
+      </table>
+    }
+  </div>
+</ng-container>

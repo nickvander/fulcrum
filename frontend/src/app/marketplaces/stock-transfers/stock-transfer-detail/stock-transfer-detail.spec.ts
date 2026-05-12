@@ -1,0 +1,105 @@
+import type { MockedObject } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslocoTestingModule } from '@ngneat/transloco';
+import { of } from 'rxjs';
+
+import { StockTransferDetailComponent } from './stock-transfer-detail';
+import { StockTransfer, StockTransferService } from '../stock-transfer.service';
+
+function transfer(overrides: Partial<StockTransfer> = {}): StockTransfer {
+  return {
+    id: 42,
+    source_location: 'default',
+    dest_location: 'ml-full',
+    status: 'draft',
+    notes: null,
+    external_inbound_id: null,
+    shipped_at: null,
+    received_at: null,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    items: [
+      {
+        id: 1,
+        transfer_id: 42,
+        product_id: 7,
+        variant_id: null,
+        qty_planned: 8,
+        qty_shipped: 0,
+        qty_received: 0,
+        product: { id: 7, name: 'Demo', sku: 'D-1' },
+      },
+    ],
+    ...overrides,
+  };
+}
+
+describe('StockTransferDetailComponent', () => {
+  let fixture: ComponentFixture<StockTransferDetailComponent>;
+  let component: StockTransferDetailComponent;
+  let service: MockedObject<StockTransferService>;
+
+  beforeEach(async () => {
+    const stub = {
+      get: vi.fn().mockReturnValue(of(transfer())),
+      ship: vi.fn().mockReturnValue(of(transfer({ status: 'shipped' }))),
+      cancel: vi.fn().mockReturnValue(of(transfer({ status: 'cancelled' }))),
+      delete: vi.fn().mockReturnValue(of({ deleted: 42 })),
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [
+        StockTransferDetailComponent,
+        NoopAnimationsModule,
+        RouterTestingModule,
+        MatDialogModule,
+        MatSnackBarModule,
+        TranslocoTestingModule.forRoot({
+          langs: { en: {}, 'es-MX': {} },
+          translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' },
+        }),
+      ],
+      providers: [
+        { provide: StockTransferService, useValue: stub },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: { get: () => '42' } } },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StockTransferDetailComponent);
+    component = fixture.componentInstance;
+    service = TestBed.inject(StockTransferService) as MockedObject<StockTransferService>;
+    fixture.detectChanges();
+  });
+
+  it('loads the transfer for the route id', () => {
+    expect(service.get).toHaveBeenCalledWith(42);
+    expect(component.transfer?.id).toBe(42);
+  });
+
+  it('exposes ship/receive/cancel/delete affordances based on status', () => {
+    expect(component.canShip()).toBe(true);
+    expect(component.canReceive()).toBe(false);
+    expect(component.canCancel()).toBe(true);
+    expect(component.canDelete()).toBe(true);
+
+    component.transfer = transfer({ status: 'shipped' });
+    expect(component.canShip()).toBe(false);
+    expect(component.canReceive()).toBe(true);
+    expect(component.canCancel()).toBe(false);
+    expect(component.canDelete()).toBe(false);
+  });
+
+  it('ships the transfer when ship() is called', () => {
+    component.ship();
+    expect(service.ship).toHaveBeenCalledWith(42);
+    expect(component.transfer?.status).toBe('shipped');
+  });
+});
