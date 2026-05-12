@@ -1,0 +1,122 @@
+<ng-container *transloco="let t">
+  <div class="stock-transfer-planner">
+    <a routerLink="/marketplaces/transfers" class="back-link">
+      <mat-icon>arrow_back</mat-icon>
+      {{ t('stockTransfers.backToList') }}
+    </a>
+
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('stockTransfers.planner.title') }}</h1>
+        <p>{{ t('stockTransfers.planner.subtitle') }}</p>
+      </div>
+      <div class="planner-actions">
+        <mat-form-field appearance="outline" class="notes-field" subscriptSizing="dynamic">
+          <mat-label>{{ t('stockTransfers.createDialog.notesLabel') }}</mat-label>
+          <input matInput [(ngModel)]="notes" data-testid="planner-notes" />
+        </mat-form-field>
+        <button
+          mat-flat-button
+          color="primary"
+          [disabled]="!canSave()"
+          (click)="save()"
+          data-testid="planner-save"
+        >
+          <mat-icon>send</mat-icon>
+          {{ t('stockTransfers.planner.save') }}
+        </button>
+      </div>
+    </div>
+
+    <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+      <mat-label>{{ t('stockTransfers.createDialog.searchProducts') }}</mat-label>
+      <input
+        matInput
+        [(ngModel)]="search"
+        placeholder="{{ t('stockTransfers.createDialog.searchPlaceholder') }}"
+        data-testid="planner-search"
+      />
+    </mat-form-field>
+
+    @if (loading) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (filteredRows.length === 0) {
+      <p class="empty-text">{{ t('stockTransfers.planner.noProducts') }}</p>
+    } @else {
+      <table mat-table [dataSource]="filteredRows" class="planner-table" data-testid="planner-table">
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="product-cell">
+              <span>{{ row.productName }}</span>
+              @if (row.sku) {
+                <code>{{ row.sku }}</code>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="internal">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.internal') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.internal }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="mlFull">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.mlFull') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.mlFull }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="amazonFba">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.amazonFba') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.amazonFba }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="allocateMl">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.allocateMl') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
+              <input
+                matInput
+                type="number"
+                min="0"
+                [max]="row.internal"
+                [ngModel]="row.allocateMl"
+                (ngModelChange)="updateAlloc(row, 'allocateMl', $event)"
+                [attr.data-testid]="'allocate-ml-' + row.productId"
+              />
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="allocateAmazon">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.allocateAmazon') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
+              <input
+                matInput
+                type="number"
+                min="0"
+                [max]="row.internal"
+                [ngModel]="row.allocateAmazon"
+                (ngModelChange)="updateAlloc(row, 'allocateAmazon', $event)"
+                [attr.data-testid]="'allocate-amazon-' + row.productId"
+              />
+            </mat-form-field>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="remaining">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.planner.col.remaining') }}</th>
+          <td mat-cell *matCellDef="let row" [class.over-allocated]="isOver(row)">
+            {{ remaining(row) }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" [class.over-allocated-row]="isOver(row)"></tr>
+      </table>
+    }
+  </div>
+</ng-container>

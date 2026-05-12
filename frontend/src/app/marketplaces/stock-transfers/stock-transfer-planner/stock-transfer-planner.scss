@@ -1,0 +1,87 @@
+.stock-transfer-planner {
+  padding: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.6rem;
+  }
+  p {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.planner-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.notes-field {
+  min-width: 280px;
+}
+
+.search-field {
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 12px;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 32px;
+}
+
+.empty-text {
+  color: rgba(0, 0, 0, 0.6);
+  padding: 16px;
+}
+
+.planner-table {
+  width: 100%;
+}
+
+.product-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  code {
+    font-size: 0.75rem;
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    align-self: flex-start;
+  }
+}
+
+.qty-field {
+  width: 96px;
+}
+
+.over-allocated {
+  color: #c62828;
+  font-weight: 600;
+}
+.over-allocated-row {
+  background: rgba(198, 40, 40, 0.05);
+}

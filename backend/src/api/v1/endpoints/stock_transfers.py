@@ -12,6 +12,55 @@ from src.services.stock_transfer_service import stock_transfer_service
 router = APIRouter()
 
 
+@router.get("/inventory-snapshot", response_model=List[st_schema.InventorySnapshotRow])
+def stock_transfer_inventory_snapshot(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Per-product stock broken down by internal vs marketplace-warehouse
+    locations. Feeds the allocation planner.
+    """
+    return stock_transfer_service.get_inventory_snapshot(db=db)
+
+
+@router.get("/reconciliation", response_model=List[st_schema.ReconciliationRow])
+def stock_transfer_reconciliation(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Lines from completed / cancelled / partial transfers where received qty
+    diverges from shipped qty — i.e., shrinkage, damage, or over-receipt.
+    """
+    return stock_transfer_service.get_reconciliation_report(db=db)
+
+
+@router.post(
+    "/plan-allocations",
+    response_model=List[st_schema.StockTransfer],
+)
+def plan_allocations(
+    *,
+    db: Session = Depends(get_db),
+    plan: st_schema.StockAllocationPlanRequest,
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Create one DRAFT transfer per destination location from a flat list of
+    {product_id, dest_location, qty_planned} allocations. Validates that the
+    combined draft allocations don't exceed the current internal stock.
+    """
+    return stock_transfer_service.plan_allocations(
+        db=db,
+        allocations=[a.model_dump() for a in plan.allocations],
+        notes=plan.notes,
+        user=current_user,
+    )
+
+
 @router.post("/", response_model=st_schema.StockTransfer)
 def create_stock_transfer(
     *,

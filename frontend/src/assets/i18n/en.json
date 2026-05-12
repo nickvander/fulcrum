@@ -763,6 +763,27 @@
                 "shipped": "Shipped",
                 "received": "Received"
             }
+        },
+        "planner": {
+            "title": "Allocation planner",
+            "subtitle": "Split internal stock across MercadoLibre Full and Amazon FBA in one pass.",
+            "save": "Create draft transfers",
+            "noProducts": "No products in inventory yet.",
+            "col": {
+                "internal": "Internal",
+                "mlFull": "ML Full",
+                "amazonFba": "Amazon FBA",
+                "allocateMl": "Send to ML",
+                "allocateAmazon": "Send to Amazon",
+                "remaining": "Remaining internal"
+            }
+        },
+        "reconciliation": {
+            "title": "Reconciliation",
+            "subtitle": "Lines where received quantity diverges from shipped quantity.",
+            "empty": "No discrepancies — every received transfer matches its shipped quantity.",
+            "delta": "Delta",
+            "summary": "{{lines}} line(s) with a divergence. Net delta: {{net}}."
         }
     },
     "marketplaces": {
