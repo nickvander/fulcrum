@@ -26,15 +26,18 @@ launch readiness and supplier import reviews.
 
 ## Best Next Features
 
-1. Demo-data cleanup guardrail
-   - Show customers which demo records exist before go-live.
-   - Provide a guided cleanup path that does not delete real customer records.
+1. Demo-data cleanup guardrail - done
+   - Launch readiness shows each detected demo record before go-live.
+   - Cleanup removes only records that still match the seeded demo fingerprints.
+   - Cleanup is blocked when demo records have customer-linked activity.
 
 2. Import review match assistance
-   - From an unmatched supplier line, create a Fulcrum product or supplier alias
-     without leaving the review dialog.
-   - Make the review queue usable when a customer imports their first messy
-     Alibaba document.
+   - Done: From an unmatched supplier line, create a Fulcrum product or learn a
+     supplier alias without leaving the review dialog.
+   - Done: Review updates persist to the pending import so reopening the dialog
+     keeps the match.
+   - Remaining: Add bulk reject/cleanup stale reviews and visual diffs for
+     matched invoice/packing-list documents.
 
 3. Import review history
    - Add filters for pending, approved, and rejected reviews.

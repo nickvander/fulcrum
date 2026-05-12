@@ -31,6 +31,31 @@ export interface DemoWorkspaceResult {
     message: string;
 }
 
+export interface DemoDataRecord {
+    key: string;
+    type: string;
+    id: number | null;
+    label: string;
+    identifier: string | null;
+    description: string;
+    route: string | null;
+    safe_to_delete: boolean;
+    blockers: string[];
+}
+
+export interface DemoDataReport {
+    has_demo_data: boolean;
+    cleanup_available: boolean;
+    blocked_reasons: string[];
+    records: DemoDataRecord[];
+    message: string;
+}
+
+export interface DemoDataCleanupResult extends DemoDataReport {
+    cleaned: boolean;
+    removed_records: string[];
+}
+
 export interface LaunchReadinessSection {
     key: string;
     label: string;
@@ -39,6 +64,9 @@ export interface LaunchReadinessSection {
     action_label: string;
     route: string;
     metrics: Record<string, number>;
+    records?: DemoDataRecord[];
+    cleanup_available?: boolean;
+    blocked_reasons?: string[];
 }
 
 export interface LaunchReadinessReport {
@@ -65,6 +93,10 @@ export class OnboardingService {
 
     createDemoWorkspace(): Observable<DemoWorkspaceResult> {
         return this.http.post<DemoWorkspaceResult>(`${this.apiUrl}/demo-workspace`, {});
+    }
+
+    cleanupDemoData(): Observable<DemoDataCleanupResult> {
+        return this.http.post<DemoDataCleanupResult>(`${this.apiUrl}/demo-data/cleanup`, { confirm: true });
     }
 
     getLaunchReadiness(): Observable<LaunchReadinessReport> {

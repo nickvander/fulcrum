@@ -6,6 +6,7 @@ import { OnboardingService } from '../../services/onboarding.service';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -21,6 +22,7 @@ describe('DashboardComponent', () => {
     let statsServiceMock: any;
     let onboardingServiceMock: any;
     let snackBarMock: any;
+    let dialogMock: any;
 
     beforeEach(async () => {
         statsServiceMock = {
@@ -71,6 +73,18 @@ describe('DashboardComponent', () => {
                         action_label: 'Review checklist',
                         route: '/dashboard',
                         metrics: {}
+                    },
+                    {
+                        key: 'demo_data',
+                        label: 'Demo data',
+                        status: 'ready',
+                        description: 'No demo records were detected.',
+                        action_label: 'Review records',
+                        route: '/dashboard',
+                        metrics: { demo_records: 0 },
+                        records: [],
+                        cleanup_available: false,
+                        blocked_reasons: []
                     }
                 ]
             })),
@@ -81,7 +95,21 @@ describe('DashboardComponent', () => {
                 product_id: 2,
                 purchase_order_id: 3,
                 message: 'Demo workspace created.'
+            })),
+            cleanupDemoData: vi.fn().mockReturnValue(of({
+                cleaned: true,
+                has_demo_data: false,
+                cleanup_available: false,
+                blocked_reasons: [],
+                records: [],
+                removed_records: ['product and demo inventory'],
+                message: 'Demo data cleaned up by admin@example.com.'
             }))
+        };
+        dialogMock = {
+            open: vi.fn().mockReturnValue({
+                afterClosed: vi.fn().mockReturnValue(of(true))
+            })
         };
         snackBarMock = {
             open: vi.fn()
@@ -92,6 +120,7 @@ describe('DashboardComponent', () => {
                 DashboardComponent, // Standalone
                 HttpClientTestingModule,
                 MatButtonModule,
+                MatDialogModule,
                 MatIconModule,
                 MatTooltipModule,
                 MatSnackBarModule,
@@ -106,7 +135,8 @@ describe('DashboardComponent', () => {
             providers: [
                 { provide: DashboardStatsService, useValue: statsServiceMock },
                 { provide: OnboardingService, useValue: onboardingServiceMock },
-                { provide: MatSnackBar, useValue: snackBarMock }
+                { provide: MatSnackBar, useValue: snackBarMock },
+                { provide: MatDialog, useValue: dialogMock }
             ],
             schemas: [CUSTOM_ELEMENTS_SCHEMA]
         })
@@ -115,6 +145,7 @@ describe('DashboardComponent', () => {
         fixture = TestBed.createComponent(DashboardComponent);
         component = fixture.componentInstance;
         (component as any).snackBar = snackBarMock;
+        (component as any).dialog = dialogMock;
         fixture.detectChanges();
     });
 
@@ -140,6 +171,82 @@ describe('DashboardComponent', () => {
 
         expect(onboardingServiceMock.createDemoWorkspace).toHaveBeenCalled();
         expect(snackBarMock.open).toHaveBeenCalledWith('Demo workspace created.', 'Close', { duration: 5000 });
+        expect(statsServiceMock.getStats).toHaveBeenCalled();
+        expect(onboardingServiceMock.getStatus).toHaveBeenCalled();
+    });
+
+    it('should render demo records in the launch readiness guardrail', async () => {
+        component.launchReadiness$ = of({
+            status: 'needs_attention',
+            ready: false,
+            summary: {
+                blocked: 0,
+                needs_attention: 1,
+                ready: 3,
+                optional: 1
+            },
+            sections: [
+                {
+                    key: 'demo_data',
+                    label: 'Demo data',
+                    status: 'needs_attention',
+                    description: 'Demo records exist.',
+                    action_label: 'Review records',
+                    route: '/dashboard',
+                    metrics: { demo_records: 1 },
+                    cleanup_available: true,
+                    blocked_reasons: [],
+                    records: [
+                        {
+                            key: 'product:2',
+                            type: 'Product',
+                            id: 2,
+                            label: '[Demo] Starter Widget',
+                            identifier: 'DEMO-STARTER-WIDGET',
+                            description: 'Seed product used for supplier matching.',
+                            route: '/products',
+                            safe_to_delete: true,
+                            blockers: []
+                        }
+                    ]
+                }
+            ]
+        });
+
+        fixture.detectChanges();
+        await fixture.whenStable();
+
+        const text = fixture.nativeElement.textContent;
+        expect(text).toContain('Review before go-live');
+        expect(text).toContain('[Demo] Starter Widget');
+        expect(text).toContain('DEMO-STARTER-WIDGET');
+    });
+
+    it('should confirm and clean up demo data', async () => {
+        onboardingServiceMock.getStatus.mockClear();
+        statsServiceMock.getStats.mockClear();
+
+        component.cleanupDemoData({
+            key: 'demo_data',
+            label: 'Demo data',
+            status: 'needs_attention',
+            description: 'Demo records exist.',
+            action_label: 'Review records',
+            route: '/dashboard',
+            metrics: { demo_records: 1 },
+            cleanup_available: true,
+            blocked_reasons: [],
+            records: []
+        });
+        await fixture.whenStable();
+
+        expect(dialogMock.open).toHaveBeenCalled();
+        expect(onboardingServiceMock.cleanupDemoData).toHaveBeenCalled();
+        expect(snackBarMock.open).toHaveBeenCalledWith(
+            'Demo data cleaned up by admin@example.com.',
+            'Close',
+            { duration: 5000 }
+        );
         expect(statsServiceMock.getStats).toHaveBeenCalled();
         expect(onboardingServiceMock.getStatus).toHaveBeenCalled();
     });

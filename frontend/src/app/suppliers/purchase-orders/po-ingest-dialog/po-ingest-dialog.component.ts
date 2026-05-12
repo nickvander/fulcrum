@@ -11,6 +11,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslocoModule } from '@ngneat/transloco';
 
 import { SuppliersService, PoIngestionResponse, ExtractedLineItem, DocumentParseResult, SupplierDocumentImportReview } from '../../suppliers.service';
@@ -42,6 +43,7 @@ export interface PoIngestDialogResult {
         MatProgressBarModule,
         MatChipsModule,
         MatTooltipModule,
+        MatSnackBarModule,
         TranslocoModule,
     ],
     templateUrl: './po-ingest-dialog.component.html',
@@ -66,6 +68,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     importReviewId: number | null = null;
     importedFileName = '';
     reviewWarnings: string[] = [];
+    assistingItemIndex: number | null = null;
 
     // Form fields for header
     supplierName = '';
@@ -85,6 +88,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         private suppliersService: SuppliersService,
         private productService: ProductService,
         private settingsService: SettingsService,
+        private snackBar: MatSnackBar,
         @Optional() @Inject(MAT_DIALOG_DATA) private data?: { review?: SupplierDocumentImportReview }
     ) { }
 
@@ -269,6 +273,98 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     // --- Preview Actions ---
     removeItem(index: number): void {
         this.editableItems.splice(index, 1);
+    }
+
+    createProductForItem(item: ExtractedLineItem, index: number): void {
+        if (!this.importReviewId) {
+            this.uploadError = 'Please process or select an import review before creating products.';
+            return;
+        }
+        if (!this.supplierId) {
+            this.uploadError = 'Please select a supplier before creating a product from this line.';
+            return;
+        }
+
+        this.assistingItemIndex = index;
+        this.uploadError = null;
+        this.suppliersService.createProductFromImportReviewItem(
+            this.importReviewId,
+            index,
+            {
+                supplier_id: this.supplierId,
+                name: item.description || item.sku || 'Imported product',
+                sku: item.sku,
+                default_resale_price: item.unit_cost || 0,
+                create_alias: true
+            }
+        ).subscribe({
+            next: (response) => {
+                if (response.product && !this.products.some(product => product.id === response.product!.id)) {
+                    this.products = [...this.products, response.product];
+                }
+                this.applyAssistedReview(response.import_review);
+                this.snackBar.open('Product created and matched to this line', 'Close', { duration: 3000 });
+                this.assistingItemIndex = null;
+            },
+            error: (err) => {
+                this.uploadError = err.error?.detail || 'Could not create a product from this line.';
+                this.assistingItemIndex = null;
+            }
+        });
+    }
+
+    learnAliasForItem(item: ExtractedLineItem, index: number): void {
+        if (!this.importReviewId) {
+            this.uploadError = 'Please process or select an import review before learning aliases.';
+            return;
+        }
+        if (!this.supplierId) {
+            this.uploadError = 'Please select a supplier before learning an alias.';
+            return;
+        }
+        if (!item.matched_product_id) {
+            this.uploadError = 'Select a Fulcrum product before learning this alias.';
+            return;
+        }
+
+        this.assistingItemIndex = index;
+        this.uploadError = null;
+        this.suppliersService.learnAliasFromImportReviewItem(
+            this.importReviewId,
+            index,
+            {
+                supplier_id: this.supplierId,
+                product_id: item.matched_product_id,
+                variant_id: item.matched_variant_id || null,
+                alias_sku: item.sku,
+                alias_name: item.description
+            }
+        ).subscribe({
+            next: (response) => {
+                this.applyAssistedReview(response.import_review);
+                this.snackBar.open('Supplier alias learned for this line', 'Close', { duration: 3000 });
+                this.assistingItemIndex = null;
+            },
+            error: (err) => {
+                this.uploadError = err.error?.detail || 'Could not learn an alias for this line.';
+                this.assistingItemIndex = null;
+            }
+        });
+    }
+
+    getProductLabel(productId: number | null | undefined): string {
+        if (!productId) return '';
+        const product = this.products.find(item => item.id === productId);
+        return product ? `${product.sku} - ${product.name}` : `Product #${productId}`;
+    }
+
+    private applyAssistedReview(review: SupplierDocumentImportReview): void {
+        this.importReviewId = review.id;
+        this.reviewWarnings = review.warnings || [];
+        this.supplierId = review.supplier_id || this.supplierId;
+        const normalized = this.toPoIngestionResponse(review.extracted_data);
+        this.extractedData = normalized;
+        this.editableItems = [...normalized.items];
     }
 
     getConfidenceLabel(): string {

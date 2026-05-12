@@ -4,6 +4,7 @@ import { finalize, Observable } from 'rxjs';
 import { LaunchReadinessReport, LaunchReadinessSection, OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -14,6 +15,7 @@ import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
+import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
     selector: 'app-dashboard',
@@ -23,6 +25,7 @@ import { TranslocoModule } from '@ngneat/transloco';
     imports: [
         CommonModule,
         MatButtonModule,
+        MatDialogModule,
         MatIconModule,
         MatTooltipModule,
         MatSnackBarModule,
@@ -40,11 +43,13 @@ export class DashboardComponent implements OnInit {
     onboardingStatus$!: Observable<OnboardingStatus>;
     launchReadiness$!: Observable<LaunchReadinessReport>;
     creatingDemoWorkspace = false;
+    cleaningDemoData = false;
 
     constructor(
         private statsService: DashboardStatsService,
         private onboardingService: OnboardingService,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit(): void {
@@ -78,10 +83,46 @@ export class DashboardComponent implements OnInit {
             });
     }
 
+    cleanupDemoData(section: LaunchReadinessSection): void {
+        if (this.cleaningDemoData || !section.cleanup_available) return;
+
+        const dialogRef = this.dialog.open(ConfirmationDialog, {
+            width: '420px',
+            data: {
+                title: 'Clean up demo data',
+                message: 'This removes only records that still match Fulcrum demo fingerprints. Cleanup is blocked automatically if customer activity is detected.'
+            } as ConfirmationDialogData
+        });
+
+        dialogRef.afterClosed().subscribe((confirmed) => {
+            if (!confirmed) return;
+
+            this.cleaningDemoData = true;
+            this.onboardingService.cleanupDemoData()
+                .pipe(finalize(() => this.cleaningDemoData = false))
+                .subscribe({
+                    next: (result) => {
+                        this.snackBar.open(result.message, 'Close', { duration: 5000 });
+                        this.refresh();
+                    },
+                    error: (error) => {
+                        const message = error?.error?.detail?.message
+                            || 'Demo cleanup could not run safely. Review the blocked records first.';
+                        this.snackBar.open(message, 'Close', { duration: 7000 });
+                        this.refresh();
+                    }
+                });
+        });
+    }
+
     readinessIcon(section: LaunchReadinessSection): string {
         if (section.status === 'ready') return 'check_circle';
         if (section.status === 'needs_attention') return 'warning';
         if (section.status === 'optional') return 'radio_button_unchecked';
         return 'error';
+    }
+
+    demoDataSection(report: LaunchReadinessReport): LaunchReadinessSection | undefined {
+        return report.sections.find(section => section.key === 'demo_data');
     }
 }

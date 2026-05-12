@@ -49,6 +49,52 @@
                         </a>
                     </article>
                 </div>
+
+                <ng-container *ngIf="demoDataSection(launchReadiness) as demoSection">
+                    <section class="demo-guardrail" *ngIf="demoSection.records?.length"
+                        [class.blocked]="!demoSection.cleanup_available">
+                        <div class="demo-guardrail-header">
+                            <div>
+                                <p class="eyebrow">Demo records</p>
+                                <h3>Review before go-live</h3>
+                                <p>Only the records below match Fulcrum demo fingerprints.</p>
+                            </div>
+                            <button mat-raised-button color="warn" (click)="cleanupDemoData(demoSection)"
+                                [disabled]="cleaningDemoData || !demoSection.cleanup_available">
+                                <mat-icon>{{ cleaningDemoData ? 'hourglass_top' : 'delete_sweep' }}</mat-icon>
+                                {{ cleaningDemoData ? 'Cleaning demo data' : 'Clean up demo data' }}
+                            </button>
+                        </div>
+
+                        <div class="demo-record-list">
+                            <article class="demo-record" *ngFor="let record of demoSection.records"
+                                [class.blocked]="!record.safe_to_delete">
+                                <mat-icon>{{ record.safe_to_delete ? 'fact_check' : 'lock' }}</mat-icon>
+                                <div>
+                                    <strong>{{ record.type }}</strong>
+                                    <span>{{ record.label }}</span>
+                                    <small *ngIf="record.identifier">{{ record.identifier }}</small>
+                                    <p>{{ record.description }}</p>
+                                    <p class="record-blocker" *ngFor="let blocker of record.blockers">
+                                        {{ blocker }}
+                                    </p>
+                                </div>
+                                <a *ngIf="record.route" mat-icon-button color="primary" [routerLink]="record.route"
+                                    matTooltip="Open record">
+                                    <mat-icon>open_in_new</mat-icon>
+                                </a>
+                            </article>
+                        </div>
+
+                        <div class="blocked-reasons" *ngIf="demoSection.blocked_reasons?.length">
+                            <mat-icon>shield</mat-icon>
+                            <div>
+                                <strong>Cleanup is paused</strong>
+                                <p *ngFor="let reason of demoSection.blocked_reasons">{{ reason }}</p>
+                            </div>
+                        </div>
+                    </section>
+                </ng-container>
             </section>
 
             <div class="dashboard-grid">

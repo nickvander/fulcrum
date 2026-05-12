@@ -8,14 +8,21 @@ from pydantic import BaseModel
 
 from src.database import get_db
 from src.crud import crud_purchase_order
+from src.crud.crud_product import product as crud_product
 from src.crud.crud_supplier_invoice import supplier_invoice as crud_supplier_invoice
+from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
+from src.crud.crud_supplier_product_alias import supplier_product_alias as crud_supplier_product_alias
+from src.schemas import product as product_schema
 from src.schemas import purchase_order as po_schema
 from src.schemas import supplier_invoice as invoice_schema
+from src.schemas import supplier_product as supplier_product_schema
+from src.schemas import supplier_product_alias as alias_schema
 from src.services.purchase_order_service import purchase_order_service
 from src.api.dependencies import get_current_active_user
 from src.models.user import User
 from src.models.supplier import Supplier
 from src.models.supplier_document_import import SupplierDocumentImport
+from src.models.supplier_product_alias import SupplierProductAlias
 
 router = APIRouter()
 
@@ -554,6 +561,28 @@ class SupplierDocumentImportApproveResponse(BaseModel):
     purchase_order: po_schema.PurchaseOrder
 
 
+class ImportReviewCreateProductRequest(BaseModel):
+    supplier_id: int
+    name: str | None = None
+    sku: str | None = None
+    default_resale_price: float | None = None
+    create_alias: bool = True
+
+
+class ImportReviewLearnAliasRequest(BaseModel):
+    supplier_id: int
+    product_id: int
+    variant_id: int | None = None
+    alias_sku: str | None = None
+    alias_name: str | None = None
+
+
+class SupplierDocumentImportAssistResponse(BaseModel):
+    import_review: SupplierDocumentImportRead
+    product: product_schema.Product | None = None
+    alias: alias_schema.SupplierProductAlias | None = None
+
+
 def _import_review_response(review: SupplierDocumentImport) -> SupplierDocumentImportRead:
     return SupplierDocumentImportRead(
         id=review.id,
@@ -582,6 +611,100 @@ def _find_supplier_id_for_vendor(db: Session, vendor_name: str | None) -> int | 
         if vendor_lower in supplier_lower or supplier_lower in vendor_lower:
             return supplier.id
     return None
+
+
+def _pending_import_review(db: Session, review_id: int) -> SupplierDocumentImport:
+    review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
+    if not review:
+        raise HTTPException(status_code=404, detail="Import review not found")
+    if review.status != "pending":
+        raise HTTPException(status_code=400, detail="Only pending import reviews can be updated")
+    return review
+
+
+def _review_items(review: SupplierDocumentImport) -> list[dict]:
+    extracted_data = review.extracted_data or {}
+    items = extracted_data.get("items") or []
+    if not isinstance(items, list):
+        raise HTTPException(status_code=400, detail="Import review does not contain line items")
+    return items
+
+
+def _review_item(review: SupplierDocumentImport, item_index: int) -> dict:
+    items = _review_items(review)
+    if item_index < 0 or item_index >= len(items):
+        raise HTTPException(status_code=404, detail="Import review line item not found")
+    item = items[item_index]
+    if not isinstance(item, dict):
+        raise HTTPException(status_code=400, detail="Import review line item is invalid")
+    return item
+
+
+def _refresh_import_review_warnings(review: SupplierDocumentImport) -> None:
+    extracted_data = review.extracted_data or {}
+    items = extracted_data.get("items") or []
+    warnings = []
+
+    if extracted_data.get("mode") == "match":
+        warnings.append("This document appears to match an existing PO. Review it there before receiving stock.")
+
+    unmatched_count = sum(1 for item in items if isinstance(item, dict) and not item.get("matched_product_id"))
+    if unmatched_count:
+        warnings.append(f"{unmatched_count} line item(s) need a Fulcrum product match before approval.")
+
+    review.warnings = warnings
+
+
+def _update_review_item_match(
+    review: SupplierDocumentImport,
+    *,
+    item_index: int,
+    product_id: int,
+    variant_id: int | None = None,
+) -> None:
+    extracted_data = dict(review.extracted_data or {})
+    items = [dict(item) if isinstance(item, dict) else item for item in extracted_data.get("items", [])]
+    if item_index < 0 or item_index >= len(items) or not isinstance(items[item_index], dict):
+        raise HTTPException(status_code=404, detail="Import review line item not found")
+
+    items[item_index]["matched_product_id"] = product_id
+    items[item_index]["matched_variant_id"] = variant_id
+    extracted_data["items"] = items
+    review.extracted_data = extracted_data
+    _refresh_import_review_warnings(review)
+
+
+def _validate_supplier_and_product(
+    db: Session,
+    *,
+    supplier_id: int,
+    product_id: int | None = None,
+) -> None:
+    if not db.query(Supplier).filter(Supplier.id == supplier_id).first():
+        raise HTTPException(status_code=404, detail="Supplier not found")
+    if product_id and not crud_product.get(db=db, id=product_id):
+        raise HTTPException(status_code=404, detail="Product not found")
+
+
+def _learn_import_review_alias(
+    db: Session,
+    *,
+    supplier_id: int,
+    product_id: int,
+    variant_id: int | None,
+    alias_sku: str | None,
+    alias_name: str | None,
+) -> SupplierProductAlias | None:
+    return crud_supplier_product_alias.upsert_learned_alias(
+        db=db,
+        supplier_id=supplier_id,
+        product_id=product_id,
+        variant_id=variant_id,
+        alias_sku=alias_sku,
+        alias_name=alias_name,
+        source="import_review_assist",
+        confidence=1.0,
+    )
 
 
 @router.post("/imports/reviews", response_model=SupplierDocumentImportRead)
@@ -653,6 +776,154 @@ def get_supplier_document_import_review(
     if not review:
         raise HTTPException(status_code=404, detail="Import review not found")
     return _import_review_response(review)
+
+
+@router.post(
+    "/imports/reviews/{review_id}/items/{item_index}/create-product",
+    response_model=SupplierDocumentImportAssistResponse,
+)
+def create_product_from_import_review_item(
+    *,
+    db: Session = Depends(get_db),
+    review_id: int,
+    item_index: int,
+    request: ImportReviewCreateProductRequest,
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Create a Fulcrum product from one staged supplier-import line item.
+
+    The pending review is updated with the created product match, so approval can
+    continue without leaving the review dialog.
+    """
+    review = _pending_import_review(db, review_id)
+    item = _review_item(review, item_index)
+    _validate_supplier_and_product(db, supplier_id=request.supplier_id)
+
+    item_sku = (request.sku if request.sku is not None else item.get("sku")) or None
+    item_sku = item_sku.strip() if isinstance(item_sku, str) else item_sku
+    if item_sku == "":
+        item_sku = None
+
+    item_name = (request.name or item.get("description") or item_sku or "").strip()
+    if not item_name:
+        raise HTTPException(status_code=400, detail="A product name is required")
+
+    if item_sku and crud_product.get_by_sku(db, sku=item_sku):
+        raise HTTPException(status_code=409, detail="A product with this SKU already exists")
+
+    unit_cost = float(item.get("unit_cost") or 0)
+    product_in = product_schema.ProductCreate(
+        name=item_name,
+        sku=item_sku,
+        description=f"Created from supplier import review #{review.id}: {review.file_name}",
+        default_resale_price=request.default_resale_price if request.default_resale_price is not None else unit_cost,
+        cost_price=unit_cost,
+        average_cost=0.0,
+        category="Imported",
+    )
+    product = crud_product.create(db=db, obj_in=product_in)
+
+    if not crud_supplier_product.get_by_product_and_supplier(
+        db=db,
+        product_id=product.id,
+        supplier_id=request.supplier_id,
+    ):
+        crud_supplier_product.create(
+            db=db,
+            obj_in=supplier_product_schema.SupplierProductCreate(
+                product_id=product.id,
+                supplier_id=request.supplier_id,
+                supplier_sku=item_sku,
+                supplier_product_name=item.get("description") or item_name,
+                cost_price=unit_cost,
+                minimum_order_qty=1.0,
+            ),
+        )
+
+    alias = None
+    if request.create_alias:
+        alias = _learn_import_review_alias(
+            db,
+            supplier_id=request.supplier_id,
+            product_id=product.id,
+            variant_id=None,
+            alias_sku=item.get("sku"),
+            alias_name=item.get("description"),
+        )
+
+    review.supplier_id = request.supplier_id
+    _update_review_item_match(review, item_index=item_index, product_id=product.id)
+    review.reviewed_by_id = current_user.id
+    db.add(review)
+    db.commit()
+    db.refresh(product)
+    db.refresh(review)
+    if alias:
+        db.refresh(alias)
+
+    return SupplierDocumentImportAssistResponse(
+        import_review=_import_review_response(review),
+        product=product,
+        alias=alias_schema.SupplierProductAlias.model_validate(alias) if alias else None,
+    )
+
+
+@router.post(
+    "/imports/reviews/{review_id}/items/{item_index}/learn-alias",
+    response_model=SupplierDocumentImportAssistResponse,
+)
+def learn_alias_from_import_review_item(
+    *,
+    db: Session = Depends(get_db),
+    review_id: int,
+    item_index: int,
+    request: ImportReviewLearnAliasRequest,
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Learn a supplier alias from one staged import line and match it to a product.
+    """
+    review = _pending_import_review(db, review_id)
+    item = _review_item(review, item_index)
+    _validate_supplier_and_product(
+        db,
+        supplier_id=request.supplier_id,
+        product_id=request.product_id,
+    )
+
+    alias_sku = request.alias_sku if request.alias_sku is not None else item.get("sku")
+    alias_name = request.alias_name if request.alias_name is not None else item.get("description")
+    alias = _learn_import_review_alias(
+        db,
+        supplier_id=request.supplier_id,
+        product_id=request.product_id,
+        variant_id=request.variant_id,
+        alias_sku=alias_sku,
+        alias_name=alias_name,
+    )
+    if not alias:
+        raise HTTPException(status_code=400, detail="Alias SKU or name is required")
+
+    review.supplier_id = request.supplier_id
+    _update_review_item_match(
+        review,
+        item_index=item_index,
+        product_id=request.product_id,
+        variant_id=request.variant_id,
+    )
+    review.reviewed_by_id = current_user.id
+    db.add(review)
+    db.commit()
+    db.refresh(review)
+    db.refresh(alias)
+    product = crud_product.get(db=db, id=request.product_id)
+
+    return SupplierDocumentImportAssistResponse(
+        import_review=_import_review_response(review),
+        product=product,
+        alias=alias_schema.SupplierProductAlias.model_validate(alias),
+    )
 
 
 @router.post("/imports/reviews/{review_id}/approve", response_model=SupplierDocumentImportApproveResponse)

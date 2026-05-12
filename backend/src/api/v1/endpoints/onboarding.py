@@ -1,16 +1,24 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends
-from sqlalchemy import func
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_current_active_user
 from src.crud import crud_purchase_order
 from src.database import get_db
-from src.models.inventory import InventoryAdjustment
-from src.models.marketplace import MarketplaceCredential
-from src.models.product import Product
+from src.models.custom_field import ProductCustomField
+from src.models.expense import Expense
+from src.models.inventory import InventoryAdjustment, InventoryItem
+from src.models.marketplace import MarketplaceCredential, MarketplaceListing
+from src.models.marketing import campaign_products, event_products
+from src.models.order import SalesOrderItem
+from src.models.product import BundleComponent, Product, ProductImage
+from src.models.product_inventory_settings import ProductInventorySettings
+from src.models.product_variant import ProductVariant
 from src.models.purchase_order import PurchaseOrder
+from src.models.purchase_order_item import PurchaseOrderItem
 from src.models.store_settings import StoreSettings
 from src.models.supplier import Supplier
 from src.models.supplier_document_import import SupplierDocumentImport
@@ -26,6 +34,7 @@ from src.services.purchase_order_service import purchase_order_service
 
 router = APIRouter()
 
+DEMO_STORE_NAME = "Fulcrum Demo Workspace"
 DEMO_SUPPLIER_NAME = "[Demo] Alibaba Supplier"
 DEMO_SUPPLIER_EMAIL = "demo-alibaba-supplier@fulcrum-demo.com"
 LEGACY_DEMO_SUPPLIER_EMAIL = "demo-alibaba-supplier@fulcrum.local"
@@ -36,6 +45,10 @@ DEMO_SUPPLIER_SKU = "ALI-DEMO-WIDGET-001"
 DEMO_SUPPLIER_PRODUCT_NAME = "Alibaba Demo Starter Widget"
 DEMO_RECEIVE_QUANTITY = 5
 DEMO_UNIT_COST = 12.5
+
+
+class DemoCleanupRequest(BaseModel):
+    confirm: bool = False
 
 
 def _step(
@@ -60,6 +73,561 @@ def _step(
         "route": route,
         "count": count,
     }
+
+
+def _count(db: Session, model: Any, *criteria: Any) -> int:
+    query = db.query(func.count(model.id))
+    if criteria:
+        query = query.filter(*criteria)
+    return query.scalar() or 0
+
+
+def _table_count(db: Session, table: Any, *criteria: Any) -> int:
+    query = db.query(func.count()).select_from(table)
+    if criteria:
+        query = query.filter(*criteria)
+    return query.scalar() or 0
+
+
+def _demo_record(
+    *,
+    key: str,
+    record_type: str,
+    label: str,
+    description: str,
+    record_id: int | None = None,
+    identifier: str | None = None,
+    route: str | None = None,
+    safe_to_delete: bool = True,
+    blockers: list[str] | None = None,
+) -> dict[str, Any]:
+    return {
+        "key": key,
+        "type": record_type,
+        "id": record_id,
+        "label": label,
+        "identifier": identifier,
+        "description": description,
+        "route": route,
+        "safe_to_delete": safe_to_delete,
+        "blockers": blockers or [],
+    }
+
+
+def _get_demo_store_settings(db: Session) -> list[StoreSettings]:
+    store_settings = db.query(StoreSettings).all()
+    return [
+        settings
+        for settings in store_settings
+        if settings.store_name == DEMO_STORE_NAME
+        or bool((settings.settings or {}).get("demo_workspace"))
+    ]
+
+
+def _get_demo_supplier(db: Session) -> Supplier | None:
+    return (
+        db.query(Supplier)
+        .filter(
+            (Supplier.email.in_([DEMO_SUPPLIER_EMAIL, LEGACY_DEMO_SUPPLIER_EMAIL]))
+            | (Supplier.name == DEMO_SUPPLIER_NAME)
+        )
+        .first()
+    )
+
+
+def _get_demo_product(db: Session) -> Product | None:
+    return db.query(Product).filter(Product.sku == DEMO_PRODUCT_SKU).first()
+
+
+def _get_demo_purchase_order(db: Session) -> PurchaseOrder | None:
+    return db.query(PurchaseOrder).filter(PurchaseOrder.notes == DEMO_PO_NOTES).first()
+
+
+def _is_demo_alias(alias: SupplierProductAlias) -> bool:
+    return alias.alias_sku == DEMO_SUPPLIER_SKU or alias.alias_name == DEMO_SUPPLIER_PRODUCT_NAME
+
+
+def _is_demo_supplier_product(supplier_product: SupplierProduct) -> bool:
+    return (
+        supplier_product.supplier_product_name == DEMO_SUPPLIER_PRODUCT_NAME
+        or supplier_product.supplier_sku == DEMO_SUPPLIER_SKU
+    )
+
+
+def _demo_context(db: Session) -> dict[str, Any]:
+    supplier = _get_demo_supplier(db)
+    product = _get_demo_product(db)
+    purchase_order = _get_demo_purchase_order(db)
+
+    aliases: list[SupplierProductAlias] = []
+    all_aliases: list[SupplierProductAlias] = []
+    supplier_products: list[SupplierProduct] = []
+    all_supplier_products: list[SupplierProduct] = []
+    if supplier and product:
+        all_aliases = (
+            db.query(SupplierProductAlias)
+            .filter(
+                SupplierProductAlias.supplier_id == supplier.id,
+                SupplierProductAlias.product_id == product.id,
+            )
+            .all()
+        )
+        aliases = [alias for alias in all_aliases if _is_demo_alias(alias)]
+        all_supplier_products = (
+            db.query(SupplierProduct)
+            .filter(
+                SupplierProduct.supplier_id == supplier.id,
+                SupplierProduct.product_id == product.id,
+            )
+            .all()
+        )
+        supplier_products = [
+            supplier_product
+            for supplier_product in all_supplier_products
+            if _is_demo_supplier_product(supplier_product)
+        ]
+
+    return {
+        "store_settings": _get_demo_store_settings(db),
+        "supplier": supplier,
+        "product": product,
+        "purchase_order": purchase_order,
+        "aliases": aliases,
+        "all_aliases": all_aliases,
+        "supplier_products": supplier_products,
+        "all_supplier_products": all_supplier_products,
+    }
+
+
+def _demo_product_blockers(
+    db: Session,
+    *,
+    product: Product | None,
+    supplier: Supplier | None,
+    purchase_order: PurchaseOrder | None,
+) -> list[str]:
+    if not product:
+        return []
+
+    blockers: list[str] = []
+    demo_supplier_id = supplier.id if supplier else None
+    demo_po_id = purchase_order.id if purchase_order else None
+
+    if product.supplier_id and product.supplier_id != demo_supplier_id:
+        blockers.append("Demo product is assigned to a non-demo supplier.")
+
+    po_item_query = db.query(func.count(PurchaseOrderItem.id)).filter(
+        PurchaseOrderItem.product_id == product.id
+    )
+    if demo_po_id:
+        po_item_query = po_item_query.filter(PurchaseOrderItem.po_id != demo_po_id)
+    linked_po_items = po_item_query.scalar() or 0
+    if linked_po_items:
+        blockers.append("Demo product appears on non-demo purchase orders.")
+
+    protected_links = [
+        (_count(db, SalesOrderItem, SalesOrderItem.product_id == product.id), "sales orders"),
+        (_count(db, MarketplaceListing, MarketplaceListing.product_id == product.id), "marketplace listings"),
+        (_count(db, Expense, Expense.product_id == product.id), "expenses"),
+        (
+            _count(
+                db,
+                BundleComponent,
+                (BundleComponent.bundle_id == product.id) | (BundleComponent.component_id == product.id),
+            ),
+            "bundles",
+        ),
+        (
+            _table_count(db, campaign_products, campaign_products.c.product_id == product.id)
+            + _table_count(db, event_products, event_products.c.product_id == product.id),
+            "marketing plans",
+        ),
+    ]
+    for count, label in protected_links:
+        if count:
+            blockers.append(f"Demo product is linked to {label}.")
+
+    product_supplier_links = (
+        db.query(SupplierProduct)
+        .filter(SupplierProduct.product_id == product.id)
+        .all()
+    )
+    if any(
+        link.supplier_id != demo_supplier_id or not _is_demo_supplier_product(link)
+        for link in product_supplier_links
+    ):
+        blockers.append("Demo product has supplier links outside the demo fingerprint.")
+
+    product_aliases = (
+        db.query(SupplierProductAlias)
+        .filter(SupplierProductAlias.product_id == product.id)
+        .all()
+    )
+    if any(
+        alias.supplier_id != demo_supplier_id or not _is_demo_alias(alias)
+        for alias in product_aliases
+    ):
+        blockers.append("Demo product has learned aliases outside the demo fingerprint.")
+
+    product_setup_links = [
+        (_count(db, ProductImage, ProductImage.product_id == product.id), "images"),
+        (_count(db, ProductVariant, ProductVariant.product_id == product.id), "variants"),
+        (_count(db, ProductCustomField, ProductCustomField.product_id == product.id), "custom fields"),
+        (
+            _count(
+                db,
+                ProductInventorySettings,
+                ProductInventorySettings.product_id == product.id,
+            ),
+            "inventory settings",
+        ),
+    ]
+    for count, label in product_setup_links:
+        if count:
+            blockers.append(f"Demo product has {label} that may include customer setup.")
+
+    expected_demo_reason = f"Received PO #{demo_po_id}" if demo_po_id else None
+    adjustment_query = db.query(func.count(InventoryAdjustment.id)).filter(
+        InventoryAdjustment.product_id == product.id
+    )
+    if expected_demo_reason:
+        non_demo_adjustments = (
+            adjustment_query.filter(
+                or_(
+                    InventoryAdjustment.reason != expected_demo_reason,
+                    InventoryAdjustment.reason.is_(None),
+                )
+            ).scalar()
+            or 0
+        )
+        if non_demo_adjustments:
+            blockers.append("Demo product has inventory adjustments outside the demo receipt.")
+    elif adjustment_query.scalar() or 0:
+        blockers.append("Demo product has inventory adjustments but no matching demo PO was found.")
+
+    stock_quantity = (
+        db.query(func.sum(InventoryItem.quantity))
+        .filter(InventoryItem.product_id == product.id)
+        .scalar()
+        or 0
+    )
+    if stock_quantity not in (0, DEMO_RECEIVE_QUANTITY):
+        blockers.append("Demo product inventory quantity no longer matches the seeded demo quantity.")
+
+    return blockers
+
+
+def _demo_supplier_blockers(
+    db: Session,
+    *,
+    supplier: Supplier | None,
+    product: Product | None,
+    purchase_order: PurchaseOrder | None,
+) -> list[str]:
+    if not supplier:
+        return []
+
+    blockers: list[str] = []
+    demo_product_id = product.id if product else None
+    demo_po_id = purchase_order.id if purchase_order else None
+
+    product_query = db.query(func.count(Product.id)).filter(Product.supplier_id == supplier.id)
+    if demo_product_id:
+        product_query = product_query.filter(Product.id != demo_product_id)
+    if product_query.scalar() or 0:
+        blockers.append("Demo supplier is assigned to non-demo products.")
+
+    po_query = db.query(func.count(PurchaseOrder.id)).filter(PurchaseOrder.supplier_id == supplier.id)
+    if demo_po_id:
+        po_query = po_query.filter(PurchaseOrder.id != demo_po_id)
+    if po_query.scalar() or 0:
+        blockers.append("Demo supplier is linked to non-demo purchase orders.")
+
+    if _count(db, SupplierDocumentImport, SupplierDocumentImport.supplier_id == supplier.id):
+        blockers.append("Demo supplier is linked to supplier document import reviews.")
+
+    if _count(db, Expense, Expense.supplier_id == supplier.id):
+        blockers.append("Demo supplier is linked to expenses.")
+
+    supplier_product_query = db.query(func.count(SupplierProduct.id)).filter(
+        SupplierProduct.supplier_id == supplier.id
+    )
+    alias_query = db.query(func.count(SupplierProductAlias.id)).filter(
+        SupplierProductAlias.supplier_id == supplier.id
+    )
+    if demo_product_id:
+        supplier_product_query = supplier_product_query.filter(
+            SupplierProduct.product_id != demo_product_id
+        )
+        alias_query = alias_query.filter(SupplierProductAlias.product_id != demo_product_id)
+    if supplier_product_query.scalar() or 0:
+        blockers.append("Demo supplier has non-demo supplier-product links.")
+    if alias_query.scalar() or 0:
+        blockers.append("Demo supplier has non-demo learned aliases.")
+
+    if demo_product_id:
+        product_supplier_links = (
+            db.query(SupplierProduct)
+            .filter(
+                SupplierProduct.supplier_id == supplier.id,
+                SupplierProduct.product_id == demo_product_id,
+            )
+            .all()
+        )
+        if any(not _is_demo_supplier_product(link) for link in product_supplier_links):
+            blockers.append("Demo supplier/product link has customer-edited supplier data.")
+
+        product_aliases = (
+            db.query(SupplierProductAlias)
+            .filter(
+                SupplierProductAlias.supplier_id == supplier.id,
+                SupplierProductAlias.product_id == demo_product_id,
+            )
+            .all()
+        )
+        if any(not _is_demo_alias(alias) for alias in product_aliases):
+            blockers.append("Demo supplier/product pair has non-demo learned aliases.")
+
+    return blockers
+
+
+def _demo_po_blockers(
+    db: Session,
+    *,
+    purchase_order: PurchaseOrder | None,
+    product: Product | None,
+) -> list[str]:
+    if not purchase_order:
+        return []
+
+    blockers: list[str] = []
+    product_id = product.id if product else None
+    if product_id and any(item.product_id != product_id for item in purchase_order.items):
+        blockers.append("Demo purchase order contains non-demo products.")
+
+    if purchase_order.invoices:
+        blockers.append("Demo purchase order has attached supplier invoices.")
+
+    if _count(db, Expense, Expense.purchase_order_id == purchase_order.id):
+        blockers.append("Demo purchase order is linked to expenses.")
+
+    return blockers
+
+
+def _build_demo_data_report(db: Session) -> dict[str, Any]:
+    context = _demo_context(db)
+    store_settings: list[StoreSettings] = context["store_settings"]
+    supplier: Supplier | None = context["supplier"]
+    product: Product | None = context["product"]
+    purchase_order: PurchaseOrder | None = context["purchase_order"]
+    aliases: list[SupplierProductAlias] = context["aliases"]
+    supplier_products: list[SupplierProduct] = context["supplier_products"]
+
+    product_blockers = _demo_product_blockers(
+        db,
+        product=product,
+        supplier=supplier,
+        purchase_order=purchase_order,
+    )
+    supplier_blockers = _demo_supplier_blockers(
+        db,
+        supplier=supplier,
+        product=product,
+        purchase_order=purchase_order,
+    )
+    po_blockers = _demo_po_blockers(db, purchase_order=purchase_order, product=product)
+
+    records: list[dict[str, Any]] = []
+    for settings in store_settings:
+        records.append(
+            _demo_record(
+                key=f"store_settings:{settings.id}",
+                record_type="Store settings",
+                record_id=settings.id,
+                label=settings.store_name or "Demo workspace marker",
+                identifier="demo_workspace",
+                description="Demo workspace marker in store settings.",
+                route="/settings",
+            )
+        )
+
+    if supplier:
+        records.append(
+            _demo_record(
+                key=f"supplier:{supplier.id}",
+                record_type="Supplier",
+                record_id=supplier.id,
+                label=supplier.name,
+                identifier=supplier.email,
+                description="Seed supplier used for Alibaba onboarding walkthroughs.",
+                route=f"/suppliers/id/{supplier.id}",
+                safe_to_delete=not supplier_blockers,
+                blockers=supplier_blockers,
+            )
+        )
+
+    if product:
+        records.append(
+            _demo_record(
+                key=f"product:{product.id}",
+                record_type="Product",
+                record_id=product.id,
+                label=product.name,
+                identifier=product.sku,
+                description="Seed product used for supplier matching and receiving walkthroughs.",
+                route="/products",
+                safe_to_delete=not product_blockers,
+                blockers=product_blockers,
+            )
+        )
+
+        stock_quantity = (
+            db.query(func.sum(InventoryItem.quantity))
+            .filter(InventoryItem.product_id == product.id)
+            .scalar()
+            or 0
+        )
+        adjustment_count = _count(
+            db,
+            InventoryAdjustment,
+            InventoryAdjustment.product_id == product.id,
+        )
+        if stock_quantity or adjustment_count:
+            records.append(
+                _demo_record(
+                    key=f"inventory:{product.id}",
+                    record_type="Inventory",
+                    record_id=product.id,
+                    label=f"{stock_quantity:g} units for {product.sku}",
+                    identifier=f"{adjustment_count} audit entries",
+                    description="Inventory created by the demo PO receiving flow.",
+                    route="/products",
+                    safe_to_delete=not product_blockers,
+                    blockers=product_blockers,
+                )
+            )
+
+    if purchase_order:
+        records.append(
+            _demo_record(
+                key=f"purchase_order:{purchase_order.id}",
+                record_type="Purchase order",
+                record_id=purchase_order.id,
+                label=f"PO #{purchase_order.id}",
+                identifier=purchase_order.status,
+                description="Demo purchase order used to exercise receiving and cost updates.",
+                route="/suppliers/po",
+                safe_to_delete=not po_blockers,
+                blockers=po_blockers,
+            )
+        )
+
+    for supplier_product in supplier_products:
+        records.append(
+            _demo_record(
+                key=f"supplier_product:{supplier_product.id}",
+                record_type="Supplier product link",
+                record_id=supplier_product.id,
+                label=supplier_product.supplier_product_name or DEMO_SUPPLIER_PRODUCT_NAME,
+                identifier=DEMO_SUPPLIER_SKU,
+                description="Demo supplier catalog link learned from the walkthrough PO.",
+                route=f"/suppliers/id/{supplier.id}" if supplier else "/suppliers",
+            )
+        )
+
+    for alias in aliases:
+        records.append(
+            _demo_record(
+                key=f"supplier_alias:{alias.id}",
+                record_type="Learned alias",
+                record_id=alias.id,
+                label=alias.alias_name or DEMO_SUPPLIER_PRODUCT_NAME,
+                identifier=alias.alias_sku,
+                description="Demo alias used to match Alibaba line items to the demo product.",
+                route=f"/suppliers/id/{supplier.id}" if supplier else "/suppliers",
+            )
+        )
+
+    blocked_reasons = sorted({*product_blockers, *supplier_blockers, *po_blockers})
+    has_demo_data = bool(records)
+
+    return {
+        "has_demo_data": has_demo_data,
+        "cleanup_available": has_demo_data and not blocked_reasons,
+        "blocked_reasons": blocked_reasons,
+        "records": records,
+        "message": (
+            "Demo records are ready for safe cleanup."
+            if has_demo_data and not blocked_reasons
+            else "Demo records need manual review before cleanup."
+            if has_demo_data
+            else "No demo records were detected."
+        ),
+    }
+
+
+def _is_demo_only_store_settings(store_settings: StoreSettings) -> bool:
+    settings = store_settings.settings or {}
+    real_settings = {key: value for key, value in settings.items() if key != "demo_workspace"}
+    return (
+        store_settings.store_name == DEMO_STORE_NAME
+        and not real_settings
+        and store_settings.low_inventory_days_default in (None, 30)
+        and store_settings.low_stock_quantity_default in (None, 10)
+        and not store_settings.store_domain
+        and not store_settings.smtp_password_encrypted
+        and not store_settings.ai_enabled
+        and store_settings.ai_provider in (None, "google")
+        and not store_settings.ai_model
+        and not store_settings.ai_google_api_key
+        and not store_settings.ai_openai_api_key
+        and not store_settings.ai_anthropic_api_key
+        and not store_settings.ai_qwen_api_key
+    )
+
+
+def _cleanup_demo_data(db: Session) -> list[str]:
+    context = _demo_context(db)
+    removed_records: list[str] = []
+
+    for store_settings in context["store_settings"]:
+        if _is_demo_only_store_settings(store_settings):
+            db.delete(store_settings)
+            removed_records.append("store settings marker")
+        else:
+            settings = dict(store_settings.settings or {})
+            if settings.pop("demo_workspace", None) is not None:
+                store_settings.settings = settings
+            if store_settings.store_name == DEMO_STORE_NAME:
+                store_settings.store_name = None
+            db.add(store_settings)
+            removed_records.append("store settings demo marker")
+
+    for alias in context["aliases"]:
+        db.delete(alias)
+        removed_records.append("learned alias")
+
+    for supplier_product in context["supplier_products"]:
+        db.delete(supplier_product)
+        removed_records.append("supplier product link")
+
+    purchase_order: PurchaseOrder | None = context["purchase_order"]
+    if purchase_order:
+        db.delete(purchase_order)
+        removed_records.append("purchase order")
+
+    product: Product | None = context["product"]
+    if product:
+        db.delete(product)
+        removed_records.append("product and demo inventory")
+
+    supplier: Supplier | None = context["supplier"]
+    if supplier:
+        db.delete(supplier)
+        removed_records.append("supplier")
+
+    db.commit()
+    return removed_records
 
 
 @router.get("/status")
@@ -303,6 +871,60 @@ def create_demo_workspace(
     }
 
 
+@router.get("/demo-data")
+def read_demo_data(db: Session = Depends(get_db)) -> dict[str, Any]:
+    """
+    Return the demo records that should be reviewed before customer go-live.
+    """
+    return _build_demo_data_report(db)
+
+
+@router.post("/demo-data/cleanup")
+def cleanup_demo_data(
+    *,
+    request: DemoCleanupRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> dict[str, Any]:
+    """
+    Remove only the known Fulcrum demo records after a guarded confirmation.
+
+    Cleanup is intentionally refused when the demo supplier/product has links
+    that look like customer activity.
+    """
+    if not request.confirm:
+        raise HTTPException(status_code=400, detail="Demo data cleanup must be confirmed.")
+
+    report = _build_demo_data_report(db)
+    if not report["has_demo_data"]:
+        return {
+            **report,
+            "cleaned": False,
+            "removed_records": [],
+            "message": "No demo records were detected.",
+        }
+
+    if not report["cleanup_available"]:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "Demo data cleanup was blocked to protect customer records.",
+                "blocked_reasons": report["blocked_reasons"],
+                "records": report["records"],
+            },
+        )
+
+    removed_records = _cleanup_demo_data(db)
+    refreshed_report = _build_demo_data_report(db)
+
+    return {
+        **refreshed_report,
+        "cleaned": True,
+        "removed_records": removed_records,
+        "message": f"Demo data cleaned up by {current_user.email}.",
+    }
+
+
 @router.get("/launch-readiness")
 def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
     """
@@ -316,6 +938,7 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
     po_count = steps_by_key["purchase_orders"]["count"]
     inventory_movement_count = steps_by_key["inventory"]["count"]
     marketplace_count = steps_by_key["marketplaces"]["count"]
+    demo_data = _build_demo_data_report(db)
 
     pending_import_count = (
         db.query(func.count(SupplierDocumentImport.id))
@@ -323,25 +946,7 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
         .scalar()
         or 0
     )
-    demo_product_count = (
-        db.query(func.count(Product.id))
-        .filter(Product.sku == DEMO_PRODUCT_SKU)
-        .scalar()
-        or 0
-    )
-    demo_supplier_count = (
-        db.query(func.count(Supplier.id))
-        .filter(Supplier.name == DEMO_SUPPLIER_NAME)
-        .scalar()
-        or 0
-    )
-    demo_po_count = (
-        db.query(func.count(PurchaseOrder.id))
-        .filter(PurchaseOrder.notes == DEMO_PO_NOTES)
-        .scalar()
-        or 0
-    )
-    demo_data_count = demo_product_count + demo_supplier_count + demo_po_count
+    demo_data_count = len(demo_data["records"])
 
     sections = [
         {
@@ -385,12 +990,15 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
             "key": "demo_data",
             "label": "Demo data",
             "status": "ready" if demo_data_count == 0 else "needs_attention",
-            "description": "No demo records were detected." if demo_data_count == 0 else "Demo records exist. Review or remove them before using Fulcrum as the source of truth.",
-            "action_label": "Review demo PO",
-            "route": "/suppliers/po",
+            "description": "No demo records were detected." if demo_data_count == 0 else "Demo records exist. Review the list and clean them up before go-live.",
+            "action_label": "Review records",
+            "route": "/dashboard",
             "metrics": {
                 "demo_records": demo_data_count,
             },
+            "records": demo_data["records"],
+            "cleanup_available": demo_data["cleanup_available"],
+            "blocked_reasons": demo_data["blocked_reasons"],
         },
         {
             "key": "marketplaces",
