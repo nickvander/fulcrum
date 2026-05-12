@@ -7,10 +7,14 @@ import { MarketplaceSettingsComponent } from './pages/marketplace-settings/marke
 import { MarketplaceCallbackComponent } from './pages/marketplace-callback/marketplace-callback';
 import { StockTransferListComponent } from './stock-transfers/stock-transfer-list/stock-transfer-list';
 import { StockTransferDetailComponent } from './stock-transfers/stock-transfer-detail/stock-transfer-detail';
+import { StockTransferPlannerComponent } from './stock-transfers/stock-transfer-planner/stock-transfer-planner';
+import { StockTransferReconciliationComponent } from './stock-transfers/stock-transfer-reconciliation/stock-transfer-reconciliation';
 
 const routes: Routes = [
   { path: '', component: MarketplaceListComponent },
   { path: 'transfers', component: StockTransferListComponent },
+  { path: 'transfers/planner', component: StockTransferPlannerComponent },
+  { path: 'transfers/reconciliation', component: StockTransferReconciliationComponent },
   { path: 'transfers/:id', component: StockTransferDetailComponent },
   { path: 'settings/:type', component: MarketplaceSettingsComponent },
   { path: ':type/callback', component: MarketplaceCallbackComponent },

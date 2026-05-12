@@ -763,6 +763,27 @@
                 "shipped": "Enviada",
                 "received": "Recibida"
             }
+        },
+        "planner": {
+            "title": "Planificador de asignación",
+            "subtitle": "Divide el stock interno entre MercadoLibre Full y Amazon FBA en un solo paso.",
+            "save": "Crear borradores",
+            "noProducts": "Aún no hay productos en inventario.",
+            "col": {
+                "internal": "Interno",
+                "mlFull": "ML Full",
+                "amazonFba": "Amazon FBA",
+                "allocateMl": "Enviar a ML",
+                "allocateAmazon": "Enviar a Amazon",
+                "remaining": "Restante interno"
+            }
+        },
+        "reconciliation": {
+            "title": "Conciliación",
+            "subtitle": "Líneas donde la cantidad recibida difiere de la enviada.",
+            "empty": "Sin discrepancias — todo lo recibido coincide con lo enviado.",
+            "delta": "Diferencia",
+            "summary": "{{lines}} línea(s) con divergencia. Diferencia neta: {{net}}."
         }
     },
     "marketplaces": {

@@ -90,6 +90,33 @@ export interface SyncListingsResult {
   missing_listings: SyncListingsMissing[];
 }
 
+export interface InventorySnapshotRow {
+  product_id: number;
+  product_name: string;
+  product_sku?: string | null;
+  by_location: { [location: string]: number };
+  total: number;
+}
+
+export interface AllocationEntry {
+  product_id: number;
+  dest_location: string;
+  qty_planned: number;
+}
+
+export interface ReconciliationRow {
+  transfer_id: number;
+  transfer_status: string;
+  dest_location: string;
+  product_id: number;
+  product_name?: string | null;
+  qty_shipped: number;
+  qty_received: number;
+  delta: number;
+  shipped_at?: string | null;
+  received_at?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class StockTransferService {
   private apiUrl = `${environment.apiUrl}/stock-transfers`;
@@ -126,6 +153,24 @@ export class StockTransferService {
 
   syncListings(id: number): Observable<SyncListingsResult> {
     return this.http.post<SyncListingsResult>(`${this.apiUrl}/${id}/sync-listings`, {});
+  }
+
+  inventorySnapshot(): Observable<InventorySnapshotRow[]> {
+    return this.http.get<InventorySnapshotRow[]>(`${this.apiUrl}/inventory-snapshot`);
+  }
+
+  planAllocations(
+    allocations: AllocationEntry[],
+    notes?: string | null,
+  ): Observable<StockTransfer[]> {
+    return this.http.post<StockTransfer[]>(`${this.apiUrl}/plan-allocations`, {
+      allocations,
+      notes: notes || null,
+    });
+  }
+
+  reconciliation(): Observable<ReconciliationRow[]> {
+    return this.http.get<ReconciliationRow[]>(`${this.apiUrl}/reconciliation`);
   }
 
   receive(id: number, lines: StockTransferReceiveLine[]): Observable<StockTransfer> {

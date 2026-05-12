@@ -5,15 +5,33 @@
         <h1>{{ t('stockTransfers.title') }}</h1>
         <p>{{ t('stockTransfers.subtitle') }}</p>
       </div>
-      <button
-        mat-flat-button
-        color="primary"
-        data-testid="new-transfer-button"
-        (click)="openCreate()"
-      >
-        <mat-icon>add</mat-icon>
-        {{ t('stockTransfers.newTransfer') }}
-      </button>
+      <div class="header-actions">
+        <button
+          mat-stroked-button
+          routerLink="/marketplaces/transfers/planner"
+          data-testid="open-planner-button"
+        >
+          <mat-icon>view_quilt</mat-icon>
+          {{ t('stockTransfers.planner.title') }}
+        </button>
+        <button
+          mat-stroked-button
+          routerLink="/marketplaces/transfers/reconciliation"
+          data-testid="open-reconciliation-button"
+        >
+          <mat-icon>fact_check</mat-icon>
+          {{ t('stockTransfers.reconciliation.title') }}
+        </button>
+        <button
+          mat-flat-button
+          color="primary"
+          data-testid="new-transfer-button"
+          (click)="openCreate()"
+        >
+          <mat-icon>add</mat-icon>
+          {{ t('stockTransfers.newTransfer') }}
+        </button>
+      </div>
     </div>
 
     <mat-tab-group (selectedIndexChange)="onFilterChange($event)" animationDuration="0ms">

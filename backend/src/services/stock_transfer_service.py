@@ -10,6 +10,7 @@ from src.models.inventory import InventoryItem
 from src.models.marketplace import Marketplace, MarketplaceListing
 from src.models.stock_transfer import (
     LOCATION_AMAZON_FBA,
+    LOCATION_INTERNAL,
     LOCATION_ML_FULL,
     StockTransfer,
     StockTransferStatus,
@@ -258,6 +259,208 @@ class StockTransferService:
             print(f"[stock-transfer] inbound shipment failed: {exc}")
             return None
         return result.external_inbound_id
+
+    def get_inventory_snapshot(
+        self,
+        db: Session,
+        *,
+        product_ids: Optional[list] = None,
+        locations: Optional[list] = None,
+    ) -> list:
+        """
+        Returns the current stock for each product, broken down by location.
+
+        Result rows:
+            {
+                "product_id": int,
+                "product_name": str,
+                "product_sku": str | None,
+                "by_location": {location: qty, ...},
+                "total": int,
+            }
+        Products with zero stock at all queried locations are still returned
+        so the planner can show them as candidates.
+        """
+        from src.models.product import Product
+
+        target_locations = locations or [
+            LOCATION_INTERNAL,
+            LOCATION_ML_FULL,
+            LOCATION_AMAZON_FBA,
+        ]
+
+        product_query = db.query(Product)
+        if product_ids:
+            product_query = product_query.filter(Product.id.in_(product_ids))
+        products = product_query.order_by(Product.name.asc()).limit(500).all()
+        if not products:
+            return []
+        ids = [p.id for p in products]
+
+        rows = (
+            db.query(
+                InventoryItem.product_id,
+                InventoryItem.location,
+                func.coalesce(func.sum(InventoryItem.quantity), 0).label("qty"),
+            )
+            .filter(
+                InventoryItem.product_id.in_(ids),
+                InventoryItem.location.in_(target_locations),
+            )
+            .group_by(InventoryItem.product_id, InventoryItem.location)
+            .all()
+        )
+        by_product: dict = {pid: {loc: 0 for loc in target_locations} for pid in ids}
+        for product_id, location, qty in rows:
+            by_product.setdefault(product_id, {loc: 0 for loc in target_locations})
+            by_product[product_id][location] = int(qty or 0)
+
+        result = []
+        for product in products:
+            buckets = by_product.get(product.id, {loc: 0 for loc in target_locations})
+            result.append(
+                {
+                    "product_id": product.id,
+                    "product_name": product.name,
+                    "product_sku": product.sku,
+                    "by_location": buckets,
+                    "total": sum(buckets.values()),
+                }
+            )
+        return result
+
+    def plan_allocations(
+        self,
+        db: Session,
+        *,
+        allocations: list,
+        user=None,
+        notes: Optional[str] = None,
+    ) -> list:
+        """
+        Bundle a list of {product_id, dest_location, qty_planned} allocations
+        into one DRAFT StockTransfer per destination location and return them.
+
+        Validates that each allocation is positive and that no allocation
+        exceeds the current internal stock for that product.
+        """
+        if not allocations:
+            raise HTTPException(status_code=400, detail="No allocations supplied")
+
+        # Group by destination, dedup product entries (sum qty for same product).
+        grouped: dict = {}
+        product_totals: dict = {}
+        for entry in allocations:
+            if isinstance(entry, dict):
+                pid = entry.get("product_id")
+                dest = entry.get("dest_location")
+                qty = entry.get("qty_planned")
+            else:
+                pid = getattr(entry, "product_id", None)
+                dest = getattr(entry, "dest_location", None)
+                qty = getattr(entry, "qty_planned", None)
+
+            if pid is None or not dest or qty is None or qty <= 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Each allocation needs product_id, dest_location, qty_planned > 0",
+                )
+            if dest == LOCATION_INTERNAL:
+                raise HTTPException(
+                    status_code=400,
+                    detail="dest_location cannot be the internal warehouse",
+                )
+
+            grouped.setdefault(dest, {})
+            grouped[dest][pid] = grouped[dest].get(pid, 0) + int(qty)
+            product_totals[pid] = product_totals.get(pid, 0) + int(qty)
+
+        # Validate combined allocations don't exceed current internal stock.
+        for pid, total in product_totals.items():
+            current = (
+                db.query(func.coalesce(func.sum(InventoryItem.quantity), 0))
+                .filter(
+                    InventoryItem.product_id == pid,
+                    InventoryItem.location == LOCATION_INTERNAL,
+                )
+                .scalar()
+                or 0
+            )
+            if total > current:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"Allocations for product {pid} exceed internal stock "
+                        f"({total} requested, {current} available)"
+                    ),
+                )
+
+        created = []
+        from src.schemas.stock_transfer import (
+            StockTransferCreate as _Create,
+            StockTransferItemCreate as _ItemCreate,
+        )
+
+        for dest, by_product in grouped.items():
+            transfer_in = _Create(
+                dest_location=dest,
+                notes=notes,
+                items=[
+                    _ItemCreate(product_id=pid, qty_planned=int(qty))
+                    for pid, qty in by_product.items()
+                ],
+            )
+            transfer = self.create_draft(db=db, transfer_in=transfer_in, user=user)
+            created.append(transfer)
+        return created
+
+    def get_reconciliation_report(self, db: Session) -> list:
+        """
+        Returns rows for transfer items whose received quantity diverges from
+        the shipped quantity — i.e., shrinkage / damage / over-receipt.
+        Only considers transfers in RECEIVED / PARTIALLY_RECEIVED / CANCELLED
+        states (DRAFT and SHIPPED still have an open receive window).
+        """
+        from src.models.stock_transfer import StockTransfer, StockTransferItem
+
+        terminal = (
+            StockTransferStatus.RECEIVED.value,
+            StockTransferStatus.PARTIALLY_RECEIVED.value,
+            StockTransferStatus.CANCELLED.value,
+        )
+        rows = (
+            db.query(StockTransfer, StockTransferItem)
+            .join(StockTransferItem, StockTransferItem.transfer_id == StockTransfer.id)
+            .filter(StockTransfer.status.in_(terminal))
+            .order_by(StockTransfer.id.desc())
+            .all()
+        )
+        result = []
+        for transfer, item in rows:
+            shipped = item.qty_shipped or 0
+            received = item.qty_received or 0
+            delta = received - shipped
+            if delta == 0:
+                continue
+            result.append(
+                {
+                    "transfer_id": transfer.id,
+                    "transfer_status": transfer.status,
+                    "dest_location": transfer.dest_location,
+                    "product_id": item.product_id,
+                    "product_name": item.product.name if item.product else None,
+                    "qty_shipped": shipped,
+                    "qty_received": received,
+                    "delta": delta,
+                    "shipped_at": transfer.shipped_at.isoformat()
+                    if transfer.shipped_at
+                    else None,
+                    "received_at": transfer.received_at.isoformat()
+                    if transfer.received_at
+                    else None,
+                }
+            )
+        return result
 
     def sync_marketplace_listings(
         self,

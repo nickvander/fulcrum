@@ -1,0 +1,81 @@
+<ng-container *transloco="let t">
+  <div class="reconciliation">
+    <a routerLink="/marketplaces/transfers" class="back-link">
+      <mat-icon>arrow_back</mat-icon>
+      {{ t('stockTransfers.backToList') }}
+    </a>
+
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('stockTransfers.reconciliation.title') }}</h1>
+        <p>{{ t('stockTransfers.reconciliation.subtitle') }}</p>
+      </div>
+      <button mat-stroked-button (click)="reload()">
+        <mat-icon>refresh</mat-icon>
+        {{ t('common.refresh') }}
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (rows.length === 0) {
+      <p class="empty-text">{{ t('stockTransfers.reconciliation.empty') }}</p>
+    } @else {
+      <p class="summary">
+        {{
+          t('stockTransfers.reconciliation.summary', {
+            lines: rows.length,
+            net: totalDelta()
+          })
+        }}
+      </p>
+      <table mat-table [dataSource]="rows" class="rec-table" data-testid="rec-table">
+        <ng-container matColumnDef="transfer">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.id') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <a [routerLink]="['/marketplaces/transfers', row.transfer_id]">
+              #{{ row.transfer_id }}
+            </a>
+            <span class="status-chip">{{ t('stockTransfers.status.' + row.transfer_status) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.product_name || ('Product #' + row.product_id) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="destination">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.route') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <code>{{ row.dest_location }}</code>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="shipped">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.shipped') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.qty_shipped }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="received">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.received') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.qty_received }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="delta">
+          <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.reconciliation.delta') }}</th>
+          <td mat-cell *matCellDef="let row" [class]="shrinkRowClass(row)">
+            {{ row.delta > 0 ? '+' : '' }}{{ row.delta }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns"></tr>
+      </table>
+    }
+  </div>
+</ng-container>

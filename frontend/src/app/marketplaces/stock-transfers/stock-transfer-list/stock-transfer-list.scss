@@ -11,6 +11,12 @@
   flex-wrap: wrap;
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .header-text h1 {
   margin: 0 0 4px;
   font-size: 1.6rem;

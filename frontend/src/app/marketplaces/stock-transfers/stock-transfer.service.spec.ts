@@ -79,4 +79,32 @@ describe('StockTransferService', () => {
     expect(req.request.method).toBe('POST');
     req.flush({ updated: [], missing_listings: [] });
   });
+
+  it('fetches the inventory snapshot from the planner endpoint', () => {
+    service.inventorySnapshot().subscribe();
+    const req = httpMock.expectOne('/api/v1/stock-transfers/inventory-snapshot');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
+
+  it('plans allocations with notes', () => {
+    service
+      .planAllocations(
+        [{ product_id: 1, dest_location: 'ml-full', qty_planned: 5 }],
+        'first',
+      )
+      .subscribe();
+    const req = httpMock.expectOne('/api/v1/stock-transfers/plan-allocations');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.allocations.length).toBe(1);
+    expect(req.request.body.notes).toBe('first');
+    req.flush([]);
+  });
+
+  it('fetches the reconciliation report', () => {
+    service.reconciliation().subscribe();
+    const req = httpMock.expectOne('/api/v1/stock-transfers/reconciliation');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });
