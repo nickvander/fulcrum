@@ -1,32 +1,86 @@
 <ng-container *transloco="let t">
-    <div class="widget-container">
-        <div class="widget-header">
-            <h3>{{ t('dashboard.criticalStock') }}</h3>
-            <a mat-button color="primary" routerLink="/products" [queryParams]="{max_stock: 10}">{{ t('common.viewAll')
-                }}</a>
-        </div>
-
-        <div class="widget-content">
-            <div *ngIf="products.length === 0" class="empty-state">
-                <mat-icon class="success-icon">check_circle</mat-icon>
-                <p>{{ t('common.allStockHealthy') }}</p>
-            </div>
-
-            <mat-nav-list *ngIf="products.length > 0" class="dense-list">
-                <a mat-list-item *ngFor="let product of products" [routerLink]="['/products']"
-                    [queryParams]="{open_sku: product.sku}" class="list-item">
-                    <span matListItemIcon class="icon-badge error">
-                        <mat-icon>error_outline</mat-icon>
-                    </span>
-                    <span matListItemTitle class="item-name">{{ product.name }}</span>
-                    <span matListItemLine class="item-meta">
-                        <span>SKU: {{ product.sku }}</span>
-                        <span class="stock-badge" [class.critical]="getTotalStock(product) === 0">
-                            {{ getTotalStock(product) }} {{ t('common.units') }}
-                        </span>
-                    </span>
-                </a>
-            </mat-nav-list>
-        </div>
+  <div class="widget-container">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.criticalStock') }}</h3>
+      <a mat-button color="primary" routerLink="/products" [queryParams]="{ max_stock: 10 }">
+        {{ t('common.viewAll') }}
+      </a>
     </div>
+
+    @if (rows.length === 0) {
+      <div class="widget-content">
+        <div class="empty-state">
+          <mat-icon class="success-icon">check_circle</mat-icon>
+          <p>{{ t('common.allStockHealthy') }}</p>
+        </div>
+      </div>
+    } @else {
+      <div class="severity-chips">
+        @if (summary.critical > 0) {
+          <span class="chip critical" data-testid="chip-critical">
+            {{ summary.critical }} {{ t('dashboard.severity.critical') }}
+          </span>
+        }
+        @if (summary.low > 0) {
+          <span class="chip low" data-testid="chip-low">
+            {{ summary.low }} {{ t('dashboard.severity.low') }}
+          </span>
+        }
+        @if (summary.watch > 0) {
+          <span class="chip watch" data-testid="chip-watch">
+            {{ summary.watch }} {{ t('dashboard.severity.watch') }}
+          </span>
+        }
+      </div>
+
+      <div class="widget-content">
+        <table class="lowstock-table" data-testid="lowstock-table">
+          <thead>
+            <tr>
+              <th>{{ t('dashboard.lowStock.product') }}</th>
+              <th class="num">{{ t('dashboard.lowStock.onHand') }}</th>
+              <th class="num">{{ t('dashboard.lowStock.threshold') }}</th>
+              <th class="num">{{ t('dashboard.lowStock.velocity') }}</th>
+              <th class="num">{{ t('dashboard.lowStock.daysLeft') }}</th>
+              <th class="num">{{ t('dashboard.lowStock.suggested') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.product_id) {
+              <tr [attr.data-testid]="'lowstock-row-' + row.product_id" [class]="'sev-' + row.severity">
+                <td>
+                  <a [routerLink]="['/products']" [queryParams]="{ open_sku: row.product_sku }">
+                    {{ row.product_name }}
+                  </a>
+                  @if (row.product_sku) {
+                    <code>{{ row.product_sku }}</code>
+                  }
+                </td>
+                <td class="num">{{ row.on_hand }}</td>
+                <td class="num">{{ row.threshold }}</td>
+                <td class="num" [matTooltip]="t('dashboard.lowStock.velocityHint')">
+                  {{ velocityLabel(row) }}
+                </td>
+                <td class="num">{{ daysLeftLabel(row) }}</td>
+                <td class="num suggested">{{ row.suggested_reorder_qty }}</td>
+                <td class="actions">
+                  <a
+                    mat-stroked-button
+                    color="primary"
+                    [routerLink]="['/suppliers/po/create']"
+                    [queryParams]="{ product_id: row.product_id }"
+                    [attr.data-testid]="'create-po-' + row.product_id"
+                  >
+                    <mat-icon>add_shopping_cart</mat-icon>
+                    {{ t('dashboard.lowStock.createPo') }}
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
 </ng-container>

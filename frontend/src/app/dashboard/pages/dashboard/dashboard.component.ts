@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DashboardStats, DashboardStatsService } from '../../services/dashboard-stats.service';
+import { LowStockReport, LowStockService } from '../../services/low-stock.service';
 import { finalize, Observable } from 'rxjs';
 import { LaunchReadinessReport, LaunchReadinessSection, OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
 import { CommonModule } from '@angular/common';
@@ -42,12 +43,14 @@ export class DashboardComponent implements OnInit {
     stats$!: Observable<DashboardStats>;
     onboardingStatus$!: Observable<OnboardingStatus>;
     launchReadiness$!: Observable<LaunchReadinessReport>;
+    lowStock$!: Observable<LowStockReport>;
     creatingDemoWorkspace = false;
     cleaningDemoData = false;
 
     constructor(
         private statsService: DashboardStatsService,
         private onboardingService: OnboardingService,
+        private lowStockService: LowStockService,
         private snackBar: MatSnackBar,
         private dialog: MatDialog
     ) { }
@@ -60,6 +63,7 @@ export class DashboardComponent implements OnInit {
         this.stats$ = this.statsService.getStats();
         this.onboardingStatus$ = this.onboardingService.getStatus();
         this.launchReadiness$ = this.onboardingService.getLaunchReadiness();
+        this.lowStock$ = this.lowStockService.getLowStock();
     }
 
     createDemoWorkspace(): void {

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardStatsService } from '../../services/dashboard-stats.service';
+import { LowStockService } from '../../services/low-stock.service';
 import { OnboardingService } from '../../services/onboarding.service';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -21,6 +22,7 @@ describe('DashboardComponent', () => {
     let fixture: ComponentFixture<DashboardComponent>;
     let statsServiceMock: any;
     let onboardingServiceMock: any;
+    let lowStockServiceMock: any;
     let snackBarMock: any;
     let dialogMock: any;
 
@@ -106,6 +108,14 @@ describe('DashboardComponent', () => {
                 message: 'Demo data cleaned up by admin@example.com.'
             }))
         };
+        lowStockServiceMock = {
+            getLowStock: vi.fn().mockReturnValue(of({
+                rows: [],
+                total_critical: 0,
+                total_low: 0,
+                total_watch: 0,
+            }))
+        };
         dialogMock = {
             open: vi.fn().mockReturnValue({
                 afterClosed: vi.fn().mockReturnValue(of(true))
@@ -135,6 +145,7 @@ describe('DashboardComponent', () => {
             providers: [
                 { provide: DashboardStatsService, useValue: statsServiceMock },
                 { provide: OnboardingService, useValue: onboardingServiceMock },
+                { provide: LowStockService, useValue: lowStockServiceMock },
                 { provide: MatSnackBar, useValue: snackBarMock },
                 { provide: MatDialog, useValue: dialogMock }
             ],
