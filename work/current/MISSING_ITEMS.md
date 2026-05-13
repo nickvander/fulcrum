@@ -38,8 +38,22 @@
       - MercadoLibre Full inbound shipment + listing-quantity sync wired up
         in Slice 2 with a stub fallback. First live token will exercise the
         real API path.
-- [ ] OAuth token refresh handling improvements
+- [x] OAuth token refresh handling improvements
+      - Implemented in `87-marketplace-oauth-hardening.md`.
+      - 5-minute pre-refresh buffer, typed `ReauthorizationRequiredError`,
+        `needs_reauthorization` + `last_refresh_error` on the credential row,
+        and a clear reauth banner in the stock-transfer sync panel.
+      - Open follow-up: surface the reauth state on the marketplace cards
+        (today only the sync panel shows it) and wire
+        `force_refresh_access_token` into a 401-retry decorator.
 
 ## Future
 
-- [ ] Enhance Marketplace Status UI with sync indicators
+- [ ] Enhance Marketplace Status UI with sync indicators (the
+      `needs_reauthorization` flag is now available on the credential
+      and surfaces in the stock-transfer sync panel — extend that to
+      the Marketplaces channel cards too).
+- [ ] Reorder workflow (shopping-cart style): pick low-stock products
+      across the dashboard, group by supplier, create one draft PO per
+      supplier in a single pass. Natural follow-on to the new
+      low-stock dashboard widget (`88-low-stock-dashboard-widget.md`).

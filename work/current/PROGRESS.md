@@ -1,11 +1,14 @@
 # Progress Log
 
-**Status:** Launch readiness, supplier import review queue, demo cleanup guardrail, and import match assistance implemented **Current Phase:** Phase 7 -
-Customer Onboarding Reliability
+**Status:** Marketplace allocation workflow + OAuth refresh hardening +
+real low-stock dashboard widget all shipped to main.
+**Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
+Operator Tools.
 
 ## Current Work
 
-- [86-marketplace-allocation-workflow.md](./86-marketplace-allocation-workflow.md)
+- [88-low-stock-dashboard-widget.md](./88-low-stock-dashboard-widget.md)
+- [87-marketplace-oauth-hardening.md](./87-marketplace-oauth-hardening.md)
 - [85-customer-onboarding-next.md](./85-customer-onboarding-next.md)
 
 ## Important Product Decision
@@ -16,51 +19,59 @@ Customer Onboarding Reliability
 
 ## Latest Slice
 
-- Implemented the full marketplace allocation workflow (Slices 1-3):
-  stock-transfer model with explicit DRAFT → SHIPPED → RECEIVED state
-  machine, MercadoLibre Full inbound-shipment integration with stub
-  fallback, listing-quantity push, allocation planner that bundles draft
-  transfers per destination, and a reconciliation report for shrinkage.
-- See `86-marketplace-allocation-workflow.md` for the full breakdown.
-- Verified: 38 backend tests + 35 frontend vitest specs + production
-  Angular build green.
-
-- Added launch-readiness demo record details for store marker, supplier,
-  product, PO, inventory, supplier-product link, and learned alias records.
-- Added guarded demo cleanup API that removes only known demo fingerprints and
-  blocks when demo product/supplier/PO rows have customer-linked activity.
-- Added dashboard demo-record guardrail with confirmation-based cleanup.
-- Documented launch-readiness demo cleanup in the dashboard guide.
-- Added import-review match assistance:
-  - create a Fulcrum product from an unmatched supplier line
-  - learn a supplier SKU/name alias for an existing Fulcrum product
-  - persist assisted matches back to the pending review
-- Documented import-review match assistance in the suppliers guide.
-- Verified focused backend onboarding/import-review tests, touched frontend
-  specs, and Angular production build.
+- **Low-stock dashboard widget** rebuilt against a real
+  `/api/v1/reports/low-stock` endpoint with proper threshold precedence
+  (Product.reorder_point > ProductInventorySettings > store default),
+  velocity, days-of-inventory, severity chips, and a per-row "Create PO"
+  button that prefills the PO form. New `reorder_point` /
+  `reorder_quantity` columns on Product. See `88-low-stock-dashboard-widget.md`.
+  Verified with mixed-severity seed in real Chromium.
+- **Marketplace OAuth refresh hardened**: 5-minute pre-refresh buffer,
+  typed `ReauthorizationRequiredError`, `needs_reauthorization` +
+  `last_refresh_error` columns on the credential row, and a clear
+  reauth banner in the stock-transfer detail page when the credential
+  is dead. See `87-marketplace-oauth-hardening.md`. Verified the banner
+  in real Chromium.
+- **Marketplace allocation workflow (Slices 1-3)**: stock-transfer
+  model with explicit DRAFT → SHIPPED → RECEIVED state machine,
+  MercadoLibre Full inbound-shipment integration with stub fallback,
+  listing-quantity push, allocation planner that bundles draft
+  transfers per destination, reconciliation report for shrinkage.
+  Archived as `archive/86-marketplace-allocation-workflow.md`.
+- **Pre-existing onboarding work** (launch readiness, demo cleanup
+  guardrail, import review match assistance) shipped earlier — see
+  `85-customer-onboarding-next.md` for the slice that's still in
+  flight (import review history filters, bulk reject, visual diff).
 
 ## Next Session Starting Point
 
-- Add one-click product/supplier alias creation for unmatched supplier import
-- Add bulk reject/cleanup for stale import reviews.
-- Add visual diff for uploaded invoice/packing-list documents that match an
-  existing PO.
-- Add import review history filters for approved/rejected documents.
-- Start marketplace allocation planning as a separate workflow from receiving.
-- Keep old quick wins in `work/future/`; they are useful later but secondary to
-  onboarding customers safely.
+- Reorder workflow (shopping-cart style) — pick low-stock products
+  across the dashboard, group by supplier, create one draft PO per
+  supplier in a single pass.
+- Surface `needs_reauthorization` on the marketplace cards / list page
+  too (today only the stock-transfer sync panel shows it).
+- Wire `force_refresh_access_token()` into a 401-retry decorator on
+  connector calls.
+- Continue `85-customer-onboarding-next.md` open items: bulk reject
+  stale import reviews, visual diff for matched invoice/packing-list
+  docs, import-review history filters.
+- Keep the broader future ideas in `work/future/` (marketplace status
+  UI sync indicators, advanced analytics, hybrid storefront).
 
 ## Recent Archive
 
+- [86-marketplace-allocation-workflow.md](../archive/86-marketplace-allocation-workflow.md) -
+  Full marketplace allocation workflow (stock-transfer model, ML Full
+  API integration, allocation planner, reconciliation report) plus
+  Playwright E2E coverage and docs refresh.
 - [84-customer-onboarding-readiness.md](../archive/84-customer-onboarding-readiness.md) -
-  Launch readiness report, supplier import review queue, Alibaba sample import,
-  and draft PO approval smoke
+  Launch readiness report, supplier import review queue, Alibaba sample
+  import, and draft PO approval smoke.
 - [83-platform-improvements-roadmap.md](../archive/83-platform-improvements-roadmap.md) -
   Supplier alias learning, review/undo, live dummy PO transaction, and
-  marketplace allocation guardrails
+  marketplace allocation guardrails.
 - [82-po-receiving-to-inventory-workflow.md](../archive/82-po-receiving-to-inventory-workflow.md) -
-  PO document parsing, invoice matching, and exact inventory receiving workflow
+  PO document parsing, invoice matching, and exact inventory receiving
+  workflow.
 - [81-mercadolibre-deep-integration.md](../archive/81-mercadolibre-deep-integration.md) -
-  Deep ML Sync & UI Polish
-- [79-marketplace-integration-log.md](../archive/79-marketplace-integration-log.md) -
-  AI Listing Generation
+  Deep ML Sync & UI Polish.
