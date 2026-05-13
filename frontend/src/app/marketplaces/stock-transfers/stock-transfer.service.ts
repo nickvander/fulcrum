@@ -88,6 +88,9 @@ export interface SyncListingsMissing {
 export interface SyncListingsResult {
   updated: SyncListingsUpdated[];
   missing_listings: SyncListingsMissing[];
+  needs_reauthorization?: boolean;
+  reauthorization_reason?: string | null;
+  marketplace?: string;
 }
 
 export interface InventorySnapshotRow {

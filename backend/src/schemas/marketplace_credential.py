@@ -25,6 +25,8 @@ class MarketplaceCredentialUpdate(BaseModel):
     token_type: Optional[str] = None
     scopes: Optional[str] = None
     expires_at: Optional[datetime] = None
+    needs_reauthorization: Optional[bool] = None
+    last_refresh_error: Optional[str] = None
 
 class MarketplaceCredential(MarketplaceCredentialBase):
     """
@@ -33,6 +35,8 @@ class MarketplaceCredential(MarketplaceCredentialBase):
     """
     id: int
     user_id: int
+    needs_reauthorization: bool = False
+    last_refresh_error: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

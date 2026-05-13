@@ -195,6 +195,78 @@ def test_sync_listings_reports_missing_listing(db):
     ]
 
 
+def test_sync_listings_short_circuits_when_credential_needs_reauth(db, test_admin_user):
+    """
+    When the user's credential is marked needs_reauthorization, the sync
+    must NOT call the connector — it should surface the reauth state on
+    the response and on each affected listing's sync_status.
+    """
+    from src.crud.crud_marketplace_credential import (
+        marketplace_credential as crud_cred,
+    )
+    from src.schemas.marketplace_credential import MarketplaceCredentialCreate
+
+    product = _make_product(db, "MP-REAUTH")
+    _seed_internal_stock(db, product.id, 30)
+    mp = _ensure_marketplace(db)
+
+    listing = MarketplaceListing(
+        product_id=product.id,
+        marketplace_id=mp.id,
+        external_listing_id="MLM-REAUTH-1",
+        status="active",
+        sync_status="SYNCED",
+    )
+    db.add(listing)
+
+    # Seed a credential already marked for reauth.
+    cred = crud_cred.create_with_owner(
+        db,
+        obj_in=MarketplaceCredentialCreate(
+            marketplace_id=mp.id,
+            access_token="stale",
+            refresh_token="dead",
+        ),
+        user_id=test_admin_user.id,
+    )
+    cred.needs_reauthorization = True
+    cred.last_refresh_error = "previous refresh denied"
+    db.commit()
+
+    transfer = stock_transfer_service.create_draft(
+        db=db,
+        transfer_in=StockTransferCreate(
+            dest_location=LOCATION_ML_FULL,
+            items=[StockTransferItemCreate(product_id=product.id, qty_planned=12)],
+        ),
+    )
+    stock_transfer_service.ship(db=db, transfer_id=transfer.id)
+    stock_transfer_service.receive_items(
+        db=db,
+        transfer_id=transfer.id,
+        received_items=[StockTransferReceiveItem(product_id=product.id, quantity=12)],
+    )
+
+    with patch(
+        "src.services.marketplaces.mercadolibre.MercadoLibreConnector.sync_inventory",
+        new=AsyncMock(return_value=True),
+    ) as mocked_sync:
+        summary = stock_transfer_service.sync_marketplace_listings(
+            db=db, transfer_id=transfer.id, user=test_admin_user
+        )
+
+    # Connector should not have been called because the credential is dead.
+    mocked_sync.assert_not_called()
+    assert summary["needs_reauthorization"] is True
+    assert "previous refresh denied" in (summary["reauthorization_reason"] or "")
+    assert summary["updated"][0]["error"] == "needs_reauthorization"
+    assert summary["updated"][0]["ok"] is False
+
+    db.refresh(listing)
+    assert listing.sync_status == "ERROR"
+    assert "Reauthorization required" in listing.error_message
+
+
 def test_sync_listings_rejects_non_marketplace_destination(db):
     product = _make_product(db, "MP-SYNC-OTHER")
     _seed_internal_stock(db, product.id, 10)

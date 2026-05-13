@@ -756,6 +756,8 @@
             "externalInboundId": "Marketplace inbound id",
             "notFound": "Stock transfer not found.",
             "lastSync": "Last listing-quantity push",
+            "reauthRequired": "{{marketplace}} needs re-authorization before listings can sync.",
+            "reauthCta": "Open marketplace settings",
             "missingListings": "{{count}} product(s) have no marketplace listing yet — create those listings before they will sync.",
             "col": {
                 "product": "Product",

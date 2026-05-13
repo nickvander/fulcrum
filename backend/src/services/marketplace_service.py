@@ -1,8 +1,35 @@
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Type
 from sqlalchemy.orm import Session
 from src.services.marketplaces.base import BaseMarketplaceConnector
 from src.services.marketplaces.mercadolibre import MercadoLibreConnector
 from src.services.marketplaces.amazon import AmazonConnector
+
+
+# How early before `expires_at` we proactively refresh a token. 5 minutes
+# leaves enough headroom for a refresh round-trip plus the actual API call
+# we're about to make, even on a slow network.
+TOKEN_PRE_REFRESH_BUFFER = timedelta(minutes=5)
+
+
+class ReauthorizationRequiredError(Exception):
+    """
+    Raised by `get_valid_access_token` when the credential cannot be
+    refreshed (no refresh token, refresh API failed, or refresh response
+    rejected). The corresponding MarketplaceCredential row is also marked
+    with `needs_reauthorization=True` so the UI can surface the state
+    without re-attempting the refresh.
+    """
+
+    def __init__(self, credential_id: int, marketplace_name: str, reason: str):
+        self.credential_id = credential_id
+        self.marketplace_name = marketplace_name
+        self.reason = reason
+        super().__init__(
+            f"Reauthorization required for {marketplace_name} "
+            f"credential #{credential_id}: {reason}"
+        )
+
 
 class MarketplaceService:
     """
@@ -24,10 +51,10 @@ class MarketplaceService:
         name = marketplace_name.lower()
         if name not in self._connectors:
             raise ValueError(f"Unsupported marketplace: {marketplace_name}")
-        
+
         if name not in self._instances:
             self._instances[name] = self._connectors[name]()
-        
+
         return self._instances[name]
 
     async def sync_product_inventory(self, db: Session, marketplace_name: str, external_id: str, quantity: int, access_token: str = None) -> bool:
@@ -46,46 +73,140 @@ class MarketplaceService:
 
     async def get_valid_access_token(self, db: Session, credential_id: int) -> str:
         """
-        Retrieves a valid access token, refreshing it if it's expired.
+        Retrieves a valid access token, refreshing it proactively if it's
+        within the pre-refresh window.
+
+        Raises:
+            ReauthorizationRequiredError: when the credential cannot be
+                refreshed and the user must re-authorize. The credential
+                row is updated with `needs_reauthorization=True` and the
+                refresh error.
         """
         from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
-        from datetime import datetime, timedelta, timezone
-        
+
         db_cred = crud_cred.get(db, id=credential_id)
         if not db_cred:
             raise ValueError(f"Credential with ID {credential_id} not found.")
-        
-        # Check if expired (with 1-minute buffer)
+
+        marketplace_name = db_cred.marketplace.name if db_cred.marketplace else "unknown"
+
+        # If a previous refresh attempt failed and we haven't been re-authorized
+        # since, surface the typed error immediately rather than spamming the
+        # provider with another refresh.
+        if db_cred.needs_reauthorization:
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason=db_cred.last_refresh_error or "credential previously marked for re-authorization",
+            )
+
+        # Wide enough buffer that the refresh round-trip itself doesn't run us
+        # past the actual expiry.
         is_expired = False
         if db_cred.expires_at:
-            # db_cred.expires_at is timezone-aware (UTC)
-            is_expired = db_cred.expires_at <= (datetime.now(timezone.utc) + timedelta(minutes=1))
-        
+            is_expired = db_cred.expires_at <= (datetime.now(timezone.utc) + TOKEN_PRE_REFRESH_BUFFER)
+
         if not is_expired:
             return crud_cred.get_decrypted_access_token(db_cred)
-        
-        # Refresh needed
-        refresh_token = crud_cred.get_decrypted_refresh_token(db_cred)
-        if not refresh_token:
-            raise ValueError("Access token expired and no refresh token available.")
-        
-        connector = self.get_connector(db_cred.marketplace.name)
-        new_tokens = await connector.refresh_token(refresh_token)
-        
-        # Update credentials in DB
+
+        return await self._refresh_access_token(db, db_cred)
+
+    async def force_refresh_access_token(self, db: Session, credential_id: int) -> str:
+        """
+        Force a token refresh regardless of expiry — used when an API call
+        returns 401 even though the credential said it was still valid.
+        """
+        from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+
+        db_cred = crud_cred.get(db, id=credential_id)
+        if not db_cred:
+            raise ValueError(f"Credential with ID {credential_id} not found.")
+        return await self._refresh_access_token(db, db_cred)
+
+    async def _refresh_access_token(self, db: Session, db_cred) -> str:
+        """
+        Internal helper. Executes the connector refresh, persists the new
+        tokens, and either clears or sets the reauthorization flag.
+        """
+        from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
         from src.schemas.marketplace_credential import MarketplaceCredentialUpdate
+
+        marketplace_name = db_cred.marketplace.name if db_cred.marketplace else "unknown"
+
+        try:
+            refresh_token = crud_cred.get_decrypted_refresh_token(db_cred)
+        except Exception as exc:
+            self._mark_reauth_required(db, db_cred, f"refresh_token unreadable: {exc}")
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason="refresh_token unreadable",
+            )
+
+        if not refresh_token:
+            self._mark_reauth_required(db, db_cred, "no refresh_token stored")
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason="no refresh_token stored",
+            )
+
+        try:
+            connector = self.get_connector(marketplace_name)
+        except ValueError as exc:
+            self._mark_reauth_required(db, db_cred, str(exc))
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason=str(exc),
+            )
+
+        try:
+            new_tokens = await connector.refresh_token(refresh_token)
+        except Exception as exc:
+            self._mark_reauth_required(db, db_cred, f"refresh call failed: {exc}")
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason=f"refresh call failed: {exc}",
+            )
+
+        if not new_tokens or not new_tokens.get("access_token"):
+            self._mark_reauth_required(db, db_cred, "refresh response missing access_token")
+            raise ReauthorizationRequiredError(
+                credential_id=db_cred.id,
+                marketplace_name=marketplace_name,
+                reason="refresh response missing access_token",
+            )
+
         expires_at = None
         if "expires_in" in new_tokens:
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=new_tokens["expires_in"])
-        
+
         update_in = MarketplaceCredentialUpdate(
             access_token=new_tokens["access_token"],
             refresh_token=new_tokens.get("refresh_token") or refresh_token,
-            expires_at=expires_at
+            expires_at=expires_at,
+            needs_reauthorization=False,
+            last_refresh_error=None,
         )
         crud_cred.update_with_encryption(db, db_obj=db_cred, obj_in=update_in)
-        
         return new_tokens["access_token"]
+
+    @staticmethod
+    def _mark_reauth_required(db: Session, db_cred, reason: str) -> None:
+        from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+        from src.schemas.marketplace_credential import MarketplaceCredentialUpdate
+
+        crud_cred.update_with_encryption(
+            db,
+            db_obj=db_cred,
+            obj_in=MarketplaceCredentialUpdate(
+                needs_reauthorization=True,
+                last_refresh_error=reason[:500],
+            ),
+        )
+
 
 # Singleton instance
 marketplace_service = MarketplaceService()

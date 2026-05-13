@@ -107,6 +107,14 @@ export class StockTransferDetailComponent implements OnInit {
       next: summary => {
         this.acting = false;
         this.lastSync = summary;
+        if (summary.needs_reauthorization) {
+          this.snackBar.open(
+            `Reauthorize ${summary.marketplace || 'marketplace'} before syncing`,
+            'Close',
+            { duration: 5000 },
+          );
+          return;
+        }
         const okCount = summary.updated.filter(u => u.ok).length;
         const total = summary.updated.length;
         const missing = summary.missing_listings.length;

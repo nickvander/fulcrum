@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime, JSON
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Float, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -22,6 +22,10 @@ class MarketplaceCredential(Base):
     token_type = Column(String, nullable=True)
     scopes = Column(String, nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
+    # Set when a refresh attempt fails or no refresh token is available.
+    # Cleared on the next successful refresh / re-authorization.
+    needs_reauthorization = Column(Boolean, nullable=False, default=False, server_default="false")
+    last_refresh_error = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

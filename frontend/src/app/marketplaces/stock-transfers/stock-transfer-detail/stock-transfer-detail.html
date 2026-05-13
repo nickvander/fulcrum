@@ -128,6 +128,22 @@
         <mat-card class="sync-summary" data-testid="last-sync-summary">
           <mat-card-content>
             <h3>{{ t('stockTransfers.detail.lastSync') }}</h3>
+            @if (lastSync.needs_reauthorization) {
+              <div class="reauth-banner" data-testid="reauth-banner">
+                <mat-icon>error_outline</mat-icon>
+                <div class="reauth-text">
+                  <strong>
+                    {{ t('stockTransfers.detail.reauthRequired', { marketplace: lastSync.marketplace || 'marketplace' }) }}
+                  </strong>
+                  @if (lastSync.reauthorization_reason) {
+                    <span class="reauth-reason">{{ lastSync.reauthorization_reason }}</span>
+                  }
+                  <a routerLink="/marketplaces" class="reauth-link">
+                    {{ t('stockTransfers.detail.reauthCta') }}
+                  </a>
+                </div>
+              </div>
+            }
             @if (lastSync.updated.length > 0) {
               <ul class="sync-list">
                 @for (entry of lastSync.updated; track entry.external_listing_id) {

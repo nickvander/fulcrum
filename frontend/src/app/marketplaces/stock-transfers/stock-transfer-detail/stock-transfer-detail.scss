@@ -111,6 +111,33 @@
   h3 {
     margin: 0 0 8px;
   }
+  .reauth-banner {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: #fff3e0;
+    border-left: 4px solid #ef6c00;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    mat-icon {
+      color: #ef6c00;
+      flex-shrink: 0;
+    }
+    .reauth-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .reauth-reason {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.85rem;
+    }
+    .reauth-link {
+      margin-top: 4px;
+      color: #1565c0;
+    }
+  }
   .sync-list {
     margin: 0;
     padding-left: 1.2em;
