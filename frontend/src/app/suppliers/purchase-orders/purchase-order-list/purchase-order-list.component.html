@@ -41,35 +41,96 @@
             </app-stat-card>
         </div>
 
-        <section class="import-review-panel" *ngIf="importReviews.length > 0">
+        <section class="import-review-panel"
+            *ngIf="importReviews.length > 0 || reviewFilter !== 'pending' || isLoadingReviews || staleReviewCount > 0">
             <div class="review-panel-header">
                 <div>
                     <p class="eyebrow">Supplier import queue</p>
-                    <h2>{{ importReviews.length }} document{{ importReviews.length === 1 ? '' : 's' }} waiting for review</h2>
-                    <p>Approve product matches to create draft POs. Internal stock only changes later when those POs are received.</p>
+                    <h2>{{ reviewPanelTitle() }}</h2>
+                    <p>{{ reviewPanelDescription() }}</p>
                 </div>
-                <button mat-stroked-button color="primary" (click)="openIngestDialog()">
-                    <mat-icon>upload_file</mat-icon>
-                    Add document
+                <div class="review-panel-actions">
+                    <button mat-stroked-button color="warn"
+                        *ngIf="staleReviewCount > 0"
+                        [disabled]="bulkRejectInFlight"
+                        (click)="bulkRejectStale()"
+                        [matTooltip]="'Reject pending imports older than ' + staleReviewDays + ' days'">
+                        <mat-icon>auto_delete</mat-icon>
+                        Reject stale ({{ staleReviewCount }})
+                    </button>
+                    <button mat-stroked-button color="primary" (click)="openIngestDialog()">
+                        <mat-icon>upload_file</mat-icon>
+                        Add document
+                    </button>
+                </div>
+            </div>
+
+            <div class="review-filter-tabs" role="tablist" aria-label="Supplier import review filters">
+                <button type="button" class="review-filter-tab"
+                    [class.active]="reviewFilter === 'pending'"
+                    (click)="setReviewFilter('pending')">
+                    Pending
+                </button>
+                <button type="button" class="review-filter-tab"
+                    [class.active]="reviewFilter === 'history'"
+                    (click)="setReviewFilter('history')">
+                    History
+                </button>
+                <button type="button" class="review-filter-tab"
+                    [class.active]="reviewFilter === 'all'"
+                    (click)="setReviewFilter('all')">
+                    All
                 </button>
             </div>
 
-            <div class="review-list">
-                <article class="review-card" *ngFor="let review of importReviews" (click)="reviewImport(review)">
+            <div class="review-loading" *ngIf="isLoadingReviews">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+            </div>
+
+            <div class="review-empty" *ngIf="!isLoadingReviews && importReviews.length === 0">
+                <mat-icon>inbox</mat-icon>
+                <p *ngIf="reviewFilter === 'history'">No approved or rejected supplier imports yet.</p>
+                <p *ngIf="reviewFilter === 'pending'">No supplier imports waiting for review.</p>
+                <p *ngIf="reviewFilter === 'all'">No supplier imports have been uploaded yet.</p>
+            </div>
+
+            <div class="review-list" *ngIf="!isLoadingReviews && importReviews.length > 0">
+                <article class="review-card" *ngFor="let review of importReviews"
+                    [class.terminal]="review.status !== 'pending'"
+                    (click)="onReviewCardClick(review)">
                     <div class="review-icon">
                         <mat-icon>{{ review.mode === 'match' ? 'rule' : 'description' }}</mat-icon>
                     </div>
                     <div class="review-main">
-                        <h3>{{ review.file_name }}</h3>
+                        <h3>
+                            {{ review.file_name }}
+                            <span class="review-status-pill"
+                                *ngIf="review.status !== 'pending'"
+                                [style.background-color]="getReviewStatusColor(review) + '22'"
+                                [style.color]="getReviewStatusColor(review)">
+                                {{ getReviewStatusLabel(review) }}
+                            </span>
+                        </h3>
                         <p>{{ getReviewVendor(review) }} · {{ getReviewItemCount(review) }} item{{ getReviewItemCount(review) === 1 ? '' : 's' }} · {{ review.created_at | date:'mediumDate':undefined:currentLang }}</p>
                         <span class="review-warning" *ngIf="review.warnings.length">{{ review.warnings[0] }}</span>
                     </div>
                     <div class="review-actions">
-                        <button mat-stroked-button color="primary" (click)="reviewImport(review); $event.stopPropagation()">
+                        <button mat-stroked-button color="primary"
+                            *ngIf="review.status === 'pending'"
+                            (click)="reviewImport(review); $event.stopPropagation()">
                             Review
                         </button>
-                        <button mat-icon-button color="warn" (click)="rejectImport(review, $event)" matTooltip="Reject import">
+                        <button mat-icon-button color="warn"
+                            *ngIf="review.status === 'pending'"
+                            (click)="rejectImport(review, $event)"
+                            matTooltip="Reject import">
                             <mat-icon>delete</mat-icon>
+                        </button>
+                        <button mat-stroked-button color="primary"
+                            *ngIf="review.status === 'approved' && review.purchase_order_id"
+                            (click)="viewDetail(review.purchase_order_id!); $event.stopPropagation()"
+                            matTooltip="Open the PO this review created">
+                            <mat-icon>visibility</mat-icon> Open PO
                         </button>
                     </div>
                 </article>

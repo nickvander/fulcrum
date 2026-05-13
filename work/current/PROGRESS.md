@@ -19,6 +19,16 @@ Operator Tools.
 
 ## Latest Slice
 
+- **Supplier import review filters + bulk reject**:
+  `GET /api/v1/purchase-orders/imports/reviews` now accepts comma-separated
+  `status` (`approved,rejected` / `all`), `supplier_id`, `created_after/before`,
+  `search`, and `limit`. New `POST /imports/reviews/bulk-reject` accepts either
+  explicit `review_ids` or a `stale_before` cutoff; non-pending and unknown IDs
+  are returned as `skipped_ids` so the UI can show a partial summary instead of
+  failing the whole call. UI: **Pending / History / All** filter pills and a
+  **Reject stale (>30 days)** button on the supplier import queue. Approved
+  review cards link straight to the PO they created; terminal reviews no longer
+  open the approve dialog. Verified end-to-end in real Chromium.
 - **Low-stock dashboard widget** rebuilt against a real
   `/api/v1/reports/low-stock` endpoint with proper threshold precedence
   (Product.reorder_point > ProductInventorySettings > store default),
@@ -41,7 +51,7 @@ Operator Tools.
 - **Pre-existing onboarding work** (launch readiness, demo cleanup
   guardrail, import review match assistance) shipped earlier — see
   `85-customer-onboarding-next.md` for the slice that's still in
-  flight (import review history filters, bulk reject, visual diff).
+  flight (visual diff for matched invoice/packing-list docs).
 
 ## Next Session Starting Point
 
@@ -52,9 +62,14 @@ Operator Tools.
   too (today only the stock-transfer sync panel shows it).
 - Wire `force_refresh_access_token()` into a 401-retry decorator on
   connector calls.
-- Continue `85-customer-onboarding-next.md` open items: bulk reject
-  stale import reviews, visual diff for matched invoice/packing-list
-  docs, import-review history filters.
+- Visual diff for uploaded invoice/packing-list documents that match
+  an existing PO (compare extracted vs. PO line items side-by-side,
+  surface qty/price deltas).
+- Multi-select bulk-reject from the import-review list (checkbox
+  column + call `bulk-reject` with `review_ids`) — backend already
+  accepts this shape.
+- Surface `supplier_id` filter and free-text `search` on the import
+  queue UI (backend already supports both).
 - Keep the broader future ideas in `work/future/` (marketplace status
   UI sync indicators, advanced analytics, hybrid storefront).
 

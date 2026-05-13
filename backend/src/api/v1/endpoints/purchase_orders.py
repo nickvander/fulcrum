@@ -583,6 +583,17 @@ class SupplierDocumentImportAssistResponse(BaseModel):
     alias: alias_schema.SupplierProductAlias | None = None
 
 
+class BulkRejectImportReviewsRequest(BaseModel):
+    review_ids: List[int] | None = None
+    stale_before: datetime | None = None
+
+
+class BulkRejectImportReviewsResponse(BaseModel):
+    rejected_count: int
+    rejected_ids: List[int]
+    skipped_ids: List[int]
+
+
 def _import_review_response(review: SupplierDocumentImport) -> SupplierDocumentImportRead:
     return SupplierDocumentImportRead(
         id=review.id,
@@ -753,16 +764,34 @@ async def create_supplier_document_import_review(
 def list_supplier_document_import_reviews(
     *,
     db: Session = Depends(get_db),
-    status: str | None = Query("pending"),
+    status: str | None = Query("pending", description="Status filter. Accepts a single value, comma-separated list (e.g. 'approved,rejected'), or 'all' for no filter."),
+    supplier_id: int | None = Query(None),
+    created_after: datetime | None = Query(None),
+    created_before: datetime | None = Query(None),
+    search: str | None = Query(None, description="Case-insensitive substring match on file name"),
+    limit: int = Query(100, ge=1, le=500),
     current_user: User = Depends(get_current_active_user),
 ):
     query = db.query(SupplierDocumentImport).order_by(
         SupplierDocumentImport.created_at.desc(),
         SupplierDocumentImport.id.desc(),
     )
-    if status:
-        query = query.filter(SupplierDocumentImport.status == status)
-    return [_import_review_response(review) for review in query.limit(100).all()]
+    if status and status.lower() != "all":
+        statuses = [s.strip() for s in status.split(",") if s.strip()]
+        if len(statuses) == 1:
+            query = query.filter(SupplierDocumentImport.status == statuses[0])
+        elif statuses:
+            query = query.filter(SupplierDocumentImport.status.in_(statuses))
+    if supplier_id is not None:
+        query = query.filter(SupplierDocumentImport.supplier_id == supplier_id)
+    if created_after is not None:
+        query = query.filter(SupplierDocumentImport.created_at >= created_after)
+    if created_before is not None:
+        query = query.filter(SupplierDocumentImport.created_at <= created_before)
+    if search:
+        like = f"%{search.strip()}%"
+        query = query.filter(SupplierDocumentImport.file_name.ilike(like))
+    return [_import_review_response(review) for review in query.limit(limit).all()]
 
 
 @router.get("/imports/reviews/{review_id}", response_model=SupplierDocumentImportRead)
@@ -1004,6 +1033,66 @@ def reject_supplier_document_import_review(
     db.commit()
     db.refresh(review)
     return _import_review_response(review)
+
+
+@router.post("/imports/reviews/bulk-reject", response_model=BulkRejectImportReviewsResponse)
+def bulk_reject_supplier_document_import_reviews(
+    *,
+    db: Session = Depends(get_db),
+    request: BulkRejectImportReviewsRequest,
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Reject many pending supplier import reviews in one call.
+
+    Pass either an explicit list of `review_ids` (e.g. checked rows in the UI)
+    or a `stale_before` timestamp to clear pending reviews older than a date.
+    Non-pending reviews are returned as `skipped_ids` rather than failing the
+    whole call so the UI can show a clear summary.
+    """
+    if not request.review_ids and request.stale_before is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Provide review_ids or stale_before to bulk reject reviews.",
+        )
+
+    query = db.query(SupplierDocumentImport)
+    if request.review_ids:
+        query = query.filter(SupplierDocumentImport.id.in_(request.review_ids))
+    if request.stale_before is not None:
+        query = query.filter(
+            SupplierDocumentImport.status == "pending",
+            SupplierDocumentImport.created_at <= request.stale_before,
+        )
+
+    candidates = query.all()
+    rejected_ids: list[int] = []
+    skipped_ids: list[int] = []
+    now = datetime.now(timezone.utc)
+    for review in candidates:
+        if review.status != "pending":
+            skipped_ids.append(review.id)
+            continue
+        review.status = "rejected"
+        review.reviewed_by_id = current_user.id
+        review.reviewed_at = now
+        db.add(review)
+        rejected_ids.append(review.id)
+
+    if request.review_ids:
+        found_ids = {review.id for review in candidates}
+        for missing_id in request.review_ids:
+            if missing_id not in found_ids:
+                skipped_ids.append(missing_id)
+
+    if rejected_ids:
+        db.commit()
+
+    return BulkRejectImportReviewsResponse(
+        rejected_count=len(rejected_ids),
+        rejected_ids=rejected_ids,
+        skipped_ids=skipped_ids,
+    )
 
 
 @router.post("/parse-document", response_model=DocumentParseResult)

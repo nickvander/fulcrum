@@ -168,12 +168,45 @@ export class SuppliersService {
     return this.http.post<SupplierDocumentImportReview>(`${this.apiUrl}/purchase-orders/imports/reviews`, formData, { params });
   }
 
-  getImportReviews(status: string | null = 'pending'): Observable<SupplierDocumentImportReview[]> {
+  getImportReviews(
+    status: string | null = 'pending',
+    options: {
+      supplierId?: number | null;
+      createdAfter?: string | null;
+      createdBefore?: string | null;
+      search?: string | null;
+      limit?: number | null;
+    } = {}
+  ): Observable<SupplierDocumentImportReview[]> {
     let params = new HttpParams();
     if (status) {
       params = params.set('status', status);
     }
+    if (options.supplierId != null) {
+      params = params.set('supplier_id', String(options.supplierId));
+    }
+    if (options.createdAfter) {
+      params = params.set('created_after', options.createdAfter);
+    }
+    if (options.createdBefore) {
+      params = params.set('created_before', options.createdBefore);
+    }
+    if (options.search) {
+      params = params.set('search', options.search);
+    }
+    if (options.limit != null) {
+      params = params.set('limit', String(options.limit));
+    }
     return this.http.get<SupplierDocumentImportReview[]>(`${this.apiUrl}/purchase-orders/imports/reviews`, { params });
+  }
+
+  bulkRejectImportReviews(
+    request: SupplierDocumentImportBulkRejectRequest
+  ): Observable<SupplierDocumentImportBulkRejectResponse> {
+    return this.http.post<SupplierDocumentImportBulkRejectResponse>(
+      `${this.apiUrl}/purchase-orders/imports/reviews/bulk-reject`,
+      request
+    );
   }
 
   approveImportReview(reviewId: number, approval: SupplierDocumentImportApproveRequest): Observable<SupplierDocumentImportApproveResponse> {
@@ -366,4 +399,15 @@ export interface SupplierDocumentImportAssistResponse {
   import_review: SupplierDocumentImportReview;
   product: import('../products/models/product.model').Product | null;
   alias: SupplierProductAlias | null;
+}
+
+export interface SupplierDocumentImportBulkRejectRequest {
+  review_ids?: number[];
+  stale_before?: string;
+}
+
+export interface SupplierDocumentImportBulkRejectResponse {
+  rejected_count: number;
+  rejected_ids: number[];
+  skipped_ids: number[];
 }

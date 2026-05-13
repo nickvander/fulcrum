@@ -23,9 +23,11 @@
 - [x] Supplier document review queue for imported Alibaba PDFs/images before PO
       or stock updates.
 - [ ] Supplier import review polish:
-      - bulk reject/cleanup stale reviews
+      - [x] bulk reject/cleanup stale reviews (>30 days; explicit IDs accepted
+        by the backend for a future multi-select UI)
       - [x] one-click create product / learn supplier alias from unmatched import
         lines
+      - [x] history filter view (pending / approved+rejected / all)
       - visual diff for uploaded invoice/packing-list documents that match an
         existing PO
 - [x] Marketplace allocation workflow before stock sync. Do not sync received

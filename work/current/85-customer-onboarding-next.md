@@ -36,13 +36,17 @@ launch readiness and supplier import reviews.
      supplier alias without leaving the review dialog.
    - Done: Review updates persist to the pending import so reopening the dialog
      keeps the match.
-   - Remaining: Add bulk reject/cleanup stale reviews and visual diffs for
-     matched invoice/packing-list documents.
+   - Done: Bulk-reject endpoint + "Reject stale (>30 days)" affordance on the
+     queue. Accepts explicit `review_ids` for future multi-select UI.
+   - Remaining: Visual diff for invoice/packing-list documents that match an
+     existing PO (qty/price deltas side-by-side).
 
-3. Import review history
-   - Add filters for pending, approved, and rejected reviews.
-   - Keep approved/rejected documents auditable without cluttering the active
-     queue.
+3. Import review history - done
+   - Pending / History / All filter tabs on the queue.
+   - Backend supports comma-separated `status`, supplier filter, date range,
+     and file-name search; UI currently wires status only.
+   - Approved review cards link to the PO they created; terminal reviews
+     don't open the approve dialog.
 
 4. Marketplace allocation planning
    - Design the separate workflow that decides how much internal inventory is

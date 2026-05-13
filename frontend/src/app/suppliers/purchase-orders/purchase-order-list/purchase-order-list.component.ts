@@ -30,6 +30,9 @@ interface POSummary {
   received_value: number;
 }
 
+const STALE_REVIEW_DAYS = 30;
+type ImportReviewFilter = 'pending' | 'history' | 'all';
+
 @Component({
   selector: 'app-purchase-order-list',
   templateUrl: './purchase-order-list.component.html',
@@ -65,6 +68,11 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   purchaseOrders: PurchaseOrder[] = [];
   filteredOrders: PurchaseOrder[] = [];
   importReviews: SupplierDocumentImportReview[] = [];
+  reviewFilter: ImportReviewFilter = 'pending';
+  isLoadingReviews = false;
+  bulkRejectInFlight = false;
+  staleReviewCount = 0;
+  readonly staleReviewDays = STALE_REVIEW_DAYS;
   suppliers: Supplier[] = [];
   supplierMap: Map<number, Supplier> = new Map();
   displayedColumns: string[] = ['id', 'supplier', 'status', 'total', 'created_at', 'actions'];
@@ -145,30 +153,127 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
 
   loadData(): void {
     this.isLoading = true;
-    // Load both POs and suppliers in parallel
+    this.isLoadingReviews = true;
     forkJoin({
       pos: this.suppliersService.getPurchaseOrders(),
       suppliers: this.suppliersService.getSuppliers(),
-      importReviews: this.suppliersService.getImportReviews()
+      importReviews: this.suppliersService.getImportReviews(this.importReviewStatusParam()),
+      pendingReviews: this.suppliersService.getImportReviews('pending')
     }).subscribe({
-      next: ({ pos, suppliers, importReviews }) => {
+      next: ({ pos, suppliers, importReviews, pendingReviews }) => {
         this.suppliers = suppliers;
         this.supplierMap = new Map(suppliers.map(s => [s.id, s]));
         this.purchaseOrders = pos;
         this.importReviews = importReviews;
+        this.staleReviewCount = this.countStaleReviews(pendingReviews);
 
-        // Update supplier name if ID was set from query params
         if (this.selectedSupplierId) {
           this.updateSupplierName();
         }
 
         this.applyFilters();
         this.isLoading = false;
+        this.isLoadingReviews = false;
       },
       error: () => {
         this.isLoading = false;
+        this.isLoadingReviews = false;
       }
     });
+  }
+
+  private importReviewStatusParam(): string | null {
+    switch (this.reviewFilter) {
+      case 'pending': return 'pending';
+      case 'history': return 'approved,rejected';
+      case 'all': return 'all';
+    }
+  }
+
+  private staleCutoffIso(): string {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - STALE_REVIEW_DAYS);
+    return cutoff.toISOString();
+  }
+
+  private countStaleReviews(reviews: SupplierDocumentImportReview[]): number {
+    const cutoff = Date.now() - STALE_REVIEW_DAYS * 24 * 60 * 60 * 1000;
+    return reviews.filter(review => {
+      if (review.status !== 'pending') return false;
+      const created = new Date(review.created_at).getTime();
+      return Number.isFinite(created) && created <= cutoff;
+    }).length;
+  }
+
+  setReviewFilter(filter: ImportReviewFilter): void {
+    if (this.reviewFilter === filter) return;
+    this.reviewFilter = filter;
+    this.refreshImportReviews();
+  }
+
+  private refreshImportReviews(): void {
+    this.isLoadingReviews = true;
+    this.suppliersService.getImportReviews(this.importReviewStatusParam()).subscribe({
+      next: reviews => {
+        this.importReviews = reviews;
+        this.isLoadingReviews = false;
+      },
+      error: () => { this.isLoadingReviews = false; }
+    });
+  }
+
+  bulkRejectStale(): void {
+    if (this.staleReviewCount === 0 || this.bulkRejectInFlight) return;
+    const confirmed = window.confirm(
+      `Reject all pending supplier imports older than ${STALE_REVIEW_DAYS} days? ` +
+      `${this.staleReviewCount} review${this.staleReviewCount === 1 ? '' : 's'} will be marked rejected.`
+    );
+    if (!confirmed) return;
+
+    this.bulkRejectInFlight = true;
+    this.suppliersService.bulkRejectImportReviews({ stale_before: this.staleCutoffIso() }).subscribe({
+      next: () => {
+        this.bulkRejectInFlight = false;
+        this.loadData();
+      },
+      error: err => {
+        this.bulkRejectInFlight = false;
+        console.error('Failed to bulk reject stale import reviews', err);
+      }
+    });
+  }
+
+  reviewPanelTitle(): string {
+    const count = this.importReviews.length;
+    if (this.reviewFilter === 'pending') {
+      return `${count} document${count === 1 ? '' : 's'} waiting for review`;
+    }
+    if (this.reviewFilter === 'history') {
+      return `${count} processed import${count === 1 ? '' : 's'}`;
+    }
+    return `${count} supplier import${count === 1 ? '' : 's'}`;
+  }
+
+  reviewPanelDescription(): string {
+    if (this.reviewFilter === 'pending') {
+      return 'Approve product matches to create draft POs. Internal stock only changes later when those POs are received.';
+    }
+    if (this.reviewFilter === 'history') {
+      return 'Approved and rejected supplier documents stay searchable here without cluttering the active queue.';
+    }
+    return 'All supplier document imports across statuses.';
+  }
+
+  getReviewStatusLabel(review: SupplierDocumentImportReview): string {
+    return review.status.charAt(0).toUpperCase() + review.status.slice(1);
+  }
+
+  getReviewStatusColor(review: SupplierDocumentImportReview): string {
+    switch (review.status) {
+      case 'approved': return '#4caf50';
+      case 'rejected': return '#c62828';
+      default: return '#ff9800';
+    }
   }
 
   updateSupplierName(): void {
@@ -295,6 +400,16 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
         }
       });
     });
+  }
+
+  onReviewCardClick(review: SupplierDocumentImportReview): void {
+    if (review.status === 'pending') {
+      this.reviewImport(review);
+      return;
+    }
+    if (review.status === 'approved' && review.purchase_order_id) {
+      this.viewDetail(review.purchase_order_id);
+    }
   }
 
   reviewImport(review: SupplierDocumentImportReview): void {
