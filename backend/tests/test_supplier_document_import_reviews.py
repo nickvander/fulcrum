@@ -1,9 +1,12 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 from fastapi.testclient import TestClient
 
 from src.crud import crud_product
 from src.crud.crud_supplier import supplier as crud_supplier
 from src.models.inventory import InventoryAdjustment
+from src.models.supplier_document_import import SupplierDocumentImport
 from src.models.supplier_product import SupplierProduct
 from src.models.supplier_product_alias import SupplierProductAlias
 from src.schemas.product import ProductCreate
@@ -254,3 +257,160 @@ def test_import_review_line_can_learn_alias_for_existing_product(
     next_review = next_review_response.json()
     assert next_review["warnings"] == []
     assert next_review["extracted_data"]["items"][0]["matched_product_id"] == product.id
+
+
+def _create_review(client: TestClient, admin_headers, file_name: str) -> dict:
+    response = client.post(
+        "/api/v1/purchase-orders/imports/reviews",
+        files={"file": (file_name, UNMATCHED_SAMPLE_BYTES, "text/plain")},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    return response.json()
+
+
+def test_import_review_list_supports_history_and_search_filters(
+    client: TestClient,
+    db,
+    admin_headers,
+):
+    crud_supplier.create(
+        db=db,
+        obj_in=SupplierCreate(name="Alibaba Launch Supplier", currency="USD"),
+    )
+    pending = _create_review(client, admin_headers, "alibaba_pending_filter.txt")
+    to_reject = _create_review(client, admin_headers, "alibaba_to_reject_filter.txt")
+
+    reject_response = client.post(
+        f"/api/v1/purchase-orders/imports/reviews/{to_reject['id']}/reject",
+        headers=admin_headers,
+    )
+    assert reject_response.status_code == 200
+
+    history = client.get(
+        "/api/v1/purchase-orders/imports/reviews",
+        params={"status": "approved,rejected"},
+        headers=admin_headers,
+    )
+    assert history.status_code == 200
+    history_ids = [item["id"] for item in history.json()]
+    assert to_reject["id"] in history_ids
+    assert pending["id"] not in history_ids
+
+    all_reviews = client.get(
+        "/api/v1/purchase-orders/imports/reviews",
+        params={"status": "all"},
+        headers=admin_headers,
+    )
+    assert all_reviews.status_code == 200
+    all_ids = [item["id"] for item in all_reviews.json()]
+    assert pending["id"] in all_ids
+    assert to_reject["id"] in all_ids
+
+    search = client.get(
+        "/api/v1/purchase-orders/imports/reviews",
+        params={"status": "all", "search": "to_reject"},
+        headers=admin_headers,
+    )
+    assert search.status_code == 200
+    search_ids = [item["id"] for item in search.json()]
+    assert to_reject["id"] in search_ids
+    assert pending["id"] not in search_ids
+
+
+def test_import_reviews_bulk_reject_by_ids_skips_non_pending_and_unknown(
+    client: TestClient,
+    db,
+    admin_headers,
+):
+    crud_supplier.create(
+        db=db,
+        obj_in=SupplierCreate(name="Alibaba Launch Supplier", currency="USD"),
+    )
+    pending_one = _create_review(client, admin_headers, "alibaba_pending_one.txt")
+    pending_two = _create_review(client, admin_headers, "alibaba_pending_two.txt")
+    already_rejected = _create_review(client, admin_headers, "alibaba_already_rejected.txt")
+    reject_response = client.post(
+        f"/api/v1/purchase-orders/imports/reviews/{already_rejected['id']}/reject",
+        headers=admin_headers,
+    )
+    assert reject_response.status_code == 200
+
+    response = client.post(
+        "/api/v1/purchase-orders/imports/reviews/bulk-reject",
+        json={
+            "review_ids": [
+                pending_one["id"],
+                pending_two["id"],
+                already_rejected["id"],
+                999_999,
+            ],
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["rejected_count"] == 2
+    assert set(payload["rejected_ids"]) == {pending_one["id"], pending_two["id"]}
+    assert set(payload["skipped_ids"]) == {already_rejected["id"], 999_999}
+
+    for review_id in (pending_one["id"], pending_two["id"]):
+        check = client.get(
+            f"/api/v1/purchase-orders/imports/reviews/{review_id}",
+            headers=admin_headers,
+        )
+        assert check.status_code == 200
+        assert check.json()["status"] == "rejected"
+
+
+def test_import_reviews_bulk_reject_by_stale_before_only_targets_pending(
+    client: TestClient,
+    db,
+    admin_headers,
+):
+    crud_supplier.create(
+        db=db,
+        obj_in=SupplierCreate(name="Alibaba Launch Supplier", currency="USD"),
+    )
+    stale = _create_review(client, admin_headers, "alibaba_stale_pending.txt")
+    fresh = _create_review(client, admin_headers, "alibaba_fresh_pending.txt")
+
+    stale_row = (
+        db.query(SupplierDocumentImport)
+        .filter(SupplierDocumentImport.id == stale["id"])
+        .one()
+    )
+    stale_row.created_at = datetime.now(timezone.utc) - timedelta(days=45)
+    db.add(stale_row)
+    db.commit()
+
+    response = client.post(
+        "/api/v1/purchase-orders/imports/reviews/bulk-reject",
+        json={"stale_before": (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["rejected_ids"] == [stale["id"]]
+    assert payload["rejected_count"] == 1
+    assert payload["skipped_ids"] == []
+
+    fresh_check = client.get(
+        f"/api/v1/purchase-orders/imports/reviews/{fresh['id']}",
+        headers=admin_headers,
+    )
+    assert fresh_check.status_code == 200
+    assert fresh_check.json()["status"] == "pending"
+
+
+def test_import_reviews_bulk_reject_requires_a_filter(
+    client: TestClient,
+    db,
+    admin_headers,
+):
+    response = client.post(
+        "/api/v1/purchase-orders/imports/reviews/bulk-reject",
+        json={},
+        headers=admin_headers,
+    )
+    assert response.status_code == 400

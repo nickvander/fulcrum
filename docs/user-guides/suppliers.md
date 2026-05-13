@@ -153,6 +153,22 @@ it before approval:
 Approving an import review still creates a draft PO only. Inventory changes only
 after the PO is received.
 
+### Review Queue Filters and Cleanup
+
+The supplier import queue on the Purchase Orders page now exposes three filter
+tabs:
+
+- **Pending** is the active work queue.
+- **History** shows previously approved and rejected imports so audit context
+  is preserved without cluttering the active queue. Approved reviews link
+  back to the PO they created.
+- **All** combines both views for quick searches.
+
+When at least one pending review is older than 30 days, a **Reject stale**
+button appears next to **Add document**. Confirming it bulk-rejects every
+pending review past the 30-day cutoff in one request. Non-pending reviews are
+never modified by the bulk action.
+
 ## Linking Products to Suppliers
 
 You can associate products with specific suppliers for reorder tracking:
