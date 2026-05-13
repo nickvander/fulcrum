@@ -116,7 +116,7 @@
 
             <div class="secondary-grid">
                 <div class="grid-section">
-                    <app-low-stock-list [products]="stats.lowStockProducts"
+                    <app-low-stock-list [report]="lowStock$ | async"
                         class="dashboard-widget"></app-low-stock-list>
                 </div>
                 <div class="grid-section">

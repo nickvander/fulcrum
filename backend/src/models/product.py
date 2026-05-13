@@ -34,6 +34,12 @@ class Product(Base):
     depth = Column(Float, nullable=True)
     weight = Column(Float, nullable=True)
     is_bundle = Column(Boolean, default=False)
+
+    # Reorder targets used by /reports/low-stock and the dashboard widget.
+    # Both nullable so we can fall back to product- and store-level defaults
+    # for products that haven't been tuned yet.
+    reorder_point = Column(Integer, nullable=True)
+    reorder_quantity = Column(Integer, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

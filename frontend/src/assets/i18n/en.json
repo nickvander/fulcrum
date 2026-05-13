@@ -125,14 +125,28 @@
         "recentActivity": "Recent Activity",
         "quickActions": "Quick Actions",
         "totalProducts": "Total Products",
-        "lowStock": "Low Stock",
         "criticalStock": "Critical Stock",
         "totalValue": "Total Value",
         "pendingOrders": "Pending Orders",
         "inventoryHealth": "Inventory Health",
         "healthy": "Healthy",
         "warning": "Warning",
-        "critical": "Critical"
+        "critical": "Critical",
+        "severity": {
+            "critical": "out of stock",
+            "low": "low",
+            "watch": "watch"
+        },
+        "lowStock": {
+            "product": "Product",
+            "onHand": "On hand",
+            "threshold": "Threshold",
+            "velocity": "Velocity",
+            "velocityHint": "Average daily sales over the last 30 days",
+            "daysLeft": "Days left",
+            "suggested": "Suggested",
+            "createPo": "Create PO"
+        }
     },
     "products": {
         "title": "Products",

@@ -125,14 +125,28 @@
         "recentActivity": "Actividad Reciente",
         "quickActions": "Acciones Rápidas",
         "totalProducts": "Total de Productos",
-        "lowStock": "Stock Bajo",
         "criticalStock": "Stock Crítico",
         "totalValue": "Valor Total",
         "pendingOrders": "Órdenes Pendientes",
         "inventoryHealth": "Salud del Inventario",
         "healthy": "Saludable",
         "warning": "Advertencia",
-        "critical": "Crítico"
+        "critical": "Crítico",
+        "severity": {
+            "critical": "sin stock",
+            "low": "bajo",
+            "watch": "alerta"
+        },
+        "lowStock": {
+            "product": "Producto",
+            "onHand": "En mano",
+            "threshold": "Umbral",
+            "velocity": "Velocidad",
+            "velocityHint": "Ventas diarias promedio (últimos 30 días)",
+            "daysLeft": "Días restantes",
+            "suggested": "Sugerido",
+            "createPo": "Crear OC"
+        }
     },
     "products": {
         "title": "Productos",

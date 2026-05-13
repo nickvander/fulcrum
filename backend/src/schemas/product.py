@@ -77,6 +77,8 @@ class ProductBase(BaseModel):
     weight: Optional[float] = None
     average_cost: Optional[float] = None
     is_bundle: bool = False
+    reorder_point: Optional[int] = None
+    reorder_quantity: Optional[int] = None
 
 class ProductCreate(ProductBase):
     bundle_components: Optional[List[BundleComponentCreate]] = None
@@ -103,6 +105,8 @@ class ProductUpdate(BaseModel):
     qrcode_value: Optional[str] = None
     barcode_image_url: Optional[str] = None
     qrcode_image_url: Optional[str] = None
+    reorder_point: Optional[int] = None
+    reorder_quantity: Optional[int] = None
 
 
 
