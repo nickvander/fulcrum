@@ -478,7 +478,10 @@ class StockTransferService:
         import asyncio
 
         from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
-        from src.services.marketplace_service import marketplace_service
+        from src.services.marketplace_service import (
+            ReauthorizationRequiredError,
+            marketplace_service,
+        )
 
         transfer = self._get_or_404(db, transfer_id)
         marketplace_name = _LOCATION_TO_MARKETPLACE.get(transfer.dest_location)
@@ -501,6 +504,8 @@ class StockTransferService:
 
         user_id = getattr(user, "id", None)
         token: Optional[str] = None
+        needs_reauth = False
+        reauth_reason: Optional[str] = None
         if user_id:
             cred = crud_cred.get_by_marketplace(
                 db, user_id=user_id, marketplace_id=marketplace.id
@@ -510,8 +515,13 @@ class StockTransferService:
                     token = asyncio.run(
                         marketplace_service.get_valid_access_token(db, cred.id)
                     )
-                except Exception:
-                    token = None
+                except ReauthorizationRequiredError as exc:
+                    needs_reauth = True
+                    reauth_reason = exc.reason
+                except Exception as exc:
+                    # Unknown failure path. Don't lose the message.
+                    needs_reauth = True
+                    reauth_reason = str(exc)[:200]
 
         try:
             connector = marketplace_service.get_connector(marketplace.name)
@@ -521,7 +531,13 @@ class StockTransferService:
                 detail=f"Marketplace connector unavailable: {exc}",
             )
 
-        summary = {"updated": [], "missing_listings": []}
+        summary = {
+            "updated": [],
+            "missing_listings": [],
+            "needs_reauthorization": needs_reauth,
+            "reauthorization_reason": reauth_reason,
+            "marketplace": marketplace_name,
+        }
         for item in transfer.items:
             qty_at_dest = (
                 db.query(func.coalesce(func.sum(InventoryItem.quantity), 0))
@@ -548,6 +564,27 @@ class StockTransferService:
                     {
                         "product_id": item.product_id,
                         "qty_to_publish": int(qty_at_dest),
+                    }
+                )
+                continue
+
+            if needs_reauth:
+                # Skip the live API call — the caller needs to re-authorize
+                # before any sync can succeed. Record the intended qty so the
+                # UI can show "would have pushed N" after reauth.
+                listing.sync_status = "ERROR"
+                listing.error_message = (
+                    f"Reauthorization required ({reauth_reason})" if reauth_reason
+                    else "Reauthorization required"
+                )[:500]
+                db.add(listing)
+                summary["updated"].append(
+                    {
+                        "product_id": item.product_id,
+                        "external_listing_id": listing.external_listing_id,
+                        "qty": int(qty_at_dest),
+                        "ok": False,
+                        "error": "needs_reauthorization",
                     }
                 )
                 continue

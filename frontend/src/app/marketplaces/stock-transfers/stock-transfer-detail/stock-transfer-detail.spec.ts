@@ -139,4 +139,22 @@ describe('StockTransferDetailComponent', () => {
     expect(service.syncListings).toHaveBeenCalledWith(42);
     expect(component.lastSync?.missing_listings.length).toBe(1);
   });
+
+  it('shows reauth state when the sync response says credentials are stale', () => {
+    service.syncListings.mockReturnValue(
+      of({
+        updated: [
+          { product_id: 7, external_listing_id: 'MLM-1', qty: 5, ok: false, error: 'needs_reauthorization' },
+        ],
+        missing_listings: [],
+        needs_reauthorization: true,
+        reauthorization_reason: 'refresh call failed: invalid_grant',
+        marketplace: 'MercadoLibre',
+      }),
+    );
+    component.transfer = transfer({ status: 'received' });
+    component.syncListings();
+    expect(component.lastSync?.needs_reauthorization).toBe(true);
+    expect(component.lastSync?.marketplace).toBe('MercadoLibre');
+  });
 });

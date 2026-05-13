@@ -756,6 +756,8 @@
             "externalInboundId": "ID inbound del marketplace",
             "notFound": "Transferencia no encontrada.",
             "lastSync": "Última sincronización de cantidad",
+            "reauthRequired": "{{marketplace}} requiere reautorización antes de poder sincronizar listados.",
+            "reauthCta": "Abrir configuración de marketplace",
             "missingListings": "{{count}} producto(s) aún no tienen listado en el marketplace — créalos antes de poder sincronizar.",
             "col": {
                 "product": "Producto",
