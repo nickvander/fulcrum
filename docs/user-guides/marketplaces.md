@@ -112,8 +112,98 @@ Saved listings are stored as **drafts** in Fulcrum. They contain:
 - Marketplace association
 - Sync status (PENDING until published)
 
-> **Coming Soon**: Direct publishing to marketplace APIs with automatic
-> inventory synchronization.
+## Stock Transfers (Allocation Workflow)
+
+Fulcrum keeps Purchase Order receiving separate from marketplace stock so you
+can decide explicitly how much inventory goes to which channel. The path from
+"received from supplier" to "available on MercadoLibre Full / Amazon FBA" goes
+through a **Stock Transfer**.
+
+### Mental model
+
+Every product can have stock at multiple locations:
+
+- `default` — your own warehouse.
+- `ml-full` — MercadoLibre Full's fulfillment warehouse.
+- `amazon-fba` — Amazon FBA's fulfillment warehouse.
+
+A stock transfer is a planned movement between two of those locations under an
+explicit state machine: **Draft → Shipped → Partially received → Received**
+(plus **Cancelled** before ship).
+
+### Accessing Stock Transfers
+
+In the sidebar, expand **Marketplaces** and click **Stock Transfers**. The list
+header has three top-level actions:
+
+- **New Transfer** — create a single draft against one destination.
+- **Allocation planner** — plan splits across multiple destinations in one pass.
+- **Reconciliation** — view shrinkage / damage across received transfers.
+
+### Creating and shipping a transfer
+
+1. Click **New Transfer**. Pick the destination (MercadoLibre Full or Amazon
+   FBA), search for products, set the units per row.
+2. Click **Create draft**. You land on the detail page with status **Draft**.
+3. When you actually ship the goods, either:
+   - **Mark shipped** — pure status change, useful for tracking internally.
+   - **Ship + reserve inbound** — also calls the marketplace's API to reserve an
+     inbound shipment and stores the returned `external_inbound_id` on the
+     transfer. This is the typical path for ML Full / Amazon FBA.
+4. Status flips to **Shipped**; the source-location stock is decremented and an
+   inventory adjustment row is written for the audit trail.
+
+### Receiving and reconciling
+
+When the destination warehouse confirms receipt (manually entered or, in the
+future, via webhook):
+
+1. Open the transfer detail and click **Receive items**.
+2. The dialog pre-fills each line with the remaining shipped quantity. Adjust if
+   the warehouse reported a different count.
+3. Click **Record receipt**. Status moves to **Partially received** or
+   **Received** depending on whether all lines are complete.
+
+If `qty_received` ends up different from `qty_shipped`, the line shows up on the
+**Reconciliation** page (shrinkage if negative, over-receipt if positive), so
+discrepancies don't get lost.
+
+### Pushing the new quantity to listings
+
+Once a transfer is **Received** (or **Partially received**), the detail page
+exposes **Push qty to listings**. This calls the marketplace's API and updates
+the `available_quantity` on every `marketplace_listing` whose product appears in
+the transfer.
+
+The result panel reports three categories:
+
+- ✅ Listings that synced successfully.
+- ❌ Listings whose sync failed (with the error message — usually a
+  missing/expired OAuth token).
+- ⚠️ Products that have no marketplace listing yet — create those listings
+  manually before they will sync.
+
+### Allocation planner
+
+If you want to split a batch of received inventory across multiple destinations
+in one pass:
+
+1. From **Stock Transfers**, click **Allocation planner**.
+2. The table shows each product with its current quantity at internal,
+   MercadoLibre Full, and Amazon FBA locations.
+3. Enter values in **Send to ML** and **Send to Amazon** per row. The
+   **Remaining internal** column updates live; over-allocating a product
+   highlights the row and disables the save button.
+4. Click **Create draft transfers**. Fulcrum creates **one DRAFT transfer per
+   destination** bundling every product allocated to that destination.
+
+Each draft is then shipped / received like any other transfer.
+
+### Note on Purchase Order receiving
+
+PO receiving updates **internal stock only**. Pushing that stock to a
+marketplace warehouse is always an explicit Stock Transfer, never an automatic
+side-effect of receiving a PO.
 
 ## Order Management
 
@@ -128,4 +218,4 @@ Fulcrum can:
 
 ---
 
-_Last Updated: January 2026_
+_Last Updated: May 2026_

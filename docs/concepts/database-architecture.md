@@ -33,11 +33,20 @@ fields, and rich media.
 ### Inventory Management
 
 The inventory system tracks stock levels and provides full audit trails for
-changes.
+changes. Stock is keyed by **location** (a free-form string on
+`inventory_items.location`) so the same SKU can be tracked separately in the
+internal warehouse vs. marketplace fulfillment warehouses (e.g. `"default"`,
+`"ml-full"`, `"amazon-fba"`).
 
-- **inventory_items**: Current stock levels for products and variants.
+- **inventory_items**: Current stock levels for products and variants at a
+  specific location.
 - **inventory_adjustments**: Historical record of all inventory changes for
   audit purposes.
+- **stock_transfers**: Planned movements of inventory between two locations
+  (e.g. internal → MercadoLibre Full). State machine: DRAFT → SHIPPED →
+  PARTIALLY_RECEIVED → RECEIVED, plus CANCELLED.
+- **stock_transfer_items**: Per-product line items for each transfer with
+  planned, shipped, and received quantities.
 
 ### Marketplace Integration
 
@@ -46,7 +55,8 @@ System for connecting with external marketplaces and managing listings.
 - **marketplaces**: Configuration for supported marketplaces.
 - **marketplace_credentials**: User-specific credentials for marketplace APIs.
 - **marketplace_listings**: Links products to their external marketplace
-  listings.
+  listings. The `available_quantity` column reflects the last quantity pushed to
+  the marketplace via the stock-transfer sync workflow.
 
 ### Order Processing
 
@@ -220,6 +230,45 @@ erDiagram
     product_variants ||--o{ inventory_adjustments : adjusts
 ```
 
+### Stock Transfer Schema
+
+Stock transfers model movements of inventory between locations under an explicit
+state machine. Ship decrements the source location's `inventory_items` row;
+receive increments the destination's. Both transitions also write an
+`inventory_adjustment` audit row.
+
+```mermaid
+erDiagram
+    stock_transfers {
+        int id PK
+        string source_location
+        string dest_location
+        string status
+        string notes
+        string external_inbound_id
+        int created_by_id FK
+        datetime shipped_at
+        datetime received_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    stock_transfer_items {
+        int id PK
+        int transfer_id FK
+        int product_id FK
+        int variant_id FK
+        int qty_planned
+        int qty_shipped
+        int qty_received
+    }
+
+    stock_transfers ||--o{ stock_transfer_items : contains
+    products ||--o{ stock_transfer_items : referenced
+    product_variants ||--o{ stock_transfer_items : referenced
+    users ||--o{ stock_transfers : created_by
+```
+
 ### Order Processing Schema
 
 ```mermaid
@@ -256,6 +305,9 @@ erDiagram
         string external_listing_id
         string listing_url
         string status
+        string sync_status
+        int available_quantity
+        float marketplace_price
     }
 
     marketplaces ||--o{ marketplace_listings : lists

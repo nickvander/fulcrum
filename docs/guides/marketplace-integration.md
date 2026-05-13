@@ -3,7 +3,7 @@
 This guide covers how to set up and configure integrations with external
 marketplaces (Amazon SP-API and MercadoLibre) for Fulcrum.
 
-> **Last Updated**: December 2025
+> **Last Updated**: May 2026
 
 ## Supported Marketplaces
 
@@ -210,6 +210,66 @@ MercadoLibre provides **test users** for development:
    real accounts.
 
 ---
+
+## Stock Transfers & Marketplace Fulfillment
+
+Fulcrum models inventory at marketplace fulfillment warehouses (ML Full, Amazon
+FBA) as additional `inventory_items.location` values alongside the internal
+`default` warehouse. Movement between locations always goes through the
+`stock_transfers` workflow — PO receiving only ever updates internal stock.
+
+### Connector surface
+
+`BaseMarketplaceConnector` exposes two methods that subclasses can implement to
+plug into the workflow:
+
+```python
+async def create_inbound_shipment(
+    items: List[InboundShipmentItem],
+    access_token: Optional[str] = None,
+) -> InboundShipmentResult:
+    """Reserve an inbound shipment at the marketplace warehouse."""
+
+async def get_inbound_shipment_status(
+    external_inbound_id: str,
+    access_token: Optional[str] = None,
+) -> InboundShipmentResult:
+    """Poll the marketplace for inbound shipment receipt status."""
+```
+
+Both have default no-op stubs on the base class so existing connectors stay
+valid. `MercadoLibreConnector` implements them against the `/fbm/inbound/...`
+endpoints, with a deterministic stub fallback when no access token is present so
+dev/test environments can run the workflow end-to-end without live API calls.
+
+### Service & endpoints
+
+`StockTransferService` orchestrates the workflow:
+
+- `ship(transfer_id, push_to_marketplace=False)` — decrements source stock,
+  marks SHIPPED. When `push_to_marketplace=True` and the destination is a
+  recognised marketplace location (`ml-full`, `amazon-fba`), the service invokes
+  the connector's `create_inbound_shipment` and stores `external_inbound_id` on
+  the transfer.
+- `receive_items(transfer_id, lines)` — increments destination stock, advances
+  status to PARTIALLY_RECEIVED or RECEIVED.
+- `sync_marketplace_listings(transfer_id)` — after a transfer reaches RECEIVED,
+  pushes the destination-location quantity into every `MarketplaceListing` for
+  the products in the transfer via the connector's `sync_inventory`. Products
+  without an existing listing surface as `missing_listings` in the response so
+  callers can resolve them manually.
+
+The REST surface follows the same shape:
+
+| Method | Path                                  | Notes                                                    |
+| ------ | ------------------------------------- | -------------------------------------------------------- |
+| POST   | `/stock-transfers/`                   | Create draft                                             |
+| POST   | `/stock-transfers/{id}/ship`          | Accepts `?push_to_marketplace=true` query flag           |
+| POST   | `/stock-transfers/{id}/receive`       | Body: list of `{transfer_item_id, product_id, quantity}` |
+| POST   | `/stock-transfers/{id}/sync-listings` | Pushes `available_quantity` to listings via connector    |
+| POST   | `/stock-transfers/plan-allocations`   | Bundles flat allocations into one draft per destination  |
+| GET    | `/stock-transfers/inventory-snapshot` | Per-product stock by location (feeds the planner UI)     |
+| GET    | `/stock-transfers/reconciliation`     | Lines where `qty_received ≠ qty_shipped`                 |
 
 ## Security Considerations
 
