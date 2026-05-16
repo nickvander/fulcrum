@@ -19,22 +19,25 @@
                 <p>{{ t('marketing.selectMarketplace') }}</p>
 
                 <div class="marketplace-options">
-                    <button mat-stroked-button class="marketplace-option amazon"
+                    <button mat-stroked-button class="marketplace-option mercadolibre recommended"
+                        routerLink="/marketplaces/settings/mercadolibre" (click)="showAddDialog = false">
+                        <img src="images/marketplaces/mercadolibre.png" alt="MercadoLibre" class="marketplace-logo">
+                        <div class="marketplace-info">
+                            <div class="name-row">
+                                <span class="marketplace-name">MercadoLibre</span>
+                                <span class="recommended-badge">{{ t('marketing.recommendedForMexico') }}</span>
+                            </div>
+                            <span class="marketplace-desc">{{ t('marketing.connectMercadoLibre') }}</span>
+                        </div>
+                        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                    </button>
+
+                    <button mat-stroked-button class="marketplace-option amazon secondary"
                         routerLink="/marketplaces/settings/amazon" (click)="showAddDialog = false">
                         <img src="images/marketplaces/amazon.png" alt="Amazon" class="marketplace-logo">
                         <div class="marketplace-info">
                             <span class="marketplace-name">Amazon Seller Central</span>
                             <span class="marketplace-desc">{{ t('marketing.connectAmazon') }}</span>
-                        </div>
-                        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
-                    </button>
-
-                    <button mat-stroked-button class="marketplace-option mercadolibre"
-                        routerLink="/marketplaces/settings/mercadolibre" (click)="showAddDialog = false">
-                        <img src="images/marketplaces/mercadolibre.png" alt="MercadoLibre" class="marketplace-logo">
-                        <div class="marketplace-info">
-                            <span class="marketplace-name">MercadoLibre</span>
-                            <span class="marketplace-desc">{{ t('marketing.connectMercadoLibre') }}</span>
                         </div>
                         <mat-icon class="arrow-icon">arrow_forward</mat-icon>
                     </button>
@@ -48,7 +51,7 @@
         }
 
         <div class="marketplace-grid">
-            @for (market of marketplaces$ | async; track market.id) {
+            @for (market of cards$ | async; track market.id) {
             <mat-card class="channel-card">
                 <div class="card-glow" [ngClass]="market.name.toLowerCase()"></div>
                 <div class="card-header-overlay">
@@ -57,32 +60,48 @@
                     </div>
                     <div class="header-info">
                         <mat-card-title>{{ market.name }}</mat-card-title>
-                        <mat-card-subtitle>{{ t('marketing.activeConnection') }} • ID: {{ market.id
-                            }}</mat-card-subtitle>
+                        <mat-card-subtitle>
+                            @if (market.summary?.credential_connected) {
+                            {{ t('marketing.activeConnection') }} • {{ formatLastSync(market.summary?.last_sync_at) }}
+                            } @else {
+                            Not connected • ID: {{ market.id }}
+                            }
+                        </mat-card-subtitle>
                     </div>
                 </div>
 
                 <mat-card-content>
                     <div class="status-indicator">
+                        @if (market.summary?.credential_connected) {
                         <span class="status-dot online"></span>
                         <span class="status-text">{{ t('marketing.operational') }}</span>
+                        } @else {
+                        <span class="status-dot offline"></span>
+                        <span class="status-text offline">Disconnected</span>
+                        }
                         <span class="spacer"></span>
+                        @if (tokenChipState(market.summary) !== 'none') {
                         <mat-chip-set>
-                            <mat-chip class="sync-chip">{{ t('marketing.autoSyncOn') }}</mat-chip>
+                            <mat-chip class="token-chip" [ngClass]="tokenChipState(market.summary)">
+                                {{ tokenChipLabel(market.summary) }}
+                            </mat-chip>
                         </mat-chip-set>
+                        }
                     </div>
 
                     <div class="quick-stats">
                         <div class="stat-item">
-                            <span class="stat-value">--</span>
+                            <span class="stat-value">{{ market.summary?.listing_count ?? '--' }}</span>
                             <span class="stat-label">{{ t('marketing.listings') }}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value success">--</span>
+                            <span class="stat-value success">{{ market.summary?.healthy_count ?? '--' }}</span>
                             <span class="stat-label">{{ t('marketing.healthy') }}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value warning">--</span>
+                            <span class="stat-value" [class.warning]="(market.summary?.issues_count ?? 0) > 0">
+                                {{ market.summary?.issues_count ?? '--' }}
+                            </span>
                             <span class="stat-label">{{ t('marketing.issues') }}</span>
                         </div>
                     </div>

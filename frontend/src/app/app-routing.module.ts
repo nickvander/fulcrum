@@ -30,6 +30,22 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'orders',
+    loadComponent: () =>
+      import('./sales-orders/pages/sales-order-list/sales-order-list').then(
+        (m) => m.SalesOrderListComponent
+      ),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'orders/:id',
+    loadComponent: () =>
+      import('./sales-orders/pages/sales-order-detail/sales-order-detail').then(
+        (m) => m.SalesOrderDetailComponent
+      ),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'settings',
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]

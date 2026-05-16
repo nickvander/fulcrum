@@ -156,6 +156,43 @@
             animation: pulse 2s infinite;
         }
     }
+
+    &.offline {
+        background-color: var(--text-hint);
+    }
+}
+
+.status-text.offline {
+    color: var(--text-secondary);
+}
+
+.token-chip {
+    font-size: 10px;
+    font-weight: 800;
+    height: 22px;
+    border: 1px solid var(--border-color);
+
+    &.ok {
+        background: var(--success-bg) !important;
+        color: var(--success-color) !important;
+    }
+
+    &.warning {
+        background: var(--warning-bg) !important;
+        color: var(--warning-color) !important;
+    }
+
+    &.expired,
+    &.disconnected {
+        background: var(--error-bg) !important;
+        color: var(--error-color) !important;
+    }
+}
+
+.status-indicator {
+    &:has(.status-dot.offline) {
+        background: var(--bg-app);
+    }
 }
 
 @keyframes pulse {
@@ -381,6 +418,34 @@
     font-weight: 600;
     font-size: 1rem;
     color: var(--text-main);
+}
+
+.name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.recommended-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    padding: 2px 8px;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.marketplace-option.recommended {
+    border-width: 2px !important;
+    box-shadow: 0 0 0 1px var(--accent-light);
+}
+
+.marketplace-option.secondary {
+    opacity: 0.85;
 }
 
 .marketplace-desc {

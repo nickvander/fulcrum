@@ -1,0 +1,44 @@
+<ng-container *transloco="let t">
+    <div class="widget-container">
+        <div class="widget-header">
+            <div>
+                <h3>{{ t('dashboard.salesByChannel') }}</h3>
+                <small>{{ t('dashboard.salesByChannelSubtitle') }}</small>
+            </div>
+            <a mat-button color="primary" routerLink="/orders">{{ t('common.viewAll') }}</a>
+        </div>
+
+        <div class="widget-content" *ngIf="hasData; else empty">
+            <div class="totals">
+                <div class="total-block">
+                    <span class="value">{{ summary?.total_orders ?? 0 }}</span>
+                    <span class="label">{{ t('orders.title') }}</span>
+                </div>
+                <div class="total-block">
+                    <span class="value">{{ summary?.total_revenue | currency:'MXN':'symbol-narrow':'1.0-0' }}</span>
+                    <span class="label">Total revenue</span>
+                </div>
+            </div>
+
+            <ul class="channel-list">
+                <li *ngFor="let row of rows" [class]="'channel ' + channelClass(row.source)">
+                    <div class="channel-info">
+                        <strong>{{ row.label }}</strong>
+                        <small>{{ row.count }} · {{ row.revenue | currency:'MXN':'symbol-narrow':'1.0-0' }}</small>
+                    </div>
+                    <div class="bar-track">
+                        <div class="bar-fill" [style.width.%]="row.share"></div>
+                    </div>
+                    <span class="share">{{ row.share }}%</span>
+                </li>
+            </ul>
+        </div>
+
+        <ng-template #empty>
+            <div class="empty-state">
+                <mat-icon>insights</mat-icon>
+                <p>{{ t('dashboard.noOrdersYet') }}</p>
+            </div>
+        </ng-template>
+    </div>
+</ng-container>

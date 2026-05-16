@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { DashboardStats, DashboardStatsService } from '../../services/dashboard-stats.service';
 import { LowStockReport, LowStockService } from '../../services/low-stock.service';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { SalesOrderSummary, SalesOrdersService } from '../../../sales-orders/services/sales-orders.service';
 import { LaunchReadinessReport, LaunchReadinessSection, OnboardingService, OnboardingStatus } from '../../services/onboarding.service';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +15,7 @@ import { StatCardComponent } from '../../widgets/stat-card/stat-card.component';
 import { LowStockListWidgetComponent } from '../../widgets/low-stock-list/low-stock-list.component';
 import { InventoryHealthWidgetComponent } from '../../widgets/inventory-health-widget/inventory-health-widget.component';
 import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist/onboarding-checklist.component';
+import { SalesByChannelWidgetComponent } from '../../widgets/sales-by-channel-widget/sales-by-channel-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
@@ -35,6 +38,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
         LowStockListWidgetComponent,
         InventoryHealthWidgetComponent,
         OnboardingChecklistComponent,
+        SalesByChannelWidgetComponent,
         RouterModule,
         TranslocoModule
     ]
@@ -44,6 +48,7 @@ export class DashboardComponent implements OnInit {
     onboardingStatus$!: Observable<OnboardingStatus>;
     launchReadiness$!: Observable<LaunchReadinessReport>;
     lowStock$!: Observable<LowStockReport>;
+    salesSummary$!: Observable<SalesOrderSummary | null>;
     creatingDemoWorkspace = false;
     cleaningDemoData = false;
 
@@ -51,6 +56,7 @@ export class DashboardComponent implements OnInit {
         private statsService: DashboardStatsService,
         private onboardingService: OnboardingService,
         private lowStockService: LowStockService,
+        private salesOrdersService: SalesOrdersService,
         private snackBar: MatSnackBar,
         private dialog: MatDialog
     ) { }
@@ -64,6 +70,7 @@ export class DashboardComponent implements OnInit {
         this.onboardingStatus$ = this.onboardingService.getStatus();
         this.launchReadiness$ = this.onboardingService.getLaunchReadiness();
         this.lowStock$ = this.lowStockService.getLowStock();
+        this.salesSummary$ = this.salesOrdersService.summary(30).pipe(catchError(() => of(null)));
     }
 
     createDemoWorkspace(): void {

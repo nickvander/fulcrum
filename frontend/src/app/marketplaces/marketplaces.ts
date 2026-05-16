@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface Marketplace {
@@ -123,4 +123,40 @@ export class MarketplacesService {
   createMarketplace(marketplace: { name: string; api_base_url: string }): Observable<Marketplace> {
     return this.http.post<Marketplace>(`${this.apiUrl}/`, marketplace);
   }
+
+  getCredentialForMarketplace(marketplaceId: number): Observable<MarketplaceCredential | null> {
+    return this.http
+      .get<MarketplaceCredential>(`${environment.apiUrl}/marketplace-credentials/${marketplaceId}`)
+      .pipe(catchError(() => of(null)));
+  }
+
+  disconnectCredential(credentialId: number): Observable<unknown> {
+    return this.http.delete(`${environment.apiUrl}/marketplace-credentials/${credentialId}`);
+  }
+
+  getMarketplaceSummary(marketplaceId: number): Observable<MarketplaceSummary> {
+    return this.http.get<MarketplaceSummary>(`${this.apiUrl}/${marketplaceId}/summary`);
+  }
+}
+
+export interface MarketplaceCredential {
+  id: number;
+  marketplace_id: number;
+  user_id: number;
+  token_type?: string;
+  scopes?: string;
+  expires_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface MarketplaceSummary {
+  marketplace_id: number;
+  listing_count: number;
+  healthy_count: number;
+  issues_count: number;
+  last_sync_at?: string | null;
+  credential_connected: boolean;
+  token_expires_at?: string | null;
+  token_expires_in_days?: number | null;
 }

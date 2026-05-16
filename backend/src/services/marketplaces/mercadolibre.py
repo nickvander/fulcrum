@@ -336,3 +336,15 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                 detail_url=data.get("detail_url"),
                 raw_data=data,
             )
+    async def fetch_order(self, order_id: str, access_token: str) -> Dict[str, Any]:
+        """
+        Fetches a single order from MercadoLibre via GET /orders/{order_id}.
+        Requires a valid access token.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_URL}/orders/{order_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response.raise_for_status()
+            return response.json()

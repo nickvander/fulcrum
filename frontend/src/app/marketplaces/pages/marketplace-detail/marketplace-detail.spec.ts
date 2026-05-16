@@ -5,6 +5,7 @@ import { MarketplacesService } from '../../marketplaces';
 import { of } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoTestingModule } from '@ngneat/transloco';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('MarketplaceDetailComponent', () => {
   let component: MarketplaceDetailComponent;
@@ -14,6 +15,7 @@ describe('MarketplaceDetailComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         MarketplaceDetailComponent,
+        NoopAnimationsModule,
         TranslocoTestingModule.forRoot({
           langs: { en: {}, 'es-MX': {} },
           translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
@@ -23,7 +25,9 @@ describe('MarketplaceDetailComponent', () => {
         {
           provide: MarketplacesService,
           useValue: {
-            getMarketplaceListings: () => of([])
+            getMarketplaceListings: () => of([]),
+            getCredentialForMarketplace: () => of(null),
+            disconnectCredential: () => of({})
           }
         },
         {

@@ -105,16 +105,21 @@
                     [value]="(stats.totalInventoryValue | currency:'USD':'symbol':'1.0-0') ?? ''" icon="payments"
                     colorType="success" link="/products" [tooltip]="t('dashboard.totalValue')"></app-stat-card>
 
-                <app-stat-card [title]="t('dashboard.inventoryHealth')" [value]="stats.stockHealthPercentage + '%'"
-                    icon="health_and_safety" colorType="accent" link="/products"
-                    [tooltip]="t('dashboard.inventoryHealth')"></app-stat-card>
-
-                <app-stat-card [title]="t('dashboard.pendingOrders')" [value]="stats.pendingOrdersCount"
+                <app-stat-card [title]="t('dashboard.openPurchaseOrders')" [value]="stats.pendingOrdersCount"
                     icon="shopping_cart" colorType="warn" link="/suppliers/po"
-                    [tooltip]="t('dashboard.pendingOrders')"></app-stat-card>
+                    [tooltip]="t('dashboard.openPurchaseOrdersTooltip')"></app-stat-card>
+
+                <app-stat-card [title]="t('dashboard.openSalesOrders')"
+                    [value]="(salesSummary$ | async)?.open_orders ?? 0"
+                    icon="receipt_long" colorType="accent" link="/orders"
+                    [tooltip]="t('dashboard.openSalesOrdersTooltip')"></app-stat-card>
             </div>
 
             <div class="secondary-grid">
+                <div class="grid-section">
+                    <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"
+                        class="dashboard-widget"></app-sales-by-channel-widget>
+                </div>
                 <div class="grid-section">
                     <app-low-stock-list [report]="lowStock$ | async"
                         class="dashboard-widget"></app-low-stock-list>
