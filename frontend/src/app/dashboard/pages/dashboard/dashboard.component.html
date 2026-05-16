@@ -41,11 +41,11 @@
                         [class.optional]="section.status === 'optional'">
                         <mat-icon>{{ readinessIcon(section) }}</mat-icon>
                         <div>
-                            <h3>{{ section.label }}</h3>
-                            <p>{{ section.description }}</p>
+                            <h3>{{ section.label_key ? t(section.label_key) : section.label }}</h3>
+                            <p>{{ section.description_key ? t(section.description_key) : section.description }}</p>
                         </div>
                         <a mat-stroked-button color="primary" [routerLink]="section.route">
-                            {{ section.action_label }}
+                            {{ section.action_label_key ? t(section.action_label_key) : section.action_label }}
                         </a>
                     </article>
                 </div>

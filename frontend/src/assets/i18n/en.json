@@ -166,7 +166,49 @@
         "creatingDemo": "Creating demo",
         "createDemoTooltip": "Create one sample supplier, product, purchase order, and receipt. No marketplace stock is changed.",
         "requiredDone": "required done",
-        "optional": "Optional"
+        "optional": "Optional",
+        "steps": {
+            "profile": {
+                "label": "Admin account",
+                "description": "At least one user can sign in and manage the workspace.",
+                "action": "Manage users"
+            },
+            "store": {
+                "label": "Store settings",
+                "description": "Name the workspace and set defaults for inventory decisions.",
+                "action": "Open settings"
+            },
+            "products": {
+                "label": "Products",
+                "description": "Create or import products before receiving stock.",
+                "action": "Add products"
+            },
+            "suppliers": {
+                "label": "Suppliers",
+                "description": "Add suppliers so purchase orders and supplier documents have a source.",
+                "action": "Add suppliers"
+            },
+            "supplier_matching": {
+                "label": "Supplier matching",
+                "description": "Link supplier names/SKUs to Fulcrum products for faster imports.",
+                "action": "Review suppliers"
+            },
+            "purchase_orders": {
+                "label": "Purchase orders",
+                "description": "Create or import a supplier PO to start the stock-in workflow.",
+                "action": "Create PO"
+            },
+            "inventory": {
+                "label": "Inventory movement",
+                "description": "Receive a PO or adjust stock so inventory has an audit trail.",
+                "action": "Receive stock"
+            },
+            "marketplaces": {
+                "label": "Marketplace credentials",
+                "description": "Optional: connect channels after internal inventory is reliable.",
+                "action": "Connect marketplace"
+            }
+        }
     },
     "launchReadiness": {
         "eyebrow": "Launch readiness",
@@ -181,7 +223,39 @@
         "cleanDemo": "Clean up demo data",
         "cleaningDemo": "Cleaning demo data",
         "openRecord": "Open record",
-        "cleanupPaused": "Cleanup is paused"
+        "cleanupPaused": "Cleanup is paused",
+        "sections": {
+            "setup": {
+                "label": "Setup",
+                "description_ready": "Required onboarding steps are complete.",
+                "description_blocked": "Required setup steps still need attention.",
+                "action": "Review checklist"
+            },
+            "inventory": {
+                "label": "Inventory",
+                "description_ready": "Products and audited inventory movement exist.",
+                "description_blocked": "Create products and receive or adjust stock before launch.",
+                "action": "Open products"
+            },
+            "supplier_documents": {
+                "label": "Supplier documents",
+                "description_ready": "No supplier document imports are waiting for review.",
+                "description_needs_attention": "Review pending supplier document imports before they become purchase orders.",
+                "action": "Open PO imports"
+            },
+            "demo_data": {
+                "label": "Demo data",
+                "description_ready": "No demo records were detected.",
+                "description_needs_attention": "Demo records exist. Review the list and clean them up before go-live.",
+                "action": "Review records"
+            },
+            "marketplaces": {
+                "label": "Marketplace connections",
+                "description_ready": "Marketplace credentials are configured.",
+                "description_optional": "Optional for launch. Connect channels after internal inventory is reliable.",
+                "action": "Open marketplaces"
+            }
+        }
     },
     "orders": {
         "title": "Sales Orders",
