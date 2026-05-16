@@ -1,0 +1,85 @@
+<ng-container *transloco="let t">
+    <div class="orders-container">
+        <div class="page-header">
+            <div class="header-text">
+                <h1>{{ t('orders.title') }}</h1>
+                <p>{{ t('orders.subtitle') }}</p>
+            </div>
+            <div class="header-actions">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+                    <mat-label>{{ t('orders.channel') }}</mat-label>
+                    <mat-select [(ngModel)]="source" (selectionChange)="onSourceChange()">
+                        <mat-option value="ALL">{{ t('orders.allChannels') }}</mat-option>
+                        <mat-option value="MERCADOLIBRE">MercadoLibre</mat-option>
+                        <mat-option value="AMAZON">Amazon</mat-option>
+                        <mat-option value="FULCRUM">Fulcrum</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+                    <mat-label>{{ t('orders.window') }}</mat-label>
+                    <mat-select [(ngModel)]="days" (selectionChange)="onDaysChange()">
+                        <mat-option [value]="7">{{ t('orders.last7') }}</mat-option>
+                        <mat-option [value]="30">{{ t('orders.last30') }}</mat-option>
+                        <mat-option [value]="90">{{ t('orders.last90') }}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-icon-button color="primary" (click)="refresh()" [matTooltip]="t('common.refresh')">
+                    <mat-icon>refresh</mat-icon>
+                </button>
+            </div>
+        </div>
+
+        <div class="table-card mat-elevation-z2">
+            <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+            <mat-table [dataSource]="(orders$ | async) || []">
+                <ng-container matColumnDef="created_at">
+                    <mat-header-cell *matHeaderCellDef>{{ t('orders.date') }}</mat-header-cell>
+                    <mat-cell *matCellDef="let order">
+                        {{ order.created_at | date:'short' }}
+                    </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="source">
+                    <mat-header-cell *matHeaderCellDef>{{ t('orders.channel') }}</mat-header-cell>
+                    <mat-cell *matCellDef="let order">
+                        <mat-chip [class]="sourceChipClass(order.source)">{{ order.source || '—' }}</mat-chip>
+                    </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="external">
+                    <mat-header-cell *matHeaderCellDef>{{ t('orders.externalRef') }}</mat-header-cell>
+                    <mat-cell *matCellDef="let order">
+                        <span class="external-id">{{ order.external_order_id || '—' }}</span>
+                    </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                    <mat-header-cell *matHeaderCellDef>{{ t('orders.status') }}</mat-header-cell>
+                    <mat-cell *matCellDef="let order">
+                        <mat-chip [class]="statusChipClass(order.status)">{{ order.status || '—' }}</mat-chip>
+                    </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="total">
+                    <mat-header-cell *matHeaderCellDef>{{ t('orders.total') }}</mat-header-cell>
+                    <mat-cell *matCellDef="let order">
+                        {{ order.total_price | currency:'MXN':'symbol-narrow' }}
+                    </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: displayedColumns;"
+                    [routerLink]="['/orders', row.id]"
+                    class="clickable-row"></mat-row>
+            </mat-table>
+
+            <div class="empty-table" *ngIf="!loading && !((orders$ | async)?.length)">
+                <mat-icon>inbox</mat-icon>
+                <p>{{ t('orders.empty') }}</p>
+            </div>
+        </div>
+    </div>
+</ng-container>

@@ -1,0 +1,93 @@
+<ng-container *transloco="let t">
+    <div class="order-detail-container">
+        <nav class="breadcrumb">
+            <a routerLink="/orders" class="back-link">
+                <mat-icon>arrow_back</mat-icon>
+                <span>{{ t('orders.title') }}</span>
+            </a>
+        </nav>
+
+        <ng-container *ngIf="order$ | async as order; else loading">
+            <header class="order-header">
+                <div>
+                    <p class="eyebrow">{{ order.source || '—' }}</p>
+                    <h1>{{ t('orders.orderNumber') }} #{{ order.id }}</h1>
+                    <p class="meta">
+                        {{ t('orders.placed') }} {{ order.created_at | date:'medium' }}
+                    </p>
+                </div>
+                <div class="header-side">
+                    <mat-chip [class]="'status-' + (order.status || 'unknown' | lowercase)">
+                        {{ order.status || '—' }}
+                    </mat-chip>
+                    <div class="total">
+                        <span class="label">{{ t('orders.total') }}</span>
+                        <span class="value">{{ order.total_price | currency:'MXN':'symbol-narrow' }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="external-card" *ngIf="order.external_order_id">
+                <mat-icon>link</mat-icon>
+                <div>
+                    <strong>{{ t('orders.externalRef') }}</strong>
+                    <span class="external-id">{{ order.external_order_id }}</span>
+                </div>
+                <a *ngIf="externalLink(order) as url" mat-stroked-button color="primary"
+                    [href]="url" target="_blank" rel="noopener">
+                    <mat-icon>open_in_new</mat-icon>
+                    {{ t('orders.openOnChannel') }}
+                </a>
+            </section>
+
+            <section class="items-card">
+                <h2>{{ t('orders.lineItems') }}</h2>
+                <mat-table [dataSource]="order.items">
+                    <ng-container matColumnDef="product">
+                        <mat-header-cell *matHeaderCellDef>{{ t('orders.product') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let item">
+                            <div class="product-cell">
+                                <strong>{{ item.product_name || ('Product #' + item.product_id) }}</strong>
+                                <small *ngIf="item.product_sku">SKU: {{ item.product_sku }}</small>
+                                <small *ngIf="!item.product_id" class="unmatched">{{ t('orders.unmatched') }}</small>
+                            </div>
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="quantity">
+                        <mat-header-cell *matHeaderCellDef>{{ t('orders.qty') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let item">{{ item.quantity || 0 }}</mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="unit_price">
+                        <mat-header-cell *matHeaderCellDef>{{ t('orders.unitPrice') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let item">
+                            {{ item.price_per_unit | currency:'MXN':'symbol-narrow' }}
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="subtotal">
+                        <mat-header-cell *matHeaderCellDef>{{ t('orders.subtotal') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let item">
+                            {{ (item.price_per_unit || 0) * (item.quantity || 0) | currency:'MXN':'symbol-narrow' }}
+                        </mat-cell>
+                    </ng-container>
+
+                    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+                </mat-table>
+
+                <div class="empty-items" *ngIf="!order.items.length">
+                    {{ t('orders.noItems') }}
+                </div>
+            </section>
+        </ng-container>
+
+        <ng-template #loading>
+            <div class="loading-state">
+                <mat-icon>hourglass_top</mat-icon>
+                <p>{{ t('common.loading') }}</p>
+            </div>
+        </ng-template>
+    </div>
+</ng-container>

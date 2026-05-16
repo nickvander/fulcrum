@@ -208,11 +208,6 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
     return this.campaigns.filter(c => c.status === 'draft').length;
   }
 
-  duplicateCampaign(campaign: CampaignSummary): void {
-    // TODO: Implement duplicate
-    this.snackBar.open('Duplicate feature coming soon', 'Close', { duration: 2000 });
-  }
-
   openQuickPostDialog(): void {
     const dialogRef = this.dialog.open(QuickPostDialogComponent, {
       width: '500px',

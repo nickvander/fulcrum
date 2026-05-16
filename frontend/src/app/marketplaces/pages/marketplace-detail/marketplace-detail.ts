@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslocoModule } from '@ngneat/transloco';
 import { MarketplacesService, MarketplaceListing } from '../../marketplaces';
 import { Observable, of } from 'rxjs';
+import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
   selector: 'app-marketplace-detail',
@@ -23,6 +25,7 @@ import { Observable, of } from 'rxjs';
     MatChipsModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatDialogModule,
     TranslocoModule
   ],
   templateUrl: './marketplace-detail.html',
@@ -33,10 +36,14 @@ export class MarketplaceDetailComponent implements OnInit {
   listings$: Observable<MarketplaceListing[]> = of([]);
   displayedColumns: string[] = ['product', 'status', 'sync', 'price', 'actions'];
 
+  disconnecting = false;
+
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private marketplaceService: MarketplacesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
@@ -75,11 +82,50 @@ export class MarketplaceDetailComponent implements OnInit {
     }
   }
 
-  comingSoon(feature: string): void {
-    this.snackBar.open(`${feature} functionality is coming soon!`, 'Close', {
-      duration: 3000,
-      horizontalPosition: 'right',
-      verticalPosition: 'top'
+  disconnect(): void {
+    if (!this.marketplaceId) {
+      return;
+    }
+    const marketplaceId = parseInt(this.marketplaceId, 10);
+    const ref = this.dialog.open(ConfirmationDialog, {
+      data: {
+        title: 'Disconnect marketplace',
+        message:
+          'This revokes the stored access token. Existing listings stay, but stock and price will not sync until you reconnect. Continue?'
+      }
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+
+      this.disconnecting = true;
+      this.marketplaceService.getCredentialForMarketplace(marketplaceId).subscribe({
+        next: (credential) => {
+          if (!credential) {
+            this.disconnecting = false;
+            this.snackBar.open('No stored credential to disconnect.', 'Close', { duration: 3000 });
+            return;
+          }
+          this.marketplaceService.disconnectCredential(credential.id).subscribe({
+            next: () => {
+              this.disconnecting = false;
+              this.snackBar.open('Marketplace disconnected.', 'Close', { duration: 3000 });
+              this.router.navigate(['/marketplaces']);
+            },
+            error: (err) => {
+              this.disconnecting = false;
+              console.error('Disconnect error:', err);
+              this.snackBar.open('Disconnect failed. Please try again.', 'Close', { duration: 5000 });
+            }
+          });
+        },
+        error: () => {
+          this.disconnecting = false;
+          this.snackBar.open('Could not look up credential.', 'Close', { duration: 3000 });
+        }
+      });
     });
   }
 }

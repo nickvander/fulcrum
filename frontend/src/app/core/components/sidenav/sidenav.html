@@ -22,6 +22,11 @@
           <span>{{ t('nav.products') }}</span>
         </a>
 
+        <a routerLink="/orders" routerLinkActive="active" class="nav-item">
+          <mat-icon>receipt_long</mat-icon>
+          <span>{{ t('nav.orders') }}</span>
+        </a>
+
         <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
           (closed)="purchasingExpanded = false">
           <mat-expansion-panel-header>

@@ -1,0 +1,172 @@
+.order-detail-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.breadcrumb {
+    margin-bottom: 1.5rem;
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+        color: var(--primary-color);
+    }
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+
+    .eyebrow {
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--text-hint);
+        text-transform: uppercase;
+        margin: 0 0 0.25rem 0;
+    }
+
+    h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-main);
+    }
+
+    .meta {
+        margin: 0.5rem 0 0;
+        color: var(--text-secondary);
+    }
+
+    .header-side {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.75rem;
+    }
+
+    .total {
+        text-align: right;
+
+        .label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-hint);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+    }
+}
+
+.external-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+
+    mat-icon {
+        color: var(--primary-color);
+    }
+
+    div {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .external-id {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--text-secondary);
+    }
+}
+
+.items-card {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+
+    h2 {
+        margin: 0 0 1rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+}
+
+.product-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    small {
+        color: var(--text-secondary);
+    }
+
+    .unmatched {
+        color: var(--warning-color);
+        font-weight: 700;
+    }
+}
+
+.empty-items {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.loading-state {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--text-secondary);
+}
+
+mat-chip[class^="status-"],
+mat-chip[class*=" status-"] {
+    font-weight: 700 !important;
+}
+
+.status-pending,
+.status-processing {
+    background: var(--warning-bg) !important;
+    color: var(--warning-color) !important;
+}
+
+.status-paid,
+.status-confirmed,
+.status-completed,
+.status-shipped {
+    background: var(--success-bg) !important;
+    color: var(--success-color) !important;
+}
+
+.status-cancelled,
+.status-canceled,
+.status-refunded,
+.status-failed {
+    background: var(--error-bg) !important;
+    color: var(--error-color) !important;
+}

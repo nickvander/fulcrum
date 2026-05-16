@@ -13,9 +13,9 @@
                 <p>{{ t('marketing.channelListingsDesc') }} <strong>#{{ marketplaceId }}</strong></p>
             </div>
             <div class="header-actions">
-                <button mat-stroked-button color="warn" (click)="comingSoon('Disconnect')">
-                    <mat-icon>link_off</mat-icon>
-                    {{ t('marketing.disconnect') }}
+                <button mat-stroked-button color="warn" (click)="disconnect()" [disabled]="disconnecting">
+                    <mat-icon>{{ disconnecting ? 'hourglass_top' : 'link_off' }}</mat-icon>
+                    {{ disconnecting ? t('common.loading') : t('marketing.disconnect') }}
                 </button>
                 <button mat-flat-button color="primary" (click)="syncAll()">
                     <mat-icon>sync</mat-icon>

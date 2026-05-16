@@ -4,6 +4,7 @@ import { DashboardComponent } from './dashboard.component';
 import { DashboardStatsService } from '../../services/dashboard-stats.service';
 import { LowStockService } from '../../services/low-stock.service';
 import { OnboardingService } from '../../services/onboarding.service';
+import { SalesOrdersService } from '../../../sales-orders/services/sales-orders.service';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +24,7 @@ describe('DashboardComponent', () => {
     let statsServiceMock: any;
     let onboardingServiceMock: any;
     let lowStockServiceMock: any;
+    let salesOrdersServiceMock: any;
     let snackBarMock: any;
     let dialogMock: any;
 
@@ -121,6 +123,15 @@ describe('DashboardComponent', () => {
                 afterClosed: vi.fn().mockReturnValue(of(true))
             })
         };
+        salesOrdersServiceMock = {
+            summary: vi.fn().mockReturnValue(of({
+                window_days: 30,
+                total_orders: 0,
+                total_revenue: 0,
+                open_orders: 0,
+                by_channel: []
+            }))
+        };
         snackBarMock = {
             open: vi.fn()
         };
@@ -146,6 +157,7 @@ describe('DashboardComponent', () => {
                 { provide: DashboardStatsService, useValue: statsServiceMock },
                 { provide: OnboardingService, useValue: onboardingServiceMock },
                 { provide: LowStockService, useValue: lowStockServiceMock },
+                { provide: SalesOrdersService, useValue: salesOrdersServiceMock },
                 { provide: MatSnackBar, useValue: snackBarMock },
                 { provide: MatDialog, useValue: dialogMock }
             ],

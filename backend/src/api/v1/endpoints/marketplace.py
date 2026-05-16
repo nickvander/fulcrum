@@ -63,6 +63,60 @@ def read_marketplace_listings(
         for listing in listings
     ]
 
+@router.get("/{marketplace_id}/summary")
+def read_marketplace_summary(
+    marketplace_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """
+    Return per-marketplace operational summary for the connection card:
+    - total listings, healthy count, issues count
+    - most recent sync timestamp
+    - credential connection state + token expiry
+    """
+    from datetime import datetime, timezone
+    from sqlalchemy import func
+    from src.models.marketplace import MarketplaceListing as ModelListing
+    from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
+
+    db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
+    if db_marketplace is None:
+        raise HTTPException(status_code=404, detail="Marketplace not found")
+
+    listings_q = db.query(ModelListing).filter(ModelListing.marketplace_id == marketplace_id)
+    listing_count = listings_q.count()
+    healthy_count = listings_q.filter(ModelListing.sync_status == "IN_SYNC").count()
+    issues_count = (
+        listings_q.filter(ModelListing.sync_status.in_(["FAILED", "ERROR", "SYNC_ERROR"])).count()
+    )
+    last_sync_at = (
+        db.query(func.max(ModelListing.last_sync))
+        .filter(ModelListing.marketplace_id == marketplace_id)
+        .scalar()
+    )
+
+    credential = crud_cred.get_by_marketplace(
+        db, user_id=current_user.id, marketplace_id=marketplace_id
+    )
+    token_expires_at = credential.expires_at if credential else None
+    token_expires_in_days = None
+    if token_expires_at is not None:
+        delta = token_expires_at - datetime.now(token_expires_at.tzinfo or timezone.utc)
+        token_expires_in_days = int(delta.total_seconds() // 86400)
+
+    return {
+        "marketplace_id": marketplace_id,
+        "listing_count": listing_count,
+        "healthy_count": healthy_count,
+        "issues_count": issues_count,
+        "last_sync_at": last_sync_at.isoformat() if last_sync_at else None,
+        "credential_connected": credential is not None,
+        "token_expires_at": token_expires_at.isoformat() if token_expires_at else None,
+        "token_expires_in_days": token_expires_in_days,
+    }
+
+
 @router.get("/{marketplace_id}", response_model=marketplace_schema.Marketplace)
 def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
     db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
