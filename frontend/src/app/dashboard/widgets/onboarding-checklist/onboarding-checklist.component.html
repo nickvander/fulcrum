@@ -28,14 +28,14 @@
             <mat-icon class="state-icon">{{ stateIcon(step) }}</mat-icon>
             <div class="step-copy">
                 <div class="step-title-row">
-                    <h3>{{ step.label }}</h3>
+                    <h3>{{ step.label_key ? t(step.label_key) : step.label }}</h3>
                     <span class="count-pill" *ngIf="step.count">{{ step.count }}</span>
                     <span class="optional-pill" *ngIf="step.optional">{{ t('onboarding.optional') }}</span>
                 </div>
-                <p>{{ step.description }}</p>
+                <p>{{ step.description_key ? t(step.description_key) : step.description }}</p>
             </div>
             <a mat-stroked-button color="primary" [routerLink]="step.route">
-                {{ step.action_label }}
+                {{ step.action_label_key ? t(step.action_label_key) : step.action_label }}
             </a>
         </article>
     </div>

@@ -6,11 +6,17 @@ import { environment } from '../../../environments/environment';
 export interface OnboardingStep {
     key: string;
     label: string;
+    /** Transloco key for the label. Backend emits this so the frontend can
+     * translate without the backend knowing the user's locale. Falls back to
+     * `label` when missing (older API responses). */
+    label_key?: string;
     description: string;
+    description_key?: string;
     complete: boolean;
     optional: boolean;
     warning: boolean;
     action_label: string;
+    action_label_key?: string;
     route: string;
     count: number;
 }
@@ -59,9 +65,13 @@ export interface DemoDataCleanupResult extends DemoDataReport {
 export interface LaunchReadinessSection {
     key: string;
     label: string;
+    label_key?: string;
     status: 'ready' | 'needs_attention' | 'blocked' | 'optional';
     description: string;
+    /** Includes the status suffix, e.g. launchReadiness.sections.setup.description_ready */
+    description_key?: string;
     action_label: string;
+    action_label_key?: string;
     route: string;
     metrics: Record<string, number>;
     records?: DemoDataRecord[];

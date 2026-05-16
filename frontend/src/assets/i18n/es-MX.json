@@ -166,7 +166,49 @@
         "creatingDemo": "Creando demo",
         "createDemoTooltip": "Crea un proveedor, producto, orden de compra y recibo de muestra. El stock en marketplaces no se modifica.",
         "requiredDone": "obligatorios completados",
-        "optional": "Opcional"
+        "optional": "Opcional",
+        "steps": {
+            "profile": {
+                "label": "Cuenta de administrador",
+                "description": "Al menos un usuario puede iniciar sesión y administrar el espacio.",
+                "action": "Administrar usuarios"
+            },
+            "store": {
+                "label": "Configuración de la tienda",
+                "description": "Nombra el espacio y define los valores predeterminados de inventario.",
+                "action": "Abrir configuración"
+            },
+            "products": {
+                "label": "Productos",
+                "description": "Crea o importa productos antes de recibir stock.",
+                "action": "Agregar productos"
+            },
+            "suppliers": {
+                "label": "Proveedores",
+                "description": "Agrega proveedores para que las órdenes de compra y documentos tengan un origen.",
+                "action": "Agregar proveedores"
+            },
+            "supplier_matching": {
+                "label": "Coincidencia de proveedor",
+                "description": "Vincula nombres/SKUs de proveedor con productos de Fulcrum para acelerar importaciones.",
+                "action": "Revisar proveedores"
+            },
+            "purchase_orders": {
+                "label": "Órdenes de compra",
+                "description": "Crea o importa una orden de compra para iniciar el flujo de stock entrante.",
+                "action": "Crear OC"
+            },
+            "inventory": {
+                "label": "Movimiento de inventario",
+                "description": "Recibe una OC o ajusta stock para que el inventario tenga rastro auditable.",
+                "action": "Recibir stock"
+            },
+            "marketplaces": {
+                "label": "Credenciales de marketplace",
+                "description": "Opcional: conecta canales después de que el inventario interno sea confiable.",
+                "action": "Conectar marketplace"
+            }
+        }
     },
     "launchReadiness": {
         "eyebrow": "Listo para lanzamiento",
@@ -181,7 +223,39 @@
         "cleanDemo": "Limpiar datos demo",
         "cleaningDemo": "Limpiando datos demo",
         "openRecord": "Abrir registro",
-        "cleanupPaused": "La limpieza está en pausa"
+        "cleanupPaused": "La limpieza está en pausa",
+        "sections": {
+            "setup": {
+                "label": "Configuración",
+                "description_ready": "Los pasos obligatorios de incorporación están completos.",
+                "description_blocked": "Aún faltan pasos obligatorios de configuración.",
+                "action": "Revisar lista"
+            },
+            "inventory": {
+                "label": "Inventario",
+                "description_ready": "Existen productos y movimientos de inventario auditados.",
+                "description_blocked": "Crea productos y recibe o ajusta stock antes del lanzamiento.",
+                "action": "Abrir productos"
+            },
+            "supplier_documents": {
+                "label": "Documentos de proveedor",
+                "description_ready": "No hay importaciones de documentos pendientes de revisión.",
+                "description_needs_attention": "Revisa las importaciones de documentos pendientes antes de convertirlas en órdenes.",
+                "action": "Abrir importaciones"
+            },
+            "demo_data": {
+                "label": "Datos demo",
+                "description_ready": "No se detectaron registros demo.",
+                "description_needs_attention": "Hay registros demo. Revisa la lista y límpialos antes de salir en vivo.",
+                "action": "Revisar registros"
+            },
+            "marketplaces": {
+                "label": "Conexiones de marketplace",
+                "description_ready": "Las credenciales de marketplace están configuradas.",
+                "description_optional": "Opcional para el lanzamiento. Conecta canales después de que el inventario interno sea confiable.",
+                "action": "Abrir marketplaces"
+            }
+        }
     },
     "orders": {
         "title": "Pedidos de Venta",

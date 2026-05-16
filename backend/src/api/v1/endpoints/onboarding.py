@@ -104,14 +104,22 @@ def _step(
     optional: bool = False,
     count: int = 0,
 ) -> dict[str, Any]:
+    # The label/description/action_label strings are kept for backwards
+    # compatibility (older clients still render them as-is), but the canonical
+    # source for the new frontend is the *_key fields, which the Angular app
+    # resolves through Transloco. Keeping the keys derived from `key` means the
+    # backend doesn't need to know the user's locale.
     return {
         "key": key,
         "label": label,
+        "label_key": f"onboarding.steps.{key}.label",
         "description": description,
+        "description_key": f"onboarding.steps.{key}.description",
         "complete": complete,
         "optional": optional,
         "warning": not complete and not optional,
         "action_label": action_label,
+        "action_label_key": f"onboarding.steps.{key}.action",
         "route": route,
         "count": count,
     }
@@ -1056,13 +1064,25 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
     )
     demo_data_count = len(demo_data["records"])
 
+    # Each section also emits *_key fields so the frontend can resolve copy
+    # via Transloco. The description key is suffixed with the section's
+    # current `status` so each state has its own translation string.
+    setup_status = "ready" if status["complete"] else "blocked"
+    inventory_status = "ready" if product_count and inventory_movement_count else "blocked"
+    supplier_documents_status = "ready" if pending_import_count == 0 else "needs_attention"
+    demo_data_status = "ready" if demo_data_count == 0 else "needs_attention"
+    marketplaces_status = "optional" if marketplace_count == 0 else "ready"
+
     sections = [
         {
             "key": "setup",
             "label": "Setup",
-            "status": "ready" if status["complete"] else "blocked",
+            "label_key": "launchReadiness.sections.setup.label",
+            "status": setup_status,
             "description": "Required onboarding steps are complete." if status["complete"] else "Required setup steps still need attention.",
+            "description_key": f"launchReadiness.sections.setup.description_{setup_status}",
             "action_label": "Review checklist",
+            "action_label_key": "launchReadiness.sections.setup.action",
             "route": "/dashboard",
             "metrics": {
                 "completed_required": status["completed_required"],
@@ -1072,9 +1092,12 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
         {
             "key": "inventory",
             "label": "Inventory",
-            "status": "ready" if product_count and inventory_movement_count else "blocked",
+            "label_key": "launchReadiness.sections.inventory.label",
+            "status": inventory_status,
             "description": "Products and audited inventory movement exist." if product_count and inventory_movement_count else "Create products and receive or adjust stock before launch.",
+            "description_key": f"launchReadiness.sections.inventory.description_{inventory_status}",
             "action_label": "Open products",
+            "action_label_key": "launchReadiness.sections.inventory.action",
             "route": "/products",
             "metrics": {
                 "products": product_count,
@@ -1084,9 +1107,12 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
         {
             "key": "supplier_documents",
             "label": "Supplier documents",
-            "status": "ready" if pending_import_count == 0 else "needs_attention",
+            "label_key": "launchReadiness.sections.supplier_documents.label",
+            "status": supplier_documents_status,
             "description": "No supplier document imports are waiting for review." if pending_import_count == 0 else "Review pending supplier document imports before they become purchase orders.",
+            "description_key": f"launchReadiness.sections.supplier_documents.description_{supplier_documents_status}",
             "action_label": "Open PO imports",
+            "action_label_key": "launchReadiness.sections.supplier_documents.action",
             "route": "/suppliers/po",
             "metrics": {
                 "pending_imports": pending_import_count,
@@ -1097,9 +1123,12 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
         {
             "key": "demo_data",
             "label": "Demo data",
-            "status": "ready" if demo_data_count == 0 else "needs_attention",
+            "label_key": "launchReadiness.sections.demo_data.label",
+            "status": demo_data_status,
             "description": "No demo records were detected." if demo_data_count == 0 else "Demo records exist. Review the list and clean them up before go-live.",
+            "description_key": f"launchReadiness.sections.demo_data.description_{demo_data_status}",
             "action_label": "Review records",
+            "action_label_key": "launchReadiness.sections.demo_data.action",
             "route": "/dashboard",
             "metrics": {
                 "demo_records": demo_data_count,
@@ -1111,9 +1140,12 @@ def read_launch_readiness(db: Session = Depends(get_db)) -> dict[str, Any]:
         {
             "key": "marketplaces",
             "label": "Marketplace connections",
-            "status": "optional" if marketplace_count == 0 else "ready",
+            "label_key": "launchReadiness.sections.marketplaces.label",
+            "status": marketplaces_status,
             "description": "Marketplace credentials are configured." if marketplace_count else "Optional for launch. Connect channels after internal inventory is reliable.",
+            "description_key": f"launchReadiness.sections.marketplaces.description_{marketplaces_status}",
             "action_label": "Open marketplaces",
+            "action_label_key": "launchReadiness.sections.marketplaces.action",
             "route": "/marketplaces",
             "metrics": {
                 "credentials": marketplace_count,
