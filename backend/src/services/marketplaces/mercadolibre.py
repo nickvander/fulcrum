@@ -197,8 +197,13 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         """
         if not access_token:
             return False
-        print(f"Syncing ML Mexico inventory for {external_id} to {quantity}")
-        # Real: PUT /items/{external_id} with {"available_quantity": quantity}
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{self.API_URL}/items/{external_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={"available_quantity": quantity},
+            )
+            response.raise_for_status()
         return True
 
     async def sync_price(self, external_id: str, price: float, access_token: Optional[str] = None) -> bool:
@@ -207,8 +212,13 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         """
         if not access_token:
             return False
-        print(f"Syncing ML Mexico price for {external_id} to {price}")
-        # Real: PUT /items/{external_id} with {"price": price}
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{self.API_URL}/items/{external_id}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={"price": price},
+            )
+            response.raise_for_status()
         return True
 
     async def publish_listing(self, product_data: Dict[str, Any], access_token: Optional[str] = None) -> str:
