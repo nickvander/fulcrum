@@ -33,7 +33,7 @@ class Product(Base):
     height = Column(Float, nullable=True)
     depth = Column(Float, nullable=True)
     weight = Column(Float, nullable=True)
-    is_bundle = Column(Boolean, default=False)
+    is_bundle = Column(Boolean, nullable=False, default=False, server_default="false")
 
     # Reorder targets used by /reports/low-stock and the dashboard widget.
     # Both nullable so we can fall back to product- and store-level defaults
