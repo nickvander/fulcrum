@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 import { OnboardingStatus, OnboardingStep } from '../../services/onboarding.service';
 
 @Component({
@@ -16,7 +17,8 @@ import { OnboardingStatus, OnboardingStep } from '../../services/onboarding.serv
         MatButtonModule,
         MatIconModule,
         MatProgressBarModule,
-        MatTooltipModule
+        MatTooltipModule,
+        TranslocoModule
     ],
     templateUrl: './onboarding-checklist.component.html',
     styleUrls: ['./onboarding-checklist.component.scss']

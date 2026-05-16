@@ -135,6 +135,8 @@
         "openSalesOrdersTooltip": "Pedidos en estado pendiente o en proceso",
         "salesByChannel": "Ventas por Canal",
         "salesByChannelSubtitle": "Últimos 30 días",
+        "salesByChannelTotalRevenue": "Ingresos totales",
+        "salesByChannelOrders": "Pedidos de venta",
         "noOrdersYet": "Aún no hay pedidos registrados",
         "inventoryHealth": "Salud del Inventario",
         "healthy": "Saludable",
@@ -155,6 +157,31 @@
             "suggested": "Sugerido",
             "createPo": "Crear OC"
         }
+    },
+    "onboarding": {
+        "eyebrow": "Configuración del cliente",
+        "title": "Lista de incorporación",
+        "subtitle": "Confirma lo esencial antes de importar documentos o conectar canales.",
+        "createDemo": "Crear espacio de demostración",
+        "creatingDemo": "Creando demo",
+        "createDemoTooltip": "Crea un proveedor, producto, orden de compra y recibo de muestra. El stock en marketplaces no se modifica.",
+        "requiredDone": "obligatorios completados",
+        "optional": "Opcional"
+    },
+    "launchReadiness": {
+        "eyebrow": "Listo para lanzamiento",
+        "titleReady": "Listo para incorporar clientes",
+        "titleBlocked": "Bloqueos por atender",
+        "titleNeedsAttention": "Revisar antes de salir en vivo",
+        "subtitle": "Verifica configuración, importaciones de proveedores, datos demo y estado de marketplaces antes de usar Fulcrum como fuente de verdad.",
+        "readyAreas": "áreas listas",
+        "demoEyebrow": "Registros demo",
+        "demoTitle": "Revisar antes de salir en vivo",
+        "demoSubtitle": "Solo los registros listados corresponden a huellas demo de Fulcrum.",
+        "cleanDemo": "Limpiar datos demo",
+        "cleaningDemo": "Limpiando datos demo",
+        "openRecord": "Abrir registro",
+        "cleanupPaused": "La limpieza está en pausa"
     },
     "orders": {
         "title": "Pedidos de Venta",
@@ -712,7 +739,34 @@
         "pending": "Pendiente",
         "forceSync": "Forzar Sincronización Individual",
         "openOnMarketplace": "Abrir en Marketplace",
-        "noListingsEmpty": "No se encontraron publicaciones activas para este canal. Comienza agregando productos desde el administrador de inventario."
+        "noListingsEmpty": "No se encontraron publicaciones activas para este canal. Comienza agregando productos desde el administrador de inventario.",
+        "statusDisconnected": "Desconectado",
+        "notConnected": "Sin conectar",
+        "neverSynced": "Sin sincronizar",
+        "syncedJustNow": "Sincronizado hace un momento",
+        "syncedMinutesAgo": "Sincronizado hace {{ minutes }}m",
+        "syncedHoursAgo": "Sincronizado hace {{ hours }}h",
+        "syncedDaysAgo": "Sincronizado hace {{ days }}d",
+        "tokenHealthy": "Token saludable",
+        "tokenExpired": "Token vencido",
+        "tokenExpiresToday": "Token vence hoy",
+        "tokenExpiresInDays": "Token vence en {{ days }}d",
+        "disconnectDialog": {
+            "title": "Desconectar marketplace",
+            "message": "Esto revoca el token de acceso almacenado. Las publicaciones existentes permanecen, pero stock y precio no se sincronizarán hasta reconectar. ¿Continuar?"
+        },
+        "messages": {
+            "disconnected": "Marketplace desconectado.",
+            "disconnectFailed": "Falló la desconexión. Intenta de nuevo.",
+            "credentialLookupFailed": "No se pudo consultar la credencial.",
+            "noCredentialToDisconnect": "No hay credencial almacenada para desconectar.",
+            "listingSynced": "¡Publicación sincronizada con éxito!",
+            "listingSyncFailed": "Falló la sincronización. Intenta de nuevo.",
+            "bulkSyncInitiated": "Sincronización masiva iniciada...",
+            "bulkSyncFailed": "Falló la sincronización masiva.",
+            "syncCheckCredentials": "Falló la sincronización. Revisa tus credenciales.",
+            "syncCompleteSummary": "¡Sincronización completa! Sincronizados: {{ synced }}, Creados: {{ created }}"
+        }
     },
     "auditLogs": {
         "title": "Registros de Auditoría",

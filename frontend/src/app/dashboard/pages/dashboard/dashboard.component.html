@@ -21,15 +21,15 @@
                 [class.needs-attention]="launchReadiness.status === 'needs_attention'">
                 <div class="readiness-header">
                     <div>
-                        <p class="eyebrow">Launch readiness</p>
-                        <h2>{{ launchReadiness.status === 'ready' ? 'Ready for customer onboarding' :
-                            launchReadiness.status === 'blocked' ? 'Launch blockers need attention' :
-                            'Review before go-live' }}</h2>
-                        <p>Check setup, supplier imports, demo data, and marketplace status before using Fulcrum as the source of truth.</p>
+                        <p class="eyebrow">{{ t('launchReadiness.eyebrow') }}</p>
+                        <h2>{{ launchReadiness.status === 'ready' ? t('launchReadiness.titleReady') :
+                            launchReadiness.status === 'blocked' ? t('launchReadiness.titleBlocked') :
+                            t('launchReadiness.titleNeedsAttention') }}</h2>
+                        <p>{{ t('launchReadiness.subtitle') }}</p>
                     </div>
                     <div class="readiness-score">
                         <span>{{ launchReadiness.summary.ready }}</span>
-                        <small>ready areas</small>
+                        <small>{{ t('launchReadiness.readyAreas') }}</small>
                     </div>
                 </div>
 
@@ -55,14 +55,14 @@
                         [class.blocked]="!demoSection.cleanup_available">
                         <div class="demo-guardrail-header">
                             <div>
-                                <p class="eyebrow">Demo records</p>
-                                <h3>Review before go-live</h3>
-                                <p>Only the records below match Fulcrum demo fingerprints.</p>
+                                <p class="eyebrow">{{ t('launchReadiness.demoEyebrow') }}</p>
+                                <h3>{{ t('launchReadiness.demoTitle') }}</h3>
+                                <p>{{ t('launchReadiness.demoSubtitle') }}</p>
                             </div>
                             <button mat-raised-button color="warn" (click)="cleanupDemoData(demoSection)"
                                 [disabled]="cleaningDemoData || !demoSection.cleanup_available">
                                 <mat-icon>{{ cleaningDemoData ? 'hourglass_top' : 'delete_sweep' }}</mat-icon>
-                                {{ cleaningDemoData ? 'Cleaning demo data' : 'Clean up demo data' }}
+                                {{ cleaningDemoData ? t('launchReadiness.cleaningDemo') : t('launchReadiness.cleanDemo') }}
                             </button>
                         </div>
 
@@ -80,7 +80,7 @@
                                     </p>
                                 </div>
                                 <a *ngIf="record.route" mat-icon-button color="primary" [routerLink]="record.route"
-                                    matTooltip="Open record">
+                                    [matTooltip]="t('launchReadiness.openRecord')">
                                     <mat-icon>open_in_new</mat-icon>
                                 </a>
                             </article>
@@ -89,7 +89,7 @@
                         <div class="blocked-reasons" *ngIf="demoSection.blocked_reasons?.length">
                             <mat-icon>shield</mat-icon>
                             <div>
-                                <strong>Cleanup is paused</strong>
+                                <strong>{{ t('launchReadiness.cleanupPaused') }}</strong>
                                 <p *ngFor="let reason of demoSection.blocked_reasons">{{ reason }}</p>
                             </div>
                         </div>

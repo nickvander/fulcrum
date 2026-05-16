@@ -12,11 +12,11 @@
             <div class="totals">
                 <div class="total-block">
                     <span class="value">{{ summary?.total_orders ?? 0 }}</span>
-                    <span class="label">{{ t('orders.title') }}</span>
+                    <span class="label">{{ t('dashboard.salesByChannelOrders') }}</span>
                 </div>
                 <div class="total-block">
                     <span class="value">{{ summary?.total_revenue | currency:'MXN':'symbol-narrow':'1.0-0' }}</span>
-                    <span class="label">Total revenue</span>
+                    <span class="label">{{ t('dashboard.salesByChannelTotalRevenue') }}</span>
                 </div>
             </div>
 
