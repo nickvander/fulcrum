@@ -319,8 +319,14 @@ def _demo_product_blockers(
     ):
         blockers.append("Demo product has learned aliases outside the demo fingerprint.")
 
+    non_demo_image_count = _count(
+        db,
+        ProductImage,
+        (ProductImage.product_id == product.id)
+        & ((ProductImage.source != "demo_workspace") | (ProductImage.source.is_(None))),
+    )
     product_setup_links = [
-        (_count(db, ProductImage, ProductImage.product_id == product.id), "images"),
+        (non_demo_image_count, "images"),
         (_count(db, ProductVariant, ProductVariant.product_id == product.id), "variants"),
         (_count(db, ProductCustomField, ProductCustomField.product_id == product.id), "custom fields"),
         (
