@@ -40,11 +40,53 @@ DEMO_SUPPLIER_EMAIL = "demo-alibaba-supplier@fulcrum-demo.com"
 LEGACY_DEMO_SUPPLIER_EMAIL = "demo-alibaba-supplier@fulcrum.local"
 DEMO_PRODUCT_SKU = "DEMO-STARTER-WIDGET"
 DEMO_PRODUCT_NAME = "[Demo] Starter Widget"
+# Stable picsum.photos seed so the image is deterministic for the same SKU.
+DEMO_PRODUCT_IMAGE = "https://picsum.photos/seed/demo-starter-widget/640/480"
 DEMO_PO_NOTES = "Fulcrum demo workspace - safe to review or delete before going live."
 DEMO_SUPPLIER_SKU = "ALI-DEMO-WIDGET-001"
 DEMO_SUPPLIER_PRODUCT_NAME = "Alibaba Demo Starter Widget"
 DEMO_RECEIVE_QUANTITY = 5
 DEMO_UNIT_COST = 12.5
+
+# Extra demo catalog products so the list isn't sparse after demo workspace
+# creation. Each entry seeds product + inventory + image, but does NOT create
+# a PO so we don't muddy the "Stock In" demo. Cleanup uses the SKU prefix.
+EXTRA_DEMO_CATALOG_PREFIX = "DEMO-CATALOG-"
+EXTRA_DEMO_CATALOG: list[dict[str, Any]] = [
+    {
+        "sku": "DEMO-CATALOG-CERAMIC-MUG",
+        "name": "[Demo] Ceramic Coffee Mug",
+        "description": "Hand-painted Talavera ceramic mug, 350 ml. Demo product for catalog presentation.",
+        "brand": "Fulcrum Demo",
+        "category": "Houseware",
+        "cost_price": 45.0,
+        "default_resale_price": 159.0,
+        "image_url": "https://picsum.photos/seed/demo-ceramic-mug/640/480",
+        "initial_stock": 24,
+    },
+    {
+        "sku": "DEMO-CATALOG-LEATHER-WALLET",
+        "name": "[Demo] Bifold Leather Wallet",
+        "description": "Full-grain leather bifold wallet with RFID lining. Demo product for catalog presentation.",
+        "brand": "Fulcrum Demo",
+        "category": "Accessories",
+        "cost_price": 180.0,
+        "default_resale_price": 549.0,
+        "image_url": "https://picsum.photos/seed/demo-leather-wallet/640/480",
+        "initial_stock": 12,
+    },
+    {
+        "sku": "DEMO-CATALOG-BLUETOOTH-SPEAKER",
+        "name": "[Demo] Portable Bluetooth Speaker",
+        "description": "5W portable speaker with USB-C charging. Demo product for catalog presentation.",
+        "brand": "Fulcrum Demo",
+        "category": "Electronics",
+        "cost_price": 320.0,
+        "default_resale_price": 899.0,
+        "image_url": "https://picsum.photos/seed/demo-bt-speaker/640/480",
+        "initial_stock": 8,
+    },
+]
 
 
 class DemoCleanupRequest(BaseModel):
@@ -621,6 +663,18 @@ def _cleanup_demo_data(db: Session) -> list[str]:
         db.delete(product)
         removed_records.append("product and demo inventory")
 
+    # Extra catalog products seeded by the demo workspace are fingerprinted by
+    # their SKU prefix. Only remove ones the seeder owns; never sweep
+    # arbitrary catalog rows.
+    catalog_products = (
+        db.query(Product)
+        .filter(Product.sku.like(f"{EXTRA_DEMO_CATALOG_PREFIX}%"))
+        .all()
+    )
+    for catalog_product in catalog_products:
+        db.delete(catalog_product)
+        removed_records.append(f"catalog product {catalog_product.sku}")
+
     supplier: Supplier | None = context["supplier"]
     if supplier:
         db.delete(supplier)
@@ -812,6 +866,60 @@ def create_demo_workspace(
 
     db.commit()
     db.refresh(supplier)
+    db.refresh(product)
+
+    # Attach a primary image to the starter widget if it doesn't have one yet.
+    # picsum.photos URLs render through the frontend's getImageUrl helper because
+    # they start with `http`. No file storage round-trip needed for the demo.
+    if not any(img.is_primary for img in (product.images or [])):
+        primary_image = ProductImage(
+            product_id=product.id,
+            image_path=DEMO_PRODUCT_IMAGE,
+            is_primary=1,
+            source="demo_workspace",
+            order=0,
+            title=DEMO_PRODUCT_NAME,
+        )
+        db.add(primary_image)
+        db.commit()
+        created_resources.append("product_image")
+
+    # Seed the extra catalog products so the product list isn't sparse after
+    # demo workspace creation. They get inventory but no PO — the starter
+    # widget is the one that exercises the receiving workflow.
+    for spec in EXTRA_DEMO_CATALOG:
+        existing = db.query(Product).filter(Product.sku == spec["sku"]).first()
+        if existing:
+            continue
+        extra_product = Product(
+            name=spec["name"],
+            sku=spec["sku"],
+            description=spec["description"],
+            default_resale_price=spec["default_resale_price"],
+            cost_price=spec["cost_price"],
+            average_cost=0.0,
+            brand=spec["brand"],
+            category=spec["category"],
+        )
+        db.add(extra_product)
+        db.flush()  # get id without full commit
+
+        db.add(ProductImage(
+            product_id=extra_product.id,
+            image_path=spec["image_url"],
+            is_primary=1,
+            source="demo_workspace",
+            order=0,
+            title=spec["name"],
+        ))
+        db.add(InventoryItem(
+            product_id=extra_product.id,
+            quantity=spec["initial_stock"],
+            location="default",
+        ))
+        created_resources.append(f"catalog:{spec['sku']}")
+
+    db.commit()
     db.refresh(product)
 
     purchase_order = (

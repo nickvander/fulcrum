@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PurchaseOrderCreate, PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { environment } from '../../../../environments/environment';
@@ -110,7 +110,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     this.poForm = this.fb.group({
       supplier_id: [null, Validators.required],
       status: [PurchaseOrderStatus.DRAFT],
-      currency: ['USD'],
+      currency: ['MXN'],
       notes: [''],
       shipping_cost: [0],
       import_cost: [0],
@@ -139,10 +139,15 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     this.loadSuppliers();
     this.loadUsers(); // Load users
 
+    // Treat anything that isn't a positive integer (e.g. "create", "new",
+    // missing) as create-mode. Previously only "create" was special-cased, so
+    // /suppliers/po/new produced isEditMode=true with NaN poId and a confusing
+    // "Edit Purchase Order" title + load error.
     const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam && idParam !== 'create') {
+    const parsedId = idParam ? Number(idParam) : NaN;
+    if (Number.isInteger(parsedId) && parsedId > 0) {
       this.isEditMode = true;
-      this.poId = +idParam;
+      this.poId = parsedId;
       this.loadPurchaseOrder(this.poId);
       this.loadInvoices();
     } else {
@@ -642,6 +647,19 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
+  itemSubtotal(item: AbstractControl): number {
+    const qty = Number(item.get('quantity_ordered')?.value) || 0;
+    const cost = Number(item.get('unit_cost')?.value) || 0;
+    return qty * cost;
+  }
+
+  totalUnits(): number {
+    return this.items.controls.reduce(
+      (sum, item) => sum + (Number(item.get('quantity_ordered')?.value) || 0),
+      0,
+    );
+  }
+
   calculateGrandTotal(): number {
     const itemsSubtotal = this.calculateItemsSubtotal();
     const additionalCosts = this.calculateTotalAdditionalCosts();
@@ -954,7 +972,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         this.poForm.reset({
           supplier_id: null,
           status: 'draft',
-          currency: 'USD',
+          currency: 'MXN',
           notes: '',
           shipping_cost: 0,
           import_cost: 0,

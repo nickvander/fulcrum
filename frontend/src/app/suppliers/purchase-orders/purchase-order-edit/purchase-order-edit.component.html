@@ -1,31 +1,43 @@
 <ng-container *transloco="let t">
     <div class="po-edit-container">
+        <nav class="breadcrumb">
+            <a routerLink="/suppliers/po" class="back-link">
+                <mat-icon>arrow_back</mat-icon>
+                <span>{{ t('nav.purchaseOrders') }}</span>
+            </a>
+        </nav>
+
         <div class="header">
             <div class="title-group">
-                <h1>{{ isEditMode ? t('purchaseOrders.editPO') : t('purchaseOrders.createPO') }} {{ poId ? '#' + poId :
-                    '' }}</h1>
+                <p class="eyebrow">{{ isEditMode ? t('purchaseOrders.editPO') : t('purchaseOrders.createPO') }}</p>
+                <h1>{{ poId ? ('#' + poId) : t('purchaseOrders.newDraft') }}</h1>
                 <span class="status-badge" [class]="poForm.get('status')?.value" *ngIf="poForm.get('status')?.value">
                     {{ t(getStatusTranslationKey(poForm.get('status')?.value)) }}
                 </span>
             </div>
-            <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
-                (click)="openReceivingDialog()">
-                {{ t('purchaseOrders.actions.receiveItems') }}
-            </button>
-            <button mat-stroked-button color="warn" *ngIf="canCorrectReceiving()"
-                (click)="openReceivingCorrectionDialog()"
-                matTooltip="Reverse received quantity while keeping an inventory audit trail">
-                <mat-icon>history</mat-icon>
-                Correct Receiving
-            </button>
+            <div class="header-actions">
+                <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
+                    (click)="openReceivingDialog()">
+                    <mat-icon>inventory_2</mat-icon>
+                    {{ t('purchaseOrders.actions.receiveItems') }}
+                </button>
+                <button mat-stroked-button color="warn" *ngIf="canCorrectReceiving()"
+                    (click)="openReceivingCorrectionDialog()"
+                    matTooltip="Reverse received quantity while keeping an inventory audit trail">
+                    <mat-icon>history</mat-icon>
+                    Correct Receiving
+                </button>
+            </div>
         </div>
 
         <form [formGroup]="poForm" (ngSubmit)="onSubmit()" autocomplete="off">
             <mat-card class="form-section">
-                <h3>{{ t('purchaseOrders.sections.orderDetails') }}</h3>
-                <div class="row">
-                    <mat-form-field appearance="fill">
-                        <mat-label>{{ t('purchaseOrders.supplier') }}</mat-label>
+                <div class="section-header">
+                    <h3>{{ t('purchaseOrders.sections.orderDetails') }}</h3>
+                </div>
+                <div class="order-details-grid">
+                    <mat-form-field appearance="fill" class="grid-col-supplier">
+                        <mat-label>{{ t('purchaseOrders.supplier') }}*</mat-label>
                         <mat-select formControlName="supplier_id">
                             <mat-option *ngFor="let s of suppliers" [value]="s.id">
                                 {{s.name}}
@@ -33,36 +45,64 @@
                         </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field appearance="fill">
+                    <mat-form-field appearance="fill" class="grid-col-currency">
                         <mat-label>{{ t('common.currency') }}</mat-label>
-                        <input matInput formControlName="currency" autocomplete="off">
+                        <mat-select formControlName="currency">
+                            <mat-option value="MXN">MXN — {{ t('purchaseOrders.currencyHint.mxn') }}</mat-option>
+                            <mat-option value="USD">USD</mat-option>
+                            <mat-option value="EUR">EUR</mat-option>
+                            <mat-option value="CNY">CNY</mat-option>
+                        </mat-select>
                     </mat-form-field>
 
-                    <div class="row">
-                        <mat-form-field appearance="fill">
-                            <mat-label>{{ t('common.notes') }}</mat-label>
-                            <textarea matInput formControlName="notes"
-                                [placeholder]="t('common.placeholders.enterNote')"></textarea>
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>{{ t('purchaseOrders.orderDate') }}</mat-label>
-                            <input matInput [matDatepicker]="pickerOrdered" formControlName="ordered_at">
-                            <mat-datepicker-toggle matSuffix [for]="pickerOrdered"></mat-datepicker-toggle>
-                            <mat-datepicker #pickerOrdered></mat-datepicker>
-                        </mat-form-field>
-                        <mat-form-field appearance="fill">
-                            <mat-label>{{ t('purchaseOrders.receivedDate') }}</mat-label>
-                            <input matInput [matDatepicker]="pickerReceived" formControlName="received_at">
-                            <mat-datepicker-toggle matSuffix [for]="pickerReceived"></mat-datepicker-toggle>
-                            <mat-datepicker #pickerReceived></mat-datepicker>
-                        </mat-form-field>
-                    </div>
+                    <mat-form-field appearance="fill" class="grid-col-date">
+                        <mat-label>{{ t('purchaseOrders.orderDate') }}</mat-label>
+                        <input matInput [matDatepicker]="pickerOrdered" formControlName="ordered_at">
+                        <mat-datepicker-toggle matSuffix [for]="pickerOrdered"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerOrdered></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="grid-col-date">
+                        <mat-label>{{ t('purchaseOrders.receivedDate') }}</mat-label>
+                        <input matInput [matDatepicker]="pickerReceived" formControlName="received_at">
+                        <mat-datepicker-toggle matSuffix [for]="pickerReceived"></mat-datepicker-toggle>
+                        <mat-datepicker #pickerReceived></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="fill" class="grid-col-notes">
+                        <mat-label>{{ t('common.notes') }}</mat-label>
+                        <textarea matInput formControlName="notes" rows="2"
+                            [placeholder]="t('common.placeholders.enterNote')"></textarea>
+                    </mat-form-field>
                 </div>
             </mat-card>
 
-            <mat-card class="form-section">
-                <h3>{{ t('purchaseOrders.sections.products') }}</h3>
-                <div formArrayName="items">
+            <mat-card class="form-section items-section">
+                <div class="section-header">
+                    <div>
+                        <h3>{{ t('purchaseOrders.sections.products') }}</h3>
+                        <p class="section-meta" *ngIf="items.length > 0">
+                            {{ items.length }} {{ items.length === 1 ? t('purchaseOrders.lineItemCountSingular') : t('purchaseOrders.lineItemCountPlural') }}
+                            · {{ totalUnits() }} {{ t('common.units') }}
+                            · <strong>{{ calculateItemsSubtotal() | currency: poForm.get('currency')?.value }}</strong>
+                        </p>
+                    </div>
+                    <button mat-flat-button color="primary" type="button" (click)="addLineItem()" [disabled]="isLocked"
+                        *ngIf="items.length > 0">
+                        <mat-icon>add</mat-icon> {{ t('purchaseOrders.addItem') }}
+                    </button>
+                </div>
+
+                <div class="items-empty-state" *ngIf="items.length === 0">
+                    <mat-icon>shopping_basket</mat-icon>
+                    <h4>{{ t('purchaseOrders.noItemsTitle') }}</h4>
+                    <p>{{ t('purchaseOrders.noItemsHint') }}</p>
+                    <button mat-flat-button color="primary" type="button" (click)="addLineItem()" [disabled]="isLocked">
+                        <mat-icon>add</mat-icon> {{ t('purchaseOrders.addFirstItem') }}
+                    </button>
+                </div>
+
+                <div formArrayName="items" *ngIf="items.length > 0">
                     <div *ngFor="let item of items.controls; let i=index" [formGroupName]="i" class="item-row">
                         <div class="main-row">
                             <div class="product-field-group">
@@ -133,8 +173,13 @@
                             </mat-hint>
                         </mat-form-field>
 
+                        <div class="subtotal-cell">
+                            <span class="subtotal-label">{{ t('purchaseOrders.subtotal') }}</span>
+                            <span class="subtotal-value">{{ itemSubtotal(item) | currency: poForm.get('currency')?.value }}</span>
+                        </div>
+
                         <button mat-icon-button color="warn" type="button" (click)="removeItem(i)"
-                            [disabled]="isLocked">
+                            [disabled]="isLocked" [matTooltip]="t('purchaseOrders.removeItem')">
                             <mat-icon>delete</mat-icon>
                         </button>
                         </div>
@@ -164,9 +209,6 @@
                         </div>
                     </div>
                 </div>
-                <button mat-button type="button" (click)="addLineItem()" [disabled]="isLocked">
-                    <mat-icon>add</mat-icon> {{ t('purchaseOrders.addItem') }}
-                </button>
             </mat-card>
 
             <!-- Additional Costs Section -->
@@ -329,39 +371,55 @@
                 </table>
             </mat-card>
 
-            <div class="actions">
-                <div class="actions-left">
+            <div class="action-bar">
+                <div class="action-bar-left">
                     <button mat-button type="button" (click)="cancel()">{{ t('common.cancel') }}</button>
-                    <button mat-stroked-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">{{
-                        t('purchaseOrders.actions.clearDraft') }}</button>
+                    <button mat-stroked-button color="warn" type="button" *ngIf="!isEditMode" (click)="clearDraft()">
+                        <mat-icon>delete_sweep</mat-icon>
+                        {{ t('purchaseOrders.actions.clearDraft') }}
+                    </button>
+                    <button mat-stroked-button color="warn" type="button" *ngIf="isEditMode && poId && !isLocked"
+                        (click)="deleteOrder()">
+                        <mat-icon>delete</mat-icon> {{ t('purchaseOrders.deletePO') }}
+                    </button>
                 </div>
 
-                <!-- Grand Total Display -->
-                <div class="grand-total-display">
-                    <span class="label">{{ t('purchaseOrders.totalValue') }}:</span>
+                <div class="action-bar-total">
+                    <span class="label">{{ t('purchaseOrders.totalValue') }}</span>
                     <span class="amount">{{ calculateGrandTotal() | currency: poForm.get('currency')?.value }}</span>
                 </div>
 
-                <!-- Lock/Unlock Buttons -->
-                <button mat-stroked-button color="warn" type="button" *ngIf="isLocked" (click)="unlockOrder()">
-                    <mat-icon>lock_open</mat-icon> {{ t('purchaseOrders.actions.unlockOrder') }}
-                </button>
+                <div class="action-bar-right">
+                    <button mat-stroked-button color="warn" type="button" *ngIf="isLocked" (click)="unlockOrder()">
+                        <mat-icon>lock_open</mat-icon> {{ t('purchaseOrders.actions.unlockOrder') }}
+                    </button>
 
-                <!-- Save/Create Buttons (Hidden if Locked) -->
-                <button mat-flat-button color="primary" type="submit" [disabled]="poForm.invalid" *ngIf="!isLocked">
-                    {{ isEditMode ? t('common.update') : t('common.create') }} {{ t('purchaseOrders.order') }}
-                </button>
+                    <!--
+                      Two save paths for a draft PO:
+                      - "Save draft" stays in DRAFT status — for half-typed work.
+                      - "Place order" sets status=ORDERED — that's the real commit.
+                      Outside draft, only "Update" is shown.
+                    -->
+                    <button mat-stroked-button type="submit" [disabled]="poForm.invalid || items.length === 0"
+                        *ngIf="!isLocked && poForm.get('status')?.value === 'draft'">
+                        <mat-icon>save</mat-icon>
+                        {{ t('purchaseOrders.actions.saveDraft') }}
+                    </button>
 
-                <button mat-flat-button class="place-order-btn" type="button"
-                    *ngIf="poForm.get('status')?.value === 'draft' && !isLocked" (click)="placeOrder()"
-                    [disabled]="poForm.invalid">
-                    {{ t('purchaseOrders.actions.placeOrder') }}
-                </button>
+                    <button mat-flat-button color="primary" type="submit"
+                        [disabled]="poForm.invalid || items.length === 0"
+                        *ngIf="!isLocked && poForm.get('status')?.value !== 'draft'">
+                        <mat-icon>save</mat-icon>
+                        {{ t('common.update') }}
+                    </button>
 
-                <button mat-flat-button color="warn" type="button" *ngIf="isEditMode && poId && !isLocked"
-                    (click)="deleteOrder()">
-                    <mat-icon>delete</mat-icon> {{ t('purchaseOrders.deletePO') }}
-                </button>
+                    <button mat-flat-button class="place-order-btn" type="button"
+                        *ngIf="poForm.get('status')?.value === 'draft' && !isLocked" (click)="placeOrder()"
+                        [disabled]="poForm.invalid || items.length === 0">
+                        <mat-icon>shopping_cart_checkout</mat-icon>
+                        {{ t('purchaseOrders.actions.placeOrder') }}
+                    </button>
+                </div>
             </div>
         </form>
     </div>
