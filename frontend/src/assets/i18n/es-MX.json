@@ -186,6 +186,7 @@
         "productList": "Lista de Productos",
         "selected": "seleccionado(s)",
         "addProduct": "Agregar Producto",
+        "addImageHint": "Abre el producto para agregar una imagen",
         "editProduct": "Editar Producto",
         "deleteProduct": "Eliminar Producto",
         "productDetails": "Detalles del Producto",
@@ -445,6 +446,15 @@
         "completed": "Completado",
         "items": "Artículos",
         "addItem": "Agregar Artículo",
+        "addFirstItem": "Agregar primer producto",
+        "lineItemCountSingular": "artículo",
+        "lineItemCountPlural": "artículos",
+        "noItemsTitle": "Aún no hay productos",
+        "noItemsHint": "Agrega los productos que este proveedor te enviará. Las cantidades y el costo unitario se suman al total de la orden.",
+        "newDraft": "Nueva orden",
+        "currencyHint": {
+            "mxn": "Peso mexicano"
+        },
         "removeItem": "Eliminar Artículo",
         "unitCost": "Costo Unitario",
         "subtotal": "Subtotal",
@@ -485,6 +495,7 @@
         "actions": {
             "receiveItems": "Recibir Artículos",
             "placeOrder": "Realizar Orden",
+            "saveDraft": "Guardar Borrador",
             "unlockOrder": "Desbloquear para Editar",
             "uploadInvoice": "Subir Factura",
             "clearDraft": "Borrar Borrador"

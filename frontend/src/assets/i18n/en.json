@@ -186,6 +186,7 @@
         "productList": "Product List",
         "selected": "selected",
         "addProduct": "Add Product",
+        "addImageHint": "Open the product to add an image",
         "editProduct": "Edit Product",
         "deleteProduct": "Delete Product",
         "productDetails": "Product Details",
@@ -445,6 +446,15 @@
         "completed": "Completed",
         "items": "Items",
         "addItem": "Add Item",
+        "addFirstItem": "Add first product",
+        "lineItemCountSingular": "line item",
+        "lineItemCountPlural": "line items",
+        "noItemsTitle": "No products added yet",
+        "noItemsHint": "Add the products this supplier is sending you. Quantities and unit cost roll up into the order total.",
+        "newDraft": "New draft",
+        "currencyHint": {
+            "mxn": "Mexican peso"
+        },
         "removeItem": "Remove Item",
         "unitCost": "Unit Cost",
         "subtotal": "Subtotal",
@@ -485,6 +495,7 @@
         "actions": {
             "receiveItems": "Receive Items",
             "placeOrder": "Place Order",
+            "saveDraft": "Save Draft",
             "unlockOrder": "Unlock to Edit",
             "uploadInvoice": "Upload Invoice",
             "clearDraft": "Clear Draft"
