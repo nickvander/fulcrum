@@ -62,9 +62,9 @@
                         <mat-card-title>{{ market.name }}</mat-card-title>
                         <mat-card-subtitle>
                             @if (market.summary?.credential_connected) {
-                            {{ t('marketing.activeConnection') }} • {{ formatLastSync(market.summary?.last_sync_at) }}
+                            {{ t('marketing.activeConnection') }} • {{ formatLastSyncTranslated(market.summary?.last_sync_at, t) }}
                             } @else {
-                            Not connected • ID: {{ market.id }}
+                            {{ t('marketing.notConnected') }} • ID: {{ market.id }}
                             }
                         </mat-card-subtitle>
                     </div>
@@ -77,13 +77,13 @@
                         <span class="status-text">{{ t('marketing.operational') }}</span>
                         } @else {
                         <span class="status-dot offline"></span>
-                        <span class="status-text offline">Disconnected</span>
+                        <span class="status-text offline">{{ t('marketing.statusDisconnected') }}</span>
                         }
                         <span class="spacer"></span>
                         @if (tokenChipState(market.summary) !== 'none') {
                         <mat-chip-set>
                             <mat-chip class="token-chip" [ngClass]="tokenChipState(market.summary)">
-                                {{ tokenChipLabel(market.summary) }}
+                                {{ tokenChipLabelTranslated(market.summary, t) }}
                             </mat-chip>
                         </mat-chip-set>
                         }

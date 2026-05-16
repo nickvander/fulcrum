@@ -135,6 +135,8 @@
         "openSalesOrdersTooltip": "Sales orders in pending or processing state",
         "salesByChannel": "Sales by Channel",
         "salesByChannelSubtitle": "Last 30 days",
+        "salesByChannelTotalRevenue": "Total revenue",
+        "salesByChannelOrders": "Sales orders",
         "noOrdersYet": "No orders captured yet",
         "inventoryHealth": "Inventory Health",
         "healthy": "Healthy",
@@ -155,6 +157,31 @@
             "suggested": "Suggested",
             "createPo": "Create PO"
         }
+    },
+    "onboarding": {
+        "eyebrow": "Customer setup",
+        "title": "Onboarding checklist",
+        "subtitle": "Confirm the operational basics before importing documents or connecting channels.",
+        "createDemo": "Create demo workspace",
+        "creatingDemo": "Creating demo",
+        "createDemoTooltip": "Create one sample supplier, product, purchase order, and receipt. No marketplace stock is changed.",
+        "requiredDone": "required done",
+        "optional": "Optional"
+    },
+    "launchReadiness": {
+        "eyebrow": "Launch readiness",
+        "titleReady": "Ready for customer onboarding",
+        "titleBlocked": "Launch blockers need attention",
+        "titleNeedsAttention": "Review before go-live",
+        "subtitle": "Check setup, supplier imports, demo data, and marketplace status before using Fulcrum as the source of truth.",
+        "readyAreas": "ready areas",
+        "demoEyebrow": "Demo records",
+        "demoTitle": "Review before go-live",
+        "demoSubtitle": "Only the records below match Fulcrum demo fingerprints.",
+        "cleanDemo": "Clean up demo data",
+        "cleaningDemo": "Cleaning demo data",
+        "openRecord": "Open record",
+        "cleanupPaused": "Cleanup is paused"
     },
     "orders": {
         "title": "Sales Orders",
@@ -712,7 +739,34 @@
         "pending": "Pending",
         "forceSync": "Force Individual Sync",
         "openOnMarketplace": "Open on Marketplace",
-        "noListingsEmpty": "No active listings found for this channel. Start by pushing products from the Inventory manager."
+        "noListingsEmpty": "No active listings found for this channel. Start by pushing products from the Inventory manager.",
+        "statusDisconnected": "Disconnected",
+        "notConnected": "Not connected",
+        "neverSynced": "Never synced",
+        "syncedJustNow": "Synced just now",
+        "syncedMinutesAgo": "Synced {{ minutes }}m ago",
+        "syncedHoursAgo": "Synced {{ hours }}h ago",
+        "syncedDaysAgo": "Synced {{ days }}d ago",
+        "tokenHealthy": "Token healthy",
+        "tokenExpired": "Token expired",
+        "tokenExpiresToday": "Token expires today",
+        "tokenExpiresInDays": "Token expires in {{ days }}d",
+        "disconnectDialog": {
+            "title": "Disconnect marketplace",
+            "message": "This revokes the stored access token. Existing listings stay, but stock and price will not sync until you reconnect. Continue?"
+        },
+        "messages": {
+            "disconnected": "Marketplace disconnected.",
+            "disconnectFailed": "Disconnect failed. Please try again.",
+            "credentialLookupFailed": "Could not look up credential.",
+            "noCredentialToDisconnect": "No stored credential to disconnect.",
+            "listingSynced": "Listing synced successfully!",
+            "listingSyncFailed": "Sync failed. Please try again.",
+            "bulkSyncInitiated": "Bulk sync initiated...",
+            "bulkSyncFailed": "Bulk sync failed.",
+            "syncCheckCredentials": "Sync failed. Check your credentials.",
+            "syncCompleteSummary": "Sync complete! Synced: {{ synced }}, Created: {{ created }}"
+        }
     },
     "auditLogs": {
         "title": "Audit Logs",

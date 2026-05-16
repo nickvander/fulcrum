@@ -1,22 +1,21 @@
+<ng-container *transloco="let t">
 <section class="onboarding-panel" *ngIf="status">
     <div class="panel-header">
         <div>
-            <p class="eyebrow">Customer setup</p>
-            <h2>Onboarding checklist</h2>
-            <p class="subtitle">
-                Confirm the operational basics before importing documents or connecting channels.
-            </p>
+            <p class="eyebrow">{{ t('onboarding.eyebrow') }}</p>
+            <h2>{{ t('onboarding.title') }}</h2>
+            <p class="subtitle">{{ t('onboarding.subtitle') }}</p>
         </div>
         <div class="panel-actions">
             <button mat-stroked-button type="button" color="primary"
                 (click)="requestDemoWorkspace()" [disabled]="creatingDemo"
-                matTooltip="Create one sample supplier, product, purchase order, and receipt. No marketplace stock is changed.">
+                [matTooltip]="t('onboarding.createDemoTooltip')">
                 <mat-icon>{{ creatingDemo ? 'hourglass_top' : 'science' }}</mat-icon>
-                {{ creatingDemo ? 'Creating demo' : 'Create demo workspace' }}
+                {{ creatingDemo ? t('onboarding.creatingDemo') : t('onboarding.createDemo') }}
             </button>
             <div class="progress-summary" [class.complete]="status.complete">
                 <span>{{ status.completed_required }}/{{ status.total_required }}</span>
-                <small>required done</small>
+                <small>{{ t('onboarding.requiredDone') }}</small>
             </div>
         </div>
     </div>
@@ -31,7 +30,7 @@
                 <div class="step-title-row">
                     <h3>{{ step.label }}</h3>
                     <span class="count-pill" *ngIf="step.count">{{ step.count }}</span>
-                    <span class="optional-pill" *ngIf="step.optional">Optional</span>
+                    <span class="optional-pill" *ngIf="step.optional">{{ t('onboarding.optional') }}</span>
                 </div>
                 <p>{{ step.description }}</p>
             </div>
@@ -41,3 +40,4 @@
         </article>
     </div>
 </section>
+</ng-container>

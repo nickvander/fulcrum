@@ -8,7 +8,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+
+type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 import { MarketplacesService, Marketplace, MarketplaceSummary } from '../../marketplaces';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -42,7 +44,8 @@ export class MarketplaceListComponent implements OnInit {
 
   constructor(
     private marketplaceService: MarketplacesService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -73,17 +76,25 @@ export class MarketplaceListComponent implements OnInit {
 
   syncMarketplace(marketplaceId: number): void {
     this.syncing = true;
+    const close = this.transloco.translate('common.close');
     this.marketplaceService.importListings(marketplaceId).subscribe({
       next: (stats) => {
         this.syncing = false;
-        const msg = `Sync complete! Synced: ${stats.synced}, Created: ${stats.created_product_shell}`;
-        this.snackBar.open(msg, 'Close', { duration: 5000 });
+        const msg = this.transloco.translate('marketing.messages.syncCompleteSummary', {
+          synced: stats.synced,
+          created: stats.created_product_shell,
+        });
+        this.snackBar.open(msg, close, { duration: 5000 });
         this.refresh();
       },
       error: (err) => {
         this.syncing = false;
         console.error('Sync error:', err);
-        this.snackBar.open('Sync failed. Check your credentials.', 'Close', { duration: 5000 });
+        this.snackBar.open(
+          this.transloco.translate('marketing.messages.syncCheckCredentials'),
+          close,
+          { duration: 5000 },
+        );
       }
     });
   }
@@ -95,19 +106,23 @@ export class MarketplaceListComponent implements OnInit {
     return 'images/marketplaces/default.png';
   }
 
-  formatLastSync(iso: string | null | undefined): string {
+  /**
+   * Template-friendly variant that takes the Transloco `t` function out of
+   * `*transloco="let t"`. Keeps reactive language switching working.
+   */
+  formatLastSyncTranslated(iso: string | null | undefined, t: TranslateFn): string {
     if (!iso) {
-      return 'Never synced';
+      return t('marketing.neverSynced');
     }
     const synced = new Date(iso);
     const diffMs = Date.now() - synced.getTime();
     const minutes = Math.floor(diffMs / 60_000);
-    if (minutes < 1) return 'Synced just now';
-    if (minutes < 60) return `Synced ${minutes}m ago`;
+    if (minutes < 1) return t('marketing.syncedJustNow');
+    if (minutes < 60) return t('marketing.syncedMinutesAgo', { minutes });
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Synced ${hours}h ago`;
+    if (hours < 24) return t('marketing.syncedHoursAgo', { hours });
     const days = Math.floor(hours / 24);
-    return `Synced ${days}d ago`;
+    return t('marketing.syncedDaysAgo', { days });
   }
 
   tokenChipState(summary: MarketplaceSummary | null): 'ok' | 'warning' | 'expired' | 'disconnected' | 'none' {
@@ -119,15 +134,15 @@ export class MarketplaceListComponent implements OnInit {
     return 'ok';
   }
 
-  tokenChipLabel(summary: MarketplaceSummary | null): string {
+  tokenChipLabelTranslated(summary: MarketplaceSummary | null, t: TranslateFn): string {
     const state = this.tokenChipState(summary);
     if (state === 'none') return '';
-    if (state === 'disconnected') return 'Not connected';
-    if (state === 'expired') return 'Token expired';
+    if (state === 'disconnected') return t('marketing.notConnected');
+    if (state === 'expired') return t('marketing.tokenExpired');
     if (state === 'warning') {
       const days = summary?.token_expires_in_days ?? 0;
-      return days <= 0 ? 'Token expires today' : `Token expires in ${days}d`;
+      return days <= 0 ? t('marketing.tokenExpiresToday') : t('marketing.tokenExpiresInDays', { days });
     }
-    return 'Token healthy';
+    return t('marketing.tokenHealthy');
   }
 }
