@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Subject, takeUntil } from 'rxjs';
 import { BulkImportService } from '../../services/bulk-import.service';
+import { translateApiError } from '../../../core/errors/translate-api-error';
 
 @Component({
   selector: 'app-user-bulk-import-dialog',
@@ -91,7 +92,7 @@ export class UserBulkImportDialogComponent implements OnDestroy {
         error: (error) => {
           this.isUploading = false;
           console.error('Import failed', error);
-          this.snackBar.open(error.error?.detail || this.translocoService.translate('users.errors.importFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
+          this.snackBar.open(translateApiError(error, this.translocoService, 'users.errors.importFailed'), this.translocoService.translate('common.close'), { duration: 5000 });
         }
       });
   }

@@ -1240,5 +1240,17 @@
         "confirmDelete": "Confirmar Eliminación",
         "areYouSure": "¿Estás seguro?",
         "cannotBeUndone": "Esta acción no se puede deshacer."
+    },
+    "apiErrors": {
+        "unknown": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+        "product": {
+            "notFound": "No se encontró el producto {{id}}.",
+            "notFoundBySku": "No se encontró un producto con el SKU {{sku}}.",
+            "notFoundByBarcode": "No se encontró un producto con el código de barras {{barcode}}.",
+            "notFoundAfterAdjustment": "No se pudo recargar el producto {{id}} después del ajuste de inventario.",
+            "skuExists": "Ya existe un producto con el SKU {{sku}}.",
+            "imageNotFound": "No se encontró la imagen {{id}} del producto.",
+            "bundleAssemblyFailed": "No se pudo ensamblar el bundle: {{reason}}"
+        }
     }
 }
