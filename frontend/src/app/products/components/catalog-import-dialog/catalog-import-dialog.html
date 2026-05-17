@@ -1,0 +1,190 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>{{ t('products.catalogImport.title') }}</h2>
+
+  <mat-dialog-content class="mat-typography catalog-import-content">
+    @if (step === 'upload') {
+      <p>{{ t('products.catalogImport.instructions') }}</p>
+
+      <div class="actions-row">
+        <button mat-stroked-button color="primary" (click)="downloadTemplate()">
+          <mat-icon>download</mat-icon>
+          {{ t('products.catalogImport.downloadTemplate') }}
+        </button>
+      </div>
+
+      <mat-form-field appearance="outline" class="supplier-select">
+        <mat-label>{{ t('products.catalogImport.linkSupplier') }}</mat-label>
+        <mat-select [(ngModel)]="selectedSupplierId">
+          <mat-option [value]="null">{{ t('products.catalogImport.noSupplier') }}</mat-option>
+          @for (sup of suppliers; track sup.id) {
+            <mat-option [value]="sup.id">{{ sup.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="file-input-container">
+        <input
+          type="file"
+          accept=".csv,.tsv,text/csv,text/plain"
+          (change)="onFileSelected($event)"
+        />
+        @if (selectedFile) {
+          <p class="file-name">{{ selectedFile.name }}</p>
+        }
+      </div>
+    }
+
+    @if (step === 'review' && review) {
+      <p>
+        {{
+          t('products.catalogImport.reviewSummary', {
+            count: review.extracted_data.items.length,
+            selected: selectedCount()
+          })
+        }}
+      </p>
+
+      @if (review.warnings.length) {
+        <ul class="warnings">
+          @for (w of review.warnings; track w) {
+            <li>{{ w }}</li>
+          }
+        </ul>
+      }
+
+      <div class="select-all-row">
+        <button mat-stroked-button (click)="toggleAll(true)">
+          {{ t('products.catalogImport.selectAll') }}
+        </button>
+        <button mat-stroked-button (click)="toggleAll(false)">
+          {{ t('products.catalogImport.selectNone') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table mat-table [dataSource]="review.extracted_data.items" class="mat-elevation-z0">
+          <ng-container matColumnDef="selected">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let item; let i = index">
+              <mat-checkbox [(ngModel)]="item.selected" [disabled]="!item.name"></mat-checkbox>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="sku">
+            <th mat-header-cell *matHeaderCellDef>{{ t('products.sku') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <input matInput [(ngModel)]="item.sku" class="cell-input" />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ t('common.name') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <input matInput [(ngModel)]="item.name" class="cell-input" />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef>{{ t('common.price') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="item.default_resale_price"
+                class="cell-input cell-input--narrow"
+              />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="cost">
+            <th mat-header-cell *matHeaderCellDef>{{ t('common.cost') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="item.cost_price"
+                class="cell-input cell-input--narrow"
+              />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="brand">
+            <th mat-header-cell *matHeaderCellDef>{{ t('products.brand') }}</th>
+            <td mat-cell *matCellDef="let item">
+              <input matInput [(ngModel)]="item.brand" class="cell-input" />
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="rowWarnings">
+            <th mat-header-cell *matHeaderCellDef>{{ t('products.catalogImport.warnings') }}</th>
+            <td mat-cell *matCellDef="let item" class="row-warnings">
+              @if (item.warnings.length) {
+                <span>{{ item.warnings.join(' / ') }}</span>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index; trackBy: trackByIndex"></tr>
+        </table>
+      </div>
+    }
+
+    @if (step === 'done' && approval) {
+      <h3>{{ t('products.catalogImport.doneTitle') }}</h3>
+      <p class="success-text">
+        {{ t('products.catalogImport.createdCount', { n: approval.created_product_ids.length }) }}
+      </p>
+      @if (approval.skipped_count > 0) {
+        <p class="warning-text">
+          {{ t('products.catalogImport.skippedCount', { n: approval.skipped_count }) }}
+        </p>
+        <ul class="warnings">
+          @for (r of approval.skipped_reasons; track r) {
+            <li>{{ r }}</li>
+          }
+        </ul>
+      }
+    }
+
+    @if (isBusy) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    @if (step === 'upload') {
+      <button mat-button (click)="close()">{{ t('common.cancel') }}</button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!selectedFile || isBusy"
+        (click)="upload()"
+      >
+        {{ t('products.catalogImport.uploadAndPreview') }}
+      </button>
+    }
+    @if (step === 'review') {
+      <button mat-button [disabled]="isBusy" (click)="reject()">
+        {{ t('common.cancel') }}
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="isBusy || selectedCount() === 0"
+        (click)="approve()"
+      >
+        {{
+          t('products.catalogImport.importSelected', { n: selectedCount() })
+        }}
+      </button>
+    }
+    @if (step === 'done') {
+      <button mat-raised-button color="primary" (click)="close()">
+        {{ t('common.done') }}
+      </button>
+    }
+  </mat-dialog-actions>
+</ng-container>
