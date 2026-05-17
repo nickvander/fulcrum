@@ -166,7 +166,9 @@
             "reorderCreatedMany": "Se crearon {{count}} OC borrador para {{products}} productos.",
             "reorderPartialSkipped": "Se omitieron {{count}} (sin proveedor — p. ej. {{first}}).",
             "reorderAllSkipped": "No se pudo reordenar ninguno de los {{count}} productos seleccionados — no tienen proveedor asociado.",
-            "viewPo": "Ver OC"
+            "viewPo": "Ver OC",
+            "exportCsv": "Exportar CSV",
+            "exportCsvTooltip": "Descargar la lista completa de stock bajo como hoja de cálculo."
         }
     },
     "onboarding": {

@@ -101,6 +101,31 @@ export class LowStockListWidgetComponent {
     }
   }
 
+  /**
+   * Download the report as a CSV file using a temporary <a> blob link.
+   * Avoids navigating away from the dashboard (which a plain
+   * window.location.href would do) and keeps the JWT in the Authorization
+   * header instead of the URL.
+   */
+  exportCsv(): void {
+    this.lowStockService.exportLowStockCsv().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const today = new Date().toISOString().slice(0, 10);
+        link.download = `fulcrum-low-stock-${today}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        // HttpErrorInterceptor surfaces the localized backend message.
+      },
+    });
+  }
+
   reorderSelected(): void {
     if (this.selectedIds.size === 0 || this.isReordering) return;
     this.isReordering = true;

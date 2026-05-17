@@ -1,5 +1,11 @@
 # Phase 8: Advanced Analytics
 
+> **STATUS as of 2026-05-17:** Phase-level roadmap, mostly unimplemented.
+> Track 3 Step 5 (Export Service) has its first concrete slice landed —
+> CSV export of the low-stock report (`/reports/low-stock/export`).
+> See `80-quick-wins-{plan,log}.md` for the export side. All other
+> tracks are still open and need design / scoping before implementation.
+
 This phase focuses on transforming the raw data from Fulcrum (Inventory, Orders)
 and external Marketplaces (Amazon, MercadoLibre) into actionable business
 intelligence.
@@ -36,8 +42,13 @@ intelligence.
 
 ### Track 3: Reporting Engine
 
-- [ ] **Step 5: Export Service**
-  - Generate PDF/CSV reports for specific date ranges.
-  - End-of-Month (EOM) financial summaries for accounting.
+- [~] **Step 5: Export Service** — partial
+  - CSV export of the low-stock report landed 2026-05-17. Pattern
+    (`StreamingResponse + csv.writer` per report) extends naturally to
+    sales-by-channel, inventory health, EOM summaries, etc.
+  - PDF generation still open — needs a lib choice.
+  - Date-range filtering hooks (per the original objective) not yet
+    wired; current low-stock export is "everything in the current
+    state of the inventory".
 - [ ] **Step 6: Alerting**
   - Notifications for low margin, sudden sales dips, or out-of-stock risks.
