@@ -740,6 +740,27 @@
         "lineItemCount": {
             "one": "{{count}} artículo",
             "other": "{{count}} artículos"
+        },
+        "matchDiff": {
+            "matchedHeading": "Este documento coincide con la orden de compra {{po}}",
+            "invoiceNumber": "Factura #",
+            "totalDiscrepancy": "Discrepancia total vs. la OC",
+            "lineByLine": "Comparación línea por línea",
+            "poSide": "En la OC",
+            "invoiceSide": "En el documento",
+            "remaining": "restantes",
+            "notInPo": "No está en la OC",
+            "missingFromInvoice": "Faltan en el documento",
+            "extraOnInvoice": "Artículos extra en el documento",
+            "rejectImport": "Rechazar esta importación",
+            "openPo": "Abrir la OC",
+            "rejected": "Revisión de importación rechazada.",
+            "status": {
+                "matched": "Coincide",
+                "quantity_diff": "Cantidad distinta",
+                "price_diff": "Precio distinto",
+                "unmatched": "Sin coincidencia"
+            }
         }
     },
     "expenses": {

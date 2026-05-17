@@ -740,6 +740,27 @@
         "lineItemCount": {
             "one": "{{count}} line item",
             "other": "{{count}} line items"
+        },
+        "matchDiff": {
+            "matchedHeading": "This document matches purchase order {{po}}",
+            "invoiceNumber": "Invoice #",
+            "totalDiscrepancy": "Total discrepancy vs. PO",
+            "lineByLine": "Line-by-line comparison",
+            "poSide": "On the PO",
+            "invoiceSide": "On the document",
+            "remaining": "remaining",
+            "notInPo": "Not on the PO",
+            "missingFromInvoice": "Missing from document",
+            "extraOnInvoice": "Extra items on document",
+            "rejectImport": "Reject this import",
+            "openPo": "Open the PO",
+            "rejected": "Import review rejected.",
+            "status": {
+                "matched": "Matches",
+                "quantity_diff": "Qty differs",
+                "price_diff": "Price differs",
+                "unmatched": "Unmatched"
+            }
         }
     },
     "expenses": {
