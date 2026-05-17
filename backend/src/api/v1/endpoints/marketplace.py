@@ -111,6 +111,14 @@ def read_marketplace_summary(
         delta = token_expires_at - datetime.now(token_expires_at.tzinfo or timezone.utc)
         token_expires_in_days = int(delta.total_seconds() // 86400)
 
+    # Surface the reauth state from 9541ccb so the marketplace list page
+    # can render a "needs re-authorization" chip without an extra round trip.
+    # Previously only the stock-transfer sync panel had this signal.
+    needs_reauthorization = bool(credential and credential.needs_reauthorization)
+    reauthorization_reason = (
+        credential.last_refresh_error if needs_reauthorization else None
+    )
+
     return {
         "marketplace_id": marketplace_id,
         "listing_count": listing_count,
@@ -120,6 +128,8 @@ def read_marketplace_summary(
         "credential_connected": credential is not None,
         "token_expires_at": token_expires_at.isoformat() if token_expires_at else None,
         "token_expires_in_days": token_expires_in_days,
+        "needs_reauthorization": needs_reauthorization,
+        "reauthorization_reason": reauthorization_reason,
     }
 
 

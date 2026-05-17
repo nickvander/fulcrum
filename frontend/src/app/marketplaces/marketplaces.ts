@@ -159,4 +159,16 @@ export interface MarketplaceSummary {
   credential_connected: boolean;
   token_expires_at?: string | null;
   token_expires_in_days?: number | null;
+  /**
+   * True when the most recent refresh attempt failed and the credential
+   * was marked by `_mark_reauth_required` (e.g. invalid_grant, revoked
+   * refresh token). Renders the reauth chip on the marketplace card.
+   */
+  needs_reauthorization?: boolean;
+  /**
+   * Human-readable reason from `last_refresh_error`, shown as the
+   * tooltip on the reauth chip. Empty when `needs_reauthorization` is
+   * false.
+   */
+  reauthorization_reason?: string | null;
 }

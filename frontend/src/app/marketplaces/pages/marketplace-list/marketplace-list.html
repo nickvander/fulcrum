@@ -82,7 +82,13 @@
                         <span class="spacer"></span>
                         @if (tokenChipState(market.summary) !== 'none') {
                         <mat-chip-set>
-                            <mat-chip class="token-chip" [ngClass]="tokenChipState(market.summary)">
+                            <mat-chip class="token-chip"
+                                      [ngClass]="tokenChipState(market.summary)"
+                                      [matTooltip]="tokenChipTooltipTranslated(market.summary, t)"
+                                      matTooltipPosition="above">
+                                @if (tokenChipState(market.summary) === 'reauth') {
+                                <mat-icon class="chip-icon" matChipAvatar>warning</mat-icon>
+                                }
                                 {{ tokenChipLabelTranslated(market.summary, t) }}
                             </mat-chip>
                         </mat-chip-set>
@@ -110,10 +116,19 @@
                 <mat-divider></mat-divider>
 
                 <mat-card-actions align="end">
-                    <button mat-button (click)="syncMarketplace(market.id)" [disabled]="syncing">
+                    @if (tokenChipState(market.summary) === 'reauth') {
+                    <button mat-flat-button color="warn"
+                            [routerLink]="['/marketplaces/settings', market.name.toLowerCase()]">
+                        <mat-icon>autorenew</mat-icon>
+                        {{ t('marketing.reconnect') }}
+                    </button>
+                    } @else {
+                    <button mat-button (click)="syncMarketplace(market.id)"
+                            [disabled]="syncing || !market.summary?.credential_connected">
                         <mat-icon>sync</mat-icon>
                         {{ syncing ? t('marketing.syncing') : t('marketing.syncNow') }}
                     </button>
+                    }
                     <button mat-stroked-button color="primary" [routerLink]="['/marketplaces', market.id]">
                         <mat-icon>list</mat-icon>
                         {{ t('marketing.manage') }}

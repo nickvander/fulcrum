@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Type
+from typing import Awaitable, Callable, Dict, Any, Type, TypeVar
+import httpx
 from sqlalchemy.orm import Session
 from src.services.marketplaces.base import BaseMarketplaceConnector
 from src.services.marketplaces.mercadolibre import MercadoLibreConnector
 from src.services.marketplaces.amazon import AmazonConnector
+
+T = TypeVar("T")
 
 
 # How early before `expires_at` we proactively refresh a token. 5 minutes
@@ -122,6 +125,50 @@ class MarketplaceService:
         if not db_cred:
             raise ValueError(f"Credential with ID {credential_id} not found.")
         return await self._refresh_access_token(db, db_cred)
+
+    async def call_with_401_retry(
+        self,
+        db: Session,
+        credential_id: int,
+        fn: Callable[[str], Awaitable[T]],
+    ) -> T:
+        """
+        Run an async connector call (`fn(access_token)`) with automatic
+        recovery from a stale-token 401.
+
+        Flow:
+        1. Resolve a valid token via `get_valid_access_token` (which may
+           proactively refresh if we're inside the pre-refresh window).
+        2. Invoke `fn(token)`.
+        3. If `fn` raises `httpx.HTTPStatusError` with status 401, force-
+           refresh the credential and retry `fn` once with the new token.
+        4. If the retry also 401s — or `fn` raises any non-401 error —
+           propagate.
+
+        Why: `get_valid_access_token` uses local expiry metadata, but the
+        provider can invalidate a token between calls (refresh-token
+        rotation, manual revoke, password reset). Without this helper,
+        every connector method has to duplicate the retry logic. Callers
+        adopt this incrementally — sites that haven't migrated still work,
+        they just don't self-heal on a server-side invalidation.
+
+        Caller pattern:
+
+            result = await marketplace_service.call_with_401_retry(
+                db, credential_id,
+                lambda token: connector.sync_inventory(ext_id, qty, access_token=token),
+            )
+        """
+        token = await self.get_valid_access_token(db, credential_id)
+        try:
+            return await fn(token)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code != 401:
+                raise
+            # Token went stale between get_valid_access_token() and the
+            # actual call — force a refresh and try again with the new one.
+            new_token = await self.force_refresh_access_token(db, credential_id)
+            return await fn(new_token)
 
     async def _refresh_access_token(self, db: Session, db_cred) -> str:
         """
