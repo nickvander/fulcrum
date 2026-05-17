@@ -1,0 +1,72 @@
+.catalog-import-content {
+  min-width: 720px;
+  max-height: 70vh;
+}
+
+.actions-row {
+  margin: 12px 0;
+}
+
+.supplier-select {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.file-input-container {
+  margin-top: 12px;
+}
+
+.file-name {
+  margin-top: 6px;
+  font-size: 0.9em;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.warnings {
+  margin: 8px 0 16px;
+  padding-left: 20px;
+  color: #b76e00;
+}
+
+.select-all-row {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.table-container {
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.cell-input {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: white;
+}
+
+.cell-input--narrow {
+  max-width: 110px;
+}
+
+.row-warnings {
+  color: #b76e00;
+  font-size: 0.85em;
+}
+
+.success-text {
+  color: #2e7d32;
+}
+
+.warning-text {
+  color: #b76e00;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
