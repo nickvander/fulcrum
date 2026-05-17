@@ -60,6 +60,21 @@ export class LowStockService {
   }
 
   /**
+   * Download the low-stock report as a CSV file. Default limit is 500
+   * (vs. 50 on the JSON endpoint) — the export use case is "give me
+   * everything to triage in a spreadsheet".
+   */
+  exportLowStockCsv(limit = 500, velocityWindowDays = 30): Observable<Blob> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('velocity_window_days', velocityWindowDays.toString());
+    return this.http.get(`${this.apiUrl}/export`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  /**
    * Shopping-cart-style reorder. POSTs the selected product ids to the
    * backend, which groups them by primary supplier and creates one
    * DRAFT purchase order per supplier. Returns one summary per PO

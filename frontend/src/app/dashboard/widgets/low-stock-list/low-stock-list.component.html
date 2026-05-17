@@ -17,6 +17,17 @@
                 : t('dashboard.lowStock.reorderSelected', { count: selectedIds.size }) }}
           </button>
         }
+        @if (rows.length > 0) {
+          <button
+            mat-button
+            (click)="exportCsv()"
+            [matTooltip]="t('dashboard.lowStock.exportCsvTooltip')"
+            data-testid="export-csv-button"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.lowStock.exportCsv') }}
+          </button>
+        }
         <a mat-button color="primary" routerLink="/products" [queryParams]="{ max_stock: 10 }">
           {{ t('common.viewAll') }}
         </a>

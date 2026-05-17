@@ -166,7 +166,9 @@
             "reorderCreatedMany": "Created {{count}} draft POs covering {{products}} products.",
             "reorderPartialSkipped": "{{count}} skipped (no supplier mapped — e.g. {{first}}).",
             "reorderAllSkipped": "Could not reorder any of the {{count}} selected products — they have no supplier mapped yet.",
-            "viewPo": "View PO"
+            "viewPo": "View PO",
+            "exportCsv": "Export CSV",
+            "exportCsvTooltip": "Download the full low-stock list as a spreadsheet."
         }
     },
     "onboarding": {

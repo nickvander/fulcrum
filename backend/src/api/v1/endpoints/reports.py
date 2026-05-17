@@ -3,9 +3,13 @@ Operational reports surface. Currently exposes the low-stock report used
 by the dashboard widget; future stockout/velocity/margin reports should
 live here too.
 """
+import csv
+import io
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -165,6 +169,66 @@ def low_stock_report(
         total_critical=sum(1 for r in candidates if r.severity == "critical"),
         total_low=sum(1 for r in candidates if r.severity == "low"),
         total_watch=sum(1 for r in candidates if r.severity == "watch"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# CSV export
+# ---------------------------------------------------------------------------
+
+@router.get("/low-stock/export")
+def export_low_stock_csv(
+    *,
+    db: Session = Depends(get_db),
+    limit: int = Query(500, ge=1, le=5000),
+    velocity_window_days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """
+    Stream the low-stock report as a CSV download.
+
+    Columns mirror the rows in the JSON report — same data, just in a
+    shape that Excel / Google Sheets opens directly. Useful when the
+    buyer wants to triage / annotate the list outside the app, or to
+    email it to a supplier rep.
+
+    The default `limit` here is 500 (vs. 50 on the JSON endpoint)
+    because the export use case is "give me everything"; the cap stays
+    at 5000 so a degenerate inventory doesn't blow up the response.
+
+    Filename includes the date so successive exports don't collide in
+    the user's Downloads folder.
+    """
+    report = low_stock_report(
+        db=db, limit=limit, velocity_window_days=velocity_window_days,
+        current_user=current_user,
+    )
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "product_id", "product_sku", "product_name",
+        "severity", "on_hand", "threshold",
+        "reorder_point", "reorder_quantity", "suggested_reorder_qty",
+        "daily_velocity", "days_of_inventory",
+    ])
+    for row in report.rows:
+        writer.writerow([
+            row.product_id, row.product_sku or "", row.product_name,
+            row.severity, row.on_hand, row.threshold,
+            row.reorder_point if row.reorder_point is not None else "",
+            row.reorder_quantity if row.reorder_quantity is not None else "",
+            row.suggested_reorder_qty,
+            row.daily_velocity, row.days_of_inventory,
+        ])
+    buf.seek(0)
+
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    filename = f"fulcrum-low-stock-{date_stamp}.csv"
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
