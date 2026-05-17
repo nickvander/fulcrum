@@ -1278,6 +1278,13 @@
         "onboarding": {
             "cleanupNotConfirmed": "Demo data cleanup must be confirmed.",
             "cleanupBlocked": "Demo cleanup was blocked to protect customer records. Review the blocked records first."
+        },
+        "marketplaceCredentials": {
+            "notFound": "Credential {{id}} not found.",
+            "notFoundForMarketplace": "No credentials are connected for this marketplace.",
+            "marketplaceNotFound": "Marketplace {{id}} not found.",
+            "unsupportedMarketplace": "Marketplace {{name}} is not supported yet.",
+            "tokenExchangeFailed": "Could not complete the marketplace authorization: {{reason}}"
         }
     }
 }

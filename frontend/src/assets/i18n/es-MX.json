@@ -1278,6 +1278,13 @@
         "onboarding": {
             "cleanupNotConfirmed": "La limpieza de datos de demostración debe ser confirmada.",
             "cleanupBlocked": "La limpieza de demo se bloqueó para proteger registros de clientes. Revisa primero los registros bloqueados."
+        },
+        "marketplaceCredentials": {
+            "notFound": "No se encontró la credencial {{id}}.",
+            "notFoundForMarketplace": "No hay credenciales conectadas para este mercado.",
+            "marketplaceNotFound": "No se encontró el mercado {{id}}.",
+            "unsupportedMarketplace": "El mercado {{name}} aún no es compatible.",
+            "tokenExchangeFailed": "No se pudo completar la autorización del mercado: {{reason}}"
         }
     }
 }
