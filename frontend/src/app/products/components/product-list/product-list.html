@@ -49,6 +49,9 @@
             <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
               <mat-icon>qr_code_scanner</mat-icon>
             </button>
+            <button mat-mini-fab color="basic" (click)="openCatalogImport()" [matTooltip]="t('products.catalogImport.button')">
+              <mat-icon>upload_file</mat-icon>
+            </button>
           </div>
 
           <!-- Action Menu (Mobile/Tablet) - Show all 3 icons since they fit -->
@@ -63,6 +66,9 @@
             </button>
             <button mat-mini-fab color="primary" (click)="openScanner()" [matTooltip]="t('products.scanProduct')">
               <mat-icon>qr_code_scanner</mat-icon>
+            </button>
+            <button mat-mini-fab color="basic" (click)="openCatalogImport()" [matTooltip]="t('products.catalogImport.button')">
+              <mat-icon>upload_file</mat-icon>
             </button>
           </div>
         </div>

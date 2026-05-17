@@ -6,9 +6,7 @@ import { ProductList } from '../product-list/product-list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TranslocoModule } from '@ngneat/transloco';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
-import { CatalogImportDialogComponent } from '../catalog-import-dialog/catalog-import-dialog';
 
 @Component({
   selector: 'app-products',
@@ -19,7 +17,6 @@ import { CatalogImportDialogComponent } from '../catalog-import-dialog/catalog-i
     MatButtonModule,
     MatIconModule,
     MatDialogModule,
-    TranslocoModule,
     ProductList
   ]
 })
@@ -116,13 +113,6 @@ export class ProductsComponent implements OnInit {
           });
         }
       });
-    });
-  }
-
-  openCatalogImport(): void {
-    this.dialog.open(CatalogImportDialogComponent, {
-      width: '900px',
-      maxHeight: '90vh',
     });
   }
 }
