@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db-test:
     image: pgvector/pgvector:pg15
@@ -21,7 +19,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${FULCRUM_TEST_REDIS_PORT:-6379}:6379"
 
   backend:
     build:
@@ -44,11 +42,17 @@ services:
       - DATABASE_URL=postgresql://fulcrum_test:fulcrum_test@db-test:5432/fulcrum_test
       - FIRST_SUPERUSER_EMAIL=test@example.com
       - FIRST_SUPERUSER_PASSWORD=SecurePass123!
-      - FIRST_SUPERUSER_PASSWORD=SecurePass123!
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=testsecretkey
-      - SECRET_KEY=testsecretkey
-      - TESTING=1
+      # Encryption key required by pydantic Settings at app import time.
+      # pytest.ini also sets this for the test process; both must agree.
+      - MARKETPLACE_ENCRYPTION_KEY=H35Vk1qaARMj/yX6EC0QrCYvmkWW/lgRdB7aQbsSivE=
+      # TESTING is intentionally NOT set here. conftest.py forces
+      # os.environ["TESTING"] = "True" at import time, so pytest still
+      # behaves as expected. Setting it here would also affect uvicorn
+      # at container boot, which would skip default-superuser creation
+      # in src/main.py and disable slowapi rate limiting — breaking
+      # interactive use of `docker compose -f docker-compose.test.yml up`.
 
   worker:
     build: ./backend
