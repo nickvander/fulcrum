@@ -12,9 +12,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { SuppliersService, PoIngestionResponse, ExtractedLineItem, DocumentParseResult, SupplierDocumentImportReview } from '../../suppliers.service';
+import { translateApiError } from '../../../core/errors/translate-api-error';
 import { Supplier } from '../../../shared/models/supplier.model';
 import { Product } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
@@ -89,6 +90,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         private productService: ProductService,
         private settingsService: SettingsService,
         private snackBar: MatSnackBar,
+        private transloco: TranslocoService,
         @Optional() @Inject(MAT_DIALOG_DATA) private data?: { review?: SupplierDocumentImportReview }
     ) { }
 
@@ -202,7 +204,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.isProcessing = false;
             },
             error: (err) => {
-                this.uploadError = err.error?.detail || 'Failed to process file. Please try again.';
+                this.uploadError = translateApiError(err, this.transloco, 'purchaseOrders.ingestErrors.processFailed');
                 this.isProcessing = false;
             }
         });
@@ -307,7 +309,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.assistingItemIndex = null;
             },
             error: (err) => {
-                this.uploadError = err.error?.detail || 'Could not create a product from this line.';
+                this.uploadError = translateApiError(err, this.transloco, 'purchaseOrders.ingestErrors.productCreateFailed');
                 this.assistingItemIndex = null;
             }
         });
@@ -346,7 +348,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.assistingItemIndex = null;
             },
             error: (err) => {
-                this.uploadError = err.error?.detail || 'Could not learn an alias for this line.';
+                this.uploadError = translateApiError(err, this.transloco, 'purchaseOrders.ingestErrors.aliasLearnFailed');
                 this.assistingItemIndex = null;
             }
         });
@@ -424,7 +426,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                 this.dialogRef.close({ action: 'created', purchaseOrder: response.purchase_order });
             },
             error: (err) => {
-                this.uploadError = err.error?.detail || 'Failed to create Purchase Order.';
+                this.uploadError = translateApiError(err, this.transloco, 'purchaseOrders.ingestErrors.poCreateFailed');
                 this.step = 'preview';
             }
         });

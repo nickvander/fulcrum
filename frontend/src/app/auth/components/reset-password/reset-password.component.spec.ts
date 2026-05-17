@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { of, throwError } from 'rxjs';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ResetPasswordComponent', () => {
     let component: ResetPasswordComponent;
@@ -24,7 +25,11 @@ describe('ResetPasswordComponent', () => {
         rSpy.events = of(null); // Mock events observable
 
         await TestBed.configureTestingModule({
-            imports: [ResetPasswordComponent, BrowserAnimationsModule],
+            imports: [
+                ResetPasswordComponent,
+                BrowserAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
+            ],
             providers: [
                 { provide: AuthService, useValue: authSpy },
                 { provide: Router, useValue: rSpy },

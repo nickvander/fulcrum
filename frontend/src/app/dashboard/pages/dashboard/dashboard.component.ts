@@ -18,7 +18,7 @@ import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist
 import { SalesByChannelWidgetComponent } from '../../widgets/sales-by-channel-widget/sales-by-channel-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
@@ -58,7 +58,8 @@ export class DashboardComponent implements OnInit {
         private lowStockService: LowStockService,
         private salesOrdersService: SalesOrdersService,
         private snackBar: MatSnackBar,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private transloco: TranslocoService,
     ) { }
 
     ngOnInit(): void {
@@ -118,8 +119,8 @@ export class DashboardComponent implements OnInit {
                     },
                     error: (error) => {
                         const message = error?.error?.detail?.message
-                            || 'Demo cleanup could not run safely. Review the blocked records first.';
-                        this.snackBar.open(message, 'Close', { duration: 7000 });
+                            || this.transloco.translate('dashboard.demoCleanupBlocked');
+                        this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 7000 });
                         this.refresh();
                     }
                 });

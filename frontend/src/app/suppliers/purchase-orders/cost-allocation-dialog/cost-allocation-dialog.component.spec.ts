@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { vi } from 'vitest';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('CostAllocationDialogComponent', () => {
     let component: CostAllocationDialogComponent;
@@ -47,7 +48,8 @@ describe('CostAllocationDialogComponent', () => {
                 MatIconModule,
                 MatProgressSpinnerModule,
                 FormsModule,
-                BrowserAnimationsModule
+                BrowserAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
             ],
             providers: [
                 { provide: MAT_DIALOG_DATA, useValue: { poId: 1, overrides: {} } },

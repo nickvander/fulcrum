@@ -2,7 +2,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslocoService } from '@ngneat/transloco';
 import { AuthService } from '../../../core/services/auth.service';
+import { translateApiError } from '../../../core/errors/translate-api-error';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -24,7 +26,8 @@ export class ResetPasswordComponent implements OnInit {
         private formBuilder: FormBuilder,
         private route: ActivatedRoute,
         private router: Router,
-        private authService: AuthService
+        private authService: AuthService,
+        private transloco: TranslocoService,
     ) {
         this.resetPasswordForm = this.formBuilder.group({
             password: ['', [Validators.required, Validators.minLength(8)]],
@@ -81,7 +84,7 @@ export class ResetPasswordComponent implements OnInit {
                 },
                 error: (error) => {
                     this.isLoading = false;
-                    this.error = error.error?.detail || 'An error occurred. Please try again.';
+                    this.error = translateApiError(error, this.transloco, 'apiErrors.unknown');
                 }
             });
     }
