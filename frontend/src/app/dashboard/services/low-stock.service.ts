@@ -75,6 +75,21 @@ export class LowStockService {
   }
 
   /**
+   * Download the low-stock report as a print-ready PDF. Same data + limits
+   * as the CSV export but rendered in landscape with severity-colored rows
+   * so the buyer can hand it to an accountant or post it on a board.
+   */
+  exportLowStockPdf(limit = 500, velocityWindowDays = 30): Observable<Blob> {
+    const params = new HttpParams()
+      .set('limit', limit.toString())
+      .set('velocity_window_days', velocityWindowDays.toString());
+    return this.http.get(`${this.apiUrl}/export-pdf`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  /**
    * Shopping-cart-style reorder. POSTs the selected product ids to the
    * backend, which groups them by primary supplier and creates one
    * DRAFT purchase order per supplier. Returns one summary per PO

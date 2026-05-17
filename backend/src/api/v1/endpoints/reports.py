@@ -232,6 +232,118 @@ def export_low_stock_csv(
     )
 
 
+@router.get("/low-stock/export-pdf")
+def export_low_stock_pdf(
+    *,
+    db: Session = Depends(get_db),
+    limit: int = Query(500, ge=1, le=5000),
+    velocity_window_days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Render the low-stock report as a printable PDF.
+
+    Same data and limits as the CSV export. The PDF is laid out in landscape
+    so the wide table fits without re-flowing, and rows are color-coded by
+    severity (critical = red, low = orange, watch = light yellow) so the
+    buyer can scan the page at a glance — closer to what an "accountant
+    handoff" PDF needs to look like than the CSV.
+    """
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter, landscape
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (
+        SimpleDocTemplate,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
+    )
+
+    report = low_stock_report(
+        db=db, limit=limit, velocity_window_days=velocity_window_days,
+        current_user=current_user,
+    )
+
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=landscape(letter),
+        title="Fulcrum Low-Stock Report",
+        leftMargin=0.4 * inch, rightMargin=0.4 * inch,
+        topMargin=0.5 * inch, bottomMargin=0.4 * inch,
+    )
+
+    styles = getSampleStyleSheet()
+    elements = [
+        Paragraph("<b>Fulcrum — Low-Stock Report</b>", styles["Title"]),
+        Paragraph(
+            f"Generated {date_stamp} · {report.total_critical} critical · "
+            f"{report.total_low} low · {report.total_watch} watch",
+            styles["Normal"],
+        ),
+        Spacer(1, 0.15 * inch),
+    ]
+
+    header = [
+        "SKU", "Product", "Severity",
+        "On hand", "Threshold", "Reorder pt", "Reorder qty",
+        "Suggested", "Daily velocity", "Days left",
+    ]
+    data = [header]
+    for row in report.rows:
+        data.append([
+            row.product_sku or "",
+            row.product_name,
+            row.severity,
+            str(row.on_hand),
+            str(row.threshold),
+            "" if row.reorder_point is None else str(row.reorder_point),
+            "" if row.reorder_quantity is None else str(row.reorder_quantity),
+            str(row.suggested_reorder_qty),
+            f"{row.daily_velocity:.2f}",
+            f"{row.days_of_inventory:.1f}" if row.days_of_inventory is not None else "",
+        ])
+
+    # Color rows by severity so the page is scannable
+    severity_bg = {
+        "critical": colors.HexColor("#fde7e7"),
+        "low": colors.HexColor("#fff4d6"),
+        "watch": colors.HexColor("#f0f4ff"),
+    }
+    table = Table(data, repeatRows=1)
+    style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f2937")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d1d5db")),
+        ("ALIGN", (3, 1), (-1, -1), "RIGHT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ])
+    for idx, row in enumerate(report.rows, start=1):
+        bg = severity_bg.get(row.severity)
+        if bg:
+            style.add("BACKGROUND", (0, idx), (-1, idx), bg)
+    table.setStyle(style)
+    elements.append(table)
+
+    if not report.rows:
+        elements.append(Paragraph("No products are at or below threshold.", styles["Italic"]))
+
+    doc.build(elements)
+    buf.seek(0)
+
+    filename = f"fulcrum-low-stock-{date_stamp}.pdf"
+    return StreamingResponse(
+        iter([buf.getvalue()]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ---------------------------------------------------------------------------
 # Shopping-cart-style reorder workflow
 # ---------------------------------------------------------------------------

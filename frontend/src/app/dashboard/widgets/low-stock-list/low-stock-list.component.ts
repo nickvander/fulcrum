@@ -108,13 +108,32 @@ export class LowStockListWidgetComponent {
    * header instead of the URL.
    */
   exportCsv(): void {
-    this.lowStockService.exportLowStockCsv().subscribe({
+    this.downloadBlob(
+      this.lowStockService.exportLowStockCsv(),
+      'csv',
+    );
+  }
+
+  exportPdf(): void {
+    this.downloadBlob(
+      this.lowStockService.exportLowStockPdf(),
+      'pdf',
+    );
+  }
+
+  /**
+   * Shared blob-download helper. Uses a temporary <a> element with an
+   * object URL so we don't navigate the dashboard away and so the JWT
+   * stays in the Authorization header rather than the URL.
+   */
+  private downloadBlob(req: import('rxjs').Observable<Blob>, ext: 'csv' | 'pdf'): void {
+    req.subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         const today = new Date().toISOString().slice(0, 10);
-        link.download = `fulcrum-low-stock-${today}.csv`;
+        link.download = `fulcrum-low-stock-${today}.${ext}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

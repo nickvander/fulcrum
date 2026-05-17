@@ -168,7 +168,9 @@
             "reorderAllSkipped": "No se pudo reordenar ninguno de los {{count}} productos seleccionados — no tienen proveedor asociado.",
             "viewPo": "Ver OC",
             "exportCsv": "Exportar CSV",
-            "exportCsvTooltip": "Descargar la lista completa de stock bajo como hoja de cálculo."
+            "exportCsvTooltip": "Descargar la lista completa de stock bajo como hoja de cálculo.",
+            "exportPdf": "Exportar PDF",
+            "exportPdfTooltip": "Descargar el reporte como un PDF imprimible con filas por severidad."
         }
     },
     "onboarding": {

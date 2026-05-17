@@ -168,7 +168,9 @@
             "reorderAllSkipped": "Could not reorder any of the {{count}} selected products — they have no supplier mapped yet.",
             "viewPo": "View PO",
             "exportCsv": "Export CSV",
-            "exportCsvTooltip": "Download the full low-stock list as a spreadsheet."
+            "exportCsvTooltip": "Download the full low-stock list as a spreadsheet.",
+            "exportPdf": "Export PDF",
+            "exportPdfTooltip": "Download the report as a print-ready PDF with severity-colored rows."
         }
     },
     "onboarding": {
