@@ -1407,6 +1407,12 @@
         },
         "supplier": {
             "notFound": "Supplier not found."
+        },
+        "catalogImport": {
+            "reviewNotFound": "Catalog import not found.",
+            "reviewNotPending": "Only pending catalog imports can be modified.",
+            "emptyFile": "The uploaded catalog file is empty.",
+            "nothingSelected": "Select at least one row with a product name before approving."
         }
     }
 }

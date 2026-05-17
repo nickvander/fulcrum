@@ -1407,6 +1407,12 @@
         },
         "supplier": {
             "notFound": "Proveedor no encontrado."
+        },
+        "catalogImport": {
+            "reviewNotFound": "Importación de catálogo no encontrada.",
+            "reviewNotPending": "Sólo las importaciones pendientes pueden modificarse.",
+            "emptyFile": "El archivo de catálogo está vacío.",
+            "nothingSelected": "Selecciona al menos una fila con nombre de producto antes de aprobar."
         }
     }
 }
