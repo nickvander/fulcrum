@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
+from src.core.errors import LocalizedHTTPException
 from src.schemas import supplier as supplier_schema
 from src.schemas import supplier_product_alias as alias_schema
 from src.schemas import supplier_product as supplier_product_schema
@@ -32,8 +33,12 @@ def read_supplier(
 ):
     supplier = crud_supplier.supplier.get(db, id=supplier_id)
     if not supplier:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Supplier not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.supplier.notFound",
+            params={"id": supplier_id},
+            detail="Supplier not found",
+        )
     return supplier
 
 @router.get("/{supplier_id}/products", response_model=List[supplier_product_schema.SupplierProductWithDetails])

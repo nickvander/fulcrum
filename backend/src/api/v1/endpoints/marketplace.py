@@ -1,11 +1,12 @@
 """
 API endpoints for managing marketplaces.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Dict
 
 from src.api import dependencies
+from src.core.errors import LocalizedHTTPException
 from src.models.user import User
 from src.schemas import marketplace as marketplace_schema
 from src.database import get_db
@@ -82,7 +83,12 @@ def read_marketplace_summary(
 
     db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
     if db_marketplace is None:
-        raise HTTPException(status_code=404, detail="Marketplace not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
 
     listings_q = db.query(ModelListing).filter(ModelListing.marketplace_id == marketplace_id)
     listing_count = listings_q.count()
@@ -121,7 +127,12 @@ def read_marketplace_summary(
 def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
     db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
     if db_marketplace is None:
-        raise HTTPException(status_code=404, detail="Marketplace not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
     return db_marketplace
 
 @router.post("/listings/", response_model=marketplace_schema.MarketplaceListing)
@@ -156,13 +167,23 @@ async def sync_marketplace_listing(
     
     listing = db.query(ModelListing).filter(ModelListing.id == listing_id).first()
     if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-    
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplace.listingNotFound",
+            params={"id": listing_id},
+            detail="Listing not found",
+        )
+
     # Get credentials for current user
     from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
     db_cred = crud_cred.get_by_marketplace(db, user_id=current_user.id, marketplace_id=listing.marketplace_id)
     if not db_cred:
-        raise HTTPException(status_code=400, detail="No credentials found for this marketplace")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.marketplace.noCredentialsForMarketplace",
+            params={"marketplaceId": listing.marketplace_id},
+            detail="No credentials found for this marketplace",
+        )
         
     from src.services.marketplace_service import marketplace_service
     token = await marketplace_service.get_valid_access_token(db, db_cred.id)
@@ -192,7 +213,12 @@ async def import_marketplace_listings(
     try:
         return await marketplace_listing_service.import_marketplace_listings(db, marketplace_id, current_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplace.importFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
 
 @router.post("/publish", response_model=marketplace_schema.MarketplaceListing)
 async def publish_to_marketplace(
@@ -209,7 +235,12 @@ async def publish_to_marketplace(
     try:
         return await marketplace_listing_service.publish_to_marketplace(db, product_id, marketplace_id, current_user.id)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplace.publishFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
 
 @router.post("/listings/{listing_id}/map", response_model=marketplace_schema.MarketplaceListing)
 async def map_listing_to_product(
@@ -224,8 +255,13 @@ async def map_listing_to_product(
     from src.models.marketplace import MarketplaceListing as ModelListing
     listing = db.query(ModelListing).filter(ModelListing.id == listing_id).first()
     if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-    
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplace.listingNotFound",
+            params={"id": listing_id},
+            detail="Listing not found",
+        )
+
     listing.product_id = product_id
     listing.status = "SYNCED"
     db.commit()

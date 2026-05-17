@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 import csv
 import io
@@ -6,6 +6,7 @@ import secrets
 import string
 from typing import Dict, Any
 from src import crud, models
+from src.core.errors import LocalizedHTTPException
 from src.schemas import user as user_schema
 from src.api import dependencies
 
@@ -33,13 +34,21 @@ def bulk_import_users(
     The CSV should have columns: email, first_name, last_name, user_type
     """
     if not file.filename.endswith(('.csv',)):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-    
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.bulkUsers.onlyCsvAllowed",
+            detail="Only CSV files are allowed",
+        )
+
     # Read the file content
     try:
         contents = file.file.read().decode("utf-8")
     except UnicodeDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid file encoding. Please upload a UTF-8 encoded CSV.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.bulkUsers.invalidEncoding",
+            detail="Invalid file encoding. Please upload a UTF-8 encoded CSV.",
+        )
     finally:
         file.file.close()
     
@@ -52,9 +61,12 @@ def bulk_import_users(
     
     # Validate CSV structure
     if not csv_data.fieldnames or not required_fields.issubset(set(csv_data.fieldnames)):
-        raise HTTPException(
+        required_columns = ', '.join(required_fields)
+        raise LocalizedHTTPException(
             status_code=400,
-            detail=f"CSV must contain the following columns: {', '.join(required_fields)}"
+            code="apiErrors.bulkUsers.missingRequiredColumns",
+            params={"columns": required_columns},
+            detail=f"CSV must contain the following columns: {required_columns}",
         )
     
     created_users = []

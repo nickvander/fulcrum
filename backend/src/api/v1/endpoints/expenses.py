@@ -1,10 +1,11 @@
 from typing import Any, List, Optional
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 
+from src.core.errors import LocalizedHTTPException
 from src.crud import crud_expense
 from src.models.expense import Expense as ExpenseModel
 from src.schemas import expense as expense_schema
@@ -180,7 +181,12 @@ def update_expense(
     """
     expense = crud_expense.expense.get(db, id=id)
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.expense.notFound",
+            params={"id": id},
+            detail="Expense not found",
+        )
     expense = crud_expense.expense.update(db, db_obj=expense, obj_in=expense_in)
     return expense
 
@@ -195,7 +201,12 @@ def read_expense(
     """
     expense = crud_expense.expense.get(db, id=id)
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.expense.notFound",
+            params={"id": id},
+            detail="Expense not found",
+        )
     return expense
 
 @router.delete("/{id}", response_model=expense_schema.Expense)
@@ -209,7 +220,12 @@ def delete_expense(
     """
     expense = crud_expense.expense.get(db, id=id)
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.expense.notFound",
+            params={"id": id},
+            detail="Expense not found",
+        )
     expense = crud_expense.expense.remove(db, id=id)
     return expense
 
@@ -231,13 +247,23 @@ async def upload_receipt(
     """
     expense = crud_expense.expense.get(db, id=id)
     if not expense:
-        raise HTTPException(status_code=404, detail="Expense not found")
-    
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.expense.notFound",
+            params={"id": id},
+            detail="Expense not found",
+        )
+
     # Validate file type (image or pdf)
     allowed_types = {".jpg", ".jpeg", ".png", ".pdf", ".heic"}
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in allowed_types:
-        raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {allowed_types}")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.expense.invalidReceiptFileType",
+            params={"extension": file_ext},
+            detail=f"Invalid file type. Allowed: {allowed_types}",
+        )
 
     # Ensure upload dir exists
     save_dir = f"{UPLOAD_RECEIPT_DIR}/{id}"
@@ -282,7 +308,12 @@ def delete_receipt(
     """
     receipt = crud_expense_receipt.get(db, id=receipt_id)
     if not receipt:
-        raise HTTPException(status_code=404, detail="Receipt not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.expense.receiptNotFound",
+            params={"id": receipt_id},
+            detail="Receipt not found",
+        )
     
     # Delete file
     if os.path.exists(receipt.file_path):
@@ -330,7 +361,11 @@ async def parse_receipt(
     # Check Settings
     settings = crud_store_settings.get_settings(db)
     if not settings or not settings.ai_enabled:
-        raise HTTPException(status_code=400, detail="AI features disabled.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.expense.aiDisabled",
+            detail="AI features disabled.",
+        )
 
     # Read file
     content = await file.read()
@@ -353,6 +388,11 @@ async def parse_receipt(
     result = await orchestrator.parse_receipt(content, mime_type)
     
     if "error" in result:
-        raise HTTPException(status_code=500, detail=result["error"])
-        
+        raise LocalizedHTTPException(
+            status_code=500,
+            code="apiErrors.expense.receiptParsingFailed",
+            params={"reason": result["error"]},
+            detail=result["error"],
+        )
+
     return result
