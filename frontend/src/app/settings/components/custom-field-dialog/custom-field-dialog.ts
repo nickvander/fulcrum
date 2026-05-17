@@ -8,13 +8,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { CustomField, FieldType } from '../../models/custom-field.model';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-custom-field-dialog',
   templateUrl: './custom-field-dialog.html',
   styleUrls: ['./custom-field-dialog.scss'],
   standalone: true,
-  imports: [
+  imports: [TranslocoModule, 
     ReactiveFormsModule,
     MatDialogModule,
     MatFormFieldModule,

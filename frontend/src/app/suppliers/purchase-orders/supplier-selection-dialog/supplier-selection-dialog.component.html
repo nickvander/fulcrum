@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Select Supplier for {{ data.productName }}</h2>
+<h2 mat-dialog-title>{{ 'suppliers.dialogs.selectSupplierFor' | transloco: { productName: data.productName } }}</h2>
 <div mat-dialog-content>
     <p style="margin-bottom: 16px;">This product is available from multiple suppliers. Which one would you like to use
         for this order?</p>

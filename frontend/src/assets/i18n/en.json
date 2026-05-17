@@ -85,6 +85,9 @@
             "selectOption": "Select Option",
             "enterNote": "Enter notes...",
             "invoiceNumber": "Invoice/Receipt #"
+        },
+        "dialogs": {
+            "imageDetails": "Image Details"
         }
     },
     "nav": {
@@ -462,7 +465,14 @@
                 "finalizing": "Finalizing identification..."
             }
         },
-        "aiGenerate": "Generate with AI"
+        "aiGenerate": "Generate with AI",
+        "dialogs": {
+            "addProduct": "Add New Product",
+            "editProduct": "Edit Product",
+            "createBundle": "Create New Bundle",
+            "editBundle": "Edit Bundle",
+            "stockHistoryFor": "Stock Adjustment History for {{productName}}"
+        }
     },
     "suppliers": {
         "title": "Suppliers",
@@ -523,6 +533,9 @@
         "messages": {
             "created": "Supplier created successfully",
             "loadFailed": "Error loading supplier"
+        },
+        "dialogs": {
+            "selectSupplierFor": "Select Supplier for {{productName}}"
         }
     },
     "purchaseOrders": {
@@ -709,6 +722,9 @@
         "costAllocation": {
             "previewFailed": "Failed to load cost preview",
             "applyFailed": "Failed to apply costs"
+        },
+        "dialogs": {
+            "applyAdditionalCosts": "Apply Additional Costs"
         }
     },
     "expenses": {
@@ -1112,6 +1128,9 @@
             "resetSuccess": "Password reset successfully. New password has been generated and should be communicated to the user securely.",
             "importSuccess": "Import completed successfully",
             "importWithErrors": "Import completed with some errors"
+        },
+        "dialogs": {
+            "createUser": "Create New User"
         }
     },
     "settings": {
@@ -1229,7 +1248,11 @@
         "exportData": "Export Data",
         "exportDataDesc": "Download your data for backup, migration, or analysis.",
         "importData": "Import Data",
-        "importDataDesc": "Import CSV or JSON files to add or update records."
+        "importDataDesc": "Import CSV or JSON files to add or update records.",
+        "dialogs": {
+            "addCustomField": "Add Custom Field",
+            "editCustomField": "Edit Custom Field"
+        }
     },
     "notifications": {
         "success": "Success",

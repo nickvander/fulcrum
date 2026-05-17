@@ -13,6 +13,7 @@ import { ImageDialogComponent } from './image-dialog';
 import { ProductImage } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
 import { NotificationService } from '../../../core/services/notification.service';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('ImageDialogComponent', () => {
     let component: ImageDialogComponent;
@@ -44,6 +45,7 @@ describe('ImageDialogComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
                 ImageDialogComponent,
                 ReactiveFormsModule,
                 MatDialogModule,

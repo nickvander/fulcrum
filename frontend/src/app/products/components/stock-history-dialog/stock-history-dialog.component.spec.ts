@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { OrderByPipe } from '../../pipes/order-by.pipe';
 import { DatePipe } from '@angular/common';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('StockHistoryDialogComponent', () => {
     let component: StockHistoryDialogComponent;
@@ -40,6 +41,7 @@ describe('StockHistoryDialogComponent', () => {
 
         await TestBed.configureTestingModule({
             imports: [
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
                 StockHistoryDialogComponent,
                 NoopAnimationsModule
             ],
@@ -75,7 +77,11 @@ describe('StockHistoryDialogComponent', () => {
         const emptyData = { ...mockData, inventoryAdjustments: [] } as any;
 
         TestBed.configureTestingModule({
-            imports: [StockHistoryDialogComponent, NoopAnimationsModule],
+            imports: [
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
+                StockHistoryDialogComponent,
+                NoopAnimationsModule,
+            ],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },
                 { provide: MAT_DIALOG_DATA, useValue: emptyData },

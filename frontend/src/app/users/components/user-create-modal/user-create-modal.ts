@@ -10,13 +10,14 @@ import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-user-create-modal',
   templateUrl: './user-create-modal.html',
   styleUrls: ['./user-create-modal.scss'],
   standalone: true,
-  imports: [
+  imports: [TranslocoModule, 
     CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,

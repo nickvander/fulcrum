@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { OrderByPipe } from '../../pipes/order-by.pipe';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslocoModule } from '@ngneat/transloco';
 
 export interface StockHistoryDialogData {
   productName: string;
@@ -24,7 +25,7 @@ export interface StockHistoryDialogData {
 @Component({
   selector: 'app-stock-history-dialog',
   standalone: true,
-  imports: [
+  imports: [TranslocoModule, 
     CommonModule,
     MatDialogModule,
     MatButtonModule,
