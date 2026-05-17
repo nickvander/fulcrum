@@ -1,19 +1,14 @@
-<ng-container *transloco="let t">
 <div class="products-container">
     <div class="products-header">
-        <h1>{{ t('navigation.products') }}</h1>
+        <h1>Products</h1> <!-- Or Transloco -->
         <div class="actions">
-            <button mat-stroked-button (click)="openCatalogImport()" style="margin-right: 8px;">
-                <mat-icon>upload_file</mat-icon> {{ t('products.catalogImport.button') }}
-            </button>
             <button mat-raised-button color="accent" (click)="openScanner()" style="margin-right: 8px;">
-                <mat-icon>camera_alt</mat-icon> {{ t('products.scanProduct') }}
+                <mat-icon>camera_alt</mat-icon> Scan Product
             </button>
             <button mat-raised-button color="primary" (click)="openAddPanel()">
-                <mat-icon>add</mat-icon> {{ t('products.addProduct') }}
+                <mat-icon>add</mat-icon> Add Product
             </button>
         </div>
     </div>
     <app-product-list></app-product-list>
 </div>
-</ng-container>

@@ -26,6 +26,7 @@ import { ProductComparisonService } from '../../services/product-comparison.serv
 import { ScreenService } from '../../../core/services/screen.service';
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
+import { CatalogImportDialogComponent } from '../catalog-import-dialog/catalog-import-dialog';
 
 @Component({
   selector: 'app-product-list',
@@ -1089,6 +1090,18 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
           this.openDetailsDialog(newProduct, 'add');
         }
       });
+    });
+  }
+
+  openCatalogImport(): void {
+    const dialogRef = this.dialog.open(CatalogImportDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+    });
+    dialogRef.afterClosed().subscribe(created => {
+      if (created) {
+        this.loadProducts();
+      }
     });
   }
 }
