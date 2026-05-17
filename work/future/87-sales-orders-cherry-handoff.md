@@ -143,21 +143,29 @@ after the post-`b955e1a` session.
 8. `process_mercadolibre_event` resolves credentials by
    "most-recently-updated for that marketplace" — fine for single-tenant
    but needs work if Fulcrum ever supports multiple users with their own
-   ML accounts. **Still open.**
+   ML accounts.
 
-   Documented but deferred 2026-05-17 — needs design discussion before
-   implementation. The pragmatic options are:
+   **PARTIAL FIX (defensive stopgap) landed in this session.**
+   `process_mercadolibre_event` now counts credentials for the
+   marketplace BEFORE picking one. If more than one exists, the
+   WebhookEvent is marked FAILED with a clear "Multi-tenant credentials
+   detected" message and the connector is NOT called — eliminates the
+   silent-data-corruption path where User A's order would get fetched
+   using User B's credentials. Covered by
+   `test_ml_webhook_refused_when_multi_tenant_credentials_present`.
+
+   **The real fix is still open.** Three pragmatic options:
    1. Per-user webhook URL (`/api/v1/webhooks/mercadolibre/<user_id>`)
       so each user registers a unique URL with ML.
    2. Lookup-by-`seller_id`: after fetching the order with any
       credential, read `seller_id` from the payload and re-fetch with
       the matching user's credential. Requires storing the ML
       `seller_id` alongside each credential. Two API calls per webhook.
-   3. Defensive stopgap: detect the multi-tenant case at webhook time
-      and refuse the event with a localized 409 instead of guessing.
+   3. ~~Defensive stopgap~~ — done above.
 
-   Fulcrum is single-tenant today, so this isn't an active bug. Item
-   stays open as architectural debt.
+   Fulcrum is still single-tenant today, so the stopgap is sufficient.
+   When multi-tenant ML support becomes a roadmap item, pick option 1
+   or 2 and remove the defensive guard.
 
 ## State Of Existing Worktrees
 
