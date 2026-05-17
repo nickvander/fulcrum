@@ -1,4 +1,4 @@
-import type { MockedObject } from "vitest";
+import type { MockedObject, MockInstance } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserBulkImportDialogComponent } from './user-bulk-import-dialog';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -7,39 +7,14 @@ import { BulkImportService } from '../../services/bulk-import.service';
 import { of, throwError } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
-/**
- * Tests for UserBulkImportDialogComponent
- *
- * STATUS: DISABLED - Test suite still times out at 120s despite multiple fix attempts.
- *
- * IMPROVEMENTS MADE:
- * - ✅ Refactored component to use BulkImportService (better architecture, easier to maintain)
- * - ✅ Created comprehensive unit tests for BulkImportService (all passing)
- * - ✅ Mocked BulkImportService in component tests
- * - ✅ Added NO_ERRORS_SCHEMA to prevent Material component rendering
- * - ✅ Removed fixture.detectChanges() from beforeEach
- *
- * ATTEMPTED FIXES (all failed to resolve timeout):
- * 1. Service layer extraction with mocks - FAILED (still times out)
- * 2. NO_ERRORS_SCHEMA - FAILED (still times out)
- * 3. Skipping detectChanges() - FAILED (still times out)
- * 4. fakeAsync/tick pattern - FAILED (from previous attempts)
- * 5. async/await with fixture.whenStable() - FAILED (from previous attempts)
- * 6. takeUntil pattern in component - FAILED (from previous attempts)
- *
- * CONCLUSION: The timeout issue appears to be deeper than Material component rendering.
- * The BulkImportService is fully tested and component functionality works in production.
- * Component architecture is improved but integration tests remain disabled pending deeper investigation.
- *
- * TODO: Future investigation into test framework/Angular testing environment interaction.
- */
-describe.skip('UserBulkImportDialogComponent', () => {
+describe('UserBulkImportDialogComponent', () => {
     let component: UserBulkImportDialogComponent;
     let fixture: ComponentFixture<UserBulkImportDialogComponent>;
     let bulkImportServiceSpy: MockedObject<BulkImportService>;
     let dialogRefSpy: MockedObject<MatDialogRef<UserBulkImportDialogComponent>>;
-    let snackBarSpy: MockedObject<MatSnackBar>;
+    let snackBarOpenSpy: MockInstance;
 
     beforeEach(async () => {
         bulkImportServiceSpy = {
@@ -51,17 +26,19 @@ describe.skip('UserBulkImportDialogComponent', () => {
         dialogRefSpy = {
             close: vi.fn().mockName("MatDialogRef.close")
         } as unknown as MockedObject<MatDialogRef<UserBulkImportDialogComponent>>;
-        snackBarSpy = {
-            open: vi.fn().mockName("MatSnackBar.open")
-        } as unknown as MockedObject<MatSnackBar>;
 
         await TestBed.configureTestingModule({
-            imports: [UserBulkImportDialogComponent, NoopAnimationsModule],
-            schemas: [NO_ERRORS_SCHEMA], // Prevents rendering of Material components
+            imports: [
+                UserBulkImportDialogComponent,
+                NoopAnimationsModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
+            ],
+            // NO_ERRORS_SCHEMA prevents Material child components from rendering, which
+            // was the original timeout cause documented before this file was un-skipped.
+            schemas: [NO_ERRORS_SCHEMA],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefSpy },
                 { provide: BulkImportService, useValue: bulkImportServiceSpy },
-                { provide: MatSnackBar, useValue: snackBarSpy },
                 { provide: MAT_DIALOG_DATA, useValue: {} }
             ]
         })
@@ -76,11 +53,16 @@ describe.skip('UserBulkImportDialogComponent', () => {
 
         fixture = TestBed.createComponent(UserBulkImportDialogComponent);
         component = fixture.componentInstance;
+        // Spy on the real MatSnackBar instance Angular DI injected into the component —
+        // a useValue: { open: vi.fn() } override doesn't survive MatSnackBarModule's
+        // own provider chain in standalone components.
+        snackBarOpenSpy = vi.spyOn((component as any).snackBar as MatSnackBar, 'open');
         // Don't call detectChanges() here - it triggers Material component initialization
     });
 
     afterEach(() => {
         fixture.destroy();
+        vi.restoreAllMocks();
     });
 
     it('should create', () => {
@@ -100,7 +82,7 @@ describe.skip('UserBulkImportDialogComponent', () => {
             component.onFileSelected(event);
 
             expect(bulkImportServiceSpy.validateFile).toHaveBeenCalledWith(file);
-            expect(snackBarSpy.open).toHaveBeenCalledWith('Please select a CSV file', 'Close', { duration: 3000 });
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('Please select a CSV file', 'en.common.close', { duration: 3000 });
             expect(component.selectedFile).toBeNull();
         });
 
@@ -118,7 +100,7 @@ describe.skip('UserBulkImportDialogComponent', () => {
     });
 
     describe('upload', () => {
-        it('should call bulkImportService.processFile and handle success', async () => {
+        it('should call bulkImportService.processFile and handle success', () => {
             const file = new File([''], 'test.csv', { type: 'text/csv' });
             const mockResult = {
                 created_users: [{ email: 'test@example.com', temporary_password: 'pass123' }],
@@ -130,18 +112,13 @@ describe.skip('UserBulkImportDialogComponent', () => {
 
             component.upload();
 
-            expect(component.isUploading).toBe(true);
-
-            setTimeout(() => {
-                expect(bulkImportServiceSpy.processFile).toHaveBeenCalledWith(file);
-                expect(component.isUploading).toBe(false);
-                expect(component.importResult).toEqual(mockResult);
-                expect(snackBarSpy.open).toHaveBeenCalledWith('Import completed successfully', 'Close', { duration: 3000 });
-                ;
-            }, 100);
+            expect(bulkImportServiceSpy.processFile).toHaveBeenCalledWith(file);
+            expect(component.isUploading).toBe(false);
+            expect(component.importResult).toEqual(mockResult);
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('en.users.messages.importSuccess', 'en.common.close', { duration: 3000 });
         });
 
-        it('should handle import with failures', async () => {
+        it('should handle import with failures', () => {
             const file = new File([''], 'test.csv', { type: 'text/csv' });
             const mockResult = {
                 created_users: [],
@@ -153,14 +130,11 @@ describe.skip('UserBulkImportDialogComponent', () => {
 
             component.upload();
 
-            setTimeout(() => {
-                expect(component.isUploading).toBe(false);
-                expect(snackBarSpy.open).toHaveBeenCalledWith('Import completed with some errors', 'Close', { duration: 5000 });
-                ;
-            }, 100);
+            expect(component.isUploading).toBe(false);
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('en.users.messages.importWithErrors', 'en.common.close', { duration: 5000 });
         });
 
-        it('should handle import error', async () => {
+        it('should surface backend detail when error has no code (legacy path)', () => {
             const file = new File([''], 'test.csv', { type: 'text/csv' });
             const error = { error: { detail: 'Server error' } };
 
@@ -169,11 +143,23 @@ describe.skip('UserBulkImportDialogComponent', () => {
 
             component.upload();
 
-            setTimeout(() => {
-                expect(component.isUploading).toBe(false);
-                expect(snackBarSpy.open).toHaveBeenCalledWith('Server error', 'Close', { duration: 5000 });
-                ;
-            }, 100);
+            expect(component.isUploading).toBe(false);
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('Server error', 'en.common.close', { duration: 5000 });
+        });
+
+        it('should translate the error code when backend returns {code, params}', () => {
+            const file = new File([''], 'test.csv', { type: 'text/csv' });
+            const error = { error: { code: 'apiErrors.product.skuExists', params: { sku: 'ABC' }, detail: 'A product with SKU ABC already exists.' } };
+
+            component.selectedFile = file;
+            bulkImportServiceSpy.processFile.mockReturnValue(throwError(() => error));
+
+            component.upload();
+
+            expect(component.isUploading).toBe(false);
+            // TranslocoTestingModule has empty langs, so translate() returns the key —
+            // that's enough to prove translateApiError took the code branch.
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('en.apiErrors.product.skuExists', 'en.common.close', { duration: 5000 });
         });
 
         it('should not upload if no file selected', () => {
@@ -220,25 +206,23 @@ describe.skip('UserBulkImportDialogComponent', () => {
             component.importResult = { created_users: users, failed_users: [] };
 
             bulkImportServiceSpy.formatResultsAsCsv.mockReturnValue('Email,Temporary Password\nuser@test.com,pass');
-            vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(Promise.resolve());
+            const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText').mockReturnValue(Promise.resolve());
 
             component.copyAll();
+            await Promise.resolve(); // let the writeText().then() callback run
 
-            setTimeout(() => {
-                expect(bulkImportServiceSpy.formatResultsAsCsv).toHaveBeenCalledWith(users);
-                expect(navigator.clipboard.writeText).toHaveBeenCalled();
-                expect(snackBarSpy.open).toHaveBeenCalledWith('All results copied to clipboard', 'Close', { duration: 2000 });
-                ;
-            }, 100);
+            expect(bulkImportServiceSpy.formatResultsAsCsv).toHaveBeenCalledWith(users);
+            expect(writeTextSpy).toHaveBeenCalled();
+            expect(snackBarOpenSpy).toHaveBeenCalledWith('en.common.messages.copied', 'en.common.close', { duration: 2000 });
         });
 
         it('should not copy if no import result', () => {
             component.importResult = null;
-            vi.spyOn(navigator.clipboard, 'writeText');
+            const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
 
             component.copyAll();
 
-            expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+            expect(writeTextSpy).not.toHaveBeenCalled();
         });
     });
 });

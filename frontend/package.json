@@ -163,6 +163,7 @@
     "is-extglob": "^2.1.1",
     "is-glob": "^4.0.3",
     "is-number": "^7.0.0",
+    "jsdom": "^29.1.1",
     "json-schema-traverse": "^1.0.0",
     "json5": "^2.2.3",
     "jsonc-parser": "^3.3.1",

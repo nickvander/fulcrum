@@ -14,8 +14,7 @@ import { SupplierProductManagerComponent } from '../supplier-product-manager/sup
 import { SuppliersService } from '../suppliers.service';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 
-// Skip: DOM removeChild error in happy-dom environment, unrelated to component logic
-describe.skip('SupplierDetailComponent', () => {
+describe('SupplierDetailComponent', () => {
   let component: SupplierDetailComponent;
   let fixture: ComponentFixture<SupplierDetailComponent>;
 
