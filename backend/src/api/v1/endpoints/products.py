@@ -1,7 +1,8 @@
 import os
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response, Body
+from fastapi import APIRouter, Depends, UploadFile, File, Response, Body
+from src.core.errors import LocalizedHTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -131,7 +132,12 @@ def get_product_purchase_history(
 
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
 
     # Query PurchaseOrderItems for this product, joined with PO and Supplier
     query = (
@@ -192,7 +198,12 @@ def read_products(
     if sku:
         products = crud_product.product.get_by_sku(db, sku=sku)
         if not products:
-            raise HTTPException(status_code=404, detail="Product not found")
+            raise LocalizedHTTPException(
+                status_code=404,
+                code="apiErrors.product.notFoundBySku",
+                params={"sku": sku},
+                detail="Product not found",
+            )
         # Wrap single product in paginated response
         return {
             "data": [products],
@@ -234,8 +245,10 @@ def create_product(
     """
     product = crud_product.product.get_by_sku(db, sku=product_in.sku)
     if product:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=409,
+            code="apiErrors.product.skuExists",
+            params={"sku": product_in.sku},
             detail="A product with this SKU already exists.",
         )
     product = crud_product.product.create(db, obj_in=product_in)
@@ -263,8 +276,10 @@ def update_product(
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
             detail="The product with this ID does not exist in the system.",
         )
     
@@ -314,8 +329,10 @@ def read_product(*, db: Session = Depends(get_db), product_id: int):
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
             detail="The product with this ID does not exist in the system.",
         )
     
@@ -368,8 +385,10 @@ def delete_product(*, db: Session = Depends(get_db), product_id: int):
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
             detail="The product with this ID does not exist in the system.",
         )
     product = crud_product.product.remove(db, id=product_id)
@@ -389,8 +408,10 @@ def delete_multiple_products(
     for product_id in product_ids:
         product = crud_product.product.get(db, id=product_id)
         if not product:
-            raise HTTPException(
+            raise LocalizedHTTPException(
                 status_code=404,
+                code="apiErrors.product.notFound",
+                params={"id": product_id},
                 detail=f"Product with id {product_id} not found",
             )
         crud_product.product.remove(db, id=product_id)
@@ -413,7 +434,12 @@ def upload_product_image(
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
 
     # Ensure the upload directory exists
     upload_dir = "uploads/product_images"
@@ -443,7 +469,12 @@ def delete_product_image(
     """
     image = crud_product_image.product_image.get(db=db, id=image_id)
     if not image or image.product_id != product_id:
-        raise HTTPException(status_code=404, detail="Product image not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.imageNotFound",
+            params={"id": image_id},
+            detail="Product image not found",
+        )
     
     # Delete the actual file from storage
     if image.image_path and os.path.exists(image.image_path):
@@ -464,7 +495,12 @@ def update_product_image(
     """
     db_image = crud_product_image.product_image.get(db=db, id=image_id)
     if not db_image or db_image.product_id != product_id:
-        raise HTTPException(status_code=404, detail="Product image not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.imageNotFound",
+            params={"id": image_id},
+            detail="Product image not found",
+        )
     
     updated_image = crud_product_image.product_image.update(
         db=db, db_obj=db_image, obj_in=image_update
@@ -488,7 +524,12 @@ def set_primary_image(
         db=db, product_id=product_id, image_id=image_id
     )
     if not image:
-        raise HTTPException(status_code=404, detail="Product image not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.imageNotFound",
+            params={"id": image_id},
+            detail="Product image not found",
+        )
     return image
 
 
@@ -506,7 +547,12 @@ def reorder_product_images(
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
 
     # Get all images for this product
     images = db.query(crud_product_image.product_image.model).filter(
@@ -550,7 +596,12 @@ def lookup_product_by_barcode(
     """
     product = crud_product.product.get_by_barcode(db, barcode_value=barcode)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFoundByBarcode",
+            params={"barcode": barcode},
+            detail="Product not found",
+        )
     return product
 
 
@@ -574,7 +625,12 @@ def assemble_bundle(
             user_id=current_user.email if current_user.email else f"user_{current_user.id}"
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.product.bundleAssemblyFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
     
     db.commit()
     
@@ -604,7 +660,12 @@ def adjust_stock(
     
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
 
     # Use centralized service
     inventory_service.adjust_stock(
@@ -629,7 +690,12 @@ def adjust_stock(
         .filter(Product.id == product_id).first()
     
     if not refreshed_product:
-        raise HTTPException(status_code=404, detail="Product not found after adjustment")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFoundAfterAdjustment",
+            params={"id": product_id},
+            detail="Product not found after adjustment",
+        )
     
     return refreshed_product
 
@@ -648,7 +714,12 @@ def save_product_custom_fields(
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
 
     crud_custom_field.product_custom_field.save_for_product(
         db=db, product_id=product_id, custom_fields_in=custom_fields
@@ -665,7 +736,12 @@ def get_product_variants(
     """
     product = crud_product.product.get(db, id=product_id)
     if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            params={"id": product_id},
+            detail="Product not found",
+        )
     
     # Since we don't have a specific CRUD for variants yet, we rely on relationship
     # Ensure variants are loaded. The default get() might not join them.

@@ -1240,5 +1240,17 @@
         "confirmDelete": "Confirm Delete",
         "areYouSure": "Are you sure?",
         "cannotBeUndone": "This action cannot be undone."
+    },
+    "apiErrors": {
+        "unknown": "An unexpected error occurred. Please try again.",
+        "product": {
+            "notFound": "Product {{id}} not found.",
+            "notFoundBySku": "No product found with SKU {{sku}}.",
+            "notFoundByBarcode": "No product found for barcode {{barcode}}.",
+            "notFoundAfterAdjustment": "Could not reload product {{id}} after the stock adjustment.",
+            "skuExists": "A product with SKU {{sku}} already exists.",
+            "imageNotFound": "Product image {{id}} not found.",
+            "bundleAssemblyFailed": "Could not assemble bundle: {{reason}}"
+        }
     }
 }
