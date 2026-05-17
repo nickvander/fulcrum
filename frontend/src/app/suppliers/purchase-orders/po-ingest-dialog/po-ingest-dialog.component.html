@@ -205,6 +205,118 @@
             </div>
         </div>
 
+        <!-- Step 2b: Match diff (uploaded document looks like an invoice for an existing PO) -->
+        <div *ngIf="step === 'match-diff' && matchDetails" class="match-diff-step">
+            <div class="match-diff-header">
+                <mat-icon class="match-icon">compare_arrows</mat-icon>
+                <div>
+                    <h4 class="no-margin">
+                        {{ t('purchaseOrders.matchDiff.matchedHeading', { po: matchedPoNumber || ('#' + matchedPoId) }) }}
+                    </h4>
+                    <p class="match-meta">
+                        @if (matchedSupplierName) {
+                            <span><strong>{{ t('common.name') }}:</strong> {{ matchedSupplierName }}</span>
+                        }
+                        @if (matchedInvoiceNumber) {
+                            · <span><strong>{{ t('purchaseOrders.matchDiff.invoiceNumber') }}:</strong> {{ matchedInvoiceNumber }}</span>
+                        }
+                        @if (matchedInvoiceDate) {
+                            · <span><strong>{{ t('common.date') }}:</strong> {{ matchedInvoiceDate }}</span>
+                        }
+                    </p>
+                </div>
+            </div>
+
+            @if ((matchDetails.total_discrepancy || 0) !== 0) {
+                <div class="discrepancy-banner"
+                     [class.discrepancy-warning]="(matchDetails.total_discrepancy || 0) > 0">
+                    <mat-icon>info</mat-icon>
+                    {{ t('purchaseOrders.matchDiff.totalDiscrepancy') }}:
+                    <strong>{{ matchDetails.total_discrepancy | currency }}</strong>
+                </div>
+            }
+
+            <h5>{{ t('purchaseOrders.matchDiff.lineByLine') }}</h5>
+            <table class="match-diff-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('purchaseOrders.matchDiff.poSide') }}</th>
+                        <th>{{ t('purchaseOrders.matchDiff.invoiceSide') }}</th>
+                        <th>{{ t('common.status') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (match of matchDetails.matches; track $index) {
+                        <tr [class]="matchStatusClass(match.match_status)">
+                            <td>
+                                @if (match.po_description) {
+                                    <div class="line-desc">{{ match.po_description }}</div>
+                                    <div class="line-meta">
+                                        {{ t('common.quantity') }}: {{ match.po_quantity ?? '—' }} ·
+                                        {{ t('purchaseOrders.unitCost') }}: {{ match.po_unit_cost | currency }}
+                                        @if (match.po_remaining_quantity !== null && match.po_remaining_quantity !== undefined) {
+                                            · {{ t('purchaseOrders.matchDiff.remaining') }}: {{ match.po_remaining_quantity }}
+                                        }
+                                    </div>
+                                } @else {
+                                    <em class="line-missing">{{ t('purchaseOrders.matchDiff.notInPo') }}</em>
+                                }
+                            </td>
+                            <td>
+                                <div class="line-desc">{{ match.invoice_description }}</div>
+                                <div class="line-meta">
+                                    {{ t('common.quantity') }}: {{ match.invoice_quantity }} ·
+                                    {{ t('purchaseOrders.unitCost') }}: {{ match.invoice_unit_cost | currency }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="match-status-chip" [class]="matchStatusClass(match.match_status)">
+                                    {{ t('purchaseOrders.matchDiff.status.' + match.match_status) }}
+                                </span>
+                                @if (match.discrepancy_details) {
+                                    <div class="discrepancy-detail">{{ match.discrepancy_details }}</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (matchDetails.unmatched_po_items.length > 0) {
+                <h5 class="warn-heading">{{ t('purchaseOrders.matchDiff.missingFromInvoice') }} ({{ matchDetails.unmatched_po_items.length }})</h5>
+                <ul class="unmatched-list">
+                    @for (poItem of matchDetails.unmatched_po_items; track $index) {
+                        <li>
+                            <strong>{{ poItem.description || poItem.sku || ('item ' + $index) }}</strong>
+                            @if (poItem.quantity) {
+                                — {{ t('common.quantity') }}: {{ poItem.quantity }}
+                            }
+                            @if (poItem.unit_cost) {
+                                @ {{ poItem.unit_cost | currency }}
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (matchDetails.unmatched_invoice_items.length > 0) {
+                <h5 class="warn-heading">{{ t('purchaseOrders.matchDiff.extraOnInvoice') }} ({{ matchDetails.unmatched_invoice_items.length }})</h5>
+                <ul class="unmatched-list">
+                    @for (invItem of matchDetails.unmatched_invoice_items; track $index) {
+                        <li>
+                            <strong>{{ invItem.description || invItem.sku || ('item ' + $index) }}</strong>
+                            @if (invItem.quantity) {
+                                — {{ t('common.quantity') }}: {{ invItem.quantity }}
+                            }
+                            @if (invItem.unit_cost) {
+                                @ {{ invItem.unit_cost | currency }}
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
         <!-- Step 3: Creating -->
         <div *ngIf="step === 'creating'" class="creating-step">
             <mat-progress-bar mode="indeterminate"></mat-progress-bar>
@@ -230,6 +342,15 @@
             [disabled]="!supplierId || editableItems.length === 0" (click)="createPurchaseOrder()">
             <mat-icon>add_shopping_cart</mat-icon>
             Approve & create PO
+        </button>
+
+        <button *ngIf="step === 'match-diff'" mat-button color="warn" (click)="rejectMatchedImport()">
+            <mat-icon>cancel</mat-icon>
+            {{ t('purchaseOrders.matchDiff.rejectImport') }}
+        </button>
+        <button *ngIf="step === 'match-diff'" mat-raised-button color="primary" (click)="openMatchedPo()">
+            <mat-icon>open_in_new</mat-icon>
+            {{ t('purchaseOrders.matchDiff.openPo') }}
         </button>
     </mat-dialog-actions>
 </ng-container>

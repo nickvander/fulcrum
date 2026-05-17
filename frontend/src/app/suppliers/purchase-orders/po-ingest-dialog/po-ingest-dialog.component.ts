@@ -2,6 +2,7 @@ import { Component, Inject, OnInit, OnDestroy, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -28,6 +29,35 @@ export interface PoIngestDialogResult {
     purchaseOrder?: any;
 }
 
+interface MatchDiffLine {
+    po_item_id: number | null;
+    po_description: string | null;
+    po_quantity: number | null;
+    po_remaining_quantity: number | null;
+    po_unit_cost: number | null;
+    invoice_sku: string | null;
+    invoice_description: string;
+    invoice_quantity: number;
+    invoice_unit_cost: number;
+    match_status: 'matched' | 'quantity_diff' | 'price_diff' | 'unmatched' | string;
+    discrepancy_details: string | null;
+}
+
+interface MatchDiffUnmatchedItem {
+    description?: string;
+    sku?: string;
+    quantity?: number;
+    unit_cost?: number;
+    [k: string]: unknown;
+}
+
+interface MatchDiffDetails {
+    matches: MatchDiffLine[];
+    unmatched_po_items: MatchDiffUnmatchedItem[];
+    unmatched_invoice_items: MatchDiffUnmatchedItem[];
+    total_discrepancy: number;
+}
+
 @Component({
     selector: 'app-po-ingest-dialog',
     standalone: true,
@@ -52,7 +82,7 @@ export interface PoIngestDialogResult {
 })
 export class PoIngestDialogComponent implements OnInit, OnDestroy {
     // State machine
-    step: 'upload' | 'preview' | 'creating' = 'upload';
+    step: 'upload' | 'preview' | 'match-diff' | 'creating' = 'upload';
     aiEnabled = false;
     private destroy$ = new Subject<void>();
 
@@ -61,6 +91,15 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     isDragging = false;
     uploadError: string | null = null;
     isProcessing = false;
+
+    // Match-diff state (populated when the uploaded document matches an existing PO).
+    // The shape mirrors InvoiceMatchResult on the backend (see purchase_orders.py).
+    matchedPoId: number | null = null;
+    matchedPoNumber: string | null = null;
+    matchedSupplierName: string | null = null;
+    matchedInvoiceNumber: string | null = null;
+    matchedInvoiceDate: string | null = null;
+    matchDetails: MatchDiffDetails | null = null;
 
     // Preview state
     extractedData: PoIngestionResponse | null = null;
@@ -91,6 +130,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         private settingsService: SettingsService,
         private snackBar: MatSnackBar,
         private transloco: TranslocoService,
+        private router: Router,
         @Optional() @Inject(MAT_DIALOG_DATA) private data?: { review?: SupplierDocumentImportReview }
     ) { }
 
@@ -188,15 +228,30 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         this.suppliersService.createImportReview(this.selectedFile).subscribe({
             next: (review) => {
                 const response = review.extracted_data;
+                this.importReviewId = review.id;
+                this.importedFileName = review.file_name;
+                this.reviewWarnings = review.warnings || [];
+
                 if (response.mode === 'match' && response.matched_po_id) {
-                    this.uploadError = `This document appears to match existing ${response.matched_po_number}. Open that PO to receive stock instead.`;
+                    // Don't kick the user out of the dialog like the old
+                    // behaviour did — render a side-by-side diff against the
+                    // existing PO so they can see qty/price deltas inline.
+                    this.matchedPoId = response.matched_po_id;
+                    this.matchedPoNumber = response.matched_po_number ?? null;
+                    this.matchedSupplierName = response.matched_supplier_name ?? null;
+                    this.matchedInvoiceNumber = response.invoice_number ?? null;
+                    this.matchedInvoiceDate = response.document_date ?? null;
+                    this.matchDetails = {
+                        matches: (response.matches as MatchDiffLine[]) ?? [],
+                        unmatched_po_items: (response.unmatched_po_items as MatchDiffUnmatchedItem[]) ?? [],
+                        unmatched_invoice_items: (response.unmatched_invoice_items as MatchDiffUnmatchedItem[]) ?? [],
+                        total_discrepancy: response.total_discrepancy ?? 0,
+                    };
+                    this.step = 'match-diff';
                     this.isProcessing = false;
                     return;
                 }
 
-                this.importReviewId = review.id;
-                this.importedFileName = review.file_name;
-                this.reviewWarnings = review.warnings || [];
                 const normalized = this.toPoIngestionResponse(response);
                 this.extractedData = normalized;
                 this.populateFormFromExtraction(normalized);
@@ -439,5 +494,58 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     goBack(): void {
         this.step = 'upload';
         this.extractedData = null;
+        this.matchedPoId = null;
+        this.matchedPoNumber = null;
+        this.matchedSupplierName = null;
+        this.matchedInvoiceNumber = null;
+        this.matchedInvoiceDate = null;
+        this.matchDetails = null;
+    }
+
+    /**
+     * Close the dialog and navigate to the existing PO this document
+     * matched. From there the user can use the PO's own invoice-receive
+     * flow to apply qty/price adjustments based on what they saw in the
+     * diff.
+     */
+    openMatchedPo(): void {
+        if (!this.matchedPoId) return;
+        this.dialogRef.close({ action: 'cancelled' });
+        this.router.navigate(['/suppliers/po', this.matchedPoId, 'edit']);
+    }
+
+    /**
+     * Reject the matched-PO import without creating anything — used when
+     * the diff makes it clear that the document doesn't actually belong
+     * to this PO (e.g. wrong supplier picked up by a fuzzy match).
+     */
+    rejectMatchedImport(): void {
+        if (!this.importReviewId) {
+            this.cancel();
+            return;
+        }
+        this.suppliersService.rejectImportReview(this.importReviewId).subscribe({
+            next: () => {
+                this.snackBar.open(
+                    this.transloco.translate('purchaseOrders.matchDiff.rejected'),
+                    this.transloco.translate('common.close'),
+                    { duration: 4000 },
+                );
+                this.dialogRef.close({ action: 'cancelled' });
+            },
+            error: () => {
+                // HttpErrorInterceptor surfaces the localized backend message.
+            },
+        });
+    }
+
+    matchStatusClass(status: string): string {
+        switch (status) {
+            case 'matched': return 'match-ok';
+            case 'quantity_diff': return 'match-qty';
+            case 'price_diff': return 'match-price';
+            case 'unmatched': return 'match-none';
+            default: return '';
+        }
     }
 }

@@ -318,3 +318,107 @@ h2[mat-dialog-title] {
     }
   }
 }
+
+// ---------------------------------------------------------------------
+// Match-diff step (rendered when an uploaded document looks like an
+// invoice for an existing PO — see po-ingest-dialog.component.ts step
+// transition).
+// ---------------------------------------------------------------------
+
+.match-diff-step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 4px;
+
+  .match-diff-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--info-bg, rgba(102, 126, 234, 0.08));
+    border-left: 4px solid var(--info-color, #667eea);
+    border-radius: 4px;
+
+    .match-icon { font-size: 28px; width: 28px; height: 28px; color: var(--info-color, #667eea); }
+    .no-margin { margin: 0; }
+    .match-meta { margin: 4px 0 0; font-size: 12px; color: var(--text-hint); }
+  }
+
+  .discrepancy-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--warning-bg, #fff8e1);
+    color: var(--warning-color, #b26a00);
+    border-radius: 4px;
+    font-size: 13px;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+    &.discrepancy-warning {
+      background: var(--error-bg, #fdecea);
+      color: var(--error-color, #b71c1c);
+    }
+  }
+
+  h5 { margin: 4px 0; font-size: 13px; font-weight: 600; color: var(--text-main); }
+  .warn-heading { color: var(--warning-color, #b26a00); }
+
+  .match-diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th { background: var(--bg-app); font-weight: 600; text-align: left; }
+
+    .line-desc { font-weight: 500; }
+    .line-meta { color: var(--text-hint); font-size: 11px; margin-top: 2px; }
+    .line-missing { color: var(--text-hint); }
+
+    // Row tinting per match status — subtle, so it doesn't fight the
+    // chip in the status column.
+    tr.match-ok    { background: rgba(76, 175, 80, 0.04); }
+    tr.match-qty   { background: rgba(255, 152, 0, 0.05); }
+    tr.match-price { background: rgba(33, 150, 243, 0.05); }
+    tr.match-none  { background: rgba(244, 67, 54, 0.05); }
+  }
+
+  .match-status-chip {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: white;
+
+    &.match-ok    { background: var(--success-color, #2e7d32); }
+    &.match-qty   { background: var(--warning-color, #b26a00); }
+    &.match-price { background: var(--info-color, #1565c0); }
+    &.match-none  { background: var(--error-color, #c62828); }
+  }
+
+  .discrepancy-detail {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-hint);
+    font-style: italic;
+  }
+
+  .unmatched-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12px;
+    color: var(--text-main);
+
+    li { margin-bottom: 2px; }
+  }
+}
