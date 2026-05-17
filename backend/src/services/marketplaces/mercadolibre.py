@@ -224,12 +224,52 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
     async def publish_listing(self, product_data: Dict[str, Any], access_token: Optional[str] = None) -> str:
         """
         Creates a new listing via POST /items.
+
+        Maps the Fulcrum-side payload (name/sku/description/price + optional
+        images, category, listing_type, etc.) into ML's POST /items shape with
+        Mexico-first defaults (site_id=MLM, currency=MXN, condition=new).
+        Anything the caller passes through under an ML-native key (e.g.
+        category_id, listing_type_id, pictures) overrides those defaults so
+        callers that build a complete payload can do so.
+
+        Without a token (or with a stub token) returns a deterministic stub id
+        so dev/test paths can exercise the publish workflow without hitting the
+        live ML API. Mirrors the pattern used by create_inbound_shipment.
+
+        Returns the external item id (e.g. "MLM123456789").
         """
-        if not access_token:
-            return "ERROR-NO-TOKEN"
-        print(f"Publishing to ML Mexico: {product_data.get('name')}")
-        # Real: POST /items with full product payload, site_id=MLM
-        return "MLM-STUB-123"
+        if not access_token or access_token.startswith("STUB"):
+            stub_id = "MLM-STUB-" + (product_data.get("sku") or product_data.get("name") or "ITEM")
+            return stub_id
+
+        payload: Dict[str, Any] = {
+            "site_id": self.SITE_ID,
+            "title": product_data.get("title") or product_data.get("name"),
+            "category_id": product_data.get("category_id"),
+            "price": product_data.get("price"),
+            "currency_id": product_data.get("currency_id") or "MXN",
+            "available_quantity": product_data.get("available_quantity", 1),
+            "buying_mode": product_data.get("buying_mode") or "buy_it_now",
+            "listing_type_id": product_data.get("listing_type_id") or "gold_special",
+            "condition": product_data.get("condition") or "new",
+            "description": {"plain_text": product_data.get("description") or ""},
+        }
+        pictures = product_data.get("pictures")
+        if pictures:
+            payload["pictures"] = pictures
+        # Drop keys with None values so ML doesn't reject the payload for
+        # explicit nulls on optional fields like category_id.
+        payload = {key: value for key, value in payload.items() if value is not None}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.API_URL}/items",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json=payload,
+            )
+            response.raise_for_status()
+            data = response.json()
+        return str(data.get("id") or "")
 
     async def fetch_public_listings(self, query: str) -> list:
         """
