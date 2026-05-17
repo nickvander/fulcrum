@@ -1285,6 +1285,32 @@
             "marketplaceNotFound": "No se encontró el mercado {{id}}.",
             "unsupportedMarketplace": "El mercado {{name}} aún no es compatible.",
             "tokenExchangeFailed": "No se pudo completar la autorización del mercado: {{reason}}"
+        },
+        "purchaseOrder": {
+            "notFound": "No se encontró la orden de compra {{id}}.",
+            "operationFailed": "La operación falló: {{reason}}",
+            "cannotDeleteReceived": "No se puede eliminar esta orden de compra porque ya se recibieron artículos. Para revertirlo, ajusta el stock manualmente y marca la OC como cerrada.",
+            "mustConfirmCosts": "La asignación de costos debe confirmarse antes de aplicarse.",
+            "invalidInvoiceFileType": "Tipo de archivo de factura no válido. Permitidos: {{allowed}}.",
+            "invoiceFileTooLarge": "El archivo de factura es demasiado grande. Tamaño máximo: {{maxMb}} MB.",
+            "invoiceNotFound": "Factura no encontrada.",
+            "importReviewNotFound": "No se encontró la revisión de importación.",
+            "importReviewNotPending": "Solo las revisiones de importación pendientes pueden ser {{action}}.",
+            "importReviewNoLineItems": "Esta revisión de importación no contiene líneas de artículos.",
+            "importReviewLineNotFound": "No se encontró la línea de la revisión de importación.",
+            "importReviewLineInvalid": "La línea de la revisión de importación no es válida.",
+            "importReviewNoMatched": "Al menos una línea revisada debe estar asociada a un producto.",
+            "supplierNotFound": "No se encontró el proveedor.",
+            "productNameRequired": "Se requiere un nombre de producto.",
+            "aliasRequired": "Se requiere un SKU o nombre de alias del proveedor.",
+            "bulkRejectMissingScope": "Proporciona los IDs de revisión o una fecha \"anterior a\" para rechazar revisiones en lote.",
+            "unsupportedFileType": "Tipo de archivo no compatible. Permitidos: {{allowed}}.",
+            "fileTooLarge": "Archivo demasiado grande. Tamaño máximo: {{maxMb}} MB.",
+            "parsingFailed": "No se pudo procesar el documento: {{reason}}",
+            "aiExtractionFailed": "La extracción con IA falló: {{reason}}",
+            "cannotExtractData": "No se pudieron extraer datos legibles. Los PDF de texto y HTML se pueden procesar sin IA; los PDF escaneados e imágenes requieren IA/OCR habilitada en Configuración.",
+            "ingestionFailed": "La importación del documento falló: {{reason}}",
+            "aiDisabled": "Las funciones de IA están desactivadas en Configuración. Activa la IA para procesar facturas."
         }
     }
 }

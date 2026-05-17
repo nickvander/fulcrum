@@ -1285,6 +1285,32 @@
             "marketplaceNotFound": "Marketplace {{id}} not found.",
             "unsupportedMarketplace": "Marketplace {{name}} is not supported yet.",
             "tokenExchangeFailed": "Could not complete the marketplace authorization: {{reason}}"
+        },
+        "purchaseOrder": {
+            "notFound": "Purchase order {{id}} not found.",
+            "operationFailed": "Operation failed: {{reason}}",
+            "cannotDeleteReceived": "Cannot delete this purchase order because items have already been received. To reverse this, manually adjust stock and mark the PO as Closed.",
+            "mustConfirmCosts": "Cost allocation must be confirmed before it is applied.",
+            "invalidInvoiceFileType": "Invalid invoice file type. Allowed: {{allowed}}.",
+            "invoiceFileTooLarge": "Invoice file is too large. Maximum size is {{maxMb}} MB.",
+            "invoiceNotFound": "Invoice not found.",
+            "importReviewNotFound": "Import review not found.",
+            "importReviewNotPending": "Only pending import reviews can be {{action}}.",
+            "importReviewNoLineItems": "This import review does not contain any line items.",
+            "importReviewLineNotFound": "Import review line item not found.",
+            "importReviewLineInvalid": "The import review line item is invalid.",
+            "importReviewNoMatched": "At least one reviewed line item must be matched to a product.",
+            "supplierNotFound": "Supplier not found.",
+            "productNameRequired": "A product name is required.",
+            "aliasRequired": "A supplier alias SKU or name is required.",
+            "bulkRejectMissingScope": "Provide review IDs or a \"stale before\" date to bulk-reject reviews.",
+            "unsupportedFileType": "Unsupported file type. Allowed: {{allowed}}.",
+            "fileTooLarge": "File too large. Maximum size is {{maxMb}} MB.",
+            "parsingFailed": "Could not parse the document: {{reason}}",
+            "aiExtractionFailed": "AI extraction failed: {{reason}}",
+            "cannotExtractData": "Could not extract readable order data. Text PDFs and HTML can be parsed without AI; scanned PDFs and images require AI/OCR to be enabled in Settings.",
+            "ingestionFailed": "Document ingestion failed: {{reason}}",
+            "aiDisabled": "AI features are disabled in Settings. Enable AI to use invoice parsing."
         }
     }
 }

@@ -2,6 +2,7 @@ from typing import List, Any, Optional
 import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from src.core.errors import LocalizedHTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from pydantic import BaseModel
@@ -116,7 +117,12 @@ def read_purchase_order(
     """
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     return po
 
 @router.put("/{id}", response_model=po_schema.PurchaseOrder)
@@ -131,7 +137,12 @@ def update_purchase_order(
     """
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     po = crud_purchase_order.purchase_order.update(db=db, db_obj=po, obj_in=po_in)
     
     # Recalculate landed costs if cost fields were modified
@@ -158,7 +169,12 @@ def transition_status(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.operationFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
 
 @router.post("/{id}/receive", response_model=po_schema.PurchaseOrder)
 def receive_items(
@@ -178,7 +194,12 @@ def receive_items(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.operationFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
 
 
 @router.post("/{id}/receive-correction", response_model=po_schema.PurchaseOrder)
@@ -201,7 +222,12 @@ def correct_received_items(
     except HTTPException as e:
         raise e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.operationFailed",
+            params={"reason": str(e)},
+            detail=str(e),
+        )
 
 
 @router.delete("/{id}", response_model=po_schema.PurchaseOrder)
@@ -216,17 +242,25 @@ def delete_purchase_order(
     """
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     # Safety Check: Prevent deletion if any stock has been received
     # This prevents orphaned inventory records ("ghost stock")
     has_received_items = any((item.quantity_received or 0) > 0 for item in po.items)
     
     if has_received_items:
-        raise HTTPException(
-            status_code=400, 
-            detail="Cannot delete Purchase Order because items have already been received. "
-                   "To reverse this, please manually adjust stock and mark the PO as Closed."
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.cannotDeleteReceived",
+            detail=(
+                "Cannot delete Purchase Order because items have already been received. "
+                "To reverse this, please manually adjust stock and mark the PO as Closed."
+            ),
         )
 
     po = crud_purchase_order.purchase_order.remove(db=db, id=id)
@@ -249,7 +283,12 @@ def preview_cost_allocation(
     """
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     # Use provided values or fallback to DB values
     # Treating explicit 0 as override (check for None)
@@ -330,11 +369,20 @@ def apply_cost_allocation(
     Records the breakdown for future reference.
     """
     if not request.confirm:
-        raise HTTPException(status_code=400, detail="Must confirm=True to apply costs")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.mustConfirmCosts",
+            detail="Must confirm=True to apply costs",
+        )
     
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     # Calculate total quantity (excluding ignored)
     excluded_ids = request.excluded_items
@@ -404,22 +452,31 @@ async def upload_invoice(
     # Verify PO exists
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     # Validate file type
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in ALLOWED_INVOICE_TYPES:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_INVOICE_TYPES)}"
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.invalidInvoiceFileType",
+            params={"allowed": ", ".join(ALLOWED_INVOICE_TYPES)},
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_INVOICE_TYPES)}",
         )
     
     # Read file and check size
     content = await file.read()
     if len(content) > MAX_INVOICE_SIZE:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"File too large. Maximum size: {MAX_INVOICE_SIZE // (1024*1024)}MB"
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.invoiceFileTooLarge",
+            params={"maxMb": MAX_INVOICE_SIZE // (1024 * 1024)},
+            detail=f"File too large. Maximum size: {MAX_INVOICE_SIZE // (1024*1024)}MB",
         )
     
     # Create secure filename with UUID
@@ -455,7 +512,12 @@ def list_invoices(
     """
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     return crud_supplier_invoice.get_by_po(db=db, po_id=id)
 
@@ -471,7 +533,11 @@ def delete_invoice(
     """
     invoice = crud_supplier_invoice.get(db=db, id=invoice_id)
     if not invoice:
-        raise HTTPException(status_code=404, detail="Invoice not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.invoiceNotFound",
+            detail="Invoice not found",
+        )
     
     # Delete file if exists
     if invoice.file_path and os.path.exists(invoice.file_path):
@@ -627,9 +693,18 @@ def _find_supplier_id_for_vendor(db: Session, vendor_name: str | None) -> int | 
 def _pending_import_review(db: Session, review_id: int) -> SupplierDocumentImport:
     review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Import review not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewNotFound",
+            detail="Import review not found",
+        )
     if review.status != "pending":
-        raise HTTPException(status_code=400, detail="Only pending import reviews can be updated")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewNotPending",
+            params={"action": "updated"},
+            detail="Only pending import reviews can be updated",
+        )
     return review
 
 
@@ -637,17 +712,29 @@ def _review_items(review: SupplierDocumentImport) -> list[dict]:
     extracted_data = review.extracted_data or {}
     items = extracted_data.get("items") or []
     if not isinstance(items, list):
-        raise HTTPException(status_code=400, detail="Import review does not contain line items")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewNoLineItems",
+            detail="Import review does not contain line items",
+        )
     return items
 
 
 def _review_item(review: SupplierDocumentImport, item_index: int) -> dict:
     items = _review_items(review)
     if item_index < 0 or item_index >= len(items):
-        raise HTTPException(status_code=404, detail="Import review line item not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewLineNotFound",
+            detail="Import review line item not found",
+        )
     item = items[item_index]
     if not isinstance(item, dict):
-        raise HTTPException(status_code=400, detail="Import review line item is invalid")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewLineInvalid",
+            detail="Import review line item is invalid",
+        )
     return item
 
 
@@ -676,7 +763,11 @@ def _update_review_item_match(
     extracted_data = dict(review.extracted_data or {})
     items = [dict(item) if isinstance(item, dict) else item for item in extracted_data.get("items", [])]
     if item_index < 0 or item_index >= len(items) or not isinstance(items[item_index], dict):
-        raise HTTPException(status_code=404, detail="Import review line item not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewLineNotFound",
+            detail="Import review line item not found",
+        )
 
     items[item_index]["matched_product_id"] = product_id
     items[item_index]["matched_variant_id"] = variant_id
@@ -692,9 +783,17 @@ def _validate_supplier_and_product(
     product_id: int | None = None,
 ) -> None:
     if not db.query(Supplier).filter(Supplier.id == supplier_id).first():
-        raise HTTPException(status_code=404, detail="Supplier not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.supplierNotFound",
+            detail="Supplier not found",
+        )
     if product_id and not crud_product.get(db=db, id=product_id):
-        raise HTTPException(status_code=404, detail="Product not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.product.notFound",
+            detail="Product not found",
+        )
 
 
 def _learn_import_review_alias(
@@ -803,7 +902,11 @@ def get_supplier_document_import_review(
 ):
     review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Import review not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewNotFound",
+            detail="Import review not found",
+        )
     return _import_review_response(review)
 
 
@@ -836,10 +939,18 @@ def create_product_from_import_review_item(
 
     item_name = (request.name or item.get("description") or item_sku or "").strip()
     if not item_name:
-        raise HTTPException(status_code=400, detail="A product name is required")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.productNameRequired",
+            detail="A product name is required",
+        )
 
     if item_sku and crud_product.get_by_sku(db, sku=item_sku):
-        raise HTTPException(status_code=409, detail="A product with this SKU already exists")
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.product.skuExists",
+            detail="A product with this SKU already exists",
+        )
 
     unit_cost = float(item.get("unit_cost") or 0)
     product_in = product_schema.ProductCreate(
@@ -932,7 +1043,11 @@ def learn_alias_from_import_review_item(
         alias_name=alias_name,
     )
     if not alias:
-        raise HTTPException(status_code=400, detail="Alias SKU or name is required")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.aliasRequired",
+            detail="Alias SKU or name is required",
+        )
 
     review.supplier_id = request.supplier_id
     _update_review_item_match(
@@ -965,16 +1080,29 @@ def approve_supplier_document_import_review(
 ):
     review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Import review not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewNotFound",
+            detail="Import review not found",
+        )
     if review.status != "pending":
-        raise HTTPException(status_code=400, detail="Only pending import reviews can be approved")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewNotPending",
+            params={"action": "approved"},
+            detail="Only pending import reviews can be approved",
+        )
 
     matched_items = [
         item for item in approval.items
         if item.quantity > 0 and item.matched_product_id
     ]
     if not matched_items:
-        raise HTTPException(status_code=400, detail="At least one reviewed line item must be matched to a product")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewNoMatched",
+            detail="At least one reviewed line item must be matched to a product",
+        )
 
     po_in = po_schema.PurchaseOrderCreate(
         supplier_id=approval.supplier_id,
@@ -1022,9 +1150,18 @@ def reject_supplier_document_import_review(
 ):
     review = db.query(SupplierDocumentImport).filter(SupplierDocumentImport.id == review_id).first()
     if not review:
-        raise HTTPException(status_code=404, detail="Import review not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.importReviewNotFound",
+            detail="Import review not found",
+        )
     if review.status != "pending":
-        raise HTTPException(status_code=400, detail="Only pending import reviews can be rejected")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.importReviewNotPending",
+            params={"action": "rejected"},
+            detail="Only pending import reviews can be rejected",
+        )
 
     review.status = "rejected"
     review.reviewed_by_id = current_user.id
@@ -1051,8 +1188,9 @@ def bulk_reject_supplier_document_import_reviews(
     whole call so the UI can show a clear summary.
     """
     if not request.review_ids and request.stale_before is None:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
+            code="apiErrors.purchaseOrder.bulkRejectMissingScope",
             detail="Provide review_ids or stale_before to bulk reject reviews.",
         )
 
@@ -1120,15 +1258,22 @@ async def parse_document(
     allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.avif', '.html', '.htm', '.txt'}
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in allowed_types:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
-            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+            code="apiErrors.purchaseOrder.unsupportedFileType",
+            params={"allowed": ", ".join(allowed_types)},
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}",
         )
     
     # Read file content
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10MB limit
-        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.fileTooLarge",
+            params={"maxMb": 10},
+            detail="File too large. Maximum 10MB.",
+        )
     
     # Determine MIME type
     mime_map = {
@@ -1187,7 +1332,12 @@ async def parse_document(
         except Exception as e:
             print(f"[parse_document] Traditional parsing failed: {e}")
             if not ai_enabled:
-                raise HTTPException(status_code=500, detail=f"Traditional parsing failed: {str(e)}")
+                raise LocalizedHTTPException(
+                    status_code=500,
+                    code="apiErrors.purchaseOrder.parsingFailed",
+                    params={"reason": str(e)},
+                    detail=f"Traditional parsing failed: {str(e)}",
+                )
     
     # 2. Use AI if traditional parsing failed/low confidence AND AI is enabled
     # Also use AI for images (AVIF, PNG, JPG)
@@ -1205,12 +1355,18 @@ async def parse_document(
                 extraction_result = ai_result
                 extraction_result["extraction_method"] = "ai"
         elif not extraction_result:
-             raise HTTPException(status_code=500, detail=ai_result["error"])
+             raise LocalizedHTTPException(
+             status_code=500,
+             code="apiErrors.purchaseOrder.aiExtractionFailed",
+             params={"reason": ai_result["error"]},
+             detail=ai_result["error"],
+         )
     
     if not extraction_result:
-        raise HTTPException(
-            status_code=400, 
-            detail="Could not extract readable order data. Text PDFs/HTML can be parsed without AI; scanned PDFs and images need AI/OCR enabled in Settings."
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.cannotExtractData",
+            detail="Could not extract readable order data. Text PDFs/HTML can be parsed without AI; scanned PDFs and images need AI/OCR enabled in Settings.",
         )
     
     # Extract document data
@@ -1553,15 +1709,22 @@ async def ingest_purchase_order(
     allowed_types = {'.pdf', '.html', '.htm', '.txt', '.text'}
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in allowed_types:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
-            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+            code="apiErrors.purchaseOrder.unsupportedFileType",
+            params={"allowed": ", ".join(allowed_types)},
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}",
         )
     
     # Read file content
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10MB limit
-        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.fileTooLarge",
+            params={"maxMb": 10},
+            detail="File too large. Maximum 10MB.",
+        )
     
     # Initialize service
     service = POIngestionService(ai_enabled=use_ai)
@@ -1570,7 +1733,12 @@ async def ingest_purchase_order(
     try:
         result = service.ingest_file(file.filename or "document.txt", content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ingestion failed: {str(e)}")
+        raise LocalizedHTTPException(
+            status_code=500,
+            code="apiErrors.purchaseOrder.ingestionFailed",
+            params={"reason": str(e)},
+            detail=f"Ingestion failed: {str(e)}",
+        )
     
     # Convert to response schema
     items_response = [
@@ -1665,21 +1833,33 @@ async def parse_and_match_invoice(
     # Verify PO exists
     po = crud_purchase_order.purchase_order.get(db=db, id=id)
     if not po:
-        raise HTTPException(status_code=404, detail="Purchase Order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.purchaseOrder.notFound",
+            params={"id": id},
+            detail="Purchase Order not found",
+        )
     
     # Validate file type
     allowed_types = {'.pdf', '.png', '.jpg', '.jpeg', '.html', '.htm'}
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in allowed_types:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
-            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}"
+            code="apiErrors.purchaseOrder.unsupportedFileType",
+            params={"allowed": ", ".join(allowed_types)},
+            detail=f"Unsupported file type. Allowed: {', '.join(allowed_types)}",
         )
     
     # Read file content
     content = await file.read()
     if len(content) > 10 * 1024 * 1024:  # 10MB limit
-        raise HTTPException(status_code=400, detail="File too large. Maximum 10MB.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.fileTooLarge",
+            params={"maxMb": 10},
+            detail="File too large. Maximum 10MB.",
+        )
     
     # Determine MIME type
     mime_map = {
@@ -1695,9 +1875,10 @@ async def parse_and_match_invoice(
     # Get store settings for AI config
     settings = crud_store_settings.get_settings(db)
     if not settings or not settings.ai_enabled:
-        raise HTTPException(
-            status_code=400, 
-            detail="AI features are disabled in Settings. Enable AI to use invoice parsing."
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.aiDisabled",
+            detail="AI features are disabled in Settings. Enable AI to use invoice parsing.",
         )
     
     # Initialize ADK manager and orchestrator
@@ -1708,7 +1889,12 @@ async def parse_and_match_invoice(
     extraction_result = await orchestrator.parse_invoice(content, mime_type)
     
     if "error" in extraction_result:
-        raise HTTPException(status_code=500, detail=extraction_result["error"])
+        raise LocalizedHTTPException(
+            status_code=500,
+            code="apiErrors.purchaseOrder.aiExtractionFailed",
+            params={"reason": extraction_result["error"]},
+            detail=extraction_result["error"],
+        )
     
     # Extract invoice data
     invoice_items = extraction_result.get("items", [])
