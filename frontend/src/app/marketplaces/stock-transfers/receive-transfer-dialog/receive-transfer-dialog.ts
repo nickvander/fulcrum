@@ -112,8 +112,7 @@ export class ReceiveTransferDialogComponent {
       error: err => {
         console.error('Receive failed', err);
         this.saving = false;
-        const detail = err?.error?.detail || 'Receive failed';
-        this.snackBar.open(detail, 'Close', { duration: 4000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }

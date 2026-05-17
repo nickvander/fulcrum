@@ -179,8 +179,7 @@ export class StockTransferPlannerComponent implements OnInit {
       },
       error: err => {
         this.saving = false;
-        const detail = err?.error?.detail || 'Plan failed';
-        this.snackBar.open(detail, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }

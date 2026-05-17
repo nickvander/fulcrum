@@ -88,8 +88,8 @@ export class UserCreateModal implements OnInit {
           this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
           this.dialogRef.close(user);
         },
-        error: (error) => {
-          this.snackBar.open('Error creating user: ' + error.error.detail, 'Close', { duration: 3000 });
+        error: () => {
+          // HttpErrorInterceptor surfaces the localized backend message.
         }
       });
     } else {

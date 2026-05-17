@@ -1243,6 +1243,7 @@
     },
     "apiErrors": {
         "unknown": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+        "network": "No se pudo conectar al servidor. Verifica tu conexión a Internet.",
         "product": {
             "notFound": "No se encontró el producto {{id}}.",
             "notFoundBySku": "No se encontró un producto con el SKU {{sku}}.",

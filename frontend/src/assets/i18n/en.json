@@ -1243,6 +1243,7 @@
     },
     "apiErrors": {
         "unknown": "An unexpected error occurred. Please try again.",
+        "network": "Unable to connect to server. Please check your internet connection.",
         "product": {
             "notFound": "Product {{id}} not found.",
             "notFoundBySku": "No product found with SKU {{sku}}.",

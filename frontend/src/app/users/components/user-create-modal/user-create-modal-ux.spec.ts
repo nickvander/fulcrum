@@ -152,10 +152,13 @@ describe('UserCreateModal - UX Tests', () => {
         expect(component['snackBar'].open).toHaveBeenCalledWith('User created successfully', 'Close', { duration: 3000 });
     });
 
-    it('should show error when form submission fails', () => {
-        vi.spyOn(userService, 'createUser').mockReturnValue(throwError({
+    it('should not show its own snackbar on failure (interceptor handles it)', () => {
+        // We migrated this component to defer error-message display to
+        // HttpErrorInterceptor (which calls translateApiError). The component's
+        // own error handler must NOT open a duplicate snackbar.
+        vi.spyOn(userService, 'createUser').mockReturnValue(throwError(() => ({
             error: { detail: 'Email already exists' }
-        }));
+        })));
 
         component.form.patchValue({
             email: 'test@example.com',
@@ -167,11 +170,11 @@ describe('UserCreateModal - UX Tests', () => {
             confirm_password: 'ValidPass123!'
         });
 
-        vi.spyOn(component['snackBar'], 'open');
+        const snackOpenSpy = vi.spyOn(component['snackBar'], 'open');
 
         component.onSubmit();
 
-        expect(component['snackBar'].open).toHaveBeenCalledWith('Error creating user: Email already exists', 'Close', { duration: 3000 });
+        expect(snackOpenSpy).not.toHaveBeenCalled();
     });
 
     it('should close dialog when cancel is clicked', () => {

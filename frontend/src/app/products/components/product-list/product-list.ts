@@ -882,8 +882,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
           this.loadProducts(this.currentPage, this.pageSize);
           this.deselectAll();
         },
-        error: (error) => {
-          this.notificationService.showError('Error updating product prices');
+        error: () => {
+          // HttpErrorInterceptor surfaces the localized backend message.
         }
       });
   }
@@ -900,8 +900,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
           this.loadProducts(this.currentPage, this.pageSize);
           this.deselectAll();
         },
-        error: (error) => {
-          this.notificationService.showError('Error updating product categories');
+        error: () => {
+          // HttpErrorInterceptor surfaces the localized backend message.
         }
       });
   }

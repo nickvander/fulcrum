@@ -687,7 +687,7 @@ export class ProductForm implements OnInit {
         },
         error: (error) => {
           console.error('Error updating product:', error);
-          this.notificationService.showError('Error updating product');
+          // HttpErrorInterceptor surfaces the localized backend message; no extra snackbar here.
         }
       });
 
@@ -724,7 +724,7 @@ export class ProductForm implements OnInit {
         },
         error: (error) => {
           console.error('Error creating product:', error);
-          this.notificationService.showError('Error creating product');
+          // HttpErrorInterceptor surfaces the localized backend message; no extra snackbar here.
         }
       });
     }

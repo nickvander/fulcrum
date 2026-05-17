@@ -158,8 +158,7 @@ export class StockTransferCreateDialogComponent implements OnInit {
       error: err => {
         console.error('Failed to create transfer', err);
         this.saving = false;
-        const detail = err?.error?.detail || 'Failed to create transfer';
-        this.snackBar.open(detail, 'Close', { duration: 4000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }

@@ -793,10 +793,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
             this.snackBar.open(this.translocoService.translate('purchaseOrders.messages.deleteSuccess'), this.translocoService.translate('common.close'), { duration: 3000 });
             this.router.navigate(['/suppliers/po/list']);
           },
-          error: (err) => {
-            // Backend will send 400 if items are received
-            const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.messages.deleteFailed');
-            this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
+          error: () => {
+            // HttpErrorInterceptor surfaces the localized backend message.
           }
         });
       }
@@ -1179,10 +1177,9 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           this.populateFormFromExtraction(result);
         }
       },
-      error: (err) => {
+      error: () => {
         this.isParsingInvoice = false;
-        const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.invoiceMatching.parseFailed');
-        this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       }
     });
   }
@@ -1294,9 +1291,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
         );
         this.loadPurchaseOrder(this.poId!);
       },
-      error: (err) => {
-        const msg = err.error?.detail || this.translocoService.translate('purchaseOrders.invoiceMatching.receiveFailed');
-        this.snackBar.open(msg, this.translocoService.translate('common.close'), { duration: 5000 });
+      error: () => {
+        // HttpErrorInterceptor surfaces the localized backend message.
       }
     });
   }

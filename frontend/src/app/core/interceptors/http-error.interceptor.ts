@@ -1,43 +1,42 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
+import { TranslocoService } from '@ngneat/transloco';
 import { NotificationService } from '../services/notification.service';
+import { translateApiError } from '../errors/translate-api-error';
 
 export const HttpErrorInterceptor: HttpInterceptorFn = (req, next) => {
   const notificationService = inject(NotificationService);
+  const transloco = inject(TranslocoService);
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      console.error('HTTP Error:', error); // Log full error to console for debugging
+      console.error('HTTP Error:', error);
 
-      let errorMessage = 'An unknown error occurred';
-
+      // Client-side errors (ErrorEvent) and connectivity failures don't
+      // have a server payload to translate — handle those first.
       if (error.error instanceof ErrorEvent) {
-        // Client-side error
-        errorMessage = `Error: ${error.error.message}`;
-      } else {
-        // Server-side error
-        if (error.status === 0) {
-          errorMessage = 'Unable to connect to server. Please check your internet connection.';
-        } else if (error.error && typeof error.error === 'object') {
-          // Handle FastAPI validation errors
-          if (error.error.detail) {
-            if (Array.isArray(error.error.detail)) {
-              errorMessage = error.error.detail.map((err: any) => err.msg).join('; ');
-            } else {
-              errorMessage = String(error.error.detail);
-            }
-          } else if (error.error.message) {
-            errorMessage = error.error.message;
-          }
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (error.statusText) {
-          errorMessage = error.statusText;
-        }
+        notificationService.showError(`Error: ${error.error.message}`);
+        return throwError(() => error);
+      }
+      if (error.status === 0) {
+        notificationService.showError(
+          transloco.translate('apiErrors.network', { defaultValue: 'Unable to connect to server. Please check your internet connection.' }),
+        );
+        return throwError(() => error);
       }
 
-      notificationService.showError(errorMessage);
+      // FastAPI 422 validation errors return detail as an array of pydantic
+      // field errors. Pre-flatten those so translateApiError sees a string
+      // and falls through to its detail branch.
+      const errorBody = error.error;
+      if (errorBody && typeof errorBody === 'object' && Array.isArray(errorBody.detail)) {
+        const joined = errorBody.detail.map((e: { msg?: string }) => e?.msg ?? '').filter(Boolean).join('; ');
+        notificationService.showApiError({ error: { ...errorBody, detail: joined } });
+        return throwError(() => error);
+      }
+
+      notificationService.showApiError(error);
       return throwError(() => error);
-    })
+    }),
   );
 };

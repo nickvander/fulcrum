@@ -139,7 +139,7 @@ export class QuickPostDetailDialogComponent {
       error: (err) => {
         this.publishing = false;
         console.error('Publish failed', err);
-        this.snackBar.open('Failed to publish: ' + (err.error?.detail || 'Unknown error'), 'Close', { duration: 4000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       }
     });
   }
