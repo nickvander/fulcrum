@@ -187,6 +187,23 @@
         background: var(--error-bg) !important;
         color: var(--error-color) !important;
     }
+
+    // Reauth state matches the stock-transfer reauth banner — orange
+    // border, warning color text, so it's distinguishable from "expired"
+    // (red) at a glance.
+    &.reauth {
+        background: var(--warning-bg) !important;
+        color: var(--warning-color) !important;
+        border-color: var(--warning-color);
+        border-width: 1.5px;
+
+        .chip-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+            margin-right: 2px;
+        }
+    }
 }
 
 .status-indicator {

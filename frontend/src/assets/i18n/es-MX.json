@@ -868,7 +868,11 @@
             "bulkSyncFailed": "Falló la sincronización masiva.",
             "syncCheckCredentials": "Falló la sincronización. Revisa tus credenciales.",
             "syncCompleteSummary": "¡Sincronización completa! Sincronizados: {{ synced }}, Creados: {{ created }}"
-        }
+        },
+        "needsReauth": "Reautorizar",
+        "needsReauthTooltip": "Vuelve a conectar este mercado para reanudar la sincronización.",
+        "needsReauthTooltipWithReason": "Vuelve a conectar este mercado para reanudar la sincronización. Motivo: {{reason}}",
+        "reconnect": "Reconectar"
     },
     "auditLogs": {
         "title": "Registros de Auditoría",

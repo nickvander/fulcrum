@@ -128,15 +128,36 @@ after the post-`b955e1a` session.
    **CLOSED** as not reproducible (May 2026). Navigated every major
    route with the dev server after the jsdom + TranslocoTestingModule
    work landed and no error fires. Likely already fixed.
-7. The `lineItemCountSingular` / `lineItemCountPlural` keys are a
+7. ~~The `lineItemCountSingular` / `lineItemCountPlural` keys are a
    workaround for the existing `purchaseOrders.lineItems` key.
-   Clean up to a single ICU plural. **Still open.**
+   Clean up to a single ICU plural.~~
+   **DONE** in `d20f714` ("Collapse lineItemCount{Singular,Plural}
+   into CLDR one/other keys"). The pair was replaced with
+   `purchaseOrders.lineItemCount.{one,other}` keys matching CLDR
+   plural-rule suffixes, plus a `lineItemCountLabel()` helper in
+   `purchase-order-edit.component.ts` that returns the fully-
+   interpolated "5 line items" / "5 artículos" string. Template
+   collapsed from an inline ternary to a single getter call.
 
 ### Out-of-scope architectural
 8. `process_mercadolibre_event` resolves credentials by
    "most-recently-updated for that marketplace" — fine for single-tenant
    but needs work if Fulcrum ever supports multiple users with their own
    ML accounts. **Still open.**
+
+   Documented but deferred 2026-05-17 — needs design discussion before
+   implementation. The pragmatic options are:
+   1. Per-user webhook URL (`/api/v1/webhooks/mercadolibre/<user_id>`)
+      so each user registers a unique URL with ML.
+   2. Lookup-by-`seller_id`: after fetching the order with any
+      credential, read `seller_id` from the payload and re-fetch with
+      the matching user's credential. Requires storing the ML
+      `seller_id` alongside each credential. Two API calls per webhook.
+   3. Defensive stopgap: detect the multi-tenant case at webhook time
+      and refuse the event with a localized 409 instead of guessing.
+
+   Fulcrum is single-tenant today, so this isn't an active bug. Item
+   stays open as architectural debt.
 
 ## State Of Existing Worktrees
 

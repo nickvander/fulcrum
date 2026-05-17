@@ -125,9 +125,13 @@ export class MarketplaceListComponent implements OnInit {
     return t('marketing.syncedDaysAgo', { days });
   }
 
-  tokenChipState(summary: MarketplaceSummary | null): 'ok' | 'warning' | 'expired' | 'disconnected' | 'none' {
+  tokenChipState(summary: MarketplaceSummary | null): 'ok' | 'warning' | 'expired' | 'disconnected' | 'reauth' | 'none' {
     if (!summary) return 'none';
     if (!summary.credential_connected) return 'disconnected';
+    // Reauth state takes precedence over expiry — a marked credential
+    // can't be refreshed in-process, so showing "expires in 6 days" is
+    // misleading. The chip + tooltip must surface the reauth state.
+    if (summary.needs_reauthorization) return 'reauth';
     if (summary.token_expires_in_days == null) return 'ok';
     if (summary.token_expires_in_days < 0) return 'expired';
     if (summary.token_expires_in_days <= 3) return 'warning';
@@ -138,11 +142,24 @@ export class MarketplaceListComponent implements OnInit {
     const state = this.tokenChipState(summary);
     if (state === 'none') return '';
     if (state === 'disconnected') return t('marketing.notConnected');
+    if (state === 'reauth') return t('marketing.needsReauth');
     if (state === 'expired') return t('marketing.tokenExpired');
     if (state === 'warning') {
       const days = summary?.token_expires_in_days ?? 0;
       return days <= 0 ? t('marketing.tokenExpiresToday') : t('marketing.tokenExpiresInDays', { days });
     }
     return t('marketing.tokenHealthy');
+  }
+
+  /**
+   * Tooltip text for the reauth chip — shows the captured backend
+   * `last_refresh_error` so the operator knows WHY their token went
+   * stale (invalid_grant vs network error vs revoked).
+   */
+  tokenChipTooltipTranslated(summary: MarketplaceSummary | null, t: TranslateFn): string {
+    if (this.tokenChipState(summary) !== 'reauth') return '';
+    return summary?.reauthorization_reason
+      ? t('marketing.needsReauthTooltipWithReason', { reason: summary.reauthorization_reason })
+      : t('marketing.needsReauthTooltip');
   }
 }

@@ -868,7 +868,11 @@
             "bulkSyncFailed": "Bulk sync failed.",
             "syncCheckCredentials": "Sync failed. Check your credentials.",
             "syncCompleteSummary": "Sync complete! Synced: {{ synced }}, Created: {{ created }}"
-        }
+        },
+        "needsReauth": "Reauthorize",
+        "needsReauthTooltip": "Reconnect this marketplace to resume syncing.",
+        "needsReauthTooltipWithReason": "Reconnect this marketplace to resume syncing. Reason: {{reason}}",
+        "reconnect": "Reconnect"
     },
     "auditLogs": {
         "title": "Audit Logs",
