@@ -159,17 +159,50 @@ async def process_mercadolibre_event(event_id: int):
                 db.commit()
                 return
 
-            credential = (
+            # Defensive guard against the multi-tenant bug documented as item 8
+            # in 87-sales-orders-cherry-handoff.md. ML webhooks carry NO user
+            # identifier — just `resource: /orders/<id>`. If more than one user
+            # has connected their own ML credentials to this marketplace, we
+            # have no reliable way to pick which one is the correct one to
+            # authenticate as. The most-recently-updated heuristic worked when
+            # Fulcrum was strictly single-tenant, but in a multi-tenant setup
+            # it would silently fetch User A's order using User B's
+            # credentials → either a 404/forbidden (best case) or successful
+            # access against the wrong account's data (worst case).
+            #
+            # Until we add per-user webhook URLs (option 1 in the handoff) or
+            # seller-id-based lookup (option 2), refuse the event when we
+            # detect more than one credential. The webhook caller (ML) will
+            # see a 200 from the POST handler — only the background task
+            # marks the event FAILED with a clear reason so the next operator
+            # to look at WebhookEvent.status sees why nothing happened.
+            credential_q = (
                 db.query(MarketplaceCredential)
                 .filter(MarketplaceCredential.marketplace_id == event.marketplace_id)
                 .order_by(MarketplaceCredential.updated_at.desc().nullslast(), MarketplaceCredential.id.desc())
-                .first()
             )
+            credential_count = credential_q.count()
+            credential = credential_q.first()
             if not credential:
                 event.status = "FAILED"
                 event.error_message = "No marketplace credential available to fetch order"
                 event.processed_at = datetime.now(timezone.utc)
                 db.commit()
+                return
+            if credential_count > 1:
+                event.status = "FAILED"
+                event.error_message = (
+                    f"Multi-tenant credentials detected ({credential_count} for marketplace "
+                    f"{event.marketplace_id}); ML webhooks carry no user context, so we "
+                    "cannot determine which credential owns this order. See item 8 in "
+                    "work/future/87-sales-orders-cherry-handoff.md for the fix options."
+                )
+                event.processed_at = datetime.now(timezone.utc)
+                db.commit()
+                logger.warning(
+                    "Refusing ML webhook event %s: %d credentials for marketplace %s",
+                    event.id, credential_count, event.marketplace_id,
+                )
                 return
 
             access_token = await marketplace_service.get_valid_access_token(db, credential.id)

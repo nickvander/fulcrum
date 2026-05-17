@@ -281,3 +281,87 @@ async def test_ml_duplicate_order_updates_status_without_double_decrement(db: Se
         .first()
     )
     assert inventory_after.quantity == 9
+
+
+@pytest.mark.db
+@pytest.mark.anyio
+async def test_ml_webhook_refused_when_multi_tenant_credentials_present(db: Session):
+    """Item 8 defensive stopgap: ML webhooks carry no user identifier.
+    If more than one user has connected ML credentials to the marketplace,
+    we have no reliable way to pick which one owns the order — the
+    previous most-recently-updated heuristic would silently fetch the
+    order with the wrong account's credentials. Refuse with a clear
+    FAILED state instead of guessing."""
+    marketplace, _credential, product, _listing = _seed_ml_marketplace(db)
+
+    # Second tenant connects the same marketplace
+    second_credential = MarketplaceCredential(
+        marketplace_id=marketplace.id,
+        access_token="other-tenant-token",
+        refresh_token="other-tenant-refresh",
+    )
+    db.add(second_credential)
+
+    inventory = InventoryItem(
+        product_id=product.id,
+        variant_id=None,
+        quantity=10,
+        location="default",
+    )
+    db.add(inventory)
+
+    event = WebhookEvent(
+        marketplace_id=marketplace.id,
+        topic="orders",
+        external_resource_id="/orders/55555",
+        payload={"resource": "/orders/55555", "topic": "orders"},
+        status="RECEIVED",
+    )
+    db.add(event)
+    db.commit()
+    event_id = event.id
+
+    mock_connector = AsyncMock()
+    mock_connector.fetch_order = AsyncMock()
+
+    with patch(
+        "src.api.v1.endpoints.webhooks.SessionLocal",
+        new=_patched_session_local(db),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+        new=AsyncMock(return_value="should-not-be-used"),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_connector",
+        return_value=mock_connector,
+    ):
+        await process_mercadolibre_event(event_id)
+
+    db.expire_all()
+
+    # The event must be FAILED with a clear multi-tenant message — never
+    # silently processed against the wrong tenant's credentials.
+    refreshed_event = db.query(WebhookEvent).filter(WebhookEvent.id == event_id).first()
+    assert refreshed_event.status == "FAILED"
+    assert "Multi-tenant" in (refreshed_event.error_message or "")
+    assert "2 for marketplace" in (refreshed_event.error_message or "")
+
+    # And we must NOT have called fetch_order against either credential —
+    # the whole point is to refuse before authenticating.
+    mock_connector.fetch_order.assert_not_called()
+
+    # No SalesOrder created, no stock decremented.
+    sales_order = (
+        db.query(SalesOrder)
+        .filter(
+            SalesOrder.source == OrderSource.MERCADOLIBRE,
+            SalesOrder.external_order_id == "55555",
+        )
+        .first()
+    )
+    assert sales_order is None
+    inventory_after = (
+        db.query(InventoryItem)
+        .filter(InventoryItem.product_id == product.id)
+        .first()
+    )
+    assert inventory_after.quantity == 10
