@@ -402,6 +402,19 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     return this.poForm.get('items') as FormArray;
   }
 
+  /**
+   * Pluralized "N line item(s)" label matching CLDR `one` / `other` rules.
+   * Both English and es-MX use the same buckets — extend the map if a future
+   * locale needs `few` / `many`.
+   */
+  lineItemCountLabel(): string {
+    const count = this.items.length;
+    const key = count === 1
+      ? 'purchaseOrders.lineItemCount.one'
+      : 'purchaseOrders.lineItemCount.other';
+    return this.translocoService.translate(key, { count });
+  }
+
   addLineItem(item: any = null): void {
     const index = this.items.length;
 
