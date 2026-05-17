@@ -156,7 +156,8 @@
             "daysLeft": "Days left",
             "suggested": "Suggested",
             "createPo": "Create PO"
-        }
+        },
+        "demoCleanupBlocked": "Demo cleanup could not run safely. Review the blocked records first."
     },
     "onboarding": {
         "eyebrow": "Customer setup",
@@ -699,6 +700,16 @@
                 "message": "This order is finalized. Unlocking it allows editing but may cause data inconsistencies if already processed. Are you sure?"
             },
             "unlocked": "Order unlocked for editing"
+        },
+        "ingestErrors": {
+            "processFailed": "Failed to process file. Please try again.",
+            "productCreateFailed": "Could not create a product from this line.",
+            "aliasLearnFailed": "Could not learn an alias for this line.",
+            "poCreateFailed": "Failed to create Purchase Order."
+        },
+        "costAllocation": {
+            "previewFailed": "Failed to load cost preview",
+            "applyFailed": "Failed to apply costs"
         }
     },
     "expenses": {

@@ -6,7 +6,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslocoService } from '@ngneat/transloco';
 import { SuppliersService } from '../../suppliers.service';
+import { translateApiError } from '../../../core/errors/translate-api-error';
 
 export interface CostAllocationPreviewItem {
     item_id: number;
@@ -64,7 +66,8 @@ export class CostAllocationDialogComponent implements OnInit {
     constructor(
         public dialogRef: MatDialogRef<CostAllocationDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: CostAllocationDialogData,
-        private suppliersService: SuppliersService
+        private suppliersService: SuppliersService,
+        private transloco: TranslocoService,
     ) { }
 
     ngOnInit(): void {
@@ -82,7 +85,7 @@ export class CostAllocationDialogComponent implements OnInit {
                     this.loading = false;
                 },
                 error: (err: any) => {
-                    this.error = err.error?.detail || 'Failed to load cost preview';
+                    this.error = translateApiError(err, this.transloco, 'purchaseOrders.costAllocation.previewFailed');
                     this.loading = false;
                 }
             });
@@ -111,7 +114,7 @@ export class CostAllocationDialogComponent implements OnInit {
                     this.dialogRef.close(true);
                 },
                 error: (err: any) => {
-                    this.error = err.error?.detail || 'Failed to apply costs';
+                    this.error = translateApiError(err, this.transloco, 'purchaseOrders.costAllocation.applyFailed');
                     this.applying = false;
                 }
             });

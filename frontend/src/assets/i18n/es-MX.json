@@ -156,7 +156,8 @@
             "daysLeft": "Días restantes",
             "suggested": "Sugerido",
             "createPo": "Crear OC"
-        }
+        },
+        "demoCleanupBlocked": "La limpieza de la demo no se pudo ejecutar de forma segura. Revisa primero los registros bloqueados."
     },
     "onboarding": {
         "eyebrow": "Configuración del cliente",
@@ -699,6 +700,16 @@
                 "message": "Esta orden está finalizada. Desbloquearla permite editar pero puede causar inconsistencias si ya fue procesada. ¿Está seguro?"
             },
             "unlocked": "Orden desbloqueada para edición"
+        },
+        "ingestErrors": {
+            "processFailed": "No se pudo procesar el archivo. Inténtalo de nuevo.",
+            "productCreateFailed": "No se pudo crear un producto desde esta línea.",
+            "aliasLearnFailed": "No se pudo aprender un alias para esta línea.",
+            "poCreateFailed": "No se pudo crear la orden de compra."
+        },
+        "costAllocation": {
+            "previewFailed": "No se pudo cargar la vista previa de costos",
+            "applyFailed": "No se pudieron aplicar los costos"
         }
     },
     "expenses": {

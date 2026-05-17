@@ -63,13 +63,9 @@ export class ForcePasswordChangeComponent implements OnInit {
           this.snackBar.open('Password updated successfully', 'Close', { duration: 3000 });
           this.router.navigate(['/']); // Navigate to home/dashboard
         },
-        error: (error) => {
+        error: () => {
           this.isLoading = false;
-          let errorMessage = 'Failed to update password';
-          if (error.error && error.error.detail) {
-            errorMessage = error.error.detail;
-          }
-          this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
+          // HttpErrorInterceptor surfaces the localized backend message.
         }
       });
     }
