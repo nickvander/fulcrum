@@ -82,7 +82,7 @@
                     <div>
                         <h3>{{ t('purchaseOrders.sections.products') }}</h3>
                         <p class="section-meta" *ngIf="items.length > 0">
-                            {{ items.length }} {{ items.length === 1 ? t('purchaseOrders.lineItemCountSingular') : t('purchaseOrders.lineItemCountPlural') }}
+                            {{ lineItemCountLabel() }}
                             · {{ totalUnits() }} {{ t('common.units') }}
                             · <strong>{{ calculateItemsSubtotal() | currency: poForm.get('currency')?.value }}</strong>
                         </p>

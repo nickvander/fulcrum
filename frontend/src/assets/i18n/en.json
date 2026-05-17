@@ -561,8 +561,6 @@
         "items": "Items",
         "addItem": "Add Item",
         "addFirstItem": "Add first product",
-        "lineItemCountSingular": "line item",
-        "lineItemCountPlural": "line items",
         "noItemsTitle": "No products added yet",
         "noItemsHint": "Add the products this supplier is sending you. Quantities and unit cost roll up into the order total.",
         "newDraft": "New draft",
@@ -725,6 +723,10 @@
         },
         "dialogs": {
             "applyAdditionalCosts": "Apply Additional Costs"
+        },
+        "lineItemCount": {
+            "one": "{{count}} line item",
+            "other": "{{count}} line items"
         }
     },
     "expenses": {

@@ -561,8 +561,6 @@
         "items": "Artículos",
         "addItem": "Agregar Artículo",
         "addFirstItem": "Agregar primer producto",
-        "lineItemCountSingular": "artículo",
-        "lineItemCountPlural": "artículos",
         "noItemsTitle": "Aún no hay productos",
         "noItemsHint": "Agrega los productos que este proveedor te enviará. Las cantidades y el costo unitario se suman al total de la orden.",
         "newDraft": "Nueva orden",
@@ -725,6 +723,10 @@
         },
         "dialogs": {
             "applyAdditionalCosts": "Aplicar costos adicionales"
+        },
+        "lineItemCount": {
+            "one": "{{count}} artículo",
+            "other": "{{count}} artículos"
         }
     },
     "expenses": {
