@@ -158,7 +158,15 @@
             "velocityHint": "Average daily sales over the last 30 days",
             "daysLeft": "Days left",
             "suggested": "Suggested",
-            "createPo": "Create PO"
+            "createPo": "Create PO",
+            "selectAllTooltip": "Select all visible rows",
+            "reorderSelected": "Reorder {{count}} selected",
+            "reordering": "Creating POs…",
+            "reorderCreatedOne": "Created draft PO for {{supplier}} with {{count}} items.",
+            "reorderCreatedMany": "Created {{count}} draft POs covering {{products}} products.",
+            "reorderPartialSkipped": "{{count}} skipped (no supplier mapped — e.g. {{first}}).",
+            "reorderAllSkipped": "Could not reorder any of the {{count}} selected products — they have no supplier mapped yet.",
+            "viewPo": "View PO"
         }
     },
     "onboarding": {
@@ -1344,7 +1352,8 @@
             "aiExtractionFailed": "AI extraction failed: {{reason}}",
             "cannotExtractData": "Could not extract readable order data. Text PDFs and HTML can be parsed without AI; scanned PDFs and images require AI/OCR to be enabled in Settings.",
             "ingestionFailed": "Document ingestion failed: {{reason}}",
-            "aiDisabled": "AI features are disabled in Settings. Enable AI to use invoice parsing."
+            "aiDisabled": "AI features are disabled in Settings. Enable AI to use invoice parsing.",
+            "reorderEmptySelection": "Select at least one product to reorder."
         },
         "expense": {
             "notFound": "Expense {{id}} not found.",

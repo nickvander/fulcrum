@@ -30,6 +30,21 @@
     color: var(--text-main);
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+// Keep the checkbox column narrow so it doesn't push the product
+// column around on smaller dashboards.
+.lowstock-table th.select,
+.lowstock-table td.select {
+    width: 36px;
+    padding: 4px 8px;
+    text-align: center;
+}
+
 .widget-content {
     flex: 1;
     overflow-y: auto;
