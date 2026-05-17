@@ -175,9 +175,9 @@ export class MarketplaceListingDialogComponent implements OnInit {
                 this.notificationService.showSuccess('Listing saved successfully!');
                 this.dialogRef.close(listing);
             },
-            error: (err) => {
+            error: () => {
                 this.isSaving = false;
-                this.notificationService.showError('Failed to save listing: ' + (err.error?.detail || err.message || 'Unknown error'));
+                // HttpErrorInterceptor surfaces the localized backend message.
             }
         });
     }

@@ -92,8 +92,7 @@ export class StockTransferDetailComponent implements OnInit {
       },
       error: err => {
         this.acting = false;
-        const detail = err?.error?.detail || 'Ship failed';
-        this.snackBar.open(detail, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }
@@ -131,8 +130,7 @@ export class StockTransferDetailComponent implements OnInit {
       },
       error: err => {
         this.acting = false;
-        const detail = err?.error?.detail || 'Sync failed';
-        this.snackBar.open(detail, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }
@@ -183,8 +181,7 @@ export class StockTransferDetailComponent implements OnInit {
       },
       error: err => {
         this.acting = false;
-        const detail = err?.error?.detail || 'Cancel failed';
-        this.snackBar.open(detail, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }
@@ -203,8 +200,7 @@ export class StockTransferDetailComponent implements OnInit {
       },
       error: err => {
         this.acting = false;
-        const detail = err?.error?.detail || 'Delete failed';
-        this.snackBar.open(detail, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
   }

@@ -281,16 +281,7 @@ export class QuickPostDialogComponent implements OnInit {
       error: (err) => {
         this.generating = false;
         console.error(err);
-        // Extract meaningful error message for user
-        let errorMsg = 'Generation failed';
-        if (err?.error?.detail) {
-          errorMsg = err.error.detail;
-        } else if (err?.error?.message) {
-          errorMsg = err.error.message;
-        } else if (err?.message?.includes('quota') || err?.message?.includes('429')) {
-          errorMsg = 'API quota exceeded. Please try again later.';
-        }
-        this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       }
     });
   }
@@ -408,16 +399,7 @@ export class QuickPostDialogComponent implements OnInit {
       error: (err) => {
         this.generating = false;
         console.error(err);
-        // Extract meaningful error message for user
-        let errorMsg = 'Image generation failed';
-        if (err?.error?.detail) {
-          errorMsg = err.error.detail;
-        } else if (err?.error?.message) {
-          errorMsg = err.error.message;
-        } else if (err?.message?.includes('quota') || err?.message?.includes('429')) {
-          errorMsg = 'API quota exceeded. Please try again later.';
-        }
-        this.snackBar.open(errorMsg, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
       }
     });
   }
@@ -523,10 +505,8 @@ export class QuickPostDialogComponent implements OnInit {
       },
       error: (err) => {
         this.submitting = false;
-        // Even if publish fails, the event exists.
         console.error('Publish failed', err);
-        const msg = err.error?.detail || 'Failed to publish post';
-        this.snackBar.open(msg, 'Close', { duration: 5000 });
+        // HttpErrorInterceptor surfaces the localized backend message.
         this.dialogRef.close(false);
       }
     });

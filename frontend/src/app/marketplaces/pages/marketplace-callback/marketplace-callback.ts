@@ -4,7 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpClient } from '@angular/common/http';
+import { TranslocoService } from '@ngneat/transloco';
 import { environment } from '../../../../environments/environment';
+import { translateApiError } from '../../../core/errors/translate-api-error';
 
 @Component({
   selector: 'app-marketplace-callback',
@@ -43,7 +45,8 @@ export class MarketplaceCallbackComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private http: HttpClient,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -98,7 +101,7 @@ export class MarketplaceCallbackComponent implements OnInit {
         },
         error: (err) => {
           this.loading = false;
-          this.error = `Failed to connect: ${err.error?.detail || err.message}`;
+          this.error = translateApiError(err, this.transloco, 'apiErrors.unknown');
           console.error('Token exchange error:', err);
         },
       });
