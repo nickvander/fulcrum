@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>{{ data ? 'Edit' : 'Add' }} Custom Field</h2>
+<h2 mat-dialog-title>{{ (data ? 'settings.dialogs.editCustomField' : 'settings.dialogs.addCustomField') | transloco }}</h2>
 <mat-dialog-content [formGroup]="form">
   <mat-form-field>
     <mat-label>Name</mat-label>

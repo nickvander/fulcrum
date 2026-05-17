@@ -6,6 +6,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('SupplierSelectionDialogComponent', () => {
     let component: SupplierSelectionDialogComponent;
@@ -24,7 +25,8 @@ describe('SupplierSelectionDialogComponent', () => {
 
         await TestBed.configureTestingModule({
             declarations: [],
-            imports: [SupplierSelectionDialogComponent, MatDialogModule, MatListModule, MatIconModule, MatButtonModule, NoopAnimationsModule],
+            imports: [
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),SupplierSelectionDialogComponent, MatDialogModule, MatListModule, MatIconModule, MatButtonModule, NoopAnimationsModule],
             providers: [
                 { provide: MatDialogRef, useValue: dialogRefMock },
                 { provide: MAT_DIALOG_DATA, useValue: mockData }

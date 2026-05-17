@@ -16,6 +16,7 @@ import { UserCreateModal } from './user-create-modal';
 import { UserService } from '../../services/user.service';
 import { UserServiceMock } from '../../services/user.service.mock';
 import { User } from '../../../shared/models/user.model';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('UserCreateModal - UX Tests', () => {
     let component: UserCreateModal;
@@ -30,6 +31,7 @@ describe('UserCreateModal - UX Tests', () => {
 
         await TestBed.configureTestingModule({
             imports: [
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
                 UserCreateModal,
                 HttpClientTestingModule,
                 ReactiveFormsModule,

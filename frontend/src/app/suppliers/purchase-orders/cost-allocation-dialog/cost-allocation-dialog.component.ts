@@ -6,7 +6,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { TranslocoService } from '@ngneat/transloco';
+import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
 import { SuppliersService } from '../../suppliers.service';
 import { translateApiError } from '../../../core/errors/translate-api-error';
 
@@ -44,7 +44,7 @@ export interface CostAllocationDialogData {
     templateUrl: './cost-allocation-dialog.component.html',
     styleUrls: ['./cost-allocation-dialog.component.scss'],
     standalone: true,
-    imports: [
+    imports: [TranslocoModule, 
         CommonModule,
         MatDialogModule,
         MatTableModule,

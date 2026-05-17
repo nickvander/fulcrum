@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { CustomFieldDialog } from './custom-field-dialog';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('CustomFieldDialog', () => {
   let component: CustomFieldDialog;
@@ -10,7 +11,8 @@ describe('CustomFieldDialog', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CustomFieldDialog, NoopAnimationsModule],
+      imports: [
+        TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),CustomFieldDialog, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },

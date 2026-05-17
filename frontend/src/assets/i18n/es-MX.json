@@ -85,6 +85,9 @@
             "selectOption": "Seleccionar Opción",
             "enterNote": "Ingresar notas...",
             "invoiceNumber": "Factura/Recibo #"
+        },
+        "dialogs": {
+            "imageDetails": "Detalles de la imagen"
         }
     },
     "nav": {
@@ -462,7 +465,14 @@
                 "finalizing": "Finalizando identificación..."
             }
         },
-        "aiGenerate": "Generar con IA"
+        "aiGenerate": "Generar con IA",
+        "dialogs": {
+            "addProduct": "Agregar producto",
+            "editProduct": "Editar producto",
+            "createBundle": "Crear nuevo bundle",
+            "editBundle": "Editar bundle",
+            "stockHistoryFor": "Historial de ajustes de stock para {{productName}}"
+        }
     },
     "suppliers": {
         "title": "Proveedores",
@@ -523,6 +533,9 @@
         "messages": {
             "created": "Proveedor creado exitosamente",
             "loadFailed": "Error al cargar proveedor"
+        },
+        "dialogs": {
+            "selectSupplierFor": "Selecciona un proveedor para {{productName}}"
         }
     },
     "purchaseOrders": {
@@ -709,6 +722,9 @@
         "costAllocation": {
             "previewFailed": "No se pudo cargar la vista previa de costos",
             "applyFailed": "No se pudieron aplicar los costos"
+        },
+        "dialogs": {
+            "applyAdditionalCosts": "Aplicar costos adicionales"
         }
     },
     "expenses": {
@@ -1112,6 +1128,9 @@
             "resetSuccess": "Contraseña restablecida con éxito. Se ha generado una nueva contraseña y debe ser comunicada al usuario de forma segura.",
             "importSuccess": "Importación completada con éxito",
             "importWithErrors": "Importación completada con algunos errores"
+        },
+        "dialogs": {
+            "createUser": "Crear nuevo usuario"
         }
     },
     "settings": {
@@ -1229,7 +1248,11 @@
         "exportData": "Exportar Datos",
         "exportDataDesc": "Descarga tus datos para respaldo, migración o análisis.",
         "importData": "Importar Datos",
-        "importDataDesc": "Importa archivos CSV o JSON para agregar o actualizar registros."
+        "importDataDesc": "Importa archivos CSV o JSON para agregar o actualizar registros.",
+        "dialogs": {
+            "addCustomField": "Agregar campo personalizado",
+            "editCustomField": "Editar campo personalizado"
+        }
     },
     "notifications": {
         "success": "Éxito",

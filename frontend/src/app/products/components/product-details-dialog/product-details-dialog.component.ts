@@ -11,7 +11,7 @@ import { ProductForm } from '../product-form/product-form';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { CodeDisplayComponent } from '../../../shared/components/code-display/code-display.component';
 import { MarketplaceListingDialogComponent, MarketplaceListingDialogData } from '../../../marketplaces/components/marketplace-listing-dialog/marketplace-listing-dialog.component';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -63,7 +63,8 @@ export class ProductDetailsDialogComponent implements OnInit {
         private productService: ProductService,
         private router: Router,
         private dialog: MatDialog,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private transloco: TranslocoService,
     ) {
         // Initialize with passed data for immediate display
         this.product = data.product;
@@ -73,9 +74,10 @@ export class ProductDetailsDialogComponent implements OnInit {
 
     get dialogTitle(): string {
         if (this.isEditMode) {
-            return this.product.id
-                ? (this.product.is_bundle ? 'Edit Bundle' : 'Edit Product')
-                : (this.product.is_bundle ? 'Create New Bundle' : 'Add New Product');
+            const key = this.product.id
+                ? (this.product.is_bundle ? 'products.dialogs.editBundle' : 'products.dialogs.editProduct')
+                : (this.product.is_bundle ? 'products.dialogs.createBundle' : 'products.dialogs.addProduct');
+            return this.transloco.translate(key);
         }
         return this.product.name;
     }

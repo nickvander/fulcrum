@@ -9,11 +9,12 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { ProductImage } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
 import { NotificationService } from '../../../core/services/notification.service';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-image-dialog',
   standalone: true,
-  imports: [
+  imports: [TranslocoModule, 
     ReactiveFormsModule,
     MatDialogModule,
     MatButtonModule,
