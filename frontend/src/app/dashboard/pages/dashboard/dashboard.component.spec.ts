@@ -240,7 +240,9 @@ describe('DashboardComponent', () => {
         await fixture.whenStable();
 
         const text = fixture.nativeElement.textContent;
-        expect(text).toContain('Review before go-live');
+        // Transloco test config ships empty lang dicts so translation keys render as keys.
+        // We just confirm the launch-readiness section + demo record content surface.
+        expect(text).toContain('launchReadiness.titleNeedsAttention');
         expect(text).toContain('[Demo] Starter Widget');
         expect(text).toContain('DEMO-STARTER-WIDGET');
     });
