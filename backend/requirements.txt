@@ -27,6 +27,7 @@ aiosmtplib
 pymupdf
 beautifulsoup4
 lxml
+reportlab
 
 # AI & Agents
 google-adk

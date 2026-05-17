@@ -91,3 +91,51 @@ def test_low_stock_export_with_no_low_stock_returns_header_only(
     rows = list(reader)
     assert len(rows) == 1
     assert rows[0][0] == "product_id"
+
+
+@pytest.mark.db
+def test_low_stock_export_pdf_streams_a_real_pdf_with_data(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """PDF export should return a valid PDF byte stream with the date-stamped
+    filename. We verify the magic bytes + that the response body is large
+    enough to contain real content (an empty PDF is ~700 bytes; a PDF with
+    a row of data is meaningfully bigger). We don't crack the deflate
+    streams to verify the SKU text — that's covered by the integration
+    walkthrough."""
+    p_strict = Product(
+        name="Stout (strict reorder)",
+        sku="STOUT-PDF-1",
+        default_resale_price=12.0,
+        cost_price=4.0,
+        is_bundle=False,
+        reorder_point=20,
+        reorder_quantity=50,
+    )
+    db.add(p_strict)
+    db.flush()
+    db.add(InventoryItem(product_id=p_strict.id, quantity=0, location="default"))
+    db.commit()
+
+    response = client.get("/api/v1/reports/low-stock/export-pdf", headers=admin_headers)
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/pdf")
+
+    cd = response.headers.get("content-disposition", "")
+    assert re.search(r'filename="fulcrum-low-stock-\d{4}-\d{2}-\d{2}\.pdf"', cd)
+
+    body = response.content
+    assert body.startswith(b"%PDF-"), "Response is not a PDF"
+    assert body.rstrip().endswith(b"%%EOF"), "Response is not a complete PDF"
+    assert len(body) > 1500, "PDF looks too small to contain a data row"
+
+
+@pytest.mark.db
+def test_low_stock_export_pdf_empty_report_still_renders(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """No low-stock products → PDF still renders with the empty-state line.
+    Same convention as the CSV export."""
+    response = client.get("/api/v1/reports/low-stock/export-pdf", headers=admin_headers)
+    assert response.status_code == 200
+    assert response.content.startswith(b"%PDF-")
