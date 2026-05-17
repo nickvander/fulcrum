@@ -11,11 +11,15 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from src.api.dependencies import get_current_active_user
+from src.core.errors import LocalizedHTTPException
 from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.database import get_db
 from src.models.inventory import InventoryItem
 from src.models.product import Product
 from src.models.product_inventory_settings import ProductInventorySettings
+from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
+from src.models.purchase_order_item import PurchaseOrderItem
+from src.models.supplier_product import SupplierProduct
 from src.models.user import User
 from src.services.inventory_service import inventory_service
 
@@ -162,3 +166,196 @@ def low_stock_report(
         total_low=sum(1 for r in candidates if r.severity == "low"),
         total_watch=sum(1 for r in candidates if r.severity == "watch"),
     )
+
+
+# ---------------------------------------------------------------------------
+# Shopping-cart-style reorder workflow
+# ---------------------------------------------------------------------------
+
+class ReorderRequest(BaseModel):
+    product_ids: List[int]
+    # Optional override of the suggested reorder qty, keyed by product_id.
+    # Anything not in this map uses the report's suggestion logic.
+    quantity_overrides: Optional[dict[int, int]] = None
+
+
+class CreatedReorderPO(BaseModel):
+    purchase_order_id: int
+    supplier_id: int
+    supplier_name: str
+    product_count: int
+    total_amount: float
+
+
+class SkippedReorderProduct(BaseModel):
+    product_id: int
+    product_name: Optional[str] = None
+    reason: str  # "no_supplier" | "product_not_found"
+
+
+class ReorderResponse(BaseModel):
+    created_purchase_orders: List[CreatedReorderPO]
+    skipped: List[SkippedReorderProduct]
+
+
+@router.post("/low-stock/reorder", response_model=ReorderResponse)
+def reorder_low_stock_products(
+    *,
+    db: Session = Depends(get_db),
+    request: ReorderRequest,
+    current_user: User = Depends(get_current_active_user),
+) -> ReorderResponse:
+    """
+    Shopping-cart-style reorder: take a list of product_ids (typically
+    selected on the low-stock widget) and create one DRAFT purchase order
+    per primary supplier, with each selected product as a line item.
+
+    Quantity per line:
+      1. `quantity_overrides[product_id]` if provided
+      2. `product.reorder_quantity` if set
+      3. Velocity-based fallback: `max(30 * daily_velocity, threshold * 2)`
+         — matches the suggestion logic in the low-stock report so the
+         numbers the user just saw are the numbers they get.
+
+    Supplier resolution:
+      - Look up `SupplierProduct` rows for each product
+      - Prefer the one marked `is_primary=True`; otherwise pick the
+        most-recently-updated row (deterministic + matches existing
+        product-supplier-manager behaviour)
+      - Products with no supplier mapped are returned in the `skipped`
+        list — we can't create a draft PO without a supplier, but we
+        also don't want to silently drop them.
+
+    Unit cost per line:
+      - `supplier_product.cost_price` if non-zero, else
+      - `product.cost_price` as a fallback (the product's own cost is
+        usually the most recent purchase cost)
+
+    Returns one `CreatedReorderPO` summary per PO created so the
+    frontend can deep-link to each draft for review before the buyer
+    sends it.
+    """
+    if not request.product_ids:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.purchaseOrder.reorderEmptySelection",
+            detail="Select at least one product to reorder.",
+        )
+
+    overrides = request.quantity_overrides or {}
+
+    # Pre-fetch everything we need in a few queries instead of N+1.
+    products_by_id: dict[int, Product] = {
+        p.id: p for p in db.query(Product).filter(Product.id.in_(request.product_ids)).all()
+    }
+
+    supplier_rows = (
+        db.query(SupplierProduct)
+        .filter(SupplierProduct.product_id.in_(request.product_ids))
+        .all()
+    )
+    # Group supplier rows by product, preferring primary then most-recent
+    primary_supplier_by_product: dict[int, SupplierProduct] = {}
+    for sp in supplier_rows:
+        existing = primary_supplier_by_product.get(sp.product_id)
+        if existing is None:
+            primary_supplier_by_product[sp.product_id] = sp
+            continue
+        # Replace if the new row is primary and existing isn't, or
+        # if both/neither primary and new is more recent.
+        new_pref = (sp.is_primary, sp.updated_at or sp.created_at)
+        old_pref = (existing.is_primary, existing.updated_at or existing.created_at)
+        if new_pref > old_pref:
+            primary_supplier_by_product[sp.product_id] = sp
+
+    # Settings + thresholds for the velocity-based fallback (mirror the
+    # logic in low_stock_report so the cart numbers match what the user saw).
+    settings = crud_store_settings.get_settings(db)
+    store_default = (
+        settings.low_stock_quantity_default
+        if settings and settings.low_stock_quantity_default is not None
+        else 10
+    )
+    pis_by_product = {
+        row.product_id: row for row in db.query(ProductInventorySettings).all()
+    }
+
+    def _suggested_qty(product: Product) -> int:
+        if product.id in overrides:
+            return int(overrides[product.id])
+        if product.reorder_quantity is not None:
+            return int(product.reorder_quantity)
+        pis = pis_by_product.get(product.id)
+        threshold = int(
+            product.reorder_point
+            if product.reorder_point is not None
+            else (
+                pis.low_stock_quantity_threshold
+                if pis and pis.low_stock_quantity_threshold is not None
+                else store_default
+            )
+        )
+        velocity = inventory_service.calculate_sales_velocity(db, product.id, days=30)
+        velocity_suggestion = int(round(velocity * 30))
+        floor_suggestion = max(threshold * 2, 1)
+        return max(velocity_suggestion, floor_suggestion)
+
+    # Group product_ids by the supplier we resolved.
+    supplier_groups: dict[int, list[int]] = {}
+    skipped: list[SkippedReorderProduct] = []
+    for pid in request.product_ids:
+        product = products_by_id.get(pid)
+        if product is None:
+            skipped.append(SkippedReorderProduct(
+                product_id=pid, product_name=None, reason="product_not_found",
+            ))
+            continue
+        sp = primary_supplier_by_product.get(pid)
+        if sp is None:
+            skipped.append(SkippedReorderProduct(
+                product_id=pid, product_name=product.name, reason="no_supplier",
+            ))
+            continue
+        supplier_groups.setdefault(sp.supplier_id, []).append(pid)
+
+    created: list[CreatedReorderPO] = []
+    for supplier_id, group_pids in supplier_groups.items():
+        po = PurchaseOrder(
+            supplier_id=supplier_id,
+            status=PurchaseOrderStatus.DRAFT.value,
+            notes="Auto-created from low-stock reorder cart",
+            currency=(settings.default_currency if settings and getattr(settings, "default_currency", None) else "USD"),
+        )
+        db.add(po)
+        db.flush()  # get po.id
+
+        total_amount = 0.0
+        for pid in group_pids:
+            product = products_by_id[pid]
+            sp = primary_supplier_by_product[pid]
+            qty = _suggested_qty(product)
+            unit_cost = float(sp.cost_price or 0.0) or float(product.cost_price or 0.0)
+            db.add(PurchaseOrderItem(
+                po_id=po.id,
+                product_id=pid,
+                quantity_ordered=qty,
+                unit_cost=unit_cost,
+                base_cost=unit_cost,
+            ))
+            total_amount += qty * unit_cost
+
+        po.total_amount = total_amount
+        db.add(po)
+        db.flush()
+
+        created.append(CreatedReorderPO(
+            purchase_order_id=po.id,
+            supplier_id=supplier_id,
+            supplier_name=po.supplier.name if po.supplier else "",
+            product_count=len(group_pids),
+            total_amount=round(total_amount, 2),
+        ))
+
+    db.commit()
+
+    return ReorderResponse(created_purchase_orders=created, skipped=skipped)

@@ -158,7 +158,15 @@
             "velocityHint": "Ventas diarias promedio (últimos 30 días)",
             "daysLeft": "Días restantes",
             "suggested": "Sugerido",
-            "createPo": "Crear OC"
+            "createPo": "Crear OC",
+            "selectAllTooltip": "Seleccionar todas las filas visibles",
+            "reorderSelected": "Reordenar {{count}} seleccionados",
+            "reordering": "Creando órdenes…",
+            "reorderCreatedOne": "Se creó una OC borrador para {{supplier}} con {{count}} artículos.",
+            "reorderCreatedMany": "Se crearon {{count}} OC borrador para {{products}} productos.",
+            "reorderPartialSkipped": "Se omitieron {{count}} (sin proveedor — p. ej. {{first}}).",
+            "reorderAllSkipped": "No se pudo reordenar ninguno de los {{count}} productos seleccionados — no tienen proveedor asociado.",
+            "viewPo": "Ver OC"
         }
     },
     "onboarding": {
@@ -1344,7 +1352,8 @@
             "aiExtractionFailed": "La extracción con IA falló: {{reason}}",
             "cannotExtractData": "No se pudieron extraer datos legibles. Los PDF de texto y HTML se pueden procesar sin IA; los PDF escaneados e imágenes requieren IA/OCR habilitada en Configuración.",
             "ingestionFailed": "La importación del documento falló: {{reason}}",
-            "aiDisabled": "Las funciones de IA están desactivadas en Configuración. Activa la IA para procesar facturas."
+            "aiDisabled": "Las funciones de IA están desactivadas en Configuración. Activa la IA para procesar facturas.",
+            "reorderEmptySelection": "Selecciona al menos un producto para reordenar."
         },
         "expense": {
             "notFound": "No se encontró el gasto {{id}}.",

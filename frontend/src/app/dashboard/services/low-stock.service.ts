@@ -27,6 +27,25 @@ export interface LowStockReport {
   total_watch: number;
 }
 
+export interface CreatedReorderPO {
+  purchase_order_id: number;
+  supplier_id: number;
+  supplier_name: string;
+  product_count: number;
+  total_amount: number;
+}
+
+export interface SkippedReorderProduct {
+  product_id: number;
+  product_name?: string | null;
+  reason: 'no_supplier' | 'product_not_found' | string;
+}
+
+export interface ReorderResponse {
+  created_purchase_orders: CreatedReorderPO[];
+  skipped: SkippedReorderProduct[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class LowStockService {
   private apiUrl = `${environment.apiUrl}/reports/low-stock`;
@@ -38,5 +57,22 @@ export class LowStockService {
       .set('limit', limit.toString())
       .set('velocity_window_days', velocityWindowDays.toString());
     return this.http.get<LowStockReport>(this.apiUrl, { params });
+  }
+
+  /**
+   * Shopping-cart-style reorder. POSTs the selected product ids to the
+   * backend, which groups them by primary supplier and creates one
+   * DRAFT purchase order per supplier. Returns one summary per PO
+   * created plus a `skipped` list for products that couldn't be
+   * reordered (e.g. no supplier mapped).
+   */
+  reorderProducts(
+    productIds: number[],
+    quantityOverrides?: Record<number, number>,
+  ): Observable<ReorderResponse> {
+    return this.http.post<ReorderResponse>(`${this.apiUrl}/reorder`, {
+      product_ids: productIds,
+      quantity_overrides: quantityOverrides ?? null,
+    });
   }
 }

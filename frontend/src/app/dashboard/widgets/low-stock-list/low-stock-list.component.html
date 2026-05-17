@@ -2,9 +2,25 @@
   <div class="widget-container">
     <div class="widget-header">
       <h3>{{ t('dashboard.criticalStock') }}</h3>
-      <a mat-button color="primary" routerLink="/products" [queryParams]="{ max_stock: 10 }">
-        {{ t('common.viewAll') }}
-      </a>
+      <div class="header-actions">
+        @if (selectedIds.size > 0) {
+          <button
+            mat-flat-button
+            color="primary"
+            (click)="reorderSelected()"
+            [disabled]="isReordering"
+            data-testid="reorder-selected-button"
+          >
+            <mat-icon>shopping_cart</mat-icon>
+            {{ isReordering
+                ? t('dashboard.lowStock.reordering')
+                : t('dashboard.lowStock.reorderSelected', { count: selectedIds.size }) }}
+          </button>
+        }
+        <a mat-button color="primary" routerLink="/products" [queryParams]="{ max_stock: 10 }">
+          {{ t('common.viewAll') }}
+        </a>
+      </div>
     </div>
 
     @if (rows.length === 0) {
@@ -37,6 +53,15 @@
         <table class="lowstock-table" data-testid="lowstock-table">
           <thead>
             <tr>
+              <th class="select">
+                <mat-checkbox
+                  [checked]="allSelected"
+                  [indeterminate]="someSelected"
+                  (change)="toggleAll($event.checked)"
+                  [matTooltip]="t('dashboard.lowStock.selectAllTooltip')"
+                  data-testid="select-all-checkbox"
+                ></mat-checkbox>
+              </th>
               <th>{{ t('dashboard.lowStock.product') }}</th>
               <th class="num">{{ t('dashboard.lowStock.onHand') }}</th>
               <th class="num">{{ t('dashboard.lowStock.threshold') }}</th>
@@ -49,6 +74,13 @@
           <tbody>
             @for (row of rows; track row.product_id) {
               <tr [attr.data-testid]="'lowstock-row-' + row.product_id" [class]="'sev-' + row.severity">
+                <td class="select">
+                  <mat-checkbox
+                    [checked]="isSelected(row.product_id)"
+                    (change)="toggleRow(row.product_id, $event.checked)"
+                    [attr.data-testid]="'select-row-' + row.product_id"
+                  ></mat-checkbox>
+                </td>
                 <td>
                   <a [routerLink]="['/products']" [queryParams]="{ open_sku: row.product_sku }">
                     {{ row.product_name }}

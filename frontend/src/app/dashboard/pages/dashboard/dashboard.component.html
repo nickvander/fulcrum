@@ -121,7 +121,7 @@
                         class="dashboard-widget"></app-sales-by-channel-widget>
                 </div>
                 <div class="grid-section">
-                    <app-low-stock-list [report]="lowStock$ | async"
+                    <app-low-stock-list [report]="lowStock$ | async" (reordered)="refresh()"
                         class="dashboard-widget"></app-low-stock-list>
                 </div>
                 <div class="grid-section">
