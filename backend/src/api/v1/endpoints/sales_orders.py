@@ -11,11 +11,12 @@ used by the dashboard and the Orders module.
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from src.api import dependencies
+from src.core.errors import LocalizedHTTPException
 from src.database import get_db
 from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.models.product import Product
@@ -145,7 +146,12 @@ def get_sales_order(
         .first()
     )
     if not order:
-        raise HTTPException(status_code=404, detail="Sales order not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.salesOrder.notFound",
+            params={"id": order_id},
+            detail="Sales order not found",
+        )
 
     items: List[SalesOrderItemSchema] = []
     for item in order.items:

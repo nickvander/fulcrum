@@ -2,12 +2,13 @@
 Settings API endpoints for managing marketplace credentials and other configuration.
 """
 from typing import Any, Dict
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from src.api import dependencies
 from src.api.dependencies import get_db
+from src.core.errors import LocalizedHTTPException
 from src.models.user import User
 from src.schemas.store_settings import SMTPConfigCreate
 
@@ -74,7 +75,12 @@ def save_marketplace_settings(
     
     marketplace_name = name_map.get(data.marketplace.lower())
     if not marketplace_name:
-        raise HTTPException(status_code=400, detail="Unknown marketplace")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.setting.unknownMarketplace",
+            params={"marketplace": data.marketplace},
+            detail="Unknown marketplace",
+        )
     
     # Find or create the marketplace
     m = db.query(crud_m.model).filter(crud_m.model.name == marketplace_name).first()

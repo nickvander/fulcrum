@@ -1311,6 +1311,36 @@
             "cannotExtractData": "No se pudieron extraer datos legibles. Los PDF de texto y HTML se pueden procesar sin IA; los PDF escaneados e imágenes requieren IA/OCR habilitada en Configuración.",
             "ingestionFailed": "La importación del documento falló: {{reason}}",
             "aiDisabled": "Las funciones de IA están desactivadas en Configuración. Activa la IA para procesar facturas."
+        },
+        "expense": {
+            "notFound": "No se encontró el gasto {{id}}.",
+            "receiptNotFound": "No se encontró el recibo {{id}}.",
+            "invalidReceiptFileType": "Tipo de archivo de recibo no válido {{extension}}. Permitidos: .jpg, .jpeg, .png, .pdf, .heic.",
+            "aiDisabled": "Las funciones de IA están desactivadas en Configuración. Actívalas para procesar recibos.",
+            "receiptParsingFailed": "Falló el procesamiento del recibo: {{reason}}"
+        },
+        "marketplace": {
+            "listingNotFound": "Publicación no encontrada.",
+            "noCredentialsForMarketplace": "No hay credenciales conectadas para este mercado.",
+            "importFailed": "No se pudieron importar las publicaciones del mercado: {{reason}}",
+            "publishFailed": "No se pudo publicar en el mercado: {{reason}}"
+        },
+        "bulkUsers": {
+            "onlyCsvAllowed": "Solo se permiten archivos CSV.",
+            "invalidEncoding": "Codificación de archivo no válida. Sube un CSV con codificación UTF-8.",
+            "missingRequiredColumns": "El CSV debe contener las siguientes columnas: {{columns}}"
+        },
+        "salesOrder": {
+            "notFound": "Pedido de venta no encontrado."
+        },
+        "stockTransfer": {
+            "notFound": "Transferencia de inventario no encontrada."
+        },
+        "setting": {
+            "unknownMarketplace": "Mercado desconocido."
+        },
+        "supplier": {
+            "notFound": "Proveedor no encontrado."
         }
     }
 }

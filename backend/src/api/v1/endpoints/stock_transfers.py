@@ -1,8 +1,9 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_current_active_user
+from src.core.errors import LocalizedHTTPException
 from src.crud.crud_stock_transfer import stock_transfer as crud_stock_transfer
 from src.database import get_db
 from src.models.user import User
@@ -94,7 +95,12 @@ def read_stock_transfer(
 ) -> Any:
     transfer = crud_stock_transfer.get(db=db, id=transfer_id)
     if not transfer:
-        raise HTTPException(status_code=404, detail="Stock transfer not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.stockTransfer.notFound",
+            params={"id": transfer_id},
+            detail="Stock transfer not found",
+        )
     return transfer
 
 

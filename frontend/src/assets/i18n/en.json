@@ -1311,6 +1311,36 @@
             "cannotExtractData": "Could not extract readable order data. Text PDFs and HTML can be parsed without AI; scanned PDFs and images require AI/OCR to be enabled in Settings.",
             "ingestionFailed": "Document ingestion failed: {{reason}}",
             "aiDisabled": "AI features are disabled in Settings. Enable AI to use invoice parsing."
+        },
+        "expense": {
+            "notFound": "Expense {{id}} not found.",
+            "receiptNotFound": "Receipt {{id}} not found.",
+            "invalidReceiptFileType": "Invalid receipt file type {{extension}}. Allowed: .jpg, .jpeg, .png, .pdf, .heic.",
+            "aiDisabled": "AI features are disabled in Settings. Enable AI to parse receipts.",
+            "receiptParsingFailed": "Receipt parsing failed: {{reason}}"
+        },
+        "marketplace": {
+            "listingNotFound": "Listing not found.",
+            "noCredentialsForMarketplace": "No credentials are connected for this marketplace.",
+            "importFailed": "Failed to import marketplace listings: {{reason}}",
+            "publishFailed": "Failed to publish to marketplace: {{reason}}"
+        },
+        "bulkUsers": {
+            "onlyCsvAllowed": "Only CSV files are allowed.",
+            "invalidEncoding": "Invalid file encoding. Upload a UTF-8 encoded CSV.",
+            "missingRequiredColumns": "CSV must contain the following columns: {{columns}}"
+        },
+        "salesOrder": {
+            "notFound": "Sales order not found."
+        },
+        "stockTransfer": {
+            "notFound": "Stock transfer not found."
+        },
+        "setting": {
+            "unknownMarketplace": "Unknown marketplace."
+        },
+        "supplier": {
+            "notFound": "Supplier not found."
         }
     }
 }
