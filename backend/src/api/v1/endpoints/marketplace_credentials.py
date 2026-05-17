@@ -1,5 +1,6 @@
 from typing import List, Any
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from src.core.errors import LocalizedHTTPException
 from sqlalchemy.orm import Session
 
 from src.api import dependencies
@@ -58,7 +59,12 @@ def read_credential_by_marketplace(
     """
     credential = crud_cred.get_by_marketplace(db, user_id=current_user.id, marketplace_id=marketplace_id)
     if not credential:
-        raise HTTPException(status_code=404, detail="Credentials not found for this marketplace")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.notFoundForMarketplace",
+            params={"marketplaceId": marketplace_id},
+            detail="Credentials not found for this marketplace",
+        )
     return credential
 
 @router.delete("/{id}", response_model=MarketplaceCredential)
@@ -73,9 +79,18 @@ def delete_credential(
     """
     credential = crud_cred.get(db, id=id)
     if not credential:
-        raise HTTPException(status_code=404, detail="Credential not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.notFound",
+            params={"id": id},
+            detail="Credential not found",
+        )
     if credential.user_id != current_user.id and not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+        raise LocalizedHTTPException(
+            status_code=403,
+            code="apiErrors.user.notEnoughPrivileges",
+            detail="Not enough permissions",
+        )
     
     return crud_cred.remove(db, id=id)
 
@@ -100,7 +115,12 @@ async def authorize_marketplace_by_name(
     
     name_lower = marketplace_name.lower()
     if name_lower not in marketplace_configs:
-        raise HTTPException(status_code=400, detail=f"Unsupported marketplace: {marketplace_name}")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.marketplaceCredentials.unsupportedMarketplace",
+            params={"name": marketplace_name},
+            detail=f"Unsupported marketplace: {marketplace_name}",
+        )
     
     config = marketplace_configs[name_lower]
     
@@ -128,7 +148,12 @@ async def authorize_marketplace(
     from src.crud.crud_marketplace import marketplace as crud_m
     m = crud_m.get(db, id=marketplace_id)
     if not m:
-        raise HTTPException(status_code=404, detail="Marketplace not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
     
     from src.services.marketplace_service import marketplace_service
     connector = marketplace_service.get_connector(m.name)
@@ -148,7 +173,12 @@ async def callback_marketplace(
     from src.crud.crud_marketplace import marketplace as crud_m
     m = crud_m.get(db, id=marketplace_id)
     if not m:
-        raise HTTPException(status_code=404, detail="Marketplace not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
     
     from src.services.marketplace_service import marketplace_service
     connector = marketplace_service.get_connector(m.name)
@@ -156,7 +186,12 @@ async def callback_marketplace(
     try:
         token_data = await connector.exchange_code_for_token(code)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to exchange code: {str(e)}")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.marketplaceCredentials.tokenExchangeFailed",
+            params={"reason": str(e)},
+            detail=f"Failed to exchange code: {str(e)}",
+        )
     
     from datetime import datetime, timedelta
     expires_at = None
