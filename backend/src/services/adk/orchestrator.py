@@ -227,9 +227,47 @@ class AgentOrchestrator:
         """Get configured receipt parser agent with specialized prompt."""
         config = self.manager.get_active_config()
         return InvoiceParserAgent(
-            model=config.get("model"), 
+            model=config.get("model"),
             api_key=config.get("api_key"),
             instruction_file="receipt_extraction.md"
+        )
+
+    async def parse_catalog(
+        self,
+        file_content: bytes,
+        file_type: str,
+    ) -> Dict[str, Any]:
+        """Extract a list of products from a supplier catalog (PDF or image).
+
+        Returns a dict matching the catalog_extraction.md schema:
+            {"items": [...], "confidence": float}
+        or {"error": "..."} on failure.
+
+        The InvoiceParserAgent class is reused with a different instruction
+        file — same multimodal pipeline, different prompt.
+        """
+        try:
+            agent = self._get_catalog_parser_agent()
+            if not agent.is_available:
+                return {"error": "Catalog parser agent not available"}
+
+            print(f"[Orchestrator] Parsing catalog document of type: {file_type}")
+            result = await agent.parse_invoice(file_content, file_type)
+            return result
+
+        except Exception as e:
+            print(f"[Orchestrator] Catalog parsing error: {e}")
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}
+
+    def _get_catalog_parser_agent(self) -> InvoiceParserAgent:
+        """Get configured catalog parser agent (reuses invoice agent pipeline)."""
+        config = self.manager.get_active_config()
+        return InvoiceParserAgent(
+            model=config.get("model"),
+            api_key=config.get("api_key"),
+            instruction_file="catalog_extraction.md",
         )
 
     async def run_sequence(self, input_data: Any, agents: List[Any]) -> Any:

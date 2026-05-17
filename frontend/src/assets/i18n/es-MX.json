@@ -361,8 +361,12 @@
             "doneTitle": "Importación completa",
             "createdCount": "Se crearon {{n}} productos.",
             "skippedCount": "Se omitieron {{n}} filas:",
+            "aiReady": "IA configurada — puedes subir PDFs o imágenes de páginas de catálogo.",
+            "aiUnavailable": "Los catálogos en PDF o imagen requieren IA. Los CSV funcionan sin ella.",
+            "openSettings": "Abrir Configuración",
             "errors": {
                 "csvOnly": "Sólo se admiten archivos CSV / TSV.",
+                "unsupportedType": "Tipo de archivo no admitido.",
                 "uploadFailed": "No se pudo subir el archivo de catálogo.",
                 "approveFailed": "No se pudo aprobar la importación del catálogo.",
                 "rejectFailed": "No se pudo cancelar la importación del catálogo."
@@ -1436,7 +1440,9 @@
             "reviewNotFound": "Importación de catálogo no encontrada.",
             "reviewNotPending": "Sólo las importaciones pendientes pueden modificarse.",
             "emptyFile": "El archivo de catálogo está vacío.",
-            "nothingSelected": "Selecciona al menos una fila con nombre de producto antes de aprobar."
+            "nothingSelected": "Selecciona al menos una fila con nombre de producto antes de aprobar.",
+            "aiRequiredForFileType": "Para importar catálogos {{extension}} se requiere habilitar IA y configurar una clave de API en Configuración.",
+            "aiExtractionFailed": "La extracción de catálogo con IA falló: {{reason}}"
         }
     }
 }

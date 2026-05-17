@@ -98,6 +98,20 @@ def _build_field_map(fieldnames: Iterable[str]) -> dict[str, str]:
     return field_map
 
 
+def _coerce_amount(value) -> Optional[float]:
+    """Accept the loose shapes the AI agent might return (number, numeric
+    string, None) and normalize to float-or-None. Strings are routed through
+    `_parse_amount` so currency symbols / decimal-comma still work."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, (int, float)):
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return None
+    return _parse_amount(str(value))
+
+
 def _parse_amount(value: Optional[str]) -> Optional[float]:
     """Parse a money-ish string ('$1,234.50', '1.234,50', '79.90 MXN') → float.
 
@@ -134,6 +148,20 @@ def _sniff_dialect(sample: str) -> csv.Dialect:
         return csv.get_dialect("excel")  # safe default
 
 
+CSV_SUFFIXES = {"csv", "tsv", "txt"}
+AI_SUFFIXES = {"pdf", "png", "jpg", "jpeg", "webp", "avif"}
+
+
+def file_suffix(file_name: str) -> str:
+    return file_name.lower().rsplit(".", 1)[-1] if "." in file_name else ""
+
+
+def is_ai_required(file_name: str) -> bool:
+    """True when the upload's extension is one the CSV parser can't handle and
+    that we'd route to the AI catalog parser instead."""
+    return file_suffix(file_name) in AI_SUFFIXES
+
+
 class CatalogIngestionService:
     """Stateless parser for catalog uploads. Inject for testing or swap parser
     backends per file type."""
@@ -141,14 +169,71 @@ class CatalogIngestionService:
     MAX_ROWS = 5000  # hard cap; protects the staging table from runaway uploads
 
     def ingest(self, *, file_name: str, content: bytes) -> ExtractedCatalogData:
-        suffix = file_name.lower().rsplit(".", 1)[-1] if "." in file_name else ""
-        if suffix in {"csv", "tsv", "txt"} or not suffix:
+        """Parse CSV/TSV deterministically. Non-CSV file types (PDF, images)
+        require AI and are handled by the endpoint via `ingest_ai_result` —
+        keeping the service stateless and easy to unit-test."""
+        suffix = file_suffix(file_name)
+        if suffix in CSV_SUFFIXES or not suffix:
             return self._parse_csv(content)
 
+        if suffix in AI_SUFFIXES:
+            # The endpoint routes these through the AI parser. This branch
+            # only fires when the caller forgot to gate on `is_ai_required`.
+            return ExtractedCatalogData(
+                warnings=[
+                    f".{suffix} files require AI parsing. "
+                    "Enable AI in Settings and try again."
+                ],
+                extraction_method="ai_required",
+            )
+
         return ExtractedCatalogData(
-            warnings=[f"Unsupported file type: .{suffix}. CSV / TSV uploads only."],
+            warnings=[f"Unsupported file type: .{suffix}."],
             extraction_method="failed",
         )
+
+    def ingest_ai_result(self, ai_result: dict) -> ExtractedCatalogData:
+        """Turn the catalog AI agent's JSON payload into the same
+        `ExtractedCatalogData` shape the CSV parser emits, so downstream code
+        (review storage + approval) is identical for both sources."""
+        result = ExtractedCatalogData(extraction_method="ai")
+        items_raw = ai_result.get("items") or []
+        if not isinstance(items_raw, list):
+            result.warnings.append("AI returned a non-list 'items' field.")
+            return result
+
+        for entry in items_raw:
+            if not isinstance(entry, dict):
+                continue
+            name = (entry.get("name") or "").strip()
+            if not name:
+                continue
+            item = ExtractedCatalogItem(
+                sku=(entry.get("sku") or None),
+                name=name,
+                description=(entry.get("description") or None),
+                cost_price=_coerce_amount(entry.get("cost_price")),
+                default_resale_price=_coerce_amount(entry.get("default_resale_price")),
+                category=(entry.get("category") or None),
+                brand=(entry.get("brand") or None),
+                supplier_sku=(entry.get("supplier_sku") or None),
+                raw=entry,
+                warnings=[],
+                selected=True,
+            )
+            result.items.append(item)
+
+        confidence = ai_result.get("confidence")
+        if isinstance(confidence, (int, float)) and confidence < 0.6:
+            result.warnings.append(
+                f"AI extraction confidence is low ({confidence:.2f}). "
+                "Review each row carefully before approving."
+            )
+
+        if not result.items:
+            result.warnings.append("AI returned no importable rows.")
+
+        return result
 
     def _parse_csv(self, content: bytes) -> ExtractedCatalogData:
         try:
