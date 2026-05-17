@@ -18,7 +18,7 @@ import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist
 import { SalesByChannelWidgetComponent } from '../../widgets/sales-by-channel-widget/sales-by-channel-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { TranslocoModule } from '@ngneat/transloco';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
@@ -59,7 +59,6 @@ export class DashboardComponent implements OnInit {
         private salesOrdersService: SalesOrdersService,
         private snackBar: MatSnackBar,
         private dialog: MatDialog,
-        private transloco: TranslocoService,
     ) { }
 
     ngOnInit(): void {
@@ -117,10 +116,11 @@ export class DashboardComponent implements OnInit {
                         this.snackBar.open(result.message, 'Close', { duration: 5000 });
                         this.refresh();
                     },
-                    error: (error) => {
-                        const message = error?.error?.detail?.message
-                            || this.transloco.translate('dashboard.demoCleanupBlocked');
-                        this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 7000 });
+                    error: () => {
+                        // HttpErrorInterceptor surfaces the localized backend message
+                        // (apiErrors.onboarding.cleanupBlocked / cleanupNotConfirmed).
+                        // The nested error.error.detail.blocked_reasons/records can be
+                        // read here if we ever want to render the list inline.
                         this.refresh();
                     }
                 });

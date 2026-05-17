@@ -156,8 +156,7 @@
             "daysLeft": "Days left",
             "suggested": "Suggested",
             "createPo": "Create PO"
-        },
-        "demoCleanupBlocked": "Demo cleanup could not run safely. Review the blocked records first."
+        }
     },
     "onboarding": {
         "eyebrow": "Customer setup",
@@ -1263,6 +1262,22 @@
             "skuExists": "A product with SKU {{sku}} already exists.",
             "imageNotFound": "Product image {{id}} not found.",
             "bundleAssemblyFailed": "Could not assemble bundle: {{reason}}"
+        },
+        "user": {
+            "notFound": "User {{id}} not found.",
+            "alreadyExists": "A user with email {{email}} already exists.",
+            "invalidCredentials": "Incorrect email or password.",
+            "incorrectPassword": "Current password is incorrect.",
+            "passwordSameAsCurrent": "New password cannot be the same as the current password.",
+            "notEnoughPrivileges": "You don't have enough privileges to perform this action.",
+            "resetTokenInvalid": "This password-reset link is invalid or has expired. Request a new one.",
+            "cannotDeactivateSelf": "You cannot deactivate your own account.",
+            "cannotDeleteSelf": "You cannot permanently delete your own account.",
+            "deleteFailed": "User {{id}} could not be permanently deleted."
+        },
+        "onboarding": {
+            "cleanupNotConfirmed": "Demo data cleanup must be confirmed.",
+            "cleanupBlocked": "Demo cleanup was blocked to protect customer records. Review the blocked records first."
         }
     }
 }

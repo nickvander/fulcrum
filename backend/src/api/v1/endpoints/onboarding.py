@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
+from src.core.errors import LocalizedHTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
@@ -1015,7 +1016,11 @@ def cleanup_demo_data(
     that look like customer activity.
     """
     if not request.confirm:
-        raise HTTPException(status_code=400, detail="Demo data cleanup must be confirmed.")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.onboarding.cleanupNotConfirmed",
+            detail="Demo data cleanup must be confirmed.",
+        )
 
     report = _build_demo_data_report(db)
     if not report["has_demo_data"]:
@@ -1027,8 +1032,12 @@ def cleanup_demo_data(
         }
 
     if not report["cleanup_available"]:
-        raise HTTPException(
+        # Nested detail preserved for the dashboard component that reads
+        # detail.blocked_reasons + detail.records to render the inline list.
+        # The code is the canonical localization handle for the snackbar.
+        raise LocalizedHTTPException(
             status_code=409,
+            code="apiErrors.onboarding.cleanupBlocked",
             detail={
                 "message": "Demo data cleanup was blocked to protect customer records.",
                 "blocked_reasons": report["blocked_reasons"],
