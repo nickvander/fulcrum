@@ -58,3 +58,39 @@
 - Production build clean.
 - i18n parity: 1171 keys.
 - Pre-commit + pre-push hooks green.
+
+## Session 3 - 2026-05-17 (continuation)
+
+### AI Catalog Import — CSV slice
+
+Picked up after a parallel-session pause that had only landed
+`backend/src/models/catalog_import.py`. Verified main was clean at
+`fa64707` and nothing else from the parallel session had been written.
+
+Shipped two commits:
+
+- `8fbb37c` — backend: `CatalogImport` model + alembic migration
+  `e2f1a9b73c40`, `CatalogIngestionService` (CSV/TSV, EN + es-MX
+  header aliases, `;` delimiter + European decimal-comma tolerance,
+  5000-row cap), `/api/v1/catalog-imports/reviews{,/{id},/approve,
+  /reject}` endpoints, 11 new tests. Backend suite now **359 passed,
+  8 skipped**.
+
+- `7979156` — frontend: `CatalogImportService`,
+  `CatalogImportDialogComponent` (3-step: upload → editable review
+  table → done with skipped-reasons), Products page "Import Catalog"
+  button, en + es-MX i18n, 8 new specs. Frontend suite now **421
+  passed, 14 skipped**.
+
+Approval re-uses the existing `crud_product.create` path so SKU
+validation, barcode/QR generation, and embedding queueing all fire
+identically to manual product creation. Duplicate-SKU rows are skipped
+with a reason instead of failing the whole batch, so the user can
+edit + retry without losing progress.
+
+### Still open
+
+- PDF parser inside `catalog_ingestion_service.py` — no frontend
+  changes required; the review/approve flow already accepts the
+  `ExtractedCatalogItem` shape.
+- PDF export for reports (still deferred).
