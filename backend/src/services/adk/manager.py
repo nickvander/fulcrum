@@ -50,6 +50,18 @@ class ADKManager:
         """Check if a provider has an API key."""
         return bool(self.get_api_key(provider))
 
+    def is_ready(self) -> bool:
+        """True when AI is both enabled in settings and the active provider has a key.
+
+        Callers should check this before opening features that require AI; it's
+        the single predicate the API surfaces to the frontend so the UI can
+        gate on it instead of duplicating the enabled/key checks.
+        """
+        if not self.settings or not self.settings.ai_enabled:
+            return False
+        provider = self.settings.ai_provider or "google"
+        return self.is_configured(provider)
+
     def get_active_config(self) -> Dict[str, Any]:
         """
         Return configuration for the active AI model.

@@ -38,11 +38,24 @@ export interface CatalogImportApproveResponse {
   skipped_reasons: string[];
 }
 
+export interface CatalogImportCapabilities {
+  csv: boolean;
+  ai: boolean;
+  ai_enabled: boolean;
+  ai_configured: boolean;
+  ai_provider: string | null;
+  accepted_extensions: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CatalogImportService {
   private readonly apiUrl = `${environment.apiUrl}/catalog-imports`;
 
   constructor(private http: HttpClient) {}
+
+  capabilities(): Observable<CatalogImportCapabilities> {
+    return this.http.get<CatalogImportCapabilities>(`${this.apiUrl}/capabilities`);
+  }
 
   upload(file: File, supplierId?: number | null): Observable<CatalogImportReview> {
     const formData = new FormData();

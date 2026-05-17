@@ -7,6 +7,36 @@
   margin: 12px 0;
 }
 
+.ai-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9em;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  a {
+    margin-left: 4px;
+  }
+
+  &--ready {
+    background: #e6f4ea;
+    color: #1e7a3a;
+  }
+
+  &--disabled {
+    background: #fff4d6;
+    color: #6f5400;
+  }
+}
+
 .supplier-select {
   width: 100%;
   margin-top: 12px;

@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -19,6 +20,7 @@ import { Supplier } from '../../../shared/models/supplier.model';
 import { SuppliersService } from '../../../suppliers/suppliers.service';
 import {
   CatalogImportApproveResponse,
+  CatalogImportCapabilities,
   CatalogImportItem,
   CatalogImportReview,
   CatalogImportService,
@@ -44,6 +46,7 @@ type Step = 'upload' | 'review' | 'done';
     MatSelectModule,
     MatSnackBarModule,
     MatTableModule,
+    RouterModule,
     TranslocoModule,
   ],
 })
@@ -55,6 +58,14 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
   review: CatalogImportReview | null = null;
   approval: CatalogImportApproveResponse | null = null;
   suppliers: Supplier[] = [];
+  capabilities: CatalogImportCapabilities = {
+    csv: true,
+    ai: false,
+    ai_enabled: false,
+    ai_configured: false,
+    ai_provider: null,
+    accepted_extensions: ['csv', 'tsv', 'txt'],
+  };
   readonly displayedColumns = ['selected', 'sku', 'name', 'price', 'cost', 'brand', 'rowWarnings'];
 
   private destroy$ = new Subject<void>();
@@ -72,6 +83,20 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
       .getSuppliers(0, 500)
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (suppliers) => (this.suppliers = suppliers || []) });
+
+    this.service
+      .capabilities()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (caps) => (this.capabilities = caps) });
+  }
+
+  acceptAttr(): string {
+    return this.capabilities.accepted_extensions.map((e) => '.' + e).join(',');
+  }
+
+  isFileTypeAccepted(file: File): boolean {
+    const name = file.name.toLowerCase();
+    return this.capabilities.accepted_extensions.some((ext) => name.endsWith('.' + ext));
   }
 
   ngOnDestroy(): void {
@@ -82,13 +107,11 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-    const isCsv =
-      file.type === 'text/csv' ||
-      file.type === 'text/plain' ||
-      file.name.toLowerCase().endsWith('.csv') ||
-      file.name.toLowerCase().endsWith('.tsv');
-    if (!isCsv) {
-      this.snack(this.transloco.translate('products.catalogImport.errors.csvOnly'));
+    if (!this.isFileTypeAccepted(file)) {
+      const key = this.capabilities.ai
+        ? 'products.catalogImport.errors.unsupportedType'
+        : 'products.catalogImport.errors.csvOnly';
+      this.snack(this.transloco.translate(key));
       return;
     }
     this.selectedFile = file;

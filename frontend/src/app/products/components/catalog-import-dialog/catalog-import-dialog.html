@@ -5,6 +5,21 @@
     @if (step === 'upload') {
       <p>{{ t('products.catalogImport.instructions') }}</p>
 
+      @if (capabilities.ai) {
+        <div class="ai-banner ai-banner--ready">
+          <mat-icon>auto_awesome</mat-icon>
+          <span>{{ t('products.catalogImport.aiReady') }}</span>
+        </div>
+      } @else {
+        <div class="ai-banner ai-banner--disabled">
+          <mat-icon>info</mat-icon>
+          <span>
+            {{ t('products.catalogImport.aiUnavailable') }}
+            <a routerLink="/settings" (click)="close()">{{ t('products.catalogImport.openSettings') }}</a>
+          </span>
+        </div>
+      }
+
       <div class="actions-row">
         <button mat-stroked-button color="primary" (click)="downloadTemplate()">
           <mat-icon>download</mat-icon>
@@ -25,7 +40,7 @@
       <div class="file-input-container">
         <input
           type="file"
-          accept=".csv,.tsv,text/csv,text/plain"
+          [attr.accept]="acceptAttr()"
           (change)="onFileSelected($event)"
         />
         @if (selectedFile) {
@@ -51,6 +66,16 @@
           }
         </ul>
       }
+
+      <mat-form-field appearance="outline" class="supplier-select">
+        <mat-label>{{ t('products.catalogImport.linkSupplier') }}</mat-label>
+        <mat-select [(ngModel)]="selectedSupplierId">
+          <mat-option [value]="null">{{ t('products.catalogImport.noSupplier') }}</mat-option>
+          @for (sup of suppliers; track sup.id) {
+            <mat-option [value]="sup.id">{{ sup.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
       <div class="select-all-row">
         <button mat-stroked-button (click)="toggleAll(true)">
@@ -90,6 +115,8 @@
               <input
                 matInput
                 type="number"
+                step="0.01"
+                min="0"
                 [(ngModel)]="item.default_resale_price"
                 class="cell-input cell-input--narrow"
               />
@@ -102,6 +129,8 @@
               <input
                 matInput
                 type="number"
+                step="0.01"
+                min="0"
                 [(ngModel)]="item.cost_price"
                 class="cell-input cell-input--narrow"
               />

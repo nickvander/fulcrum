@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of, throwError } from 'rxjs';
 
@@ -72,6 +73,16 @@ describe('CatalogImportDialogComponent', () => {
       upload: vi.fn(),
       approve: vi.fn(),
       reject: vi.fn(),
+      capabilities: vi.fn().mockReturnValue(
+        of({
+          csv: true,
+          ai: false,
+          ai_enabled: false,
+          ai_configured: false,
+          ai_provider: 'google',
+          accepted_extensions: ['csv', 'tsv', 'txt'],
+        }),
+      ),
     } as unknown as MockedObject<CatalogImportService>;
 
     suppliersSpy = {
@@ -90,6 +101,7 @@ describe('CatalogImportDialogComponent', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA],
       providers: [
+        provideRouter([]),
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: CatalogImportService, useValue: serviceSpy },
         { provide: SuppliersService, useValue: suppliersSpy },
@@ -112,7 +124,8 @@ describe('CatalogImportDialogComponent', () => {
     expect(suppliersSpy.getSuppliers).toHaveBeenCalledWith(0, 500);
   });
 
-  it('rejects a non-CSV file via snackbar and leaves selectedFile null', () => {
+  it('rejects a PDF when AI is not configured', () => {
+    fixture.detectChanges();  // triggers capabilities() default mock
     const file = new File([''], 'thing.pdf', { type: 'application/pdf' });
     component.onFileSelected({ target: { files: [file] } } as any);
     expect(component.selectedFile).toBeNull();
@@ -120,9 +133,33 @@ describe('CatalogImportDialogComponent', () => {
   });
 
   it('accepts a CSV file by name even when type is empty', () => {
+    fixture.detectChanges();
     const file = new File([''], 'catalog.csv', { type: '' });
     component.onFileSelected({ target: { files: [file] } } as any);
     expect(component.selectedFile).toBe(file);
+  });
+
+  it('accepts a PDF when capabilities report AI is ready', () => {
+    serviceSpy.capabilities.mockReturnValue(
+      of({
+        csv: true,
+        ai: true,
+        ai_enabled: true,
+        ai_configured: true,
+        ai_provider: 'google',
+        accepted_extensions: ['csv', 'tsv', 'txt', 'pdf', 'png', 'jpg', 'jpeg'],
+      }),
+    );
+    fixture.detectChanges();
+    const pdf = new File([''], 'catalog.pdf', { type: 'application/pdf' });
+    component.onFileSelected({ target: { files: [pdf] } } as any);
+    expect(component.selectedFile).toBe(pdf);
+    expect(component.acceptAttr()).toContain('.pdf');
+  });
+
+  it('exposes acceptAttr() with only CSV extensions when AI is off', () => {
+    fixture.detectChanges();
+    expect(component.acceptAttr()).toBe('.csv,.tsv,.txt');
   });
 
   it('upload() transitions to review step with returned items', () => {

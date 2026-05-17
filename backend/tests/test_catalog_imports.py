@@ -247,3 +247,159 @@ def test_catalog_review_approval_requires_at_least_one_selection(
     )
     assert approve.status_code == 400
     assert approve.json()["code"] == "apiErrors.catalogImport.nothingSelected"
+
+
+# --- AI / PDF gating ---------------------------------------------------------
+
+
+def test_capabilities_reports_csv_only_when_ai_is_off(client: TestClient, admin_headers):
+    resp = client.get("/api/v1/catalog-imports/capabilities", headers=admin_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["csv"] is True
+    assert body["ai"] is False
+    assert body["ai_enabled"] is False
+    assert body["ai_configured"] is False
+    assert set(body["accepted_extensions"]) == {"csv", "tsv", "txt"}
+
+
+def test_pdf_upload_is_rejected_with_localized_code_when_ai_is_off(
+    client: TestClient,
+    admin_headers,
+):
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake bytes", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400
+    body = resp.json()
+    assert body["code"] == "apiErrors.catalogImport.aiRequiredForFileType"
+    assert body["params"]["extension"] == ".pdf"
+
+
+def test_capabilities_reports_ai_ready_when_enabled_and_keyed(
+    client: TestClient,
+    db,
+    admin_headers,
+):
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    from src.core.encryption import encryption_service
+
+    settings = crud_store_settings.get_settings(db)
+    settings.ai_enabled = 1
+    settings.ai_provider = "google"
+    settings.ai_google_api_key = encryption_service.encrypt("fake-key-for-tests")
+    db.add(settings)
+    db.commit()
+
+    resp = client.get("/api/v1/catalog-imports/capabilities", headers=admin_headers)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["ai"] is True
+    assert body["ai_enabled"] is True
+    assert body["ai_configured"] is True
+    assert {"pdf", "png", "jpg", "jpeg", "csv"}.issubset(set(body["accepted_extensions"]))
+
+
+def test_pdf_upload_returns_502_on_ai_failure(
+    client: TestClient,
+    db,
+    admin_headers,
+    monkeypatch,
+):
+    """When AI is configured but the orchestrator returns an error, the
+    endpoint surfaces it as a localized 502 rather than corrupting the queue.
+    """
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    from src.core.encryption import encryption_service
+    from src.services.adk import orchestrator as orchestrator_module
+
+    settings = crud_store_settings.get_settings(db)
+    settings.ai_enabled = 1
+    settings.ai_provider = "google"
+    settings.ai_google_api_key = encryption_service.encrypt("fake-key-for-tests")
+    db.add(settings)
+    db.commit()
+
+    async def fake_parse_catalog(self, content, mime_type):
+        return {"error": "model unavailable"}
+
+    monkeypatch.setattr(
+        orchestrator_module.AgentOrchestrator, "parse_catalog", fake_parse_catalog
+    )
+
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake bytes", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 502
+    assert resp.json()["code"] == "apiErrors.catalogImport.aiExtractionFailed"
+
+
+def test_pdf_upload_creates_review_from_ai_result_when_ready(
+    client: TestClient,
+    db,
+    admin_headers,
+    monkeypatch,
+):
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    from src.core.encryption import encryption_service
+    from src.services.adk import orchestrator as orchestrator_module
+
+    settings = crud_store_settings.get_settings(db)
+    settings.ai_enabled = 1
+    settings.ai_provider = "google"
+    settings.ai_google_api_key = encryption_service.encrypt("fake-key-for-tests")
+    db.add(settings)
+    db.commit()
+
+    async def fake_parse_catalog(self, content, mime_type):
+        return {
+            "items": [
+                {
+                    "sku": "PDF-1",
+                    "name": "Widget From PDF",
+                    "description": "Parsed by AI",
+                    "cost_price": 10.0,
+                    "default_resale_price": 25.0,
+                    "category": "Tools",
+                    "brand": "Acme",
+                    "supplier_sku": None,
+                },
+                {"name": "", "sku": "PDF-2"},  # name-less row should be dropped
+            ],
+            "confidence": 0.9,
+        }
+
+    monkeypatch.setattr(
+        orchestrator_module.AgentOrchestrator, "parse_catalog", fake_parse_catalog
+    )
+
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake bytes", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["source"] == "ai"
+    items = body["extracted_data"]["items"]
+    assert len(items) == 1
+    assert items[0]["sku"] == "PDF-1"
+    assert items[0]["name"] == "Widget From PDF"
+
+
+def test_ai_result_low_confidence_attaches_warning():
+    from src.services.catalog_ingestion_service import catalog_ingestion_service
+
+    parsed = catalog_ingestion_service.ingest_ai_result(
+        {
+            "items": [{"name": "Hazy product", "cost_price": "12.50"}],
+            "confidence": 0.35,
+        }
+    )
+    assert any("low" in w.lower() for w in parsed.warnings)
+    assert parsed.items[0].name == "Hazy product"
+    assert parsed.items[0].cost_price == 12.50

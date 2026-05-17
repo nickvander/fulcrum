@@ -3,8 +3,10 @@ Catalog import review endpoints.
 
 Mirrors the supplier-document import-review flow from
 `backend/src/api/v1/endpoints/purchase_orders.py` but produces new `Product`
-rows on approval instead of a `PurchaseOrder`. CSV is the only supported
-source for this slice; PDF/AI parsing is a follow-up.
+rows on approval instead of a `PurchaseOrder`. CSV uploads parse synchronously
+via `CatalogIngestionService`; PDF / image uploads go through the AI agent
+orchestrator and only succeed when the user has both enabled AI in settings
+and configured an API key for the active provider.
 """
 from __future__ import annotations
 
@@ -18,16 +20,38 @@ from sqlalchemy.orm import Session
 from src.api.dependencies import get_current_active_user, get_db
 from src.core.errors import LocalizedHTTPException
 from src.crud import crud_product
+from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.crud.crud_supplier import supplier as crud_supplier
 from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
 from src.models.catalog_import import CatalogImport
 from src.models.user import User
 from src.schemas.product import ProductCreate
 from src.schemas.supplier_product import SupplierProductCreate
-from src.services.catalog_ingestion_service import catalog_ingestion_service, extracted_item_to_dict
+from src.services.adk.manager import ADKManager
+from src.services.adk.orchestrator import AgentOrchestrator
+from src.services.catalog_ingestion_service import (
+    AI_SUFFIXES,
+    CSV_SUFFIXES,
+    catalog_ingestion_service,
+    extracted_item_to_dict,
+    file_suffix,
+    is_ai_required,
+)
 
 
 router = APIRouter()
+
+
+# MIME types that match `AI_SUFFIXES` — used to set the right Part type when
+# handing the file to Gemini multimodal.
+_AI_MIME_BY_SUFFIX = {
+    "pdf": "application/pdf",
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+    "avif": "image/avif",
+}
 
 
 class CatalogImportItem(BaseModel):
@@ -103,6 +127,49 @@ def _pending(db: Session, review_id: int) -> CatalogImport:
     return review
 
 
+class CatalogImportCapabilities(BaseModel):
+    """Shape what the dialog can offer the user. Frontend uses this to set the
+    file input's `accept` list and to decide whether to show an AI hint."""
+    csv: bool = True
+    ai: bool = False  # ai_enabled AND active provider has an API key
+    ai_enabled: bool = False
+    ai_configured: bool = False
+    ai_provider: str | None = None
+    accepted_extensions: list[str] = Field(default_factory=lambda: sorted(CSV_SUFFIXES))
+
+
+@router.get("/capabilities", response_model=CatalogImportCapabilities)
+def get_catalog_import_capabilities(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Tell the frontend what file types this workspace can import.
+
+    Always offers CSV/TSV. PDF and images are offered only when AI is both
+    enabled in Settings and the active provider has a configured API key.
+    """
+    settings = crud_store_settings.get_settings(db)
+    ai_enabled = bool(settings and settings.ai_enabled)
+    provider = (settings.ai_provider if settings else None) or "google"
+    manager = ADKManager(db)
+    ai_configured = manager.is_configured(provider)
+    ai_ready = ai_enabled and ai_configured
+
+    accepted = sorted(CSV_SUFFIXES)
+    if ai_ready:
+        accepted = sorted(CSV_SUFFIXES | AI_SUFFIXES)
+
+    return CatalogImportCapabilities(
+        csv=True,
+        ai=ai_ready,
+        ai_enabled=ai_enabled,
+        ai_configured=ai_configured,
+        ai_provider=provider,
+        accepted_extensions=accepted,
+    )
+
+
 @router.post("/reviews", response_model=CatalogImportRead)
 async def create_catalog_import_review(
     *,
@@ -111,7 +178,9 @@ async def create_catalog_import_review(
     supplier_id: int | None = Query(None, description="Optional supplier to link new products to"),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Upload a catalog CSV, parse it, and stage a review row."""
+    """Upload a catalog file, parse it (CSV synchronously / PDF + image via AI),
+    and stage a review row.
+    """
     content = await file.read()
     if not content:
         raise LocalizedHTTPException(
@@ -127,20 +196,50 @@ async def create_catalog_import_review(
             detail="Supplier not found",
         )
 
-    parsed = catalog_ingestion_service.ingest(
-        file_name=file.filename or "catalog.csv",
-        content=content,
-    )
+    filename = file.filename or "catalog.csv"
+    suffix = file_suffix(filename)
+    source = "csv"
+    warnings: list[str] = []
+
+    if is_ai_required(filename):
+        # PDF / image upload — must be backed by a working AI provider
+        manager = ADKManager(db)
+        if not manager.is_ready():
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.catalogImport.aiRequiredForFileType",
+                params={"extension": f".{suffix}"},
+                detail=(
+                    f"Importing .{suffix} catalogs requires AI to be enabled and "
+                    "an API key configured for the active provider in Settings."
+                ),
+            )
+
+        mime_type = _AI_MIME_BY_SUFFIX.get(suffix, file.content_type or "application/octet-stream")
+        orchestrator = AgentOrchestrator(manager)
+        ai_result = await orchestrator.parse_catalog(content, mime_type)
+        if "error" in ai_result:
+            raise LocalizedHTTPException(
+                status_code=502,
+                code="apiErrors.catalogImport.aiExtractionFailed",
+                params={"reason": ai_result["error"]},
+                detail=f"AI catalog extraction failed: {ai_result['error']}",
+            )
+
+        parsed = catalog_ingestion_service.ingest_ai_result(ai_result)
+        source = "ai"
+    else:
+        parsed = catalog_ingestion_service.ingest(file_name=filename, content=content)
 
     extracted = {"items": [extracted_item_to_dict(i) for i in parsed.items]}
-    warnings = list(parsed.warnings)
+    warnings.extend(parsed.warnings)
     if not parsed.items:
         warnings.append("No importable rows found.")
 
     review = CatalogImport(
-        file_name=file.filename or "catalog.csv",
+        file_name=filename,
         content_type=file.content_type,
-        source="csv",
+        source=source,
         status="pending",
         supplier_id=supplier_id,
         extracted_data=extracted,

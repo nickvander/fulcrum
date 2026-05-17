@@ -361,8 +361,12 @@
             "doneTitle": "Import Complete",
             "createdCount": "Created {{n}} products.",
             "skippedCount": "Skipped {{n}} rows:",
+            "aiReady": "AI is configured — you can upload PDFs or images of catalog pages.",
+            "aiUnavailable": "PDF / image catalogs need AI. CSV uploads work without it.",
+            "openSettings": "Open Settings",
             "errors": {
                 "csvOnly": "Only CSV / TSV files are supported.",
+                "unsupportedType": "Unsupported file type.",
                 "uploadFailed": "Could not upload the catalog file.",
                 "approveFailed": "Could not approve the catalog import.",
                 "rejectFailed": "Could not cancel the catalog import."
@@ -1436,7 +1440,9 @@
             "reviewNotFound": "Catalog import not found.",
             "reviewNotPending": "Only pending catalog imports can be modified.",
             "emptyFile": "The uploaded catalog file is empty.",
-            "nothingSelected": "Select at least one row with a product name before approving."
+            "nothingSelected": "Select at least one row with a product name before approving.",
+            "aiRequiredForFileType": "Importing {{extension}} catalogs requires AI to be enabled and an API key configured for the active provider in Settings.",
+            "aiExtractionFailed": "AI catalog extraction failed: {{reason}}"
         }
     }
 }
