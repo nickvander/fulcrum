@@ -472,7 +472,12 @@
             "createBundle": "Create New Bundle",
             "editBundle": "Edit Bundle",
             "stockHistoryFor": "Stock Adjustment History for {{productName}}"
-        }
+        },
+        "reorderPointPlaceholder": "Auto",
+        "reorderPointHint": "When on-hand drops to this, create a PO. Overrides the store low-stock default.",
+        "reorderQuantity": "Reorder Quantity",
+        "reorderQuantityPlaceholder": "Auto",
+        "reorderQuantityHint": "Suggested batch size when reordering. Defaults to ~30 days of sales."
     },
     "suppliers": {
         "title": "Suppliers",

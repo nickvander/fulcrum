@@ -89,6 +89,18 @@ export interface Product {
 
   low_inventory_threshold?: number;
   low_stock_quantity_threshold?: number;
+  /**
+   * Per-product reorder threshold. Takes precedence over
+   * low_stock_quantity_threshold and StoreSettings.low_stock_quantity_default
+   * in the /reports/low-stock report.
+   */
+  reorder_point?: number;
+  /**
+   * Per-product suggested reorder batch size. Used verbatim by the
+   * low-stock report when set; otherwise the report falls back to a
+   * velocity-based suggestion.
+   */
+  reorder_quantity?: number;
   stock_quantity?: number; // Convenience field often used in UI
   active_campaign_count?: number;
   active_campaigns?: Array<{

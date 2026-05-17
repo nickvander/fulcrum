@@ -472,7 +472,12 @@
             "createBundle": "Crear nuevo bundle",
             "editBundle": "Editar bundle",
             "stockHistoryFor": "Historial de ajustes de stock para {{productName}}"
-        }
+        },
+        "reorderPointPlaceholder": "Automático",
+        "reorderPointHint": "Cuando el stock baje a este nivel, crea una OC. Anula el umbral predeterminado de la tienda.",
+        "reorderQuantity": "Cantidad de Reorden",
+        "reorderQuantityPlaceholder": "Automático",
+        "reorderQuantityHint": "Tamaño de lote sugerido al reordenar. Predeterminado: ~30 días de ventas."
     },
     "suppliers": {
         "title": "Proveedores",
