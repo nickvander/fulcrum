@@ -95,40 +95,48 @@ author either didn't run the test or didn't notice.
 
 ## Pre-Existing Issues NOT Touched
 
-These were on the original lucid-shirley handoff and remain TODO:
+These were on the original lucid-shirley handoff. Status updated below
+after the post-`b955e1a` session.
 
 ### High-value next slice
-1. **End-to-end test for `process_mercadolibre_event` -> SalesOrder**.
-   The function is now fully implemented (178 lines in
-   `backend/src/api/v1/endpoints/webhooks.py:120`) but unexercised
-   against a real ML order payload. Build a fixture posting a realistic
-   webhook to `/api/v1/webhooks/mercadolibre`, run the background task
-   synchronously, assert `SalesOrder` + `SalesOrderItem` + decremented
-   `InventoryItem` + `WebhookEvent.status == "PROCESSED"`.
+1. ~~**End-to-end test for `process_mercadolibre_event` -> SalesOrder**.~~
+   **DONE** in `c502b97` ("Add E2E test for MercadoLibre webhook -> SalesOrder pipeline").
 
-2. **`MercadoLibreConnector.publish_listing()` still stubbed**. Returns
-   `"MLM-STUB-123"`. Next: `POST /items` with full payload, `site_id=MLM`.
+2. ~~**`MercadoLibreConnector.publish_listing()` still stubbed**.~~
+   **DONE** in `dce6ed9` ("Make MercadoLibreConnector.publish_listing real")
+   — POST /items via httpx with Mexico-first defaults; stub fallback for
+   no-token / STUB-prefixed token.
 
-3. **Backend error message localization**. Endpoints still emit raw
-   English strings (e.g. allocation PATCH used to do this; similar
-   patterns elsewhere). Switch to `{"detail": {"code": "...", "params":
-   {...}}}` so the frontend can resolve Spanish copy.
+3. ~~**Backend error message localization**.~~
+   **DONE** in `4c6c79e` (backend `LocalizedHTTPException` + 16 sites in
+   products router), `b955e1a` (frontend `HttpErrorInterceptor` rewrites
+   to `translateApiError`, 17 redundant consumer snackbars removed),
+   `e1e749e` (inline-error fields in 5 more components). See
+   `89-localized-errors-rollout.md` for the open follow-up: extend the
+   backend migration to suppliers / sales-orders / purchase-orders /
+   marketplace routers (frontend already auto-handles via interceptor).
 
 ### Smaller pre-existing
-4. `AmazonConnector.fetch_all_listings()` returns one hardcoded stub.
-5. Frontend vitest setup is broken (`resolveComponentResources()` error
-   on every spec) — pre-existing Angular 21 + vitest issue.
-6. `ng serve` NG0203 (`inject() must be called from an injection
-   context`) — currently worked around via custom static server.
+4. **`AmazonConnector.fetch_all_listings()` returns one hardcoded stub.**
+   Still open. See `91-amazon-connector-real-impl.md` for concrete steps.
+5. ~~Frontend vitest setup is broken (`resolveComponentResources()` error
+   on every spec) — pre-existing Angular 21 + vitest issue.~~
+   **DONE** in `1178b8d` (switched env from happy-dom to jsdom,
+   unstuck 13 specs).
+6. ~~`ng serve` NG0203 (`inject() must be called from an injection
+   context`) — currently worked around via custom static server.~~
+   **CLOSED** as not reproducible (May 2026). Navigated every major
+   route with the dev server after the jsdom + TranslocoTestingModule
+   work landed and no error fires. Likely already fixed.
 7. The `lineItemCountSingular` / `lineItemCountPlural` keys are a
    workaround for the existing `purchaseOrders.lineItems` key.
-   Clean up to a single ICU plural.
+   Clean up to a single ICU plural. **Still open.**
 
 ### Out-of-scope architectural
 8. `process_mercadolibre_event` resolves credentials by
    "most-recently-updated for that marketplace" — fine for single-tenant
    but needs work if Fulcrum ever supports multiple users with their own
-   ML accounts.
+   ML accounts. **Still open.**
 
 ## State Of Existing Worktrees
 
