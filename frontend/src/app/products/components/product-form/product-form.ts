@@ -105,6 +105,8 @@ export class ProductForm implements OnInit {
       weight: [0, [Validators.min(0)]],
       low_inventory_threshold: [null, [Validators.min(0)]],
       low_stock_quantity_threshold: [null, [Validators.min(0)]],
+      reorder_point: [null, [Validators.min(0)]],
+      reorder_quantity: [null, [Validators.min(1)]],
       is_bundle: [false],
       barcode_value: [''],
       qrcode_value: ['']
@@ -433,7 +435,7 @@ export class ProductForm implements OnInit {
       // Compare current form values with original values for standard fields
       const standardFields = [
         'name', 'sku', 'description', 'default_resale_price', 'cost_price',
-        'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight', 'low_inventory_threshold', 'low_stock_quantity_threshold'
+        'manufacturer', 'brand', 'category', 'width', 'height', 'depth', 'weight', 'low_inventory_threshold', 'low_stock_quantity_threshold', 'reorder_point', 'reorder_quantity'
       ];
 
       for (const key of standardFields) {
@@ -616,6 +618,8 @@ export class ProductForm implements OnInit {
       weight: formValue.weight,
       low_inventory_threshold: formValue.low_inventory_threshold,
       low_stock_quantity_threshold: formValue.low_stock_quantity_threshold,
+      reorder_point: formValue.reorder_point,
+      reorder_quantity: formValue.reorder_quantity,
       is_bundle: formValue.is_bundle,
       bundle_components: formValue.is_bundle ? this.bundleComponents.map(bc => ({
         component_id: bc.component_id,

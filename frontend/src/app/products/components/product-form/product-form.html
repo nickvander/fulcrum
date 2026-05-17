@@ -205,6 +205,20 @@
                   </mat-form-field>
 
                   <mat-form-field>
+                    <mat-label>{{ t('products.reorderPoint') }}</mat-label>
+                    <input matInput formControlName="reorder_point" type="number" min="0"
+                      [placeholder]="t('products.reorderPointPlaceholder')">
+                    <mat-hint>{{ t('products.reorderPointHint') }}</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field>
+                    <mat-label>{{ t('products.reorderQuantity') }}</mat-label>
+                    <input matInput formControlName="reorder_quantity" type="number" min="1"
+                      [placeholder]="t('products.reorderQuantityPlaceholder')">
+                    <mat-hint>{{ t('products.reorderQuantityHint') }}</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field>
                     <mat-label>{{ t('products.costPrice') }}</mat-label>
                     <input matInput formControlName="cost_price" type="number" placeholder="0.00">
                   </mat-form-field>
