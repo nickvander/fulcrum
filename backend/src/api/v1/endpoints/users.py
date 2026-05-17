@@ -1,7 +1,8 @@
 import os
 from datetime import timedelta
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
+from src.core.errors import LocalizedHTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 import logging
@@ -29,15 +30,18 @@ def create_user(
     # Check privileges if trying to create an admin or superuser
     if user_in.user_type == "admin" or user_in.is_superuser:
         if not current_user or not crud.user.is_superuser(current_user):
-            raise HTTPException(
+            raise LocalizedHTTPException(
                 status_code=403,
+                code="apiErrors.user.notEnoughPrivileges",
                 detail="The user doesn't have enough privileges",
             )
 
     user = crud.user.get_by_email(db, email=user_in.email)
     if user:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
+            code="apiErrors.user.alreadyExists",
+            params={"email": user_in.email},
             detail="The user with this username already exists in the system",
         )
     user = crud.user.create(db, obj_in=user_in)
@@ -67,11 +71,19 @@ def change_password(
     """
     # Verify current password
     if not security.verify_password(password_data.current_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect password")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.user.incorrectPassword",
+            detail="Incorrect password",
+        )
     
     # Check if new password is the same as old password
     if security.verify_password(password_data.new_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="New password cannot be the same as the current password")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.user.passwordSameAsCurrent",
+            detail="New password cannot be the same as the current password",
+        )
         
     # Update password
     hashed_password = security.get_password_hash(password_data.new_password)
@@ -98,7 +110,11 @@ def login_access_token(
         db, email=form_data.username, password=form_data.password
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.user.invalidCredentials",
+            detail="Incorrect email or password",
+        )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
@@ -193,7 +209,11 @@ def reset_password(
     reset_token = crud.password_reset_token.get_valid_token(db, token=reset_data.token)
     
     if not reset_token or reset_token.used:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.user.resetTokenInvalid",
+            detail="Invalid or expired reset token",
+        )
     
     # Get the user to be updated
     user = reset_token.user
@@ -243,8 +263,10 @@ def admin_reset_password(
     # Get the user to reset password for
     target_user = crud.user.get(db, id=user_id)
     if not target_user:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.user.notFound",
+            params={"id": user_id},
             detail="The user with this username does not exist in the system",
         )
     
@@ -334,7 +356,12 @@ def read_user_by_id(
     """
     user = crud.user.get(db, id=user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.user.notFound",
+            params={"id": user_id},
+            detail="User not found",
+        )
     
     # Allow user to access their own profile
     if user.id == current_user.id:
@@ -342,8 +369,10 @@ def read_user_by_id(
     
     # Only admin users can access other users
     if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=403, detail="The user doesn't have enough privileges"
+        raise LocalizedHTTPException(
+            status_code=403,
+            code="apiErrors.user.notEnoughPrivileges",
+            detail="The user doesn't have enough privileges",
         )
     return user_schema.User.from_orm(user)
 
@@ -362,8 +391,10 @@ def update_user(
     """
     user = crud.user.get(db, id=user_id)
     if not user:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.user.notFound",
+            params={"id": user_id},
             detail="The user with this username does not exist in the system",
         )
     
@@ -388,15 +419,18 @@ def delete_user(
     # Get the user to be deactivated
     target_user = crud.user.get(db, id=user_id)
     if not target_user:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.user.notFound",
+            params={"id": user_id},
             detail="The user with this username does not exist in the system",
         )
     
     # Make sure the user is not trying to deactivate themselves
     if target_user.id == current_user.id:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
+            code="apiErrors.user.cannotDeactivateSelf",
             detail="You cannot deactivate your own account",
         )
     
@@ -438,15 +472,18 @@ def delete_user_permanent(
     # Get the user to be deleted for audit logging
     target_user = crud.user.get(db, id=user_id)
     if not target_user:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.user.notFound",
+            params={"id": user_id},
             detail="The user with this username does not exist in the system",
         )
     
     # Make sure the user is not trying to delete themselves
     if target_user.id == current_user.id:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=400,
+            code="apiErrors.user.cannotDeleteSelf",
             detail="You cannot permanently delete your own account",
         )
     
@@ -465,8 +502,10 @@ def delete_user_permanent(
     )
     
     if not success:
-        raise HTTPException(
+        raise LocalizedHTTPException(
             status_code=404,
+            code="apiErrors.user.deleteFailed",
+            params={"id": user_id},
             detail="The user could not be permanently deleted",
         )
     

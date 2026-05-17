@@ -156,8 +156,7 @@
             "daysLeft": "Días restantes",
             "suggested": "Sugerido",
             "createPo": "Crear OC"
-        },
-        "demoCleanupBlocked": "La limpieza de la demo no se pudo ejecutar de forma segura. Revisa primero los registros bloqueados."
+        }
     },
     "onboarding": {
         "eyebrow": "Configuración del cliente",
@@ -1263,6 +1262,22 @@
             "skuExists": "Ya existe un producto con el SKU {{sku}}.",
             "imageNotFound": "No se encontró la imagen {{id}} del producto.",
             "bundleAssemblyFailed": "No se pudo ensamblar el bundle: {{reason}}"
+        },
+        "user": {
+            "notFound": "No se encontró el usuario {{id}}.",
+            "alreadyExists": "Ya existe un usuario con el correo {{email}}.",
+            "invalidCredentials": "Correo o contraseña incorrectos.",
+            "incorrectPassword": "La contraseña actual es incorrecta.",
+            "passwordSameAsCurrent": "La nueva contraseña no puede ser igual a la actual.",
+            "notEnoughPrivileges": "No tienes privilegios suficientes para realizar esta acción.",
+            "resetTokenInvalid": "Este enlace para restablecer la contraseña no es válido o expiró. Solicita uno nuevo.",
+            "cannotDeactivateSelf": "No puedes desactivar tu propia cuenta.",
+            "cannotDeleteSelf": "No puedes eliminar permanentemente tu propia cuenta.",
+            "deleteFailed": "No se pudo eliminar permanentemente el usuario {{id}}."
+        },
+        "onboarding": {
+            "cleanupNotConfirmed": "La limpieza de datos de demostración debe ser confirmada.",
+            "cleanupBlocked": "La limpieza de demo se bloqueó para proteger registros de clientes. Revisa primero los registros bloqueados."
         }
     }
 }
