@@ -23,6 +23,11 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Stockout / velocity / margin reports (CSV + PDF on the shared
+  `report_export` module, one shared SalesOrderItem aggregation pass)
+  + marketplace channel-list reauth chip coverage tests (the chip was
+  already wired up in `7b682c0`; the spec only smoke-tested
+  `should create`). Backend 431/8, frontend 463/0.
 - `d669246` AmazonConnector SP-API completion: real `sync_inventory`
   (PATCH with required `marketplaceIds`, MFN
   `fulfillment_availability`, propagates 401 so the retry wrapper
@@ -60,15 +65,9 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Pick one of these (or anything from `work/future/`):
 
-- **Stockout / velocity / margin reports** — `endpoints/reports.py`
-  currently only exposes low-stock. The `report_export` helper makes
-  each new report ~25 lines + a SQL query.
 - **Alerting on low margin / sudden sales dips / out-of-stock risk** —
   Track 3 Step 6 of `80-advanced-analytics.md`. Could ship one channel
   (email via SMTP) first.
-- **Marketplace channel cards: surface ML / Amazon sync state** — today
-  the reauth chip is only on the stock-transfer sync panel; the
-  channel-list cards still ignore it.
 - **Mercado Pago Checkout API integration** — research lives in
   `work/future/mercadopago-checkout-research.md`. Greenfield, sizable.
 - **Rust backend migration first slice** — plan in
@@ -79,8 +78,8 @@ Pick one of these (or anything from `work/future/`):
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 418 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 450 passed, 0
+  → 431 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 463 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 
