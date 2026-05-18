@@ -33,6 +33,19 @@ class Settings(BaseSettings):
     ML_CLIENT_SECRET: Optional[str] = None
     ML_REDIRECT_URI: Optional[str] = "http://localhost:4200/marketplaces/mercadolibre/callback"
 
+    # Mercado Pago Checkout API (Custom Checkout / Checkout Transparente).
+    # MERCADOPAGO_ACCESS_TOKEN is the server-side secret used to call the
+    # MP REST API. MERCADOPAGO_PUBLIC_KEY is the frontend SDK key (sent
+    # to the browser). MERCADOPAGO_WEBHOOK_SECRET is the value of the
+    # `x-signature` HMAC the MP dashboard generates when you enable
+    # webhooks — we verify every incoming webhook against it. All three
+    # default to None so a dev workspace renders without MP creds; the
+    # connector falls back to its stub branch in that case.
+    MERCADOPAGO_ACCESS_TOKEN: Optional[str] = None
+    MERCADOPAGO_PUBLIC_KEY: Optional[str] = None
+    MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
+    MERCADOPAGO_API_BASE_URL: str = "https://api.mercadopago.com"
+
     # Testing
     TESTING: bool = False
 

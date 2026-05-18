@@ -12,10 +12,21 @@ _(none active)_
 
 _(none active)_
 
+## Medium Priority
+
+- [ ] **Frontend Mercado Pago checkout flow** — backend payments
+      surface shipped (POST /api/v1/payments, GET /payments/{id},
+      POST /webhooks/mercadopago with HMAC). Still needed on the
+      frontend: load the Mercado Pago JS SDK, render a Secure
+      Fields card form, tokenize client-side, POST the token to
+      /api/v1/payments. Test cards documented in the research file.
+- [ ] **Payments admin UI** — list / detail page for the
+      `payments` table so an operator can see status, error
+      messages, raw provider response. Pattern: existing /alerts
+      page.
+
 ## Future / Strategic
 
-- [ ] Mercado Pago Checkout API integration — research in
-      `work/future/mercadopago-checkout-research.md`.
 - [ ] Rust backend migration first slice — plan in
       `work/future/81-rust-backend-migration-plan.md`.
 - [ ] AI content generation (product descriptions, marketing copy) —
@@ -96,6 +107,24 @@ _(none active)_
       23 new backend tests + live smoke test against the dev
       backend (rule fired, email composed with correct subject +
       HTML, cooldown skip respected on the next tick).
+- [x] Mercado Pago Checkout API — backend foundation: new
+      `MercadoPagoConnector` (services/mercado_pago.py) wraps
+      `POST /v1/payments` + `GET /v1/payments/{id}` with stub
+      branch for dev (REJECT- token convention for failure
+      simulation). New `Payment` model + migration with
+      `(provider, external_payment_id)` unique constraint for
+      idempotency. `PaymentStatus.from_mercado_pago` collapses MP's
+      ~10 statuses to 5 canonical ones. `POST /api/v1/payments/`
+      persists pending → calls connector → applies provider result.
+      `POST /api/v1/webhooks/mercadopago` verifies HMAC signature
+      (manifest = `id:<data.id>;request-id:<x-request-id>;ts:<ts>;`,
+      hmac_sha256) and updates the matching Payment by
+      external_id. 26 new backend tests (status mapping, stub
+      branch, real-HTTP branch, error capture, network resilience,
+      signature accept/tamper/replay/missing/skip, endpoint CRUD,
+      webhook idempotency, ghost-id handling, non-payment event
+      filtering). Live-smoke-tested all paths end-to-end. Frontend
+      Secure Fields + admin UI deferred — see Medium Priority.
 - [x] Amazon order ingestion worker — Celery beat task
       `poll_amazon_orders` runs every 15 minutes per
       MarketplaceCredential. New `services/amazon_order_ingestion.py`
