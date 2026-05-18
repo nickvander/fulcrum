@@ -24,6 +24,7 @@ from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.crud.crud_supplier import supplier as crud_supplier
 from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
 from src.models.catalog_import import CatalogImport
+from src.models.import_template import ImportTemplate
 from src.models.supplier import Supplier
 from src.models.user import User
 from src.schemas.product import ProductCreate
@@ -133,6 +134,102 @@ class CatalogImportApproveResponse(BaseModel):
     skipped_reasons: List[str] = Field(default_factory=list)
 
 
+# --- Named import templates -------------------------------------------------
+#
+# The "Map & Template" UX from usability-roadmap.md #4: a user uploads a
+# supplier's catalog whose headers don't match any of the alias entries,
+# manually maps columns once, saves the map as a named template, and on
+# every future upload picks the template to skip the alias auto-detection.
+
+
+# Set of canonical fields a template's `column_map` is allowed to reference.
+# Kept here next to the CatalogImport schema so an out-of-date map (e.g. a
+# template that mentions a field we since removed) is caught at upload time
+# instead of producing silently-wrong rows.
+_ALLOWED_CANONICAL_FIELDS = {
+    "sku", "name", "description", "cost_price", "default_resale_price",
+    "category", "brand", "supplier_sku",
+}
+
+
+def _validate_column_map(column_map: dict[str, str]) -> None:
+    """Reject a template whose values mention fields the parser doesn't
+    know about. This is the only sanity check we run — empty source
+    headers are silently dropped by the parser when the file lands."""
+    for source_header, canonical in column_map.items():
+        if canonical not in _ALLOWED_CANONICAL_FIELDS:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.catalogImport.invalidColumnMap",
+                params={"field": canonical},
+                detail=f"Unknown Fulcrum field '{canonical}' in column map",
+            )
+
+
+class ImportTemplatePreview(BaseModel):
+    """First few rows + headers, returned without saving anything. The
+    "Map & Template" dialog uses this to populate the mapping screen
+    before the user picks a column for each source header."""
+    headers: List[str]
+    sample_rows: List[dict]
+    detected_field_map: dict[str, str]
+    """Best-effort {canonical_field: actual_header} from the existing alias
+    auto-detection — the UI can pre-fill the dropdowns with this so the
+    user only re-maps what was missed."""
+
+
+class ImportTemplateBase(BaseModel):
+    name: str
+    column_map: dict[str, str]
+    notes: str | None = None
+
+
+class ImportTemplateCreate(ImportTemplateBase):
+    pass
+
+
+class ImportTemplateUpdate(BaseModel):
+    name: str | None = None
+    column_map: dict[str, str] | None = None
+    notes: str | None = None
+
+
+class ImportTemplateRead(ImportTemplateBase):
+    id: int
+    source_type: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+def _template_response(t: ImportTemplate) -> ImportTemplateRead:
+    return ImportTemplateRead(
+        id=t.id,
+        name=t.name,
+        source_type=t.source_type,
+        column_map=t.column_map or {},
+        notes=t.notes,
+        created_at=t.created_at,
+        updated_at=t.updated_at,
+    )
+
+
+def _get_template_or_404(db: Session, template_id: int) -> ImportTemplate:
+    template = (
+        db.query(ImportTemplate)
+        .filter(ImportTemplate.id == template_id, ImportTemplate.source_type == "catalog")
+        .first()
+    )
+    if not template:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.catalogImport.templateNotFound",
+            detail="Import template not found",
+        )
+    return template
+
+
 def _read_response(review: CatalogImport) -> CatalogImportRead:
     extracted = review.extracted_data or {}
     return CatalogImportRead(
@@ -217,10 +314,19 @@ async def create_catalog_import_review(
     db: Session = Depends(get_db),
     file: UploadFile = File(...),
     supplier_id: int | None = Query(None, description="Optional supplier to link new products to"),
+    template_id: int | None = Query(
+        None,
+        description="Optional saved ImportTemplate id; overrides alias auto-detection for CSV uploads",
+    ),
     current_user: User = Depends(get_current_active_user),
 ):
     """Upload a catalog file, parse it (CSV synchronously / PDF + image via AI),
     and stage a review row.
+
+    When `template_id` is set and the file is a CSV/TSV, the template's
+    `column_map` replaces the alias auto-detection for that upload — this
+    is the "Map & Template" path for suppliers whose headers don't match
+    any built-in alias.
     """
     content = await file.read()
     if not content:
@@ -270,7 +376,13 @@ async def create_catalog_import_review(
         parsed = catalog_ingestion_service.ingest_ai_result(ai_result)
         source = "ai"
     else:
-        parsed = catalog_ingestion_service.ingest(file_name=filename, content=content)
+        column_map: dict[str, str] | None = None
+        if template_id is not None:
+            template = _get_template_or_404(db, template_id)
+            column_map = template.column_map or {}
+        parsed = catalog_ingestion_service.ingest(
+            file_name=filename, content=content, column_map=column_map,
+        )
 
     extracted = {"items": [extracted_item_to_dict(i) for i in parsed.items]}
     if parsed.vendor_name:
@@ -452,3 +564,159 @@ def reject_catalog_import_review(
     db.commit()
     db.refresh(review)
     return _read_response(review)
+
+
+# --- Template preview + CRUD ------------------------------------------------
+
+
+@router.post("/templates/preview", response_model=ImportTemplatePreview)
+async def preview_catalog_for_mapping(
+    *,
+    db: Session = Depends(get_db),
+    file: UploadFile = File(...),
+    sample_size: int = Query(5, ge=1, le=20),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Inspect a CSV without staging a review. Returns the headers, the
+    first N data rows, and what the alias auto-detector would have
+    matched — the UI uses this to populate the column-mapping screen so
+    the user only re-maps headers the auto-detector missed."""
+    content = await file.read()
+    if not content:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.catalogImport.emptyFile",
+            detail="Uploaded file is empty",
+        )
+
+    import csv as csv_mod
+    import io as io_mod
+    from src.services.catalog_ingestion_service import (
+        _build_field_map,
+        _sniff_dialect,
+    )
+
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        text = content.decode("latin-1", errors="ignore")
+
+    dialect = _sniff_dialect(text[:4096])
+    reader = csv_mod.DictReader(io_mod.StringIO(text), dialect=dialect)
+    headers = list(reader.fieldnames or [])
+    detected = _build_field_map(headers)
+    sample_rows = [row for row, _ in zip(reader, range(sample_size))]
+    return ImportTemplatePreview(
+        headers=headers,
+        sample_rows=sample_rows,
+        detected_field_map=detected,
+    )
+
+
+@router.get("/templates", response_model=List[ImportTemplateRead])
+def list_catalog_import_templates(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """List saved catalog import templates. Returns every template across
+    users for now — single-tenant workspace assumption — so a buyer can
+    pick up a template a colleague saved."""
+    templates = (
+        db.query(ImportTemplate)
+        .filter(ImportTemplate.source_type == "catalog")
+        .order_by(ImportTemplate.name.asc())
+        .all()
+    )
+    return [_template_response(t) for t in templates]
+
+
+@router.post("/templates", response_model=ImportTemplateRead)
+def create_catalog_import_template(
+    *,
+    db: Session = Depends(get_db),
+    request: ImportTemplateCreate,
+    current_user: User = Depends(get_current_active_user),
+):
+    name = (request.name or "").strip()
+    if not name:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.catalogImport.templateNameRequired",
+            detail="Template name is required",
+        )
+    _validate_column_map(request.column_map or {})
+
+    # Reject duplicate (user, name) pairs explicitly so the UI shows a
+    # clean error instead of a 500 on the unique constraint.
+    existing = (
+        db.query(ImportTemplate)
+        .filter(
+            ImportTemplate.created_by_id == current_user.id,
+            ImportTemplate.source_type == "catalog",
+            ImportTemplate.name == name,
+        )
+        .first()
+    )
+    if existing:
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.catalogImport.templateNameExists",
+            params={"name": name},
+            detail="A template with this name already exists",
+        )
+
+    template = ImportTemplate(
+        name=name,
+        source_type="catalog",
+        column_map=request.column_map or {},
+        notes=request.notes,
+        created_by_id=current_user.id,
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return _template_response(template)
+
+
+@router.put("/templates/{template_id}", response_model=ImportTemplateRead)
+def update_catalog_import_template(
+    *,
+    db: Session = Depends(get_db),
+    template_id: int,
+    request: ImportTemplateUpdate,
+    current_user: User = Depends(get_current_active_user),
+):
+    template = _get_template_or_404(db, template_id)
+    if request.name is not None:
+        template.name = request.name.strip()
+        if not template.name:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.catalogImport.templateNameRequired",
+                detail="Template name is required",
+            )
+    if request.column_map is not None:
+        _validate_column_map(request.column_map)
+        template.column_map = request.column_map
+    if request.notes is not None:
+        template.notes = request.notes
+
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return _template_response(template)
+
+
+@router.delete("/templates/{template_id}", response_model=ImportTemplateRead)
+def delete_catalog_import_template(
+    *,
+    db: Session = Depends(get_db),
+    template_id: int,
+    current_user: User = Depends(get_current_active_user),
+):
+    template = _get_template_or_404(db, template_id)
+    snapshot = _template_response(template)
+    db.delete(template)
+    db.commit()
+    return snapshot

@@ -378,6 +378,10 @@
             "aiReady": "AI is configured — you can upload PDFs or images of catalog pages.",
             "aiUnavailable": "PDF / image catalogs need AI. CSV uploads work without it.",
             "openSettings": "Open Settings",
+            "useTemplate": "Use saved column mapping",
+            "autoDetect": "Auto-detect (default)",
+            "manageTemplates": "Manage templates",
+            "manageTemplatesTooltip": "Create or remove named column mappings for repeat suppliers",
             "vendorAutoLinked": "Linked supplier \"{{supplier}}\" from document vendor \"{{vendor}}\". Confirm or change in the dropdown.",
             "vendorNoMatch": "Document vendor \"{{vendor}}\" did not match any existing supplier. Pick one below before approving.",
             "errors": {
@@ -1364,6 +1368,33 @@
         "areYouSure": "Are you sure?",
         "cannotBeUndone": "This action cannot be undone."
     },
+    "catalogImportTemplates": {
+        "title": "Catalog import templates",
+        "empty": "No saved templates yet. Create one to map non-standard supplier headers to Fulcrum fields once and reuse it on every future upload.",
+        "columnCount": "{{n}} columns mapped",
+        "createNew": "Create new",
+        "nameLabel": "Template name",
+        "uploadSamplePrompt": "Upload a sample of this supplier's CSV so we can read its headers. Nothing is imported at this step.",
+        "sampleSummary": "{{headers}} headers detected, {{rows}} sample rows read.",
+        "mapTo": "Map to Fulcrum field",
+        "save": "Save template",
+        "saved": "Template saved.",
+        "confirmDelete": "Delete template \"{{name}}\"?",
+        "unmapped": "— ignore this column —",
+        "fieldSku": "SKU",
+        "fieldName": "Product name",
+        "fieldDescription": "Description",
+        "fieldCostPrice": "Cost price",
+        "fieldResalePrice": "Resale price",
+        "fieldCategory": "Category",
+        "fieldBrand": "Brand",
+        "fieldSupplierSku": "Supplier SKU",
+        "errors": {
+            "previewFailed": "Could not read the sample file.",
+            "saveFailed": "Could not save the template.",
+            "deleteFailed": "Could not delete the template."
+        }
+    },
     "apiErrors": {
         "unknown": "An unexpected error occurred. Please try again.",
         "network": "Unable to connect to server. Please check your internet connection.",
@@ -1462,7 +1493,11 @@
             "emptyFile": "The uploaded catalog file is empty.",
             "nothingSelected": "Select at least one row with a product name before approving.",
             "aiRequiredForFileType": "Importing {{extension}} catalogs requires AI to be enabled and an API key configured for the active provider in Settings.",
-            "aiExtractionFailed": "AI catalog extraction failed: {{reason}}"
+            "aiExtractionFailed": "AI catalog extraction failed: {{reason}}",
+            "templateNotFound": "Import template not found.",
+            "templateNameRequired": "Template name is required.",
+            "templateNameExists": "A template named \"{{name}}\" already exists.",
+            "invalidColumnMap": "Unknown Fulcrum field \"{{field}}\" in column map."
         }
     }
 }

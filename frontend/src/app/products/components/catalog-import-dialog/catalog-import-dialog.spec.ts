@@ -1,7 +1,7 @@
 import type { MockedObject } from 'vitest';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
@@ -85,6 +85,10 @@ describe('CatalogImportDialogComponent', () => {
           accepted_extensions: ['csv', 'tsv', 'txt'],
         }),
       ),
+      listTemplates: vi.fn().mockReturnValue(of([])),
+      previewForMapping: vi.fn(),
+      createTemplate: vi.fn(),
+      deleteTemplate: vi.fn(),
     } as unknown as MockedObject<CatalogImportService>;
 
     suppliersSpy = {
@@ -105,6 +109,7 @@ describe('CatalogImportDialogComponent', () => {
       providers: [
         provideRouter([]),
         { provide: MatDialogRef, useValue: dialogRefSpy },
+        { provide: MatDialog, useValue: { open: vi.fn() } },
         { provide: CatalogImportService, useValue: serviceSpy },
         { provide: SuppliersService, useValue: suppliersSpy },
       ],
@@ -170,7 +175,7 @@ describe('CatalogImportDialogComponent', () => {
 
     component.upload();
 
-    expect(serviceSpy.upload).toHaveBeenCalledWith(component.selectedFile, null);
+    expect(serviceSpy.upload).toHaveBeenCalledWith(component.selectedFile, null, null);
     expect(component.step).toBe('review');
     expect(component.review!.extracted_data.items.length).toBe(2);
     expect(component.selectedCount()).toBe(2);

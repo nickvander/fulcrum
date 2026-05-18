@@ -37,6 +37,25 @@
         </mat-select>
       </mat-form-field>
 
+      <div class="template-row">
+        <mat-form-field appearance="outline" class="template-select">
+          <mat-label>{{ t('products.catalogImport.useTemplate') }}</mat-label>
+          <mat-select [(ngModel)]="selectedTemplateId" data-testid="template-select">
+            <mat-option [value]="null">{{ t('products.catalogImport.autoDetect') }}</mat-option>
+            @for (tpl of templates; track tpl.id) {
+              <mat-option [value]="tpl.id">{{ tpl.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button color="primary" type="button"
+            (click)="openTemplateManager()"
+            [matTooltip]="t('products.catalogImport.manageTemplatesTooltip')"
+            data-testid="manage-templates-button">
+          <mat-icon>tune</mat-icon>
+          {{ t('products.catalogImport.manageTemplates') }}
+        </button>
+      </div>
+
       <div class="file-input-container">
         <input
           type="file"

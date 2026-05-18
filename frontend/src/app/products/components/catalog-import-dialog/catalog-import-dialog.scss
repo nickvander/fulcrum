@@ -42,6 +42,17 @@
   margin-top: 12px;
 }
 
+.template-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 4px;
+
+  .template-select {
+    flex: 1;
+  }
+}
+
 .file-input-container {
   margin-top: 12px;
 }
