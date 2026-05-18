@@ -1,61 +1,52 @@
 # Missing Items Tracker
 
+_All onboarding / launch-readiness items are now shipped. This file
+tracks the next round of polish + greenfield work. Add new items here
+when you find them so the next session has a place to start._
+
 ## High Priority
 
-- [x] Customer onboarding checklist/setup-health workflow
-      - Show store, products, suppliers, PO, inventory movement, supplier alias,
-        and marketplace credential readiness.
-      - Provide direct actions to complete missing setup.
-- [x] Customer-ready empty states for Products, Suppliers, Purchase Orders, and
-      Supplier detail Products tab.
-- [x] Receiving correction/reversal flow so onboarding users can fix stock
-      mistakes without editing history silently.
-- [x] Optional demo workspace/sample data for trial onboarding.
-- [x] Launch readiness report for setup health, unresolved imports, test data,
-      stock health, and marketplace credential status.
-- [x] Demo-data cleanup warning/path before customer go-live.
-      - Lists exact demo records in launch readiness.
-      - Cleans only records that still match demo fingerprints.
-      - Blocks cleanup when demo records have customer-linked activity.
+_(none active)_
 
 ## Medium Priority
 
-- [x] Supplier document review queue for imported Alibaba PDFs/images before PO
-      or stock updates.
-- [ ] Supplier import review polish:
-      - [x] bulk reject/cleanup stale reviews (>30 days; explicit IDs accepted
-        by the backend for a future multi-select UI)
-      - [x] one-click create product / learn supplier alias from unmatched import
-        lines
-      - [x] history filter view (pending / approved+rejected / all)
-      - visual diff for uploaded invoice/packing-list documents that match an
-        existing PO
-- [x] Marketplace allocation workflow before stock sync. Do not sync received
-      internal stock directly to Amazon/MercadoLibre.
-      - Implemented in `86-marketplace-allocation-workflow.md` (Slices 1-3).
-      - Stock-transfer model + allocation planner replace any implicit sync
-        from PO receiving.
-- [x] Sync approved listing/inventory allocations to actual marketplace APIs
-      (Amazon SP-API, MercadoLibre API)
-      - MercadoLibre Full inbound shipment + listing-quantity sync wired up
-        in Slice 2 with a stub fallback. First live token will exercise the
-        real API path.
-- [x] OAuth token refresh handling improvements
-      - Implemented in `87-marketplace-oauth-hardening.md`.
-      - 5-minute pre-refresh buffer, typed `ReauthorizationRequiredError`,
-        `needs_reauthorization` + `last_refresh_error` on the credential row,
-        and a clear reauth banner in the stock-transfer sync panel.
-      - Open follow-up: surface the reauth state on the marketplace cards
-        (today only the sync panel shows it) and wire
-        `force_refresh_access_token` into a 401-retry decorator.
+- [ ] **Marketplace channel cards: surface needs_reauthorization** —
+      today the reauth chip is only on the stock-transfer sync panel;
+      the channel-list cards still ignore it. Cred + flag already exist
+      from `87-marketplace-oauth-hardening.md`.
+- [ ] **AmazonAdapter SP-API completion** — `fetch_all_listings` shipped
+      in `7b251fe`. `sync_inventory` and `fetch_orders` remain stubbed.
+      MercadoLibre connector is the reference implementation.
+- [ ] **Stockout / velocity / margin reports** — `endpoints/reports.py`
+      currently only exposes low-stock. The shared `report_export`
+      helper makes each new report ~25 lines once the SQL is known.
 
-## Future
+## Future / Strategic
 
-- [ ] Enhance Marketplace Status UI with sync indicators (the
-      `needs_reauthorization` flag is now available on the credential
-      and surfaces in the stock-transfer sync panel — extend that to
-      the Marketplaces channel cards too).
-- [ ] Reorder workflow (shopping-cart style): pick low-stock products
-      across the dashboard, group by supplier, create one draft PO per
-      supplier in a single pass. Natural follow-on to the new
-      low-stock dashboard widget (`88-low-stock-dashboard-widget.md`).
+- [ ] Mercado Pago Checkout API integration — research in
+      `work/future/mercadopago-checkout-research.md`.
+- [ ] Rust backend migration first slice — plan in
+      `work/future/81-rust-backend-migration-plan.md`.
+- [ ] AI content generation (product descriptions, marketing copy) —
+      plan in `work/future/ai-content-generation.md`.
+- [ ] Phase 8 Advanced Analytics — ETL pipeline, cost engine,
+      interactive charts, alerting. Plan in
+      `work/future/80-advanced-analytics.md`.
+
+## Done This Past Week
+
+- [x] Customer onboarding checklist + launch readiness report.
+- [x] Supplier document import review queue (incl. AI catalog parsing
+      with vendor auto-link).
+- [x] Marketplace allocation workflow (stock-transfer model + ML Full
+      API).
+- [x] OAuth token refresh hardening (401-retry + reauth chip on
+      stock-transfer sync panel).
+- [x] Low-stock dashboard widget + shopping-cart reorder.
+- [x] Demo workspace + cleanup guardrail.
+- [x] AI catalog import (CSV + PDF + image), gated on configured key.
+- [x] Reusable `report_export` module + 7 reports × CSV + PDF.
+- [x] Named CSV import templates ("Map & Template" UX).
+- [x] Inventory adjustment audit log UI (`/products/audit`).
+- [x] All 5 disabled product-form specs unblocked; frontend 450/0
+      skipped.
