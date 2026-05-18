@@ -472,3 +472,106 @@ async def test_fetch_orders_handles_empty_page_safely():
 
     assert orders == []
     assert mock_get.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# fetch_order_items
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.anyio
+async def test_fetch_order_items_calls_per_order_endpoint():
+    """Happy path: single SP-API page with two line items. Verifies the
+    URL template (/orders/v0/orders/{id}/orderItems), header carrier,
+    and raw-dict passthrough of the OrderItems list."""
+    connector = AmazonConnector()
+    body = {
+        "payload": {
+            "OrderItems": [
+                {
+                    "ASIN": "B000111111",
+                    "SellerSKU": "SKU-A",
+                    "OrderItemId": "OI-A",
+                    "Title": "Item Alpha",
+                    "QuantityOrdered": 2,
+                    "ItemPrice": {"CurrencyCode": "MXN", "Amount": "199.00"},
+                },
+                {
+                    "ASIN": "B000222222",
+                    "SellerSKU": "SKU-B",
+                    "OrderItemId": "OI-B",
+                    "QuantityOrdered": 1,
+                    "ItemPrice": {"CurrencyCode": "MXN", "Amount": "49.50"},
+                },
+            ],
+        }
+    }
+
+    with patch("httpx.AsyncClient.get") as mock_get:
+        mock_get.return_value = AsyncMock(
+            status_code=200,
+            json=lambda: body,
+            raise_for_status=lambda: None,
+        )
+        items = await connector.fetch_order_items(
+            order_id="111-2222222-3333333",
+            access_token="LIVE-TOKEN",
+        )
+
+    assert mock_get.call_count == 1
+    args, kwargs = mock_get.call_args
+    assert args[0].endswith("/orders/v0/orders/111-2222222-3333333/orderItems")
+    assert kwargs["headers"]["x-amz-access-token"] == "LIVE-TOKEN"
+    # First page → no NextToken in params
+    assert "NextToken" not in kwargs["params"]
+
+    assert [item["ASIN"] for item in items] == ["B000111111", "B000222222"]
+    assert items[0]["ItemPrice"]["Amount"] == "199.00"
+
+
+@pytest.mark.anyio
+async def test_fetch_order_items_paginates_via_next_token():
+    """Two-page response paginates via NextToken. Asserts the second
+    call carries NextToken and that items concatenate across pages."""
+    connector = AmazonConnector()
+    page1 = {
+        "payload": {
+            "OrderItems": [{"OrderItemId": "OI-1", "ASIN": "A1"}],
+            "NextToken": "PAGE-2",
+        }
+    }
+    page2 = {
+        "payload": {"OrderItems": [{"OrderItemId": "OI-2", "ASIN": "A2"}]}
+    }
+    responses = iter([page1, page2])
+
+    def _make_response(*args, **kwargs):
+        b = next(responses)
+        return AsyncMock(status_code=200, json=lambda body=b: body, raise_for_status=lambda: None)
+
+    with patch("httpx.AsyncClient.get", side_effect=_make_response) as mock_get:
+        items = await connector.fetch_order_items(
+            order_id="123-4567890-1234567",
+            access_token="LIVE-TOKEN",
+        )
+
+    assert mock_get.call_count == 2
+    assert "NextToken" not in mock_get.call_args_list[0].kwargs["params"]
+    assert mock_get.call_args_list[1].kwargs["params"]["NextToken"] == "PAGE-2"
+    assert [it["OrderItemId"] for it in items] == ["OI-1", "OI-2"]
+
+
+@pytest.mark.anyio
+async def test_fetch_order_items_returns_stub_for_stub_or_missing_token():
+    """Dev convenience: None / STUB- token → one stub item, no HTTP."""
+    connector = AmazonConnector()
+
+    with patch("httpx.AsyncClient.get") as mock_get:
+        none_items = await connector.fetch_order_items("AMZ-1", access_token=None)
+        stub_items = await connector.fetch_order_items("AMZ-1", access_token="STUB-AMAZON")
+
+    mock_get.assert_not_called()
+    for items in (none_items, stub_items):
+        assert len(items) == 1
+        assert items[0]["OrderItemId"] == "STUB-ITEM-1"
+        assert items[0]["SellerSKU"] == "STUB-SKU-001"

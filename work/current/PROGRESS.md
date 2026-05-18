@@ -1,9 +1,8 @@
 # Progress Log
 
-**Status:** Reports surface (low-stock + inventory-snapshot +
-inventory-adjustments + sales-by-channel + velocity + margin +
-stockout) is complete *and* surfaced on the dashboard.
-AmazonAdapter SP-API surface complete. No active in-flight slice.
+**Status:** Reports surface complete + surfaced on the dashboard.
+AmazonAdapter SP-API surface complete *and* wired to a Celery beat
+order-ingestion worker. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -24,6 +23,17 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Amazon order ingestion worker: Celery beat task
+  `poll_amazon_orders` (every 15 min) polls SP-API per Amazon
+  MarketplaceCredential since the per-credential
+  `last_orders_polled_at` cursor, upserts `SalesOrder` +
+  `SalesOrderItem` rows (source=AMAZON), decrements local stock for
+  new orders, advances the cursor on success. New
+  `AmazonConnector.fetch_order_items` for SP-API line items.
+  Migration `4c8f1d2e9b07` adds the cursor column. New `beat`
+  service in docker-compose.yml. 14 backend tests + smoke-tested
+  live (orders_new, orders_updated idempotency, per-credential
+  failure isolation). Backend 445/8.
 - New `analytics-reports-widget` on the dashboard: window selector
   (30/60/90/180d) + CSV/PDF buttons for velocity, margin, and
   stockout. New `AnalyticsReportsService` paired with the shared
@@ -72,10 +82,6 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
-  is real but unused; a Celery beat task that polls every N minutes
-  and upserts `SalesOrder` rows closes the SP-API loop the same way
-  the ML webhook does.
 - **Alerting on low margin / sudden sales dips / out-of-stock risk** —
   Track 3 Step 6 of `80-advanced-analytics.md`. Could ship one channel
   (email via SMTP) first. The new velocity / margin / stockout SQL
@@ -93,7 +99,7 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 431 passed, 8 skipped at last green.
+  → 445 passed, 8 skipped at last green.
 - Frontend full suite: `npx ng test --watch=false` → 477 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.

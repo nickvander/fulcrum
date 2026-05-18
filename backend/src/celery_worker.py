@@ -5,6 +5,7 @@ This module sets up the Celery application instance, configures it with
 the Redis broker URL from the application settings, and discovers tasks.
 """
 from celery import Celery
+from celery.schedules import crontab
 from .config import settings
 
 # Create the Celery application instance.
@@ -24,3 +25,15 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
 )
+
+# Beat schedule: periodic background polls. Each entry points to a task
+# in src/tasks.py. Cadence chosen to balance freshness against SP-API
+# rate limits — Amazon allows ~6/min on the Orders endpoint, so polling
+# every 15 minutes per credential leaves plenty of headroom even with
+# a few credentials.
+celery_app.conf.beat_schedule = {
+    "amazon-order-poll": {
+        "task": "src.tasks.poll_amazon_orders",
+        "schedule": crontab(minute="*/15"),
+    },
+}

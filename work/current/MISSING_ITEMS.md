@@ -10,13 +10,6 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
-      is real (`d669246`) but there is no job that calls it and
-      writes to `SalesOrder` / `SalesOrderItem`. ML has the webhook
-      path; Amazon needs a polling worker (Celery beat task) that
-      runs every N minutes against the credential and upserts new
-      orders, using `CreatedAfter = last_polled_at` so each run only
-      pulls the delta.
 - [ ] **Margin report: historical cost-at-sale** — today the margin
       report uses `Product.cost_price * units_sold` as the cost
       basis, which drifts every time the buyer updates the master
@@ -77,3 +70,15 @@ _(none active)_
       `ReportDownloadService`. 14 new frontend tests (6 service + 8
       widget); endpoints verified live via auth+curl (CSVs return
       real data, PDFs start with %PDF-1.4).
+- [x] Amazon order ingestion worker — Celery beat task
+      `poll_amazon_orders` runs every 15 minutes per
+      MarketplaceCredential. New `services/amazon_order_ingestion.py`
+      delta-polls SP-API since `MarketplaceCredential.last_orders_polled_at`,
+      upserts SalesOrder + SalesOrderItem keyed by
+      (source=AMAZON, external_order_id), decrements local stock
+      on new orders (idempotent — re-polls only refresh status/total).
+      New `AmazonConnector.fetch_order_items` for SP-API line items.
+      Migration adds `last_orders_polled_at` to
+      `marketplace_credentials`. 14 backend tests; smoke-tested
+      live on the dev backend (orders_new + orders_updated + the
+      per-credential failure-isolation contract all verified).
