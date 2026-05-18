@@ -2,7 +2,23 @@
     <div class="widget-container">
         <div class="widget-header">
             <h3>{{ title }}</h3>
-            <a mat-button color="primary" routerLink="/products">{{ t('common.viewAll') }}</a>
+            <div class="header-actions">
+                <button mat-button
+                    (click)="exportCsv()"
+                    [matTooltip]="t('dashboard.inventorySnapshotExportCsvTooltip')"
+                    data-testid="inventory-snapshot-export-csv">
+                    <mat-icon>download</mat-icon>
+                    {{ t('dashboard.inventorySnapshotExportCsv') }}
+                </button>
+                <button mat-button
+                    (click)="exportPdf()"
+                    [matTooltip]="t('dashboard.inventorySnapshotExportPdfTooltip')"
+                    data-testid="inventory-snapshot-export-pdf">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    {{ t('dashboard.inventorySnapshotExportPdf') }}
+                </button>
+                <a mat-button color="primary" routerLink="/products">{{ t('common.viewAll') }}</a>
+            </div>
         </div>
 
         <div class="widget-content">

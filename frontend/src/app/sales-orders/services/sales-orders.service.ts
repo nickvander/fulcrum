@@ -69,6 +69,23 @@ export class SalesOrdersService {
     });
   }
 
+  /** Download the sales-by-channel summary as CSV. Returns a Blob so the
+   *  caller can decide how to surface the download (object URL, etc.). */
+  exportSummaryCsv(days = 30): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/summary/export`, {
+      params: new HttpParams().set('days', String(days)),
+      responseType: 'blob',
+    });
+  }
+
+  /** Download the sales-by-channel summary as PDF. */
+  exportSummaryPdf(days = 30): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/summary/export-pdf`, {
+      params: new HttpParams().set('days', String(days)),
+      responseType: 'blob',
+    });
+  }
+
   get(orderId: number): Observable<SalesOrderDetail> {
     return this.http.get<SalesOrderDetail>(`${this.apiUrl}/${orderId}`);
   }

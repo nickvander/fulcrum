@@ -1,10 +1,8 @@
 """
-Operational reports surface. Currently exposes the low-stock report used
-by the dashboard widget; future stockout/velocity/margin reports should
-live here too.
+Operational reports surface. Exposes the low-stock report used by the
+dashboard widget plus reusable export endpoints (CSV + PDF) that all share
+the same `report_export` helpers — see `src/services/report_export.py`.
 """
-import csv
-import io
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -26,6 +24,15 @@ from src.models.purchase_order_item import PurchaseOrderItem
 from src.models.supplier_product import SupplierProduct
 from src.models.user import User
 from src.services.inventory_service import inventory_service
+from src.services.report_export import (
+    ReportColumn,
+    ReportTable,
+    fmt_currency,
+    fmt_float,
+    fmt_int,
+    stream_csv,
+    stream_pdf,
+)
 
 
 router = APIRouter()
@@ -173,8 +180,49 @@ def low_stock_report(
 
 
 # ---------------------------------------------------------------------------
-# CSV export
+# Exports — both CSV and PDF go through `report_export`
 # ---------------------------------------------------------------------------
+
+# Severity → row background color in the PDF. Defined once so both the
+# severity check above and the PDF coloring stay in sync.
+_SEVERITY_BG = {
+    "critical": "#fde7e7",  # light red
+    "low":      "#fff4d6",  # light amber
+    "watch":    "#f0f4ff",  # light blue
+}
+
+
+def _low_stock_table(report: LowStockReport) -> ReportTable:
+    """Build the `ReportTable` description for low-stock. Shared by CSV +
+    PDF so column order, headers, and formatters stay aligned."""
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return ReportTable(
+        title="Fulcrum — Low-Stock Report",
+        subtitle=(
+            f"Generated {date_stamp} · {report.total_critical} critical · "
+            f"{report.total_low} low · {report.total_watch} watch"
+        ),
+        filename_stem="fulcrum-low-stock",
+        empty_message="No products are at or below threshold.",
+        # CSV keeps the snake_case keys for back-compat with pre-refactor
+        # consumers; the PDF uses the human headers via `header`.
+        columns=[
+            ReportColumn("product_id",            "Product ID"),
+            ReportColumn("product_sku",           "SKU"),
+            ReportColumn("product_name",          "Product"),
+            ReportColumn("severity",              "Severity"),
+            ReportColumn("on_hand",               "On hand",        align="right", formatter=fmt_int),
+            ReportColumn("threshold",             "Threshold",      align="right", formatter=fmt_int),
+            ReportColumn("reorder_point",         "Reorder pt",     align="right", formatter=fmt_int),
+            ReportColumn("reorder_quantity",      "Reorder qty",    align="right", formatter=fmt_int),
+            ReportColumn("suggested_reorder_qty", "Suggested",      align="right", formatter=fmt_int),
+            ReportColumn("daily_velocity",        "Daily velocity", align="right", formatter=fmt_float(2)),
+            ReportColumn("days_of_inventory",     "Days left",      align="right", formatter=fmt_float(1)),
+        ],
+        rows=report.rows,
+        row_style=lambda row: {"background": _SEVERITY_BG[row.severity]} if row.severity in _SEVERITY_BG else None,
+    )
+
 
 @router.get("/low-stock/export")
 def export_low_stock_csv(
@@ -184,52 +232,18 @@ def export_low_stock_csv(
     velocity_window_days: int = Query(30, ge=1, le=365),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
-    """
-    Stream the low-stock report as a CSV download.
+    """Stream the low-stock report as a CSV download.
 
-    Columns mirror the rows in the JSON report — same data, just in a
-    shape that Excel / Google Sheets opens directly. Useful when the
-    buyer wants to triage / annotate the list outside the app, or to
-    email it to a supplier rep.
-
-    The default `limit` here is 500 (vs. 50 on the JSON endpoint)
-    because the export use case is "give me everything"; the cap stays
-    at 5000 so a degenerate inventory doesn't blow up the response.
-
-    Filename includes the date so successive exports don't collide in
-    the user's Downloads folder.
+    Columns mirror the rows in the JSON report — same data, just in a shape
+    Excel / Google Sheets opens directly. Default `limit` is 500 (vs. 50 on
+    the JSON endpoint) because the export use case is "give me everything";
+    the cap stays at 5000.
     """
     report = low_stock_report(
         db=db, limit=limit, velocity_window_days=velocity_window_days,
         current_user=current_user,
     )
-
-    buf = io.StringIO()
-    writer = csv.writer(buf)
-    writer.writerow([
-        "product_id", "product_sku", "product_name",
-        "severity", "on_hand", "threshold",
-        "reorder_point", "reorder_quantity", "suggested_reorder_qty",
-        "daily_velocity", "days_of_inventory",
-    ])
-    for row in report.rows:
-        writer.writerow([
-            row.product_id, row.product_sku or "", row.product_name,
-            row.severity, row.on_hand, row.threshold,
-            row.reorder_point if row.reorder_point is not None else "",
-            row.reorder_quantity if row.reorder_quantity is not None else "",
-            row.suggested_reorder_qty,
-            row.daily_velocity, row.days_of_inventory,
-        ])
-    buf.seek(0)
-
-    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    filename = f"fulcrum-low-stock-{date_stamp}.csv"
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return stream_csv(_low_stock_table(report))
 
 
 @router.get("/low-stock/export-pdf")
@@ -242,106 +256,138 @@ def export_low_stock_pdf(
 ) -> StreamingResponse:
     """Render the low-stock report as a printable PDF.
 
-    Same data and limits as the CSV export. The PDF is laid out in landscape
-    so the wide table fits without re-flowing, and rows are color-coded by
-    severity (critical = red, low = orange, watch = light yellow) so the
-    buyer can scan the page at a glance — closer to what an "accountant
-    handoff" PDF needs to look like than the CSV.
+    Same data + limits as the CSV export, plus severity-colored rows so the
+    buyer can scan the page at a glance.
     """
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter, landscape
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.lib.units import inch
-    from reportlab.platypus import (
-        SimpleDocTemplate,
-        Paragraph,
-        Spacer,
-        Table,
-        TableStyle,
-    )
-
     report = low_stock_report(
         db=db, limit=limit, velocity_window_days=velocity_window_days,
         current_user=current_user,
     )
+    return stream_pdf(_low_stock_table(report))
 
+
+# ---------------------------------------------------------------------------
+# Inventory snapshot — per-product point-in-time inventory value report.
+# Distinct from low-stock: this lists every active product with its on-hand
+# quantity and computed cost / retail values, the kind of report an
+# accountant asks for at quarter-end.
+# ---------------------------------------------------------------------------
+
+
+class InventorySnapshotRow(BaseModel):
+    product_id: int
+    product_sku: Optional[str] = None
+    product_name: str
+    category: Optional[str] = None
+    on_hand: int
+    cost_price: float
+    inventory_value_cost: float
+    default_resale_price: float
+    inventory_value_retail: float
+    days_of_inventory: float
+
+
+def _build_inventory_snapshot(db: Session, *, limit: int) -> list[InventorySnapshotRow]:
+    """Pull every non-bundle Product with its summed inventory + computed
+    cost/retail value. Bundles are excluded because their value is derived
+    from component stock, not counted directly."""
+    sub_qty = (
+        db.query(
+            InventoryItem.product_id.label("pid"),
+            func.coalesce(func.sum(InventoryItem.quantity), 0).label("total"),
+        )
+        .group_by(InventoryItem.product_id)
+        .subquery()
+    )
+
+    products = (
+        db.query(Product, func.coalesce(sub_qty.c.total, 0))
+        .outerjoin(sub_qty, sub_qty.c.pid == Product.id)
+        .filter(Product.is_bundle.is_(False))
+        .order_by(Product.name.asc())
+        .limit(limit)
+        .all()
+    )
+
+    rows: list[InventorySnapshotRow] = []
+    for product, on_hand_raw in products:
+        on_hand = int(on_hand_raw or 0)
+        cost = float(product.cost_price or 0.0)
+        resale = float(product.default_resale_price or 0.0)
+        rows.append(
+            InventorySnapshotRow(
+                product_id=product.id,
+                product_sku=product.sku,
+                product_name=product.name,
+                category=product.category,
+                on_hand=on_hand,
+                cost_price=cost,
+                inventory_value_cost=on_hand * cost,
+                default_resale_price=resale,
+                inventory_value_retail=on_hand * resale,
+                days_of_inventory=inventory_service.calculate_days_of_inventory(db, product.id),
+            )
+        )
+    return rows
+
+
+def _inventory_snapshot_table(rows: list[InventorySnapshotRow]) -> ReportTable:
+    """One row per product with cost/retail inventory values. Same shared
+    streamer as every other export."""
     date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    buf = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buf,
-        pagesize=landscape(letter),
-        title="Fulcrum Low-Stock Report",
-        leftMargin=0.4 * inch, rightMargin=0.4 * inch,
-        topMargin=0.5 * inch, bottomMargin=0.4 * inch,
-    )
-
-    styles = getSampleStyleSheet()
-    elements = [
-        Paragraph("<b>Fulcrum — Low-Stock Report</b>", styles["Title"]),
-        Paragraph(
-            f"Generated {date_stamp} · {report.total_critical} critical · "
-            f"{report.total_low} low · {report.total_watch} watch",
-            styles["Normal"],
+    total_cost = sum(r.inventory_value_cost for r in rows)
+    total_retail = sum(r.inventory_value_retail for r in rows)
+    return ReportTable(
+        title="Fulcrum — Inventory Snapshot",
+        subtitle=(
+            f"Generated {date_stamp} · {len(rows)} products · "
+            f"cost value ${total_cost:,.2f} · retail value ${total_retail:,.2f}"
         ),
-        Spacer(1, 0.15 * inch),
-    ]
-
-    header = [
-        "SKU", "Product", "Severity",
-        "On hand", "Threshold", "Reorder pt", "Reorder qty",
-        "Suggested", "Daily velocity", "Days left",
-    ]
-    data = [header]
-    for row in report.rows:
-        data.append([
-            row.product_sku or "",
-            row.product_name,
-            row.severity,
-            str(row.on_hand),
-            str(row.threshold),
-            "" if row.reorder_point is None else str(row.reorder_point),
-            "" if row.reorder_quantity is None else str(row.reorder_quantity),
-            str(row.suggested_reorder_qty),
-            f"{row.daily_velocity:.2f}",
-            f"{row.days_of_inventory:.1f}" if row.days_of_inventory is not None else "",
-        ])
-
-    # Color rows by severity so the page is scannable
-    severity_bg = {
-        "critical": colors.HexColor("#fde7e7"),
-        "low": colors.HexColor("#fff4d6"),
-        "watch": colors.HexColor("#f0f4ff"),
-    }
-    table = Table(data, repeatRows=1)
-    style = TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1f2937")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
-        ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d1d5db")),
-        ("ALIGN", (3, 1), (-1, -1), "RIGHT"),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ])
-    for idx, row in enumerate(report.rows, start=1):
-        bg = severity_bg.get(row.severity)
-        if bg:
-            style.add("BACKGROUND", (0, idx), (-1, idx), bg)
-    table.setStyle(style)
-    elements.append(table)
-
-    if not report.rows:
-        elements.append(Paragraph("No products are at or below threshold.", styles["Italic"]))
-
-    doc.build(elements)
-    buf.seek(0)
-
-    filename = f"fulcrum-low-stock-{date_stamp}.pdf"
-    return StreamingResponse(
-        iter([buf.getvalue()]),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        filename_stem="fulcrum-inventory-snapshot",
+        empty_message="No products with active inventory.",
+        columns=[
+            ReportColumn("product_id",             "Product ID"),
+            ReportColumn("product_sku",            "SKU"),
+            ReportColumn("product_name",           "Product"),
+            ReportColumn("category",               "Category"),
+            ReportColumn("on_hand",                "On hand",           align="right", formatter=fmt_int),
+            ReportColumn("cost_price",             "Unit cost",         align="right", formatter=fmt_currency),
+            ReportColumn("inventory_value_cost",   "Value at cost",     align="right", formatter=fmt_currency),
+            ReportColumn("default_resale_price",   "Retail price",      align="right", formatter=fmt_currency),
+            ReportColumn("inventory_value_retail", "Value at retail",   align="right", formatter=fmt_currency),
+            ReportColumn("days_of_inventory",      "Days of inventory", align="right", formatter=fmt_float(1)),
+        ],
+        rows=rows,
     )
+
+
+@router.get("/inventory-snapshot/export")
+def export_inventory_snapshot_csv(
+    *,
+    db: Session = Depends(get_db),
+    limit: int = Query(2000, ge=1, le=10000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-product inventory snapshot as a CSV. Includes on-hand qty + value
+    at cost + value at retail. Useful for quarter-end inventory accounting.
+
+    Bundles are excluded because their value is implicit in their
+    components. Default limit is 2000 (cap 10000) — exports are "give me
+    everything" use cases."""
+    rows = _build_inventory_snapshot(db, limit=limit)
+    return stream_csv(_inventory_snapshot_table(rows))
+
+
+@router.get("/inventory-snapshot/export-pdf")
+def export_inventory_snapshot_pdf(
+    *,
+    db: Session = Depends(get_db),
+    limit: int = Query(2000, ge=1, le=10000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-product inventory snapshot as a printable PDF."""
+    rows = _build_inventory_snapshot(db, limit=limit)
+    return stream_pdf(_inventory_snapshot_table(rows))
 
 
 # ---------------------------------------------------------------------------
