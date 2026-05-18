@@ -332,3 +332,60 @@ class AmazonConnector(BaseMarketplaceConnector):
                     break
 
         return results
+
+    async def fetch_order_items(
+        self,
+        order_id: str,
+        access_token: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fetch the line items for one Amazon order.
+
+        Endpoint: GET /orders/v0/orders/{AmazonOrderId}/orderItems
+            - NextToken pagination, same shape as /orders/v0/orders.
+            - No required query params beyond the path component (the
+              order already carries its marketplace context).
+
+        Returns the raw SP-API OrderItem dicts (one per line). Mirrors
+        fetch_orders's raw-passthrough convention so the ingestion
+        service owns the SalesOrderItem mapping.
+
+        Stub-token branch returns one stub item — same convention as
+        fetch_orders / fetch_all_listings so the order-ingestion worker
+        can be exercised end-to-end without a live SP-API session.
+        """
+        if not access_token or access_token.startswith("STUB-"):
+            return [
+                {
+                    "ASIN": "B000STUBITEM",
+                    "SellerSKU": "STUB-SKU-001",
+                    "OrderItemId": "STUB-ITEM-1",
+                    "Title": "Stub Amazon Item",
+                    "QuantityOrdered": 1,
+                    "ItemPrice": {"CurrencyCode": "MXN", "Amount": "199.00"},
+                }
+            ]
+
+        url = f"{self.api_base_url}/orders/v0/orders/{order_id}/orderItems"
+        headers = {"x-amz-access-token": access_token}
+        results: List[Dict[str, Any]] = []
+        next_token: Optional[str] = None
+
+        async with httpx.AsyncClient() as client:
+            while True:
+                params: Dict[str, Any] = {}
+                if next_token:
+                    params["NextToken"] = next_token
+
+                response = await client.get(url, headers=headers, params=params)
+                response.raise_for_status()
+                payload = (response.json() or {}).get("payload") or {}
+
+                for item in payload.get("OrderItems") or []:
+                    results.append(item)
+
+                next_token = payload.get("NextToken")
+                if not next_token:
+                    break
+
+        return results

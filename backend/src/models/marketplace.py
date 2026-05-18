@@ -26,6 +26,13 @@ class MarketplaceCredential(Base):
     # Cleared on the next successful refresh / re-authorization.
     needs_reauthorization = Column(Boolean, nullable=False, default=False, server_default="false")
     last_refresh_error = Column(String(500), nullable=True)
+    # Cursor used by polling workers (e.g. the Amazon order ingestion
+    # task) so each run only pulls orders created after the previous
+    # successful poll. NULL = no poll has succeeded yet → the worker
+    # falls back to the connector's 24h default lookback. Advanced to
+    # the wall-clock at the END of a successful poll so a mid-run
+    # failure doesn't skip orders on the retry.
+    last_orders_polled_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

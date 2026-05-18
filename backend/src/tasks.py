@@ -4,10 +4,43 @@ Celery tasks for the Fulcrum application.
 This module contains the definitions for background tasks that are executed
 asynchronously by the Celery worker.
 """
+import logging
+
 from .celery_worker import celery_app
 from src.database import SessionLocal
 from src.crud import crud_product
 from src.services.dummy_ai_service import ai_service
+
+logger = logging.getLogger(__name__)
+
+
+@celery_app.task(name="src.tasks.poll_amazon_orders")
+def poll_amazon_orders():
+    """
+    Periodic Amazon order ingestion. Scheduled by celery beat
+    (`src/celery_worker.py::celery_app.conf.beat_schedule`).
+
+    Each tick:
+      - Iterates every healthy Amazon MarketplaceCredential
+        (`needs_reauthorization=False`, tokens present).
+      - Pulls orders since the credential's `last_orders_polled_at`
+        cursor via SP-API.
+      - Upserts SalesOrder + SalesOrderItem rows, decrementing local
+        stock on new orders.
+      - Advances the cursor only when the per-credential work commits.
+
+    Returns a {credential_id: summary} dict so a one-off `.delay()`
+    call from a test or operator inspection has something readable to
+    look at. Beat itself ignores the return value.
+    """
+    from src.services.amazon_order_ingestion import poll_all_amazon_credentials
+
+    db = SessionLocal()
+    try:
+        return poll_all_amazon_credentials(db)
+    finally:
+        db.close()
+
 
 @celery_app.task
 def generate_product_embedding(product_id: int):

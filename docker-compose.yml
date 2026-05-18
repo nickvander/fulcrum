@@ -64,6 +64,30 @@ services:
     depends_on:
       - redis
 
+  # Celery beat: enqueues tasks on the schedule defined in
+  # `src/celery_worker.py::celery_app.conf.beat_schedule`. Separate
+  # process from `worker` so a worker restart doesn't lose the schedule
+  # state, and only one beat instance should ever run at a time
+  # (otherwise the same scheduled task fires twice per tick).
+  beat:
+    build:
+      context: ./backend
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    command: celery -A src.celery_worker.celery_app beat --loglevel=info
+    env_file:
+      - ./backend/.env.example
+    volumes:
+      - ./backend:/app
+      - /app/venv
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://fulcrum:fulcrum@db:5432/fulcrum}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - SECRET_KEY=${SECRET_KEY:-your_super_secret_key_change_me}
+    depends_on:
+      - redis
+
   flower:
     image: mher/flower
     ports:
