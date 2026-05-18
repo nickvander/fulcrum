@@ -5,13 +5,21 @@
       vs Angular Material — switching `vitest.config.ts` env to `jsdom`
       unstuck the bootstrap. 12 tests in
       `user-bulk-import-dialog.spec.ts` now run + pass.
-- [ ] **5 product-form spec files intentionally skipped** —
-      `product-form-create.spec.ts`, `product-form-edit.spec.ts`,
+- [x] ~~5 product-form spec files intentionally skipped~~
+      **DONE 2026-05-18** in commit `afb760f`. The four product-form
+      specs (`product-form-create.spec.ts`, `product-form-edit.spec.ts`,
       `product-form-error-handling.spec.ts`,
-      `product-form-advanced-error-handling.spec.ts`,
-      `products.spec.ts`. Each carries an explicit `describe.skip` with
-      a comment citing a real test-design bug (form-group control
-      mismatches, incomplete dialog mocks, async-mock instability) —
-      not flaky, deliberately disabled pending a test refactor. See
-      `1178b8d` commit message for the full triage. Unblocking
-      these would require rewriting the test setup, not a config tweak.
+      `product-form-advanced-error-handling.spec.ts`) are now running
+      green. Root fixes were mostly infrastructure: missing
+      `TranslocoTestingModule`, stale
+      `httpMock.expectOne('/custom-fields')` calls from the
+      pre-initializer-service architecture, missing
+      `generateUniqueSku`/`generateBarcodeFromSku` mock methods,
+      missing `queryParams` on the `ActivatedRoute` mock, and
+      `setValue()` calls that listed only 12 of the 20+ form controls
+      (switched to `patchValue`). One assertion against
+      `notificationService.showError` was rewritten — errors flow
+      through `HttpErrorInterceptor` + `translateApiError` since
+      `b955e1a`. The fifth file `products.spec.ts` was deleted along
+      with its dead component (`ProductsComponent` had no route, no
+      external references). Frontend suite: 450 passed, 0 skipped.
