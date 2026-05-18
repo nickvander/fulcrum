@@ -10,13 +10,7 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Marketplace channel cards: surface needs_reauthorization** —
-      today the reauth chip is only on the stock-transfer sync panel;
-      the channel-list cards still ignore it. Cred + flag already exist
-      from `87-marketplace-oauth-hardening.md`.
-- [ ] **Stockout / velocity / margin reports** — `endpoints/reports.py`
-      currently only exposes low-stock. The shared `report_export`
-      helper makes each new report ~25 lines once the SQL is known.
+_(none active)_
 
 ## Future / Strategic
 
@@ -52,3 +46,14 @@ _(none active)_
       propagates 401 for the retry wrapper) and `fetch_orders` (GET
       `/orders/v0/orders` with `MarketplaceIds`+`CreatedAfter`/
       `NextToken` pagination). Shipped in `d669246`.
+- [x] Stockout / velocity / margin reports — three new CSV + PDF
+      exports on `endpoints/reports.py` sharing one SalesOrderItem
+      aggregation pass. Velocity ranks every product by daily sales;
+      margin shows revenue/cost/gross/margin%; stockout is
+      velocity-based (out / imminent / watch) distinct from threshold-
+      based low-stock. 13 backend tests.
+- [x] Marketplace channel cards: reauth chip — implementation was
+      already shipped in `7b682c0` (chip state + reconnect button on
+      the card). Added 13 frontend tests covering state precedence,
+      tooltip with/without reason, and DOM rendering of the chip +
+      warn-styled Reconnect button.
