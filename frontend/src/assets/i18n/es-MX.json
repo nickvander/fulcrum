@@ -378,6 +378,10 @@
             "aiReady": "IA configurada — puedes subir PDFs o imágenes de páginas de catálogo.",
             "aiUnavailable": "Los catálogos en PDF o imagen requieren IA. Los CSV funcionan sin ella.",
             "openSettings": "Abrir Configuración",
+            "useTemplate": "Usar mapeo de columnas guardado",
+            "autoDetect": "Detección automática (predeterminado)",
+            "manageTemplates": "Gestionar plantillas",
+            "manageTemplatesTooltip": "Crea o elimina mapeos de columnas con nombre para proveedores recurrentes",
             "vendorAutoLinked": "Proveedor vinculado \"{{supplier}}\" del documento (\"{{vendor}}\"). Confirma o cambia en el menú.",
             "vendorNoMatch": "El proveedor del documento (\"{{vendor}}\") no coincide con ningún proveedor existente. Selecciona uno antes de aprobar.",
             "errors": {
@@ -1364,6 +1368,33 @@
         "areYouSure": "¿Estás seguro?",
         "cannotBeUndone": "Esta acción no se puede deshacer."
     },
+    "catalogImportTemplates": {
+        "title": "Plantillas de importación de catálogo",
+        "empty": "Aún no hay plantillas guardadas. Crea una para mapear los encabezados no estándar de un proveedor a campos de Fulcrum y reusarla en cada importación.",
+        "columnCount": "{{n}} columnas mapeadas",
+        "createNew": "Crear nueva",
+        "nameLabel": "Nombre de la plantilla",
+        "uploadSamplePrompt": "Sube una muestra del CSV de este proveedor para leer sus encabezados. Nada se importa en este paso.",
+        "sampleSummary": "Se detectaron {{headers}} encabezados y se leyeron {{rows}} filas de muestra.",
+        "mapTo": "Mapear a campo de Fulcrum",
+        "save": "Guardar plantilla",
+        "saved": "Plantilla guardada.",
+        "confirmDelete": "¿Eliminar la plantilla \"{{name}}\"?",
+        "unmapped": "— ignorar esta columna —",
+        "fieldSku": "SKU",
+        "fieldName": "Nombre del producto",
+        "fieldDescription": "Descripción",
+        "fieldCostPrice": "Precio de costo",
+        "fieldResalePrice": "Precio de venta",
+        "fieldCategory": "Categoría",
+        "fieldBrand": "Marca",
+        "fieldSupplierSku": "SKU del proveedor",
+        "errors": {
+            "previewFailed": "No se pudo leer el archivo de muestra.",
+            "saveFailed": "No se pudo guardar la plantilla.",
+            "deleteFailed": "No se pudo eliminar la plantilla."
+        }
+    },
     "apiErrors": {
         "unknown": "Ocurrió un error inesperado. Inténtalo de nuevo.",
         "network": "No se pudo conectar al servidor. Verifica tu conexión a Internet.",
@@ -1462,7 +1493,11 @@
             "emptyFile": "El archivo de catálogo está vacío.",
             "nothingSelected": "Selecciona al menos una fila con nombre de producto antes de aprobar.",
             "aiRequiredForFileType": "Para importar catálogos {{extension}} se requiere habilitar IA y configurar una clave de API en Configuración.",
-            "aiExtractionFailed": "La extracción de catálogo con IA falló: {{reason}}"
+            "aiExtractionFailed": "La extracción de catálogo con IA falló: {{reason}}",
+            "templateNotFound": "Plantilla de importación no encontrada.",
+            "templateNameRequired": "El nombre de la plantilla es obligatorio.",
+            "templateNameExists": "Ya existe una plantilla llamada \"{{name}}\".",
+            "invalidColumnMap": "Campo de Fulcrum desconocido \"{{field}}\" en el mapa de columnas."
         }
     }
 }

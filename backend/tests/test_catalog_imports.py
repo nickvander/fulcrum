@@ -391,6 +391,209 @@ def test_pdf_upload_creates_review_from_ai_result_when_ready(
     assert items[0]["name"] == "Widget From PDF"
 
 
+# --- Named CSV import templates --------------------------------------------
+
+
+CSV_WEIRD_HEADERS = b"""Item No.,Product Description,Cost USD,List USD,Mfr
+ACME-100,Stainless Widget,12.50,29.99,Acme
+ACME-200,Brass Widget,18.00,49.00,Acme
+"""
+
+
+def test_template_preview_returns_headers_and_sample_rows(
+    client: TestClient,
+    admin_headers,
+):
+    """Preview endpoint inspects a file without staging a review. The
+    response carries headers + the first few rows + what the alias
+    auto-detector matched, so the UI can pre-fill the mapping dropdowns."""
+    response = client.post(
+        "/api/v1/catalog-imports/templates/preview",
+        files={"file": ("weird.csv", CSV_WEIRD_HEADERS, "text/csv")},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["headers"] == [
+        "Item No.", "Product Description", "Cost USD", "List USD", "Mfr",
+    ]
+    assert len(body["sample_rows"]) == 2
+    assert body["sample_rows"][0]["Item No."] == "ACME-100"
+    # None of these headers are in the alias list, so detection should be empty
+    assert body["detected_field_map"] == {}
+
+
+def test_template_preview_surfaces_detected_aliases_for_known_headers(
+    client: TestClient,
+    admin_headers,
+):
+    """When the auto-detector *can* match some headers, the preview echoes
+    that map so the UI shows pre-filled dropdowns for the matched columns."""
+    response = client.post(
+        "/api/v1/catalog-imports/templates/preview",
+        files={"file": ("normal.csv", CSV_EN, "text/csv")},
+        headers=admin_headers,
+    )
+    body = response.json()
+    # The map is {canonical_field: source_header}; "price" is an alias of
+    # the canonical `default_resale_price` field.
+    assert body["detected_field_map"]["name"] == "name"
+    assert body["detected_field_map"]["default_resale_price"] == "price"
+
+
+def test_create_and_list_catalog_import_template(
+    client: TestClient,
+    admin_headers,
+):
+    create = client.post(
+        "/api/v1/catalog-imports/templates",
+        json={
+            "name": "ProSupply standard",
+            "column_map": {
+                "Item No.": "sku",
+                "Product Description": "name",
+                "Cost USD": "cost_price",
+                "List USD": "default_resale_price",
+                "Mfr": "brand",
+            },
+            "notes": "Used for monthly ProSupply price-list uploads",
+        },
+        headers=admin_headers,
+    )
+    assert create.status_code == 200, create.text
+    created = create.json()
+    assert created["name"] == "ProSupply standard"
+    assert created["source_type"] == "catalog"
+    assert created["column_map"]["Item No."] == "sku"
+
+    listed = client.get("/api/v1/catalog-imports/templates", headers=admin_headers)
+    assert listed.status_code == 200
+    assert any(t["name"] == "ProSupply standard" for t in listed.json())
+
+
+def test_create_template_rejects_unknown_canonical_field(
+    client: TestClient,
+    admin_headers,
+):
+    """Trying to save a column_map that mentions a field the parser
+    doesn't know about (e.g. a removed field) should 400 with the
+    localized code instead of a 500 later when an upload tries to use
+    the template."""
+    resp = client.post(
+        "/api/v1/catalog-imports/templates",
+        json={
+            "name": "Bad template",
+            "column_map": {"Item No.": "imaginary_field"},
+        },
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400
+    assert resp.json()["code"] == "apiErrors.catalogImport.invalidColumnMap"
+    assert resp.json()["params"]["field"] == "imaginary_field"
+
+
+def test_create_template_rejects_duplicate_name_for_same_user(
+    client: TestClient,
+    admin_headers,
+):
+    body = {
+        "name": "Dup Template",
+        "column_map": {"Item No.": "sku"},
+    }
+    first = client.post(
+        "/api/v1/catalog-imports/templates", json=body, headers=admin_headers,
+    )
+    assert first.status_code == 200
+    second = client.post(
+        "/api/v1/catalog-imports/templates", json=body, headers=admin_headers,
+    )
+    assert second.status_code == 409
+    assert second.json()["code"] == "apiErrors.catalogImport.templateNameExists"
+
+
+def test_update_and_delete_template(
+    client: TestClient,
+    admin_headers,
+):
+    create = client.post(
+        "/api/v1/catalog-imports/templates",
+        json={"name": "Editable", "column_map": {"Item No.": "sku"}},
+        headers=admin_headers,
+    )
+    tid = create.json()["id"]
+
+    update = client.put(
+        f"/api/v1/catalog-imports/templates/{tid}",
+        json={"name": "Edited", "column_map": {"Code": "sku", "Name": "name"}},
+        headers=admin_headers,
+    )
+    assert update.status_code == 200
+    assert update.json()["name"] == "Edited"
+    assert update.json()["column_map"] == {"Code": "sku", "Name": "name"}
+
+    delete = client.delete(
+        f"/api/v1/catalog-imports/templates/{tid}", headers=admin_headers,
+    )
+    assert delete.status_code == 200
+
+    # Subsequent fetches 404
+    listed = client.get("/api/v1/catalog-imports/templates", headers=admin_headers)
+    assert not any(t["id"] == tid for t in listed.json())
+
+
+def test_upload_with_template_id_uses_the_mapping(
+    client: TestClient,
+    admin_headers,
+):
+    """End-to-end: a CSV with non-standard headers parses cleanly when a
+    saved template tells us which header is which."""
+    create = client.post(
+        "/api/v1/catalog-imports/templates",
+        json={
+            "name": "ProSupply weird-headers",
+            "column_map": {
+                "Item No.": "sku",
+                "Product Description": "name",
+                "Cost USD": "cost_price",
+                "List USD": "default_resale_price",
+                "Mfr": "brand",
+            },
+        },
+        headers=admin_headers,
+    )
+    tid = create.json()["id"]
+
+    upload = client.post(
+        "/api/v1/catalog-imports/reviews",
+        params={"template_id": tid},
+        files={"file": ("weird.csv", CSV_WEIRD_HEADERS, "text/csv")},
+        headers=admin_headers,
+    )
+    assert upload.status_code == 200, upload.text
+    body = upload.json()
+    items = body["extracted_data"]["items"]
+    assert len(items) == 2
+    assert items[0]["sku"] == "ACME-100"
+    assert items[0]["name"] == "Stainless Widget"
+    assert items[0]["cost_price"] == 12.50
+    assert items[0]["default_resale_price"] == 29.99
+    assert items[0]["brand"] == "Acme"
+
+
+def test_upload_with_unknown_template_id_returns_localized_404(
+    client: TestClient,
+    admin_headers,
+):
+    upload = client.post(
+        "/api/v1/catalog-imports/reviews",
+        params={"template_id": 999999},
+        files={"file": ("c.csv", CSV_EN, "text/csv")},
+        headers=admin_headers,
+    )
+    assert upload.status_code == 404
+    assert upload.json()["code"] == "apiErrors.catalogImport.templateNotFound"
+
+
 def test_ai_result_low_confidence_attaches_warning():
     from src.services.catalog_ingestion_service import catalog_ingestion_service
 

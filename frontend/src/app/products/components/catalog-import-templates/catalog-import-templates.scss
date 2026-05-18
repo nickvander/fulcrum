@@ -1,0 +1,75 @@
+.templates-content {
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 70vh;
+}
+
+.loading-row {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.empty-message {
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  padding: 24px 0;
+}
+
+.template-list {
+  padding: 0;
+}
+
+.template-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  small {
+    color: rgba(0, 0, 0, 0.55);
+    font-size: 0.85em;
+  }
+}
+
+.template-name {
+  width: 100%;
+}
+
+.sample-summary {
+  color: rgba(0, 0, 0, 0.7);
+  margin-top: 8px;
+}
+
+.mapping-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mapping-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 24px minmax(180px, 2fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.source-header {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+.arrow {
+  color: rgba(0, 0, 0, 0.4);
+}

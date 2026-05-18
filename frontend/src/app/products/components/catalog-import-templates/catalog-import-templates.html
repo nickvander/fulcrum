@@ -1,0 +1,102 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>{{ t('catalogImportTemplates.title') }}</h2>
+
+  <mat-dialog-content class="templates-content">
+    @if (loading) {
+      <div class="loading-row"><mat-spinner diameter="32"></mat-spinner></div>
+    }
+
+    @if (step === 'list' && !loading) {
+      @if (templates.length === 0) {
+        <p class="empty-message">{{ t('catalogImportTemplates.empty') }}</p>
+      } @else {
+        <mat-list class="template-list">
+          @for (tpl of templates; track tpl.id) {
+            <mat-list-item>
+              <div class="template-row">
+                <div class="template-info">
+                  <strong>{{ tpl.name }}</strong>
+                  <small>
+                    {{
+                      t('catalogImportTemplates.columnCount', {
+                        n: (tpl.column_map | keyvalue).length
+                      })
+                    }}
+                  </small>
+                </div>
+                <button mat-icon-button color="warn"
+                    (click)="deleteTemplate(tpl)"
+                    [matTooltip]="t('common.delete')"
+                    [attr.data-testid]="'delete-template-' + tpl.id">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </mat-list-item>
+          }
+        </mat-list>
+      }
+    }
+
+    @if (step === 'create') {
+      <mat-form-field appearance="outline" class="template-name">
+        <mat-label>{{ t('catalogImportTemplates.nameLabel') }}</mat-label>
+        <input matInput [(ngModel)]="templateName" autocomplete="off"
+            data-testid="template-name-input" />
+      </mat-form-field>
+
+      @if (!preview) {
+        <p>{{ t('catalogImportTemplates.uploadSamplePrompt') }}</p>
+        <input type="file" accept=".csv,.tsv,text/csv,text/plain"
+            (change)="onSampleSelected($event)"
+            data-testid="template-sample-input" />
+      }
+
+      @if (preview) {
+        <p class="sample-summary">
+          {{
+            t('catalogImportTemplates.sampleSummary', {
+              headers: preview.headers.length,
+              rows: preview.sample_rows.length
+            })
+          }}
+        </p>
+        <div class="mapping-grid">
+          @for (header of preview.headers; track header) {
+            <div class="mapping-row">
+              <code class="source-header">{{ header }}</code>
+              <mat-icon class="arrow">arrow_forward</mat-icon>
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                <mat-label>{{ t('catalogImportTemplates.mapTo') }}</mat-label>
+                <mat-select [(ngModel)]="headerMap[header]">
+                  @for (field of canonicalFields; track field.key) {
+                    <mat-option [value]="field.key">{{ t(field.label) }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          }
+        </div>
+      }
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    @if (step === 'list') {
+      <button mat-button (click)="close()">{{ t('common.close') }}</button>
+      <button mat-raised-button color="primary" (click)="startCreate()"
+          data-testid="create-template-button">
+        <mat-icon>add</mat-icon>
+        {{ t('catalogImportTemplates.createNew') }}
+      </button>
+    }
+    @if (step === 'create') {
+      <button mat-button (click)="cancelCreate()">{{ t('common.cancel') }}</button>
+      <button mat-raised-button color="primary"
+          [disabled]="!canSave()"
+          (click)="saveTemplate()"
+          data-testid="save-template-button">
+        {{ t('catalogImportTemplates.save') }}
+      </button>
+    }
+  </mat-dialog-actions>
+</ng-container>

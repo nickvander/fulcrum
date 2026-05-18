@@ -19,6 +19,7 @@ from .stock_transfer import StockTransfer, StockTransferItem, StockTransferStatu
 from .supplier_invoice import SupplierInvoice
 from .supplier_document_import import SupplierDocumentImport
 from .catalog_import import CatalogImport
+from .import_template import ImportTemplate
 from .supplier_product import SupplierProduct
 from .supplier_product_alias import SupplierProductAlias
 from .expense import Expense
@@ -70,6 +71,7 @@ __all__ = [
     "SupplierInvoice",
     "SupplierDocumentImport",
     "CatalogImport",
+    "ImportTemplate",
     "SupplierProduct",
     "SupplierProductAlias",
     "Expense",

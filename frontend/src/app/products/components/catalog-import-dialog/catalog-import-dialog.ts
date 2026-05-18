@@ -11,8 +11,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+
+import { CatalogImportTemplatesDialogComponent } from '../catalog-import-templates/catalog-import-templates';
 import { Subject, takeUntil } from 'rxjs';
 
 import { translateApiError } from '../../../core/errors/translate-api-error';
@@ -24,6 +28,7 @@ import {
   CatalogImportItem,
   CatalogImportReview,
   CatalogImportService,
+  ImportTemplate,
 } from '../../services/catalog-import.service';
 
 type Step = 'upload' | 'review' | 'done';
@@ -46,6 +51,7 @@ type Step = 'upload' | 'review' | 'done';
     MatSelectModule,
     MatSnackBarModule,
     MatTableModule,
+    MatTooltipModule,
     RouterModule,
     TranslocoModule,
   ],
@@ -54,10 +60,12 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
   step: Step = 'upload';
   selectedFile: File | null = null;
   selectedSupplierId: number | null = null;
+  selectedTemplateId: number | null = null;
   isBusy = false;
   review: CatalogImportReview | null = null;
   approval: CatalogImportApproveResponse | null = null;
   suppliers: Supplier[] = [];
+  templates: ImportTemplate[] = [];
   capabilities: CatalogImportCapabilities = {
     csv: true,
     ai: false,
@@ -76,6 +84,7 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
     private suppliersService: SuppliersService,
     private snackBar: MatSnackBar,
     private transloco: TranslocoService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -88,6 +97,38 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
       .capabilities()
       .pipe(takeUntil(this.destroy$))
       .subscribe({ next: (caps) => (this.capabilities = caps) });
+
+    this.loadTemplates();
+  }
+
+  /** Pull saved column-mapping templates so the user can pick one before
+   *  upload. Refreshed after the manage-templates dialog closes. */
+  private loadTemplates(): void {
+    this.service
+      .listTemplates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: (list) => (this.templates = list || []) });
+  }
+
+  openTemplateManager(): void {
+    const ref = this.dialog.open(CatalogImportTemplatesDialogComponent, {
+      width: '780px',
+      maxHeight: '90vh',
+    });
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((updated) => {
+      // The sub-dialog hands back its latest list when it closes; reuse it
+      // so the dropdown is up to date with what the user just created or
+      // deleted without a second round-trip.
+      if (Array.isArray(updated)) {
+        this.templates = updated as ImportTemplate[];
+        // If the user deleted the template they had selected, clear it.
+        if (this.selectedTemplateId != null && !this.templates.some(t => t.id === this.selectedTemplateId)) {
+          this.selectedTemplateId = null;
+        }
+      } else {
+        this.loadTemplates();
+      }
+    });
   }
 
   acceptAttr(): string {
@@ -132,7 +173,7 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
     if (!this.selectedFile) return;
     this.isBusy = true;
     this.service
-      .upload(this.selectedFile, this.selectedSupplierId)
+      .upload(this.selectedFile, this.selectedSupplierId, this.selectedTemplateId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (review) => {

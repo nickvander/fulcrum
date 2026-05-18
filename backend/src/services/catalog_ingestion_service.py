@@ -99,6 +99,30 @@ def _build_field_map(fieldnames: Iterable[str]) -> dict[str, str]:
     return field_map
 
 
+def _apply_column_map(
+    fieldnames: Iterable[str],
+    column_map: dict[str, str],
+) -> dict[str, str]:
+    """Translate a user-supplied {source_header → canonical_field} mapping
+    into the same {canonical_field → actual_header_text_in_file} shape the
+    rest of the parser expects. Only headers actually present in the file
+    are honored — silently dropping the others lets the user save a single
+    template that covers several supplier variations."""
+    if not column_map:
+        return {}
+    normalized_to_actual = {
+        _normalize_header(header): header for header in (fieldnames or [])
+    }
+    out: dict[str, str] = {}
+    for source_header, canonical in column_map.items():
+        if not source_header or not canonical:
+            continue
+        actual = normalized_to_actual.get(_normalize_header(source_header))
+        if actual is not None and canonical not in out:
+            out[canonical] = actual
+    return out
+
+
 def _coerce_amount(value) -> Optional[float]:
     """Accept the loose shapes the AI agent might return (number, numeric
     string, None) and normalize to float-or-None. Strings are routed through
@@ -169,13 +193,25 @@ class CatalogIngestionService:
 
     MAX_ROWS = 5000  # hard cap; protects the staging table from runaway uploads
 
-    def ingest(self, *, file_name: str, content: bytes) -> ExtractedCatalogData:
+    def ingest(
+        self,
+        *,
+        file_name: str,
+        content: bytes,
+        column_map: Optional[dict[str, str]] = None,
+    ) -> ExtractedCatalogData:
         """Parse CSV/TSV deterministically. Non-CSV file types (PDF, images)
         require AI and are handled by the endpoint via `ingest_ai_result` —
-        keeping the service stateless and easy to unit-test."""
+        keeping the service stateless and easy to unit-test.
+
+        `column_map`, when provided, is a {source_header: canonical_field}
+        dict from a saved ImportTemplate. It REPLACES the alias auto-
+        detection for that upload so suppliers with non-standard headers
+        (e.g. "Item No." instead of "SKU") import cleanly.
+        """
         suffix = file_suffix(file_name)
         if suffix in CSV_SUFFIXES or not suffix:
-            return self._parse_csv(content)
+            return self._parse_csv(content, column_map=column_map)
 
         if suffix in AI_SUFFIXES:
             # The endpoint routes these through the AI parser. This branch
@@ -238,7 +274,12 @@ class CatalogIngestionService:
 
         return result
 
-    def _parse_csv(self, content: bytes) -> ExtractedCatalogData:
+    def _parse_csv(
+        self,
+        content: bytes,
+        *,
+        column_map: Optional[dict[str, str]] = None,
+    ) -> ExtractedCatalogData:
         try:
             text = content.decode("utf-8-sig")
         except UnicodeDecodeError:
@@ -257,7 +298,13 @@ class CatalogIngestionService:
                 extraction_method="csv",
             )
 
-        field_map = _build_field_map(reader.fieldnames)
+        # Saved template wins over alias auto-detection — that's the whole
+        # point of "Map & Template": the user has already told us what's
+        # in this file, so don't try to re-guess.
+        if column_map:
+            field_map = _apply_column_map(reader.fieldnames, column_map)
+        else:
+            field_map = _build_field_map(reader.fieldnames)
         result = ExtractedCatalogData(extraction_method="csv")
 
         if "name" not in field_map:
