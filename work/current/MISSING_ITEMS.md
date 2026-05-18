@@ -19,8 +19,15 @@ _(none active)_
 
 ## Future / Strategic
 
-- [ ] Rust backend migration first slice — plan in
-      `work/future/81-rust-backend-migration-plan.md`.
+- [ ] Rust backend migration — Phase 0 instrumentation
+      (request timing + query count + slow-query log around
+      `/api/v1/products`). Required gate before committing to
+      Phase 2 Rust foundation. Phase 1 (Python perf wins) has
+      shipped — see `work/future/81-rust-backend-migration-plan.md`.
+- [ ] Payments: refund + cancel actions on the `/payments` admin UI.
+      Backend wires `POST /v1/payments/{id}/refunds` on the MP
+      connector; frontend exposes a "Refund" button on the detail
+      dialog (full + partial amounts) with confirmation + reason.
 - [ ] AI content generation (product descriptions, marketing copy) —
       plan in `work/future/ai-content-generation.md`.
 - [ ] Phase 8 Advanced Analytics — ETL pipeline, cost engine,
@@ -33,6 +40,23 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Phase 1 of the Rust migration plan — final tranche of
+      Python product-listing perf wins.** The list endpoint no
+      longer eager-loads `inventory_adjustments`
+      (`noload(self.model.inventory_adjustments)` on the list path);
+      replaced with a cheap `inventory_adjustment_count` COUNT
+      aggregate added to `_hydrate_product_list_metrics` and
+      exposed as a new field on the `Product` schema. Frontend
+      `product-list.html` gates the "Stock history" menu item on
+      the count; the dialog itself lazy-fetches the full product
+      via `getProductById` so the adjustment rows are only loaded
+      when needed. Hot-path `print()` in the product-create error
+      path replaced with module-logger usage. 2 new backend tests
+      + 2 new frontend tests; existing query-count ceiling test
+      still passes (now ~17 queries, ceiling `<= 20`). Phase 1
+      checklist in the Rust migration plan updated with
+      checkbox state — only the list-vs-detail DTO split + Phase 0
+      latency-measurement remain.
 - [x] **Payments admin UI** — list / detail page for the
       `payments` table. New `/payments` route in the sidenav with a
       Material table (id, created_at, status chip, amount, payer

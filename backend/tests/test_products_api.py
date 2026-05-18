@@ -156,6 +156,82 @@ def test_product_list_uses_batched_computed_metrics(
     assert listed_product["low_inventory_threshold"] == 12
     assert listed_product["low_stock_quantity_threshold"] == 3
     assert listed_product["active_campaign_count"] == 1
+    # New count-aggregate: no adjustments on this product, so the
+    # endpoint returns 0 (not null) — UI uses this to gate the
+    # "Stock history" menu item without eager-loading every row.
+    assert listed_product["inventory_adjustment_count"] == 0
+    # The list payload deliberately does NOT include the full
+    # `inventory_adjustments` array — the dialog lazy-fetches it from
+    # `GET /products/{id}`. An empty list is acceptable.
+    assert listed_product["inventory_adjustments"] == []
+
+
+@pytest.mark.db
+def test_product_list_inventory_adjustment_count_reflects_state(
+    client: TestClient, db: Session, test_product: Product
+):
+    """The list endpoint's `inventory_adjustment_count` is a cheap
+    aggregate (not a relationship eager-load). Insert 3 adjustments on
+    `test_product`, leave another product clean, and confirm the
+    counts are correct and the list does NOT include the actual rows.
+    """
+    from src.models.inventory import InventoryAdjustment
+    from src.schemas.product import ProductCreate
+    from src.crud import crud_product
+
+    clean_product = crud_product.product.create(
+        db=db,
+        obj_in=ProductCreate(
+            name="No-Adjustments Product",
+            sku="NO-ADJ-1",
+            default_resale_price=10.0,
+            cost_price=5.0,
+        ),
+    )
+
+    for delta in (5, -2, 3):
+        db.add(InventoryAdjustment(
+            product_id=test_product.id,
+            adjustment=delta,
+            reason="test",
+            created_by="tester",
+        ))
+    db.commit()
+
+    response = client.get("/api/v1/products/")
+    assert response.status_code == 200
+    items_by_id = {item["id"]: item for item in response.json()["data"]}
+
+    assert items_by_id[test_product.id]["inventory_adjustment_count"] == 3
+    assert items_by_id[clean_product.id]["inventory_adjustment_count"] == 0
+    # The list path uses `noload` for `inventory_adjustments`, so the
+    # field renders as an empty list regardless of how many rows exist
+    # in the DB. The detail endpoint is still the canonical source.
+    assert items_by_id[test_product.id]["inventory_adjustments"] == []
+
+
+@pytest.mark.db
+def test_product_detail_still_returns_full_inventory_adjustments(
+    client: TestClient, db: Session, test_product: Product
+):
+    """The detail endpoint must keep eager-loading the actual rows so
+    the stock-history dialog (which calls `GET /products/{id}` on
+    demand) has the data the list endpoint deliberately skips."""
+    from src.models.inventory import InventoryAdjustment
+
+    for delta in (1, 2, 3):
+        db.add(InventoryAdjustment(
+            product_id=test_product.id,
+            adjustment=delta,
+            reason="seed",
+            created_by="tester",
+        ))
+    db.commit()
+
+    response = client.get(f"/api/v1/products/{test_product.id}")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["inventory_adjustments"]) == 3
 
 
 @pytest.mark.db
@@ -164,6 +240,21 @@ def test_product_list_query_count_stays_bounded(
 ):
     """
     Product list should avoid per-product metric queries as page size grows.
+
+    The ceiling is deliberately tight: bumping it should require a
+    code-review conversation. Today the path issues at most:
+      - 1 product count (pagination total)
+      - 1 product list query
+      - 7 selectinload queries (images / marketplace_listings /
+        inventory_items / custom_fields / variants /
+        bundle_components / part_of_bundles)
+      - 2 nested selectinloads (bundle.component.inventory_items +
+        part_of_bundles.bundle.inventory_items)
+      - 6 aggregate metric queries (stock / sales / thresholds /
+        store_settings / campaigns / adjustment_count)
+
+    That's ~17 queries — well under the ceiling and independent of
+    page size.
     """
     from src.schemas.product import ProductCreate
     from src.crud import crud_product

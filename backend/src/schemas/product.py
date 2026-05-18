@@ -137,6 +137,13 @@ class Product(ProductBase):
     low_stock_quantity_threshold: Optional[int] = None
     stock_quantity: Optional[int] = None
     active_campaign_count: int = 0
+    # Total InventoryAdjustment rows for this product. Populated by the
+    # list endpoint as a cheap COUNT aggregate so the UI can gate the
+    # "Stock history" menu item without eager-loading every row. The
+    # detail endpoint (`GET /products/{id}`) returns the full
+    # `inventory_adjustments` list, so the history dialog can fetch
+    # the rows on demand without paying the cost on the list endpoint.
+    inventory_adjustment_count: int = 0
     
     # Marketing data
     active_campaigns: List[Dict[str, Any]] = []

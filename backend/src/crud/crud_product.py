@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload, noload, selectinload
 from src.crud.base import CRUDBase
 from src.models.product import Product, BundleComponent
 from src.schemas.product import ProductCreate, ProductUpdate
@@ -8,11 +8,20 @@ from typing import List, Any
 
 class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
     def _list_loader_options(self):
+        # `inventory_adjustments` is intentionally `noload`ed on the list
+        # path — the list view only needs the COUNT (to gate the "Stock
+        # history" menu item), which the endpoint computes in
+        # `_hydrate_product_list_metrics` and exposes as
+        # `inventory_adjustment_count`. The history dialog itself
+        # lazy-fetches the full product via `GET /products/{id}`, which
+        # eager-loads the adjustment rows. This drops one
+        # `selectinload` query AND prevents loading a potentially-large
+        # audit-log rowset per product on every list refresh.
         return (
             selectinload(self.model.images),
             selectinload(self.model.marketplace_listings),
             selectinload(self.model.inventory_items),
-            selectinload(self.model.inventory_adjustments),
+            noload(self.model.inventory_adjustments),
             selectinload(self.model.custom_fields),
             selectinload(self.model.variants),
             selectinload(self.model.bundle_components)

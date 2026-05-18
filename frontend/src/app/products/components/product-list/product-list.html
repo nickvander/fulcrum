@@ -381,7 +381,7 @@
                 <button mat-menu-item (click)="openStockAdjustmentDialog(element)">
                   <mat-icon>trending_up</mat-icon><span>{{ t('products.adjustStock') }}</span>
                 </button>
-                @if (element.inventory_adjustments && element.inventory_adjustments.length > 0) {
+                @if (element.inventory_adjustment_count && element.inventory_adjustment_count > 0) {
                 <button mat-menu-item (click)="showStockHistory(element)">
                   <mat-icon>history</mat-icon><span>{{ t('products.stockHistory') }}</span>
                 </button>
