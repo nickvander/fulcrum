@@ -22,9 +22,9 @@ import { environment } from '../../../../environments/environment';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
-// @todo: Fix productForm.setValue issue - form group structure doesn't match expected controls
-describe.skip('ProductForm: Create Mode', () => {
+describe('ProductForm: Create Mode', () => {
     let component: ProductForm;
     let fixture: ComponentFixture<ProductForm>;
     let productServiceMock: MockedObject<ProductService>;
@@ -58,7 +58,11 @@ describe.skip('ProductForm: Create Mode', () => {
             deleteProductImage: vi.fn().mockName("ProductService.deleteProductImage"),
             setPrimaryProductImage: vi.fn().mockName("ProductService.setPrimaryProductImage"),
             uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage"),
-            getProducts: vi.fn().mockName("ProductService.getProducts")
+            getProducts: vi.fn().mockName("ProductService.getProducts"),
+            // The component calls these helpers on SKU changes / barcode init.
+            // Returning a stable stub keeps the spec focused on the form logic.
+            generateUniqueSku: vi.fn().mockReturnValue("SKU-MOCK-1"),
+            generateBarcodeFromSku: vi.fn().mockReturnValue("BARCODE-MOCK-1"),
         } as any;
         notificationServiceMock = {
             showSuccess: vi.fn().mockName("NotificationService.showSuccess")
@@ -84,7 +88,10 @@ describe.skip('ProductForm: Create Mode', () => {
         activatedRouteMock = {
             snapshot: {
                 params: {}
-            }
+            },
+            // ProductForm.ngOnInit reads queryParams to detect the `returnTo=po`
+            // re-entry path; the mock has to be an Observable.
+            queryParams: of({}),
         } as any;
 
         // Set up the initializer mock to return synchronous data for create mode
@@ -107,7 +114,8 @@ describe.skip('ProductForm: Create Mode', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatListModule
+                MatListModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock },
@@ -132,41 +140,34 @@ describe.skip('ProductForm: Create Mode', () => {
         expect(component).toBeTruthy();
     });
 
-    // DISABLED: HTTP mock expectations conflict with mocked initializer service.
-    // Re-enabling requires updating tests to not expect /custom-fields HTTP calls.
-    describe.skip('Create Mode', () => {
+    describe('Create Mode', () => {
         beforeEach(() => {
             routerMock.getCurrentNavigation.mockReturnValue(null);
         });
 
+        // The form has ~20 controls (added over time: reorder_point, low_inventory_*,
+        // qrcode_value, etc.). The tests below use patchValue to only set the
+        // fields under test — same observable effect, but doesn't break every
+        // time someone adds a control to the form.
+        const happyPathValues = {
+            name: 'New Product',
+            sku: 'NP001',
+            description: 'New Product Description',
+            default_resale_price: 10,
+            cost_price: 5,
+        };
+
         it('should initialize an empty form', () => {
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
             expect(component.isEditMode).toBe(false);
             expect(component.productForm.value.name).toBe('');
         });
 
         it('should call createProduct on submit', async () => {
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
             productServiceMock.createProduct.mockReturnValue(of(mockProduct));
             productServiceMock.saveCustomFieldValues.mockReturnValue(of({}));
-            component.productForm.setValue({
-                name: 'New',
-                sku: 'N001',
-                description: '',
-                default_resale_price: 10,
-                cost_price: 5,
-                manufacturer: '',
-                brand: '',
-                category: '',
-                width: 0,
-                height: 0,
-                depth: 0,
-                weight: 0,
-            });
+            component.productForm.patchValue(happyPathValues);
             component.onSubmit();
             await fixture.whenStable();
             expect(productServiceMock.createProduct).toHaveBeenCalled();
@@ -175,38 +176,16 @@ describe.skip('ProductForm: Create Mode', () => {
 
         it('should navigate to products list after successful create', async () => {
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
             productServiceMock.createProduct.mockReturnValue(of(mockProduct));
             productServiceMock.saveCustomFieldValues.mockReturnValue(of({}));
-
-            component.productForm.setValue({
-                name: 'New Product',
-                sku: 'NP001',
-                description: 'New Product Description',
-                default_resale_price: 10,
-                cost_price: 5,
-                manufacturer: 'New Manufacturer',
-                brand: 'New Brand',
-                category: 'New Category',
-                width: 1,
-                height: 1,
-                depth: 1,
-                weight: 1,
-            });
-
+            component.productForm.patchValue(happyPathValues);
             component.onSubmit();
             await fixture.whenStable();
-
             expect(routerMock.navigate).toHaveBeenCalledWith(['/products']);
         });
 
         it('should upload staged images when creating new product', async () => {
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
-
-            // Add a staged image
             const testFile = new File([], 'test.jpg');
             component.stagedImages.push(testFile);
 
@@ -214,21 +193,7 @@ describe.skip('ProductForm: Create Mode', () => {
             productServiceMock.saveCustomFieldValues.mockReturnValue(of({}));
             productServiceMock.uploadProductImage.mockReturnValue(of({ id: 1, product_id: 1, image_path: 'test.jpg', is_primary: 0, title: '', description: '' }));
 
-            component.productForm.setValue({
-                name: 'New Product',
-                sku: 'NP002',
-                description: 'New Product Description',
-                default_resale_price: 15,
-                cost_price: 7,
-                manufacturer: 'New Manufacturer',
-                brand: 'New Brand',
-                category: 'New Category',
-                width: 2,
-                height: 2,
-                depth: 2,
-                weight: 2,
-            });
-
+            component.productForm.patchValue({ ...happyPathValues, sku: 'NP002' });
             component.onSubmit();
             await fixture.whenStable();
 
@@ -237,14 +202,10 @@ describe.skip('ProductForm: Create Mode', () => {
 
         it('should have save button enabled when there are staged images', () => {
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
-
-            expect(component.isDirty).toBe(false);
-
-            // Add a staged image
+            // Adding a staged image flips isDirty true regardless of the
+            // form's initial state — we don't assert the pre-image value
+            // because SKU auto-generation patches the form on init.
             component.stagedImages.push(new File([], 'test.jpg'));
-
             expect(component.isDirty).toBe(true);
         });
 
@@ -253,8 +214,6 @@ describe.skip('ProductForm: Create Mode', () => {
             routerMock.getCurrentNavigation.mockReturnValue(navigationState as any);
             component.ngOnInit();
             fixture.detectChanges();
-            const req = httpMock.expectOne(`${environment.apiUrl}/custom-fields`);
-            req.flush([]);
             await fixture.whenStable();
             expect(component.productForm.value.name).toBe('AI Product');
         });
