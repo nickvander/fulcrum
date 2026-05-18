@@ -97,6 +97,7 @@
         "inventoryAudit": "Historial de stock",
         "orders": "Pedidos",
         "alerts": "Alertas",
+        "payments": "Pagos",
         "purchasing": "Compras",
         "purchaseOrders": "Órdenes de Compra",
         "suppliers": "Proveedores",
@@ -1499,6 +1500,55 @@
             "updateFailed": "No se pudo actualizar la regla.",
             "deleteFailed": "No se pudo eliminar la regla.",
             "testFailed": "No se pudo ejecutar la prueba."
+        }
+    },
+    "payments": {
+        "title": "Pagos",
+        "subtitle": "Audita los cobros de Mercado Pago: estado, errores, respuesta del proveedor y el último webhook.",
+        "filter": {
+            "status": "Estado"
+        },
+        "status": {
+            "all": "Todos",
+            "pending": "Pendiente",
+            "approved": "Aprobado",
+            "rejected": "Rechazado",
+            "refunded": "Reembolsado",
+            "cancelled": "Cancelado"
+        },
+        "empty": {
+            "title": "Aún no hay pagos",
+            "subtitle": "Los pagos aparecen aquí cuando un cliente paga vía Mercado Pago."
+        },
+        "table": {
+            "id": "ID",
+            "createdAt": "Creado",
+            "status": "Estado",
+            "amount": "Monto",
+            "payer": "Pagador",
+            "providerId": "ID del proveedor",
+            "order": "Pedido",
+            "actions": "Acciones"
+        },
+        "actions": {
+            "viewDetail": "Ver detalle"
+        },
+        "detail": {
+            "title": "Pago #{{id}}",
+            "status": "Estado",
+            "amount": "Monto",
+            "provider": "Proveedor",
+            "providerId": "ID del pago en el proveedor",
+            "payerEmail": "Email del pagador",
+            "salesOrder": "Pedido",
+            "createdAt": "Creado",
+            "updatedAt": "Actualizado",
+            "errorMessage": "Mensaje de error",
+            "rawResponse": "Respuesta cruda del proveedor",
+            "lastWebhook": "Último payload de webhook"
+        },
+        "errors": {
+            "loadFailed": "No se pudieron cargar los pagos."
         }
     },
     "apiErrors": {

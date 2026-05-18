@@ -16,10 +16,6 @@ _(none active)_
       frontend: load the Mercado Pago JS SDK, render a Secure
       Fields card form, tokenize client-side, POST the token to
       /api/v1/payments. Test cards documented in the research file.
-- [ ] **Payments admin UI** — list / detail page for the
-      `payments` table so an operator can see status, error
-      messages, raw provider response. Pattern: existing /alerts
-      page.
 
 ## Future / Strategic
 
@@ -37,6 +33,21 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Payments admin UI** — list / detail page for the
+      `payments` table. New `/payments` route in the sidenav with a
+      Material table (id, created_at, status chip, amount, payer
+      email, provider id, sales order link, view-detail action),
+      server-side status filter (all/pending/approved/rejected/
+      refunded/cancelled), `mat-paginator` (25/50/100 page sizes).
+      Per-row "View detail" opens a dialog rendering the meta grid
+      + collapsible `<details>` JSON blocks for `raw_response` and
+      `last_webhook_payload`, plus a red error block when
+      `error_message` is set. New backend `GET /api/v1/payments/`
+      paginated list endpoint with `status` / `provider` / `skip`
+      / `limit` filters returning `{items, total}`. 5 new backend
+      tests + 23 new frontend tests (5 service + 10 page + 8
+      dialog). en + es-MX i18n parity green. Backend 504/8, frontend
+      516/0.
 - [x] AmazonAdapter SP-API completion — `sync_inventory` (PATCH with
       required `marketplaceIds`, MFN `fulfillment_availability`,
       propagates 401 for the retry wrapper) and `fetch_orders` (GET

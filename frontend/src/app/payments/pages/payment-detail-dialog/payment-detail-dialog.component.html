@@ -1,0 +1,80 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>
+    {{ t('payments.detail.title', { id: payment.id }) }}
+  </h2>
+
+  <mat-dialog-content class="detail-content">
+    <div class="meta-grid">
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.status') }}</span>
+        <span class="status-chip" [ngClass]="statusClass(payment.status)"
+              data-testid="payment-detail-status">
+          {{ t('payments.status.' + payment.status) }}
+        </span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.amount') }}</span>
+        <span class="meta-value">{{ payment.amount.toFixed(2) }} {{ payment.currency }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.provider') }}</span>
+        <span class="meta-value">{{ payment.provider }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.providerId') }}</span>
+        <span class="meta-value mono">{{ payment.external_payment_id || '—' }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.payerEmail') }}</span>
+        <span class="meta-value">{{ payment.payer_email || '—' }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.salesOrder') }}</span>
+        <span class="meta-value">
+          {{ payment.sales_order_id ? '#' + payment.sales_order_id : '—' }}
+        </span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.createdAt') }}</span>
+        <span class="meta-value">{{ formatTimestamp(payment.created_at) }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">{{ t('payments.detail.updatedAt') }}</span>
+        <span class="meta-value">{{ formatTimestamp(payment.updated_at) }}</span>
+      </div>
+    </div>
+
+    @if (payment.error_message) {
+      <mat-divider></mat-divider>
+      <div class="error-block" data-testid="payment-detail-error">
+        <h3>
+          <mat-icon>error_outline</mat-icon>
+          {{ t('payments.detail.errorMessage') }}
+        </h3>
+        <pre class="error-text">{{ payment.error_message }}</pre>
+      </div>
+    }
+
+    @if (payment.raw_response) {
+      <mat-divider></mat-divider>
+      <details class="json-block" data-testid="payment-detail-raw">
+        <summary>{{ t('payments.detail.rawResponse') }}</summary>
+        <pre>{{ formatJson(payment.raw_response) }}</pre>
+      </details>
+    }
+
+    @if (payment.last_webhook_payload) {
+      <mat-divider></mat-divider>
+      <details class="json-block" data-testid="payment-detail-webhook">
+        <summary>{{ t('payments.detail.lastWebhook') }}</summary>
+        <pre>{{ formatJson(payment.last_webhook_payload) }}</pre>
+      </details>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-flat-button (click)="close()" data-testid="payment-detail-close">
+      {{ t('common.close') }}
+    </button>
+  </mat-dialog-actions>
+</ng-container>

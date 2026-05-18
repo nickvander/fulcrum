@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -7,6 +7,42 @@ from src.models.payment import Payment, PaymentStatus
 
 def get(db: Session, *, id: int) -> Optional[Payment]:
     return db.query(Payment).filter(Payment.id == id).first()
+
+
+def list_payments(
+    db: Session,
+    *,
+    status: Optional[str] = None,
+    provider: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> List[Payment]:
+    """List payments ordered newest-first by id. Filterable by status
+    (`pending` / `approved` / `rejected` / `refunded` / `cancelled`)
+    and by provider — only `mercado_pago` exists today, but the
+    filter is wired so a second gateway doesn't need a schema change.
+    """
+    q = db.query(Payment)
+    if status is not None:
+        q = q.filter(Payment.status == status)
+    if provider is not None:
+        q = q.filter(Payment.provider == provider)
+    q = q.order_by(Payment.id.desc())
+    return q.offset(skip).limit(limit).all()
+
+
+def count_payments(
+    db: Session,
+    *,
+    status: Optional[str] = None,
+    provider: Optional[str] = None,
+) -> int:
+    q = db.query(Payment)
+    if status is not None:
+        q = q.filter(Payment.status == status)
+    if provider is not None:
+        q = q.filter(Payment.provider == provider)
+    return q.count()
 
 
 def get_by_provider_id(

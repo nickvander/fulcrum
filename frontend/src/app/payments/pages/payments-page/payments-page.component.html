@@ -1,0 +1,104 @@
+<ng-container *transloco="let t">
+  <div class="payments-container">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('payments.title') }}</h1>
+        <p>{{ t('payments.subtitle') }}</p>
+      </div>
+      <mat-form-field appearance="outline" class="status-filter" data-testid="payments-status-filter">
+        <mat-label>{{ t('payments.filter.status') }}</mat-label>
+        <mat-select [(ngModel)]="selectedStatus" (selectionChange)="onStatusChange()">
+          @for (s of statusOptions; track s) {
+            <mat-option [value]="s">{{ t('payments.status.' + s) }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else if (payments.length === 0) {
+      <mat-card class="empty-state" data-testid="payments-empty-state">
+        <mat-icon class="empty-icon">credit_card_off</mat-icon>
+        <h2>{{ t('payments.empty.title') }}</h2>
+        <p>{{ t('payments.empty.subtitle') }}</p>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="payments" class="payments-table"
+               data-testid="payments-table">
+
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.id') }}</th>
+            <td mat-cell *matCellDef="let p">#{{ p.id }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="created_at">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.createdAt') }}</th>
+            <td mat-cell *matCellDef="let p">{{ formatTimestamp(p.created_at) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.status') }}</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="status-chip" [ngClass]="statusClass(p.status)">
+                {{ t('payments.status.' + p.status) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.amount') }}</th>
+            <td mat-cell *matCellDef="let p">{{ formatAmount(p) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="payer_email">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.payer') }}</th>
+            <td mat-cell *matCellDef="let p">{{ p.payer_email || '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="external_payment_id">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.providerId') }}</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="mono">{{ p.external_payment_id || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="sales_order_id">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.order') }}</th>
+            <td mat-cell *matCellDef="let p">
+              {{ p.sales_order_id ? '#' + p.sales_order_id : '—' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>{{ t('payments.table.actions') }}</th>
+            <td mat-cell *matCellDef="let p">
+              <button mat-icon-button
+                      (click)="openDetail(p)"
+                      [matTooltip]="t('payments.actions.viewDetail')"
+                      [attr.data-testid]="'payment-detail-button-' + p.id">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [attr.data-testid]="'payment-row-' + row.id"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="total"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPage($event)"
+          data-testid="payments-paginator">
+        </mat-paginator>
+      </mat-card>
+    }
+  </div>
+</ng-container>
