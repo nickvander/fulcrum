@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import httpx
 from src.config import settings
@@ -6,6 +7,12 @@ from .base import BaseMarketplaceConnector, ListingData
 # Mexico is Fulcrum's primary Amazon market. The SP-API requires at least
 # one marketplaceId on listings reads and most attribute writes.
 MEXICO_MARKETPLACE_ID = "A1AM78C64UM0Y8"
+
+# Default lookback for fetch_orders when the caller doesn't pass
+# created_after. Matches the cadence of how Fulcrum polls today (hourly /
+# on-demand) — anything older than this should be reconciled via webhooks
+# or a longer backfill, not the default poll path.
+_DEFAULT_ORDER_LOOKBACK = timedelta(days=1)
 
 
 class AmazonConnector(BaseMarketplaceConnector):
@@ -155,38 +162,57 @@ class AmazonConnector(BaseMarketplaceConnector):
         )
 
     async def sync_inventory(self, external_id: str, quantity: int, access_token: Optional[str] = None) -> bool:
-        if not access_token:
-            return False
-            
-        print(f"Syncing Amazon inventory for {external_id} to {quantity}")
+        """
+        PATCH the seller's merchant-fulfilled stock for a single SKU on
+        Amazon Mexico via the Listings Items API.
+
+        Endpoint: PATCH /listings/2021-08-01/items/{sellerId}/{sku}
+            - marketplaceIds=A1AM78C64UM0Y8 query param is REQUIRED by
+              SP-API; without it the request 400s.
+            - patches=[{op:replace, path:/attributes/fulfillment_availability,
+              value:[{fulfillment_channel_code:DEFAULT, quantity:N}]}]
+              DEFAULT == merchant-fulfilled (MFN); AMAZON_NA would be FBA.
+
+        Returns True on a 2xx response. Lets `httpx.HTTPStatusError`
+        propagate so that MarketplaceService.call_with_401_retry can
+        force-refresh the token and retry on a stale-token 401 — the old
+        bare-except swallowed every error including 401 and broke that
+        flow.
+
+        Stub-token branch (None or "STUB-…") returns True without
+        hitting the network, mirroring fetch_all_listings/publish_listing.
+        """
+        if not access_token or access_token.startswith("STUB-"):
+            return True
+
         seller_id = settings.AMAZON_SELLER_ID
         url = f"{self.api_base_url}/listings/2021-08-01/items/{seller_id}/{external_id}"
-        
-        # Patch payload for inventory
+        params = {"marketplaceIds": MEXICO_MARKETPLACE_ID}
         payload = {
             "productType": "PRODUCT",
             "patches": [
                 {
                     "op": "replace",
                     "path": "/attributes/fulfillment_availability",
-                    "value": [{"quantity": quantity}]
+                    "value": [
+                        {
+                            "fulfillment_channel_code": "DEFAULT",
+                            "quantity": quantity,
+                        }
+                    ],
                 }
-            ]
+            ],
         }
-        
+
         async with httpx.AsyncClient() as client:
-             # In Sandbox we might get 403/404 if item doesn't exist, but we mock success for now
-             # functionality verification.
-             # Note: LWA token is passed in header 'x-amz-access-token'
-             try:
-                response = await client.patch(url, json=payload, headers={"x-amz-access-token": access_token})
-                # If sandbox, we might get errors if SKU not found. 
-                # For this specific test, if we get 200 or 404 (valid connection), we consider pass.
-                print(f"Amazon Response: {response.status_code} {response.text}")
-                return True
-             except Exception as e:
-                print(f"Amazon Sync Error: {e}")
-                return False
+            response = await client.patch(
+                url,
+                params=params,
+                json=payload,
+                headers={"x-amz-access-token": access_token},
+            )
+            response.raise_for_status()
+        return True
 
     async def sync_price(self, external_id: str, price: float, access_token: Optional[str] = None) -> bool:
         if not access_token:
@@ -226,3 +252,83 @@ class AmazonConnector(BaseMarketplaceConnector):
 
     async def get_listing_status(self, external_id: str, access_token: Optional[str] = None) -> str:
         return "BUYABLE"
+
+    async def fetch_orders(
+        self,
+        access_token: Optional[str] = None,
+        created_after: Optional[datetime] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Page through the seller's recent Amazon Mexico orders via the
+        SP-API Orders v0 API.
+
+        Endpoint: GET /orders/v0/orders
+            - MarketplaceIds=A1AM78C64UM0Y8 (Mexico) — required.
+            - CreatedAfter=<ISO-8601 UTC> — required when NextToken is
+              absent. Defaults to now-24h if the caller doesn't pass one.
+            - NextToken from the previous page's payload.NextToken. When
+              paginating, SP-API rejects requests that re-pass
+              MarketplaceIds/CreatedAfter alongside NextToken, so the
+              second-page request carries only NextToken + MarketplaceIds.
+
+        Returns the raw SP-API order dicts (one per AmazonOrderId) —
+        mirrors `MercadoLibreConnector.fetch_order`, which also returns
+        the marketplace's raw payload. Adding an `OrderData` canonical
+        shape is deferred until there's a second consumer beyond the
+        eventual order-sync worker.
+
+        Stub-token branch (None or "STUB-…") returns a single stub order
+        without hitting the network, same convention as
+        fetch_all_listings.
+        """
+        if not access_token or access_token.startswith("STUB-"):
+            return [
+                {
+                    "AmazonOrderId": "AMZ-STUB-ORDER-001",
+                    "PurchaseDate": "2026-05-17T00:00:00Z",
+                    "OrderStatus": "Shipped",
+                    "OrderTotal": {"CurrencyCode": "MXN", "Amount": "199.00"},
+                    "MarketplaceId": MEXICO_MARKETPLACE_ID,
+                }
+            ]
+
+        if created_after is None:
+            created_after = datetime.now(timezone.utc) - _DEFAULT_ORDER_LOOKBACK
+        # SP-API wants ISO-8601 UTC; trim microseconds for stability and
+        # use the "Z" suffix the docs use in their examples.
+        created_after_iso = (
+            created_after.astimezone(timezone.utc)
+            .replace(microsecond=0)
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+        )
+
+        url = f"{self.api_base_url}/orders/v0/orders"
+        headers = {"x-amz-access-token": access_token}
+        results: List[Dict[str, Any]] = []
+        next_token: Optional[str] = None
+
+        async with httpx.AsyncClient() as client:
+            while True:
+                if next_token:
+                    params: Dict[str, Any] = {
+                        "MarketplaceIds": MEXICO_MARKETPLACE_ID,
+                        "NextToken": next_token,
+                    }
+                else:
+                    params = {
+                        "MarketplaceIds": MEXICO_MARKETPLACE_ID,
+                        "CreatedAfter": created_after_iso,
+                    }
+
+                response = await client.get(url, headers=headers, params=params)
+                response.raise_for_status()
+                payload = (response.json() or {}).get("payload") or {}
+
+                for order in payload.get("Orders") or []:
+                    results.append(order)
+
+                next_token = payload.get("NextToken")
+                if not next_token:
+                    break
+
+        return results
