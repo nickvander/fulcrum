@@ -3,8 +3,8 @@
 **Status:** Reports surface complete + surfaced on the dashboard.
 AmazonAdapter SP-API surface complete *and* wired to a Celery beat
 order-ingestion worker. Margin report uses historical cost-at-sale.
-Alerting (low margin / sales dips / stockout risk) ships hourly via
-Celery beat + email. No active in-flight slice.
+Alerting ships hourly via Celery beat + email, with full CRUD UI at
+`/alerts`. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -25,6 +25,12 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Frontend `/alerts` page: Material table of rules with per-row
+  Test / Edit / Delete + enabled toggle. New Add/Edit dialog with
+  threshold hints that change per alert type. Delete confirmation
+  via the shared ConfirmationDialog. Sidenav entry under
+  Operations. en + es-MX i18n. 16 new tests (6 service + 10 page).
+  Frontend 493/0.
 - Alerting + margin cost-at-sale: per-user `AlertRule`s (low_margin
   / sales_dip / stockout_risk) on the new
   `services/alert_evaluation_service.py`, hourly Celery beat
@@ -94,9 +100,6 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Frontend alert-rule management UI** — backend CRUD shipped;
-  dashboard widget for "current alert rules" + a creation form is
-  the natural next surface. Pattern: low-stock widget.
 - **Mercado Pago Checkout API integration** — research lives in
   `work/future/mercadopago-checkout-research.md`. Greenfield, sizable.
 - **Rust backend migration first slice** — plan in
@@ -108,7 +111,7 @@ Roughly in order of impact / unblock value:
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
   → 473 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 477 passed, 0
+- Frontend full suite: `npx ng test --watch=false` → 493 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

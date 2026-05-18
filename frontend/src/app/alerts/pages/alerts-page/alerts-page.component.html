@@ -1,0 +1,118 @@
+<ng-container *transloco="let t">
+  <div class="alerts-container">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('alerts.title') }}</h1>
+        <p>{{ t('alerts.subtitle') }}</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="openCreateDialog()"
+              data-testid="add-alert-rule-button">
+        <mat-icon>add_alert</mat-icon>
+        {{ t('alerts.addRule') }}
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else if (rules.length === 0) {
+      <mat-card class="empty-state" data-testid="alerts-empty-state">
+        <mat-icon class="empty-icon">notifications_off</mat-icon>
+        <h2>{{ t('alerts.empty.title') }}</h2>
+        <p>{{ t('alerts.empty.subtitle') }}</p>
+        <button mat-flat-button color="primary" (click)="openCreateDialog()">
+          <mat-icon>add_alert</mat-icon>
+          {{ t('alerts.addFirstRule') }}
+        </button>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="rules" class="alerts-table"
+               data-testid="alerts-table">
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.type') }}</th>
+            <td mat-cell *matCellDef="let rule">
+              <span class="type-chip" [ngClass]="'type-' + rule.alert_type">
+                {{ t('alerts.type.' + rule.alert_type) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="threshold">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.threshold') }}</th>
+            <td mat-cell *matCellDef="let rule">{{ thresholdLabel(rule) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="window">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.window') }}</th>
+            <td mat-cell *matCellDef="let rule">{{ rule.window_days }}d</td>
+          </ng-container>
+
+          <ng-container matColumnDef="cooldown">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.cooldown') }}</th>
+            <td mat-cell *matCellDef="let rule">{{ rule.cooldown_minutes }}m</td>
+          </ng-container>
+
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.email') }}</th>
+            <td mat-cell *matCellDef="let rule">{{ rule.notify_email }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="enabled">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.enabled') }}</th>
+            <td mat-cell *matCellDef="let rule">
+              <mat-slide-toggle
+                [checked]="rule.enabled"
+                (change)="toggleEnabled(rule, $event)"
+                [disabled]="togglingEnabled.has(rule.id)"
+                [attr.data-testid]="'alert-enabled-toggle-' + rule.id">
+              </mat-slide-toggle>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="last_triggered">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.lastTriggered') }}</th>
+            <td mat-cell *matCellDef="let rule">
+              {{ formatLastTriggered(rule.last_triggered_at) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>{{ t('alerts.table.actions') }}</th>
+            <td mat-cell *matCellDef="let rule">
+              <button mat-icon-button
+                      (click)="test(rule)"
+                      [disabled]="testing.has(rule.id)"
+                      [matTooltip]="t('alerts.actions.test')"
+                      [attr.data-testid]="'alert-test-button-' + rule.id">
+                @if (testing.has(rule.id)) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                } @else {
+                  <mat-icon>play_arrow</mat-icon>
+                }
+              </button>
+              <button mat-icon-button
+                      (click)="openEditDialog(rule)"
+                      [matTooltip]="t('alerts.actions.edit')"
+                      [attr.data-testid]="'alert-edit-button-' + rule.id">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn"
+                      (click)="delete(rule)"
+                      [disabled]="deleting.has(rule.id)"
+                      [matTooltip]="t('alerts.actions.delete')"
+                      [attr.data-testid]="'alert-delete-button-' + rule.id">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [attr.data-testid]="'alert-row-' + row.id"></tr>
+        </table>
+      </mat-card>
+    }
+  </div>
+</ng-container>

@@ -32,6 +32,11 @@
           <span>{{ t('nav.orders') }}</span>
         </a>
 
+        <a routerLink="/alerts" routerLinkActive="active" class="nav-item">
+          <mat-icon>notifications_active</mat-icon>
+          <span>{{ t('nav.alerts') }}</span>
+        </a>
+
         <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
           (closed)="purchasingExpanded = false">
           <mat-expansion-panel-header>

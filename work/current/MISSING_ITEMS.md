@@ -10,12 +10,7 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Frontend alert-rule management UI** — backend
-      `/api/v1/alerts/rules` CRUD + `/test` endpoint shipped, but
-      there's no UI to add/edit/disable rules. A dashboard widget
-      listing current rules + a creation form is the natural slice.
-      Pattern: low-stock widget. Without the UI an operator has to
-      hit the API directly.
+_(none active)_
 
 ## Future / Strategic
 
@@ -78,6 +73,16 @@ _(none active)_
       rows still render. 5 new backend tests cover the captured
       path, the legacy fallback, the mixed case, and the
       ingestion-time snapshot for orphan items (NULL).
+- [x] Frontend alert-rule management UI — new `/alerts` page in the
+      sidenav: Material table of rules with per-row Test / Edit /
+      Delete + enabled toggle. Create/Edit dialog with type select,
+      threshold + window + cooldown + email, threshold hints that
+      change per type. Delete uses the shared ConfirmationDialog.
+      Test button shows a per-result snackbar (matched + sent /
+      matched + not sent / not matched). 16 new frontend tests
+      (6 service HTTP + 10 page DOM + CRUD interactions).
+      Live-tested all CRUD via curl: list → create x2 → patch
+      disable → test (triggered + email sent) → delete x2 → empty.
 - [x] Alerting (low margin / sales dips / stockout risk) — Track 3
       Step 6 of `80-advanced-analytics.md`. Per-user `AlertRule` +
       `AlertEvent` schema, three evaluators sharing the same SQL

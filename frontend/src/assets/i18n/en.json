@@ -96,6 +96,7 @@
         "products": "Products",
         "inventoryAudit": "Stock audit log",
         "orders": "Orders",
+        "alerts": "Alerts",
         "purchasing": "Purchasing",
         "purchaseOrders": "Purchase Orders",
         "suppliers": "Suppliers",
@@ -1431,6 +1432,73 @@
             "previewFailed": "Could not read the sample file.",
             "saveFailed": "Could not save the template.",
             "deleteFailed": "Could not delete the template."
+        }
+    },
+    "alerts": {
+        "title": "Sales & Inventory Alerts",
+        "subtitle": "Get notified about low margins, sales dips, or stockout risks.",
+        "addRule": "Add rule",
+        "addFirstRule": "Add your first rule",
+        "type": {
+            "low_margin": "Low margin",
+            "sales_dip": "Sales dip",
+            "stockout_risk": "Stockout risk"
+        },
+        "empty": {
+            "title": "No alert rules yet",
+            "subtitle": "Add a rule and Fulcrum will email you when the condition is met. Rules are evaluated hourly; per-rule cooldowns prevent notification spam."
+        },
+        "table": {
+            "type": "Type",
+            "threshold": "Threshold",
+            "window": "Window",
+            "cooldown": "Cooldown",
+            "email": "Email",
+            "enabled": "Enabled",
+            "lastTriggered": "Last triggered",
+            "actions": "Actions"
+        },
+        "actions": {
+            "test": "Test now (sends email if the condition matches)",
+            "edit": "Edit",
+            "delete": "Delete"
+        },
+        "form": {
+            "titleCreate": "Add alert rule",
+            "titleEdit": "Edit alert rule",
+            "alertType": "Alert type",
+            "typeFixedHint": "The type can't be changed. Delete this rule and create a new one if needed.",
+            "threshold": "Threshold",
+            "thresholdHintLowMargin": "Trigger when ANY product's margin % is below this value.",
+            "thresholdHintSalesDip": "Trigger when revenue drops by at least this % vs the prior window.",
+            "thresholdHintStockoutRisk": "Trigger when this many products are out of stock or imminent.",
+            "windowDays": "Window (days)",
+            "windowHint": "Look-back window for the evaluation.",
+            "cooldownMinutes": "Cooldown (minutes)",
+            "cooldownHint": "Don't send another email for this rule until this many minutes have passed.",
+            "notifyEmail": "Notify email",
+            "enabled": "Enabled"
+        },
+        "delete": {
+            "title": "Delete alert rule?",
+            "message": "This permanently removes the {{type}} rule and its event history."
+        },
+        "messages": {
+            "created": "Alert rule created.",
+            "updated": "Alert rule updated.",
+            "deleted": "Alert rule deleted.",
+            "enabled": "Alert rule enabled.",
+            "disabled": "Alert rule disabled.",
+            "testTriggeredAndSent": "Test fired: condition matched, email sent.",
+            "testTriggeredNotSent": "Test fired: condition matched but email could not be sent (check SMTP settings).",
+            "testNotTriggered": "Test fired: condition did not match. No email sent."
+        },
+        "errors": {
+            "loadFailed": "Could not load alert rules.",
+            "createFailed": "Could not create the rule.",
+            "updateFailed": "Could not update the rule.",
+            "deleteFailed": "Could not delete the rule.",
+            "testFailed": "Could not run the test."
         }
     },
     "apiErrors": {

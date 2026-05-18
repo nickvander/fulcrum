@@ -96,6 +96,7 @@
         "products": "Productos",
         "inventoryAudit": "Historial de stock",
         "orders": "Pedidos",
+        "alerts": "Alertas",
         "purchasing": "Compras",
         "purchaseOrders": "Órdenes de Compra",
         "suppliers": "Proveedores",
@@ -1431,6 +1432,73 @@
             "previewFailed": "No se pudo leer el archivo de muestra.",
             "saveFailed": "No se pudo guardar la plantilla.",
             "deleteFailed": "No se pudo eliminar la plantilla."
+        }
+    },
+    "alerts": {
+        "title": "Alertas de ventas e inventario",
+        "subtitle": "Recibe notificaciones cuando bajen los márgenes, caigan las ventas o haya riesgo de desabasto.",
+        "addRule": "Agregar regla",
+        "addFirstRule": "Agrega tu primera regla",
+        "type": {
+            "low_margin": "Margen bajo",
+            "sales_dip": "Caída de ventas",
+            "stockout_risk": "Riesgo de desabasto"
+        },
+        "empty": {
+            "title": "Aún no hay reglas de alerta",
+            "subtitle": "Agrega una regla y Fulcrum te enviará un correo cuando se cumpla la condición. Las reglas se evalúan cada hora; los cooldowns por regla evitan spam."
+        },
+        "table": {
+            "type": "Tipo",
+            "threshold": "Umbral",
+            "window": "Ventana",
+            "cooldown": "Cooldown",
+            "email": "Correo",
+            "enabled": "Activa",
+            "lastTriggered": "Última activación",
+            "actions": "Acciones"
+        },
+        "actions": {
+            "test": "Probar ahora (envía correo si se cumple la condición)",
+            "edit": "Editar",
+            "delete": "Eliminar"
+        },
+        "form": {
+            "titleCreate": "Agregar regla de alerta",
+            "titleEdit": "Editar regla de alerta",
+            "alertType": "Tipo de alerta",
+            "typeFixedHint": "El tipo no se puede cambiar. Elimina la regla y crea una nueva si lo necesitas.",
+            "threshold": "Umbral",
+            "thresholdHintLowMargin": "Se activa cuando CUALQUIER producto tiene margen % por debajo de este valor.",
+            "thresholdHintSalesDip": "Se activa cuando los ingresos caen al menos este % respecto a la ventana anterior.",
+            "thresholdHintStockoutRisk": "Se activa cuando hay al menos esta cantidad de productos agotados o inminentes.",
+            "windowDays": "Ventana (días)",
+            "windowHint": "Ventana de evaluación.",
+            "cooldownMinutes": "Cooldown (minutos)",
+            "cooldownHint": "No se enviará otro correo de esta regla hasta que pasen estos minutos.",
+            "notifyEmail": "Correo de aviso",
+            "enabled": "Activa"
+        },
+        "delete": {
+            "title": "¿Eliminar regla de alerta?",
+            "message": "Esto borra permanentemente la regla de {{type}} y su historial."
+        },
+        "messages": {
+            "created": "Regla creada.",
+            "updated": "Regla actualizada.",
+            "deleted": "Regla eliminada.",
+            "enabled": "Regla activada.",
+            "disabled": "Regla desactivada.",
+            "testTriggeredAndSent": "Prueba: condición cumplida, correo enviado.",
+            "testTriggeredNotSent": "Prueba: condición cumplida pero no se pudo enviar el correo (revisa SMTP).",
+            "testNotTriggered": "Prueba: condición no se cumplió. No se envió correo."
+        },
+        "errors": {
+            "loadFailed": "No se pudieron cargar las reglas.",
+            "createFailed": "No se pudo crear la regla.",
+            "updateFailed": "No se pudo actualizar la regla.",
+            "deleteFailed": "No se pudo eliminar la regla.",
+            "testFailed": "No se pudo ejecutar la prueba."
         }
     },
     "apiErrors": {
