@@ -10,10 +10,6 @@ _(none active)_
 
 ## Medium Priority
 
-_(none active)_
-
-## Medium Priority
-
 - [ ] **Frontend Mercado Pago checkout flow** — backend payments
       surface shipped (POST /api/v1/payments, GET /payments/{id},
       POST /webhooks/mercadopago with HMAC). Still needed on the
@@ -37,21 +33,10 @@ _(none active)_
 
 ## Done This Past Week
 
-- [x] Customer onboarding checklist + launch readiness report.
-- [x] Supplier document import review queue (incl. AI catalog parsing
-      with vendor auto-link).
-- [x] Marketplace allocation workflow (stock-transfer model + ML Full
-      API).
-- [x] OAuth token refresh hardening (401-retry + reauth chip on
-      stock-transfer sync panel).
-- [x] Low-stock dashboard widget + shopping-cart reorder.
-- [x] Demo workspace + cleanup guardrail.
-- [x] AI catalog import (CSV + PDF + image), gated on configured key.
-- [x] Reusable `report_export` module + 7 reports × CSV + PDF.
-- [x] Named CSV import templates ("Map & Template" UX).
-- [x] Inventory adjustment audit log UI (`/products/audit`).
-- [x] All 5 disabled product-form specs unblocked; frontend 450/0
-      skipped.
+_(Older items are listed under PROGRESS.md's "Most Recent Shipped"
++ "Recent Archive". Keep this section short — only items from
+roughly the last 10 days.)_
+
 - [x] AmazonAdapter SP-API completion — `sync_inventory` (PATCH with
       required `marketplaceIds`, MFN `fulfillment_availability`,
       propagates 401 for the retry wrapper) and `fetch_orders` (GET
