@@ -20,10 +20,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceAsyncMock } from '../../services/product-form-initializer.service.async.mock';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
-// DISABLED: Async mock service interactions cause test instability.
-// See work/archive/44-product-form-create-test-hanging-deep-dive.md for details.
-describe.skip('ProductForm: Advanced Error Handling with Async Mock', () => {
+describe('ProductForm: Advanced Error Handling with Async Mock', () => {
     let component: ProductForm;
     let fixture: ComponentFixture<ProductForm>;
     let productServiceMock: MockedObject<ProductService>;
@@ -56,7 +55,9 @@ describe.skip('ProductForm: Advanced Error Handling with Async Mock', () => {
             deleteProductImage: vi.fn().mockName("ProductService.deleteProductImage"),
             setPrimaryProductImage: vi.fn().mockName("ProductService.setPrimaryProductImage"),
             getProductById: vi.fn().mockName("ProductService.getProductById"),
-            uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage")
+            uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage"),
+            generateUniqueSku: vi.fn().mockReturnValue("SKU-MOCK-1"),
+            generateBarcodeFromSku: vi.fn().mockReturnValue("BARCODE-MOCK-1"),
         } as any;
         notificationServiceMock = {
             showSuccess: vi.fn().mockName("NotificationService.showSuccess"),
@@ -79,7 +80,8 @@ describe.skip('ProductForm: Advanced Error Handling with Async Mock', () => {
         activatedRouteMock = {
             snapshot: {
                 params: {}
-            }
+            },
+            queryParams: of({}),
         } as any;
 
         await TestBed.configureTestingModule({
@@ -95,7 +97,8 @@ describe.skip('ProductForm: Advanced Error Handling with Async Mock', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatListModule
+                MatListModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock },

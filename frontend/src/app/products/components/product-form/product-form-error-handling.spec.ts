@@ -23,6 +23,7 @@ import { ProductFormInitializerServiceMock } from '../../services/product-form-i
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { ProductFormImageGalleryComponent } from './product-form-image-gallery.component';
 import { ProductVariantsComponent } from '../product-variants/product-variants';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 // Mock Child Components
 @Component({
@@ -71,8 +72,7 @@ class MockProductVariantsComponent {
     addVariant = new EventEmitter<void>();
 }
 
-// @todo: Fix productForm.setValue issue - form group structure mismatch
-describe.skip('ProductForm: Error Handling', () => {
+describe('ProductForm: Error Handling', () => {
     let component: ProductForm;
     let fixture: ComponentFixture<ProductForm>;
     let productServiceMock: MockedObject<ProductService>;
@@ -113,7 +113,9 @@ describe.skip('ProductForm: Error Handling', () => {
             deleteProductImage: vi.fn().mockName("ProductService.deleteProductImage"),
             setPrimaryProductImage: vi.fn().mockName("ProductService.setPrimaryProductImage"),
             getProductById: vi.fn().mockName("ProductService.getProductById"),
-            uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage")
+            uploadProductImage: vi.fn().mockName("ProductService.uploadProductImage"),
+            generateUniqueSku: vi.fn().mockReturnValue("SKU-MOCK-1"),
+            generateBarcodeFromSku: vi.fn().mockReturnValue("BARCODE-MOCK-1"),
         } as any;
         notificationServiceMock = {
             showSuccess: vi.fn().mockName("NotificationService.showSuccess"),
@@ -152,7 +154,8 @@ describe.skip('ProductForm: Error Handling', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                MatListModule
+                MatListModule,
+                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
             ],
             providers: [
                 { provide: ProductService, useValue: productServiceMock },
@@ -180,7 +183,11 @@ describe.skip('ProductForm: Error Handling', () => {
     });
 
     describe('error handling', () => {
-        it('should handle form submission errors in create mode', () => {
+        // Note: showError is no longer called directly by the component
+        // (b955e1a routed every HTTP error through HttpErrorInterceptor +
+        // translateApiError). These tests now just verify that an API
+        // error doesn't crash the component or fire navigation.
+        it('should handle form submission errors in create mode without crashing or navigating', () => {
             vi.spyOn(productFormInitializerService, 'initializeForm').mockReturnValue(of({
                 customFields: [],
                 product: undefined,
@@ -188,32 +195,21 @@ describe.skip('ProductForm: Error Handling', () => {
                 initialPrimaryImageId: null
             }));
             fixture.detectChanges();
-
-            // Mock an error during product creation
             productServiceMock.createProduct.mockReturnValue(throwError(() => new Error('API Error')));
 
-            component.productForm.setValue({
+            component.productForm.patchValue({
                 name: 'New Product',
                 sku: 'NP001',
-                description: 'New Product Description',
                 default_resale_price: 10,
                 cost_price: 5,
-                manufacturer: 'New Manufacturer',
-                brand: 'New Brand',
-                category: 'New Category',
-                width: 1,
-                height: 1,
-                depth: 1,
-                weight: 1,
             });
 
-            component.onSubmit();
-            // await fixture.whenStable();
-
-            expect(notificationServiceMock.showError).toHaveBeenCalledWith('Error creating product');
+            expect(() => component.onSubmit()).not.toThrow();
+            expect(productServiceMock.createProduct).toHaveBeenCalled();
+            expect(routerMock.navigate).not.toHaveBeenCalled();
         });
 
-        it('should handle form submission errors in edit mode', () => {
+        it('should handle form submission errors in edit mode without crashing or navigating', () => {
             vi.spyOn(productFormInitializerService, 'initializeForm').mockReturnValue(of({
                 customFields: [],
                 product: mockProduct,
@@ -221,29 +217,18 @@ describe.skip('ProductForm: Error Handling', () => {
                 initialPrimaryImageId: null
             }));
             fixture.detectChanges();
-
-            // Mock an error during product update
             productServiceMock.updateProduct.mockReturnValue(throwError(() => new Error('API Error')));
 
             component.productForm.patchValue({
                 name: 'Updated Product',
                 sku: 'UPDATED001',
-                description: 'Updated Description',
                 default_resale_price: 150,
                 cost_price: 75,
-                manufacturer: 'Updated Manufacturer',
-                brand: 'Updated Brand',
-                category: 'Updated Category',
-                width: 15,
-                height: 15,
-                depth: 15,
-                weight: 15
             });
 
-            component.onSubmit();
-            // await fixture.whenStable();
-
-            expect(notificationServiceMock.showError).toHaveBeenCalledWith('Error updating product');
+            expect(() => component.onSubmit()).not.toThrow();
+            expect(productServiceMock.updateProduct).toHaveBeenCalled();
+            expect(routerMock.navigate).not.toHaveBeenCalled();
         });
 
         it('should handle cancellation with confirmation dialog', () => {
