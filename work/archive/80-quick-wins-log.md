@@ -94,3 +94,60 @@ edit + retry without losing progress.
   changes required; the review/approve flow already accepts the
   `ExtractedCatalogItem` shape.
 - PDF export for reports (still deferred).
+
+## Session 4 - 2026-05-17 (closing)
+
+Wrapped up every open acceptance criterion in the plan.
+
+### Shipped
+
+- `cc9b038` — **AI catalog import (PDF + image), gated on a configured
+  API key.** Reuses the existing `InvoiceParserAgent` multimodal
+  pipeline with a new `catalog_extraction.md` prompt. A new
+  `ADKManager.is_ready()` predicate (ai_enabled AND active provider
+  keyed) is exposed through `GET /api/v1/catalog-imports/capabilities`.
+  The dialog renders a green "AI is configured" banner when ready or a
+  yellow "needs AI" banner with an "Open Settings" link when not, and
+  switches the file input's `accept` list accordingly. Backend
+  endpoint returns 400 `aiRequiredForFileType` when a PDF lands
+  without AI ready, 502 `aiExtractionFailed` when the provider errors.
+  6 new backend tests + 2 new frontend specs.
+
+- `4c7c5b7` — **PDF export for the low-stock report.** reportlab
+  (pure Python, no system fonts) renders a landscape letter with
+  severity-colored rows next to the existing CSV export. Same data,
+  limits, and filename convention. New "Export PDF" button next to
+  "Export CSV" in the widget header; both go through a shared
+  `downloadBlob()` helper so the JWT stays in the Authorization header.
+  2 new backend tests.
+
+- Same commit as the AI slice also moved the supplier selector to the
+  review step (so a forgotten upload-step selection isn't lost) and
+  added `step="0.01" min="0"` to price/cost inputs.
+
+### Verified live in the browser
+
+- AI-off path: dialog shows the yellow banner with "Open Settings"
+  link; `accept` is `.csv,.tsv,.txt`. API rejects `.pdf` with the
+  localized 400 code.
+- AI-on path (after seeding `ai_enabled=1` + a key in store_settings):
+  banner switches to green "AI is configured"; `accept` grows to
+  include `.pdf,.png,.jpg,.jpeg,.avif,.webp`.
+- Low-stock widget: "Export PDF" button clicks initiate a real blob
+  download of `fulcrum-low-stock-YYYY-MM-DD.pdf` (size sanity-checked
+  against an authenticated curl).
+
+### Final test counts
+
+- Backend: 367 passed, 8 skipped (was 359 at end of Session 3 — +6
+  AI gating, +2 PDF export).
+- Frontend: 423 passed, 14 skipped (+2 dialog specs for AI gating).
+- All pre-commit + pre-push hooks green; i18n parity validated; no
+  regressions in unrelated suites.
+
+### Closed
+
+All acceptance criteria in `80-quick-wins-plan.md` are now ticked.
+Future enhancements (other reports' PDF exports, vendor auto-link from
+AI extraction, per-row confidence chips) moved to the plan's "Future
+Enhancements" section to be opened as separate initiatives.
