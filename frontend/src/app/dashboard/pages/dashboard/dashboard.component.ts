@@ -16,6 +16,7 @@ import { LowStockListWidgetComponent } from '../../widgets/low-stock-list/low-st
 import { InventoryHealthWidgetComponent } from '../../widgets/inventory-health-widget/inventory-health-widget.component';
 import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist/onboarding-checklist.component';
 import { SalesByChannelWidgetComponent } from '../../widgets/sales-by-channel-widget/sales-by-channel-widget.component';
+import { AnalyticsReportsWidgetComponent } from '../../widgets/analytics-reports-widget/analytics-reports-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
@@ -39,6 +40,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
         InventoryHealthWidgetComponent,
         OnboardingChecklistComponent,
         SalesByChannelWidgetComponent,
+        AnalyticsReportsWidgetComponent,
         RouterModule,
         TranslocoModule
     ]

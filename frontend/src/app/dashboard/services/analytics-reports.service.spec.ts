@@ -1,0 +1,91 @@
+import { TestBed } from '@angular/core/testing';
+import {
+  HttpClientTestingModule,
+  HttpTestingController,
+  TestRequest,
+} from '@angular/common/http/testing';
+
+import { AnalyticsReportsService } from './analytics-reports.service';
+import { environment } from '../../../environments/environment';
+
+describe('AnalyticsReportsService', () => {
+  let service: AnalyticsReportsService;
+  let httpMock: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [HttpClientTestingModule],
+      providers: [AnalyticsReportsService],
+    });
+    service = TestBed.inject(AnalyticsReportsService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
+  });
+
+  function expectBlobRequest(url: string): TestRequest {
+    const req = httpMock.expectOne((r) => r.url === url);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    return req;
+  }
+
+  // ---- Velocity ------------------------------------------------------------
+
+  it('exportVelocityCsv hits /reports/velocity/export with default window + limit', () => {
+    service.exportVelocityCsv().subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/velocity/export`);
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('limit')).toBe('2000');
+    req.flush(new Blob());
+  });
+
+  it('exportVelocityPdf forwards custom window + limit to the -pdf endpoint', () => {
+    service.exportVelocityPdf(60, 5000).subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/velocity/export-pdf`);
+    expect(req.request.params.get('window_days')).toBe('60');
+    expect(req.request.params.get('limit')).toBe('5000');
+    req.flush(new Blob());
+  });
+
+  // ---- Margin --------------------------------------------------------------
+
+  it('exportMarginCsv hits /reports/margin/export with default window + limit', () => {
+    service.exportMarginCsv().subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/margin/export`);
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('limit')).toBe('2000');
+    req.flush(new Blob());
+  });
+
+  it('exportMarginPdf forwards a custom window', () => {
+    service.exportMarginPdf(90).subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/margin/export-pdf`);
+    expect(req.request.params.get('window_days')).toBe('90');
+    req.flush(new Blob());
+  });
+
+  // ---- Stockout ------------------------------------------------------------
+
+  it('exportStockoutCsv hits /reports/stockout/export with default thresholds', () => {
+    service.exportStockoutCsv().subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/stockout/export`);
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('imminent_days')).toBe('7');
+    expect(req.request.params.get('watch_days')).toBe('14');
+    expect(req.request.params.get('limit')).toBe('2000');
+    req.flush(new Blob());
+  });
+
+  it('exportStockoutPdf forwards custom imminent / watch / window values', () => {
+    service.exportStockoutPdf(60, 10, 21, 5000).subscribe();
+    const req = expectBlobRequest(`${environment.apiUrl}/reports/stockout/export-pdf`);
+    expect(req.request.params.get('window_days')).toBe('60');
+    expect(req.request.params.get('imminent_days')).toBe('10');
+    expect(req.request.params.get('watch_days')).toBe('21');
+    expect(req.request.params.get('limit')).toBe('5000');
+    req.flush(new Blob());
+  });
+});

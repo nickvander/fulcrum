@@ -1,0 +1,121 @@
+<ng-container *transloco="let t">
+  <div class="widget-container">
+    <div class="widget-header">
+      <div>
+        <h3>{{ t('dashboard.analyticsReports.title') }}</h3>
+        <small>{{ t('dashboard.analyticsReports.subtitle') }}</small>
+      </div>
+      <div class="header-actions">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="window-field">
+          <mat-label>{{ t('dashboard.analyticsReports.windowLabel') }}</mat-label>
+          <mat-select
+            [(value)]="windowDays"
+            data-testid="analytics-reports-window-select"
+          >
+            <mat-option *ngFor="let opt of windowOptions" [value]="opt.value">
+              {{ t(opt.labelKey) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <ul class="report-list">
+      <li class="report-row" data-testid="analytics-report-velocity">
+        <div class="row-icon velocity">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="row-info">
+          <strong>{{ t('dashboard.analyticsReports.velocityTitle') }}</strong>
+          <small>{{ t('dashboard.analyticsReports.velocityDesc') }}</small>
+        </div>
+        <div class="row-actions">
+          <button
+            mat-stroked-button
+            (click)="download('velocity', 'csv')"
+            [disabled]="isBusy('velocity', 'csv')"
+            [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
+            data-testid="velocity-export-csv"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.analyticsReports.csv') }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="download('velocity', 'pdf')"
+            [disabled]="isBusy('velocity', 'pdf')"
+            [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
+            data-testid="velocity-export-pdf"
+          >
+            <mat-icon>picture_as_pdf</mat-icon>
+            {{ t('dashboard.analyticsReports.pdf') }}
+          </button>
+        </div>
+      </li>
+
+      <li class="report-row" data-testid="analytics-report-margin">
+        <div class="row-icon margin">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="row-info">
+          <strong>{{ t('dashboard.analyticsReports.marginTitle') }}</strong>
+          <small>{{ t('dashboard.analyticsReports.marginDesc') }}</small>
+        </div>
+        <div class="row-actions">
+          <button
+            mat-stroked-button
+            (click)="download('margin', 'csv')"
+            [disabled]="isBusy('margin', 'csv')"
+            [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
+            data-testid="margin-export-csv"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.analyticsReports.csv') }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="download('margin', 'pdf')"
+            [disabled]="isBusy('margin', 'pdf')"
+            [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
+            data-testid="margin-export-pdf"
+          >
+            <mat-icon>picture_as_pdf</mat-icon>
+            {{ t('dashboard.analyticsReports.pdf') }}
+          </button>
+        </div>
+      </li>
+
+      <li class="report-row" data-testid="analytics-report-stockout">
+        <div class="row-icon stockout">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="row-info">
+          <strong>{{ t('dashboard.analyticsReports.stockoutTitle') }}</strong>
+          <small>{{ t('dashboard.analyticsReports.stockoutDesc') }}</small>
+        </div>
+        <div class="row-actions">
+          <button
+            mat-stroked-button
+            (click)="download('stockout', 'csv')"
+            [disabled]="isBusy('stockout', 'csv')"
+            [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
+            data-testid="stockout-export-csv"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.analyticsReports.csv') }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="download('stockout', 'pdf')"
+            [disabled]="isBusy('stockout', 'pdf')"
+            [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
+            data-testid="stockout-export-pdf"
+          >
+            <mat-icon>picture_as_pdf</mat-icon>
+            {{ t('dashboard.analyticsReports.pdf') }}
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</ng-container>

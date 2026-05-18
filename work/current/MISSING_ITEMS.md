@@ -10,11 +10,6 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Reports UI: surface velocity / margin / stockout exports** —
-      backend endpoints shipped in `44722bf`, but the dashboard /
-      reports page has no buttons or links for them yet. Today the
-      only way to fetch the CSV/PDF is to hit the URL directly. The
-      low-stock report widget is the existing pattern to copy.
 - [ ] **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
       is real (`d669246`) but there is no job that calls it and
       writes to `SalesOrder` / `SalesOrderItem`. ML has the webhook
@@ -75,3 +70,10 @@ _(none active)_
       the card). Added 13 frontend tests covering state precedence,
       tooltip with/without reason, and DOM rendering of the chip +
       warn-styled Reconnect button.
+- [x] Reports UI for velocity / margin / stockout — new
+      `analytics-reports-widget` on the dashboard, with a window
+      selector (30/60/90/180d) and CSV + PDF buttons per report.
+      Backed by `AnalyticsReportsService` and the shared
+      `ReportDownloadService`. 14 new frontend tests (6 service + 8
+      widget); endpoints verified live via auth+curl (CSVs return
+      real data, PDFs start with %PDF-1.4).
