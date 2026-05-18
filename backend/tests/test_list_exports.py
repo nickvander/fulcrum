@@ -316,3 +316,74 @@ def test_inventory_adjustments_pdf_renders(
     )
     assert response.status_code == 200
     assert response.content.startswith(b"%PDF-")
+
+
+@pytest.mark.db
+def test_inventory_adjustments_list_returns_newest_first_with_total(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """The JSON list endpoint behind the audit-log page. Verifies pagination
+    metadata (`total`) and newest-first sort, plus the joined product fields."""
+    product = Product(
+        name="Listed Widget", sku="LIST-1",
+        default_resale_price=10.0, cost_price=4.0, is_bundle=False,
+    )
+    db.add(product)
+    db.flush()
+    older = datetime.utcnow() - timedelta(hours=1)
+    db.add_all([
+        InventoryAdjustment(product_id=product.id, adjustment=+7,
+                            reason="Newer", timestamp=datetime.utcnow(),
+                            created_by="admin@example.com"),
+        InventoryAdjustment(product_id=product.id, adjustment=-2,
+                            reason="Older", timestamp=older,
+                            created_by="warehouse@example.com"),
+    ])
+    db.commit()
+
+    resp = client.get(
+        "/api/v1/reports/inventory-adjustments",
+        params={"limit": 50},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["total"] == 2
+    rows = body["rows"]
+    assert len(rows) == 2
+    assert rows[0]["reason"] == "Newer"
+    assert rows[0]["adjustment"] == 7
+    assert rows[0]["product_sku"] == "LIST-1"
+    assert rows[1]["reason"] == "Older"
+
+
+@pytest.mark.db
+def test_inventory_adjustments_list_respects_skip_and_limit(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    product = Product(
+        name="Many Widget", sku="MANY-1",
+        default_resale_price=10.0, cost_price=4.0, is_bundle=False,
+    )
+    db.add(product)
+    db.flush()
+    base = datetime.utcnow()
+    for i in range(5):
+        db.add(InventoryAdjustment(
+            product_id=product.id, adjustment=i + 1,
+            reason=f"adj-{i}", timestamp=base - timedelta(seconds=i),
+            created_by="u",
+        ))
+    db.commit()
+
+    resp = client.get(
+        "/api/v1/reports/inventory-adjustments",
+        params={"skip": 2, "limit": 2},
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert body["total"] == 5
+    assert len(body["rows"]) == 2
+    # skip=2, limit=2 → the 3rd and 4th rows (0-indexed 2 and 3 from newest)
+    assert body["rows"][0]["reason"] == "adj-2"
+    assert body["rows"][1]["reason"] == "adj-3"

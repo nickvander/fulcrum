@@ -459,6 +459,79 @@ def _inventory_adjustment_table(rows: list[dict]) -> ReportTable:
     )
 
 
+class InventoryAdjustmentRow(BaseModel):
+    """One audit log entry returned by the JSON list endpoint. Mirrors the
+    columns the CSV/PDF export emits so frontend and exports stay aligned."""
+    id: int
+    timestamp: Optional[datetime] = None
+    product_id: Optional[int] = None
+    product_sku: Optional[str] = None
+    product_name: Optional[str] = None
+    adjustment: int
+    reason: Optional[str] = None
+    created_by: Optional[str] = None
+
+
+class InventoryAdjustmentList(BaseModel):
+    rows: List[InventoryAdjustmentRow]
+    total: int
+    """Total matching rows ignoring pagination. The frontend uses this to
+    render a paginator without a second round-trip."""
+
+
+@router.get("/inventory-adjustments", response_model=InventoryAdjustmentList)
+def list_inventory_adjustments(
+    *,
+    db: Session = Depends(get_db),
+    product_id: Optional[int] = Query(None),
+    after: Optional[datetime] = Query(None),
+    before: Optional[datetime] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=500),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Paginated audit log of every inventory quantity change. Newest first.
+    Same filter shape as the CSV/PDF export endpoints so a buyer can find
+    the rows on screen, then click Export to get the full filtered set."""
+    from sqlalchemy.orm import joinedload as _joinedload
+
+    base = db.query(InventoryAdjustment)
+    if product_id is not None:
+        base = base.filter(InventoryAdjustment.product_id == product_id)
+    if after is not None:
+        base = base.filter(InventoryAdjustment.timestamp >= after)
+    if before is not None:
+        base = base.filter(InventoryAdjustment.timestamp <= before)
+
+    total = base.count()
+
+    page_q = (
+        base.options(_joinedload(InventoryAdjustment.product))
+        .order_by(
+            InventoryAdjustment.timestamp.desc().nullslast(),
+            InventoryAdjustment.id.desc(),
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    rows: list[InventoryAdjustmentRow] = []
+    for adj in page_q.all():
+        product = adj.product
+        rows.append(
+            InventoryAdjustmentRow(
+                id=adj.id,
+                timestamp=adj.timestamp or adj.created_at,
+                product_id=adj.product_id,
+                product_sku=product.sku if product else None,
+                product_name=product.name if product else None,
+                adjustment=adj.adjustment,
+                reason=adj.reason,
+                created_by=adj.created_by,
+            )
+        )
+    return InventoryAdjustmentList(rows=rows, total=total)
+
+
 @router.get("/inventory-adjustments/export")
 def export_inventory_adjustments_csv(
     *,
