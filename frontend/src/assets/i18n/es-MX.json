@@ -94,6 +94,7 @@
         "menu": "Menú",
         "dashboard": "Tablero",
         "products": "Productos",
+        "inventoryAudit": "Historial de stock",
         "orders": "Pedidos",
         "purchasing": "Compras",
         "purchaseOrders": "Órdenes de Compra",
@@ -1367,6 +1368,24 @@
         "confirmDelete": "Confirmar Eliminación",
         "areYouSure": "¿Estás seguro?",
         "cannotBeUndone": "Esta acción no se puede deshacer."
+    },
+    "inventoryAudit": {
+        "title": "Historial de ajustes de inventario",
+        "subtitle": "Cada cambio de cantidad en el espacio, del más reciente al más antiguo. Usa los filtros para acotar por producto o fecha; luego exporta para un registro sellado.",
+        "productIdFilter": "ID de producto",
+        "from": "Desde",
+        "to": "Hasta",
+        "when": "Cuándo",
+        "product": "Producto",
+        "delta": "Δ",
+        "reason": "Motivo",
+        "createdBy": "Realizado por",
+        "empty": "Ningún ajuste de inventario coincide con estos filtros.",
+        "deletedProduct": "(producto eliminado)",
+        "exportCsv": "Exportar CSV",
+        "exportPdf": "Exportar PDF",
+        "exportCsvTooltip": "Descargar el historial filtrado como hoja de cálculo",
+        "exportPdfTooltip": "Descargar el historial filtrado como PDF imprimible"
     },
     "catalogImportTemplates": {
         "title": "Plantillas de importación de catálogo",

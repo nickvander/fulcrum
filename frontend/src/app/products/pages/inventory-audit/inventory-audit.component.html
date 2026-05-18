@@ -1,0 +1,131 @@
+<ng-container *transloco="let t">
+  <div class="audit-container">
+    <div class="page-header">
+      <div>
+        <h1>{{ t('inventoryAudit.title') }}</h1>
+        <p>{{ t('inventoryAudit.subtitle') }}</p>
+      </div>
+      <div class="header-actions">
+        <button mat-button (click)="exportCsv()"
+            [matTooltip]="t('inventoryAudit.exportCsvTooltip')"
+            data-testid="audit-export-csv">
+          <mat-icon>download</mat-icon>
+          {{ t('inventoryAudit.exportCsv') }}
+        </button>
+        <button mat-button (click)="exportPdf()"
+            [matTooltip]="t('inventoryAudit.exportPdfTooltip')"
+            data-testid="audit-export-pdf">
+          <mat-icon>picture_as_pdf</mat-icon>
+          {{ t('inventoryAudit.exportPdf') }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+        <mat-label>{{ t('inventoryAudit.productIdFilter') }}</mat-label>
+        <input matInput type="number" min="1"
+            [(ngModel)]="searchProductId"
+            (ngModelChange)="onFilterChange()"
+            data-testid="audit-product-id-input" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+        <mat-label>{{ t('inventoryAudit.from') }}</mat-label>
+        <input matInput type="date"
+            [(ngModel)]="startDate"
+            (ngModelChange)="onFilterChange()"
+            data-testid="audit-start-date-input" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+        <mat-label>{{ t('inventoryAudit.to') }}</mat-label>
+        <input matInput type="date"
+            [(ngModel)]="endDate"
+            (ngModelChange)="onFilterChange()"
+            data-testid="audit-end-date-input" />
+      </mat-form-field>
+
+      <button mat-button
+          *ngIf="hasActiveFilters()"
+          (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon>
+        {{ t('common.clear') }}
+      </button>
+    </div>
+
+    <div class="table-card">
+      <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+      <table mat-table [dataSource]="rows" class="audit-table">
+        <ng-container matColumnDef="timestamp">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.when') }}</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.timestamp ? (row.timestamp | date:'medium') : '—' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <a *ngIf="row.product_id; else noProduct"
+                [routerLink]="['/products']" [queryParams]="{open_sku: row.product_sku}">
+              {{ row.product_name || ('#' + row.product_id) }}
+            </a>
+            <ng-template #noProduct>
+              <span class="muted">{{ t('inventoryAudit.deletedProduct') }}</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="sku">
+          <th mat-header-cell *matHeaderCellDef>{{ t('common.name') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <code class="sku" *ngIf="row.product_sku">{{ row.product_sku }}</code>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="adjustment">
+          <th mat-header-cell *matHeaderCellDef class="numeric">{{ t('inventoryAudit.delta') }}</th>
+          <td mat-cell *matCellDef="let row" class="numeric">
+            <span [class]="deltaClass(row.adjustment)">
+              {{ row.adjustment > 0 ? '+' + row.adjustment : row.adjustment }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="reason">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.reason') }}</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.reason || '—' }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="created_by">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.createdBy') }}</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.created_by || '—' }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="empty-cell" [attr.colspan]="displayedColumns.length">
+            {{ loading ? t('common.loading') : t('inventoryAudit.empty') }}
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator
+          [length]="total"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="pageSizeOptions"
+          (page)="onPage($event)"
+          showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</ng-container>

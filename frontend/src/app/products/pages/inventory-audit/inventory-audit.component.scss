@@ -1,0 +1,87 @@
+.audit-container {
+  padding: 16px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.9rem;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .filter-field {
+    min-width: 160px;
+  }
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.audit-table {
+  width: 100%;
+
+  .numeric {
+    text-align: right;
+  }
+
+  .sku {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.85em;
+  }
+
+  .delta-positive {
+    color: #1e7a3a;
+    font-weight: 600;
+  }
+
+  .delta-negative {
+    color: #c62828;
+    font-weight: 600;
+  }
+
+  .muted {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+}
+
+.empty-cell {
+  text-align: center;
+  padding: 24px;
+  color: rgba(0, 0, 0, 0.5);
+}

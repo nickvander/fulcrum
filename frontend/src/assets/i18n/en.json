@@ -94,6 +94,7 @@
         "menu": "Menu",
         "dashboard": "Dashboard",
         "products": "Products",
+        "inventoryAudit": "Stock audit log",
         "orders": "Orders",
         "purchasing": "Purchasing",
         "purchaseOrders": "Purchase Orders",
@@ -1367,6 +1368,24 @@
         "confirmDelete": "Confirm Delete",
         "areYouSure": "Are you sure?",
         "cannotBeUndone": "This action cannot be undone."
+    },
+    "inventoryAudit": {
+        "title": "Inventory adjustment audit log",
+        "subtitle": "Every quantity change in the workspace, newest first. Use the filters to narrow by product or date, then Export for a stamped record.",
+        "productIdFilter": "Product ID",
+        "from": "From",
+        "to": "To",
+        "when": "When",
+        "product": "Product",
+        "delta": "Delta",
+        "reason": "Reason",
+        "createdBy": "Created by",
+        "empty": "No inventory adjustments match these filters.",
+        "deletedProduct": "(deleted product)",
+        "exportCsv": "Export CSV",
+        "exportPdf": "Export PDF",
+        "exportCsvTooltip": "Download the filtered audit log as a spreadsheet",
+        "exportPdfTooltip": "Download the filtered audit log as a print-ready PDF"
     },
     "catalogImportTemplates": {
         "title": "Catalog import templates",
