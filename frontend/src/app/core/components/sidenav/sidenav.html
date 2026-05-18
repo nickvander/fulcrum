@@ -37,6 +37,11 @@
           <span>{{ t('nav.alerts') }}</span>
         </a>
 
+        <a routerLink="/payments" routerLinkActive="active" class="nav-item">
+          <mat-icon>payments</mat-icon>
+          <span>{{ t('nav.payments') }}</span>
+        </a>
+
         <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
           (closed)="purchasingExpanded = false">
           <mat-expansion-panel-header>

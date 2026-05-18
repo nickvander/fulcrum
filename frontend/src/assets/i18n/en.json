@@ -97,6 +97,7 @@
         "inventoryAudit": "Stock audit log",
         "orders": "Orders",
         "alerts": "Alerts",
+        "payments": "Payments",
         "purchasing": "Purchasing",
         "purchaseOrders": "Purchase Orders",
         "suppliers": "Suppliers",
@@ -1499,6 +1500,55 @@
             "updateFailed": "Could not update the rule.",
             "deleteFailed": "Could not delete the rule.",
             "testFailed": "Could not run the test."
+        }
+    },
+    "payments": {
+        "title": "Payments",
+        "subtitle": "Audit Mercado Pago charges: status, errors, raw provider response, and the most recent webhook.",
+        "filter": {
+            "status": "Status"
+        },
+        "status": {
+            "all": "All",
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "refunded": "Refunded",
+            "cancelled": "Cancelled"
+        },
+        "empty": {
+            "title": "No payments yet",
+            "subtitle": "Payments appear here once a customer checks out via Mercado Pago."
+        },
+        "table": {
+            "id": "ID",
+            "createdAt": "Created",
+            "status": "Status",
+            "amount": "Amount",
+            "payer": "Payer",
+            "providerId": "Provider ID",
+            "order": "Order",
+            "actions": "Actions"
+        },
+        "actions": {
+            "viewDetail": "View detail"
+        },
+        "detail": {
+            "title": "Payment #{{id}}",
+            "status": "Status",
+            "amount": "Amount",
+            "provider": "Provider",
+            "providerId": "Provider Payment ID",
+            "payerEmail": "Payer email",
+            "salesOrder": "Sales order",
+            "createdAt": "Created",
+            "updatedAt": "Updated",
+            "errorMessage": "Error message",
+            "rawResponse": "Raw provider response",
+            "lastWebhook": "Last webhook payload"
+        },
+        "errors": {
+            "loadFailed": "Could not load payments."
         }
     },
     "apiErrors": {

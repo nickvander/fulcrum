@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -44,6 +44,16 @@ class Payment(BaseModel):
     error_message: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+
+class PaymentListResponse(BaseModel):
+    """Paginated envelope for GET /api/v1/payments.
+
+    `total` is the count BEFORE skip/limit so the operator UI can
+    render `Showing N–M of Total` without a second request.
+    """
+    items: List[Payment]
+    total: int
 
 
 class WebhookAck(BaseModel):

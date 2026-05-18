@@ -5,8 +5,10 @@ AmazonAdapter SP-API surface complete *and* wired to a Celery beat
 order-ingestion worker. Margin report uses historical cost-at-sale.
 Alerting ships hourly via Celery beat + email, with full CRUD UI at
 `/alerts`. Mercado Pago Checkout backend foundation (connector,
-Payment model, create + get endpoints, signed webhook) ships in
-the latest commit. No active in-flight slice.
+Payment model, create + get endpoints, signed webhook) shipped, and
+the operator-facing `/payments` admin UI (paginated list + status
+filter + detail dialog) shipped in the latest commit. No active
+in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -27,6 +29,21 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Payments admin UI: new `/payments` page in the sidenav under
+  Alerts. Material table with status chip, amount/currency, payer
+  email, provider id, order link, with a server-side status filter
+  (all/pending/approved/rejected/refunded/cancelled) and a paginator
+  (25/50/100/page). Per-row "View detail" opens a dialog rendering
+  the canonical meta grid + collapsible JSON blocks for
+  `raw_response` and `last_webhook_payload`, plus a red error block
+  when `error_message` is set. New backend `GET /api/v1/payments/`
+  paginated list endpoint with `status` / `provider` / `skip` /
+  `limit` filters; `count_payments` returns the pre-pagination
+  total so the UI can render `N–M of Total`. 5 new backend tests
+  (newest-first ordering, status filter, provider filter, skip+limit
+  pagination, auth required) + 23 new frontend tests (5 service + 10
+  page + 8 dialog). en + es-MX i18n parity green. Backend 504/8,
+  frontend 516/0.
 - Mercado Pago Checkout backend foundation: new
   `services/mercado_pago.py` (`MercadoPagoConnector` wrapping
   `POST /v1/payments` + `GET /v1/payments/{id}` + HMAC signature
@@ -116,9 +133,6 @@ Roughly in order of impact / unblock value:
   shipped; next is the JS-SDK Secure Fields tokenization on the
   frontend so a customer can actually enter a card. Test cards
   documented in `work/future/mercadopago-checkout-research.md`.
-- **Payments admin UI** — list / detail page for the `payments`
-  table so an operator can audit status + see error messages
-  without hitting the API directly.
 - **Rust backend migration first slice** — plan in
   `work/future/81-rust-backend-migration-plan.md`. Highest-impact
   candidate is product listing.
@@ -127,8 +141,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 499 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 493 passed, 0
+  → 504 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 516 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

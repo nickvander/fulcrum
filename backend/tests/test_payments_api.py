@@ -184,6 +184,100 @@ def test_get_payment_404s_for_unknown_id(client: TestClient, admin_headers: dict
 
 
 # ---------------------------------------------------------------------------
+# GET /api/v1/payments/  (list)
+# ---------------------------------------------------------------------------
+
+
+def _seed_payment(db: Session, **overrides: Any) -> Payment:
+    base = dict(
+        amount=10.0,
+        currency="MXN",
+        provider="mercado_pago",
+        status=PaymentStatus.PENDING.value,
+    )
+    base.update(overrides)
+    p = Payment(**base)
+    db.add(p)
+    db.flush()
+    return p
+
+
+def test_list_payments_returns_newest_first_with_total(
+    client: TestClient, admin_headers: dict, db: Session,
+):
+    """Three payments inserted in order → list returns them id-desc
+    and `total` matches the row count."""
+    p1 = _seed_payment(db, amount=10.0, status=PaymentStatus.APPROVED.value)
+    p2 = _seed_payment(db, amount=20.0, status=PaymentStatus.PENDING.value)
+    p3 = _seed_payment(db, amount=30.0, status=PaymentStatus.REJECTED.value)
+    db.commit()
+
+    response = client.get("/api/v1/payments/", headers=admin_headers)
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["total"] == 3
+    ids = [row["id"] for row in body["items"]]
+    assert ids == [p3.id, p2.id, p1.id]
+
+
+def test_list_payments_filters_by_status(
+    client: TestClient, admin_headers: dict, db: Session,
+):
+    _seed_payment(db, status=PaymentStatus.APPROVED.value)
+    _seed_payment(db, status=PaymentStatus.APPROVED.value)
+    _seed_payment(db, status=PaymentStatus.REJECTED.value)
+    db.commit()
+
+    response = client.get(
+        "/api/v1/payments/?status=approved", headers=admin_headers,
+    )
+    body = response.json()
+    assert body["total"] == 2
+    assert all(row["status"] == "approved" for row in body["items"])
+
+
+def test_list_payments_filters_by_provider(
+    client: TestClient, admin_headers: dict, db: Session,
+):
+    """The provider column is keyed for future Stripe / PayPal — filter
+    works even though only one provider exists today."""
+    _seed_payment(db, provider="mercado_pago")
+    _seed_payment(db, provider="mercado_pago")
+    _seed_payment(db, provider="stripe")
+    db.commit()
+
+    response = client.get(
+        "/api/v1/payments/?provider=stripe", headers=admin_headers,
+    )
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["provider"] == "stripe"
+
+
+def test_list_payments_paginates_with_skip_and_limit(
+    client: TestClient, admin_headers: dict, db: Session,
+):
+    """Five payments + skip=2&limit=2 → returns items 3-4 (newest-first),
+    but `total` is still 5 so the UI can render `3–4 of 5`."""
+    ids = [_seed_payment(db, amount=float(i)).id for i in range(5)]
+    db.commit()
+
+    response = client.get(
+        "/api/v1/payments/?skip=2&limit=2", headers=admin_headers,
+    )
+    body = response.json()
+    assert body["total"] == 5
+    page_ids = [row["id"] for row in body["items"]]
+    # Newest-first → id desc → skip 2 = the 3rd + 4th-newest = ids[2], ids[1]
+    assert page_ids == [ids[2], ids[1]]
+
+
+def test_list_payments_requires_auth(client: TestClient):
+    response = client.get("/api/v1/payments/")
+    assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
 # POST /api/v1/webhooks/mercadopago
 # ---------------------------------------------------------------------------
 

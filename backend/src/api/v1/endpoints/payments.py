@@ -6,8 +6,9 @@ The webhook handler lives under `/webhooks/mercadopago` in
 prefix.
 """
 import logging
+from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_current_active_user, get_db
@@ -16,7 +17,7 @@ from src.crud import crud_payment
 from src.models.payment import PaymentStatus
 from src.models.user import User
 from src.schemas.payment import Payment as PaymentSchema
-from src.schemas.payment import PaymentCreate
+from src.schemas.payment import PaymentCreate, PaymentListResponse
 from src.services.mercado_pago import mercado_pago_connector
 
 
@@ -24,6 +25,32 @@ logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
+
+
+@router.get("/", response_model=PaymentListResponse)
+def list_payments(
+    *,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    status: Optional[str] = Query(
+        None,
+        description="Filter by canonical status (pending/approved/rejected/refunded/cancelled).",
+    ),
+    provider: Optional[str] = Query(
+        None,
+        description="Filter by provider (today: mercado_pago).",
+    ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """Paginated list of payments, newest-first. Used by the operator
+    Payments admin page. Returns a `{items, total}` envelope so the UI
+    can render `Showing X of Y` without a second round-trip."""
+    items = crud_payment.list_payments(
+        db, status=status, provider=provider, skip=skip, limit=limit,
+    )
+    total = crud_payment.count_payments(db, status=status, provider=provider)
+    return PaymentListResponse(items=items, total=total)
 
 
 @router.post("/", response_model=PaymentSchema)
