@@ -5,7 +5,7 @@ import { PurchaseOrder, PurchaseOrderStatus } from '../../../shared/models/purch
 import { Supplier } from '../../../shared/models/supplier.model';
 import { SuppliersService, SupplierDocumentImportReview } from '../../suppliers.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil, forkJoin, debounceTime, distinctUntilChanged } from 'rxjs';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -16,6 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -51,6 +52,7 @@ type ImportReviewFilter = 'pending' | 'history' | 'all';
     MatInputModule,
     MatSelectModule,
     MatCardModule,
+    MatCheckboxModule,
     MatTooltipModule,
     MatProgressBarModule,
     MatDialogModule,
@@ -71,8 +73,14 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   reviewFilter: ImportReviewFilter = 'pending';
   isLoadingReviews = false;
   bulkRejectInFlight = false;
+  bulkRejectSelectedInFlight = false;
   staleReviewCount = 0;
   readonly staleReviewDays = STALE_REVIEW_DAYS;
+  reviewSearch = '';
+  reviewSupplierFilterId: number | null = null;
+  /** IDs of pending reviews the user has checked for bulk action. */
+  selectedReviewIds = new Set<number>();
+  private reviewSearch$ = new Subject<string>();
   suppliers: Supplier[] = [];
   supplierMap: Map<number, Supplier> = new Map();
   displayedColumns: string[] = ['id', 'supplier', 'status', 'total', 'created_at', 'actions'];
@@ -126,6 +134,11 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
         }
       });
 
+    // Debounced refresh when the user types in the review search box
+    this.reviewSearch$
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(() => this.refreshImportReviews());
+
     // Handle query params for initial supplier filter
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
@@ -157,7 +170,10 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     forkJoin({
       pos: this.suppliersService.getPurchaseOrders(),
       suppliers: this.suppliersService.getSuppliers(),
-      importReviews: this.suppliersService.getImportReviews(this.importReviewStatusParam()),
+      importReviews: this.suppliersService.getImportReviews(
+        this.importReviewStatusParam(),
+        this.importReviewQueryOptions(),
+      ),
       pendingReviews: this.suppliersService.getImportReviews('pending')
     }).subscribe({
       next: ({ pos, suppliers, importReviews, pendingReviews }) => {
@@ -190,6 +206,20 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     }
   }
 
+  /** Build the options object the suppliers service expects, populated only
+   *  with non-empty filter values so we don't send empty query params. */
+  private importReviewQueryOptions(): { supplierId?: number | null; search?: string | null } {
+    const opts: { supplierId?: number | null; search?: string | null } = {};
+    if (this.reviewSupplierFilterId != null) {
+      opts.supplierId = this.reviewSupplierFilterId;
+    }
+    const trimmed = this.reviewSearch.trim();
+    if (trimmed) {
+      opts.search = trimmed;
+    }
+    return opts;
+  }
+
   private staleCutoffIso(): string {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - STALE_REVIEW_DAYS);
@@ -213,12 +243,95 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
 
   private refreshImportReviews(): void {
     this.isLoadingReviews = true;
-    this.suppliersService.getImportReviews(this.importReviewStatusParam()).subscribe({
+    this.suppliersService.getImportReviews(
+      this.importReviewStatusParam(),
+      this.importReviewQueryOptions(),
+    ).subscribe({
       next: reviews => {
         this.importReviews = reviews;
+        // Drop selections that no longer appear in the visible list (e.g.
+        // because they got filtered out or transitioned to approved/rejected)
+        const visible = new Set(reviews.map(r => r.id));
+        for (const id of Array.from(this.selectedReviewIds)) {
+          if (!visible.has(id)) this.selectedReviewIds.delete(id);
+        }
         this.isLoadingReviews = false;
       },
       error: () => { this.isLoadingReviews = false; }
+    });
+  }
+
+  onReviewSearchInput(value: string): void {
+    this.reviewSearch = value;
+    this.reviewSearch$.next(value);
+  }
+
+  onReviewSupplierFilterChange(supplierId: number | null): void {
+    this.reviewSupplierFilterId = supplierId;
+    this.refreshImportReviews();
+  }
+
+  clearReviewFilters(): void {
+    if (!this.reviewSearch && this.reviewSupplierFilterId == null) return;
+    this.reviewSearch = '';
+    this.reviewSupplierFilterId = null;
+    this.refreshImportReviews();
+  }
+
+  hasActiveReviewFilters(): boolean {
+    return this.reviewSearch.trim() !== '' || this.reviewSupplierFilterId != null;
+  }
+
+  // --- Multi-select bulk-reject ---------------------------------------------
+
+  toggleReviewSelection(reviewId: number, checked: boolean, event?: Event): void {
+    event?.stopPropagation();
+    if (checked) {
+      this.selectedReviewIds.add(reviewId);
+    } else {
+      this.selectedReviewIds.delete(reviewId);
+    }
+  }
+
+  isReviewSelected(reviewId: number): boolean {
+    return this.selectedReviewIds.has(reviewId);
+  }
+
+  pendingReviewIds(): number[] {
+    return this.importReviews
+      .filter(r => r.status === 'pending')
+      .map(r => r.id);
+  }
+
+  selectAllPendingVisible(): void {
+    for (const id of this.pendingReviewIds()) this.selectedReviewIds.add(id);
+  }
+
+  clearReviewSelection(event?: Event): void {
+    event?.stopPropagation();
+    this.selectedReviewIds.clear();
+  }
+
+  bulkRejectSelected(): void {
+    if (this.selectedReviewIds.size === 0 || this.bulkRejectSelectedInFlight) return;
+    const ids = Array.from(this.selectedReviewIds);
+    const confirmed = window.confirm(
+      `Reject ${ids.length} selected supplier import${ids.length === 1 ? '' : 's'}? ` +
+      `Approved or already-rejected reviews are skipped automatically.`
+    );
+    if (!confirmed) return;
+
+    this.bulkRejectSelectedInFlight = true;
+    this.suppliersService.bulkRejectImportReviews({ review_ids: ids }).subscribe({
+      next: () => {
+        this.bulkRejectSelectedInFlight = false;
+        this.selectedReviewIds.clear();
+        this.loadData();
+      },
+      error: err => {
+        this.bulkRejectSelectedInFlight = false;
+        console.error('Failed to bulk reject selected import reviews', err);
+      }
     });
   }
 

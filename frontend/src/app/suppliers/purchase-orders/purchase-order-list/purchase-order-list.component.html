@@ -50,6 +50,19 @@
                     <p>{{ reviewPanelDescription() }}</p>
                 </div>
                 <div class="review-panel-actions">
+                    <button mat-flat-button color="warn"
+                        *ngIf="selectedReviewIds.size > 0"
+                        [disabled]="bulkRejectSelectedInFlight"
+                        (click)="bulkRejectSelected()"
+                        matTooltip="Reject every checked import">
+                        <mat-icon>delete_sweep</mat-icon>
+                        Reject selected ({{ selectedReviewIds.size }})
+                    </button>
+                    <button mat-stroked-button
+                        *ngIf="selectedReviewIds.size > 0"
+                        (click)="clearReviewSelection($event)">
+                        Clear selection
+                    </button>
                     <button mat-stroked-button color="warn"
                         *ngIf="staleReviewCount > 0"
                         [disabled]="bulkRejectInFlight"
@@ -63,6 +76,45 @@
                         Add document
                     </button>
                 </div>
+            </div>
+
+            <div class="review-filter-row">
+                <mat-form-field appearance="outline" class="review-search-field" subscriptSizing="dynamic">
+                    <mat-icon matPrefix>search</mat-icon>
+                    <mat-label>Filter by file name</mat-label>
+                    <input matInput
+                        type="search"
+                        [ngModel]="reviewSearch"
+                        (ngModelChange)="onReviewSearchInput($event)"
+                        autocomplete="off"
+                        data-testid="review-search-input"
+                    />
+                    <button *ngIf="reviewSearch" mat-icon-button matSuffix
+                        (click)="onReviewSearchInput('')"
+                        aria-label="Clear search">
+                        <mat-icon style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
+                    </button>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="review-supplier-filter" subscriptSizing="dynamic">
+                    <mat-label>Supplier</mat-label>
+                    <mat-select [ngModel]="reviewSupplierFilterId"
+                        (selectionChange)="onReviewSupplierFilterChange($event.value)"
+                        data-testid="review-supplier-filter">
+                        <mat-option [value]="null">All suppliers</mat-option>
+                        <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
+                            {{ supplier.name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-button
+                    *ngIf="hasActiveReviewFilters()"
+                    (click)="clearReviewFilters()"
+                    matTooltip="Clear search + supplier filter">
+                    <mat-icon>filter_alt_off</mat-icon>
+                    Clear filters
+                </button>
             </div>
 
             <div class="review-filter-tabs" role="tablist" aria-label="Supplier import review filters">
@@ -94,10 +146,31 @@
                 <p *ngIf="reviewFilter === 'all'">No supplier imports have been uploaded yet.</p>
             </div>
 
+            <div class="review-select-all-row"
+                *ngIf="!isLoadingReviews && pendingReviewIds().length > 0">
+                <button mat-stroked-button
+                    (click)="selectAllPendingVisible()"
+                    [disabled]="selectedReviewIds.size === pendingReviewIds().length"
+                    matTooltip="Check every visible pending row">
+                    <mat-icon>checklist</mat-icon>
+                    Select all pending ({{ pendingReviewIds().length }})
+                </button>
+            </div>
+
             <div class="review-list" *ngIf="!isLoadingReviews && importReviews.length > 0">
                 <article class="review-card" *ngFor="let review of importReviews"
                     [class.terminal]="review.status !== 'pending'"
+                    [class.selected]="isReviewSelected(review.id)"
                     (click)="onReviewCardClick(review)">
+                    <mat-checkbox
+                        *ngIf="review.status === 'pending'"
+                        class="review-select"
+                        [checked]="isReviewSelected(review.id)"
+                        (change)="toggleReviewSelection(review.id, $event.checked)"
+                        (click)="$event.stopPropagation()"
+                        [attr.data-testid]="'review-select-' + review.id"
+                        [aria-label]="'Select ' + review.file_name">
+                    </mat-checkbox>
                     <div class="review-icon">
                         <mat-icon>{{ review.mode === 'match' ? 'rule' : 'description' }}</mat-icon>
                     </div>

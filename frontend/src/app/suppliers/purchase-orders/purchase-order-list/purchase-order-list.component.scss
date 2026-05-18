@@ -107,7 +107,7 @@
 
 .review-card {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto auto 1fr auto;
     align-items: center;
     gap: 14px;
     border: 1px solid var(--border-color);
@@ -120,6 +120,40 @@
         background: var(--bg-hover);
         border-color: var(--primary-color);
     }
+
+    &.selected {
+        background: rgba(63, 81, 181, 0.08);
+        border-color: var(--primary-color);
+    }
+}
+
+.review-select {
+    // Avoid hover state on the card propagating into the checkbox
+    cursor: pointer;
+}
+
+.review-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 12px;
+    flex-wrap: wrap;
+
+    .review-search-field {
+        flex: 1 1 280px;
+        min-width: 240px;
+    }
+
+    .review-supplier-filter {
+        flex: 0 1 240px;
+        min-width: 180px;
+    }
+}
+
+.review-select-all-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
 }
 
 .review-icon {
