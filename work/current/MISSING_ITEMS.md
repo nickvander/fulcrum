@@ -10,7 +10,25 @@ _(none active)_
 
 ## Medium Priority
 
-_(none active)_
+- [ ] **Reports UI: surface velocity / margin / stockout exports** —
+      backend endpoints shipped in `44722bf`, but the dashboard /
+      reports page has no buttons or links for them yet. Today the
+      only way to fetch the CSV/PDF is to hit the URL directly. The
+      low-stock report widget is the existing pattern to copy.
+- [ ] **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
+      is real (`d669246`) but there is no job that calls it and
+      writes to `SalesOrder` / `SalesOrderItem`. ML has the webhook
+      path; Amazon needs a polling worker (Celery beat task) that
+      runs every N minutes against the credential and upserts new
+      orders, using `CreatedAfter = last_polled_at` so each run only
+      pulls the delta.
+- [ ] **Margin report: historical cost-at-sale** — today the margin
+      report uses `Product.cost_price * units_sold` as the cost
+      basis, which drifts every time the buyer updates the master
+      cost. `SalesOrderItem` would need a `cost_per_unit` column
+      captured at order-create time (in the FULCRUM POS path and the
+      ML / Amazon ingestion paths). Once that's in place, swap the
+      margin SQL to read from the stored value.
 
 ## Future / Strategic
 
