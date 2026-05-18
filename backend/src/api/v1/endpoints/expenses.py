@@ -1,6 +1,7 @@
 from typing import Any, List, Optional
-from datetime import date
+from datetime import date, datetime, timezone
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
@@ -17,6 +18,15 @@ from fastapi import File, UploadFile
 from src.crud.crud_expense_receipt import expense_receipt as crud_expense_receipt
 from src.schemas import expense_receipt as receipt_schema
 from pydantic import BaseModel
+from src.services.report_export import (
+    ReportColumn,
+    ReportTable,
+    fmt_currency,
+    fmt_date,
+    fmt_int,
+    stream_csv,
+    stream_pdf,
+)
 
 router = APIRouter()
 
@@ -156,6 +166,112 @@ def read_expenses(
     
     expenses = query.order_by(ExpenseModel.date.desc()).offset(skip).limit(limit).all()
     return expenses
+
+# ---------------------------------------------------------------------------
+# Expense report export — CSV + PDF for monthly / quarterly tax reporting.
+# Same filters as the JSON list endpoint plus a date window.
+# ---------------------------------------------------------------------------
+
+
+def _build_expense_export_rows(
+    db: Session,
+    *,
+    category: Optional[str],
+    expense_type: Optional[str],
+    start_date: Optional[date],
+    end_date: Optional[date],
+    limit: int,
+) -> list[dict]:
+    query = db.query(ExpenseModel)
+    if category:
+        query = query.filter(ExpenseModel.category == category)
+    if expense_type:
+        query = query.filter(ExpenseModel.expense_type == expense_type)
+    if start_date:
+        query = query.filter(ExpenseModel.date >= start_date)
+    if end_date:
+        query = query.filter(ExpenseModel.date <= end_date)
+
+    rows: list[dict] = []
+    for e in query.order_by(ExpenseModel.date.desc(), ExpenseModel.id.desc()).limit(limit).all():
+        rows.append({
+            "expense_id":       e.id,
+            "date":             e.date,
+            "description":      e.description or "",
+            "category":         e.category or "",
+            "amount":           float(e.amount or 0.0),
+            "currency":         e.currency or "",
+            "expense_type":     e.expense_type or "",
+            "payment_method":   e.payment_method or "",
+            "reference_number": e.reference_number or "",
+            "paid_by":          e.paid_by_name or "",
+            "is_reimbursed":    "yes" if e.is_reimbursed else "no",
+        })
+    return rows
+
+
+def _expense_export_table(rows: list[dict]) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    total = sum(r["amount"] for r in rows)
+    return ReportTable(
+        title="Fulcrum — Expense Report",
+        subtitle=(
+            f"Generated {date_stamp} · {len(rows)} expenses · "
+            f"total ${total:,.2f}"
+        ),
+        filename_stem="fulcrum-expenses",
+        empty_message="No expenses match the filters.",
+        columns=[
+            ReportColumn("expense_id",       "ID",            align="right", formatter=fmt_int),
+            ReportColumn("date",             "Date",          formatter=fmt_date),
+            ReportColumn("description",      "Description"),
+            ReportColumn("category",         "Category"),
+            ReportColumn("amount",           "Amount",        align="right", formatter=fmt_currency),
+            ReportColumn("currency",         "Currency"),
+            ReportColumn("expense_type",     "Type"),
+            ReportColumn("payment_method",   "Payment method"),
+            ReportColumn("reference_number", "Reference"),
+            ReportColumn("paid_by",          "Paid by"),
+            ReportColumn("is_reimbursed",    "Reimbursed"),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/export")
+def export_expenses_csv(
+    db: Session = Depends(get_db),
+    category: Optional[str] = Query(None),
+    expense_type: Optional[str] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    limit: int = Query(5000, ge=1, le=10000),
+) -> StreamingResponse:
+    """Stream the expense list as a CSV. Same filters as the JSON list
+    endpoint; default limit 5000 (cap 10000) for tax-period exports."""
+    rows = _build_expense_export_rows(
+        db, category=category, expense_type=expense_type,
+        start_date=start_date, end_date=end_date, limit=limit,
+    )
+    return stream_csv(_expense_export_table(rows))
+
+
+@router.get("/export-pdf")
+def export_expenses_pdf(
+    db: Session = Depends(get_db),
+    category: Optional[str] = Query(None),
+    expense_type: Optional[str] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    limit: int = Query(5000, ge=1, le=10000),
+) -> StreamingResponse:
+    """Stream the expense list as a printable PDF."""
+    rows = _build_expense_export_rows(
+        db, category=category, expense_type=expense_type,
+        start_date=start_date, end_date=end_date, limit=limit,
+    )
+    return stream_pdf(_expense_export_table(rows))
+
 
 @router.post("/", response_model=expense_schema.Expense)
 def create_expense(

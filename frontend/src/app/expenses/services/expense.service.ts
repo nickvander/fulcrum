@@ -38,6 +38,31 @@ export class ExpenseService {
         return this.http.get<Expense>(`${this.apiUrl}/${id}`);
     }
 
+    /** Download the expense list as CSV. Accepts the same filters as
+     *  `getExpenses` so the export covers the same scope as the UI. */
+    exportListCsv(filters?: ExpenseFilters, limit = 5000): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export`, {
+            params: this.buildExportParams(filters, limit),
+            responseType: 'blob',
+        });
+    }
+
+    exportListPdf(filters?: ExpenseFilters, limit = 5000): Observable<Blob> {
+        return this.http.get(`${this.apiUrl}/export-pdf`, {
+            params: this.buildExportParams(filters, limit),
+            responseType: 'blob',
+        });
+    }
+
+    private buildExportParams(filters: ExpenseFilters | undefined, limit: number): HttpParams {
+        let params = new HttpParams().set('limit', String(limit));
+        if (filters?.category) params = params.set('category', filters.category);
+        if (filters?.expense_type) params = params.set('expense_type', filters.expense_type);
+        if (filters?.start_date) params = params.set('start_date', filters.start_date);
+        if (filters?.end_date) params = params.set('end_date', filters.end_date);
+        return params;
+    }
+
     createExpense(expense: ExpenseCreate): Observable<Expense> {
         return this.http.post<Expense>(`${this.apiUrl}/`, expense);
     }

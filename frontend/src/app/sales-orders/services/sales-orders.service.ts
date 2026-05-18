@@ -69,6 +69,27 @@ export class SalesOrdersService {
     });
   }
 
+  /** Download the full sales orders list as CSV. Accepts the same filters
+   *  as the JSON list endpoint plus a higher limit for "give me the
+   *  whole quarter" exports. */
+  exportListCsv(opts: { source?: string; status?: string; days?: number; limit?: number } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    if (opts.source) params = params.set('source', opts.source);
+    if (opts.status) params = params.set('status', opts.status);
+    if (opts.days != null) params = params.set('days', String(opts.days));
+    if (opts.limit != null) params = params.set('limit', String(opts.limit));
+    return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
+  }
+
+  exportListPdf(opts: { source?: string; status?: string; days?: number; limit?: number } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    if (opts.source) params = params.set('source', opts.source);
+    if (opts.status) params = params.set('status', opts.status);
+    if (opts.days != null) params = params.set('days', String(opts.days));
+    if (opts.limit != null) params = params.set('limit', String(opts.limit));
+    return this.http.get(`${this.apiUrl}/export-pdf`, { params, responseType: 'blob' });
+  }
+
   /** Download the sales-by-channel summary as CSV. Returns a Blob so the
    *  caller can decide how to surface the download (object URL, etc.). */
   exportSummaryCsv(days = 30): Observable<Blob> {

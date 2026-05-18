@@ -289,6 +289,10 @@
         "last7": "Last 7 days",
         "last30": "Last 30 days",
         "last90": "Last 90 days",
+        "exportCsv": "Export CSV",
+        "exportPdf": "Export PDF",
+        "exportCsvTooltip": "Download the filtered sales orders list as a spreadsheet",
+        "exportPdfTooltip": "Download the filtered sales orders list as a print-ready PDF",
         "date": "Date",
         "externalRef": "External ref",
         "status": "Status",
@@ -596,6 +600,8 @@
     "purchaseOrders": {
         "title": "Purchase Orders",
         "poList": "Purchase Order List",
+        "exportCsvTooltip": "Download the filtered PO list as a spreadsheet",
+        "exportPdfTooltip": "Download the filtered PO list as a print-ready PDF",
         "createPO": "Create Purchase Order",
         "editPO": "Edit Purchase Order",
         "deletePO": "Delete Purchase Order",
@@ -808,6 +814,8 @@
     "expenses": {
         "title": "Expenses",
         "expenseList": "Expense List",
+        "exportCsvTooltip": "Download the filtered expense list as a spreadsheet",
+        "exportPdfTooltip": "Download the filtered expense list as a print-ready PDF",
         "addExpense": "Add Expense",
         "editExpense": "Edit Expense",
         "deleteExpense": "Delete Expense",

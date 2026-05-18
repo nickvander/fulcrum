@@ -6,6 +6,7 @@ the same `report_export` helpers — see `src/services/report_export.py`.
 from datetime import datetime, timezone
 from typing import List, Optional
 
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -16,7 +17,7 @@ from src.api.dependencies import get_current_active_user
 from src.core.errors import LocalizedHTTPException
 from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.database import get_db
-from src.models.inventory import InventoryItem
+from src.models.inventory import InventoryAdjustment, InventoryItem
 from src.models.product import Product
 from src.models.product_inventory_settings import ProductInventorySettings
 from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
@@ -28,6 +29,7 @@ from src.services.report_export import (
     ReportColumn,
     ReportTable,
     fmt_currency,
+    fmt_date,
     fmt_float,
     fmt_int,
     stream_csv,
@@ -388,6 +390,109 @@ def export_inventory_snapshot_pdf(
     """Per-product inventory snapshot as a printable PDF."""
     rows = _build_inventory_snapshot(db, limit=limit)
     return stream_pdf(_inventory_snapshot_table(rows))
+
+
+# ---------------------------------------------------------------------------
+# Inventory adjustment audit log — every quantity change with who/why/when.
+# Used for stockout investigations + compliance audits.
+# ---------------------------------------------------------------------------
+
+
+def _build_inventory_adjustment_rows(
+    db: Session,
+    *,
+    product_id: Optional[int],
+    after: Optional[datetime],
+    before: Optional[datetime],
+    limit: int,
+) -> list[dict]:
+    from sqlalchemy.orm import joinedload as _joinedload  # local to avoid widening top imports
+
+    query = (
+        db.query(InventoryAdjustment)
+        .options(_joinedload(InventoryAdjustment.product))
+        .order_by(InventoryAdjustment.timestamp.desc().nullslast(), InventoryAdjustment.id.desc())
+    )
+    if product_id is not None:
+        query = query.filter(InventoryAdjustment.product_id == product_id)
+    if after is not None:
+        query = query.filter(InventoryAdjustment.timestamp >= after)
+    if before is not None:
+        query = query.filter(InventoryAdjustment.timestamp <= before)
+
+    rows: list[dict] = []
+    for adj in query.limit(limit).all():
+        product = adj.product
+        rows.append({
+            "timestamp":    adj.timestamp or adj.created_at,
+            "product_id":   adj.product_id,
+            "product_sku":  product.sku if product else "",
+            "product_name": product.name if product else "",
+            "adjustment":   adj.adjustment,
+            "reason":       adj.reason or "",
+            "created_by":   adj.created_by or "",
+        })
+    return rows
+
+
+def _inventory_adjustment_table(rows: list[dict]) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    net = sum(r["adjustment"] for r in rows)
+    return ReportTable(
+        title="Fulcrum — Inventory Adjustment Audit Log",
+        subtitle=(
+            f"Generated {date_stamp} · {len(rows)} adjustments · "
+            f"net delta {net:+,d} units"
+        ),
+        filename_stem="fulcrum-inventory-adjustments",
+        empty_message="No inventory adjustments match the filters.",
+        columns=[
+            ReportColumn("timestamp",    "When",       formatter=fmt_date),
+            ReportColumn("product_id",   "Product ID", align="right", formatter=fmt_int),
+            ReportColumn("product_sku",  "SKU"),
+            ReportColumn("product_name", "Product"),
+            ReportColumn("adjustment",   "Delta",      align="right", formatter=fmt_int),
+            ReportColumn("reason",       "Reason"),
+            ReportColumn("created_by",   "Created by"),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/inventory-adjustments/export")
+def export_inventory_adjustments_csv(
+    *,
+    db: Session = Depends(get_db),
+    product_id: Optional[int] = Query(None),
+    after: Optional[datetime] = Query(None),
+    before: Optional[datetime] = Query(None),
+    limit: int = Query(5000, ge=1, le=20000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream the inventory-adjustment audit log as a CSV. Sorted newest
+    first. Default limit is 5000 (cap 20000) for "give me the whole
+    quarter" audit requests."""
+    rows = _build_inventory_adjustment_rows(
+        db, product_id=product_id, after=after, before=before, limit=limit,
+    )
+    return stream_csv(_inventory_adjustment_table(rows))
+
+
+@router.get("/inventory-adjustments/export-pdf")
+def export_inventory_adjustments_pdf(
+    *,
+    db: Session = Depends(get_db),
+    product_id: Optional[int] = Query(None),
+    after: Optional[datetime] = Query(None),
+    before: Optional[datetime] = Query(None),
+    limit: int = Query(5000, ge=1, le=20000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream the inventory-adjustment audit log as a printable PDF."""
+    rows = _build_inventory_adjustment_rows(
+        db, product_id=product_id, after=after, before=before, limit=limit,
+    )
+    return stream_pdf(_inventory_adjustment_table(rows))
 
 
 # ---------------------------------------------------------------------------

@@ -289,6 +289,10 @@
         "last7": "Últimos 7 días",
         "last30": "Últimos 30 días",
         "last90": "Últimos 90 días",
+        "exportCsv": "Exportar CSV",
+        "exportPdf": "Exportar PDF",
+        "exportCsvTooltip": "Descargar los pedidos filtrados como hoja de cálculo",
+        "exportPdfTooltip": "Descargar los pedidos filtrados como PDF imprimible",
         "date": "Fecha",
         "externalRef": "Ref. externa",
         "status": "Estado",
@@ -596,6 +600,8 @@
     "purchaseOrders": {
         "title": "Órdenes de Compra",
         "poList": "Lista de Órdenes de Compra",
+        "exportCsvTooltip": "Descargar la lista filtrada de OC como hoja de cálculo",
+        "exportPdfTooltip": "Descargar la lista filtrada de OC como PDF imprimible",
         "createPO": "Crear Orden de Compra",
         "editPO": "Editar Orden de Compra",
         "deletePO": "Eliminar Orden de Compra",
@@ -808,6 +814,8 @@
     "expenses": {
         "title": "Gastos",
         "expenseList": "Lista de Gastos",
+        "exportCsvTooltip": "Descargar los gastos filtrados como hoja de cálculo",
+        "exportPdfTooltip": "Descargar los gastos filtrados como PDF imprimible",
         "addExpense": "Agregar Gasto",
         "editExpense": "Editar Gasto",
         "deleteExpense": "Eliminar Gasto",
