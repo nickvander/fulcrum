@@ -2,8 +2,8 @@
 
 **Status:** Reports surface (low-stock + inventory-snapshot +
 inventory-adjustments + sales-by-channel + velocity + margin +
-stockout) and AmazonAdapter SP-API surface both complete on `main`.
-No active in-flight slice.
+stockout) is complete *and* surfaced on the dashboard.
+AmazonAdapter SP-API surface complete. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -24,6 +24,12 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- New `analytics-reports-widget` on the dashboard: window selector
+  (30/60/90/180d) + CSV/PDF buttons for velocity, margin, and
+  stockout. New `AnalyticsReportsService` paired with the shared
+  `ReportDownloadService`. Endpoints verified end-to-end via
+  auth+curl (200, correct content-type + filename + payload).
+  Backend 431/8, frontend 477/0.
 - `44722bf` Velocity / margin / stockout reports (CSV + PDF on the
   shared `report_export` module, one shared SalesOrderItem
   aggregation pass) + marketplace channel-list reauth chip coverage
@@ -66,10 +72,6 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Reports UI** — surface the new velocity / margin / stockout
-  exports on the dashboard / reports page (today they're URL-only).
-  Pattern: low-stock report widget. Small slice, immediate customer-
-  facing payoff.
 - **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
   is real but unused; a Celery beat task that polls every N minutes
   and upserts `SalesOrder` rows closes the SP-API loop the same way
@@ -92,7 +94,7 @@ Roughly in order of impact / unblock value:
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
   → 431 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 463 passed, 0
+- Frontend full suite: `npx ng test --watch=false` → 477 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 
