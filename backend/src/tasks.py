@@ -14,6 +14,35 @@ from src.services.dummy_ai_service import ai_service
 logger = logging.getLogger(__name__)
 
 
+@celery_app.task(name="src.tasks.evaluate_alerts")
+def evaluate_alerts():
+    """
+    Periodic alert evaluator. Scheduled hourly by celery beat
+    (`src/celery_worker.py::celery_app.conf.beat_schedule`).
+
+    Each tick:
+      - Iterates every enabled AlertRule across all users.
+      - Runs the type-specific evaluator (low_margin / sales_dip /
+        stockout_risk) against the same SQL helpers the dashboard
+        reports use.
+      - For triggered rules outside their cooldown window: composes
+        an email via the existing EmailService, inserts an AlertEvent
+        row, and advances `last_triggered_at`.
+
+    Returns the batch summary {rules_evaluated, rules_triggered,
+    notifications_sent, rule_results}. Beat ignores the return value;
+    operators can call `.delay()` and inspect for ad-hoc debugging.
+    """
+    from src.services.alert_evaluation_service import evaluate_all_enabled_rules
+
+    db = SessionLocal()
+    try:
+        result = evaluate_all_enabled_rules(db)
+        return result.model_dump()
+    finally:
+        db.close()
+
+
 @celery_app.task(name="src.tasks.poll_amazon_orders")
 def poll_amazon_orders():
     """

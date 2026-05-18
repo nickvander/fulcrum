@@ -521,3 +521,87 @@ def test_celery_task_delegates_to_poll_all_amazon_credentials():
     assert result == {"sentinel": True}
     mock_poll.assert_called_once_with(fake_session)
     fake_session.close.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Cost-at-sale capture (migration 5d9f2a3b1c08)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.anyio
+async def test_snapshots_product_cost_price_into_cost_per_unit_for_new_items(
+    db, amazon_credential, linked_product
+):
+    """A new SalesOrderItem must carry cost_per_unit = the linked
+    product's current cost_price at ingestion time. Later changes to
+    Product.cost_price must NOT propagate to the captured row."""
+    product, _ = linked_product
+    product.cost_price = 7.50
+    db.commit()
+
+    orders = [{
+        "AmazonOrderId": "COST-1",
+        "PurchaseDate": "2026-05-17T10:00:00Z",
+        "OrderStatus": "Shipped",
+        "OrderTotal": {"CurrencyCode": "MXN", "Amount": "30.00"},
+    }]
+    items = {"COST-1": [{
+        "ASIN": "B000LINKED01",
+        "SellerSKU": "LINK-001",
+        "OrderItemId": "OI-COST",
+        "QuantityOrdered": 1,
+        "ItemPrice": {"CurrencyCode": "MXN", "Amount": "30.00"},
+    }]}
+    connector = _make_connector(orders, items)
+
+    await _run(AmazonOrderIngestionService(), db, amazon_credential, connector)
+    db.commit()
+
+    sales_order = (
+        db.query(SalesOrder).filter(SalesOrder.external_order_id == "COST-1").one()
+    )
+    item = (
+        db.query(SalesOrderItem).filter(SalesOrderItem.order_id == sales_order.id).one()
+    )
+    assert item.cost_per_unit == 7.50
+
+    # Buyer raises the master cost AFTER the order ships — captured
+    # cost on the SalesOrderItem must stay at 7.50.
+    product.cost_price = 99.0
+    db.commit()
+    db.refresh(item)
+    assert item.cost_per_unit == 7.50
+
+
+@pytest.mark.anyio
+async def test_cost_per_unit_is_null_for_orphan_items(db, amazon_credential):
+    """A line item with no mapped product (ASIN/SellerSKU not found in
+    marketplace_listings) must have product_id=NULL AND
+    cost_per_unit=NULL — we have no cost basis for it. The margin
+    report's COALESCE falls back to Product.cost_price for legacy
+    rows, but those rows DO have a product_id; this orphan path is
+    excluded from the margin report entirely since it lacks a
+    product."""
+    orders = [{
+        "AmazonOrderId": "ORPHAN-COST",
+        "PurchaseDate": "2026-05-17T10:00:00Z",
+        "OrderStatus": "Pending",
+        "OrderTotal": {"CurrencyCode": "MXN", "Amount": "5.00"},
+    }]
+    items = {"ORPHAN-COST": [{
+        "ASIN": "B000NOWHERE", "QuantityOrdered": 1,
+        "ItemPrice": {"CurrencyCode": "MXN", "Amount": "5.00"},
+    }]}
+    connector = _make_connector(orders, items)
+
+    await _run(AmazonOrderIngestionService(), db, amazon_credential, connector)
+    db.commit()
+
+    sales_order = (
+        db.query(SalesOrder).filter(SalesOrder.external_order_id == "ORPHAN-COST").one()
+    )
+    item = (
+        db.query(SalesOrderItem).filter(SalesOrderItem.order_id == sales_order.id).one()
+    )
+    assert item.product_id is None
+    assert item.cost_per_unit is None

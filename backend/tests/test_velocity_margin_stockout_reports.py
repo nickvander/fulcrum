@@ -408,3 +408,162 @@ def test_stockout_pdf_renders(
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/pdf")
     assert response.content.startswith(b"%PDF-")
+
+
+# ---------------------------------------------------------------------------
+# Margin report: historical cost-at-sale (migration 5d9f2a3b1c08)
+#
+# The margin SQL uses
+#   SUM(quantity * COALESCE(items.cost_per_unit, products.cost_price))
+# so:
+#   - rows with a captured `cost_per_unit` lock in the cost-at-sale and
+#     do NOT drift when Product.cost_price changes
+#   - legacy rows (NULL) still render via the Product.cost_price fallback
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.db
+def test_margin_uses_captured_cost_per_unit_when_present(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """A SalesOrderItem with cost_per_unit set ignores any later
+    change to Product.cost_price — the whole point of the migration."""
+    product = Product(
+        name="Stable Cost", sku="STABLE-COST",
+        cost_price=10.0,  # current master cost
+        default_resale_price=50.0,
+        is_bundle=False,
+    )
+    db.add(product)
+    db.flush()
+    order = SalesOrder(
+        status="COMPLETED", total_price=200.0,
+        created_at=datetime.utcnow() - timedelta(days=1),
+        source=OrderSource.AMAZON, external_order_id="STABLE-1",
+    )
+    db.add(order)
+    db.flush()
+    db.add(SalesOrderItem(
+        order_id=order.id, product_id=product.id,
+        quantity=4, price_per_unit=50.0,
+        cost_per_unit=4.0,  # snapshotted when the master cost was 4
+    ))
+    db.commit()
+
+    # Simulate the buyer raising cost_price after the sale shipped.
+    product.cost_price = 99.0
+    db.commit()
+
+    response = client.get(
+        "/api/v1/reports/margin/export",
+        params={"window_days": 30},
+        headers=admin_headers,
+    )
+    rows = list(csv.reader(io.StringIO(response.text)))
+    by_sku = {row[1]: row for row in rows[1:]}
+    line = by_sku["STABLE-COST"]
+    # revenue = 4 * 50 = 200
+    # captured cost = 4 * 4 = 16  (NOT 4 * 99 = 396 from drifted master)
+    # gross = 184; margin = 92%
+    assert line[5] == "USD 200.00"
+    assert line[6] == "USD 16.00"
+    assert line[7] == "USD 184.00"
+    assert line[8] == "92.0%"
+
+
+@pytest.mark.db
+def test_margin_falls_back_to_product_cost_for_legacy_rows(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """A SalesOrderItem ingested before the migration has
+    cost_per_unit=NULL. The COALESCE falls back to Product.cost_price
+    so the report still renders — the only behaviour we keep from
+    pre-migration."""
+    product = Product(
+        name="Legacy", sku="LEGACY-COST",
+        cost_price=8.0,
+        default_resale_price=20.0,
+        is_bundle=False,
+    )
+    db.add(product)
+    db.flush()
+    order = SalesOrder(
+        status="COMPLETED", total_price=40.0,
+        created_at=datetime.utcnow() - timedelta(days=1),
+        source=OrderSource.FULCRUM, external_order_id="LEGACY-1",
+    )
+    db.add(order)
+    db.flush()
+    db.add(SalesOrderItem(
+        order_id=order.id, product_id=product.id,
+        quantity=2, price_per_unit=20.0,
+        cost_per_unit=None,  # legacy
+    ))
+    db.commit()
+
+    response = client.get(
+        "/api/v1/reports/margin/export",
+        params={"window_days": 30},
+        headers=admin_headers,
+    )
+    rows = list(csv.reader(io.StringIO(response.text)))
+    by_sku = {row[1]: row for row in rows[1:]}
+    line = by_sku["LEGACY-COST"]
+    # revenue = 2 * 20 = 40; cost = 2 * 8 = 16; gross = 24; margin = 60%
+    assert line[5] == "USD 40.00"
+    assert line[6] == "USD 16.00"
+    assert line[7] == "USD 24.00"
+    assert line[8] == "60.0%"
+
+
+@pytest.mark.db
+def test_margin_mixes_captured_and_legacy_rows_for_same_product(
+    client: TestClient, admin_headers: dict, db: Session
+):
+    """A product with both pre- and post-migration sales must sum
+    correctly: captured rows use their captured cost; legacy rows fall
+    back to Product.cost_price. Verifies the COALESCE is applied
+    per-row (not per-product)."""
+    product = Product(
+        name="Mixed", sku="MIXED-COST",
+        cost_price=10.0,
+        default_resale_price=30.0,
+        is_bundle=False,
+    )
+    db.add(product)
+    db.flush()
+    order = SalesOrder(
+        status="COMPLETED", total_price=120.0,
+        created_at=datetime.utcnow() - timedelta(days=1),
+        source=OrderSource.FULCRUM, external_order_id="MIXED-1",
+    )
+    db.add(order)
+    db.flush()
+    # Legacy row (NULL captured cost → falls back to product.cost_price=10).
+    db.add(SalesOrderItem(
+        order_id=order.id, product_id=product.id,
+        quantity=2, price_per_unit=30.0, cost_per_unit=None,
+    ))
+    # Captured row (cost_per_unit=5, ignores product.cost_price).
+    db.add(SalesOrderItem(
+        order_id=order.id, product_id=product.id,
+        quantity=2, price_per_unit=30.0, cost_per_unit=5.0,
+    ))
+    db.commit()
+
+    response = client.get(
+        "/api/v1/reports/margin/export",
+        params={"window_days": 30},
+        headers=admin_headers,
+    )
+    rows = list(csv.reader(io.StringIO(response.text)))
+    by_sku = {row[1]: row for row in rows[1:]}
+    line = by_sku["MIXED-COST"]
+    # units = 4; revenue = 4 * 30 = 120
+    # cost = 2 * 10 (legacy) + 2 * 5 (captured) = 30
+    # gross = 90; margin = 75%
+    assert line[4] == "4"
+    assert line[5] == "USD 120.00"
+    assert line[6] == "USD 30.00"
+    assert line[7] == "USD 90.00"
+    assert line[8] == "75.0%"

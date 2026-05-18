@@ -36,4 +36,12 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.poll_amazon_orders",
         "schedule": crontab(minute="*/15"),
     },
+    # Alerting (Track 3 Step 6 of 80-advanced-analytics.md). Hourly is
+    # the conservative default — most thresholds (margin %, sales dip
+    # over 30 days) move slowly. Per-rule cooldowns prevent spam when
+    # a condition is sticky.
+    "alert-evaluation": {
+        "task": "src.tasks.evaluate_alerts",
+        "schedule": crontab(minute="5"),  # 5 past every hour
+    },
 }
