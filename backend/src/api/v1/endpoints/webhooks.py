@@ -239,12 +239,25 @@ async def process_mercadolibre_event(event_id: int):
                 unit_price = line.get("unit_price")
                 product_id = _find_local_product_id(db, event.marketplace_id, item_payload)
 
+                # Capture cost-at-sale so the margin report stops drifting
+                # when Product.cost_price is later changed. NULL when the
+                # line item isn't mapped to a Fulcrum product (cost
+                # unknowable); the margin SQL falls back to product cost
+                # via COALESCE for legacy rows so this is safe.
+                cost_per_unit = None
+                if product_id is not None:
+                    from src.models.product import Product
+                    product = db.query(Product).filter(Product.id == product_id).first()
+                    if product and product.cost_price is not None:
+                        cost_per_unit = float(product.cost_price)
+
                 db.add(
                     SalesOrderItem(
                         order_id=sales_order.id,
                         product_id=product_id,
                         quantity=quantity,
                         price_per_unit=float(unit_price) if unit_price is not None else None,
+                        cost_per_unit=cost_per_unit,
                     )
                 )
 

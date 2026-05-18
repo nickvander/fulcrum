@@ -42,6 +42,8 @@ from .marketing import (
     ConnectorType,
 )
 
+from .alert import AlertRule, AlertEvent, AlertType
+
 __all__ = [
     "User",
     "UserAuditLog",
@@ -95,4 +97,8 @@ __all__ = [
     "SyncBatch",
     "PendingSyncChange",
     "EntityChangeLog",
+    # Alerts
+    "AlertRule",
+    "AlertEvent",
+    "AlertType",
 ]

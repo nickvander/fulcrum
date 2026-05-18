@@ -130,6 +130,20 @@ def _parse_item_price(item_payload: Dict[str, Any]) -> Optional[float]:
         return None
 
 
+def _snapshot_cost_per_unit(db: Session, product_id: Optional[int]) -> Optional[float]:
+    """Snapshot the product's current cost_price. None for unmapped
+    items (no product → no cost basis). The margin SQL uses
+    COALESCE(cost_per_unit, products.cost_price) so leaving this NULL
+    is fine for orphan rows."""
+    if product_id is None:
+        return None
+    from src.models.product import Product
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if product is None or product.cost_price is None:
+        return None
+    return float(product.cost_price)
+
+
 # ---------------------------------------------------------------------------
 # Ingestion service
 # ---------------------------------------------------------------------------
@@ -213,12 +227,21 @@ class AmazonOrderIngestionService:
                 price = _parse_item_price(item_payload)
                 product_id = _resolve_product_id(db, marketplace_id, item_payload)
 
+                # Capture cost-at-sale (see margin report drift fix in
+                # commit 5d9f2a3b1c08). SP-API doesn't include cost
+                # basis on order lines, so we snapshot the current
+                # Product.cost_price. NULL when no mapped product —
+                # margin SQL falls back to Product.cost_price via
+                # COALESCE for those.
+                cost_per_unit = _snapshot_cost_per_unit(db, product_id)
+
                 db.add(
                     SalesOrderItem(
                         order_id=sales_order.id,
                         product_id=product_id,
                         quantity=quantity,
                         price_per_unit=price,
+                        cost_per_unit=cost_per_unit,
                     )
                 )
                 summary["items_created"] += 1

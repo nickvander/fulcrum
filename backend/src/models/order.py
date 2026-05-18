@@ -30,6 +30,11 @@ class SalesOrderItem(Base):
     product_id = Column(Integer, ForeignKey("products.id"))
     quantity = Column(Integer)
     price_per_unit = Column(Float)
+    # Cost basis captured at order-create time so the margin report
+    # doesn't drift when Product.cost_price is later updated. NULL on
+    # rows ingested before this column existed — the margin SQL falls
+    # back to Product.cost_price via COALESCE for those.
+    cost_per_unit = Column(Float, nullable=True)
 
     order = relationship("SalesOrder", back_populates="items")
     product = relationship("Product")

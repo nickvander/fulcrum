@@ -10,13 +10,12 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Margin report: historical cost-at-sale** — today the margin
-      report uses `Product.cost_price * units_sold` as the cost
-      basis, which drifts every time the buyer updates the master
-      cost. `SalesOrderItem` would need a `cost_per_unit` column
-      captured at order-create time (in the FULCRUM POS path and the
-      ML / Amazon ingestion paths). Once that's in place, swap the
-      margin SQL to read from the stored value.
+- [ ] **Frontend alert-rule management UI** — backend
+      `/api/v1/alerts/rules` CRUD + `/test` endpoint shipped, but
+      there's no UI to add/edit/disable rules. A dashboard widget
+      listing current rules + a creation form is the natural slice.
+      Pattern: low-stock widget. Without the UI an operator has to
+      hit the API directly.
 
 ## Future / Strategic
 
@@ -70,6 +69,28 @@ _(none active)_
       `ReportDownloadService`. 14 new frontend tests (6 service + 8
       widget); endpoints verified live via auth+curl (CSVs return
       real data, PDFs start with %PDF-1.4).
+- [x] Margin report: historical cost-at-sale — migration
+      `5d9f2a3b1c08` adds `sales_order_items.cost_per_unit`. ML
+      webhook and Amazon ingestion now snapshot
+      `Product.cost_price` at order-create time. Margin SQL uses
+      `SUM(quantity * COALESCE(items.cost_per_unit, products.cost_price))`
+      so the report stops drifting on new rows while legacy NULL
+      rows still render. 5 new backend tests cover the captured
+      path, the legacy fallback, the mixed case, and the
+      ingestion-time snapshot for orphan items (NULL).
+- [x] Alerting (low margin / sales dips / stockout risk) — Track 3
+      Step 6 of `80-advanced-analytics.md`. Per-user `AlertRule` +
+      `AlertEvent` schema, three evaluators sharing the same SQL
+      helpers as the velocity/margin/stockout reports, email
+      notifications via the existing `EmailService` provider
+      (console-by-default; SMTP via `EMAIL_PROVIDER=resend` or
+      future channels). Hourly Celery beat task
+      `evaluate_alerts`. CRUD API at `/api/v1/alerts/rules` with a
+      `/test` endpoint that force-notifies for SMTP-wiring
+      verification. Per-rule cooldown prevents notification spam.
+      23 new backend tests + live smoke test against the dev
+      backend (rule fired, email composed with correct subject +
+      HTML, cooldown skip respected on the next tick).
 - [x] Amazon order ingestion worker — Celery beat task
       `poll_amazon_orders` runs every 15 minutes per
       MarketplaceCredential. New `services/amazon_order_ingestion.py`

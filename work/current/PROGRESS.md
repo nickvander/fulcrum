@@ -2,7 +2,9 @@
 
 **Status:** Reports surface complete + surfaced on the dashboard.
 AmazonAdapter SP-API surface complete *and* wired to a Celery beat
-order-ingestion worker. No active in-flight slice.
+order-ingestion worker. Margin report uses historical cost-at-sale.
+Alerting (low margin / sales dips / stockout risk) ships hourly via
+Celery beat + email. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -23,6 +25,16 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Alerting + margin cost-at-sale: per-user `AlertRule`s (low_margin
+  / sales_dip / stockout_risk) on the new
+  `services/alert_evaluation_service.py`, hourly Celery beat
+  `evaluate_alerts`, email via existing EmailService, per-rule
+  cooldown, /alerts/rules CRUD API with `/test` for ad-hoc
+  evaluation. Migration `5d9f2a3b1c08` adds
+  `sales_order_items.cost_per_unit` captured by both ingestion
+  paths so the margin report stops drifting when master cost
+  changes. 28 new backend tests + live smoke test (rule fired,
+  email composed, cooldown respected). Backend 473/8.
 - Amazon order ingestion worker: Celery beat task
   `poll_amazon_orders` (every 15 min) polls SP-API per Amazon
   MarketplaceCredential since the per-credential
@@ -82,13 +94,9 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Alerting on low margin / sudden sales dips / out-of-stock risk** —
-  Track 3 Step 6 of `80-advanced-analytics.md`. Could ship one channel
-  (email via SMTP) first. The new velocity / margin / stockout SQL
-  helpers make the queries one line each.
-- **Margin report: historical cost-at-sale** — capture
-  `SalesOrderItem.cost_per_unit` at order-create time so the margin
-  report stops drifting when master cost changes.
+- **Frontend alert-rule management UI** — backend CRUD shipped;
+  dashboard widget for "current alert rules" + a creation form is
+  the natural next surface. Pattern: low-stock widget.
 - **Mercado Pago Checkout API integration** — research lives in
   `work/future/mercadopago-checkout-research.md`. Greenfield, sizable.
 - **Rust backend migration first slice** — plan in
@@ -99,7 +107,7 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 445 passed, 8 skipped at last green.
+  → 473 passed, 8 skipped at last green.
 - Frontend full suite: `npx ng test --watch=false` → 477 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.

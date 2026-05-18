@@ -958,32 +958,62 @@ def _build_margin_rows(db: Session, *, window_days: int, limit: int) -> list[Mar
     """Per-product realized margin over the window.
 
     Only products with at least one realized sale show up — a zero row
-    has no margin to report and would bloat the export. Cost is computed
-    from Product.cost_price at report time, not the historical cost-at-
-    sale (Fulcrum doesn't store the per-line cost on SalesOrderItem
-    today). The PR that adds historical cost capture should swap this
-    expression for the stored value.
+    has no margin to report and would bloat the export.
+
+    Cost basis precedence (per line, summed):
+      1. `sales_order_items.cost_per_unit` — captured at order-create
+         time. New default since migration 5d9f2a3b1c08.
+      2. `products.cost_price` — current master cost. Used for legacy
+         rows (cost_per_unit IS NULL) so reports over pre-migration
+         windows still render. Drifts when master cost changes, which
+         is the bug we're closing for new rows.
+
+    Implemented with `SUM(quantity * COALESCE(items.cost_per_unit,
+    products.cost_price))` so the mixed case (some lines captured,
+    some legacy) sums correctly in a single query.
     """
-    sales = _sales_aggregates_by_product(db, window_days=window_days)
-    if not sales:
+    cutoff = datetime.utcnow() - timedelta(days=window_days)
+    rows_raw = (
+        db.query(
+            SalesOrderItem.product_id,
+            func.coalesce(func.sum(SalesOrderItem.quantity), 0),
+            func.coalesce(
+                func.sum(SalesOrderItem.quantity * SalesOrderItem.price_per_unit),
+                0.0,
+            ),
+            func.coalesce(
+                func.sum(
+                    SalesOrderItem.quantity
+                    * func.coalesce(SalesOrderItem.cost_per_unit, Product.cost_price)
+                ),
+                0.0,
+            ),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
+        .join(Product, Product.id == SalesOrderItem.product_id)
+        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .filter(Product.is_bundle.is_(False))
+        .group_by(SalesOrderItem.product_id)
+        .all()
+    )
+    if not rows_raw:
         return []
 
-    product_ids = list(sales.keys())
+    product_ids = [pid for pid, _, _, _ in rows_raw]
     products_by_id = {
         p.id: p
-        for p in db.query(Product)
-        .filter(Product.id.in_(product_ids))
-        .filter(Product.is_bundle.is_(False))
-        .all()
+        for p in db.query(Product).filter(Product.id.in_(product_ids)).all()
     }
 
     rows: list[MarginRow] = []
-    for pid, (units, revenue) in sales.items():
+    for pid, units_raw, revenue_raw, cost_raw in rows_raw:
         product = products_by_id.get(pid)
         if product is None:
-            continue  # bundle or deleted product — skip
-        unit_cost = float(product.cost_price or 0.0)
-        cost = unit_cost * units
+            continue
+        units = int(units_raw or 0)
+        revenue = float(revenue_raw or 0.0)
+        cost = float(cost_raw or 0.0)
         gross = revenue - cost
         margin_pct = (gross / revenue * 100.0) if revenue else 0.0
         rows.append(MarginRow(
