@@ -28,6 +28,7 @@ from src.api.v1.endpoints import (
     sales_orders,
     catalog_imports,
     alerts,
+    payments,
 )
 
 api_router = APIRouter()
@@ -58,4 +59,5 @@ api_router.include_router(onboarding.router, prefix="/onboarding", tags=["onboar
 api_router.include_router(sales_orders.router, prefix="/sales-orders", tags=["sales-orders"])
 api_router.include_router(catalog_imports.router, prefix="/catalog-imports", tags=["catalog-imports"])
 api_router.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
+api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
 

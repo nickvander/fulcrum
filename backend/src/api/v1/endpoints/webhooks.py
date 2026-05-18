@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
+from src.core.errors import LocalizedHTTPException
 from src.database import SessionLocal, get_db
 from src.schemas import webhook as webhook_schema
 from src.models.marketplace import (
@@ -342,3 +343,100 @@ def list_webhook_events(
     """
     events = db.query(WebhookEvent).order_by(WebhookEvent.received_at.desc()).offset(skip).limit(limit).all()
     return events
+
+
+# ---------------------------------------------------------------------------
+# Mercado Pago payment webhooks
+#
+# MP sends notifications shaped roughly:
+#   {
+#     "type": "payment",
+#     "action": "payment.updated",
+#     "data": { "id": "1234567890" },
+#     ...
+#   }
+# We verify the `x-signature` header against MERCADOPAGO_WEBHOOK_SECRET,
+# fetch the canonical payment from MP, and update the matching `Payment`
+# row by `external_payment_id`. Same idempotency semantics as the ML
+# webhook — re-receiving the same notification just refreshes status.
+# ---------------------------------------------------------------------------
+
+
+@router.post("/mercadopago")
+async def receive_mercadopago_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    from src.config import settings as _settings
+    from src.services.mercado_pago import mercado_pago_connector
+
+    raw_body = await request.body()
+    try:
+        body = await request.json()
+    except Exception:  # noqa: BLE001 — some MP test webhooks send empty body
+        body = {}
+
+    headers = request.headers
+    signature_ok = mercado_pago_connector.verify_webhook_signature(
+        signature_header=headers.get("x-signature"),
+        request_id_header=headers.get("x-request-id"),
+        data_id=(body.get("data") or {}).get("id") if isinstance(body, dict) else None,
+        secret=_settings.MERCADOPAGO_WEBHOOK_SECRET,
+    )
+    if not signature_ok:
+        logger.warning("Rejecting MercadoPago webhook — invalid signature")
+        raise LocalizedHTTPException(
+            status_code=401,
+            code="apiErrors.payments.invalidWebhookSignature",
+            detail="Invalid MercadoPago webhook signature",
+        )
+
+    # MP retries on non-2xx, so we acknowledge fast and process in the
+    # background. The same pattern the ML webhook uses.
+    background_tasks.add_task(
+        _process_mercadopago_event,
+        body if isinstance(body, dict) else {"raw": raw_body.decode("utf-8", errors="replace")},
+    )
+    return {"status": "received"}
+
+
+async def _process_mercadopago_event(payload: Dict[str, Any]) -> None:
+    """Background task: fetch the canonical payment from MP, update
+    the matching Payment row by external_payment_id. Tolerates a
+    missing payment (e.g. the create-payment call hasn't returned yet
+    — MP can deliver a webhook before the synchronous response on a
+    fast network)."""
+    from src.crud import crud_payment as _crud_payment
+    from src.models.payment import PaymentStatus
+    from src.services.mercado_pago import mercado_pago_connector
+
+    event_type = (payload.get("type") or "").lower()
+    if event_type and event_type != "payment":
+        # Future MP event types (chargebacks, plans, subscriptions)
+        # land here but aren't payment notifications; ignore quietly.
+        return
+
+    data_id = (payload.get("data") or {}).get("id") if isinstance(payload, dict) else None
+    if not data_id:
+        return
+
+    result = await mercado_pago_connector.fetch_payment(str(data_id))
+    db: Session = SessionLocal()
+    try:
+        payment = _crud_payment.get_by_provider_id(
+            db, provider="mercado_pago", external_payment_id=str(data_id),
+        )
+        if payment is None:
+            logger.info(
+                "MercadoPago webhook for unknown payment id=%s — ignoring "
+                "(the create-payment call may still be in flight)", data_id,
+            )
+            return
+        new_status = PaymentStatus.from_mercado_pago(result.status)
+        _crud_payment.apply_webhook(
+            db, payment=payment, status=new_status, payload=result.raw or payload,
+        )
+        db.commit()
+    finally:
+        db.close()

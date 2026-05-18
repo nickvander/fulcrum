@@ -43,6 +43,7 @@ from .marketing import (
 )
 
 from .alert import AlertRule, AlertEvent, AlertType
+from .payment import Payment, PaymentStatus
 
 __all__ = [
     "User",
@@ -101,4 +102,7 @@ __all__ = [
     "AlertRule",
     "AlertEvent",
     "AlertType",
+    # Payments
+    "Payment",
+    "PaymentStatus",
 ]

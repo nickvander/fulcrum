@@ -4,7 +4,9 @@
 AmazonAdapter SP-API surface complete *and* wired to a Celery beat
 order-ingestion worker. Margin report uses historical cost-at-sale.
 Alerting ships hourly via Celery beat + email, with full CRUD UI at
-`/alerts`. No active in-flight slice.
+`/alerts`. Mercado Pago Checkout backend foundation (connector,
+Payment model, create + get endpoints, signed webhook) ships in
+the latest commit. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -25,6 +27,16 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Mercado Pago Checkout backend foundation: new
+  `services/mercado_pago.py` (`MercadoPagoConnector` wrapping
+  `POST /v1/payments` + `GET /v1/payments/{id}` + HMAC signature
+  verification), `Payment` model + migration (unique on
+  provider+external_id for idempotency), `PaymentStatus` enum that
+  collapses MP's ~10 statuses to 5, `POST /api/v1/payments/`
+  endpoint with pending-row-before-call pattern, signed `POST
+  /webhooks/mercadopago`. 26 new backend tests covering every
+  layer + live smoke-tested end-to-end. Frontend Secure Fields
+  tokenization deferred to a follow-up. Backend 499/8.
 - Frontend `/alerts` page: Material table of rules with per-row
   Test / Edit / Delete + enabled toggle. New Add/Edit dialog with
   threshold hints that change per alert type. Delete confirmation
@@ -100,8 +112,13 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Mercado Pago Checkout API integration** — research lives in
-  `work/future/mercadopago-checkout-research.md`. Greenfield, sizable.
+- **Frontend Mercado Pago checkout flow** — backend foundation
+  shipped; next is the JS-SDK Secure Fields tokenization on the
+  frontend so a customer can actually enter a card. Test cards
+  documented in `work/future/mercadopago-checkout-research.md`.
+- **Payments admin UI** — list / detail page for the `payments`
+  table so an operator can audit status + see error messages
+  without hitting the API directly.
 - **Rust backend migration first slice** — plan in
   `work/future/81-rust-backend-migration-plan.md`. Highest-impact
   candidate is product listing.
@@ -110,7 +127,7 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 473 passed, 8 skipped at last green.
+  → 499 passed, 8 skipped at last green.
 - Frontend full suite: `npx ng test --watch=false` → 493 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
