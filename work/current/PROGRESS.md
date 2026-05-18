@@ -1,7 +1,8 @@
 # Progress Log
 
-**Status:** Reports surface + supplier import polish + product-form tests all
-green on `main`. No active in-flight slice.
+**Status:** AmazonAdapter SP-API surface (fetch_all_listings +
+sync_inventory + fetch_orders) is complete on `main`. No active
+in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -22,6 +23,12 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- `d669246` AmazonConnector SP-API completion: real `sync_inventory`
+  (PATCH with required `marketplaceIds`, MFN
+  `fulfillment_availability`, propagates 401 so the retry wrapper
+  works) and real `fetch_orders` (GET `/orders/v0/orders` with
+  `MarketplaceIds`+`CreatedAfter`/`NextToken` pagination, raw-dict
+  passthrough). Backend 418/8, frontend 450/0.
 - `f8f8b61` Mark product-form specs backlog item done.
 - `afb760f` Unblock the 5 skipped product-form specs (frontend 450/0
   skipped, was 432/14 skipped). Root causes were mostly infrastructure
@@ -53,9 +60,6 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Pick one of these (or anything from `work/future/`):
 
-- **AmazonAdapter SP-API completion** — `fetch_all_listings` shipped in
-  `7b251fe`; `sync_inventory` and `fetch_orders` are still stubbed. The
-  ML connector is the reference implementation.
 - **Stockout / velocity / margin reports** — `endpoints/reports.py`
   currently only exposes low-stock. The `report_export` helper makes
   each new report ~25 lines + a SQL query.
@@ -75,7 +79,7 @@ Pick one of these (or anything from `work/future/`):
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 410 passed, 8 skipped at last green.
+  → 418 passed, 8 skipped at last green.
 - Frontend full suite: `npx ng test --watch=false` → 450 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
