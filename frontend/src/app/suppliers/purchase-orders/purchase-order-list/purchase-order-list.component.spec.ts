@@ -130,6 +130,76 @@ describe('PurchaseOrderListComponent', () => {
     const getReviewsSpy = suppliersServiceMock.getImportReviews as ReturnType<typeof vi.fn>;
     getReviewsSpy.mockClear();
     component.setReviewFilter('history');
-    expect(getReviewsSpy).toHaveBeenCalledWith('approved,rejected');
+    // status arg first, options object second (may be empty when no filters set)
+    expect(getReviewsSpy).toHaveBeenCalledWith('approved,rejected', expect.any(Object));
+  });
+
+  // --- Multi-select bulk reject -------------------------------------------
+
+  it('toggleReviewSelection tracks the checked set across toggle on/off', () => {
+    component.toggleReviewSelection(1, true);
+    component.toggleReviewSelection(2, true);
+    expect(component.selectedReviewIds.size).toBe(2);
+    expect(component.isReviewSelected(1)).toBe(true);
+
+    component.toggleReviewSelection(1, false);
+    expect(component.isReviewSelected(1)).toBe(false);
+    expect(component.selectedReviewIds.size).toBe(1);
+  });
+
+  it('selectAllPendingVisible checks only pending rows in the current list', () => {
+    component.selectAllPendingVisible();
+    // Both seeded rows are pending so both should now be selected
+    expect(component.selectedReviewIds.size).toBe(2);
+  });
+
+  it('bulkRejectSelected POSTs explicit review_ids and clears the selection', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component.toggleReviewSelection(1, true);
+    component.toggleReviewSelection(2, true);
+
+    const spy = suppliersServiceMock.bulkRejectImportReviews as ReturnType<typeof vi.fn>;
+    spy.mockClear();
+    component.bulkRejectSelected();
+
+    expect(spy).toHaveBeenCalled();
+    const payload = spy.mock.calls[spy.mock.calls.length - 1][0] as {
+      review_ids?: number[];
+      stale_before?: string;
+    };
+    expect(payload.review_ids).toEqual([1, 2]);
+    expect(payload.stale_before).toBeUndefined();
+    expect(component.selectedReviewIds.size).toBe(0);
+  });
+
+  it('bulkRejectSelected does nothing when selection is empty', () => {
+    const spy = suppliersServiceMock.bulkRejectImportReviews as ReturnType<typeof vi.fn>;
+    spy.mockClear();
+    component.bulkRejectSelected();
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  // --- Search + supplier filter -------------------------------------------
+
+  it('onReviewSupplierFilterChange refreshes with the supplier_id option', () => {
+    const spy = suppliersServiceMock.getImportReviews as ReturnType<typeof vi.fn>;
+    spy.mockClear();
+    component.onReviewSupplierFilterChange(7);
+
+    expect(spy).toHaveBeenCalledWith('pending', expect.objectContaining({ supplierId: 7 }));
+    expect(component.hasActiveReviewFilters()).toBe(true);
+  });
+
+  it('clearReviewFilters resets search + supplier and re-fetches', () => {
+    component.reviewSearch = 'invoice';
+    component.reviewSupplierFilterId = 5;
+    const spy = suppliersServiceMock.getImportReviews as ReturnType<typeof vi.fn>;
+    spy.mockClear();
+
+    component.clearReviewFilters();
+    expect(component.reviewSearch).toBe('');
+    expect(component.reviewSupplierFilterId).toBeNull();
+    expect(component.hasActiveReviewFilters()).toBe(false);
+    expect(spy).toHaveBeenCalled();
   });
 });
