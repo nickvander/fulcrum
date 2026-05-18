@@ -259,6 +259,29 @@ dev/test environments can run the workflow end-to-end without live API calls.
   without an existing listing surface as `missing_listings` in the response so
   callers can resolve them manually.
 
+### Automatic inbound reconciliation (ML Full)
+
+`services/inbound_shipment_reconciliation.py` runs hourly under the
+`mercadolibre-inbound-reconcile` Celery beat schedule. Each tick:
+
+1. Finds every `StockTransfer` in `SHIPPED` or `PARTIALLY_RECEIVED` with a
+   non-NULL `external_inbound_id` and `dest_location='ml-full'`.
+2. Calls `MercadoLibreConnector.get_inbound_shipment_status` for each.
+3. Maps the marketplace's per-item received counts back to local
+   `StockTransferItem` rows via `marketplace_listings.external_listing_id →
+   product_id`.
+4. Credits stock at `ml-full` for any positive delta vs. local `qty_received`,
+   advances the transfer's status, and sets `received_at` once everything
+   has been received.
+
+This means the manual `receive_items` workflow becomes a fallback —
+operators only need it when ML hasn't received the shipment yet or the
+mapping is incomplete. Marketplace over-reports are capped at the local
+`qty_shipped` so a warehouse miscount cannot inflate Fulcrum stock; the
+reconciliation never decrements (e.g. if ML revises a received count
+downward), so chargebacks and warehouse corrections still need an
+explicit operator adjustment.
+
 The REST surface follows the same shape:
 
 | Method | Path                                  | Notes                                                    |
@@ -311,6 +334,29 @@ MercadoLibre sends JSON payloads like:
   "sent": "2025-01-01T12:00:00.000Z"
 }
 ```
+
+### Order back-fill poller (handles dropped webhooks)
+
+MercadoLibre's webhook delivery is best-effort — notifications occasionally
+drop or arrive out of order. The `mercadolibre-order-poll` Celery beat
+schedule runs every 15 minutes and back-fills any orders the webhook missed:
+
+- `MercadoLibreConnector.fetch_orders` paginates
+  `/orders/search?seller=...&order.date_created.from=...` (50 per page,
+  capped at 1,000 orders per run).
+- The cursor lives on `MarketplaceCredential.last_orders_polled_at` and only
+  advances after the credential's run commits, so a transient failure
+  re-polls the same range on the next tick.
+- Upserts are keyed by `(source=MERCADOLIBRE, external_order_id)` — the
+  same key the webhook handler uses. A poll racing the webhook only
+  refreshes status/total and never re-decrements stock.
+- Per-credential SAVEPOINT isolation: one bad seller's credential cannot
+  kill the beat tick for other credentials.
+
+The poller is naturally immune to the multi-tenant credential-selection bug
+that affects the webhook path (each credential authenticates with its own
+access token), so it's also the recommended workaround for multi-tenant
+deployments until per-user webhook URLs land.
 
 ### Amazon Notifications
 

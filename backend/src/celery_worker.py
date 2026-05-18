@@ -36,6 +36,23 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.poll_amazon_orders",
         "schedule": crontab(minute="*/15"),
     },
+    # ML push webhook is the primary order surface; this poll back-fills
+    # the gaps when ML's notifications drop or arrive out of order. Same
+    # 15-min cadence as Amazon — ML's rate budget for the per-seller
+    # `/orders/search` endpoint is generous enough.
+    "mercadolibre-order-poll": {
+        "task": "src.tasks.poll_mercadolibre_orders",
+        "schedule": crontab(minute="*/15"),
+    },
+    # ML inbound shipment reconciliation: warehouse receipts move on
+    # human/forklift time, not minute-by-minute, so hourly is sufficient.
+    # Catches the operator-visible "I sent 100 units to ML Full last week
+    # but my dashboard still says 0 received" gap that the manual
+    # `receive_items` workflow left.
+    "mercadolibre-inbound-reconcile": {
+        "task": "src.tasks.reconcile_ml_inbound_shipments",
+        "schedule": crontab(minute="10"),  # 10 past every hour
+    },
     # Alerting (Track 3 Step 6 of 80-advanced-analytics.md). Hourly is
     # the conservative default — most thresholds (margin %, sales dip
     # over 30 days) move slowly. Per-rule cooldowns prevent spam when

@@ -1,8 +1,14 @@
 from typing import Dict, Any, List, Optional
 import asyncio
+from datetime import datetime, timedelta, timezone
 import httpx
 from src.config import settings
-from .base import BaseMarketplaceConnector, InboundShipmentItem, InboundShipmentResult
+from .base import (
+    BaseMarketplaceConnector,
+    InboundShipmentItem,
+    InboundShipmentReceivedItem,
+    InboundShipmentResult,
+)
 
 class MercadoLibreConnector(BaseMarketplaceConnector):
     """
@@ -364,7 +370,18 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         external_inbound_id: str,
         access_token: Optional[str] = None,
     ) -> InboundShipmentResult:
-        """Polls an existing inbound shipment for its current status."""
+        """Polls an existing inbound shipment for its current status.
+
+        Populates `received_items` with per-line received quantities so
+        `inbound_shipment_reconciliation` can back-fill `qty_received`
+        on local `StockTransferItem` rows.
+
+        ML's inbound endpoint returns per-item rows with `item_id` (the
+        listing id) + a received-quantity field. The exact name has
+        varied across API revisions, so we accept a few aliases
+        (`received_quantity`, `quantity_received`, `quantity`) and fall
+        back to 0 — better to under-report than crash on a renamed key.
+        """
         if not access_token or access_token.startswith("STUB") or external_inbound_id.startswith("ML-FULL-STUB-"):
             return InboundShipmentResult(
                 external_inbound_id=external_inbound_id,
@@ -384,8 +401,43 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                 status=data.get("status", "pending"),
                 label_url=data.get("label_url"),
                 detail_url=data.get("detail_url"),
+                received_items=self._parse_received_items(data),
                 raw_data=data,
             )
+
+    @staticmethod
+    def _parse_received_items(data: Dict[str, Any]) -> List[InboundShipmentReceivedItem]:
+        """Extract per-line received quantities from an ML inbound
+        status payload. Tolerant of key renames: `received_quantity`,
+        `quantity_received`, and bare `quantity` are all accepted in
+        that order of preference.
+        """
+        rows = data.get("items") or []
+        parsed: List[InboundShipmentReceivedItem] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            received: Any = (
+                row.get("received_quantity")
+                or row.get("quantity_received")
+                or row.get("quantity")
+                or 0
+            )
+            try:
+                received_int = int(received)
+            except (TypeError, ValueError):
+                received_int = 0
+            parsed.append(
+                InboundShipmentReceivedItem(
+                    external_listing_id=(
+                        str(row.get("item_id")) if row.get("item_id") is not None
+                        else None
+                    ),
+                    sku=row.get("sku"),
+                    received_quantity=received_int,
+                )
+            )
+        return parsed
     async def fetch_order(self, order_id: str, access_token: str) -> Dict[str, Any]:
         """
         Fetches a single order from MercadoLibre via GET /orders/{order_id}.
@@ -398,3 +450,82 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
             )
             response.raise_for_status()
             return response.json()
+
+    async def fetch_orders(
+        self,
+        access_token: str,
+        *,
+        created_from: Optional[datetime] = None,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """List orders for the authenticated seller created after a cursor.
+
+        Used by the periodic ML order poller
+        (`services/mercadolibre_order_ingestion.py`) to back-fill orders
+        that the webhook missed or delivered out of order.
+
+        ML's listing API requires a `seller` query parameter — the
+        seller's numeric user id. We resolve it via `/users/me` exactly
+        the way `fetch_all_listings` does, so a single access token is
+        sufficient (no extra config).
+
+        `created_from` is filled into `order.date_created.from` as an
+        ISO-8601 string with a `Z` suffix (ML's format). When None, we
+        default to 24h ago — same fallback the Amazon connector applies
+        when its cursor is fresh.
+
+        Paginates 50-at-a-time (ML's API max) up to a hard cap on total
+        rows so a misconfigured cursor or unbounded backlog can't burn
+        the request budget. The cap is generous enough for normal
+        operation: 1,000 orders means 20 pages, well below typical
+        seller order volumes per 15-minute tick.
+        """
+        cursor = created_from or (
+            datetime.now(timezone.utc) - timedelta(hours=24)
+        )
+        if cursor.tzinfo is None:
+            cursor = cursor.replace(tzinfo=timezone.utc)
+        cursor_iso = cursor.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+
+        max_rows = 1000
+        page_limit = max(1, min(limit, 50))
+        results: List[Dict[str, Any]] = []
+
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+
+            user_response = await client.get(
+                f"{self.API_URL}/users/me", headers=headers,
+            )
+            user_response.raise_for_status()
+            seller_id = user_response.json().get("id")
+            if seller_id is None:
+                return results
+
+            offset = 0
+            while True:
+                response = await client.get(
+                    f"{self.API_URL}/orders/search",
+                    params={
+                        "seller": seller_id,
+                        "order.date_created.from": cursor_iso,
+                        "sort": "date_asc",
+                        "offset": offset,
+                        "limit": page_limit,
+                    },
+                    headers=headers,
+                )
+                response.raise_for_status()
+                data = response.json() or {}
+                page = data.get("results") or []
+                if not page:
+                    break
+                results.extend(page)
+                if len(results) >= max_rows:
+                    break
+                if len(page) < page_limit:
+                    # ML returned a short page → no more pages even if
+                    # `paging.total` says otherwise.
+                    break
+                offset += page_limit
+        return results[:max_rows]

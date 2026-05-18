@@ -28,15 +28,40 @@ class InboundShipmentItem(BaseModel):
     quantity: int
 
 
+class InboundShipmentReceivedItem(BaseModel):
+    """One per-item row from a marketplace inbound-shipment status call.
+
+    Used by `inbound_shipment_reconciliation` to back-fill the local
+    `qty_received` on `StockTransferItem` rows when a marketplace
+    warehouse has received some/all of the inbound stock.
+
+    `external_listing_id` is the marketplace's item id (e.g. ML
+    `MLMxxxxx` or Amazon ASIN). We resolve it to a local
+    `StockTransferItem` via `MarketplaceListing.external_listing_id →
+    product_id` so connectors don't need to know about Fulcrum's
+    internal ids.
+    """
+    external_listing_id: Optional[str] = None
+    sku: Optional[str] = None
+    received_quantity: int = 0
+
+
 class InboundShipmentResult(BaseModel):
     """
-    Result of creating an inbound shipment (i.e. transferring stock to a
-    marketplace fulfillment warehouse like ML Full or Amazon FBA).
+    Result of creating or polling an inbound shipment (i.e. transferring
+    stock to a marketplace fulfillment warehouse like ML Full or Amazon
+    FBA).
+
+    `received_items` is populated by `get_inbound_shipment_status` so
+    callers can reconcile per-line received quantities. Empty on the
+    initial `create_inbound_shipment` path — only the status poll
+    surface fills it.
     """
     external_inbound_id: str
     status: str = "pending"
     label_url: Optional[str] = None
     detail_url: Optional[str] = None
+    received_items: List[InboundShipmentReceivedItem] = []
     raw_data: Dict[str, Any] = {}
 
 
