@@ -366,6 +366,8 @@
             "aiReady": "AI is configured — you can upload PDFs or images of catalog pages.",
             "aiUnavailable": "PDF / image catalogs need AI. CSV uploads work without it.",
             "openSettings": "Open Settings",
+            "vendorAutoLinked": "Linked supplier \"{{supplier}}\" from document vendor \"{{vendor}}\". Confirm or change in the dropdown.",
+            "vendorNoMatch": "Document vendor \"{{vendor}}\" did not match any existing supplier. Pick one below before approving.",
             "errors": {
                 "csvOnly": "Only CSV / TSV files are supported.",
                 "unsupportedType": "Unsupported file type.",

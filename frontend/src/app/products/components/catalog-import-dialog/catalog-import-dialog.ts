@@ -139,6 +139,11 @@ export class CatalogImportDialogComponent implements OnInit, OnDestroy {
           this.isBusy = false;
           this.review = review;
           this.step = 'review';
+          // If the backend auto-linked a supplier from the document, mirror
+          // that into the dialog state so the dropdown shows the match.
+          if (review.supplier_id != null) {
+            this.selectedSupplierId = review.supplier_id;
+          }
         },
         error: (err) => {
           this.isBusy = false;

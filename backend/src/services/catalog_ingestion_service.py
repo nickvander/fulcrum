@@ -47,6 +47,7 @@ class ExtractedCatalogData:
     items: List[ExtractedCatalogItem] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
     extraction_method: str = "csv"
+    vendor_name: Optional[str] = None  # AI-extracted supplier name (when source is a PDF/image)
 
 
 # Header aliases: keys are canonical fields, values are accepted column titles
@@ -197,6 +198,8 @@ class CatalogIngestionService:
         `ExtractedCatalogData` shape the CSV parser emits, so downstream code
         (review storage + approval) is identical for both sources."""
         result = ExtractedCatalogData(extraction_method="ai")
+        vendor = (ai_result.get("vendor_name") or "").strip()
+        result.vendor_name = vendor or None
         items_raw = ai_result.get("items") or []
         if not isinstance(items_raw, list):
             result.warnings.append("AI returned a non-list 'items' field.")

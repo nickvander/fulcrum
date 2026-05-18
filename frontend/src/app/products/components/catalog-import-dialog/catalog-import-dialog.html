@@ -59,6 +59,34 @@
         }}
       </p>
 
+      @if (review.detected_vendor_name) {
+        <div
+          class="ai-banner"
+          [class.ai-banner--ready]="review.auto_linked_supplier_name"
+          [class.ai-banner--disabled]="!review.auto_linked_supplier_name"
+        >
+          <mat-icon>{{ review.auto_linked_supplier_name ? 'link' : 'help' }}</mat-icon>
+          @if (review.auto_linked_supplier_name) {
+            <span>
+              {{
+                t('products.catalogImport.vendorAutoLinked', {
+                  vendor: review.detected_vendor_name,
+                  supplier: review.auto_linked_supplier_name
+                })
+              }}
+            </span>
+          } @else {
+            <span>
+              {{
+                t('products.catalogImport.vendorNoMatch', {
+                  vendor: review.detected_vendor_name
+                })
+              }}
+            </span>
+          }
+        </div>
+      }
+
       @if (review.warnings.length) {
         <ul class="warnings">
           @for (w of review.warnings; track w) {

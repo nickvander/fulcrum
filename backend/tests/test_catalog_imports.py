@@ -403,3 +403,138 @@ def test_ai_result_low_confidence_attaches_warning():
     assert any("low" in w.lower() for w in parsed.warnings)
     assert parsed.items[0].name == "Hazy product"
     assert parsed.items[0].cost_price == 12.50
+
+
+# --- Vendor auto-link from AI extraction ------------------------------------
+
+
+def _seed_ai_ready(db):
+    """Helper: enable AI in the dev settings so the endpoint accepts PDFs."""
+    from src.crud.crud_store_settings import store_settings as crud_store_settings
+    from src.core.encryption import encryption_service
+
+    settings = crud_store_settings.get_settings(db)
+    settings.ai_enabled = 1
+    settings.ai_provider = "google"
+    settings.ai_google_api_key = encryption_service.encrypt("fake-key-for-tests")
+    db.add(settings)
+    db.commit()
+
+
+def test_pdf_upload_auto_links_supplier_when_vendor_name_matches(
+    client: TestClient,
+    db,
+    admin_headers,
+    monkeypatch,
+):
+    """AI extracts a vendor name. Endpoint fuzzy-matches it against an
+    existing Supplier and sets review.supplier_id automatically; the response
+    echoes both the detected vendor and the matched supplier name."""
+    from src.services.adk import orchestrator as orchestrator_module
+
+    _seed_ai_ready(db)
+    supplier = crud_supplier.create(
+        db=db, obj_in=SupplierCreate(name="Acme Tools de México", currency="MXN"),
+    )
+
+    async def fake_parse_catalog(self, content, mime_type):
+        return {
+            "vendor_name": "Acme Tools de México, S.A. de C.V.",
+            "items": [{"name": "Widget From PDF", "cost_price": 10.0}],
+            "confidence": 0.9,
+        }
+
+    monkeypatch.setattr(
+        orchestrator_module.AgentOrchestrator, "parse_catalog", fake_parse_catalog
+    )
+
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["supplier_id"] == supplier.id
+    assert body["detected_vendor_name"] == "Acme Tools de México, S.A. de C.V."
+    assert body["auto_linked_supplier_name"] == "Acme Tools de México"
+    assert any("Auto-linked" in w for w in body["warnings"])
+
+
+def test_pdf_upload_warns_when_vendor_name_doesnt_match_any_supplier(
+    client: TestClient,
+    db,
+    admin_headers,
+    monkeypatch,
+):
+    """When the AI returns a vendor name with no fuzzy match, supplier_id
+    stays null but the response surfaces the detected name + a warning so
+    the user knows to pick one manually."""
+    from src.services.adk import orchestrator as orchestrator_module
+
+    _seed_ai_ready(db)
+    # Seed an unrelated supplier so we know the match has a corpus
+    crud_supplier.create(db=db, obj_in=SupplierCreate(name="HydroMX"))
+
+    async def fake_parse_catalog(self, content, mime_type):
+        return {
+            "vendor_name": "Completely Unknown Distributor Co.",
+            "items": [{"name": "Anonymous Widget"}],
+        }
+
+    monkeypatch.setattr(
+        orchestrator_module.AgentOrchestrator, "parse_catalog", fake_parse_catalog
+    )
+
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["supplier_id"] is None
+    assert body["detected_vendor_name"] == "Completely Unknown Distributor Co."
+    assert body["auto_linked_supplier_name"] is None
+    assert any("did not match" in w for w in body["warnings"])
+
+
+def test_pdf_upload_does_not_override_explicit_supplier_id(
+    client: TestClient,
+    db,
+    admin_headers,
+    monkeypatch,
+):
+    """If the user already picked a supplier at upload time, the auto-link
+    should NOT override their choice — even if the AI extracts a vendor
+    that fuzzy-matches a different supplier."""
+    from src.services.adk import orchestrator as orchestrator_module
+
+    _seed_ai_ready(db)
+    explicit = crud_supplier.create(db=db, obj_in=SupplierCreate(name="My Chosen Supplier"))
+    crud_supplier.create(db=db, obj_in=SupplierCreate(name="Acme Tools"))
+
+    async def fake_parse_catalog(self, content, mime_type):
+        return {
+            "vendor_name": "Acme Tools",
+            "items": [{"name": "Acme Widget"}],
+        }
+
+    monkeypatch.setattr(
+        orchestrator_module.AgentOrchestrator, "parse_catalog", fake_parse_catalog
+    )
+
+    resp = client.post(
+        "/api/v1/catalog-imports/reviews",
+        params={"supplier_id": explicit.id},
+        files={"file": ("catalog.pdf", b"%PDF-1.4 fake", "application/pdf")},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["supplier_id"] == explicit.id
+    # detected_vendor_name still surfaces for transparency
+    assert body["detected_vendor_name"] == "Acme Tools"
+    # but no auto-link warning since we respected the user's choice
+    assert body["auto_linked_supplier_name"] is None
+    assert not any("Auto-linked" in w for w in body["warnings"])

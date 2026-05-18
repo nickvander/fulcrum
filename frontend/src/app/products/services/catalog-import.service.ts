@@ -25,10 +25,12 @@ export interface CatalogImportReview {
   source: string;
   status: 'pending' | 'approved' | 'rejected';
   supplier_id: number | null;
-  extracted_data: { items: CatalogImportItem[] };
+  extracted_data: { items: CatalogImportItem[]; vendor_name?: string; auto_linked_supplier_name?: string | null };
   warnings: string[];
   created_at: string;
   reviewed_at: string | null;
+  detected_vendor_name?: string | null;
+  auto_linked_supplier_name?: string | null;
 }
 
 export interface CatalogImportApproveResponse {

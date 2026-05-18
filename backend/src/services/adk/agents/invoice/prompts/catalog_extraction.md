@@ -18,6 +18,7 @@ Return ONLY valid JSON in this exact shape — no prose, no markdown fences:
 
 ```json
 {
+  "vendor_name": "Acme Tools de México, S.A. de C.V.",
   "items": [
     {
       "sku": "ABC-100",
@@ -33,6 +34,14 @@ Return ONLY valid JSON in this exact shape — no prose, no markdown fences:
   "confidence": 0.85
 }
 ```
+
+### `vendor_name`
+
+The supplier / manufacturer this catalog is **from**. Look for it in a
+letterhead, cover page, or repeated footer. Use the exact name as printed
+(including legal suffix like "S.A. de C.V." if shown), in the original
+language. Leave `null` if the document genuinely does not state who issued
+it — never guess from a product brand inside the catalog.
 
 ## Field rules
 

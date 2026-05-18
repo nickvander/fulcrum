@@ -24,6 +24,7 @@ from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.crud.crud_supplier import supplier as crud_supplier
 from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
 from src.models.catalog_import import CatalogImport
+from src.models.supplier import Supplier
 from src.models.user import User
 from src.schemas.product import ProductCreate
 from src.schemas.supplier_product import SupplierProductCreate
@@ -54,6 +55,37 @@ _AI_MIME_BY_SUFFIX = {
 }
 
 
+def _fuzzy_match_supplier(db: Session, vendor_name: str | None) -> Supplier | None:
+    """Best-effort match of a vendor name extracted from a document to an
+    existing Supplier row. Strategy mirrors `_find_supplier_id_for_vendor`
+    in purchase_orders.py — case-insensitive substring match in either
+    direction, first hit wins.
+
+    Returns the Supplier row (not just the id) so the endpoint can echo the
+    matched name back to the UI for transparency.
+    """
+    if not vendor_name:
+        return None
+
+    vendor_lower = vendor_name.strip().lower()
+    if not vendor_lower:
+        return None
+
+    # First pass: exact case-insensitive match (avoid mis-matching when one
+    # supplier name is a substring of another, e.g. "Acme" vs "Acme Tools")
+    for supplier in db.query(Supplier).limit(500).all():
+        if supplier.name.lower() == vendor_lower:
+            return supplier
+
+    # Second pass: substring match in either direction
+    for supplier in db.query(Supplier).limit(500).all():
+        sup_lower = supplier.name.lower()
+        if vendor_lower in sup_lower or sup_lower in vendor_lower:
+            return supplier
+
+    return None
+
+
 class CatalogImportItem(BaseModel):
     sku: str | None = None
     name: str = ""
@@ -79,6 +111,12 @@ class CatalogImportRead(BaseModel):
     warnings: List[str] = []
     created_at: datetime
     reviewed_at: datetime | None = None
+    # AI-extracted vendor name (only set when source == "ai")
+    detected_vendor_name: str | None = None
+    # If we auto-linked the detected vendor to an existing supplier, this is
+    # that supplier's display name so the UI can show "Linked: VendorName"
+    # without an extra round-trip.
+    auto_linked_supplier_name: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -96,6 +134,7 @@ class CatalogImportApproveResponse(BaseModel):
 
 
 def _read_response(review: CatalogImport) -> CatalogImportRead:
+    extracted = review.extracted_data or {}
     return CatalogImportRead(
         id=review.id,
         file_name=review.file_name,
@@ -103,10 +142,12 @@ def _read_response(review: CatalogImport) -> CatalogImportRead:
         source=review.source or "csv",
         status=review.status,
         supplier_id=review.supplier_id,
-        extracted_data=review.extracted_data or {},
+        extracted_data=extracted,
         warnings=review.warnings or [],
         created_at=review.created_at,
         reviewed_at=review.reviewed_at,
+        detected_vendor_name=extracted.get("vendor_name"),
+        auto_linked_supplier_name=extracted.get("auto_linked_supplier_name"),
     )
 
 
@@ -232,9 +273,30 @@ async def create_catalog_import_review(
         parsed = catalog_ingestion_service.ingest(file_name=filename, content=content)
 
     extracted = {"items": [extracted_item_to_dict(i) for i in parsed.items]}
+    if parsed.vendor_name:
+        extracted["vendor_name"] = parsed.vendor_name
     warnings.extend(parsed.warnings)
     if not parsed.items:
         warnings.append("No importable rows found.")
+
+    # If AI extracted a vendor name and the user didn't pick a supplier at
+    # upload time, try to auto-link to an existing supplier. The user can
+    # still change it on the review step.
+    if source == "ai" and supplier_id is None and parsed.vendor_name:
+        matched = _fuzzy_match_supplier(db, parsed.vendor_name)
+        if matched:
+            supplier_id = matched.id
+            extracted["auto_linked_supplier_name"] = matched.name
+            warnings.append(
+                f"Auto-linked supplier '{matched.name}' from document vendor "
+                f"'{parsed.vendor_name}'. Confirm before approving."
+            )
+        else:
+            extracted["auto_linked_supplier_name"] = None
+            warnings.append(
+                f"Document vendor '{parsed.vendor_name}' did not match any "
+                "existing supplier. Pick one manually before approving."
+            )
 
     review = CatalogImport(
         file_name=filename,
