@@ -1,0 +1,62 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>
+    {{ data.mode === 'create' ? t('alerts.form.titleCreate') : t('alerts.form.titleEdit') }}
+  </h2>
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-dialog-content class="dialog-content">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('alerts.form.alertType') }}</mat-label>
+        <mat-select formControlName="alert_type" data-testid="alert-form-type">
+          <mat-option *ngFor="let opt of alertTypes" [value]="opt">
+            {{ t('alerts.type.' + opt) }}
+          </mat-option>
+        </mat-select>
+        <mat-hint *ngIf="data.mode === 'edit'">
+          {{ t('alerts.form.typeFixedHint') }}
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('alerts.form.threshold') }}</mat-label>
+        <input matInput type="number" formControlName="threshold"
+               data-testid="alert-form-threshold" />
+        <mat-hint>{{ t(thresholdHintKey()) }}</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('alerts.form.windowDays') }}</mat-label>
+        <input matInput type="number" formControlName="window_days"
+               data-testid="alert-form-window" />
+        <mat-hint>{{ t('alerts.form.windowHint') }}</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('alerts.form.cooldownMinutes') }}</mat-label>
+        <input matInput type="number" formControlName="cooldown_minutes"
+               data-testid="alert-form-cooldown" />
+        <mat-hint>{{ t('alerts.form.cooldownHint') }}</mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ t('alerts.form.notifyEmail') }}</mat-label>
+        <input matInput type="email" formControlName="notify_email"
+               data-testid="alert-form-email" />
+      </mat-form-field>
+
+      <mat-slide-toggle formControlName="enabled" data-testid="alert-form-enabled">
+        {{ t('alerts.form.enabled') }}
+      </mat-slide-toggle>
+    </mat-dialog-content>
+
+    <mat-dialog-actions align="end">
+      <button mat-button type="button" (click)="cancel()"
+              data-testid="alert-form-cancel">
+        {{ t('common.cancel') }}
+      </button>
+      <button mat-flat-button color="primary" type="submit"
+              [disabled]="form.invalid" data-testid="alert-form-submit">
+        {{ data.mode === 'create' ? t('common.create') : t('common.save') }}
+      </button>
+    </mat-dialog-actions>
+  </form>
+</ng-container>

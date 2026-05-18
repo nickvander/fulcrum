@@ -46,6 +46,14 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'alerts',
+    loadComponent: () =>
+      import('./alerts/pages/alerts-page/alerts-page.component').then(
+        (m) => m.AlertsPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'settings',
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]
