@@ -57,6 +57,8 @@ function makeReview(overrides: Partial<CatalogImportReview> = {}): CatalogImport
     warnings: [],
     created_at: '2026-05-17T00:00:00Z',
     reviewed_at: null,
+    detected_vendor_name: null,
+    auto_linked_supplier_name: null,
     ...overrides,
   };
 }
@@ -210,6 +212,19 @@ describe('CatalogImportDialogComponent', () => {
     component.reject();
     expect(serviceSpy.reject).toHaveBeenCalledWith(7);
     expect(dialogRefSpy.close).toHaveBeenCalledWith(false);
+  });
+
+  it('mirrors auto-linked supplier_id from the server response into the dropdown', () => {
+    component.selectedFile = new File(['x'], 'c.pdf', { type: 'application/pdf' });
+    const review = makeReview({
+      supplier_id: 42,
+      detected_vendor_name: 'Acme Tools',
+      auto_linked_supplier_name: 'Acme Tools',
+    });
+    serviceSpy.upload.mockReturnValue(of(review));
+    component.upload();
+    expect(component.review!.auto_linked_supplier_name).toBe('Acme Tools');
+    expect(component.selectedSupplierId).toBe(42);
   });
 
   it('shows snackbar on upload error', () => {

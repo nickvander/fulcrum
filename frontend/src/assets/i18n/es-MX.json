@@ -366,6 +366,8 @@
             "aiReady": "IA configurada — puedes subir PDFs o imágenes de páginas de catálogo.",
             "aiUnavailable": "Los catálogos en PDF o imagen requieren IA. Los CSV funcionan sin ella.",
             "openSettings": "Abrir Configuración",
+            "vendorAutoLinked": "Proveedor vinculado \"{{supplier}}\" del documento (\"{{vendor}}\"). Confirma o cambia en el menú.",
+            "vendorNoMatch": "El proveedor del documento (\"{{vendor}}\") no coincide con ningún proveedor existente. Selecciona uno antes de aprobar.",
             "errors": {
                 "csvOnly": "Sólo se admiten archivos CSV / TSV.",
                 "unsupportedType": "Tipo de archivo no admitido.",
