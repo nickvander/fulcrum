@@ -13,11 +13,19 @@ from src.database import SessionLocal, get_db
 from src.schemas import webhook as webhook_schema
 from src.models.marketplace import (
     MarketplaceCredential,
-    MarketplaceListing,
     WebhookEvent,
 )
 from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.crud.crud_marketplace import marketplace as crud_marketplace
+
+# Helpers `_ml_order_to_sales_order` and `_find_local_product_id`
+# live in `services/mercadolibre_order_ingestion.py` so the poller
+# and the webhook share one implementation. Aliased here for any
+# external import that still references the private name.
+from src.services.mercadolibre_order_ingestion import (
+    find_local_product_id as _find_local_product_id,
+    ml_order_to_sales_order as _ml_order_to_sales_order,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -78,44 +86,6 @@ def _extract_external_id(resource: Optional[str]) -> Optional[str]:
     return parts[-1] if parts else None
 
 
-def _ml_order_to_sales_order(payload: Dict[str, Any]) -> SalesOrder:
-    status = (payload.get("status") or "PENDING").upper()
-    total_amount = payload.get("total_amount") or payload.get("paid_amount")
-    date_created = payload.get("date_created")
-    created_at: Optional[datetime] = None
-    if isinstance(date_created, str):
-        try:
-            parsed = datetime.fromisoformat(date_created.replace("Z", "+00:00"))
-            # SalesOrder.created_at is a naive TIMESTAMP — strip tz and normalize to UTC.
-            if parsed.tzinfo is not None:
-                parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-            created_at = parsed
-        except ValueError:
-            created_at = None
-
-    return SalesOrder(
-        status=status,
-        total_price=float(total_amount) if total_amount is not None else None,
-        created_at=created_at or datetime.utcnow(),
-        source=OrderSource.MERCADOLIBRE,
-        external_order_id=str(payload.get("id")) if payload.get("id") is not None else None,
-    )
-
-
-def _find_local_product_id(db: Session, marketplace_id: int, item_payload: Dict[str, Any]) -> Optional[int]:
-    """Resolve a ML order line item to a local Fulcrum product via marketplace_listings."""
-    external_id = item_payload.get("id") or item_payload.get("item_id")
-    if not external_id:
-        return None
-    listing = (
-        db.query(MarketplaceListing)
-        .filter(
-            MarketplaceListing.marketplace_id == marketplace_id,
-            MarketplaceListing.external_listing_id == str(external_id),
-        )
-        .first()
-    )
-    return listing.product_id if listing else None
 
 
 async def process_mercadolibre_event(event_id: int):

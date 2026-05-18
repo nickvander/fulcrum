@@ -2,18 +2,19 @@
 
 **Status:** Reports surface complete + surfaced on the dashboard.
 AmazonAdapter SP-API surface complete *and* wired to a Celery beat
-order-ingestion worker. Margin report uses historical cost-at-sale.
-Alerting ships hourly via Celery beat + email, with full CRUD UI at
-`/alerts`. Mercado Pago Checkout backend foundation (connector,
-Payment model, create + get endpoints, signed webhook) shipped,
-and the operator-facing `/payments` admin UI (paginated list +
-status filter + detail dialog) shipped. Phase 1 of the Rust
-backend migration plan ("Fix Product Listing In Python") landed
-its final tranche in the latest commit: `inventory_adjustments`
-is no longer eager-loaded on the list path, replaced with a cheap
-`inventory_adjustment_count` aggregate, and the noisy hot-path
-`print()` was replaced with module-logger usage. No active
-in-flight slice.
+order-ingestion worker. ML now has a matching delta-poll worker
+that back-fills any orders the ML webhook dropped + a Celery beat
+job that reconciles ML Full inbound shipments against local
+`stock_transfers` rows so warehouse-side receipts flow through to
+local stock automatically. Margin report uses historical
+cost-at-sale. Alerting ships hourly via Celery beat + email, with
+full CRUD UI at `/alerts`. Mercado Pago Checkout backend foundation
+(connector, Payment model, create + get endpoints, signed webhook)
+shipped along with the operator-facing `/payments` admin UI (parked
+for the future-storefront milestone, no production caller today).
+Phase 1 of the Rust backend migration plan ("Fix Product Listing In
+Python") shipped, only Phase 0 instrumentation + the
+list-vs-detail DTO split remain. No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -34,6 +35,42 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- ML order reconciliation polish + ML Full inbound reconciliation:
+  two new Celery beat workers + supporting services so the operator
+  no longer has to babysit dropped ML webhooks or manually mark
+  inbound shipments as received.
+  - `poll_mercadolibre_orders` (every 15 min): mirrors the existing
+    Amazon order poller. New `MercadoLibreConnector.fetch_orders`
+    queries `/orders/search?seller=...&order.date_created.from=...`
+    paginated to 50/page, capped at 1k rows/run. New
+    `services/mercadolibre_order_ingestion.py` upserts by
+    `(source=MERCADOLIBRE, external_order_id)` — the same key the
+    webhook uses, so a poll racing the webhook only refreshes
+    status/total and never re-decrements stock. Helpers
+    `_ml_order_to_sales_order` + `_find_local_product_id` lifted out
+    of `endpoints/webhooks.py` into the new shared service module;
+    webhooks.py re-imports them under their original private names so
+    no external caller breaks. Per-credential SAVEPOINT pattern keeps
+    one bad seller from killing the Celery tick. Naturally immune to
+    the multi-tenant credential-selection bug that affects the
+    webhook path (each credential authenticates with its own token).
+  - `reconcile_ml_inbound_shipments` (every hour): closes the gap
+    where `StockTransferService.ship(push_to_marketplace=True)`
+    stored an `external_inbound_id` but nothing polled ML for the
+    actual received state. New `InboundShipmentReceivedItem` schema
+    on the connector base + `MercadoLibreConnector._parse_received_items`
+    (tolerant of ML's API revisions: accepts `received_quantity`,
+    `quantity_received`, plain `quantity`). New
+    `services/inbound_shipment_reconciliation.py` iterates open ML
+    transfers (SHIPPED / PARTIALLY_RECEIVED with non-NULL
+    `external_inbound_id`), maps marketplace receipts back to
+    `StockTransferItem` via `marketplace_listings`, credits stock at
+    `ml-full` for any positive delta, advances status to
+    PARTIALLY_RECEIVED / RECEIVED, sets `received_at` on full.
+    Idempotent; caps marketplace over-reports at `qty_shipped`; logs
+    unmapped listings instead of crashing.
+  - 26 new backend tests (13 order poller + 13 reconciliation).
+    Backend 532/8, frontend 518/0.
 - Phase 1 of Rust migration — product listing perf tranche:
   `inventory_adjustments` is no longer eager-loaded on the list
   path (`noload` instead of `selectinload`); replaced with an
@@ -150,19 +187,24 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Frontend Mercado Pago checkout flow** — backend foundation
-  shipped; next is the JS-SDK Secure Fields tokenization on the
-  frontend so a customer can actually enter a card. Test cards
-  documented in `work/future/mercadopago-checkout-research.md`.
 - **Phase 0 of the Rust migration plan** — instrumentation. Phase 1
   product-listing perf wins have all landed (see Rust plan checkbox
   state); the remaining gate before deciding "optimized Python is
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Payment operator actions: refund + cancel** — extend the
-  `/payments` admin UI with refund (full + partial) and cancel
-  buttons backed by `POST /v1/payments/{id}/refunds` on Mercado Pago.
+- **Amazon FBA inbound reconciliation** — same pattern just shipped
+  for ML Full. Amazon's inbound API is structured differently
+  (per-shipment item events instead of a single status poll), so it
+  needs a custom AmazonConnector.get_inbound_shipment_status that
+  reduces those events down to the same `InboundShipmentReceivedItem`
+  shape the reconciliation service already consumes.
+- **ML webhook subscription auto-create** — the order poller now
+  back-fills missed webhooks, but a credential's webhook subscription
+  itself could go missing (operator never subscribed, or ML expired
+  the subscription). Add a startup check that POSTs to ML's
+  `/applications/{app_id}/notifications` to ensure every healthy ML
+  credential has an active subscription for the `orders` topic.
 - **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
   Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
@@ -170,7 +212,7 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 506 passed, 8 skipped at last green.
+  → 532 passed, 8 skipped at last green.
 - Frontend full suite: `npx ng test --watch=false` → 518 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.

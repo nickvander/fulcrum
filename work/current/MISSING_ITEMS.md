@@ -10,12 +10,29 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Frontend Mercado Pago checkout flow** — backend payments
-      surface shipped (POST /api/v1/payments, GET /payments/{id},
-      POST /webhooks/mercadopago with HMAC). Still needed on the
-      frontend: load the Mercado Pago JS SDK, render a Secure
-      Fields card form, tokenize client-side, POST the token to
-      /api/v1/payments. Test cards documented in the research file.
+- [ ] **Amazon FBA inbound reconciliation** — same shape as the ML
+      Full inbound reconciliation just shipped, but Amazon's inbound
+      API is structured differently (per-shipment item events vs. a
+      single status poll). Wire
+      `AmazonConnector.get_inbound_shipment_status` to reduce those
+      events into the same `InboundShipmentReceivedItem` shape the
+      reconciliation service already consumes, then add an
+      `amazon-inbound-reconcile` beat schedule entry. The service
+      layer in `inbound_shipment_reconciliation.py` is intentionally
+      marketplace-agnostic — only the bulk runner today filters to
+      `dest_location='ml-full'`. Generalize that filter when Amazon
+      lands.
+- [ ] **ML webhook subscription health check** — the order poller
+      now back-fills missed webhooks, but the subscription itself can
+      be missing (operator never subscribed, ML expired it). Add a
+      startup or hourly check that POSTs to
+      `/applications/{app_id}/notifications` to ensure every healthy
+      ML credential has an active `orders` topic subscription.
+- [ ] **Frontend Mercado Pago checkout flow** — DEFERRED. The MP
+      Checkout API is for a future direct-to-consumer storefront,
+      which Fulcrum is not today. ML sales already flow through
+      `endpoints/webhooks.py::process_mercadolibre_event` + the new
+      `poll_mercadolibre_orders` back-fill worker.
 
 ## Future / Strategic
 
@@ -40,6 +57,33 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **ML order poller + ML Full inbound reconciliation** —
+      `poll_mercadolibre_orders` Celery beat (every 15 min) back-
+      fills any orders the ML webhook missed. New
+      `MercadoLibreConnector.fetch_orders` paginates
+      `/orders/search?seller=X&order.date_created.from=...` (50/page,
+      capped at 1k rows/run). Uses the existing `last_orders_polled_at`
+      cursor on `MarketplaceCredential` — same column the Amazon
+      poller uses. Idempotent on the same `(source, external_order_id)`
+      key the webhook upserts on, so a poll + webhook race just
+      refreshes status and never re-decrements stock. Helpers
+      `_ml_order_to_sales_order` + `_find_local_product_id` lifted
+      out of `endpoints/webhooks.py` into the new shared service so
+      webhook and poller use one implementation; webhooks.py
+      re-imports them under the old names for back-compat.
+      `reconcile_ml_inbound_shipments` Celery beat (hourly) closes
+      the gap where `StockTransfer.ship(push_to_marketplace=True)`
+      stored an `external_inbound_id` but nothing polled ML for the
+      actual received state. New `InboundShipmentReceivedItem`
+      schema on the connector base + tolerant ML parser (accepts
+      `received_quantity` / `quantity_received` / plain `quantity`).
+      New `services/inbound_shipment_reconciliation.py` credits
+      `ml-full` stock for any positive delta vs. local
+      `qty_received`, advances status to PARTIALLY_RECEIVED /
+      RECEIVED, sets `received_at` on full. Idempotent; caps
+      marketplace over-reporting at `qty_shipped`; logs unmapped
+      listings instead of crashing. 26 new backend tests (13 poller
+      + 13 reconciliation). Backend 532/8, frontend 518/0.
 - [x] **Phase 1 of the Rust migration plan — final tranche of
       Python product-listing perf wins.** The list endpoint no
       longer eager-loads `inventory_adjustments`
