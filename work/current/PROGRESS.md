@@ -1,8 +1,9 @@
 # Progress Log
 
-**Status:** AmazonAdapter SP-API surface (fetch_all_listings +
-sync_inventory + fetch_orders) is complete on `main`. No active
-in-flight slice.
+**Status:** Reports surface (low-stock + inventory-snapshot +
+inventory-adjustments + sales-by-channel + velocity + margin +
+stockout) and AmazonAdapter SP-API surface both complete on `main`.
+No active in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -23,11 +24,11 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
-- Stockout / velocity / margin reports (CSV + PDF on the shared
-  `report_export` module, one shared SalesOrderItem aggregation pass)
-  + marketplace channel-list reauth chip coverage tests (the chip was
-  already wired up in `7b682c0`; the spec only smoke-tested
-  `should create`). Backend 431/8, frontend 463/0.
+- `44722bf` Velocity / margin / stockout reports (CSV + PDF on the
+  shared `report_export` module, one shared SalesOrderItem
+  aggregation pass) + marketplace channel-list reauth chip coverage
+  tests (the chip was already wired up in `7b682c0`; the spec only
+  smoke-tested `should create`). Backend 431/8, frontend 463/0.
 - `d669246` AmazonConnector SP-API completion: real `sync_inventory`
   (PATCH with required `marketplaceIds`, MFN
   `fulfillment_availability`, propagates 401 so the retry wrapper
@@ -63,11 +64,23 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Suggested Next Slices
 
-Pick one of these (or anything from `work/future/`):
+Roughly in order of impact / unblock value:
 
+- **Reports UI** — surface the new velocity / margin / stockout
+  exports on the dashboard / reports page (today they're URL-only).
+  Pattern: low-stock report widget. Small slice, immediate customer-
+  facing payoff.
+- **Amazon order ingestion worker** — `AmazonConnector.fetch_orders`
+  is real but unused; a Celery beat task that polls every N minutes
+  and upserts `SalesOrder` rows closes the SP-API loop the same way
+  the ML webhook does.
 - **Alerting on low margin / sudden sales dips / out-of-stock risk** —
   Track 3 Step 6 of `80-advanced-analytics.md`. Could ship one channel
-  (email via SMTP) first.
+  (email via SMTP) first. The new velocity / margin / stockout SQL
+  helpers make the queries one line each.
+- **Margin report: historical cost-at-sale** — capture
+  `SalesOrderItem.cost_per_unit` at order-create time so the margin
+  report stops drifting when master cost changes.
 - **Mercado Pago Checkout API integration** — research lives in
   `work/future/mercadopago-checkout-research.md`. Greenfield, sizable.
 - **Rust backend migration first slice** — plan in
