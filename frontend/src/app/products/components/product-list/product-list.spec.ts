@@ -26,7 +26,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { of, BehaviorSubject } from 'rxjs';
+import { of, BehaviorSubject, throwError } from 'rxjs';
 import { Product } from '../../models/product.model';
 import { PaginatedProducts } from '../../models/paginated-products.model';
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
@@ -172,6 +172,7 @@ describe('ProductList', () => {
         productsSubject = new BehaviorSubject<Product[]>([]);
         productServiceMock = {
             getProducts: vi.fn().mockName("ProductService.getProducts"),
+            getProductById: vi.fn().mockName("ProductService.getProductById"),
             deleteProduct: vi.fn().mockName("ProductService.deleteProduct")
         } as any;
         Object.defineProperty(productServiceMock, 'products$', {
@@ -434,6 +435,57 @@ describe('ProductList', () => {
 
             expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, {});
             expect(component.products).toEqual(mockProducts);
+        });
+    });
+
+    // The list endpoint deliberately does NOT eager-load
+    // `inventory_adjustments` (it only returns
+    // `inventory_adjustment_count`). When the operator clicks
+    // "Stock history", the component must lazy-fetch the full product
+    // so the dialog gets the actual rows.
+    describe('showStockHistory', () => {
+        it('fetches the full product via getProductById, then opens the dialog with the loaded adjustments', () => {
+            const listShapeProduct: Product = {
+                ...mockProducts[0],
+                inventory_adjustments: [], // list endpoint sends [] now
+                inventory_adjustment_count: 3,
+            } as Product;
+            const fullProduct: Product = {
+                ...mockProducts[0],
+                inventory_adjustments: [
+                    { id: 11, product_id: 1, adjustment: 5, reason: 'restock', created_by: 'op', timestamp: '2026-01-01T00:00:00Z' },
+                    { id: 12, product_id: 1, adjustment: -2, reason: 'sale', created_by: 'op', timestamp: '2026-01-02T00:00:00Z' },
+                    { id: 13, product_id: 1, adjustment: 1, reason: 'audit', created_by: 'op', timestamp: '2026-01-03T00:00:00Z' },
+                ],
+            } as Product;
+            productServiceMock.getProductById.mockReturnValue(of(fullProduct));
+            dialogMock.open.mockReturnValue({ afterClosed: () => of(false) } as any);
+
+            component.showStockHistory(listShapeProduct);
+
+            expect(productServiceMock.getProductById).toHaveBeenCalledWith(1);
+            expect(dialogMock.open).toHaveBeenCalledTimes(1);
+            const args = dialogMock.open.mock.calls[0] as any[];
+            expect(args[1].data.inventoryAdjustments.length).toBe(3);
+            expect(args[1].data.productName).toBe('Product 1');
+        });
+
+        it('falls back to an empty adjustments list when the lazy fetch fails', () => {
+            const listShapeProduct: Product = {
+                ...mockProducts[0],
+                inventory_adjustments: [],
+                inventory_adjustment_count: 3,
+            } as Product;
+            productServiceMock.getProductById.mockReturnValue(
+                throwError(() => new Error('network')),
+            );
+            dialogMock.open.mockReturnValue({ afterClosed: () => of(false) } as any);
+
+            component.showStockHistory(listShapeProduct);
+
+            expect(dialogMock.open).toHaveBeenCalledTimes(1);
+            const args = dialogMock.open.mock.calls[0] as any[];
+            expect(args[1].data.inventoryAdjustments).toEqual([]);
         });
     });
 });

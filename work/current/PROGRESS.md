@@ -5,9 +5,14 @@ AmazonAdapter SP-API surface complete *and* wired to a Celery beat
 order-ingestion worker. Margin report uses historical cost-at-sale.
 Alerting ships hourly via Celery beat + email, with full CRUD UI at
 `/alerts`. Mercado Pago Checkout backend foundation (connector,
-Payment model, create + get endpoints, signed webhook) shipped, and
-the operator-facing `/payments` admin UI (paginated list + status
-filter + detail dialog) shipped in the latest commit. No active
+Payment model, create + get endpoints, signed webhook) shipped,
+and the operator-facing `/payments` admin UI (paginated list +
+status filter + detail dialog) shipped. Phase 1 of the Rust
+backend migration plan ("Fix Product Listing In Python") landed
+its final tranche in the latest commit: `inventory_adjustments`
+is no longer eager-loaded on the list path, replaced with a cheap
+`inventory_adjustment_count` aggregate, and the noisy hot-path
+`print()` was replaced with module-logger usage. No active
 in-flight slice.
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
@@ -29,6 +34,22 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Phase 1 of Rust migration — product listing perf tranche:
+  `inventory_adjustments` is no longer eager-loaded on the list
+  path (`noload` instead of `selectinload`); replaced with an
+  `inventory_adjustment_count` aggregate added to
+  `_hydrate_product_list_metrics` and exposed on the `Product`
+  schema. Frontend `product-list.html` now gates "Stock history"
+  on the new count; the dialog itself lazy-fetches the full product
+  via `getProductById` so the rows are only loaded when actually
+  needed. Hot-path `print()` in product-create error path replaced
+  with module-logger. 2 new backend tests
+  (`test_product_list_inventory_adjustment_count_reflects_state`,
+  `test_product_detail_still_returns_full_inventory_adjustments`)
+  + existing query-count ceiling test updated with the new
+  expected query budget (~17 queries, ceiling `<= 20`). 2 new
+  frontend tests cover the lazy-fetch happy path + the
+  error-fallback. Backend 506/8, frontend 518/0.
 - Payments admin UI: new `/payments` page in the sidenav under
   Alerts. Material table with status chip, amount/currency, payer
   email, provider id, order link, with a server-side status filter
@@ -133,16 +154,24 @@ Roughly in order of impact / unblock value:
   shipped; next is the JS-SDK Secure Fields tokenization on the
   frontend so a customer can actually enter a card. Test cards
   documented in `work/future/mercadopago-checkout-research.md`.
-- **Rust backend migration first slice** — plan in
-  `work/future/81-rust-backend-migration-plan.md`. Highest-impact
-  candidate is product listing.
+- **Phase 0 of the Rust migration plan** — instrumentation. Phase 1
+  product-listing perf wins have all landed (see Rust plan checkbox
+  state); the remaining gate before deciding "optimized Python is
+  enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
+  realistic 1k / 10k / 100k catalogs. Add request timing + query
+  count metrics around `/api/v1/products`.
+- **Payment operator actions: refund + cancel** — extend the
+  `/payments` admin UI with refund (full + partial) and cancel
+  buttons backed by `POST /v1/payments/{id}/refunds` on Mercado Pago.
+- **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
+  Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
 ## Verification Surface
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 504 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 516 passed, 0
+  → 506 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 518 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

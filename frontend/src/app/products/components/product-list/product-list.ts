@@ -594,14 +594,36 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   showStockHistory(product: Product): void {
-    const dialogRef = this.dialog.open(StockHistoryDialogComponent, {
-      width: '600px',
-      data: {
-        productName: product.name,
-        currentStock: this.getCurrentStock(product),
-        inventoryAdjustments: product.inventory_adjustments || []
-      }
-    });
+    // The list endpoint no longer eager-loads `inventory_adjustments`
+    // (it only returns the count) to keep the list response small.
+    // Fetch the full product on demand so the dialog has the rows.
+    this.productService.getProductById(product.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (full) => {
+          this.dialog.open(StockHistoryDialogComponent, {
+            width: '600px',
+            data: {
+              productName: full.name,
+              currentStock: this.getCurrentStock(full),
+              inventoryAdjustments: full.inventory_adjustments || [],
+            },
+          });
+        },
+        error: () => {
+          // If the fetch fails (network, deleted product), fall back to
+          // an empty history so the user gets a graceful empty state
+          // instead of a silent no-op.
+          this.dialog.open(StockHistoryDialogComponent, {
+            width: '600px',
+            data: {
+              productName: product.name,
+              currentStock: this.getCurrentStock(product),
+              inventoryAdjustments: [],
+            },
+          });
+        },
+      });
   }
 
   onImageError(event: any): void {

@@ -108,32 +108,71 @@ This is intentionally before Rust. It separates algorithmic/database bottlenecks
 
 Tasks:
 
-- Replace per-product metric calls with one aggregate query for all visible product ids:
-  - total stock by product
-  - sales quantity over the last 30 days
-  - sales velocity
-  - days of inventory
-  - active campaign count
-  - product-specific inventory thresholds
-  - store default thresholds
-- Avoid `joinedload` explosion on list endpoints; return a lightweight list DTO with only fields needed by the product table.
-- Add a separate detail endpoint payload for heavy relationships.
-- Add indexes:
-  - `inventory_items(product_id)`
-  - `inventory_items(product_id, location)`
-  - `sales_order_items(product_id)`
-  - `sales_orders(status, created_at)`
-  - `marketplace_listings(product_id)`
-  - `marketplace_listings(marketplace_id, external_listing_id)`
-  - optional trigram indexes for product name, sku, description search
-- Remove debug `print` calls in hot paths.
-- Add tests that assert product list query count stays under a fixed ceiling.
+- [x] Replace per-product metric calls with one aggregate query for
+      all visible product ids. Done in commit `114304f` — see
+      `_hydrate_product_list_metrics` in
+      `backend/src/api/v1/endpoints/products.py`. Covers:
+  - [x] total stock by product
+  - [x] sales quantity over the last 30 days
+  - [x] sales velocity
+  - [x] days of inventory
+  - [x] active campaign count
+  - [x] product-specific inventory thresholds
+  - [x] store default thresholds
+  - [x] inventory adjustment count (shipped in the Phase-1 follow-up
+        commit; eager-loading of the adjustment rows themselves is
+        now `noload`-ed on the list path).
+- [ ] Avoid `joinedload` explosion on list endpoints; return a
+      lightweight list DTO with only fields needed by the product
+      table. **Partially done**: `inventory_adjustments` is no longer
+      eager-loaded on the list path (replaced with a count aggregate).
+      The other heavy relations (`images`, `marketplace_listings`,
+      `inventory_items`, `custom_fields`, `variants`, `bundle_components`,
+      `part_of_bundles`) are still eager-loaded because the existing
+      `ProductList` frontend component reads from them directly. A
+      proper list-vs-detail DTO split is deferred — it requires
+      frontend changes to trust server-computed `stock_quantity`
+      instead of recomputing from `inventory_items`, plus a similar
+      lazy-fetch pattern for marketplace status + bundle composition.
+- [ ] Add a separate detail endpoint payload for heavy relationships.
+      **Deferred**: depends on the DTO split above.
+- [x] Add indexes — shipped in migration `8a7c2d4f9b31`:
+  - [x] `inventory_items(product_id, location)`
+        (`ix_inventory_items_product_id_location`)
+  - [x] `sales_order_items(product_id)`
+        (`ix_sales_order_items_product_id`)
+  - [x] `sales_orders(status, created_at)`
+        (`ix_sales_orders_status_created_at`)
+  - [x] `marketplace_listings(product_id)`
+        (`ix_marketplace_listings_product_id`)
+  - [x] `marketplace_listings(marketplace_id, external_listing_id)`
+        (`ix_marketplace_listings_marketplace_external`)
+  - [ ] optional trigram indexes for product name, sku, description
+        search — deferred until search traffic justifies them.
+- [x] Remove debug `print` calls in hot paths. Done in the Phase-1
+      follow-up commit (`products.py` create-product path now uses
+      `logging.getLogger(__name__).warning(...)`).
+- [x] Add tests that assert product list query count stays under a
+      fixed ceiling — see
+      `test_product_list_query_count_stays_bounded` in
+      `backend/tests/test_products_api.py`. Current ceiling is
+      `<= 20` statements at `limit=100`; the actual path issues ~17
+      and is flat with N.
 
 Acceptance criteria:
 
-- Product listing p95 improves materially before any Rust code.
-- Product list query count is stable relative to page size.
-- Contract tests still match existing frontend expectations.
+- [x] Product list query count is stable relative to page size — the
+      test asserts the ceiling and would catch a regression.
+- [x] Contract tests still match existing frontend expectations —
+      `inventory_adjustments` is still present on the list response
+      (as `[]`), and the new `inventory_adjustment_count` field is
+      additive.
+- [ ] Product listing p95 improves materially before any Rust code.
+      Measurement still TODO — Phase 0 instrumentation is the
+      prerequisite and hasn't been completed yet. Once instrumentation
+      lands, capture before/after numbers at 1k / 10k / 100k product
+      catalogs and decide whether the optimized Python is sufficient
+      or whether Phase 2 (Rust foundation) should proceed.
 
 ## Phase 2: Rust Foundation
 

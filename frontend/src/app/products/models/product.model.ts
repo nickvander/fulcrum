@@ -103,6 +103,14 @@ export interface Product {
   reorder_quantity?: number;
   stock_quantity?: number; // Convenience field often used in UI
   active_campaign_count?: number;
+  /**
+   * Total InventoryAdjustment rows for this product. Populated by the
+   * list endpoint as a cheap COUNT aggregate; the list endpoint does
+   * NOT return the full `inventory_adjustments` array to keep payloads
+   * small. The detail endpoint (`GET /products/{id}`) still returns
+   * the full list, so the stock-history dialog fetches them on demand.
+   */
+  inventory_adjustment_count?: number;
   active_campaigns?: Array<{
     id: number;
     name: string;

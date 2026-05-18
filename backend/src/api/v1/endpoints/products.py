@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
@@ -14,6 +15,9 @@ from src.schemas import product as product_schema, inventory as inventory_schema
 from src.services.base import AIService
 from src.tasks import generate_product_embedding
 
+
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -25,7 +29,7 @@ def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 
     if not product_ids:
         return
 
-    from src.models.inventory import InventoryItem
+    from src.models.inventory import InventoryItem, InventoryAdjustment
     from src.models.order import SalesOrder, SalesOrderItem
     from src.models.product_inventory_settings import ProductInventorySettings
     from src.models.store_settings import StoreSettings
@@ -93,6 +97,24 @@ def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 
         row.product_id: int(row.active_campaign_count or 0) for row in campaign_rows
     }
 
+    # Adjustment count only — the rows themselves are intentionally
+    # not eager-loaded on the list path (see `_list_loader_options`).
+    # The list view uses the count to gate a "Stock history" menu
+    # item; the dialog itself lazy-fetches the full product.
+    adjustment_count_rows = (
+        db.query(
+            InventoryAdjustment.product_id,
+            func.count(InventoryAdjustment.id).label("adjustment_count"),
+        )
+        .filter(InventoryAdjustment.product_id.in_(product_ids))
+        .group_by(InventoryAdjustment.product_id)
+        .all()
+    )
+    adjustment_counts_by_product = {
+        row.product_id: int(row.adjustment_count or 0)
+        for row in adjustment_count_rows
+    }
+
     for product in products:
         stock_quantity = stock_by_product.get(product.id, 0)
         quantity_sold = quantity_sold_by_product.get(product.id, 0.0)
@@ -115,6 +137,7 @@ def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 
         )
         product.stock_quantity = stock_quantity
         product.active_campaign_count = active_campaigns_by_product.get(product.id, 0)
+        product.inventory_adjustment_count = adjustment_counts_by_product.get(product.id, 0)
 
 
 @router.get("/{product_id}/purchase-history", response_model=List[product_schema.ProductPurchaseHistory])
@@ -257,8 +280,10 @@ def create_product(
     try:
         generate_product_embedding.delay(product.id)
     except Exception as e:
-        # Log the error but don't block product creation
-        print(f"Warning: Failed to queue embedding generation: {e}")
+        # Log the error but don't block product creation. Uses the
+        # module logger instead of `print` so the message respects the
+        # app's logging config + level filters.
+        logger.warning("Failed to queue embedding generation: %s", e)
     
     return product
 
