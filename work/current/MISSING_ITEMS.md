@@ -14,9 +14,6 @@ _(none active)_
       today the reauth chip is only on the stock-transfer sync panel;
       the channel-list cards still ignore it. Cred + flag already exist
       from `87-marketplace-oauth-hardening.md`.
-- [ ] **AmazonAdapter SP-API completion** — `fetch_all_listings` shipped
-      in `7b251fe`. `sync_inventory` and `fetch_orders` remain stubbed.
-      MercadoLibre connector is the reference implementation.
 - [ ] **Stockout / velocity / margin reports** — `endpoints/reports.py`
       currently only exposes low-stock. The shared `report_export`
       helper makes each new report ~25 lines once the SQL is known.
@@ -50,3 +47,8 @@ _(none active)_
 - [x] Inventory adjustment audit log UI (`/products/audit`).
 - [x] All 5 disabled product-form specs unblocked; frontend 450/0
       skipped.
+- [x] AmazonAdapter SP-API completion — `sync_inventory` (PATCH with
+      required `marketplaceIds`, MFN `fulfillment_availability`,
+      propagates 401 for the retry wrapper) and `fetch_orders` (GET
+      `/orders/v0/orders` with `MarketplaceIds`+`CreatedAfter`/
+      `NextToken` pagination). Shipped in `d669246`.
