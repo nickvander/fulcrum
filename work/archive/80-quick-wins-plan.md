@@ -1,11 +1,11 @@
 # 80: Quick Wins & AI Catalog Import
 
-> **STATUS as of 2026-05-17:** Low Stock Widget complete (incl. editable
-> reorder fields and shopping-cart-style bulk reorder); Export Service
-> first slice (CSV for the low-stock report) shipped; AI Catalog Import
-> **CSV slice** shipped in `8fbb37c` (backend) + `7979156` (frontend).
-> Remaining for this initiative: PDF/AI parsing reusing the same review
-> shape, and PDF export for reports.
+> **STATUS as of 2026-05-17 (closed):** Every acceptance criterion in this
+> plan is shipped. Low Stock Widget, Export Service (CSV + PDF), and AI
+> Catalog Import (CSV + AI-powered PDF/image) are all in production on
+> `main`. Remaining ideas (other reports' PDF exports, supplier
+> auto-mapping for AI imports) live under "Future Enhancements" and can
+> be opened as separate initiatives.
 
 ## Summary
 
@@ -22,20 +22,24 @@ parsing patterns).
 - [x] **Export Service generates CSV** for the low-stock report — done in
       this slice (`/api/v1/reports/low-stock/export`, "Export CSV" button
       on the widget header, downloads `fulcrum-low-stock-<date>.csv`).
-- [ ] **Export Service generates PDF** — deferred; needs a PDF library
-      choice (reportlab vs. weasyprint vs. external service). CSV covers
-      the most common "give it to my accountant" use case; PDF is a
-      polish item.
+- [x] **Export Service generates PDF** — shipped in `4c7c5b7`. Uses
+      reportlab (pure Python, no system font deps). Landscape letter
+      page, severity-colored rows, same data + limits as the CSV
+      export. New `Export PDF` button on the widget header next to
+      `Export CSV`.
 - [x] **User can preview extracted data before bulk importing** — done
       in the CSV slice via `/api/v1/catalog-imports/reviews` +
       `CatalogImportDialogComponent` (upload → editable review table →
       approve/reject).
-- [ ] **AI Catalog Import parses PDF catalogs (multi-page supported)**
-      — open. The review/approve flow already accepts the
-      `ExtractedCatalogItem` shape so adding a PDF parser is a backend-
-      only follow-up: add `_parse_pdf` to `CatalogIngestionService`,
-      reuse the same `extracted_data["items"]` schema, no frontend
-      changes required.
+- [x] **AI Catalog Import parses PDF catalogs (multi-page supported)**
+      — shipped in `cc9b038`. Reuses `InvoiceParserAgent` with a new
+      `catalog_extraction.md` prompt (one row per product). PDF /
+      image uploads are only accepted when AI is enabled in Settings
+      AND the active provider has an API key (checked via
+      `ADKManager.is_ready()`). The frontend dialog gates on a new
+      `GET /catalog-imports/capabilities` endpoint: yellow "needs AI"
+      banner when off, green "AI is configured" banner when ready,
+      with the file input's `accept` list adjusted accordingly.
 
 ## Technical Approach
 
@@ -47,29 +51,30 @@ parsing patterns).
 | `frontend/src/app/dashboard/widgets/low-stock-list/` | Done — `LowStockListWidgetComponent` with table, severity chips, per-row Create-PO, multi-select bulk reorder, CSV export |
 | `frontend/src/assets/i18n/*.json`         | Done — full `dashboard.lowStock.*` + `apiErrors.purchaseOrder.reorderEmptySelection` |
 
-### Export Service — PARTIAL (CSV done, PDF deferred)
+### Export Service — DONE
 
-| File                                      | Status |
-| ----------------------------------------- | ------ |
-| `backend/src/api/v1/endpoints/reports.py` | Done — `GET /reports/low-stock/export` streams CSV via `StreamingResponse`, date-stamped filename, default limit 500 (cap 5000) |
-| `frontend/src/app/dashboard/services/low-stock.service.ts` | Done — `exportLowStockCsv(limit, days)` returns `Blob` |
-| `frontend/src/app/dashboard/widgets/low-stock-list/` | Done — "Export CSV" button on widget header, `<a download>` trigger to avoid navigating away |
-| PDF generation | **Open** — pick a lib (reportlab is pure-Python, weasyprint needs system fonts). Likely scope: one slice per report type. |
-| Export of other reports (sales-by-channel, inventory health, etc.) | **Open** — extend the same pattern when a new report needs export |
+| File                                                       | Status |
+| ---------------------------------------------------------- | ------ |
+| `backend/src/api/v1/endpoints/reports.py`                  | Done — `GET /reports/low-stock/export` streams CSV; `/reports/low-stock/export-pdf` streams a reportlab-rendered landscape PDF with severity-colored rows. Both date-stamped, default limit 500 (cap 5000). |
+| `frontend/src/app/dashboard/services/low-stock.service.ts` | Done — `exportLowStockCsv(limit, days)` and `exportLowStockPdf(limit, days)`, both returning `Blob` |
+| `frontend/src/app/dashboard/widgets/low-stock-list/`       | Done — `Export CSV` and `Export PDF` buttons share a `downloadBlob` helper so the JWT stays in the Authorization header rather than the URL |
+| Export of other reports (sales-by-channel, inventory health, etc.) | **Open** — same `StreamingResponse + reportlab/csv.writer` pattern can extend when a new report needs export |
 
-### AI Catalog Import — CSV SLICE DONE, PDF/AI OPEN
+### AI Catalog Import — DONE
 
-| File                                                                    | Status |
-| ----------------------------------------------------------------------- | ------ |
-| `backend/src/models/catalog_import.py`                                  | Done — staging row, same shape as `SupplierDocumentImport` |
-| `backend/alembic/versions/e2f1a9b73c40_add_catalog_imports.py`          | Done |
-| `backend/src/services/catalog_ingestion_service.py`                    | Done — CSV/TSV with EN+es-MX header aliases, ; delimiter, decimal-comma |
-| `backend/src/api/v1/endpoints/catalog_imports.py`                       | Done — POST/GET/approve/reject |
-| `backend/tests/test_catalog_imports.py`                                 | Done — 11 tests (parser + endpoints + duplicate-SKU skip) |
-| `frontend/src/app/products/services/catalog-import.service.ts`         | Done |
-| `frontend/src/app/products/components/catalog-import-dialog/`          | Done — 3-step dialog + 8 specs |
-| Products page entry button                                              | Done — "Import Catalog" next to Scan/Add |
-| **Open:** PDF parser inside `catalog_ingestion_service.py`             | Reuses the same `ExtractedCatalogItem` shape; no frontend changes needed |
+| File                                                                   | Status |
+| ---------------------------------------------------------------------- | ------ |
+| `backend/src/models/catalog_import.py`                                 | Done — staging row, same shape as `SupplierDocumentImport` |
+| `backend/alembic/versions/e2f1a9b73c40_add_catalog_imports.py`         | Done |
+| `backend/src/services/catalog_ingestion_service.py`                    | Done — CSV/TSV with EN+es-MX header aliases, `;` delimiter, decimal-comma; `ingest_ai_result()` normalizes the AI agent's JSON into the same `ExtractedCatalogData` shape; low-confidence warning |
+| `backend/src/services/adk/agents/invoice/prompts/catalog_extraction.md` | Done — catalog-shaped prompt (one row per product) |
+| `backend/src/services/adk/orchestrator.py`                              | Done — `parse_catalog()` reuses `InvoiceParserAgent` with the new prompt |
+| `backend/src/services/adk/manager.py`                                   | Done — `ADKManager.is_ready()` single predicate (ai_enabled AND active provider keyed) used by capabilities + upload endpoint |
+| `backend/src/api/v1/endpoints/catalog_imports.py`                       | Done — `GET /capabilities`, `POST /reviews` (CSV + AI), GET-list, GET-one, approve, reject |
+| `backend/tests/test_catalog_imports.py`                                 | Done — 17 tests (parser + endpoints + duplicate-SKU skip + AI gating) |
+| `frontend/src/app/products/services/catalog-import.service.ts`         | Done — `capabilities()` queried on dialog init |
+| `frontend/src/app/products/components/catalog-import-dialog/`          | Done — 3-step dialog + AI-status banner (green ready / yellow needs-AI with "Open Settings" link) + dynamic `accept` list; supplier select also available on review step; price/cost cells now `step="0.01"`; 10 specs |
+| Products page entry button                                              | Done — "Import Catalog" next to Scan/Add (on the routed `ProductList` component) |
 
 **Supported PDF Types:**
 
@@ -81,11 +86,19 @@ parsing patterns).
 ## Future Enhancements
 
 - [ ] Website URL scraping for supplier product pages
-- [ ] CSV column auto-mapping with AI suggestions
+- [ ] CSV column auto-mapping with AI suggestions (instead of fixed aliases)
+- [ ] PDF export for other reports (sales-by-channel, inventory health) —
+      reuse the reportlab layout helpers
+- [ ] AI catalog import: auto-link a supplier from the document itself
+      (vendor name extraction) so the user doesn't have to pick one
+- [ ] AI catalog import: per-row confidence chips in the review table
 
 ## Verification Plan
 
 - [x] Backend: `docker compose -f docker-compose.test.yml exec backend python -m pytest`
-       — backend currently 347/0/6 (2 new CSV-export tests)
-- [x] Frontend: `npx ng test --watch=false` — 413/0/14, no regressions
-- [ ] Manual: Test PDF upload with sample supplier catalog (pending AI Catalog Import)
+       — backend 367 passed / 8 skipped at last check (was 345 baseline)
+- [x] Frontend: `npx ng test --watch=false` — 423 passed / 14 skipped
+- [x] Manual walkthrough: CSV upload + approve + duplicate-SKU rerun, all
+      verified live in the browser. AI-on / AI-off banner states verified
+      against live capabilities endpoint. PDF download from low-stock
+      widget verified (`fulcrum-low-stock-YYYY-MM-DD.pdf` blob download).
