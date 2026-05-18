@@ -18,6 +18,7 @@ import {
   SalesOrder,
   SalesOrdersService,
 } from '../../services/sales-orders.service';
+import { ReportDownloadService } from '../../../core/services/report-download.service';
 
 @Component({
   selector: 'app-sales-order-list',
@@ -48,7 +49,35 @@ export class SalesOrderListComponent implements OnInit {
 
   displayedColumns = ['created_at', 'source', 'external', 'status', 'total'];
 
-  constructor(private salesOrders: SalesOrdersService) {}
+  constructor(
+    private salesOrders: SalesOrdersService,
+    private reportDownloader: ReportDownloadService,
+  ) {}
+
+  /** Build the filter shape from the current page state so the export
+   *  covers the same scope as the on-screen table. */
+  private currentExportFilters() {
+    return {
+      ...(this.source !== 'ALL' ? { source: this.source } : {}),
+      days: this.days,
+    };
+  }
+
+  exportCsv(): void {
+    this.reportDownloader.download(
+      this.salesOrders.exportListCsv(this.currentExportFilters()),
+      'fulcrum-sales-orders',
+      'csv',
+    );
+  }
+
+  exportPdf(): void {
+    this.reportDownloader.download(
+      this.salesOrders.exportListPdf(this.currentExportFilters()),
+      'fulcrum-sales-orders',
+      'pdf',
+    );
+  }
 
   ngOnInit(): void {
     this.refresh();

@@ -49,6 +49,47 @@ export class SuppliersService {
   }
 
   // --- Purchase Orders ---
+  exportPurchaseOrdersCsv(opts: {
+    status?: string;
+    supplierId?: number | null;
+    createdAfter?: string | null;
+    createdBefore?: string | null;
+    limit?: number;
+  } = {}): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/purchase-orders/export`, {
+      params: this.buildPoExportParams(opts),
+      responseType: 'blob',
+    });
+  }
+
+  exportPurchaseOrdersPdf(opts: {
+    status?: string;
+    supplierId?: number | null;
+    createdAfter?: string | null;
+    createdBefore?: string | null;
+    limit?: number;
+  } = {}): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/purchase-orders/export-pdf`, {
+      params: this.buildPoExportParams(opts),
+      responseType: 'blob',
+    });
+  }
+
+  private buildPoExportParams(opts: {
+    status?: string;
+    supplierId?: number | null;
+    createdAfter?: string | null;
+    createdBefore?: string | null;
+    limit?: number;
+  }): HttpParams {
+    let params = new HttpParams().set('limit', String(opts.limit ?? 2000));
+    if (opts.status) params = params.set('status', opts.status);
+    if (opts.supplierId != null) params = params.set('supplier_id', String(opts.supplierId));
+    if (opts.createdAfter) params = params.set('created_after', opts.createdAfter);
+    if (opts.createdBefore) params = params.set('created_before', opts.createdBefore);
+    return params;
+  }
+
   getPurchaseOrders(skip: number = 0, limit: number = 100): Observable<PurchaseOrder[]> {
     let params = new HttpParams().set('skip', skip).set('limit', limit);
     return this.http.get<PurchaseOrder[]>(`${this.apiUrl}/purchase-orders/`, { params });

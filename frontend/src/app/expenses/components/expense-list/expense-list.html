@@ -19,6 +19,16 @@
                     [matTooltip]="t('suppliers.addSupplier')">
                     <mat-icon>business</mat-icon>
                 </button>
+                <button mat-mini-fab color="basic" (click)="exportCsv()"
+                    [matTooltip]="t('expenses.exportCsvTooltip')"
+                    data-testid="expenses-export-csv">
+                    <mat-icon>download</mat-icon>
+                </button>
+                <button mat-mini-fab color="basic" (click)="exportPdf()"
+                    [matTooltip]="t('expenses.exportPdfTooltip')"
+                    data-testid="expenses-export-pdf">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                </button>
             </div>
         </div>
 

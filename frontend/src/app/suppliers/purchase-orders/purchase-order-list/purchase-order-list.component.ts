@@ -24,6 +24,8 @@ import { DateRangePresetsComponent } from '../../../shared/components/date-range
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
+import { ReportDownloadService } from '../../../core/services/report-download.service';
+
 interface POSummary {
   total_orders: number;
   pending_count: number;
@@ -104,7 +106,8 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     private route: ActivatedRoute,
     private dateRangeService: DateRangeService,
     private translocoService: TranslocoService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private reportDownloader: ReportDownloadService,
   ) {
     this.currentLang = this.translocoService.getActiveLang();
   }
@@ -310,6 +313,36 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   clearReviewSelection(event?: Event): void {
     event?.stopPropagation();
     this.selectedReviewIds.clear();
+  }
+
+  // --- Exports ---------------------------------------------------------------
+
+  /** Build the export filter shape from the current PO list filters so the
+   *  CSV/PDF matches what the user sees on screen. Date range is taken
+   *  from the same `startDate` / `endDate` the table is filtered by. */
+  private currentExportFilters() {
+    return {
+      status: this.selectedStatus || undefined,
+      supplierId: this.selectedSupplierId ?? undefined,
+      createdAfter: this.startDate ? this.startDate.toISOString() : undefined,
+      createdBefore: this.endDate ? this.endDate.toISOString() : undefined,
+    };
+  }
+
+  exportCsv(): void {
+    this.reportDownloader.download(
+      this.suppliersService.exportPurchaseOrdersCsv(this.currentExportFilters()),
+      'fulcrum-purchase-orders',
+      'csv',
+    );
+  }
+
+  exportPdf(): void {
+    this.reportDownloader.download(
+      this.suppliersService.exportPurchaseOrdersPdf(this.currentExportFilters()),
+      'fulcrum-purchase-orders',
+      'pdf',
+    );
   }
 
   bulkRejectSelected(): void {

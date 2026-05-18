@@ -34,6 +34,7 @@ from src.services.report_export import (
     ReportColumn,
     ReportTable,
     fmt_currency,
+    fmt_date,
     fmt_int,
     fmt_percent,
     stream_csv,
@@ -194,6 +195,99 @@ def _channel_summary_table(summary: SalesOrderSummary) -> ReportTable:
         ],
         rows=_channel_summary_rows(summary),
     )
+
+
+# --- List export (per-order) ------------------------------------------------
+
+
+def _build_sales_order_export_rows(
+    db: Session,
+    *,
+    source: Optional[OrderSourceSchema],
+    status: Optional[str],
+    days: Optional[int],
+    limit: int,
+) -> list[dict]:
+    q = db.query(SalesOrder)
+    if source is not None:
+        q = q.filter(SalesOrder.source == OrderSource(source.value))
+    if status is not None:
+        q = q.filter(SalesOrder.status == status)
+    if days is not None:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        q = q.filter(SalesOrder.created_at >= cutoff)
+    q = q.order_by(SalesOrder.created_at.desc().nullslast(), SalesOrder.id.desc())
+
+    rows: list[dict] = []
+    for o in q.limit(limit).all():
+        rows.append({
+            "order_id":          o.id,
+            "channel":           _CHANNEL_LABELS.get(o.source.value, o.source.value) if o.source else "",
+            "external_order_id": o.external_order_id or "",
+            "status":            o.status or "",
+            "total_price":       float(o.total_price or 0.0),
+            "created_at":        o.created_at,
+        })
+    return rows
+
+
+def _sales_order_export_table(rows: list[dict]) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    total = sum(r["total_price"] for r in rows)
+    return ReportTable(
+        title="Fulcrum — Sales Orders",
+        subtitle=(
+            f"Generated {date_stamp} · {len(rows)} orders · "
+            f"total value ${total:,.2f}"
+        ),
+        filename_stem="fulcrum-sales-orders",
+        empty_message="No sales orders match the filters.",
+        columns=[
+            ReportColumn("order_id",          "Order ID",     align="right", formatter=fmt_int),
+            ReportColumn("channel",           "Channel"),
+            ReportColumn("external_order_id", "External ID"),
+            ReportColumn("status",            "Status"),
+            ReportColumn("total_price",       "Total",        align="right", formatter=fmt_currency),
+            ReportColumn("created_at",        "Created",      formatter=fmt_date),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/export")
+def export_sales_orders_csv(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+    source: Optional[OrderSourceSchema] = Query(None),
+    status: Optional[str] = Query(None),
+    days: Optional[int] = Query(None, ge=1, le=365),
+    limit: int = Query(5000, ge=1, le=10000),
+) -> StreamingResponse:
+    """Stream the sales orders list as a CSV. Same filters as the JSON
+    list endpoint; default limit 5000 (cap 10000) for the "give me
+    everything in this quarter" use case."""
+    rows = _build_sales_order_export_rows(
+        db, source=source, status=status, days=days, limit=limit,
+    )
+    return stream_csv(_sales_order_export_table(rows))
+
+
+@router.get("/export-pdf")
+def export_sales_orders_pdf(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+    source: Optional[OrderSourceSchema] = Query(None),
+    status: Optional[str] = Query(None),
+    days: Optional[int] = Query(None, ge=1, le=365),
+    limit: int = Query(5000, ge=1, le=10000),
+) -> StreamingResponse:
+    rows = _build_sales_order_export_rows(
+        db, source=source, status=status, days=days, limit=limit,
+    )
+    return stream_pdf(_sales_order_export_table(rows))
+
+
+# --- Channel summary export (existing) --------------------------------------
 
 
 @router.get("/summary/export")

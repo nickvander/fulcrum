@@ -2,13 +2,24 @@ from typing import List, Any, Optional
 import os
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi.responses import StreamingResponse
 from src.core.errors import LocalizedHTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from src.database import get_db
 from src.crud import crud_purchase_order
+from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
+from src.services.report_export import (
+    ReportColumn,
+    ReportTable,
+    fmt_currency,
+    fmt_date,
+    fmt_int,
+    stream_csv,
+    stream_pdf,
+)
 from src.crud.crud_product import product as crud_product
 from src.crud.crud_supplier_invoice import supplier_invoice as crud_supplier_invoice
 from src.crud.crud_supplier_product import supplier_product as crud_supplier_product
@@ -105,6 +116,155 @@ def read_purchase_orders(
     Retrieve Purchase Orders.
     """
     return crud_purchase_order.purchase_order.get_multi(db, skip=skip, limit=limit)
+
+
+# ---------------------------------------------------------------------------
+# Purchase order list export — CSV + PDF for accounting / month-end review.
+# Same filters as the JSON list plus an optional date window. Bundles the
+# fields an accountant actually wants: PO id, supplier name (resolved),
+# status, dates, line-item count, financial totals.
+# ---------------------------------------------------------------------------
+
+
+def _build_po_export_rows(
+    db: Session,
+    *,
+    status: Optional[str],
+    supplier_id: Optional[int],
+    created_after: Optional[datetime],
+    created_before: Optional[datetime],
+    limit: int,
+) -> list[dict]:
+    query = (
+        db.query(PurchaseOrder)
+        .options(
+            joinedload(PurchaseOrder.supplier),
+            joinedload(PurchaseOrder.items),
+        )
+        .order_by(PurchaseOrder.created_at.desc(), PurchaseOrder.id.desc())
+    )
+    if status:
+        # Accept either the lowercase enum value ("ordered") or the
+        # uppercase Python name ("ORDERED") so the public API is forgiving.
+        normalized = status.lower()
+        try:
+            status_enum = PurchaseOrderStatus(normalized)
+        except ValueError:
+            status_enum = None
+        if status_enum is not None:
+            query = query.filter(PurchaseOrder.status == status_enum.value)
+    if supplier_id is not None:
+        query = query.filter(PurchaseOrder.supplier_id == supplier_id)
+    if created_after is not None:
+        query = query.filter(PurchaseOrder.created_at >= created_after)
+    if created_before is not None:
+        query = query.filter(PurchaseOrder.created_at <= created_before)
+
+    rows: list[dict] = []
+    for po in query.limit(limit).all():
+        subtotal = sum(
+            (i.quantity_ordered or 0) * (i.unit_cost or 0.0) for i in (po.items or [])
+        )
+        total = (
+            subtotal
+            + float(po.shipping_cost or 0.0)
+            + float(po.tax_amount or 0.0)
+            + float(po.other_costs or 0.0)
+        )
+        rows.append({
+            "po_id": po.id,
+            "status": (po.status.value if hasattr(po.status, "value") else (po.status or "")),
+            "supplier_name": po.supplier.name if po.supplier else "",
+            "currency": po.currency or "",
+            "ordered_at": po.ordered_at,
+            "received_at": po.received_at,
+            "items_count": len(po.items or []),
+            "subtotal": subtotal,
+            "shipping_cost": float(po.shipping_cost or 0.0),
+            "tax_amount": float(po.tax_amount or 0.0),
+            "other_costs": float(po.other_costs or 0.0),
+            "total_amount": total,
+            "created_at": po.created_at,
+        })
+    return rows
+
+
+def _po_export_table(rows: list[dict]) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    total_value = sum(r["total_amount"] for r in rows)
+    return ReportTable(
+        title="Fulcrum — Purchase Orders",
+        subtitle=(
+            f"Generated {date_stamp} · {len(rows)} POs · "
+            f"total value ${total_value:,.2f}"
+        ),
+        filename_stem="fulcrum-purchase-orders",
+        empty_message="No purchase orders match the filters.",
+        columns=[
+            ReportColumn("po_id",         "PO ID",     align="right", formatter=fmt_int),
+            ReportColumn("status",        "Status"),
+            ReportColumn("supplier_name", "Supplier"),
+            ReportColumn("currency",      "Currency"),
+            ReportColumn("ordered_at",    "Ordered",   formatter=fmt_date),
+            ReportColumn("received_at",   "Received",  formatter=fmt_date),
+            ReportColumn("items_count",   "Lines",     align="right", formatter=fmt_int),
+            ReportColumn("subtotal",      "Subtotal",  align="right", formatter=fmt_currency),
+            ReportColumn("shipping_cost", "Shipping",  align="right", formatter=fmt_currency),
+            ReportColumn("tax_amount",    "Tax",       align="right", formatter=fmt_currency),
+            ReportColumn("other_costs",   "Other",     align="right", formatter=fmt_currency),
+            ReportColumn("total_amount",  "Total",     align="right", formatter=fmt_currency),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/export")
+def export_purchase_orders_csv(
+    *,
+    db: Session = Depends(get_db),
+    status: Optional[str] = Query(None, description="Filter by PO status (DRAFT, ORDERED, RECEIVED, etc.)"),
+    supplier_id: Optional[int] = Query(None),
+    created_after: Optional[datetime] = Query(None),
+    created_before: Optional[datetime] = Query(None),
+    limit: int = Query(2000, ge=1, le=10000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream purchase orders as a CSV. Defaults to the most recent 2000
+    POs across all statuses; filters mirror the JSON list endpoint plus a
+    date window for month-end / year-end accounting cuts."""
+    rows = _build_po_export_rows(
+        db,
+        status=status,
+        supplier_id=supplier_id,
+        created_after=created_after,
+        created_before=created_before,
+        limit=limit,
+    )
+    return stream_csv(_po_export_table(rows))
+
+
+@router.get("/export-pdf")
+def export_purchase_orders_pdf(
+    *,
+    db: Session = Depends(get_db),
+    status: Optional[str] = Query(None),
+    supplier_id: Optional[int] = Query(None),
+    created_after: Optional[datetime] = Query(None),
+    created_before: Optional[datetime] = Query(None),
+    limit: int = Query(2000, ge=1, le=10000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream purchase orders as a printable PDF."""
+    rows = _build_po_export_rows(
+        db,
+        status=status,
+        supplier_id=supplier_id,
+        created_after=created_after,
+        created_before=created_before,
+        limit=limit,
+    )
+    return stream_pdf(_po_export_table(rows))
+
 
 @router.get("/{id}", response_model=po_schema.PurchaseOrder)
 def read_purchase_order(

@@ -28,6 +28,18 @@
                 <button mat-icon-button color="primary" (click)="refresh()" [matTooltip]="t('common.refresh')">
                     <mat-icon>refresh</mat-icon>
                 </button>
+                <button mat-button (click)="exportCsv()"
+                    [matTooltip]="t('orders.exportCsvTooltip')"
+                    data-testid="orders-export-csv">
+                    <mat-icon>download</mat-icon>
+                    {{ t('orders.exportCsv') }}
+                </button>
+                <button mat-button (click)="exportPdf()"
+                    [matTooltip]="t('orders.exportPdfTooltip')"
+                    data-testid="orders-export-pdf">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    {{ t('orders.exportPdf') }}
+                </button>
             </div>
         </div>
 

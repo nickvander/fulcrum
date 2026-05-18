@@ -24,6 +24,7 @@ import { ExpenseDialogComponent } from '../expense-dialog/expense-dialog';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
+import { ReportDownloadService } from '../../../core/services/report-download.service';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import { TranslocoModule } from '@ngneat/transloco';
 
@@ -81,8 +82,38 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
         private notificationService: NotificationService,
         private dialog: MatDialog,
         private router: Router,
-        private dateRangeService: DateRangeService
+        private dateRangeService: DateRangeService,
+        private reportDownloader: ReportDownloadService,
     ) { }
+
+    /** Build the filter shape from the current page state so the export
+     *  covers the same scope as the on-screen table. Dates are converted
+     *  to ISO date strings (YYYY-MM-DD) — the backend accepts `date`, not
+     *  full timestamps, for this filter. */
+    private currentExportFilters() {
+        return {
+            category: this.selectedCategory || undefined,
+            expense_type: this.selectedType || undefined,
+            start_date: this.startDate ? this.startDate.toISOString().slice(0, 10) : undefined,
+            end_date: this.endDate ? this.endDate.toISOString().slice(0, 10) : undefined,
+        };
+    }
+
+    exportCsv(): void {
+        this.reportDownloader.download(
+            this.expenseService.exportListCsv(this.currentExportFilters()),
+            'fulcrum-expenses',
+            'csv',
+        );
+    }
+
+    exportPdf(): void {
+        this.reportDownloader.download(
+            this.expenseService.exportListPdf(this.currentExportFilters()),
+            'fulcrum-expenses',
+            'pdf',
+        );
+    }
 
     ngOnInit(): void {
         // Initialize date range from service's current value
