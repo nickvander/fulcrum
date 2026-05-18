@@ -11,6 +11,7 @@ import { Router, RouterModule } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { LowStockReport, LowStockRow, LowStockService } from '../../services/low-stock.service';
+import { ReportDownloadService } from '../../../core/services/report-download.service';
 
 @Component({
   selector: 'app-low-stock-list',
@@ -47,6 +48,7 @@ export class LowStockListWidgetComponent {
     private snackBar: MatSnackBar,
     private transloco: TranslocoService,
     private router: Router,
+    private reportDownloader: ReportDownloadService,
   ) {}
 
   get rows(): LowStockRow[] {
@@ -108,41 +110,19 @@ export class LowStockListWidgetComponent {
    * header instead of the URL.
    */
   exportCsv(): void {
-    this.downloadBlob(
+    this.reportDownloader.download(
       this.lowStockService.exportLowStockCsv(),
+      'fulcrum-low-stock',
       'csv',
     );
   }
 
   exportPdf(): void {
-    this.downloadBlob(
+    this.reportDownloader.download(
       this.lowStockService.exportLowStockPdf(),
+      'fulcrum-low-stock',
       'pdf',
     );
-  }
-
-  /**
-   * Shared blob-download helper. Uses a temporary <a> element with an
-   * object URL so we don't navigate the dashboard away and so the JWT
-   * stays in the Authorization header rather than the URL.
-   */
-  private downloadBlob(req: import('rxjs').Observable<Blob>, ext: 'csv' | 'pdf'): void {
-    req.subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const today = new Date().toISOString().slice(0, 10);
-        link.download = `fulcrum-low-stock-${today}.${ext}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-      },
-      error: () => {
-        // HttpErrorInterceptor surfaces the localized backend message.
-      },
-    });
   }
 
   reorderSelected(): void {

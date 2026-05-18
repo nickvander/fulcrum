@@ -5,7 +5,25 @@
                 <h3>{{ t('dashboard.salesByChannel') }}</h3>
                 <small>{{ t('dashboard.salesByChannelSubtitle') }}</small>
             </div>
-            <a mat-button color="primary" routerLink="/orders">{{ t('common.viewAll') }}</a>
+            <div class="header-actions">
+                <button mat-button
+                    *ngIf="hasData"
+                    (click)="exportCsv()"
+                    [matTooltip]="t('dashboard.salesByChannelExportCsvTooltip')"
+                    data-testid="sales-by-channel-export-csv">
+                    <mat-icon>download</mat-icon>
+                    {{ t('dashboard.salesByChannelExportCsv') }}
+                </button>
+                <button mat-button
+                    *ngIf="hasData"
+                    (click)="exportPdf()"
+                    [matTooltip]="t('dashboard.salesByChannelExportPdfTooltip')"
+                    data-testid="sales-by-channel-export-pdf">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    {{ t('dashboard.salesByChannelExportPdf') }}
+                </button>
+                <a mat-button color="primary" routerLink="/orders">{{ t('common.viewAll') }}</a>
+            </div>
         </div>
 
         <div class="widget-content" *ngIf="hasData; else empty">

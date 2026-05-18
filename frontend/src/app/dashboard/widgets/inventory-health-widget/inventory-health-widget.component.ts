@@ -8,8 +8,12 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { ProductService } from '../../../products/services/product';
 import { Product } from '../../../products/models/product.model';
+import { ReportDownloadService } from '../../../core/services/report-download.service';
+import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
 
@@ -38,7 +42,30 @@ export class InventoryHealthWidgetComponent implements OnInit {
     lowStockItems: Product[] = [];
     loading = true;
 
-    constructor(private productService: ProductService) { }
+    constructor(
+        private productService: ProductService,
+        private http: HttpClient,
+        private reportDownloader: ReportDownloadService,
+    ) { }
+
+    exportCsv(): void {
+        this.reportDownloader.download(this.fetchInventorySnapshot('csv'), 'fulcrum-inventory-snapshot', 'csv');
+    }
+
+    exportPdf(): void {
+        this.reportDownloader.download(this.fetchInventorySnapshot('pdf'), 'fulcrum-inventory-snapshot', 'pdf');
+    }
+
+    /** Hit the backend `/reports/inventory-snapshot/export[-pdf]` endpoint
+     *  with the standard high-limit default — exports are the "give me
+     *  everything" path so we don't paginate the 50-row widget limit. */
+    private fetchInventorySnapshot(ext: 'csv' | 'pdf'): Observable<Blob> {
+        const suffix = ext === 'pdf' ? '/export-pdf' : '/export';
+        return this.http.get(`${environment.apiUrl}/reports/inventory-snapshot${suffix}`, {
+            params: new HttpParams().set('limit', '2000'),
+            responseType: 'blob',
+        });
+    }
 
     ngOnInit(): void {
         this.loadData();
