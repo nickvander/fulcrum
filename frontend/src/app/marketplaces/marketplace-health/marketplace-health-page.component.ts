@@ -18,6 +18,7 @@ import {
   MarketplaceHealthService,
   PollOrdersResult,
   ReconcileInboundResult,
+  SettlementSyncResult,
 } from './marketplace-health.service';
 
 @Component({
@@ -56,6 +57,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
    *  on the row whose button was clicked. */
   polling = new Set<number>();
   reconciling = new Set<number>();
+  settling = new Set<number>();
 
   private destroy$ = new Subject<void>();
 
@@ -63,6 +65,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
    *  result chip on the row + as a snackbar. */
   lastPollResult = new Map<number, PollOrdersResult>();
   lastReconcileResult = new Map<number, ReconcileInboundResult>();
+  lastSettlementResult = new Map<number, SettlementSyncResult>();
 
   readonly columns = [
     'marketplace',
@@ -70,6 +73,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
     'order_poll',
     'webhooks',
     'inbound',
+    'settlement',
     'actions',
   ];
 
@@ -89,7 +93,11 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
     interval(this.AUTO_REFRESH_MS)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        if (this.polling.size > 0 || this.reconciling.size > 0) return;
+        if (
+          this.polling.size > 0
+          || this.reconciling.size > 0
+          || this.settling.size > 0
+        ) return;
         this.quietRefresh();
       });
   }
@@ -161,6 +169,59 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
         },
         error: () => this.snack('marketplaceHealth.errors.reconcileFailed'),
       });
+  }
+
+  syncSettlementFees(row: MarketplaceCredentialHealth): void {
+    if (this.settling.has(row.credential_id)) return;
+    this.settling.add(row.credential_id);
+    this.health.syncSettlementFees(row.credential_id)
+      .pipe(finalize(() => this.settling.delete(row.credential_id)))
+      .subscribe({
+        next: result => {
+          this.lastSettlementResult.set(row.credential_id, result);
+          this.applyRefreshedHealth(result.health);
+          this.surfaceSettlementResult(result);
+        },
+        error: () => this.snack('marketplaceHealth.errors.settlementFailed'),
+      });
+  }
+
+  /** Settlement-only badge: 'ok' once a sync has happened recently
+   *  (< 90min for hourly cadence ×1.5), 'warn' otherwise, 'unsupported'
+   *  for marketplaces we can't settle. */
+  settlementClass(row: MarketplaceCredentialHealth): string {
+    const supportedMarketplace = this.isSettlementSupported(row);
+    if (!supportedMarketplace) return 'badge-info';
+    if (!row.last_settlement_synced_at) return 'badge-warn';
+    const ageMin = (Date.now() - new Date(row.last_settlement_synced_at).getTime()) / 60_000;
+    return ageMin > 90 ? 'badge-warn' : 'badge-ok';
+  }
+
+  isSettlementSupported(row: MarketplaceCredentialHealth): boolean {
+    const name = (row.marketplace_name || '').toLowerCase();
+    return name === 'amazon' || name === 'mercadolibre';
+  }
+
+  private surfaceSettlementResult(result: SettlementSyncResult): void {
+    if (result.error === 'needs_reauthorization') {
+      this.snack('marketplaceHealth.messages.settlementNeedsReauth');
+      return;
+    }
+    if (result.error === 'unsupported_marketplace') {
+      this.snack('marketplaceHealth.messages.settlementUnsupported');
+      return;
+    }
+    if (result.error) {
+      this.snack('marketplaceHealth.errors.settlementFailed');
+      return;
+    }
+    this.snack(
+      this.transloco.translate('marketplaceHealth.messages.settlementDone', {
+        settled: result.orders_settled,
+        pending: result.orders_pending,
+        scanned: result.scanned,
+      }),
+    );
   }
 
   /** The action endpoints embed a refreshed health row so the UI can
@@ -271,7 +332,8 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
 
   isBusy(row: MarketplaceCredentialHealth): boolean {
     return this.polling.has(row.credential_id)
-      || this.reconciling.has(row.credential_id);
+      || this.reconciling.has(row.credential_id)
+      || this.settling.has(row.credential_id);
   }
 
   private snack(keyOrMessage: string): void {

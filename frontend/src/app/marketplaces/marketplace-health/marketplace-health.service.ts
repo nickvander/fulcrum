@@ -35,6 +35,15 @@ export interface MarketplaceCredentialHealth {
    * connected credential.
    */
   webhook_likely_disconnected: boolean;
+
+  /**
+   * Timestamp of the last successful settlement-fee sync run for this
+   * credential. NULL until the first run completes. Powers the
+   * marketplace-health page's "Settlement (last synced)" column so the
+   * operator can tell whether the real settled-fee numbers powering
+   * the dashboard's net-margin widgets are fresh.
+   */
+  last_settlement_synced_at?: string | null;
 }
 
 export interface HealthListResponse {
@@ -77,6 +86,20 @@ export interface ReconcileInboundResult {
   health?: MarketplaceCredentialHealth | null;
 }
 
+export interface SettlementSyncResult {
+  credential_id: number;
+  marketplace_name: string;
+  /** Breakdown rows flipped from `estimated` → `settled` this run. */
+  orders_settled: number;
+  /** Orders whose marketplace returned no fee data yet — retried next tick. */
+  orders_pending: number;
+  errors: number;
+  /** Total orders considered (capped at MAX_BATCH per credential). */
+  scanned: number;
+  error?: string | null;
+  health?: MarketplaceCredentialHealth | null;
+}
+
 /**
  * Thin HTTP wrapper around the operator-facing
  * `/api/v1/marketplaces/health` surface. Pairs with
@@ -104,6 +127,12 @@ export class MarketplaceHealthService {
   reconcileInbound(credentialId: number): Observable<ReconcileInboundResult> {
     return this.http.post<ReconcileInboundResult>(
       `${this.apiUrl}/${credentialId}/reconcile-inbound`, {},
+    );
+  }
+
+  syncSettlementFees(credentialId: number): Observable<SettlementSyncResult> {
+    return this.http.post<SettlementSyncResult>(
+      `${this.apiUrl}/${credentialId}/sync-settlement-fees`, {},
     );
   }
 }

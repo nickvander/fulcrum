@@ -74,6 +74,14 @@ class MarketplaceCredentialHealth(BaseModel):
     webhooks_received_last_24h: int = 0
     webhook_likely_disconnected: bool = False
 
+    # --- settlement-fee ingestion ---
+    # Timestamp of the last successful settlement-fee sync run for this
+    # credential (Celery beat task `poll_settlement_fees`). NULL until
+    # the first run completes. The marketplace-health page surfaces
+    # this so the operator can tell whether the real settled-fee
+    # numbers powering the dashboard's net-margin widgets are recent.
+    last_settlement_synced_at: Optional[datetime] = None
+
 
 class HealthListResponse(BaseModel):
     """Envelope for `GET /marketplaces/health`. The constants are
@@ -101,6 +109,24 @@ class PollOrdersResult(BaseModel):
     error: Optional[str] = None
     # Refreshed health row for the caller so the UI can refresh the
     # specific credential's row without a follow-up list call.
+    health: Optional[MarketplaceCredentialHealth] = None
+
+
+class SettlementSyncResult(BaseModel):
+    """Returned by `POST /marketplaces/health/{credential_id}/sync-settlement-fees`.
+
+    Mirrors the per-credential `SettlementSyncSummary` shape emitted by
+    `settlement_fee_ingestion.sync_settlement_for_credential` so the
+    operator's manual click + the hourly Celery beat run report the
+    same numbers.
+    """
+    credential_id: int
+    marketplace_name: str
+    orders_settled: int = 0       # rows flipped from estimated → settled
+    orders_pending: int = 0       # marketplace had no fee data yet
+    errors: int = 0
+    scanned: int = 0
+    error: Optional[str] = None
     health: Optional[MarketplaceCredentialHealth] = None
 
 

@@ -117,6 +117,26 @@
             </td>
           </ng-container>
 
+          <ng-container matColumnDef="settlement">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.settlement') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="settlementClass(row)"
+                    [attr.data-testid]="'settlement-pill-' + row.credential_id"
+                    [matTooltip]="row.last_settlement_synced_at ? t('marketplaceHealth.settlement.lastSyncedTooltip', { when: ago(row.last_settlement_synced_at) }) : (isSettlementSupported(row) ? t('marketplaceHealth.settlement.neverTooltip') : t('marketplaceHealth.settlement.unsupportedTooltip'))">
+                @if (!isSettlementSupported(row)) {
+                  <mat-icon class="pill-icon">block</mat-icon>
+                  {{ t('marketplaceHealth.settlement.unsupported') }}
+                } @else if (row.last_settlement_synced_at) {
+                  <mat-icon class="pill-icon">receipt_long</mat-icon>
+                  {{ ago(row.last_settlement_synced_at) }}
+                } @else {
+                  <mat-icon class="pill-icon">schedule</mat-icon>
+                  {{ t('marketplaceHealth.never') }}
+                }
+              </span>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.actions') }}</th>
             <td mat-cell *matCellDef="let row">
@@ -145,6 +165,20 @@
                   }
                   {{ t('marketplaceHealth.actions.reconcileNow') }}
                 </button>
+                @if (isSettlementSupported(row)) {
+                  <button mat-stroked-button
+                          (click)="syncSettlementFees(row)"
+                          [disabled]="isBusy(row)"
+                          [matTooltip]="t('marketplaceHealth.actions.settlementTooltip')"
+                          [attr.data-testid]="'settlement-button-' + row.credential_id">
+                    @if (settling.has(row.credential_id)) {
+                      <mat-spinner diameter="16"></mat-spinner>
+                    } @else {
+                      <mat-icon>receipt_long</mat-icon>
+                    }
+                    {{ t('marketplaceHealth.actions.settlementNow') }}
+                  </button>
+                }
               </div>
 
               @if (lastPollResult.get(row.credential_id); as poll) {
@@ -174,6 +208,21 @@
                       processed: recon.transfers_processed,
                       updated: recon.transfers_updated,
                       units: recon.total_received_added
+                    }) }}
+                  }
+                </div>
+              }
+
+              @if (lastSettlementResult.get(row.credential_id); as settle) {
+                <div class="last-result"
+                     [attr.data-testid]="'settlement-result-' + row.credential_id">
+                  @if (settle.error) {
+                    {{ t('marketplaceHealth.results.settlementError', { error: settle.error }) }}
+                  } @else {
+                    {{ t('marketplaceHealth.results.settlementSummary', {
+                      settled: settle.orders_settled,
+                      pending: settle.orders_pending,
+                      scanned: settle.scanned
                     }) }}
                   }
                 </div>

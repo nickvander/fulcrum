@@ -529,3 +529,91 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                     break
                 offset += page_limit
         return results[:max_rows]
+
+    async def fetch_order_billing(
+        self, order_id: str, access_token: str,
+    ) -> Dict[str, Optional[float]]:
+        """Return real per-order settlement fees + shipping cost for one
+        ML order, used by the settlement-fee ingestion worker.
+
+        Strategy: fetch the order via `GET /orders/{order_id}`, which
+        embeds the payments list. Each payment carries
+        `marketplace_fee` (or `fee_details[]` on newer API revisions)
+        and the order's `shipping` object carries `shipping_cost`.
+        We sum across payments because partial captures + multi-method
+        orders can split fees across rows.
+
+        Returns a dict with two keys; both `None` means "the
+        marketplace didn't carry fee data on this order yet" (a typical
+        pending ML order). Caller treats `None` as "skip, retry on the
+        next tick".
+
+          {"marketplace_fees_amount": float | None,
+           "shipping_cost_amount":    float | None}
+
+        Tolerant of ML's evolving JSON shape — it has revised the
+        payment payload several times. We accept both top-level
+        `marketplace_fee` and `fee_details[].amount`, and both
+        `shipping.shipping_cost` and `shipping.cost`.
+        """
+        data = await self.fetch_order(order_id, access_token)
+        return self._extract_settlement_from_order(data)
+
+    @staticmethod
+    def _extract_settlement_from_order(
+        data: Dict[str, Any],
+    ) -> Dict[str, Optional[float]]:
+        """Pure parser for the order payload → settlement summary.
+
+        Extracted so tests can exercise the field-precedence rules
+        without HTTP fixtures.
+        """
+        fees: Optional[float] = None
+        for payment in data.get("payments") or []:
+            if not isinstance(payment, dict):
+                continue
+            # Skip refunded payments — their fees are reversed and
+            # carry meaningless residuals on the live ML side.
+            status = (payment.get("status") or "").lower()
+            if status in {"refunded", "cancelled", "rejected"}:
+                continue
+            payment_fee: Optional[float] = None
+            # 1) Newer revision: `fee_details: [{amount, ...}, ...]`
+            details = payment.get("fee_details")
+            if isinstance(details, list) and details:
+                acc = 0.0
+                any_value = False
+                for detail in details:
+                    if isinstance(detail, dict) and detail.get("amount") is not None:
+                        try:
+                            acc += float(detail["amount"])
+                            any_value = True
+                        except (TypeError, ValueError):
+                            continue
+                if any_value:
+                    payment_fee = acc
+            # 2) Older revision: top-level `marketplace_fee`.
+            if payment_fee is None and payment.get("marketplace_fee") is not None:
+                try:
+                    payment_fee = float(payment["marketplace_fee"])
+                except (TypeError, ValueError):
+                    payment_fee = None
+            if payment_fee is not None:
+                fees = (fees or 0.0) + payment_fee
+
+        shipping_cost: Optional[float] = None
+        shipping = data.get("shipping") or {}
+        if isinstance(shipping, dict):
+            for key in ("shipping_cost", "cost", "list_cost"):
+                value = shipping.get(key)
+                if value is not None:
+                    try:
+                        shipping_cost = float(value)
+                        break
+                    except (TypeError, ValueError):
+                        continue
+
+        return {
+            "marketplace_fees_amount": fees,
+            "shipping_cost_amount": shipping_cost,
+        }

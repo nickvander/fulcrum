@@ -105,6 +105,18 @@ class OrderCostBreakdown(Base):
     # treats NULL as "no margin data" rather than 0%.
     net_margin_percent = Column(Float, nullable=True)
 
+    # 'estimated' when fees come from Marketplace.default_fee_rate;
+    # 'settled' when the settlement-fee ingestion has overwritten
+    # marketplace_fees_amount + shipping_cost_amount with real numbers
+    # from the marketplace's finance API. The cost engine guards
+    # against overwriting 'settled' values with estimates on a
+    # subsequent recompute (a stale operator-changed fee rate must not
+    # silently revert real settled data).
+    fees_source = Column(
+        String(16), nullable=False, default="estimated", server_default="estimated", index=True,
+    )
+    fees_synced_at = Column(DateTime(timezone=True), nullable=True)
+
     computed_at = Column(DateTime(timezone=True), nullable=False)
 
     order = relationship("SalesOrder", back_populates="cost_breakdown")

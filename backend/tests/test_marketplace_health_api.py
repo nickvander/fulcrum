@@ -698,3 +698,114 @@ def test_reconcile_inbound_404s_for_unknown_credential(
         headers=admin_headers,
     )
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# POST /{id}/sync-settlement-fees
+# ---------------------------------------------------------------------------
+
+
+def test_sync_settlement_fees_for_amazon_credential_returns_summary(
+    client: TestClient, db, admin_headers, test_admin_user, amazon_marketplace,
+):
+    """The manual settlement-sync endpoint runs the same per-credential
+    code the Celery beat uses, returns the per-credential summary, and
+    embeds the refreshed health row so the UI can update in place."""
+    from src.services.settlement_fee_ingestion import SettlementSyncSummary
+
+    cred = _make_credential(db, amazon_marketplace, test_admin_user)
+
+    summary = SettlementSyncSummary(
+        orders_settled=4, orders_pending=1, errors=0, scanned=5,
+    )
+
+    with (
+        patch(
+            "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+            new=AsyncMock(return_value="LIVE-TOKEN"),
+        ),
+        patch(
+            "src.services.settlement_fee_ingestion.sync_settlement_for_credential",
+            new=AsyncMock(return_value=summary),
+        ),
+    ):
+        response = client.post(
+            f"/api/v1/marketplaces/health/{cred.id}/sync-settlement-fees",
+            headers=admin_headers,
+        )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["credential_id"] == cred.id
+    assert body["marketplace_name"] == "Amazon"
+    assert body["orders_settled"] == 4
+    assert body["orders_pending"] == 1
+    assert body["scanned"] == 5
+    assert body["error"] is None
+    assert body["health"]["credential_id"] == cred.id
+
+
+def test_sync_settlement_fees_short_circuits_for_reauth_required(
+    client: TestClient, db, admin_headers, test_admin_user, amazon_marketplace,
+):
+    cred = _make_credential(
+        db, amazon_marketplace, test_admin_user,
+        needs_reauthorization=True,
+        last_refresh_error="invalid_grant",
+    )
+
+    response = client.post(
+        f"/api/v1/marketplaces/health/{cred.id}/sync-settlement-fees",
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["error"] == "needs_reauthorization"
+    assert body["orders_settled"] == 0
+
+
+def test_sync_settlement_fees_404s_for_unknown_credential(
+    client: TestClient, admin_headers,
+):
+    response = client.post(
+        "/api/v1/marketplaces/health/9999999/sync-settlement-fees",
+        headers=admin_headers,
+    )
+    assert response.status_code == 404
+
+
+def test_sync_settlement_fees_returns_unsupported_for_custom_marketplace(
+    client: TestClient, db, admin_headers, test_admin_user,
+):
+    custom = Marketplace(name="Shopify", api_base_url="https://example.com")
+    db.add(custom)
+    db.commit()
+    db.refresh(custom)
+    cred = _make_credential(db, custom, test_admin_user)
+
+    response = client.post(
+        f"/api/v1/marketplaces/health/{cred.id}/sync-settlement-fees",
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    assert response.json()["error"] == "unsupported_marketplace"
+
+
+def test_settlement_sync_timestamp_surfaces_on_health_list(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """The `last_settlement_synced_at` column lands on each health row
+    so the operator can tell at a glance whether real settled fees
+    powering the margin dashboard are fresh."""
+    now = datetime.now(timezone.utc)
+    cred = _make_credential(
+        db, ml_marketplace, test_admin_user,
+        last_settlement_synced_at=now - timedelta(minutes=30),
+    )
+
+    response = client.get("/api/v1/marketplaces/health/", headers=admin_headers)
+    assert response.status_code == 200
+    by_id = {row["credential_id"]: row for row in response.json()["items"]}
+    # Timestamp present + roughly correct
+    assert by_id[cred.id]["last_settlement_synced_at"] is not None

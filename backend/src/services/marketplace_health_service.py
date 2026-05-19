@@ -37,6 +37,7 @@ from src.schemas.marketplace_health import (
     ORDER_POLL_STALE_MINUTES,
     PollOrdersResult,
     ReconcileInboundResult,
+    SettlementSyncResult,
     WEBHOOK_DISCONNECT_HOURS,
 )
 
@@ -222,6 +223,7 @@ def _build_credential_health(
             webhook_last_received_at=webhook["last_received_at"],
             now=now,
         ),
+        last_settlement_synced_at=credential.last_settlement_synced_at,
     )
 
 
@@ -528,6 +530,95 @@ def reconcile_inbound_for_credential(
     result.transfers_updated = transfers_updated
     result.total_received_added = total_received_added
     result.per_transfer = per_transfer
+    db.refresh(credential)
+    result.health = _build_credential_health(
+        db, credential, datetime.now(timezone.utc),
+    )
+    return result
+
+
+def sync_settlement_for_credential(
+    db: Session, credential_id: int,
+) -> SettlementSyncResult:
+    """Run settlement-fee ingestion synchronously for one credential.
+
+    Reuses `settlement_fee_ingestion.sync_settlement_for_credential` —
+    the same per-credential entrypoint the Celery beat task uses — so
+    the manual + automatic paths share one implementation.
+
+    Synchronous on purpose: the operator clicks this expecting "are my
+    real settled-fee numbers up to date now?". A 200-order batch
+    against ML / SP-API finishes in a few seconds; if it ever grows
+    slow enough to matter, flip to `.delay()` and add status polling.
+    """
+    from src.services.marketplace_service import (
+        ReauthorizationRequiredError,
+        marketplace_service,
+    )
+    from src.services.settlement_fee_ingestion import (
+        sync_settlement_for_credential as run_sync,
+    )
+
+    credential = get_credential_or_raise(db, credential_id)
+    marketplace = (
+        db.query(Marketplace).filter(Marketplace.id == credential.marketplace_id).first()
+    )
+    marketplace_name = marketplace.name if marketplace else ""
+
+    result = SettlementSyncResult(
+        credential_id=credential.id,
+        marketplace_name=marketplace_name,
+    )
+
+    if credential.needs_reauthorization:
+        result.error = "needs_reauthorization"
+        result.health = _build_credential_health(
+            db, credential, datetime.now(timezone.utc),
+        )
+        return result
+
+    name_lower = (marketplace_name or "").lower()
+    if name_lower not in {"amazon", "mercadolibre"}:
+        result.error = "unsupported_marketplace"
+        result.health = _build_credential_health(
+            db, credential, datetime.now(timezone.utc),
+        )
+        return result
+
+    connector = marketplace_service.get_connector(marketplace_name)
+    if connector is None:
+        result.error = "connector_unavailable"
+        result.health = _build_credential_health(
+            db, credential, datetime.now(timezone.utc),
+        )
+        return result
+
+    try:
+        token = asyncio.run(
+            marketplace_service.get_valid_access_token(db, credential.id)
+        )
+        summary = asyncio.run(
+            run_sync(db, credential, connector, token),
+        )
+        db.commit()
+    except ReauthorizationRequiredError as exc:
+        result.error = "needs_reauthorization"
+        logger.warning(
+            "Manual settlement-sync: credential %d needs reauth: %s",
+            credential.id, exc.reason,
+        )
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        logger.exception(
+            "Manual settlement-sync failed for credential %d", credential.id,
+        )
+        result.error = "exception"
+    else:
+        result.orders_settled = summary.orders_settled
+        result.orders_pending = summary.orders_pending
+        result.errors = summary.errors
+        result.scanned = summary.scanned
+
     db.refresh(credential)
     result.health = _build_credential_health(
         db, credential, datetime.now(timezone.utc),

@@ -4,7 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslocoTestingModule } from '@ngneat/transloco';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { MarketplaceHealthPageComponent } from './marketplace-health-page.component';
 import {
@@ -51,6 +51,7 @@ describe('MarketplaceHealthPageComponent', () => {
     list: ReturnType<typeof vi.fn>;
     pollOrders: ReturnType<typeof vi.fn>;
     reconcileInbound: ReturnType<typeof vi.fn>;
+    syncSettlementFees: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -65,6 +66,10 @@ describe('MarketplaceHealthPageComponent', () => {
         transfers_processed: 0, transfers_updated: 0,
         total_received_added: 0, per_transfer: [],
       } as ReconcileInboundResult)),
+      syncSettlementFees: vi.fn().mockReturnValue(of({
+        credential_id: 1, marketplace_name: 'Amazon',
+        orders_settled: 0, orders_pending: 0, errors: 0, scanned: 0,
+      })),
     };
 
     await TestBed.configureTestingModule({
@@ -377,6 +382,90 @@ describe('MarketplaceHealthPageComponent', () => {
       fixture.destroy();
       vi.advanceTimersByTime(component.AUTO_REFRESH_MS * 5);
       expect(serviceStub.list).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('settlement column + button', () => {
+    it('renders the settlement column with the right pill per row', () => {
+      const fresh = new Date(Date.now() - 5 * 60_000).toISOString();
+      const old = new Date(Date.now() - 4 * 60 * 60_000).toISOString();
+      serviceStub.list.mockReturnValue(of(listResponse([
+        // Supported marketplace, fresh sync → ok
+        row({ credential_id: 11, marketplace_name: 'Amazon', last_settlement_synced_at: fresh }),
+        // Supported marketplace, stale sync → warn
+        row({ credential_id: 12, marketplace_name: 'MercadoLibre', last_settlement_synced_at: old }),
+        // Supported marketplace, never synced → warn
+        row({ credential_id: 13, marketplace_name: 'Amazon', last_settlement_synced_at: null }),
+        // Unsupported marketplace → info pill, no button
+        row({ credential_id: 14, marketplace_name: 'Shopify', last_settlement_synced_at: null }),
+      ])));
+      component.refresh();
+      fixture.detectChanges();
+
+      expect(component.settlementClass(component.rows[0])).toBe('badge-ok');
+      expect(component.settlementClass(component.rows[1])).toBe('badge-warn');
+      expect(component.settlementClass(component.rows[2])).toBe('badge-warn');
+      expect(component.settlementClass(component.rows[3])).toBe('badge-info');
+
+      // Button visible only for supported marketplaces.
+      expect(fixture.debugElement.query(By.css('[data-testid="settlement-button-11"]'))).not.toBeNull();
+      expect(fixture.debugElement.query(By.css('[data-testid="settlement-button-14"]'))).toBeNull();
+    });
+
+    it('syncSettlementFees() patches the row from the embedded health payload', () => {
+      serviceStub.list.mockReturnValue(of(listResponse([
+        row({ credential_id: 21, marketplace_name: 'MercadoLibre', last_settlement_synced_at: null }),
+      ])));
+      component.refresh();
+      fixture.detectChanges();
+
+      const updatedAt = new Date().toISOString();
+      serviceStub.syncSettlementFees.mockReturnValue(of({
+        credential_id: 21, marketplace_name: 'MercadoLibre',
+        orders_settled: 3, orders_pending: 1, errors: 0, scanned: 4,
+        health: row({
+          credential_id: 21, marketplace_name: 'MercadoLibre',
+          last_settlement_synced_at: updatedAt,
+        }),
+      }));
+
+      component.syncSettlementFees(component.rows[0]);
+      fixture.detectChanges();
+
+      expect(serviceStub.syncSettlementFees).toHaveBeenCalledWith(21);
+      expect(component.rows[0].last_settlement_synced_at).toBe(updatedAt);
+      const result = component.lastSettlementResult.get(21);
+      expect(result?.orders_settled).toBe(3);
+      expect(result?.orders_pending).toBe(1);
+    });
+
+    it('syncSettlementFees() is a no-op while a previous sync for the same row is in flight', () => {
+      serviceStub.list.mockReturnValue(of(listResponse([
+        row({ credential_id: 31, marketplace_name: 'Amazon' }),
+      ])));
+      component.refresh();
+      fixture.detectChanges();
+
+      // Hold the request open so finalize() doesn't fire (Subject never
+      // emits + never completes, so the first call stays "in flight").
+      serviceStub.syncSettlementFees.mockReturnValue(new Subject<any>());
+
+      component.syncSettlementFees(component.rows[0]);
+      component.syncSettlementFees(component.rows[0]);
+      expect(serviceStub.syncSettlementFees).toHaveBeenCalledTimes(1);
+    });
+
+    it('isBusy() flips when a settlement sync is in flight', () => {
+      serviceStub.list.mockReturnValue(of(listResponse([
+        row({ credential_id: 41, marketplace_name: 'Amazon' }),
+      ])));
+      component.refresh();
+      fixture.detectChanges();
+
+      component.settling.add(41);
+      expect(component.isBusy(component.rows[0])).toBe(true);
+      component.settling.delete(41);
+      expect(component.isBusy(component.rows[0])).toBe(false);
     });
   });
 });

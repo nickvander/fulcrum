@@ -191,6 +191,10 @@ def compute_breakdown(inputs: _CostInputs) -> Dict[str, Any]:
     }
 
 
+SETTLED_FEES_SOURCE = "settled"
+ESTIMATED_FEES_SOURCE = "estimated"
+
+
 def upsert_breakdown(
     db: Session, order: SalesOrder, *, now: Optional[datetime] = None,
 ) -> OrderCostBreakdown:
@@ -227,6 +231,7 @@ def upsert_breakdown(
             exchange_rate_to_mxn=rate,
             revenue_amount_mxn=round(revenue_mxn, 4),
             computed_at=when,
+            fees_source=ESTIMATED_FEES_SOURCE,
             **computed,
         )
         db.add(breakdown)
@@ -235,10 +240,94 @@ def upsert_breakdown(
         existing.exchange_rate_to_mxn = rate
         existing.revenue_amount_mxn = round(revenue_mxn, 4)
         existing.computed_at = when
+        # Preserve real settled fee data on recompute. The cost engine
+        # owns COGS (which depends on local product cost), but the
+        # marketplace owns marketplace_fees + shipping_cost once we've
+        # ingested settlement data — a stale operator-changed fee rate
+        # must not silently revert it.
+        preserve_settled = existing.fees_source == SETTLED_FEES_SOURCE
         for field, value in computed.items():
+            if preserve_settled and field in {
+                "marketplace_fees_amount",
+                "shipping_cost_amount",
+            }:
+                continue
             setattr(existing, field, value)
+        if preserve_settled:
+            # Rebuild totals/profit using the preserved settled fees,
+            # not the recomputed estimates we skipped above.
+            _recompute_totals_in_place(existing)
         breakdown = existing
 
+    db.flush()
+    return breakdown
+
+
+def _recompute_totals_in_place(row: OrderCostBreakdown) -> None:
+    """Refresh `total_cost_amount`, `net_profit_amount`, and
+    `net_margin_percent` from the row's component columns. Used when
+    callers overwrite individual cost components (settlement fees,
+    operator adjustment) and need the rollup values to stay
+    consistent without going through the full pure-compute path.
+    """
+    revenue = float(row.revenue_amount or 0.0)
+    total = (
+        float(row.cogs_amount or 0.0)
+        + float(row.marketplace_fees_amount or 0.0)
+        + float(row.shipping_cost_amount or 0.0)
+        + float(row.ad_spend_amount or 0.0)
+        + float(row.other_cost_amount or 0.0)
+    )
+    row.total_cost_amount = round(total, 4)
+    row.net_profit_amount = round(revenue - total, 4)
+    row.net_margin_percent = (
+        round(((revenue - total) / revenue) * 100.0, 4) if revenue > 0 else None
+    )
+
+
+def apply_settlement_fees(
+    db: Session,
+    order: SalesOrder,
+    *,
+    marketplace_fees_amount: float,
+    shipping_cost_amount: Optional[float] = None,
+    synced_at: Optional[datetime] = None,
+) -> OrderCostBreakdown:
+    """Overwrite the breakdown row's fee components with real settled
+    data from the marketplace's finance API and flip `fees_source` to
+    'settled' so future recomputes preserve it.
+
+    `shipping_cost_amount` is optional because some marketplaces (ML's
+    `total_fee_amount`, Amazon's Commission) only carry a single fee
+    bucket — in that case the caller leaves shipping untouched and the
+    row keeps whatever the cost engine estimated. When it IS provided,
+    it overwrites in full.
+
+    If the breakdown row doesn't exist yet (rare — ingestion paths
+    upsert one inline), we create a stub by calling `upsert_breakdown`
+    first, then apply settlement on top. This keeps the settlement
+    worker resilient to ingestion-time hiccups.
+
+    Caller owns the transaction.
+    """
+    when = synced_at or datetime.now(timezone.utc)
+    breakdown = (
+        db.query(OrderCostBreakdown)
+        .filter(OrderCostBreakdown.order_id == order.id)
+        .first()
+    )
+    if breakdown is None:
+        breakdown = upsert_breakdown(db, order, now=when)
+
+    fees = max(0.0, float(marketplace_fees_amount or 0.0))
+    breakdown.marketplace_fees_amount = round(fees, 4)
+    if shipping_cost_amount is not None:
+        breakdown.shipping_cost_amount = round(max(0.0, float(shipping_cost_amount)), 4)
+    breakdown.fees_source = SETTLED_FEES_SOURCE
+    breakdown.fees_synced_at = when
+    breakdown.computed_at = when
+
+    _recompute_totals_in_place(breakdown)
     db.flush()
     return breakdown
 
