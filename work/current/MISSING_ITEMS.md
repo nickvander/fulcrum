@@ -96,14 +96,49 @@ when you find them so the next session has a place to start._
          `AlertRule` schema; no new schema columns. New rule type
          appears in the `/alerts` create dialog's type select.
 
-      **Known bug (separate slice):** the cancellation path does
-      NOT re-credit stock. When an ML/Amazon order moves to
+      **Known bug, in scope:** the cancellation path does NOT
+      re-credit stock. When an ML/Amazon order moves to
       `CANCELLED`, the decremented inventory stays decremented.
-      This is a correctness bug, but fixing it cleanly requires
-      handling repeated-cancellation idempotency and the case
-      where the cancelled units have already been resold to
-      someone else. Track separately once this surface-level
-      tracking is in.
+
+      Correct semantics (per channel; refunds vs cancellations
+      behave differently):
+
+        - Cancel **before ship** (ML `cancelled` from `paid` with
+          `shipping.status` ≠ `shipped`; Amazon `Canceled` from
+          `Pending`/`Unshipped`) → **re-credit stock**. We held
+          inventory; never sent it.
+        - Cancel **after ship** (rare; ML `cancelled` with
+          `shipping.status=shipped`; Amazon `Canceled` from
+          `Shipped`/`PartiallyShipped`) → **don't re-credit**.
+          Product is out the door. Becomes a return if the buyer
+          ships back, which requires an operator "received return"
+          workflow we don't have yet.
+        - Refund (money-only — ML `payments[].status=refunded`
+          while the order itself stays `paid`; Amazon partial
+          refund via `RefundEventList` while `OrderStatus=Shipped`)
+          → **don't re-credit**. Product stays with the buyer.
+        - Return → re-credit, but marketplaces don't reliably
+          report returns. Out of scope for this slice.
+
+      Implementation:
+
+        - New column `SalesOrder.stock_recredited_at: datetime |
+          None`. Set when the re-credit fires; non-NULL → never
+          re-credit again (idempotency).
+        - Helper `_was_ever_shipped(db, order)`: returns True iff
+          the status-event audit (Deliverable 1) contains a row
+          where `to_status` ∈ {`SHIPPED`, `DELIVERED`}. Single
+          query per cancellation, cheap.
+        - In the status-transition hook: when transitioning
+          `realized → CANCELLED` AND `not _was_ever_shipped(...)`
+          AND `order.stock_recredited_at is None`, call
+          `inventory_service.adjust_stock(+qty)` for each line
+          item, then set `stock_recredited_at = now()`.
+        - The audit-first check side-steps the
+          "marketplace-payload shipping subobject might be missing"
+          problem — our local audit knows what we ever saw on this
+          order, regardless of how complete the cancellation
+          webhook payload is.
 
       **Tests:**
         - Backend: status-event idempotency, reversed_at-on-
