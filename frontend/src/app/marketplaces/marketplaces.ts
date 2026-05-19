@@ -8,6 +8,26 @@ export interface Marketplace {
   id: number;
   name: string;
   api_base_url?: string;
+  /**
+   * Phase-8 cost-engine config. Both default to 0 — a newly-
+   * connected marketplace returns the same gross-margin number the
+   * existing reports always showed until the operator configures
+   * real rates via the fee-config form on the marketplace detail
+   * page.
+   */
+  default_fee_rate?: number;
+  default_shipping_cost?: number;
+}
+
+export interface MarketplaceFeeConfigUpdate {
+  default_fee_rate?: number;
+  default_shipping_cost?: number;
+}
+
+export interface MarketplaceFeeConfigRecomputeResult {
+  breakdowns_created: number;
+  breakdowns_updated: number;
+  errors: number;
 }
 
 export interface MarketplaceListing {
@@ -84,6 +104,36 @@ export class MarketplacesService {
 
   getMarketplaces(): Observable<Marketplace[]> {
     return this.http.get<Marketplace[]>(`${this.apiUrl}/`);
+  }
+
+  getMarketplaceById(id: number): Observable<Marketplace> {
+    return this.http.get<Marketplace>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Update the per-marketplace cost-engine config used by Phase-8
+   * net-margin reporting. Both fields are optional — omitting one
+   * leaves it unchanged. Updating these rates does NOT recompute
+   * existing breakdowns; call `recomputeCostBreakdowns()` after.
+   */
+  updateFeeConfig(
+    id: number, update: MarketplaceFeeConfigUpdate,
+  ): Observable<Marketplace> {
+    return this.http.patch<Marketplace>(
+      `${this.apiUrl}/${id}/fee-config`, update,
+    );
+  }
+
+  /**
+   * Recompute every cost-breakdown row for orders whose source
+   * matches this marketplace. Synchronous on the backend (typical
+   * Mexico-market order volumes are hundreds, not millions). UI
+   * disables the button while the request is in flight.
+   */
+  recomputeCostBreakdowns(id: number): Observable<MarketplaceFeeConfigRecomputeResult> {
+    return this.http.post<MarketplaceFeeConfigRecomputeResult>(
+      `${this.apiUrl}/${id}/recompute-cost-breakdowns`, {},
+    );
   }
 
   getMarketplaceByName(name: string): Observable<Marketplace | undefined> {

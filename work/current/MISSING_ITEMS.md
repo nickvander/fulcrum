@@ -18,12 +18,6 @@ _(none active)_
 
 ## Future / Strategic
 
-- [ ] Marketplace fee config UI — Track 1 exposed
-      `Marketplace.default_fee_rate` + `default_shipping_cost` but
-      there's no UI to set them yet. Operators currently have to
-      update via DB. Single-form slice on the marketplace detail
-      page + a "Recompute all breakdowns" button that triggers the
-      `recompute_for_orders(only_missing=False)` path.
 - [ ] Rust backend migration — Phase 0 instrumentation
       (request timing + query count + slow-query log around
       `/api/v1/products`). Required gate before committing to
@@ -45,6 +39,16 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Marketplace fee-config UI** — form + recompute-all button
+      on the marketplace detail page. New backend endpoints
+      `PATCH /api/v1/marketplace/{id}/fee-config` (partial update,
+      rejects negatives) + `POST /api/v1/marketplace/{id}/recompute-cost-breakdowns`
+      (synchronous, filters by `OrderSource` derived from the
+      marketplace name). UI converts the fractional fee_rate into
+      a percent for the form, validates non-negative inputs, shows
+      the recompute summary inline. 10 new backend tests + 12 new
+      frontend tests. en + es-MX i18n parity. Backend 617/8,
+      frontend 594/0.
 - [x] **Phase 8 Track 2 dashboard widgets** — four new analytics
       widgets consuming the Track 1 cost-rollup endpoints, laid out
       in a 2x2 grid on the main dashboard:

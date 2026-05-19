@@ -1015,6 +1015,19 @@
         "forceSync": "Force Individual Sync",
         "openOnMarketplace": "Open on Marketplace",
         "noListingsEmpty": "No active listings found for this channel. Start by pushing products from the Inventory manager.",
+        "feeConfig": {
+            "title": "Cost-engine config",
+            "subtitle": "Per-marketplace defaults the Phase-8 net-margin engine uses. Updating these does NOT touch existing breakdowns — click Recompute after to refresh.",
+            "feeRateLabel": "Default fee rate",
+            "shippingLabel": "Default shipping cost",
+            "save": "Save config",
+            "saved": "Fee config saved.",
+            "recompute": "Recompute breakdowns",
+            "recomputeTooltip": "Refresh every cost breakdown for this marketplace's orders using the current fee config.",
+            "recomputeSummary": "Recomputed: {{updated}} updated, {{created}} created, {{errors}} errors.",
+            "recomputeFailed": "Could not recompute breakdowns.",
+            "errorNegative": "Fee rate and shipping cost must be non-negative."
+        },
         "statusDisconnected": "Disconnected",
         "notConnected": "Not connected",
         "neverSynced": "Never synced",
@@ -1758,7 +1771,9 @@
             "listingNotFound": "Listing not found.",
             "noCredentialsForMarketplace": "No credentials are connected for this marketplace.",
             "importFailed": "Failed to import marketplace listings: {{reason}}",
-            "publishFailed": "Failed to publish to marketplace: {{reason}}"
+            "publishFailed": "Failed to publish to marketplace: {{reason}}",
+            "feeRateNegative": "Fee rate must be greater than or equal to 0.",
+            "shippingNegative": "Shipping cost must be greater than or equal to 0."
         },
         "bulkUsers": {
             "onlyCsvAllowed": "Only CSV files are allowed.",

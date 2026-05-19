@@ -145,6 +145,142 @@ def read_marketplace(marketplace_id: int, db: Session = Depends(get_db)):
         )
     return db_marketplace
 
+
+@router.patch(
+    "/{marketplace_id}/fee-config",
+    response_model=marketplace_schema.Marketplace,
+)
+def update_marketplace_fee_config(
+    marketplace_id: int,
+    body: marketplace_schema.MarketplaceFeeConfigUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """Update the per-marketplace cost-engine config
+    (`default_fee_rate` + `default_shipping_cost`). Either field is
+    optional; the other keeps its previous value.
+
+    Updating these rates does NOT auto-recompute existing
+    breakdowns — that's an explicit operator action via
+    `POST /marketplaces/{id}/recompute-cost-breakdowns`, since
+    recomputing every order can be expensive for high-volume
+    sellers and a fee-rate change is usually paired with a
+    deliberate "refresh everything" click in the same flow.
+    """
+    db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
+    if db_marketplace is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
+
+    updates = body.model_dump(exclude_unset=True)
+    if "default_fee_rate" in updates:
+        rate = updates["default_fee_rate"]
+        if rate is not None and rate < 0:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.marketplace.feeRateNegative",
+                params={},
+                detail="default_fee_rate must be >= 0",
+            )
+        db_marketplace.default_fee_rate = float(rate or 0.0)
+    if "default_shipping_cost" in updates:
+        shipping = updates["default_shipping_cost"]
+        if shipping is not None and shipping < 0:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.marketplace.shippingNegative",
+                params={},
+                detail="default_shipping_cost must be >= 0",
+            )
+        db_marketplace.default_shipping_cost = float(shipping or 0.0)
+
+    db.add(db_marketplace)
+    db.commit()
+    db.refresh(db_marketplace)
+    return db_marketplace
+
+
+@router.post(
+    "/{marketplace_id}/recompute-cost-breakdowns",
+    response_model=marketplace_schema.MarketplaceFeeConfigRecomputeResult,
+)
+def recompute_marketplace_cost_breakdowns(
+    marketplace_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """Recompute every `OrderCostBreakdown` for orders whose
+    `source` matches this marketplace. Used after the operator
+    updates fee-config so the existing dashboard numbers reflect
+    the new rates without waiting for the hourly backfill to catch
+    up (which only fills MISSING rows, not stale ones).
+
+    Synchronous on purpose — typical Mexico-market sellers have
+    hundreds, not millions, of orders. Beyond ~5k orders this
+    should be moved to a Celery `.delay()` with status polling.
+    """
+    from src.models.order import OrderSource
+
+    db_marketplace = crud_marketplace.marketplace.get(db=db, id=marketplace_id)
+    if db_marketplace is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.marketplaceCredentials.marketplaceNotFound",
+            params={"id": marketplace_id},
+            detail="Marketplace not found",
+        )
+
+    # Map the Marketplace name back to the OrderSource enum value.
+    # Unknown marketplaces (custom user-added rows) return zeros
+    # rather than crash — recompute is a no-op for them since they
+    # have no orders to update.
+    source_map = {"amazon": OrderSource.AMAZON, "mercadolibre": OrderSource.MERCADOLIBRE}
+    source = source_map.get(db_marketplace.name.lower())
+    if source is None:
+        return marketplace_schema.MarketplaceFeeConfigRecomputeResult(
+            breakdowns_created=0, breakdowns_updated=0, errors=0,
+        )
+
+    # Filter orders by source via a subquery instead of touching the
+    # bulk runner's args. The runner already commits per order, so
+    # we restart its query with our own filter for now — this scales
+    # fine at Mexico-market order volumes.
+    from src.models.order import SalesOrder
+    from src.models.order import OrderCostBreakdown
+
+    summary = {"breakdowns_created": 0, "breakdowns_updated": 0, "errors": 0}
+    orders = (
+        db.query(SalesOrder)
+        .filter(SalesOrder.source == source)
+        .order_by(SalesOrder.id.asc())
+        .all()
+    )
+    for order in orders:
+        existed = (
+            db.query(OrderCostBreakdown)
+            .filter(OrderCostBreakdown.order_id == order.id)
+            .first()
+            is not None
+        )
+        try:
+            from src.services.order_cost_engine import upsert_breakdown
+            upsert_breakdown(db, order)
+            db.commit()
+        except Exception:  # noqa: BLE001 — one bad row shouldn't kill the batch
+            db.rollback()
+            summary["errors"] += 1
+            continue
+        if existed:
+            summary["breakdowns_updated"] += 1
+        else:
+            summary["breakdowns_created"] += 1
+
+    return marketplace_schema.MarketplaceFeeConfigRecomputeResult(**summary)
+
 @router.post("/listings/", response_model=marketplace_schema.MarketplaceListing)
 async def create_marketplace_listing(
     *,

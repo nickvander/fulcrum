@@ -35,6 +35,16 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Marketplace fee-config UI: form + recompute-all button on the
+  marketplace detail page so operators can set
+  `Marketplace.default_fee_rate` + `default_shipping_cost`
+  without a DB shell, then click Recompute to refresh existing
+  cost breakdowns with the new rates. New backend endpoints
+  `PATCH /api/v1/marketplace/{id}/fee-config` (partial update,
+  rejects negatives) + `POST /api/v1/marketplace/{id}/recompute-cost-breakdowns`
+  (synchronous, filters by `OrderSource` derived from the
+  marketplace name). 10 new backend tests + 12 new frontend
+  tests. en + es-MX i18n parity. Backend 617/8, frontend 594/0.
 - Phase 8 Track 2 dashboard widgets: four new analytics widgets
   consuming the Track 1 cost-rollup endpoints, laid out in a 2x2
   grid on the main dashboard. (1) **Today's profit** ticker —
@@ -294,11 +304,6 @@ Roughly in order of impact / unblock value:
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Marketplace fee config UI** — Phase 8 Track 1 exposed
-  `Marketplace.default_fee_rate` + `default_shipping_cost` but
-  there's no UI to set them yet. Operators have to update via DB
-  shell. Small slice — a single form on the marketplace detail page
-  + a "Recompute all breakdowns" button.
 - **Track 2 follow-ups**: "Dead stock" table + geographic heatmaps.
   Both deferred — see `work/future/80-advanced-analytics.md`. Dead
   stock needs a velocity-by-window aggregator; heatmaps need
@@ -310,8 +315,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 607 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 582 passed, 0
+  → 617 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 594 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 
