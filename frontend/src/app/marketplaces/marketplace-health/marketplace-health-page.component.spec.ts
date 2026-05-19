@@ -28,6 +28,9 @@ function row(overrides: Partial<MarketplaceCredentialHealth> = {}): MarketplaceC
     orders_poll_stale: false,
     inbound_open_count: 0,
     inbound_stale_count: 0,
+    webhook_last_received_at: null,
+    webhooks_received_last_24h: 0,
+    webhook_likely_disconnected: false,
     ...overrides,
   };
 }
@@ -37,6 +40,7 @@ function listResponse(items: MarketplaceCredentialHealth[]): HealthListResponse 
     items,
     order_poll_stale_minutes: 30,
     inbound_reconcile_stale_minutes: 90,
+    webhook_disconnect_hours: 24,
   };
 }
 
@@ -103,6 +107,7 @@ describe('MarketplaceHealthPageComponent', () => {
     expect(fixture.debugElement.query(By.css('[data-testid="health-empty-state"]'))).toBeNull();
     expect(component.orderPollStaleMinutes).toBe(30);
     expect(component.inboundReconcileStaleMinutes).toBe(90);
+    expect(component.webhookDisconnectHours).toBe(24);
   });
 
   it('pollOrders() patches the row in-place from the embedded health payload', () => {
@@ -192,6 +197,74 @@ describe('MarketplaceHealthPageComponent', () => {
     expect(component.inboundClass(row({ inbound_open_count: 0 }))).toBe('badge-ok');
     expect(component.inboundClass(row({ inbound_open_count: 2, inbound_stale_count: 0 }))).toBe('badge-info');
     expect(component.inboundClass(row({ inbound_open_count: 2, inbound_stale_count: 1 }))).toBe('badge-warn');
+
+    // Webhook column has three states: ok (events received), warn
+    // (no events in 24h but credential too fresh to flag), error
+    // (subscription likely disconnected).
+    expect(component.webhookClass(row({
+      webhooks_received_last_24h: 5,
+      webhook_likely_disconnected: false,
+    }))).toBe('badge-ok');
+    expect(component.webhookClass(row({
+      webhooks_received_last_24h: 0,
+      webhook_likely_disconnected: false,
+    }))).toBe('badge-warn');
+    expect(component.webhookClass(row({
+      webhooks_received_last_24h: 0,
+      webhook_likely_disconnected: true,
+    }))).toBe('badge-error');
+  });
+
+  it('renders the webhook column with the right pill state per row', () => {
+    serviceStub.list.mockReturnValue(of(listResponse([
+      row({
+        credential_id: 1,
+        webhooks_received_last_24h: 3,
+        webhook_last_received_at: '2026-05-18T11:00:00Z',
+        webhook_likely_disconnected: false,
+      }),
+      row({
+        credential_id: 2,
+        webhooks_received_last_24h: 0,
+        webhook_last_received_at: null,
+        webhook_likely_disconnected: true,
+      }),
+    ])));
+    component.refresh();
+    fixture.detectChanges();
+
+    const pillOne = fixture.debugElement.query(By.css('[data-testid="webhook-pill-1"]'));
+    expect(pillOne).not.toBeNull();
+    expect(pillOne.nativeElement.classList.contains('badge-ok')).toBe(true);
+
+    const pillTwo = fixture.debugElement.query(By.css('[data-testid="webhook-pill-2"]'));
+    expect(pillTwo).not.toBeNull();
+    expect(pillTwo.nativeElement.classList.contains('badge-error')).toBe(true);
+  });
+
+  it('applyRefreshedHealth() updates the webhook flags after a poll', () => {
+    serviceStub.list.mockReturnValue(of(listResponse([row({
+      credential_id: 1,
+      webhook_likely_disconnected: true,
+      webhooks_received_last_24h: 0,
+    })])));
+    component.refresh();
+    fixture.detectChanges();
+
+    serviceStub.pollOrders.mockReturnValue(of({
+      credential_id: 1, marketplace_name: 'Amazon',
+      orders_new: 1, orders_updated: 0, orders_skipped: 0, items_created: 1,
+      health: row({
+        credential_id: 1,
+        webhook_likely_disconnected: false,
+        webhooks_received_last_24h: 2,
+        webhook_last_received_at: '2026-05-18T12:00:00Z',
+      }),
+    } as PollOrdersResult));
+
+    component.pollOrders(component.rows[0]);
+    expect(component.rows[0].webhook_likely_disconnected).toBe(false);
+    expect(component.rows[0].webhooks_received_last_24h).toBe(2);
   });
 
   it("ago() returns 'Never' for null and a relative string for a recent timestamp", () => {

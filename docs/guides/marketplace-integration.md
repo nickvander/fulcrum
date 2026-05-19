@@ -319,6 +319,7 @@ are healthy:
 | --------------- | --------------------------------------------------- |
 | Auth            | `MarketplaceCredential.needs_reauthorization` + `last_refresh_error` |
 | Last order poll | `MarketplaceCredential.last_orders_polled_at` (flags stale at 30min) |
+| Webhooks (24h)  | most recent `WebhookEvent.received_at` + 24h count for this marketplace. Flags `webhook_likely_disconnected` when the credential is older than 24h AND no events have arrived in 24h |
 | Inbound         | rollup of open `StockTransfer`s for this marketplace; stale = `last_reconciled_at` NULL or > 90min |
 | Actions         | "Poll orders" + "Reconcile inbound" buttons        |
 
@@ -337,6 +338,16 @@ API surface:
 
 Both action endpoints embed a refreshed health row in the response so
 the UI can patch the table without a follow-up list call.
+
+The webhook column is a defensive complement to the order back-fill
+poller. The poller catches missed webhook deliveries automatically, so
+silent webhook failures don't lose orders — but they DO mean the
+push-notification channel is broken, and a sustained "0 webhooks in
+24h" on a credential that's been live for a day is the operator's
+signal to re-check the orders subscription in the marketplace's
+developer panel. The flag deliberately gates on credential age (only
+fires after 24h of connection) to avoid false-positives on a
+freshly-connected account.
 
 The REST surface follows the same shape:
 

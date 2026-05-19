@@ -1561,7 +1561,7 @@
     },
     "marketplaceHealth": {
         "title": "Salud de marketplaces",
-        "subtitle": "Estado de los pipelines de polling de pedidos y reconciliación de inbound. El polling se marca como obsoleto a los {{pollMins}} minutos; la reconciliación a los {{reconcileMins}} minutos.",
+        "subtitle": "Estado de los pipelines de polling de pedidos, webhooks y reconciliación de inbound. El polling se marca como obsoleto a los {{pollMins}} minutos; la reconciliación a los {{reconcileMins}} minutos; la suscripción de webhooks tras {{webhookHours}} horas sin eventos.",
         "refresh": "Actualizar",
         "never": "Nunca",
         "justNow": "Ahora",
@@ -1574,6 +1574,7 @@
             "marketplace": "Marketplace",
             "auth": "Autenticación",
             "orderPoll": "Último polling de pedidos",
+            "webhooks": "Webhooks (24h)",
             "inbound": "Transferencias inbound",
             "actions": "Acciones"
         },
@@ -1585,6 +1586,13 @@
             "none": "Ninguna abierta",
             "openCount": "{{count}} abierta(s)",
             "staleCount": "{{count}} obsoleta(s)"
+        },
+        "webhooks": {
+            "disconnected": "Suscripción probablemente rota",
+            "none24h": "Sin eventos",
+            "count24h": "{{count}} recibidos",
+            "lastReceived": "Último evento: hace {{when}}",
+            "neverTooltip": "No se han recibido webhooks en las últimas {{hours}}h. Revisa el panel de desarrollador del marketplace — la suscripción de pedidos puede necesitar reconfigurarse."
         },
         "actions": {
             "pollNow": "Polling de pedidos",

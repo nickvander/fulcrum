@@ -44,6 +44,7 @@ export class MarketplaceHealthPageComponent implements OnInit {
   loading = false;
   orderPollStaleMinutes = 30;
   inboundReconcileStaleMinutes = 90;
+  webhookDisconnectHours = 24;
 
   /** Per-row busy keyed by credential_id, so the spinner shows only
    *  on the row whose button was clicked. */
@@ -59,6 +60,7 @@ export class MarketplaceHealthPageComponent implements OnInit {
     'marketplace',
     'auth',
     'order_poll',
+    'webhooks',
     'inbound',
     'actions',
   ];
@@ -82,6 +84,7 @@ export class MarketplaceHealthPageComponent implements OnInit {
           this.rows = resp.items;
           this.orderPollStaleMinutes = resp.order_poll_stale_minutes;
           this.inboundReconcileStaleMinutes = resp.inbound_reconcile_stale_minutes;
+          this.webhookDisconnectHours = resp.webhook_disconnect_hours;
         },
         error: () => this.snack('marketplaceHealth.errors.loadFailed'),
       });
@@ -197,6 +200,15 @@ export class MarketplaceHealthPageComponent implements OnInit {
   inboundClass(row: MarketplaceCredentialHealth): string {
     if (row.inbound_open_count === 0) return 'badge-ok';
     return row.inbound_stale_count > 0 ? 'badge-warn' : 'badge-info';
+  }
+
+  /** Webhook column color: red when the subscription looks dead,
+   *  orange when the 24h count is zero (but the credential is still
+   *  too fresh to flag), green otherwise. */
+  webhookClass(row: MarketplaceCredentialHealth): string {
+    if (row.webhook_likely_disconnected) return 'badge-error';
+    if (row.webhooks_received_last_24h === 0) return 'badge-warn';
+    return 'badge-ok';
   }
 
   /** Compact "Xm ago" / "Xh ago" without pulling in a date lib. */

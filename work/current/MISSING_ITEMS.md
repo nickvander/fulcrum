@@ -10,12 +10,6 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **ML webhook subscription health check** — the order poller
-      now back-fills missed webhooks, but the subscription itself can
-      be missing (operator never subscribed, ML expired it). Add a
-      startup or hourly check that POSTs to
-      `/applications/{app_id}/notifications` to ensure every healthy
-      ML credential has an active `orders` topic subscription.
 - [ ] **Frontend Mercado Pago checkout flow** — DEFERRED. The MP
       Checkout API is for a future direct-to-consumer storefront,
       which Fulcrum is not today. ML sales already flow through
@@ -45,6 +39,20 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **ML webhook subscription health check** — folded into the
+      `/marketplaces/health` page rather than ML's
+      `/applications/{app_id}/notifications` (which the docs say is a
+      one-time developer-panel config, not a per-user API surface).
+      New `Webhooks (24h)` column shows the most-recent
+      `WebhookEvent.received_at` per marketplace + a 24h count, and
+      flags `webhook_likely_disconnected=True` when the credential is
+      older than 24h AND no events have arrived in 24h. Catches both
+      "subscription never configured" and "subscription died" without
+      false-positives on a freshly-connected credential. The signal
+      is read-only over the existing `WebhookEvent` table — no new
+      schema, no extra API call to ML. Defensive complement to the
+      order back-fill poller. 6 new backend tests + 2 new frontend
+      tests. Backend 564/8, frontend 539/0.
 - [x] **Marketplace pipeline health page** — new `/marketplaces/health`
       surfaces per-credential auth + order-poll-cursor + open-inbound
       rollups for the three automatic pipelines shipped over the last

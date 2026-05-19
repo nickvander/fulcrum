@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
-from src.models.marketplace import Marketplace, MarketplaceCredential
+from src.models.marketplace import Marketplace, MarketplaceCredential, WebhookEvent
 from src.models.stock_transfer import (
     StockTransfer,
     StockTransferStatus,
@@ -37,6 +37,7 @@ from src.schemas.marketplace_health import (
     ORDER_POLL_STALE_MINUTES,
     PollOrdersResult,
     ReconcileInboundResult,
+    WEBHOOK_DISCONNECT_HOURS,
 )
 
 
@@ -80,6 +81,77 @@ def _is_order_poll_stale(
 
 def _dest_location_for(marketplace_name: str) -> Optional[str]:
     return _MARKETPLACE_TO_DEST_LOCATION.get(marketplace_name.lower())
+
+
+def _webhook_stats(
+    db: Session, marketplace_id: int, now: datetime,
+) -> Dict[str, Any]:
+    """Per-marketplace webhook freshness. Returns the most recent
+    `WebhookEvent.received_at` for this marketplace + a count of
+    events in the last 24h. Used to populate
+    `webhook_last_received_at` + `webhooks_received_last_24h` on
+    every credential row for this marketplace."""
+    last_received = (
+        db.query(WebhookEvent.received_at)
+        .filter(WebhookEvent.marketplace_id == marketplace_id)
+        .order_by(WebhookEvent.received_at.desc())
+        .limit(1)
+        .scalar()
+    )
+
+    cutoff = now - timedelta(hours=24)
+    recent_count = (
+        db.query(WebhookEvent)
+        .filter(
+            WebhookEvent.marketplace_id == marketplace_id,
+            WebhookEvent.received_at >= cutoff,
+        )
+        .count()
+    )
+
+    return {
+        "last_received_at": last_received,
+        "recent_count": int(recent_count),
+    }
+
+
+def _is_webhook_disconnected(
+    *,
+    credential_created_at: Optional[datetime],
+    webhook_last_received_at: Optional[datetime],
+    now: datetime,
+) -> bool:
+    """A credential's webhook subscription is "likely disconnected"
+    when the operator has been connected long enough that we'd expect
+    SOMETHING to have arrived AND nothing has in the last
+    WEBHOOK_DISCONNECT_HOURS.
+
+    Two-part guard avoids false-positives on a freshly-connected
+    credential where it's too early to tell. The ML order poller
+    will still back-fill any missing orders regardless of this flag —
+    the flag just tells the operator their subscription is probably
+    broken and they should check the developer panel.
+    """
+    if credential_created_at is None:
+        return False
+    age = now - _ensure_tz(credential_created_at, now)
+    if age < timedelta(hours=WEBHOOK_DISCONNECT_HOURS):
+        return False
+
+    if webhook_last_received_at is None:
+        return True
+    since_last = now - _ensure_tz(webhook_last_received_at, now)
+    return since_last > timedelta(hours=WEBHOOK_DISCONNECT_HOURS)
+
+
+def _ensure_tz(value: datetime, reference: datetime) -> datetime:
+    """SQLite (used in some test paths) returns naive datetimes even
+    when the column is `DateTime(timezone=True)`. Normalize to UTC
+    using the same tz as the comparison reference so subtraction
+    doesn't raise."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=reference.tzinfo or timezone.utc)
+    return value
 
 
 def _open_transfer_stats(
@@ -128,6 +200,7 @@ def _build_credential_health(
     marketplace_name = marketplace.name if marketplace else f"#{credential.marketplace_id}"
 
     stats = _open_transfer_stats(db, marketplace_name, credential.user_id)
+    webhook = _webhook_stats(db, credential.marketplace_id, now)
     return MarketplaceCredentialHealth(
         credential_id=credential.id,
         marketplace_id=credential.marketplace_id,
@@ -142,6 +215,13 @@ def _build_credential_health(
         ),
         inbound_open_count=stats["open_count"],
         inbound_stale_count=stats["stale_count"],
+        webhook_last_received_at=webhook["last_received_at"],
+        webhooks_received_last_24h=webhook["recent_count"],
+        webhook_likely_disconnected=_is_webhook_disconnected(
+            credential_created_at=credential.created_at,
+            webhook_last_received_at=webhook["last_received_at"],
+            now=now,
+        ),
     )
 
 
