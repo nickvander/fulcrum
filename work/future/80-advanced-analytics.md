@@ -52,16 +52,17 @@ intelligence.
 
 ### Track 2: Dashboard Visualization
 
-- [~] **Step 3: KPI Widgets** — partial (2026-05-19).
+- [x] **Step 3: KPI Widgets** — complete (2026-05-19).
   - [x] "Today's profit" ticker (uses cost-rollup window_days=1) —
     headline number + revenue/cost/margin/orders breakdown.
   - [x] "Top movers" table — top 10 by revenue with per-product
     net margin (server-side pro-rates order-level fees by revenue
     share).
-  - [ ] "Dead stock" table — depends on a velocity-by-window
-    aggregator that doesn't exist yet; the existing low-stock
-    report covers some of this but doesn't surface dead vs
-    healthy.
+  - [x] "Dead stock" table — products with on-hand stock and
+    near-zero velocity over a configurable window. Reuses the
+    velocity-by-window aggregator from the velocity/margin
+    reports; sorts never-sold first, then by days_since_last_sale
+    desc, then by capital-at-risk (stock × cost) desc.
 - [~] **Step 4: Interactive Charts** — partial (2026-05-19).
   - [x] Sales vs spend over time (hand-rolled SVG line chart
     over daily time-series).

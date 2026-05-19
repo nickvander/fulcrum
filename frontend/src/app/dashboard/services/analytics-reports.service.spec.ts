@@ -129,4 +129,14 @@ describe('AnalyticsReportsService', () => {
     expect(req.request.params.get('limit')).toBe('5');
     req.flush({ window_days: 30, limit: 5, rows: [] });
   });
+
+  it('deadStock() GETs /reports/dead-stock with window + threshold + limit', () => {
+    service.deadStock(60, 0.2, 30).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/dead-stock`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('60');
+    expect(req.request.params.get('threshold_daily_velocity')).toBe('0.2');
+    expect(req.request.params.get('limit')).toBe('30');
+    req.flush({ window_days: 60, threshold_daily_velocity: 0.2, rows: [] });
+  });
 });

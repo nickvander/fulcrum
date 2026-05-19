@@ -21,6 +21,7 @@ import { TodayProfitWidgetComponent } from '../../widgets/today-profit-widget/to
 import { SalesVsSpendWidgetComponent } from '../../widgets/sales-vs-spend-widget/sales-vs-spend-widget.component';
 import { MarginByChannelWidgetComponent } from '../../widgets/margin-by-channel-widget/margin-by-channel-widget.component';
 import { TopMoversWidgetComponent } from '../../widgets/top-movers-widget/top-movers-widget.component';
+import { DeadStockWidgetComponent } from '../../widgets/dead-stock-widget/dead-stock-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
@@ -49,6 +50,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
         SalesVsSpendWidgetComponent,
         MarginByChannelWidgetComponent,
         TopMoversWidgetComponent,
+        DeadStockWidgetComponent,
         RouterModule,
         TranslocoModule
     ]

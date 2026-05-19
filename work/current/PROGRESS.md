@@ -35,6 +35,23 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Phase 8 Track 2 dead-stock widget: closes the last open
+  Track-2 KPI widget. New `GET /api/v1/reports/dead-stock`
+  surfaces products with on-hand inventory but near-zero
+  velocity over a configurable window (default 30d) /
+  threshold (default 0.1 units/day). Per-row info: on-hand,
+  units_sold, daily_velocity, days_since_last_sale (NULL for
+  never-sold products), cost_price, and stock_value_at_cost
+  (the capital-at-risk dollars frozen in the SKU). Sort
+  order: never-sold first (worst kind of frozen capital),
+  then by days_since_last_sale desc, then by
+  stock_value_at_cost desc as a tie-breaker. Bundles excluded
+  (same rule the velocity/margin reports follow). Dashboard
+  widget renders the table full-width below the 2x2
+  analytics grid with a capital-at-risk tag in the header.
+  15 new backend tests + 10 new frontend tests (9 widget + 1
+  service). en + es-MX i18n parity green. Backend 632/8,
+  frontend 604/0.
 - Marketplace fee-config UI: form + recompute-all button on the
   marketplace detail page so operators can set
   `Marketplace.default_fee_rate` + `default_shipping_cost`
@@ -304,10 +321,9 @@ Roughly in order of impact / unblock value:
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Track 2 follow-ups**: "Dead stock" table + geographic heatmaps.
-  Both deferred — see `work/future/80-advanced-analytics.md`. Dead
-  stock needs a velocity-by-window aggregator; heatmaps need
-  shipping-zone or customer-location data not currently captured.
+- **Track 2 follow-ups**: only geographic heatmaps remain. Deferred
+  — needs shipping-zone or customer-location data not currently
+  captured. See `work/future/80-advanced-analytics.md`.
 - **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
   Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
@@ -315,8 +331,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 617 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 594 passed, 0
+  → 632 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 604 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

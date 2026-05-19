@@ -65,6 +65,30 @@ export interface TopMoversResponse {
   rows: TopMoverRow[];
 }
 
+export interface DeadStockRow {
+  product_id: number;
+  product_name: string;
+  product_sku: string | null;
+  on_hand: number;
+  units_sold: number;
+  daily_velocity: number;
+  /**
+   * Calendar days since the product's most-recent realized sale.
+   * `null` when the product has NEVER sold — UI sorts those to the
+   * top because never-sold inventory is the worst kind.
+   */
+  days_since_last_sale: number | null;
+  cost_price: number | null;
+  /** on_hand × cost_price; the dollars "frozen" in this SKU. */
+  stock_value_at_cost: number | null;
+}
+
+export interface DeadStockResponse {
+  window_days: number;
+  threshold_daily_velocity: number;
+  rows: DeadStockRow[];
+}
+
 /**
  * CSV/PDF download endpoints for the velocity / margin / stockout
  * reports. These reports do not have a JSON shape on the frontend yet —
@@ -182,6 +206,24 @@ export class AnalyticsReportsService {
       .set('limit', String(limit));
     return this.http.get<TopMoversResponse>(
       `${this.apiUrl}/top-movers`, { params },
+    );
+  }
+
+  /**
+   * Products with on-hand stock but near-zero recent sales velocity.
+   * Powers the dashboard "Dead stock" widget. Threshold is in
+   * units/day; the backend default 0.1 (~< 1 sale per 10 days) is
+   * passed explicitly here so frontend + backend stay in sync.
+   */
+  deadStock(
+    windowDays = 30, thresholdDailyVelocity = 0.1, limit = 20,
+  ): Observable<DeadStockResponse> {
+    const params = new HttpParams()
+      .set('window_days', String(windowDays))
+      .set('threshold_daily_velocity', String(thresholdDailyVelocity))
+      .set('limit', String(limit));
+    return this.http.get<DeadStockResponse>(
+      `${this.apiUrl}/dead-stock`, { params },
     );
   }
 }
