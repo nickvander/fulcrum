@@ -6,7 +6,110 @@ when you find them so the next session has a place to start._
 
 ## High Priority
 
-_(none active)_
+- [ ] **Payments: refund + cancel actions on `/payments` admin UI.**
+      The Payments admin UI (shipped — `frontend/src/app/payments/`)
+      lists every payment but offers no way to reverse one. Build
+      the full vertical slice so an operator can refund (full or
+      partial) or cancel a pending payment from the detail dialog.
+
+      Note: the candidate list initially said "backend already
+      wires `POST /v1/payments/{id}/refunds`". That was wrong — the
+      `MercadoPagoConnector` (`backend/src/services/mercado_pago.py`)
+      currently has only `create_payment`, `fetch_payment`, and
+      `verify_webhook_signature`. The connector methods + Fulcrum
+      endpoints + UI all still need to be built.
+
+      **Deliverables (in order):**
+
+      1. **Connector — `MercadoPagoConnector.refund_payment`** in
+         `backend/src/services/mercado_pago.py`. Wraps MP's
+         `POST /v1/payments/{external_id}/refunds`:
+           - No body → full refund.
+           - Body `{"amount": <number>}` → partial refund.
+         Returns a `RefundResult` dataclass with the MP refund id,
+         amount, status, raw response. Stub branch for dev mirrors
+         the `_stub_create_payment` convention.
+
+      2. **Connector — `MercadoPagoConnector.cancel_payment`** in
+         the same file. Wraps MP's `PUT /v1/payments/{external_id}`
+         with body `{"status": "cancelled"}`. Per MP docs only
+         `pending` / `in_process` payments are cancellable —
+         anything else returns 400 from MP, which the connector
+         propagates as a `RefundResult`/`CancelResult` with an
+         error field instead of raising.
+
+      3. **Model — add reversal audit columns to `Payment`** in
+         `backend/src/models/payment.py`. New columns + migration:
+           - `refunded_amount: float` (sum across refunds; 0 default)
+           - `last_refund_id: str | None` (MP refund id, for idempotency)
+           - `last_reversal_at: datetime | None`
+           - `reversal_reason: str(255) | None` (operator-supplied)
+         `PaymentStatus.REFUNDED` already exists — partial refunds
+         keep `APPROVED` until `refunded_amount >= amount`, then
+         flip to `REFUNDED`.
+
+      4. **Endpoint — `POST /api/v1/payments/{id}/refund`** in
+         `backend/src/api/v1/endpoints/payments.py`. Body:
+         `{amount?: float, reason?: str}`. Loads the Payment row,
+         validates state (only `APPROVED` is refundable, and
+         `amount <= remaining`), calls the connector, persists the
+         result + audit columns, returns the updated `PaymentSchema`.
+         Localized errors: `apiErrors.payment.notRefundable`,
+         `apiErrors.payment.refundExceedsRemaining`,
+         `apiErrors.payment.providerError` (with the MP reason).
+
+      5. **Endpoint — `POST /api/v1/payments/{id}/cancel`** —
+         similar shape. Only `PENDING` is cancellable. Errors:
+         `apiErrors.payment.notCancellable`,
+         `apiErrors.payment.providerError`.
+
+      6. **Frontend service** — extend
+         `frontend/src/app/payments/services/payments.service.ts`
+         with `refund(paymentId, {amount?, reason?})` and
+         `cancel(paymentId, {reason?})`. Both return the updated
+         `PaymentSchema` so the dialog can patch in place.
+
+      7. **Frontend — detail dialog actions** in
+         `frontend/src/app/payments/pages/payment-detail-dialog/`:
+           - **Refund** button: visible only when status is
+             `APPROVED` and `refunded_amount < amount`. Opens a
+             nested modal asking for amount (defaulted to the
+             remaining balance) + reason. Confirmation step that
+             surfaces the connector's reply on success / error.
+           - **Cancel** button: visible only when status is
+             `PENDING`. Single confirmation dialog with reason
+             field.
+           - Result snackbar + in-place patch of the Payment row
+             so the user sees the new status without reopening the
+             dialog.
+
+      8. **Tests:**
+           - Backend: connector refund + cancel against the stub
+             branch + real-HTTP branch + provider-error branch
+             (10+ tests across the two methods); endpoint state-
+             gating tests (refund a pending = 400, refund > remaining
+             = 400, refund happy path, partial → partial → full
+             status transition, cancel an approved = 400, idempotent
+             re-call of the same operation).
+           - Frontend: service spec covers the two new methods + the
+             error pathways; dialog spec covers button visibility per
+             status + nested-modal flow + result patch.
+
+      9. **i18n** — en + es-MX parity. New keys go under
+         `payments.actions.*` (button labels + tooltips +
+         confirmation copy) and `apiErrors.payment.*` (the four new
+         error codes).
+
+      **Out of scope:** chargebacks (MP webhook already sets
+      `PaymentStatus.REFUNDED` on `charged_back`); refund reversals
+      (rare; would only matter if MP supports it on this account
+      tier); per-line-item partial refunds (the Payment row is
+      order-level, not item-level).
+
+      **Verification surface:** end-to-end against the dev MP
+      account — create a stub payment, refund it $1, refund it
+      again for the rest, status flips to `REFUNDED`. Repeat for
+      cancel on a `PENDING` payment.
 
 ## Medium Priority
 
@@ -23,10 +126,6 @@ _(none active)_
       `/api/v1/products`). Required gate before committing to
       Phase 2 Rust foundation. Phase 1 (Python perf wins) has
       shipped — see `work/future/81-rust-backend-migration-plan.md`.
-- [ ] Payments: refund + cancel actions on the `/payments` admin UI.
-      Backend wires `POST /v1/payments/{id}/refunds` on the MP
-      connector; frontend exposes a "Refund" button on the detail
-      dialog (full + partial amounts) with confirmation + reason.
 - [ ] AI content generation backend + UI hooks **shipped** —
       `/ai/generate-description` + `/ai/generate-listing-description`
       both exist, frontend buttons gate on
