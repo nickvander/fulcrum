@@ -5,6 +5,7 @@ import { MarketplaceDetailComponent } from './pages/marketplace-detail/marketpla
 import { MarketplaceSettingsComponent } from './pages/marketplace-settings/marketplace-settings';
 
 import { MarketplaceCallbackComponent } from './pages/marketplace-callback/marketplace-callback';
+import { MarketplaceHealthPageComponent } from './marketplace-health/marketplace-health-page.component';
 import { StockTransferListComponent } from './stock-transfers/stock-transfer-list/stock-transfer-list';
 import { StockTransferDetailComponent } from './stock-transfers/stock-transfer-detail/stock-transfer-detail';
 import { StockTransferPlannerComponent } from './stock-transfers/stock-transfer-planner/stock-transfer-planner';
@@ -12,6 +13,7 @@ import { StockTransferReconciliationComponent } from './stock-transfers/stock-tr
 
 const routes: Routes = [
   { path: '', component: MarketplaceListComponent },
+  { path: 'health', component: MarketplaceHealthPageComponent },
   { path: 'transfers', component: StockTransferListComponent },
   { path: 'transfers/planner', component: StockTransferPlannerComponent },
   { path: 'transfers/reconciliation', component: StockTransferReconciliationComponent },

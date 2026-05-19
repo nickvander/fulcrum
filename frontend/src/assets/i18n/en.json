@@ -105,6 +105,7 @@
         "marketplaces": "Marketplaces",
         "marketplaceChannels": "Channels",
         "stockTransfers": "Stock Transfers",
+        "marketplaceHealth": "Pipeline Health",
         "marketing": "Marketing",
         "management": "Management",
         "users": "Users",
@@ -1558,6 +1559,62 @@
             "loadFailed": "Could not load payments."
         }
     },
+    "marketplaceHealth": {
+        "title": "Marketplace Health",
+        "subtitle": "Status of the order-poll + inbound-reconciliation pipelines. Order polls flag stale after {{pollMins}} minutes; inbound reconciliation flags stale after {{reconcileMins}} minutes.",
+        "refresh": "Refresh",
+        "never": "Never",
+        "justNow": "Just now",
+        "empty": {
+            "title": "No marketplace credentials connected",
+            "subtitle": "Connect MercadoLibre or Amazon under Channels first.",
+            "cta": "Go to Channels"
+        },
+        "cols": {
+            "marketplace": "Marketplace",
+            "auth": "Auth",
+            "orderPoll": "Last order poll",
+            "inbound": "Inbound transfers",
+            "actions": "Actions"
+        },
+        "auth": {
+            "ok": "Healthy",
+            "reauthRequired": "Reauth required"
+        },
+        "inbound": {
+            "none": "None open",
+            "openCount": "{{count}} open",
+            "staleCount": "{{count}} stale"
+        },
+        "actions": {
+            "pollNow": "Poll orders",
+            "pollTooltip": "Run the order ingestion against this credential right now",
+            "reconcileNow": "Reconcile inbound",
+            "reconcileTooltip": "Run inbound reconciliation for this credential's open transfers"
+        },
+        "results": {
+            "pollSummary": "Poll: {{new}} new, {{updated}} updated, {{items}} line items.",
+            "pollError": "Poll failed: {{error}}",
+            "reconcileSummary": "Reconcile: {{processed}} transfer(s) processed, {{updated}} updated, {{units}} units credited.",
+            "reconcileEmpty": "Reconcile: nothing open to reconcile.",
+            "reconcileError": "Reconcile failed: {{error}}"
+        },
+        "messages": {
+            "pollFound": "Poll found {{new}} new order(s), {{updated}} updated, {{items}} line items.",
+            "pollNoNew": "Poll completed — no new orders.",
+            "pollNeedsReauth": "Reconnect the credential before polling.",
+            "pollUnsupported": "Order polling is not supported for this marketplace.",
+            "reconcileDone": "Reconcile: {{processed}} transfer(s), {{updated}} updated, {{units}} units credited.",
+            "reconcileEmpty": "Reconcile completed — nothing open to reconcile.",
+            "reconcileNeedsReauth": "Reconnect the credential before reconciling.",
+            "reconcileUnsupported": "Inbound reconciliation is not supported for this marketplace."
+        },
+        "errors": {
+            "loadFailed": "Could not load marketplace health.",
+            "pollFailed": "Could not run the order poll.",
+            "reconcileFailed": "Could not run the inbound reconciliation."
+        }
+    },
     "apiErrors": {
         "unknown": "An unexpected error occurred. Please try again.",
         "network": "Unable to connect to server. Please check your internet connection.",
@@ -1642,7 +1699,15 @@
             "notFound": "Sales order not found."
         },
         "stockTransfer": {
-            "notFound": "Stock transfer not found."
+            "notFound": "Stock transfer not found.",
+            "reconcileUnsupportedDestination": "Destination {{dest}} is not a marketplace fulfillment warehouse.",
+            "reconcileMarketplaceNotFound": "Marketplace {{name}} is not configured.",
+            "reconcileNoCredential": "No usable {{name}} credential. Connect the marketplace before reconciling.",
+            "reconcileConnectorUnavailable": "Marketplace connector for {{name}} is unavailable.",
+            "reconcileNeedsReauth": "{{name}} credential needs re-authorization: {{reason}}"
+        },
+        "marketplaceCredential": {
+            "notFound": "Marketplace credential {{id}} not found."
         },
         "setting": {
             "unknownMarketplace": "Unknown marketplace."

@@ -35,6 +35,23 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Marketplace pipeline health page: new `/marketplaces/health`
+  surfaces a per-credential rollup of the three automatic pipelines
+  (Amazon order poll, ML order poll, ML+Amazon inbound reconciliation).
+  Each row shows auth state (with `last_refresh_error` tooltip), the
+  most-recent order-poll timestamp with staleness flag at 30min
+  (2x the 15min cron), and an inbound rollup counting open transfers
+  + how many are stale at 90min (1.5x the hourly reconcile cron).
+  Rows sort problems-first: reauth-required, then least-recently-
+  polled. Per-row "Poll orders" and "Reconcile inbound" buttons run
+  the existing per-credential entrypoints synchronously and patch
+  the row in place from the refreshed health payload the action
+  endpoints embed. Backend wires `GET /api/v1/marketplaces/health/`,
+  `POST /{id}/poll-orders`, `POST /{id}/reconcile-inbound` — all
+  reuse the per-credential code path that the Celery beats also use
+  (no parallel implementation). 13 new backend tests + 14 new
+  frontend tests. en + es-MX i18n parity green. Backend 558/8,
+  frontend 537/0.
 - Amazon FBA inbound reconciliation + manual reconcile-now UI: the
   reconciliation service is now marketplace-agnostic
   (`MARKETPLACE_INBOUND_TARGETS` registry) so both ML Full and Amazon
@@ -209,14 +226,6 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
-- **Marketplace credential health page** — operator visibility for
-  the three automatic processes touching marketplace data (Amazon
-  order poll, ML order poll, ML + Amazon inbound reconciliation).
-  Today the operator would have to query the DB to see
-  `last_orders_polled_at` cadence + `needs_reauthorization` state +
-  per-transfer `last_reconciled_at`. A simple `/marketplaces/health`
-  page with one row per credential + reconcile rollup closes the
-  "is my pipeline healthy?" question without ssh.
 - **Phase 0 of the Rust migration plan** — instrumentation. Phase 1
   product-listing perf wins have all landed (see Rust plan checkbox
   state); the remaining gate before deciding "optimized Python is
@@ -236,8 +245,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 545 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 523 passed, 0
+  → 558 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 537 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

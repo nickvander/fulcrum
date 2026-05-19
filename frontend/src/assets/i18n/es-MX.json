@@ -105,6 +105,7 @@
         "marketplaces": "Mercados",
         "marketplaceChannels": "Canales",
         "stockTransfers": "Transferencias de stock",
+        "marketplaceHealth": "Salud de pipelines",
         "marketing": "Marketing",
         "management": "Administración",
         "users": "Usuarios",
@@ -1558,6 +1559,62 @@
             "loadFailed": "No se pudieron cargar los pagos."
         }
     },
+    "marketplaceHealth": {
+        "title": "Salud de marketplaces",
+        "subtitle": "Estado de los pipelines de polling de pedidos y reconciliación de inbound. El polling se marca como obsoleto a los {{pollMins}} minutos; la reconciliación a los {{reconcileMins}} minutos.",
+        "refresh": "Actualizar",
+        "never": "Nunca",
+        "justNow": "Ahora",
+        "empty": {
+            "title": "No hay credenciales de marketplace conectadas",
+            "subtitle": "Conecta MercadoLibre o Amazon primero, en Canales.",
+            "cta": "Ir a Canales"
+        },
+        "cols": {
+            "marketplace": "Marketplace",
+            "auth": "Autenticación",
+            "orderPoll": "Último polling de pedidos",
+            "inbound": "Transferencias inbound",
+            "actions": "Acciones"
+        },
+        "auth": {
+            "ok": "OK",
+            "reauthRequired": "Requiere reautorización"
+        },
+        "inbound": {
+            "none": "Ninguna abierta",
+            "openCount": "{{count}} abierta(s)",
+            "staleCount": "{{count}} obsoleta(s)"
+        },
+        "actions": {
+            "pollNow": "Polling de pedidos",
+            "pollTooltip": "Ejecuta la ingesta de pedidos para esta credencial ahora",
+            "reconcileNow": "Reconciliar inbound",
+            "reconcileTooltip": "Ejecuta la reconciliación inbound para las transferencias abiertas de esta credencial"
+        },
+        "results": {
+            "pollSummary": "Polling: {{new}} nuevos, {{updated}} actualizados, {{items}} líneas.",
+            "pollError": "El polling falló: {{error}}",
+            "reconcileSummary": "Reconciliación: {{processed}} transferencia(s) procesadas, {{updated}} actualizadas, {{units}} unidades acreditadas.",
+            "reconcileEmpty": "Reconciliación: nada abierto para reconciliar.",
+            "reconcileError": "La reconciliación falló: {{error}}"
+        },
+        "messages": {
+            "pollFound": "Polling encontró {{new}} pedido(s) nuevos, {{updated}} actualizados, {{items}} líneas.",
+            "pollNoNew": "Polling completado — no hay pedidos nuevos.",
+            "pollNeedsReauth": "Reconecta la credencial antes de hacer polling.",
+            "pollUnsupported": "El polling de pedidos no está disponible para este marketplace.",
+            "reconcileDone": "Reconciliación: {{processed}} transferencia(s), {{updated}} actualizada(s), {{units}} unidades acreditadas.",
+            "reconcileEmpty": "Reconciliación completada — nada abierto para reconciliar.",
+            "reconcileNeedsReauth": "Reconecta la credencial antes de reconciliar.",
+            "reconcileUnsupported": "La reconciliación inbound no está disponible para este marketplace."
+        },
+        "errors": {
+            "loadFailed": "No se pudo cargar la salud del marketplace.",
+            "pollFailed": "No se pudo ejecutar el polling de pedidos.",
+            "reconcileFailed": "No se pudo ejecutar la reconciliación inbound."
+        }
+    },
     "apiErrors": {
         "unknown": "Ocurrió un error inesperado. Inténtalo de nuevo.",
         "network": "No se pudo conectar al servidor. Verifica tu conexión a Internet.",
@@ -1642,7 +1699,15 @@
             "notFound": "Pedido de venta no encontrado."
         },
         "stockTransfer": {
-            "notFound": "Transferencia de inventario no encontrada."
+            "notFound": "Transferencia de inventario no encontrada.",
+            "reconcileUnsupportedDestination": "El destino {{dest}} no es un almacén de marketplace.",
+            "reconcileMarketplaceNotFound": "El marketplace {{name}} no está configurado.",
+            "reconcileNoCredential": "No hay credencial usable de {{name}}. Conéctalo antes de reconciliar.",
+            "reconcileConnectorUnavailable": "Conector del marketplace {{name}} no disponible.",
+            "reconcileNeedsReauth": "La credencial de {{name}} requiere reautorización: {{reason}}"
+        },
+        "marketplaceCredential": {
+            "notFound": "No se encontró la credencial de marketplace {{id}}."
         },
         "setting": {
             "unknownMarketplace": "Mercado desconocido."

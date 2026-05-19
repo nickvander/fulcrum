@@ -10,11 +10,6 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Marketplace credential health page** — surface
-      `last_orders_polled_at`, `needs_reauthorization`, last poll
-      summary per credential + per-transfer `last_reconciled_at`
-      rollup so the operator can see whether the auto-pipelines are
-      healthy without ssh'ing to read Celery logs.
 - [ ] **ML webhook subscription health check** — the order poller
       now back-fills missed webhooks, but the subscription itself can
       be missing (operator never subscribed, ML expired it). Add a
@@ -50,6 +45,19 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Marketplace pipeline health page** — new `/marketplaces/health`
+      surfaces per-credential auth + order-poll-cursor + open-inbound
+      rollups for the three automatic pipelines shipped over the last
+      few sessions. Each row has "Poll orders" + "Reconcile inbound"
+      buttons that run the existing per-credential entrypoints
+      synchronously and patch the row in place from the embedded
+      refreshed health. Staleness thresholds (30min for order poll,
+      90min for inbound reconcile) are surfaced on the page so the
+      operator knows when a number is normal vs. concerning. Backend
+      reuses the per-credential code path the Celery beats already
+      use — no parallel implementation. 13 new backend tests + 14
+      new frontend tests. en + es-MX i18n parity. Backend 558/8,
+      frontend 537/0.
 - [x] **Amazon FBA inbound reconciliation + manual reconcile-now UI**
       — generalized `inbound_shipment_reconciliation` from
       ML-specific to marketplace-agnostic via
