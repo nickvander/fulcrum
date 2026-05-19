@@ -23,7 +23,10 @@ describe('ProductScannerComponent', () => {
 
     beforeEach(async () => {
         aiServiceSpy = {
-            identifyProduct: vi.fn()
+            identifyProduct: vi.fn(),
+            isReady$: vi.fn().mockReturnValue(of(true)),
+            getCapabilities: vi.fn().mockReturnValue(of({ ready: true, enabled: true, configured: true, provider: 'google' })),
+            invalidateCapabilities: vi.fn()
         };
         snackBarSpy = {
             open: vi.fn()

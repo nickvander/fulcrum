@@ -86,16 +86,11 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     ) { }
 
     ngOnInit(): void {
-        // Force refresh store settings to ensure latest AI config
-        this.settingsService.loadStoreSettings();
-
-        // Need to check Store settings for AI config
-        this.settingsService.storeSettings$.subscribe(storeSettings => {
-
-            if (storeSettings?.ai_config) {
-                this.isAiEnabled = storeSettings.ai_config.enabled;
-
-            }
+        // Use AiService.isReady$() so the AI-identification path is enabled
+        // only when AI is on AND the active provider has an API key — keeps
+        // the scanner in sync with the backend gate on /ai/identify-product.
+        this.aiService.isReady$().subscribe(ready => {
+            this.isAiEnabled = ready;
         });
 
         // Sticky Tab: Restore last used tab index
