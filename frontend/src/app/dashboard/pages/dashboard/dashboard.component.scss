@@ -58,6 +58,21 @@
     }
 }
 
+// Phase-8 Track-2 analytics widgets. 2x2 desktop layout — today's
+// profit (small ticker) + sales vs spend (line chart) on top row,
+// margin by channel + top movers on the second. Collapses to one
+// column on narrow viewports.
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+}
+
 .grid-section {
     display: flex;
     flex-direction: column;

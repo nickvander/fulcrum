@@ -88,4 +88,45 @@ describe('AnalyticsReportsService', () => {
     expect(req.request.params.get('limit')).toBe('5000');
     req.flush(new Blob());
   });
+
+  // ---- Phase 8 cost-rollup endpoints ---------------------------------------
+
+  it('costRollup() GETs /reports/cost-rollup with window_days', () => {
+    service.costRollup(7).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/cost-rollup`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('7');
+    expect(req.request.params.has('source')).toBe(false);
+    req.flush({});
+  });
+
+  it('costRollup() forwards the optional source query param when set', () => {
+    service.costRollup(30, 'amazon').subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/cost-rollup`);
+    expect(req.request.params.get('source')).toBe('amazon');
+    req.flush({});
+  });
+
+  it('costRollupByChannel() GETs the by-channel endpoint', () => {
+    service.costRollupByChannel(60).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/cost-rollup/by-channel`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('60');
+    req.flush({ window_days: 60, channels: [] });
+  });
+
+  it('costRollupDaily() GETs the daily-series endpoint', () => {
+    service.costRollupDaily(14).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/cost-rollup/daily`);
+    expect(req.request.params.get('window_days')).toBe('14');
+    req.flush({ window_days: 14, series: [] });
+  });
+
+  it('topMovers() GETs /reports/top-movers with window + limit', () => {
+    service.topMovers(30, 5).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/top-movers`);
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('limit')).toBe('5');
+    req.flush({ window_days: 30, limit: 5, rows: [] });
+  });
 });

@@ -130,6 +130,68 @@
         "title": "Dashboard",
         "welcome": "Welcome to Fulcrum",
         "overview": "Overview",
+        "todayProfit": {
+            "title": "Today's profit",
+            "refresh": "Refresh",
+            "profitLabel": "Net profit (24h)",
+            "revenue": "Revenue",
+            "totalCost": "Total cost",
+            "margin": "Margin",
+            "orders": "Orders",
+            "empty": "No realized orders in the last 24h.",
+            "error": "Could not load today's profit."
+        },
+        "marginByChannel": {
+            "title": "Margin by channel",
+            "window": "Last {{days}}d",
+            "empty": "No channels have realized orders in this window.",
+            "error": "Could not load margin by channel.",
+            "legend": {
+                "cogs": "COGS",
+                "fees": "Fees",
+                "shipping": "Shipping",
+                "ads": "Ads",
+                "profit": "Profit"
+            },
+            "tooltip": {
+                "cogs": "COGS: {{amount}} ({{pct}}%)",
+                "fees": "Marketplace fees: {{amount}} ({{pct}}%)",
+                "shipping": "Shipping: {{amount}} ({{pct}}%)",
+                "ads": "Ad spend: {{amount}} ({{pct}}%)",
+                "other": "Other: {{amount}} ({{pct}}%)",
+                "profit": "Profit: {{amount}} ({{pct}}%)",
+                "loss": "Loss overrun: {{amount}} ({{pct}}%)"
+            }
+        },
+        "salesVsSpend": {
+            "title": "Sales vs spend",
+            "window": "Last {{days}}d",
+            "empty": "No realized orders in this window.",
+            "error": "Could not load sales vs spend.",
+            "legend": {
+                "revenue": "Revenue",
+                "cost": "Total cost"
+            },
+            "totals": {
+                "revenue": "Revenue",
+                "cost": "Total cost",
+                "profit": "Net profit",
+                "orders": "Orders"
+            }
+        },
+        "topMovers": {
+            "title": "Top movers",
+            "window": "Top {{limit}} by revenue · Last {{days}}d",
+            "empty": "No realized orders in this window.",
+            "error": "Could not load top movers.",
+            "cols": {
+                "product": "Product",
+                "units": "Units",
+                "revenue": "Revenue",
+                "profit": "Net profit",
+                "margin": "Margin"
+            }
+        },
         "recentActivity": "Recent Activity",
         "quickActions": "Quick Actions",
         "totalProducts": "Total Products",

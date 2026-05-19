@@ -35,6 +35,24 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Phase 8 Track 2 dashboard widgets: four new analytics widgets
+  consuming the Track 1 cost-rollup endpoints, laid out in a 2x2
+  grid on the main dashboard. (1) **Today's profit** ticker —
+  single headline using window_days=1, color-coded positive /
+  negative / zero. (2) **Sales vs spend** — hand-rolled SVG line
+  chart (no chart library dependency) plotting daily revenue +
+  total cost over the last 30 days, with a totals strip below.
+  (3) **Margin by channel** — horizontal stacked bar per
+  marketplace showing COGS / fees / shipping / ad spend / profit
+  proportions, with a loss-overrun segment when total cost exceeds
+  revenue. (4) **Top movers** — Material table of top 10 products
+  by revenue with per-product net margin (server-side pro-rates
+  order-level fees by revenue share). Three new backend endpoints
+  power these: `/reports/cost-rollup/by-channel`,
+  `/reports/cost-rollup/daily`, `/reports/top-movers`. en + es-MX
+  i18n parity green. 17 new backend tests + 32 new frontend tests
+  (6 service + 7 today-profit + 7 margin + 10 sales-vs-spend + 8
+  top-movers). Backend 607/8, frontend 582/0.
 - Phase 8 Track 1 scaffolding (cost engine + ETL pipeline): new
   per-order `order_cost_breakdowns` analytics row populated inline
   by every ingestion path (Amazon poll, ML poll, ML webhook) +
@@ -276,15 +294,15 @@ Roughly in order of impact / unblock value:
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Phase 8 Track 2 — dashboard visualization** — Track 1 scaffolding
-  shipped; the `cost-rollup` endpoint + per-order breakdown rows are
-  ready to power KPI widgets and interactive charts.
-  `work/future/80-advanced-analytics.md` Steps 3 + 4.
 - **Marketplace fee config UI** — Phase 8 Track 1 exposed
   `Marketplace.default_fee_rate` + `default_shipping_cost` but
   there's no UI to set them yet. Operators have to update via DB
   shell. Small slice — a single form on the marketplace detail page
   + a "Recompute all breakdowns" button.
+- **Track 2 follow-ups**: "Dead stock" table + geographic heatmaps.
+  Both deferred — see `work/future/80-advanced-analytics.md`. Dead
+  stock needs a velocity-by-window aggregator; heatmaps need
+  shipping-zone or customer-location data not currently captured.
 - **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
   Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
@@ -292,8 +310,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 590 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 545 passed, 0
+  → 607 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 582 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 
