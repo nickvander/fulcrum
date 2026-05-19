@@ -71,6 +71,30 @@ def poll_amazon_orders():
         db.close()
 
 
+@celery_app.task(name="src.tasks.reconcile_amazon_inbound_shipments")
+def reconcile_amazon_inbound_shipments():
+    """
+    Periodic Amazon FBA inbound-shipment reconciliation. Scheduled by
+    celery beat (`src/celery_worker.py::celery_app.conf.beat_schedule`).
+
+    Mirrors `reconcile_ml_inbound_shipments` against the Amazon FBA
+    inbound API (`AmazonConnector.get_inbound_shipment_status`). Iterates
+    every StockTransfer in SHIPPED / PARTIALLY_RECEIVED with
+    `dest_location='amazon-fba'` and a non-NULL `external_inbound_id`.
+
+    Returns a {transfer_id: summary} dict for ad-hoc inspection.
+    """
+    from src.services.inbound_shipment_reconciliation import (
+        reconcile_all_open_amazon_inbounds,
+    )
+
+    db = SessionLocal()
+    try:
+        return reconcile_all_open_amazon_inbounds(db)
+    finally:
+        db.close()
+
+
 @celery_app.task(name="src.tasks.reconcile_ml_inbound_shipments")
 def reconcile_ml_inbound_shipments():
     """

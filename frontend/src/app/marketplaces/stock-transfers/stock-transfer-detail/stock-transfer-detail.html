@@ -58,6 +58,13 @@
               <code>{{ transfer.external_inbound_id }}</code>
             </div>
           }
+
+          @if (transfer.last_reconciled_at) {
+            <div class="external-id" data-testid="last-reconciled-at">
+              <strong>{{ t('stockTransfers.detail.lastReconciledAt') }}:</strong>
+              <span>{{ transfer.last_reconciled_at | date:'medium' }}</span>
+            </div>
+          }
         </mat-card-content>
       </mat-card>
 
@@ -110,6 +117,18 @@
             {{ t('stockTransfers.actions.receive') }}
           </button>
         }
+        @if (canReconcile()) {
+          <button
+            mat-stroked-button
+            color="primary"
+            (click)="reconcileNow()"
+            [disabled]="acting"
+            data-testid="reconcile-now-button"
+          >
+            <mat-icon>autorenew</mat-icon>
+            {{ t('stockTransfers.actions.reconcileNow') }}
+          </button>
+        }
         @if (canCancel()) {
           <button mat-stroked-button color="warn" (click)="cancelTransfer()" [disabled]="acting">
             <mat-icon>cancel</mat-icon>
@@ -160,6 +179,36 @@
             @if (lastSync.missing_listings.length > 0) {
               <p class="missing-warning">
                 {{ t('stockTransfers.detail.missingListings', { count: lastSync.missing_listings.length }) }}
+              </p>
+            }
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @if (lastReconcile) {
+        <mat-card class="sync-summary" data-testid="last-reconcile-summary">
+          <mat-card-content>
+            <h3>{{ t('stockTransfers.detail.lastReconcile') }}</h3>
+            @if (lastReconcile.skipped_reason) {
+              <p class="missing-warning">
+                {{ t('stockTransfers.detail.reconcileSkipped', { reason: lastReconcile.skipped_reason }) }}
+              </p>
+            } @else if (lastReconcile.items_updated > 0) {
+              <p>
+                {{ t('stockTransfers.detail.reconcileApplied', {
+                  items: lastReconcile.items_updated,
+                  units: lastReconcile.total_received_added,
+                  before: lastReconcile.status_before,
+                  after: lastReconcile.status_after
+                }) }}
+              </p>
+            } @else {
+              <p>{{ t('stockTransfers.detail.reconcileNoChange') }}</p>
+            }
+            @if (lastReconcile.unmapped_listings.length > 0) {
+              <p class="missing-warning" data-testid="reconcile-unmapped">
+                {{ t('stockTransfers.detail.reconcileUnmapped', { count: lastReconcile.unmapped_listings.length }) }}
+                <code>{{ lastReconcile.unmapped_listings.join(', ') }}</code>
               </p>
             }
           </mat-card-content>

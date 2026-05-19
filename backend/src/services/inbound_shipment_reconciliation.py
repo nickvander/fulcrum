@@ -1,5 +1,5 @@
 """
-Inbound-shipment reconciliation.
+Inbound-shipment reconciliation (marketplace-agnostic).
 
 Closes a known gap: `StockTransferService.ship(push_to_marketplace=True)`
 stores an `external_inbound_id` on the StockTransfer but nothing polls
@@ -7,34 +7,43 @@ the marketplace for the actual received quantities. Operators have to
 manually call `receive_items()` to advance the transfer to
 PARTIALLY_RECEIVED / RECEIVED.
 
-This module periodically polls every open ML inbound shipment and
-back-fills `qty_received` from the marketplace's reported state. The
-delta is applied via `inventory_service.adjust_stock` at the
-transfer's `dest_location` (typically `ml-full`), so local stock
-levels reflect what ML's warehouse has confirmed.
+The service polls every open inbound shipment for a given marketplace,
+maps the marketplace's per-line received quantities back to local
+`StockTransferItem` rows, and credits stock at the transfer's
+`dest_location` for any positive delta. Status advances to
+PARTIALLY_RECEIVED / RECEIVED automatically, `received_at` is set
+when full.
 
-Scope: ML only today — Amazon FBA reconciliation would follow the
-same shape but Amazon's inbound API is structured differently (per-
-shipment item events instead of a single status poll). Land Amazon as
-a follow-up.
+Marketplaces wired today: MercadoLibre Full, Amazon FBA. The service
+itself doesn't know about either — `MARKETPLACE_INBOUND_TARGETS` is the
+single place that maps a marketplace name to its `dest_location` filter
+and connector handle, so adding a third marketplace is just an entry
+plus a connector implementation of `get_inbound_shipment_status`.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
 from src.models.marketplace import Marketplace, MarketplaceCredential, MarketplaceListing
+from src.models.product import Product
 from src.models.stock_transfer import (
+    LOCATION_AMAZON_FBA,
     LOCATION_ML_FULL,
     StockTransfer,
     StockTransferItem,
     StockTransferStatus,
 )
 from src.services.inventory_service import InventoryService
-from src.services.marketplaces.base import InboundShipmentResult
+from src.services.marketplaces.base import (
+    InboundShipmentReceivedItem,
+    InboundShipmentResult,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -46,62 +55,91 @@ _OPEN_STATUSES = (
 )
 
 
+@dataclass(frozen=True)
+class _MarketplaceTarget:
+    """Single source of truth for "which marketplace owns which
+    dest_location, which connector authenticates, which actor name
+    shows up in the audit log."""
+    marketplace_name: str   # `Marketplace.name` lookup (case-insensitive via ilike)
+    connector_key: str      # `marketplace_service.get_connector(key)`
+    dest_location: str      # the StockTransfer.dest_location that points here
+    actor: str              # audit-log `InventoryAdjustment.created_by` value
+
+
+# Registry: name → target. The Celery beat task iterates these.
+# Anything not in this map is invisible to the reconciliation pipeline.
+MARKETPLACE_INBOUND_TARGETS: Dict[str, _MarketplaceTarget] = {
+    "mercadolibre": _MarketplaceTarget(
+        marketplace_name="mercadolibre",
+        connector_key="MercadoLibre",
+        dest_location=LOCATION_ML_FULL,
+        actor="ml-inbound-poll",
+    ),
+    "amazon": _MarketplaceTarget(
+        marketplace_name="amazon",
+        connector_key="amazon",
+        dest_location=LOCATION_AMAZON_FBA,
+        actor="amazon-inbound-poll",
+    ),
+}
+
+
+def get_target_for_dest_location(dest_location: str) -> Optional[_MarketplaceTarget]:
+    """Reverse lookup — `POST /stock-transfers/{id}/reconcile` resolves
+    a transfer's `dest_location` to the matching marketplace target."""
+    for target in MARKETPLACE_INBOUND_TARGETS.values():
+        if target.dest_location == dest_location:
+            return target
+    return None
+
+
 # ---------------------------------------------------------------------------
-# Helpers
+# Per-item resolution (listing-id first, SKU fallback)
 # ---------------------------------------------------------------------------
 
 
-def _build_received_by_listing(
-    result: InboundShipmentResult,
-) -> Dict[str, int]:
-    """Collapse the marketplace's per-line received quantities into a
-    {external_listing_id: received_quantity} map. Same listing
-    appearing on multiple rows (rare but possible — partial-shipment
-    splits) sums into one bucket so the local reconciliation sees the
-    true total.
-    """
-    by_listing: Dict[str, int] = {}
-    for item in result.received_items:
-        listing_id = item.external_listing_id
-        if not listing_id:
-            continue
-        by_listing[listing_id] = by_listing.get(listing_id, 0) + (
-            item.received_quantity or 0
-        )
-    return by_listing
+def _resolve_received_to_product(
+    db: Session,
+    received: InboundShipmentReceivedItem,
+    marketplace_id: int,
+) -> Optional[int]:
+    """Resolve one received-item row to a local `Product.id`.
 
+    Two-step lookup so the same code path works for both ML (returns
+    listing item id like `MLM123`, matched on
+    `MarketplaceListing.external_listing_id`) and Amazon FBA (returns
+    `SellerSKU` — which IS the local `Product.sku` for any product
+    that was uploaded via the catalog or auto-listed):
 
-def _build_transfer_listing_index(
-    db: Session, transfer: StockTransfer, marketplace_id: int,
-) -> Dict[str, StockTransferItem]:
-    """Map each `external_listing_id` (ML item id) back to the local
-    `StockTransferItem` that ships under it. Resolution path:
-    `external_listing_id` → `marketplace_listings.product_id` →
-    `stock_transfer_items.product_id`.
+    1. Try `MarketplaceListing.external_listing_id == external_listing_id`
+       under the given marketplace.
+    2. If that misses, try `Product.sku == received.sku` (or
+       `external_listing_id` reinterpreted as SKU when no separate sku
+       is supplied — Amazon's FBA inbound API only returns one
+       identifier per row).
+
+    Returns None when neither path resolves; caller logs as unmapped.
     """
-    if not transfer.items:
-        return {}
-    product_ids = {item.product_id for item in transfer.items if item.product_id}
-    if not product_ids:
-        return {}
-    listings = (
-        db.query(MarketplaceListing)
-        .filter(
-            MarketplaceListing.marketplace_id == marketplace_id,
-            MarketplaceListing.product_id.in_(product_ids),
-            MarketplaceListing.external_listing_id.isnot(None),
+    listing_id = received.external_listing_id
+    if listing_id:
+        listing = (
+            db.query(MarketplaceListing)
+            .filter(
+                MarketplaceListing.marketplace_id == marketplace_id,
+                MarketplaceListing.external_listing_id == str(listing_id),
+            )
+            .first()
         )
-        .all()
-    )
-    listing_id_by_product: Dict[int, str] = {
-        listing.product_id: listing.external_listing_id for listing in listings
-    }
-    out: Dict[str, StockTransferItem] = {}
-    for item in transfer.items:
-        listing_id = listing_id_by_product.get(item.product_id)
-        if listing_id:
-            out[listing_id] = item
-    return out
+        if listing is not None:
+            return listing.product_id
+
+    sku_candidate = received.sku or received.external_listing_id
+    if sku_candidate:
+        product = db.query(Product).filter(Product.sku == str(sku_candidate)).first()
+        if product is not None:
+            return product.id
+
+    return None
 
 
 def _apply_received_delta(
@@ -114,9 +152,9 @@ def _apply_received_delta(
 ) -> None:
     """Adjust local stock + advance `qty_received` for one item by
     `delta` units. Caller guarantees `delta > 0` — we never decrement
-    on reconciliation because ML reducing its reported received count
-    (e.g., warehouse correction) doesn't mean Fulcrum should
-    automatically yank inventory back out of `ml-full`."""
+    on reconciliation because a marketplace reducing its reported
+    received count (e.g., warehouse correction) doesn't mean Fulcrum
+    should automatically yank inventory back out of the destination."""
     inventory_service = InventoryService()
     inventory_service.adjust_stock(
         db=db,
@@ -125,7 +163,7 @@ def _apply_received_delta(
         variant_id=transfer_item.variant_id,
         reason=(
             f"Stock transfer #{transfer.id} received at "
-            f"{transfer.dest_location} (ML inbound reconciliation)"
+            f"{transfer.dest_location} (inbound reconciliation)"
         ),
         location=transfer.dest_location,
         user_id=actor,
@@ -161,7 +199,6 @@ def _update_transfer_status(transfer: StockTransfer) -> None:
         return  # No change.
 
     if new_status != transfer.status:
-        from datetime import datetime, timezone
         transfer.status = new_status
         if new_status == StockTransferStatus.RECEIVED.value:
             transfer.received_at = datetime.now(timezone.utc)
@@ -183,14 +220,16 @@ class InboundShipmentReconciliationService:
         access_token: str,
         *,
         marketplace_id: int,
-        actor: str = "ml-inbound-poll",
+        actor: str = "inbound-poll",
     ) -> Dict[str, Any]:
         """Poll the marketplace for the transfer's inbound state and
         apply any positive delta to local `qty_received` + inventory.
 
         Returns a summary {items_updated, total_received_added,
         status_before, status_after}. Idempotent: calling twice with no
-        marketplace change is a no-op (`items_updated=0`).
+        marketplace change is a no-op (`items_updated=0`). On success
+        the transfer's `last_reconciled_at` is bumped to the wall
+        clock so the UI / health pages can show "Reconciled X ago".
         """
         summary: Dict[str, Any] = {
             "items_updated": 0,
@@ -210,24 +249,46 @@ class InboundShipmentReconciliationService:
             access_token=access_token,
         )
 
-        received_by_listing = _build_received_by_listing(result)
-        if not received_by_listing:
-            return summary
-
-        transfer_item_by_listing = _build_transfer_listing_index(
-            db, transfer, marketplace_id,
-        )
-
-        for listing_id, marketplace_received in received_by_listing.items():
-            item = transfer_item_by_listing.get(listing_id)
-            if item is None:
-                # ML reported received units for a listing we don't have
-                # a local mapping for — surface as a counter instead of
-                # silently dropping.
-                summary.setdefault("unmapped_listings", []).append(listing_id)
+        # Step 1: collapse the marketplace's per-line rows into a
+        # {product_id: total_received} map. Each row resolves
+        # independently (listing-id → product, sku fallback). Rows that
+        # can't be resolved land in `unmapped_listings` for the
+        # operator to investigate without blocking the rest.
+        received_by_product: Dict[int, int] = {}
+        for received in result.received_items:
+            qty = received.received_quantity or 0
+            if qty <= 0:
                 continue
-            shipped = item.qty_shipped or 0
-            already = item.qty_received or 0
+            product_id = _resolve_received_to_product(
+                db, received, marketplace_id,
+            )
+            if product_id is None:
+                identifier = received.external_listing_id or received.sku
+                if identifier is None:
+                    continue
+                summary.setdefault("unmapped_listings", []).append(str(identifier))
+                continue
+            received_by_product[product_id] = (
+                received_by_product.get(product_id, 0) + qty
+            )
+
+        # Step 2: apply the delta against each StockTransferItem.
+        # `received_by_product` keys not in this transfer (marketplace
+        # reported a product we didn't ship) are recorded under
+        # `unmapped_listings` so the operator can see the divergence.
+        items_by_product = {item.product_id: item for item in transfer.items}
+        for product_id, marketplace_received in received_by_product.items():
+            transfer_item = items_by_product.get(product_id)
+            if transfer_item is None:
+                # We resolved the listing but it's not on this transfer.
+                # Surface as an unmapped row keyed by product_id so the
+                # operator at least has a pointer.
+                summary.setdefault("unmapped_listings", []).append(
+                    f"product:{product_id}"
+                )
+                continue
+            shipped = transfer_item.qty_shipped or 0
+            already = transfer_item.qty_received or 0
             # Cap at the shipped quantity. Marketplace over-reporting
             # vs. what we shipped is a divergence worth logging but not
             # acting on automatically; an operator can resolve it.
@@ -238,7 +299,7 @@ class InboundShipmentReconciliationService:
             _apply_received_delta(
                 db,
                 transfer=transfer,
-                transfer_item=item,
+                transfer_item=transfer_item,
                 delta=delta,
                 actor=actor,
             )
@@ -246,6 +307,7 @@ class InboundShipmentReconciliationService:
             summary["total_received_added"] += delta
 
         _update_transfer_status(transfer)
+        transfer.last_reconciled_at = datetime.now(timezone.utc)
         summary["status_after"] = transfer.status
         return summary
 
@@ -254,32 +316,35 @@ inbound_shipment_reconciliation = InboundShipmentReconciliationService()
 
 
 # ---------------------------------------------------------------------------
-# Bulk runner — what the Celery beat task calls
+# Bulk runner — what the Celery beat tasks call
 # ---------------------------------------------------------------------------
 
 
-def _open_ml_transfers(db: Session) -> List[StockTransfer]:
-    """Every transfer destined for ML Full that's in flight (SHIPPED or
-    PARTIALLY_RECEIVED) and has an external inbound id to poll."""
+def _open_transfers_for_destination(
+    db: Session, dest_location: str,
+) -> List[StockTransfer]:
+    """Every transfer destined for the given marketplace warehouse
+    that's in flight (SHIPPED or PARTIALLY_RECEIVED) and has an
+    external inbound id to poll."""
     return (
         db.query(StockTransfer)
         .filter(
             StockTransfer.status.in_(_OPEN_STATUSES),
             StockTransfer.external_inbound_id.isnot(None),
-            StockTransfer.dest_location == LOCATION_ML_FULL,
+            StockTransfer.dest_location == dest_location,
         )
         .order_by(StockTransfer.id.asc())
         .all()
     )
 
 
-def _ml_credential_for_transfer(
-    db: Session, transfer: StockTransfer, ml_marketplace_id: int,
+def _credential_for_transfer(
+    db: Session, transfer: StockTransfer, marketplace_id: int,
 ) -> Optional[MarketplaceCredential]:
-    """Pick the ML credential that should authenticate the poll.
+    """Pick the credential that should authenticate the poll.
 
     Preference: the user who created the transfer
-    (`StockTransfer.created_by_id`). Falls back to any healthy ML
+    (`StockTransfer.created_by_id`). Falls back to any healthy
     credential for the same marketplace if that user has no creds (or
     `created_by_id` is NULL). Returns None when no usable credential
     exists, in which case the bulk runner skips this transfer.
@@ -287,7 +352,7 @@ def _ml_credential_for_transfer(
     base = (
         db.query(MarketplaceCredential)
         .filter(
-            MarketplaceCredential.marketplace_id == ml_marketplace_id,
+            MarketplaceCredential.marketplace_id == marketplace_id,
             MarketplaceCredential.needs_reauthorization.is_(False),
             MarketplaceCredential.access_token.isnot(None),
             MarketplaceCredential.refresh_token.isnot(None),
@@ -300,42 +365,50 @@ def _ml_credential_for_transfer(
     return base.order_by(MarketplaceCredential.updated_at.desc().nullslast()).first()
 
 
-def reconcile_all_open_ml_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
-    """Poll every open ML inbound shipment and apply any positive
-    received-quantity delta. Per-transfer SAVEPOINT so one bad
-    shipment's failure doesn't roll back another's progress.
+def reconcile_marketplace_inbounds(
+    db: Session, target: _MarketplaceTarget,
+) -> Dict[int, Dict[str, Any]]:
+    """Poll every open inbound shipment for ONE marketplace target and
+    apply any positive received-quantity delta. Per-transfer SAVEPOINT
+    so one bad shipment's failure doesn't roll back another's progress.
 
-    Returns {transfer_id: summary} so ad-hoc `.delay()` invocations
-    have something readable; Beat ignores the return.
+    Returns {transfer_id: summary}. Bulk runners for individual
+    marketplaces are thin wrappers around this — see
+    `reconcile_all_open_ml_inbounds` / `reconcile_all_open_amazon_inbounds`.
     """
     from src.services.marketplace_service import (
         ReauthorizationRequiredError,
         marketplace_service,
     )
 
-    ml_marketplace = (
-        db.query(Marketplace).filter(Marketplace.name.ilike("mercadolibre")).first()
+    marketplace = (
+        db.query(Marketplace)
+        .filter(Marketplace.name.ilike(target.marketplace_name))
+        .first()
     )
-    if ml_marketplace is None:
+    if marketplace is None:
         return {}
 
     try:
-        connector = marketplace_service.get_connector("MercadoLibre")
+        connector = marketplace_service.get_connector(target.connector_key)
     except Exception:  # noqa: BLE001 — no connector → nothing to do
-        logger.exception("MercadoLibre connector unavailable; skipping inbound poll")
+        logger.exception(
+            "%s connector unavailable; skipping inbound poll",
+            target.connector_key,
+        )
         return {}
 
     results: Dict[int, Dict[str, Any]] = {}
-    for transfer in _open_ml_transfers(db):
+    for transfer in _open_transfers_for_destination(db, target.dest_location):
         sp = db.begin_nested()
         try:
-            credential = _ml_credential_for_transfer(db, transfer, ml_marketplace.id)
+            credential = _credential_for_transfer(db, transfer, marketplace.id)
             if credential is None:
                 sp.rollback()
                 results[transfer.id] = {"error": "no_credential"}
                 logger.info(
-                    "Skipping transfer %d — no usable ML credential",
-                    transfer.id,
+                    "Skipping transfer %d — no usable %s credential",
+                    transfer.id, target.connector_key,
                 )
                 continue
             token = asyncio.run(
@@ -344,7 +417,8 @@ def reconcile_all_open_ml_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
             summary = asyncio.run(
                 inbound_shipment_reconciliation.reconcile_for_transfer(
                     db, transfer, connector, token,
-                    marketplace_id=ml_marketplace.id,
+                    marketplace_id=marketplace.id,
+                    actor=target.actor,
                 )
             )
             sp.commit()
@@ -352,9 +426,9 @@ def reconcile_all_open_ml_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
             results[transfer.id] = summary
             if summary.get("items_updated"):
                 logger.info(
-                    "Reconciled transfer %d: %s items updated, "
+                    "Reconciled transfer %d (%s): %s items updated, "
                     "%s units received (status %s -> %s)",
-                    transfer.id,
+                    transfer.id, target.connector_key,
                     summary["items_updated"],
                     summary["total_received_added"],
                     summary["status_before"],
@@ -363,14 +437,30 @@ def reconcile_all_open_ml_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
         except ReauthorizationRequiredError as exc:
             sp.rollback()
             logger.warning(
-                "Skipping transfer %d — credential needs reauthorization: %s",
-                transfer.id, exc.reason,
+                "Skipping transfer %d — %s credential needs reauthorization: %s",
+                transfer.id, target.connector_key, exc.reason,
             )
             results[transfer.id] = {"error": "needs_reauthorization"}
         except Exception:  # noqa: BLE001 — keep the loop alive
             sp.rollback()
             logger.exception(
-                "Inbound reconciliation failed for transfer %d", transfer.id,
+                "%s inbound reconciliation failed for transfer %d",
+                target.connector_key, transfer.id,
             )
             results[transfer.id] = {"error": "exception"}
     return results
+
+
+def reconcile_all_open_ml_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
+    """Thin wrapper kept for backwards compatibility with the existing
+    Celery task name + any external callers."""
+    return reconcile_marketplace_inbounds(
+        db, MARKETPLACE_INBOUND_TARGETS["mercadolibre"],
+    )
+
+
+def reconcile_all_open_amazon_inbounds(db: Session) -> Dict[int, Dict[str, Any]]:
+    """Amazon FBA equivalent — same shape as the ML helper."""
+    return reconcile_marketplace_inbounds(
+        db, MARKETPLACE_INBOUND_TARGETS["amazon"],
+    )

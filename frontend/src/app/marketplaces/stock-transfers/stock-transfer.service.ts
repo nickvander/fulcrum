@@ -40,9 +40,27 @@ export interface StockTransfer {
   external_inbound_id?: string | null;
   shipped_at?: string | null;
   received_at?: string | null;
+  /**
+   * Set by `inbound_shipment_reconciliation` after every successful
+   * poll of the marketplace's inbound-shipment status, regardless of
+   * whether anything changed. Lets the UI surface "Reconciled X ago"
+   * so the operator can tell the auto-reconcile is healthy without
+   * checking Celery logs.
+   */
+  last_reconciled_at?: string | null;
   created_at: string;
   updated_at: string;
   items: StockTransferItem[];
+}
+
+export interface ReconcileResult {
+  items_updated: number;
+  total_received_added: number;
+  status_before: string;
+  status_after: string;
+  skipped_reason?: string | null;
+  unmapped_listings: string[];
+  transfer: StockTransfer;
 }
 
 export interface StockTransferItemInput {
@@ -178,6 +196,18 @@ export class StockTransferService {
 
   receive(id: number, lines: StockTransferReceiveLine[]): Observable<StockTransfer> {
     return this.http.post<StockTransfer>(`${this.apiUrl}/${id}/receive`, lines);
+  }
+
+  /**
+   * Force-run inbound reconciliation for a single transfer. The
+   * hourly Celery beat is the primary surface; this endpoint exists
+   * so an operator who knows the marketplace warehouse just received
+   * a shipment can pull the new state immediately instead of waiting.
+   * Resolves the marketplace from `dest_location`, so the same call
+   * serves both ML Full and Amazon FBA.
+   */
+  reconcile(id: number): Observable<ReconcileResult> {
+    return this.http.post<ReconcileResult>(`${this.apiUrl}/${id}/reconcile`, {});
   }
 
   cancel(id: number): Observable<StockTransfer> {

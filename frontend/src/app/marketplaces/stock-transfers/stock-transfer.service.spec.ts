@@ -107,4 +107,19 @@ describe('StockTransferService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('POSTs to the per-transfer reconcile endpoint with an empty body', () => {
+    service.reconcile(17).subscribe();
+    const req = httpMock.expectOne('/api/v1/stock-transfers/17/reconcile');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({
+      items_updated: 0,
+      total_received_added: 0,
+      status_before: 'shipped',
+      status_after: 'shipped',
+      unmapped_listings: [],
+      transfer: { id: 17 },
+    });
+  });
 });

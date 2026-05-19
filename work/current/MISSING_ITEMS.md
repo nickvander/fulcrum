@@ -10,18 +10,11 @@ _(none active)_
 
 ## Medium Priority
 
-- [ ] **Amazon FBA inbound reconciliation** — same shape as the ML
-      Full inbound reconciliation just shipped, but Amazon's inbound
-      API is structured differently (per-shipment item events vs. a
-      single status poll). Wire
-      `AmazonConnector.get_inbound_shipment_status` to reduce those
-      events into the same `InboundShipmentReceivedItem` shape the
-      reconciliation service already consumes, then add an
-      `amazon-inbound-reconcile` beat schedule entry. The service
-      layer in `inbound_shipment_reconciliation.py` is intentionally
-      marketplace-agnostic — only the bulk runner today filters to
-      `dest_location='ml-full'`. Generalize that filter when Amazon
-      lands.
+- [ ] **Marketplace credential health page** — surface
+      `last_orders_polled_at`, `needs_reauthorization`, last poll
+      summary per credential + per-transfer `last_reconciled_at`
+      rollup so the operator can see whether the auto-pipelines are
+      healthy without ssh'ing to read Celery logs.
 - [ ] **ML webhook subscription health check** — the order poller
       now back-fills missed webhooks, but the subscription itself can
       be missing (operator never subscribed, ML expired it). Add a
@@ -57,6 +50,27 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Amazon FBA inbound reconciliation + manual reconcile-now UI**
+      — generalized `inbound_shipment_reconciliation` from
+      ML-specific to marketplace-agnostic via
+      `MARKETPLACE_INBOUND_TARGETS` registry. New
+      `AmazonConnector.get_inbound_shipment_status` makes the two
+      SP-API calls (shipment doc + paginated `/items`) and emits the
+      canonical `InboundShipmentReceivedItem` shape with
+      `SellerSKU`. The reconciliation service's two-step resolution
+      (`MarketplaceListing.external_listing_id` first, `Product.sku`
+      fallback) is what makes the Amazon path work when listings are
+      keyed by ASIN. New `amazon-inbound-reconcile` Celery beat (30
+      past every hour). New `last_reconciled_at` column on
+      `stock_transfers` (migration `9b2d3e7a5f01`) bumped on every
+      poll regardless of whether anything changed.
+      `POST /api/v1/stock-transfers/{id}/reconcile` endpoint runs the
+      same code path on demand, returning the summary + refreshed
+      transfer. Stock-transfer detail UI adds a "Reconcile inbound
+      now" button + "Last reconciled" timestamp + a result card
+      showing items updated / units received / unmapped listings.
+      en + es-MX i18n parity green. 18 new backend tests + 5 new
+      frontend tests. Backend 545/8, frontend 523/0.
 - [x] **ML order poller + ML Full inbound reconciliation** —
       `poll_mercadolibre_orders` Celery beat (every 15 min) back-
       fills any orders the ML webhook missed. New

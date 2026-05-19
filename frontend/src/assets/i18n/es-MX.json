@@ -1074,7 +1074,8 @@
             "shipWithMarketplace": "Enviar + reservar inbound",
             "receive": "Recibir productos",
             "cancel": "Cancelar borrador",
-            "syncListings": "Enviar cantidad a listados"
+            "syncListings": "Enviar cantidad a listados",
+            "reconcileNow": "Reconciliar inbound ahora"
         },
         "detail": {
             "title": "Transferencia #{{id}}",
@@ -1083,8 +1084,14 @@
             "shippedAt": "Enviada",
             "receivedAt": "Recibida",
             "externalInboundId": "ID inbound del marketplace",
+            "lastReconciledAt": "Última reconciliación",
             "notFound": "Transferencia no encontrada.",
             "lastSync": "Última sincronización de cantidad",
+            "lastReconcile": "Resultado de la última reconciliación",
+            "reconcileSkipped": "Reconciliación omitida: {{reason}}",
+            "reconcileApplied": "Aplicada: {{items}} producto(s), {{units}} unidades recibidas (estado {{before}} → {{after}}).",
+            "reconcileNoChange": "Reconciliada — el marketplace no reportó nuevos recibos.",
+            "reconcileUnmapped": "{{count}} fila(s) del marketplace no pudieron mapearse a un producto local:",
             "reauthRequired": "{{marketplace}} requiere reautorización antes de poder sincronizar listados.",
             "reauthCta": "Abrir configuración de marketplace",
             "missingListings": "{{count}} producto(s) aún no tienen listado en el marketplace — créalos antes de poder sincronizar.",

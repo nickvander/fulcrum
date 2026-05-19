@@ -259,28 +259,54 @@ dev/test environments can run the workflow end-to-end without live API calls.
   without an existing listing surface as `missing_listings` in the response so
   callers can resolve them manually.
 
-### Automatic inbound reconciliation (ML Full)
+### Automatic inbound reconciliation (ML Full + Amazon FBA)
 
-`services/inbound_shipment_reconciliation.py` runs hourly under the
-`mercadolibre-inbound-reconcile` Celery beat schedule. Each tick:
+`services/inbound_shipment_reconciliation.py` is marketplace-agnostic:
+its `MARKETPLACE_INBOUND_TARGETS` registry maps a marketplace name to a
+`dest_location` filter and connector handle. Two Celery beat
+schedules drive it — one per marketplace — so adding a third marketplace
+is a registry entry plus a connector implementation of
+`get_inbound_shipment_status`.
+
+Active schedules:
+
+| Beat name                          | Cadence       | Calls                              |
+| ---------------------------------- | ------------- | ---------------------------------- |
+| `mercadolibre-inbound-reconcile`   | 10 past hour  | `reconcile_all_open_ml_inbounds`   |
+| `amazon-inbound-reconcile`         | 30 past hour  | `reconcile_all_open_amazon_inbounds` |
+
+Each tick (per marketplace):
 
 1. Finds every `StockTransfer` in `SHIPPED` or `PARTIALLY_RECEIVED` with a
-   non-NULL `external_inbound_id` and `dest_location='ml-full'`.
-2. Calls `MercadoLibreConnector.get_inbound_shipment_status` for each.
-3. Maps the marketplace's per-item received counts back to local
-   `StockTransferItem` rows via `marketplace_listings.external_listing_id →
-   product_id`.
-4. Credits stock at `ml-full` for any positive delta vs. local `qty_received`,
-   advances the transfer's status, and sets `received_at` once everything
-   has been received.
+   non-NULL `external_inbound_id` whose `dest_location` matches the target.
+2. Calls the marketplace connector's `get_inbound_shipment_status` for each.
+3. Resolves the marketplace's per-item rows to local products via a
+   two-step lookup: `MarketplaceListing.external_listing_id` first, then
+   `Product.sku` fallback. The SKU fallback is critical for Amazon FBA —
+   SP-API's inbound items endpoint returns `SellerSKU`, but Amazon
+   `MarketplaceListing` rows typically store `ASIN` as the
+   `external_listing_id`.
+4. Credits stock at the dest location for any positive delta vs. local
+   `qty_received`, advances the transfer status, sets `received_at`
+   once everything has been received, and bumps `last_reconciled_at`
+   so the UI can show "Reconciled X ago".
 
 This means the manual `receive_items` workflow becomes a fallback —
-operators only need it when ML hasn't received the shipment yet or the
-mapping is incomplete. Marketplace over-reports are capped at the local
-`qty_shipped` so a warehouse miscount cannot inflate Fulcrum stock; the
-reconciliation never decrements (e.g. if ML revises a received count
-downward), so chargebacks and warehouse corrections still need an
-explicit operator adjustment.
+operators only need it when the marketplace hasn't received the
+shipment yet or the mapping is incomplete. Marketplace over-reports are
+capped at the local `qty_shipped` so a warehouse miscount cannot
+inflate Fulcrum stock; the reconciliation never decrements (e.g. if a
+marketplace revises a received count downward), so chargebacks and
+warehouse corrections still need an explicit operator adjustment.
+
+### Manual reconcile trigger
+
+`POST /api/v1/stock-transfers/{id}/reconcile` runs the same code path
+on demand. Surfaced as a "Reconcile inbound now" button on the stock-
+transfer detail page when the transfer is in-flight with an external
+inbound id. The endpoint returns the per-transfer summary plus the
+refreshed transfer row, so the UI can render the new status without a
+follow-up GET.
 
 The REST surface follows the same shape:
 

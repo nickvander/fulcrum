@@ -35,6 +35,28 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Amazon FBA inbound reconciliation + manual reconcile-now UI: the
+  reconciliation service is now marketplace-agnostic
+  (`MARKETPLACE_INBOUND_TARGETS` registry) so both ML Full and Amazon
+  FBA flow through the same code path. New
+  `AmazonConnector.get_inbound_shipment_status` makes the two SP-API
+  calls (shipment doc + paginated `/items`) and folds the result into
+  the canonical `InboundShipmentReceivedItem` shape with `SellerSKU`
+  populated in both `external_listing_id` and `sku` so the
+  reconciliation service's two-step resolution (`MarketplaceListing`
+  first, `Product.sku` fallback) catches Amazon's typical
+  ASIN-keyed listing scheme. New `amazon-inbound-reconcile` Celery
+  beat (30 past every hour) + new `last_reconciled_at` column on
+  `stock_transfers` (migration `9b2d3e7a5f01`) bumped on every poll
+  regardless of whether anything changed. New
+  `POST /api/v1/stock-transfers/{id}/reconcile` endpoint returns the
+  summary + refreshed transfer in one round trip. Stock-transfer
+  detail UI gains a "Reconcile inbound now" button and a
+  "Last reconciled" timestamp; manual click shows a result card with
+  items updated / units received / unmapped listings. en + es-MX
+  i18n parity green. 18 new backend tests (9 Amazon-specific + 4
+  endpoint + 5 from the bulk-runner refactor) + 5 new frontend tests
+  (1 service + 4 detail). Backend 545/8, frontend 523/0.
 - ML order reconciliation polish + ML Full inbound reconciliation:
   two new Celery beat workers + supporting services so the operator
   no longer has to babysit dropped ML webhooks or manually mark
@@ -187,18 +209,20 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 Roughly in order of impact / unblock value:
 
+- **Marketplace credential health page** — operator visibility for
+  the three automatic processes touching marketplace data (Amazon
+  order poll, ML order poll, ML + Amazon inbound reconciliation).
+  Today the operator would have to query the DB to see
+  `last_orders_polled_at` cadence + `needs_reauthorization` state +
+  per-transfer `last_reconciled_at`. A simple `/marketplaces/health`
+  page with one row per credential + reconcile rollup closes the
+  "is my pipeline healthy?" question without ssh.
 - **Phase 0 of the Rust migration plan** — instrumentation. Phase 1
   product-listing perf wins have all landed (see Rust plan checkbox
   state); the remaining gate before deciding "optimized Python is
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Amazon FBA inbound reconciliation** — same pattern just shipped
-  for ML Full. Amazon's inbound API is structured differently
-  (per-shipment item events instead of a single status poll), so it
-  needs a custom AmazonConnector.get_inbound_shipment_status that
-  reduces those events down to the same `InboundShipmentReceivedItem`
-  shape the reconciliation service already consumes.
 - **ML webhook subscription auto-create** — the order poller now
   back-fills missed webhooks, but a credential's webhook subscription
   itself could go missing (operator never subscribed, or ML expired
@@ -212,8 +236,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 532 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 518 passed, 0
+  → 545 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 523 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

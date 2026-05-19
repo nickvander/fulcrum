@@ -1,11 +1,29 @@
 import pytest
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from fastapi.testclient import TestClient
 
 from src.crud import crud_product
 from src.models.inventory import InventoryItem
-from src.models.stock_transfer import LOCATION_INTERNAL, LOCATION_ML_FULL
+from src.models.marketplace import (
+    Marketplace,
+    MarketplaceCredential,
+    MarketplaceListing,
+)
+from src.models.stock_transfer import (
+    LOCATION_AMAZON_FBA,
+    LOCATION_INTERNAL,
+    LOCATION_ML_FULL,
+    StockTransfer,
+    StockTransferItem,
+    StockTransferStatus,
+)
 from src.schemas.product import ProductCreate
 from src.services.inventory_service import inventory_service
+from src.services.marketplaces.base import (
+    InboundShipmentReceivedItem,
+    InboundShipmentResult,
+)
 
 pytestmark = pytest.mark.db
 
@@ -225,3 +243,185 @@ def test_api_cancel_and_delete_draft(client: TestClient, db, admin_headers):
 
     after = client.get(f"/api/v1/stock-transfers/{transfer_id}", headers=admin_headers)
     assert after.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# POST /stock-transfers/{id}/reconcile (manual inbound reconciliation)
+# ---------------------------------------------------------------------------
+
+
+def _ensure_marketplace_with_credential(db, name, user_id):
+    """Insert (or fetch) a Marketplace + an attached healthy credential
+    for the given user. Returns (Marketplace, MarketplaceCredential)."""
+    mp = db.query(Marketplace).filter(Marketplace.name.ilike(name)).first()
+    if mp is None:
+        mp = Marketplace(name=name, api_base_url="https://example.com")
+        db.add(mp)
+        db.commit()
+        db.refresh(mp)
+    cred = MarketplaceCredential(
+        user_id=user_id, marketplace_id=mp.id,
+        access_token="STUB-A", refresh_token="STUB-R",
+    )
+    db.add(cred)
+    db.commit()
+    db.refresh(cred)
+    return mp, cred
+
+
+def _make_shipped_transfer_in_db(db, *, product_id, dest_location, created_by_id):
+    transfer = StockTransfer(
+        source_location=LOCATION_INTERNAL,
+        dest_location=dest_location,
+        status=StockTransferStatus.SHIPPED.value,
+        external_inbound_id="EXT-RECON-1",
+        created_by_id=created_by_id,
+    )
+    db.add(transfer)
+    db.flush()
+    db.add(StockTransferItem(
+        transfer_id=transfer.id,
+        product_id=product_id,
+        qty_planned=10,
+        qty_shipped=10,
+        qty_received=0,
+    ))
+    db.commit()
+    db.refresh(transfer)
+    return transfer
+
+
+def test_reconcile_endpoint_runs_against_amazon_and_returns_summary_plus_transfer(
+    client: TestClient, db, admin_headers, test_admin_user,
+):
+    """The happy path: an Amazon FBA transfer, a healthy credential,
+    and a connector that reports 4/10 received. The endpoint commits
+    the delta, returns the summary, and includes the refreshed
+    transfer so the UI can render without a follow-up GET."""
+    product = _make_product(db, "RECON-AMZN-1")
+    mp, _cred = _ensure_marketplace_with_credential(db, "Amazon", test_admin_user.id)
+    # Listing keyed by ASIN — exercises the SKU fallback path the
+    # Amazon flow depends on.
+    db.add(MarketplaceListing(
+        product_id=product.id, marketplace_id=mp.id,
+        external_listing_id="B0000RECON01", sync_status="IN_SYNC",
+    ))
+    db.commit()
+    transfer = _make_shipped_transfer_in_db(
+        db, product_id=product.id, dest_location=LOCATION_AMAZON_FBA,
+        created_by_id=test_admin_user.id,
+    )
+
+    fake_connector = MagicMock()
+    fake_connector.get_inbound_shipment_status = AsyncMock(
+        return_value=InboundShipmentResult(
+            external_inbound_id="EXT-RECON-1",
+            status="receiving",
+            received_items=[InboundShipmentReceivedItem(
+                external_listing_id="RECON-AMZN-1",
+                sku="RECON-AMZN-1",
+                received_quantity=4,
+            )],
+        )
+    )
+
+    with (
+        patch(
+            "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+            new=AsyncMock(return_value="LIVE-TOKEN"),
+        ),
+        patch(
+            "src.services.marketplace_service.marketplace_service.get_connector",
+            return_value=fake_connector,
+        ),
+    ):
+        response = client.post(
+            f"/api/v1/stock-transfers/{transfer.id}/reconcile",
+            headers=admin_headers,
+        )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["items_updated"] == 1
+    assert body["total_received_added"] == 4
+    assert body["status_before"] == "shipped"
+    assert body["status_after"] == "partially_received"
+    # Transfer payload embedded so the UI can refresh in one round-trip.
+    assert body["transfer"]["id"] == transfer.id
+    assert body["transfer"]["status"] == "partially_received"
+    assert body["transfer"]["last_reconciled_at"] is not None
+
+
+def test_reconcile_endpoint_404s_for_unknown_transfer(
+    client: TestClient, admin_headers,
+):
+    response = client.post(
+        "/api/v1/stock-transfers/9999999/reconcile", headers=admin_headers,
+    )
+    assert response.status_code == 404
+
+
+def test_reconcile_endpoint_400s_when_destination_is_not_a_marketplace(
+    client: TestClient, db, admin_headers, test_admin_user,
+):
+    """A transfer to an internal warehouse has no marketplace to poll
+    — the endpoint refuses rather than silently doing nothing."""
+    product = _make_product(db, "RECON-INTERNAL-1")
+    transfer = StockTransfer(
+        source_location=LOCATION_INTERNAL,
+        dest_location="warehouse-b",  # Not in MARKETPLACE_INBOUND_TARGETS
+        status=StockTransferStatus.SHIPPED.value,
+        external_inbound_id=None,
+        created_by_id=test_admin_user.id,
+    )
+    db.add(transfer)
+    db.flush()
+    db.add(StockTransferItem(
+        transfer_id=transfer.id, product_id=product.id,
+        qty_planned=1, qty_shipped=1, qty_received=0,
+    ))
+    db.commit()
+
+    response = client.post(
+        f"/api/v1/stock-transfers/{transfer.id}/reconcile",
+        headers=admin_headers,
+    )
+    assert response.status_code == 400
+    body = response.json()
+    # Body shape comes from LocalizedHTTPException: it carries the
+    # localizable error code so the frontend interceptor renders the
+    # right translated string. Detail string is the operator-friendly
+    # fallback.
+    assert "code" in body.get("detail", {}) or "warehouse" in response.text
+
+
+def test_reconcile_endpoint_400s_when_no_credential_available(
+    client: TestClient, db, admin_headers, test_admin_user,
+):
+    """An Amazon FBA transfer whose creator has no Amazon credential
+    AND there's no fallback credential available → 400 with a clear
+    message so the operator knows to connect the marketplace."""
+    product = _make_product(db, "RECON-NOCRED-1")
+    # Create the Marketplace but NO credential.
+    mp = db.query(Marketplace).filter(Marketplace.name == "Amazon").first()
+    if mp is None:
+        mp = Marketplace(name="Amazon", api_base_url="https://example.com")
+        db.add(mp)
+        db.commit()
+    # Wipe any credential rows for the admin user on the Amazon mp so
+    # the fallback can't pick one up.
+    db.query(MarketplaceCredential).filter(
+        MarketplaceCredential.marketplace_id == mp.id,
+    ).delete()
+    db.commit()
+
+    transfer = _make_shipped_transfer_in_db(
+        db, product_id=product.id, dest_location=LOCATION_AMAZON_FBA,
+        created_by_id=test_admin_user.id,
+    )
+
+    response = client.post(
+        f"/api/v1/stock-transfers/{transfer.id}/reconcile",
+        headers=admin_headers,
+    )
+    assert response.status_code == 400

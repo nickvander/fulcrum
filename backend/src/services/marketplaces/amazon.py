@@ -2,7 +2,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 import httpx
 from src.config import settings
-from .base import BaseMarketplaceConnector, ListingData
+from .base import (
+    BaseMarketplaceConnector,
+    InboundShipmentReceivedItem,
+    InboundShipmentResult,
+    ListingData,
+)
 
 # Mexico is Fulcrum's primary Amazon market. The SP-API requires at least
 # one marketplaceId on listings reads and most attribute writes.
@@ -389,3 +394,140 @@ class AmazonConnector(BaseMarketplaceConnector):
                     break
 
         return results
+
+    # -- Inbound shipments (FBA) -------------------------------------------
+
+    # Amazon's FBA Inbound v0 API is split across two endpoints — the
+    # shipment-level status doc and a paginated items endpoint. We hit
+    # both per poll because the shipment-status lookup doesn't include
+    # per-SKU received counts, and the items endpoint doesn't include
+    # the overall ShipmentStatus.
+    FBA_INBOUND_PATH = "/fba/inbound/v0/shipments"
+
+    async def get_inbound_shipment_status(
+        self,
+        external_inbound_id: str,
+        access_token: Optional[str] = None,
+    ) -> InboundShipmentResult:
+        """Poll an Amazon FBA inbound shipment for its current status +
+        per-item received counts.
+
+        Two SP-API calls:
+          1. GET /fba/inbound/v0/shipments/{shipmentId} →
+             `ShipmentStatus` (WORKING, READY_TO_SHIP, SHIPPED,
+             RECEIVING, CLOSED, CANCELLED, DELETED, ERROR, etc.). We
+             surface the lowercased version on `InboundShipmentResult.status`
+             for parity with ML's pending/receiving/received strings.
+          2. GET /fba/inbound/v0/shipments/{shipmentId}/items → an
+             array of items with `SellerSKU`, `QuantityShipped`, and
+             `QuantityReceived`. Folded into `InboundShipmentReceivedItem`
+             rows so the marketplace-agnostic reconciliation service
+             can consume them uniformly with ML.
+
+        Stub-token branch returns an empty `received_items` list — same
+        convention as the other Amazon connector methods so the dev /
+        test environments don't need a live SP-API session.
+        """
+        if (
+            not access_token
+            or access_token.startswith("STUB-")
+            or not external_inbound_id
+            or external_inbound_id.startswith("STUB")
+        ):
+            return InboundShipmentResult(
+                external_inbound_id=external_inbound_id or "",
+                status="pending",
+                raw_data={"stub": True},
+            )
+
+        headers = {"x-amz-access-token": access_token}
+        shipment_url = (
+            f"{self.api_base_url}{self.FBA_INBOUND_PATH}/{external_inbound_id}"
+        )
+        items_url = f"{shipment_url}/items"
+        params = {"MarketplaceId": MEXICO_MARKETPLACE_ID}
+
+        async with httpx.AsyncClient() as client:
+            shipment_response = await client.get(
+                shipment_url, headers=headers, params=params,
+            )
+            shipment_response.raise_for_status()
+            shipment_payload = (shipment_response.json() or {}).get("payload") or {}
+
+            # SP-API returns the shipment object under different keys
+            # depending on whether the endpoint variant uses
+            # `InboundShipmentData` or `InboundShipmentInfo`. Handle
+            # both so we don't crash on a minor API revision.
+            shipment_obj = (
+                shipment_payload.get("InboundShipmentData")
+                or shipment_payload.get("InboundShipmentInfo")
+                or shipment_payload
+            )
+            raw_status = shipment_obj.get("ShipmentStatus") or "pending"
+
+            # Paginate the items endpoint — Amazon caps results per
+            # page and returns a NextToken for the rest. Each item
+            # carries its own per-SKU received count.
+            received_items: List[InboundShipmentReceivedItem] = []
+            next_token: Optional[str] = None
+            while True:
+                items_params: Dict[str, Any] = {
+                    "MarketplaceId": MEXICO_MARKETPLACE_ID,
+                }
+                if next_token:
+                    items_params["NextToken"] = next_token
+
+                items_response = await client.get(
+                    items_url, headers=headers, params=items_params,
+                )
+                items_response.raise_for_status()
+                items_payload = (
+                    (items_response.json() or {}).get("payload") or {}
+                )
+
+                for row in items_payload.get("ItemData") or []:
+                    received_items.append(
+                        self._parse_inbound_item(row)
+                    )
+
+                next_token = items_payload.get("NextToken")
+                if not next_token:
+                    break
+
+        return InboundShipmentResult(
+            external_inbound_id=external_inbound_id,
+            status=str(raw_status).lower(),
+            received_items=received_items,
+            raw_data={
+                "shipment": shipment_obj,
+                "item_count": len(received_items),
+            },
+        )
+
+    @staticmethod
+    def _parse_inbound_item(row: Dict[str, Any]) -> InboundShipmentReceivedItem:
+        """Map one SP-API FBA inbound item row to the canonical
+        `InboundShipmentReceivedItem` shape.
+
+        Amazon returns `SellerSKU` as the only consistently-present
+        identifier. We populate BOTH `external_listing_id` AND `sku`
+        with that value so the reconciliation service's two-step
+        resolution (`MarketplaceListing.external_listing_id` first,
+        `Product.sku` fallback) works regardless of whether the
+        seller's `MarketplaceListing` rows are keyed by ASIN or SKU.
+
+        Defensive about `QuantityReceived` — SP-API has occasionally
+        sent it as a string. `int(...)` with a TypeError/ValueError
+        fallback to 0 is safer than crashing the whole poll.
+        """
+        seller_sku = row.get("SellerSKU") or ""
+        raw_qty = row.get("QuantityReceived") or 0
+        try:
+            qty = int(raw_qty)
+        except (TypeError, ValueError):
+            qty = 0
+        return InboundShipmentReceivedItem(
+            external_listing_id=str(seller_sku) if seller_sku else None,
+            sku=str(seller_sku) if seller_sku else None,
+            received_quantity=qty,
+        )
