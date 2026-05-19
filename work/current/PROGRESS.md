@@ -1,20 +1,31 @@
 # Progress Log
 
-**Status:** Reports surface complete + surfaced on the dashboard.
-AmazonAdapter SP-API surface complete *and* wired to a Celery beat
-order-ingestion worker. ML now has a matching delta-poll worker
-that back-fills any orders the ML webhook dropped + a Celery beat
-job that reconciles ML Full inbound shipments against local
-`stock_transfers` rows so warehouse-side receipts flow through to
-local stock automatically. Margin report uses historical
-cost-at-sale. Alerting ships hourly via Celery beat + email, with
-full CRUD UI at `/alerts`. Mercado Pago Checkout backend foundation
-(connector, Payment model, create + get endpoints, signed webhook)
-shipped along with the operator-facing `/payments` admin UI (parked
-for the future-storefront milestone, no production caller today).
-Phase 1 of the Rust backend migration plan ("Fix Product Listing In
-Python") shipped, only Phase 0 instrumentation + the
-list-vs-detail DTO split remain. No active in-flight slice.
+**Status:** Settlement-fee ingestion replaces estimated marketplace
+fees with real per-order data from ML (`/orders/{id}` payments +
+shipping) and Amazon (SP-API Finances financialEvents). New hourly
+Celery beat `poll_settlement_fees` + manual operator endpoint
+`POST /marketplaces/health/{id}/sync-settlement-fees`. `OrderCostBreakdown`
+gains `fees_source` (`estimated` | `settled`) + `fees_synced_at`
+so subsequent recomputes preserve real settled values. Marketplace
+health page now has a "Settlement (last synced)" column + per-row
+"Sync settlement" button.
+
+AI features are now properly gated: new `GET /api/v1/ai/capabilities`
+returns the `(ready, enabled, configured, provider)` predicate, all
+3 AI endpoints (`/ai/identify-product`, `/ai/generate-description`,
+`/ai/generate-listing-description`) refuse with a localized
+`apiErrors.ai.disabled` when the workspace hasn't enabled AI + set
+an API key, and the frontend hides the corresponding buttons in
+`ProductForm`, `ProductScanner`, and `MarketplaceListingDialog` via
+a shared `AiService.isReady$()` stream.
+
+Analytics export endpoints (velocity, margin, stockout) now accept
+optional `start_date` / `end_date` query params for explicit
+calendar-range filtering ("last quarter") in addition to the
+legacy `window_days` window. The dashboard's
+`AnalyticsReportsWidget` exposes a paired Material datepicker for
+each bound.
+
 **Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
 Operator Tools.
 
@@ -34,6 +45,72 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Settlement-fee ingestion (Phase 8 Track 1 follow-up): replaces
+  estimated `marketplace_fees_amount` + `shipping_cost_amount` on
+  `OrderCostBreakdown` rows with real settled data from each
+  marketplace's finance API.
+  - `MercadoLibreConnector.fetch_order_billing` reads
+    `/orders/{order_id}` and parses `payments[].marketplace_fee`
+    (legacy) + `payments[].fee_details[]` (newer) with
+    refund-status filtering, plus `shipping.shipping_cost` /
+    `shipping.cost`.
+  - `AmazonConnector.fetch_order_financials` reads SP-API
+    `/finances/v0/orders/{orderId}/financialEvents` and sums every
+    Commission / FBA / per-order fee across ShipmentEventList +
+    RefundEventList; ShippingChargeList nets across both.
+  - New `services/settlement_fee_ingestion.py` orchestrates per-
+    credential batches (cap 200/tick, 90-day lookback). Pending
+    orders with no fee data yet stay in `estimated` state for the
+    next tick to retry.
+  - New `services/order_cost_engine.apply_settlement_fees` flips
+    `fees_source` to `settled` + bumps `fees_synced_at`; future
+    cost-engine recomputes preserve those values (a stale
+    operator-changed fee rate can't silently revert real settled
+    data).
+  - New Celery beat `poll_settlement_fees` (hourly at :40) +
+    manual `POST /marketplaces/health/{id}/sync-settlement-fees`
+    so the operator can backfill on demand.
+  - Marketplace-health page surfaces `last_settlement_synced_at`
+    as a new column + a per-row "Sync settlement" button (hidden
+    for non-supported marketplaces).
+  - Migration `7c2e8d4a91f6`: `fees_source`, `fees_synced_at` on
+    `order_cost_breakdowns` + `last_settlement_synced_at` on
+    `marketplace_credentials`.
+  - 24 new backend tests (parser fixtures + cost-engine settled-
+    preservation + sync_for_credential loop + health endpoint
+    contract) + 4 new frontend tests (settlement column pill
+    state + button visibility + service wrapper). en + es-MX i18n
+    parity. Backend 666/8, frontend 618/0.
+
+- AI capability gating: all 3 AI endpoints
+  (`/ai/identify-product`, `/ai/generate-description`,
+  `/ai/generate-listing-description`) now check
+  `ADKManager.is_ready()` and refuse with a localized 400
+  (`apiErrors.ai.disabled`) when AI is off or no API key is
+  configured. New `GET /api/v1/ai/capabilities` exposes the
+  predicate as `{ready, enabled, configured, provider}`. Frontend
+  `AiService.getCapabilities()` caches the call with `shareReplay`
+  + an `invalidateCapabilities()` hook that the AI settings tab
+  calls after a save. `ProductForm`, `ProductScanner`, and
+  `MarketplaceListingDialog` subscribe to `isReady$()` so AI
+  buttons are *hidden* (not just disabled) when the workspace
+  can't actually use them.
+
+- Date-range filters on analytics exports: velocity / margin /
+  stockout export endpoints (CSV + PDF) now accept optional
+  `start_date` / `end_date` query params (ISO 8601 dates). When
+  set, they pin an explicit calendar window; otherwise the legacy
+  `window_days` fallback wins so existing callers stay green.
+  Inverted ranges return a localized 400
+  (`apiErrors.reports.invalidDateRange`). The dashboard's
+  `AnalyticsReportsWidget` exposes a pair of `mat-datepicker`
+  inputs; the window-days selector auto-disables when either
+  picker is set + a clear button reverts to legacy mode. The
+  report subtitle line (rendered in both CSV header + PDF) shows
+  the calendar range when explicit ("2026-01-01 → 2026-03-31")
+  vs. the legacy `window 30d`. 5 new backend tests + 5 new
+  frontend tests. en + es-MX i18n parity.
 
 - Phase 8 Track 2 dead-stock widget: closes the last open
   Track-2 KPI widget. New `GET /api/v1/reports/dead-stock`
@@ -331,8 +408,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 632 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 604 passed, 0
+  → 666 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 618 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

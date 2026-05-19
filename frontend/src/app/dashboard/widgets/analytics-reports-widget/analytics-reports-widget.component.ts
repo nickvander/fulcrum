@@ -6,9 +6,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { TranslocoModule } from '@ngneat/transloco';
 
-import { AnalyticsReportsService } from '../../services/analytics-reports.service';
+import {
+  AnalyticsReportsService,
+  DateRange,
+} from '../../services/analytics-reports.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
 
 type ReportKey = 'velocity' | 'margin' | 'stockout';
@@ -36,6 +42,9 @@ type ReportKey = 'velocity' | 'margin' | 'stockout';
     MatSelectModule,
     MatTooltipModule,
     MatFormFieldModule,
+    MatInputModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     TranslocoModule,
   ],
   templateUrl: './analytics-reports-widget.component.html',
@@ -43,6 +52,12 @@ type ReportKey = 'velocity' | 'margin' | 'stockout';
 })
 export class AnalyticsReportsWidgetComponent {
   windowDays: 30 | 60 | 90 | 180 = 30;
+  /** Optional explicit date range. When set, overrides windowDays. Both
+   *  pickers are independent — partial ranges (start only / end only)
+   *  are valid and the backend fills in the missing bound. */
+  startDate: Date | null = null;
+  endDate: Date | null = null;
+
   /** Per-row busy flag so a click only disables the row that's actually
    *  downloading, not the whole widget. Indexed by `<reportKey>:<ext>`
    *  to keep CSV and PDF independent. */
@@ -93,18 +108,56 @@ export class AnalyticsReportsWidgetComponent {
   }
 
   private requestFor(report: ReportKey, ext: 'csv' | 'pdf') {
+    const range = this.currentRange();
     if (report === 'velocity') {
       return ext === 'csv'
-        ? this.analyticsReports.exportVelocityCsv(this.windowDays)
-        : this.analyticsReports.exportVelocityPdf(this.windowDays);
+        ? this.analyticsReports.exportVelocityCsv(this.windowDays, 2000, range)
+        : this.analyticsReports.exportVelocityPdf(this.windowDays, 2000, range);
     }
     if (report === 'margin') {
       return ext === 'csv'
-        ? this.analyticsReports.exportMarginCsv(this.windowDays)
-        : this.analyticsReports.exportMarginPdf(this.windowDays);
+        ? this.analyticsReports.exportMarginCsv(this.windowDays, 2000, range)
+        : this.analyticsReports.exportMarginPdf(this.windowDays, 2000, range);
     }
     return ext === 'csv'
-      ? this.analyticsReports.exportStockoutCsv(this.windowDays)
-      : this.analyticsReports.exportStockoutPdf(this.windowDays);
+      ? this.analyticsReports.exportStockoutCsv(this.windowDays, 7, 14, 2000, range)
+      : this.analyticsReports.exportStockoutPdf(this.windowDays, 7, 14, 2000, range);
   }
+
+  /** True when at least one date picker has a value — operators that
+   *  haven't touched the pickers fall back to the windowDays selector. */
+  hasExplicitRange(): boolean {
+    return this.startDate !== null || this.endDate !== null;
+  }
+
+  /** True when both pickers are set in the wrong order. Disables the
+   *  download buttons + drives a localized hint without burning a
+   *  backend round-trip. */
+  rangeInverted(): boolean {
+    if (!this.startDate || !this.endDate) return false;
+    return this.startDate.getTime() > this.endDate.getTime();
+  }
+
+  clearRange(): void {
+    this.startDate = null;
+    this.endDate = null;
+  }
+
+  private currentRange(): DateRange | undefined {
+    if (!this.hasExplicitRange()) return undefined;
+    return {
+      startDate: this.startDate ? toIsoDate(this.startDate) : null,
+      endDate: this.endDate ? toIsoDate(this.endDate) : null,
+    };
+  }
+}
+
+/** Format a JS Date as `YYYY-MM-DD` in local time — matches what the
+ *  backend's `date.fromisoformat` expects and what the operator sees in
+ *  the picker. */
+function toIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }

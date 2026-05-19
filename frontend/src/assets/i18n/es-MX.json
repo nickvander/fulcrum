@@ -247,7 +247,11 @@
             "marginTitle": "Margen bruto",
             "marginDesc": "Ingreso, costo, margen y porcentaje por producto",
             "stockoutTitle": "Desabasto proyectado",
-            "stockoutDesc": "Agotado / inminente / a vigilar, por días de cobertura"
+            "stockoutDesc": "Agotado / inminente / a vigilar, por días de cobertura",
+            "startLabel": "Fecha de inicio",
+            "endLabel": "Fecha de fin",
+            "clearRangeTooltip": "Borrar rango de fechas y usar el selector de ventana",
+            "rangeInverted": "La fecha de inicio debe ser anterior o igual a la fecha de fin."
         },
         "noOrdersYet": "Aún no hay pedidos registrados",
         "inventoryHealth": "Salud del Inventario",
@@ -1667,6 +1671,7 @@
             "orderPoll": "Último polling de pedidos",
             "webhooks": "Webhooks (24h)",
             "inbound": "Transferencias inbound",
+            "settlement": "Comisiones reales",
             "actions": "Acciones"
         },
         "auth": {
@@ -1685,18 +1690,28 @@
             "lastReceived": "Último evento: hace {{when}}",
             "neverTooltip": "No se han recibido webhooks en las últimas {{hours}}h. Revisa el panel de desarrollador del marketplace — la suscripción de pedidos puede necesitar reconfigurarse."
         },
+        "settlement": {
+            "unsupported": "No disponible",
+            "lastSyncedTooltip": "Las comisiones reales se sincronizaron hace {{when}}. El motor de costos las usa en lugar de la tasa estimada.",
+            "neverTooltip": "Aún no se han sincronizado comisiones reales para esta credencial. Pulsa 'Sincronizar comisiones' para obtener las comisiones reales por pedido desde el marketplace.",
+            "unsupportedTooltip": "La ingesta de comisiones reales solo está disponible para Amazon y MercadoLibre."
+        },
         "actions": {
             "pollNow": "Polling de pedidos",
             "pollTooltip": "Ejecuta la ingesta de pedidos para esta credencial ahora",
             "reconcileNow": "Reconciliar inbound",
-            "reconcileTooltip": "Ejecuta la reconciliación inbound para las transferencias abiertas de esta credencial"
+            "reconcileTooltip": "Ejecuta la reconciliación inbound para las transferencias abiertas de esta credencial",
+            "settlementNow": "Sincronizar comisiones",
+            "settlementTooltip": "Obtén las comisiones reales del marketplace + el costo real de envío por pedido y reemplaza las estimaciones en el desglose de costos."
         },
         "results": {
             "pollSummary": "Polling: {{new}} nuevos, {{updated}} actualizados, {{items}} líneas.",
             "pollError": "El polling falló: {{error}}",
             "reconcileSummary": "Reconciliación: {{processed}} transferencia(s) procesadas, {{updated}} actualizadas, {{units}} unidades acreditadas.",
             "reconcileEmpty": "Reconciliación: nada abierto para reconciliar.",
-            "reconcileError": "La reconciliación falló: {{error}}"
+            "reconcileError": "La reconciliación falló: {{error}}",
+            "settlementSummary": "Comisiones: {{settled}} liquidadas, {{pending}} pendientes, {{scanned}} revisadas.",
+            "settlementError": "La sincronización de comisiones falló: {{error}}"
         },
         "messages": {
             "pollFound": "Polling encontró {{new}} pedido(s) nuevos, {{updated}} actualizados, {{items}} líneas.",
@@ -1706,12 +1721,16 @@
             "reconcileDone": "Reconciliación: {{processed}} transferencia(s), {{updated}} actualizada(s), {{units}} unidades acreditadas.",
             "reconcileEmpty": "Reconciliación completada — nada abierto para reconciliar.",
             "reconcileNeedsReauth": "Reconecta la credencial antes de reconciliar.",
-            "reconcileUnsupported": "La reconciliación inbound no está disponible para este marketplace."
+            "reconcileUnsupported": "La reconciliación inbound no está disponible para este marketplace.",
+            "settlementDone": "Sincronización: {{settled}} pedido(s) liquidados, {{pending}} aún pendientes, {{scanned}} revisados.",
+            "settlementNeedsReauth": "Reconecta la credencial antes de sincronizar las comisiones.",
+            "settlementUnsupported": "La ingesta de comisiones reales no está disponible para este marketplace."
         },
         "errors": {
             "loadFailed": "No se pudo cargar la salud del marketplace.",
             "pollFailed": "No se pudo ejecutar el polling de pedidos.",
-            "reconcileFailed": "No se pudo ejecutar la reconciliación inbound."
+            "reconcileFailed": "No se pudo ejecutar la reconciliación inbound.",
+            "settlementFailed": "No se pudo ejecutar la sincronización de comisiones."
         }
     },
     "apiErrors": {
@@ -1827,6 +1846,12 @@
             "templateNameRequired": "El nombre de la plantilla es obligatorio.",
             "templateNameExists": "Ya existe una plantilla llamada \"{{name}}\".",
             "invalidColumnMap": "Campo de Fulcrum desconocido \"{{field}}\" en el mapa de columnas."
+        },
+        "ai": {
+            "disabled": "Las funciones de IA están deshabilitadas. Habilita IA y configura una clave de API para el proveedor activo en Configuración."
+        },
+        "reports": {
+            "invalidDateRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin (se recibió {{start}} → {{end}})."
         }
     }
 }

@@ -247,7 +247,11 @@
             "marginTitle": "Gross margin",
             "marginDesc": "Per-product revenue, cost, margin and margin %",
             "stockoutTitle": "Projected stockout",
-            "stockoutDesc": "Out / imminent / watch, by velocity-projected days of cover"
+            "stockoutDesc": "Out / imminent / watch, by velocity-projected days of cover",
+            "startLabel": "Start date",
+            "endLabel": "End date",
+            "clearRangeTooltip": "Clear date range and use the window selector",
+            "rangeInverted": "Start date must be on or before end date."
         },
         "noOrdersYet": "No orders captured yet",
         "inventoryHealth": "Inventory Health",
@@ -1667,6 +1671,7 @@
             "orderPoll": "Last order poll",
             "webhooks": "Webhooks (24h)",
             "inbound": "Inbound transfers",
+            "settlement": "Settlement fees",
             "actions": "Actions"
         },
         "auth": {
@@ -1685,18 +1690,28 @@
             "lastReceived": "Last event: {{when}} ago",
             "neverTooltip": "No webhooks received in the last {{hours}}h. Check the marketplace's developer panel — the orders subscription may need to be re-configured."
         },
+        "settlement": {
+            "unsupported": "Not supported",
+            "lastSyncedTooltip": "Real settled fees were last fetched {{when}} ago. The cost engine prefers these over the estimated fee rate.",
+            "neverTooltip": "Settlement fees have never been synced for this credential. Click 'Sync settlement' to fetch real per-order fees from the marketplace.",
+            "unsupportedTooltip": "Settlement-fee ingestion only supports Amazon and MercadoLibre today."
+        },
         "actions": {
             "pollNow": "Poll orders",
             "pollTooltip": "Run the order ingestion against this credential right now",
             "reconcileNow": "Reconcile inbound",
-            "reconcileTooltip": "Run inbound reconciliation for this credential's open transfers"
+            "reconcileTooltip": "Run inbound reconciliation for this credential's open transfers",
+            "settlementNow": "Sync settlement",
+            "settlementTooltip": "Fetch real per-order marketplace fees + shipping from the marketplace's finance API and replace the estimates on each order's cost breakdown."
         },
         "results": {
             "pollSummary": "Poll: {{new}} new, {{updated}} updated, {{items}} line items.",
             "pollError": "Poll failed: {{error}}",
             "reconcileSummary": "Reconcile: {{processed}} transfer(s) processed, {{updated}} updated, {{units}} units credited.",
             "reconcileEmpty": "Reconcile: nothing open to reconcile.",
-            "reconcileError": "Reconcile failed: {{error}}"
+            "reconcileError": "Reconcile failed: {{error}}",
+            "settlementSummary": "Settlement: {{settled}} settled, {{pending}} pending, {{scanned}} scanned.",
+            "settlementError": "Settlement sync failed: {{error}}"
         },
         "messages": {
             "pollFound": "Poll found {{new}} new order(s), {{updated}} updated, {{items}} line items.",
@@ -1706,12 +1721,16 @@
             "reconcileDone": "Reconcile: {{processed}} transfer(s), {{updated}} updated, {{units}} units credited.",
             "reconcileEmpty": "Reconcile completed — nothing open to reconcile.",
             "reconcileNeedsReauth": "Reconnect the credential before reconciling.",
-            "reconcileUnsupported": "Inbound reconciliation is not supported for this marketplace."
+            "reconcileUnsupported": "Inbound reconciliation is not supported for this marketplace.",
+            "settlementDone": "Settlement sync: {{settled}} order(s) settled, {{pending}} still pending, {{scanned}} scanned.",
+            "settlementNeedsReauth": "Reconnect the credential before syncing settlement fees.",
+            "settlementUnsupported": "Settlement-fee ingestion is not supported for this marketplace."
         },
         "errors": {
             "loadFailed": "Could not load marketplace health.",
             "pollFailed": "Could not run the order poll.",
-            "reconcileFailed": "Could not run the inbound reconciliation."
+            "reconcileFailed": "Could not run the inbound reconciliation.",
+            "settlementFailed": "Could not run the settlement-fee sync."
         }
     },
     "apiErrors": {
@@ -1827,6 +1846,12 @@
             "templateNameRequired": "Template name is required.",
             "templateNameExists": "A template named \"{{name}}\" already exists.",
             "invalidColumnMap": "Unknown Fulcrum field \"{{field}}\" in column map."
+        },
+        "ai": {
+            "disabled": "AI features are disabled. Enable AI and configure an API key for the active provider in Settings."
+        },
+        "reports": {
+            "invalidDateRange": "Start date must be on or before end date (got {{start}} → {{end}})."
         }
     }
 }

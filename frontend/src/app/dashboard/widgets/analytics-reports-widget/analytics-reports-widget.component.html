@@ -10,6 +10,7 @@
           <mat-label>{{ t('dashboard.analyticsReports.windowLabel') }}</mat-label>
           <mat-select
             [(value)]="windowDays"
+            [disabled]="hasExplicitRange()"
             data-testid="analytics-reports-window-select"
           >
             <mat-option *ngFor="let opt of windowOptions" [value]="opt.value">
@@ -17,8 +18,52 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="date-field">
+          <mat-label>{{ t('dashboard.analyticsReports.startLabel') }}</mat-label>
+          <input
+            matInput
+            [matDatepicker]="startPicker"
+            [(ngModel)]="startDate"
+            [max]="endDate || undefined"
+            data-testid="analytics-reports-start-date"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="date-field">
+          <mat-label>{{ t('dashboard.analyticsReports.endLabel') }}</mat-label>
+          <input
+            matInput
+            [matDatepicker]="endPicker"
+            [(ngModel)]="endDate"
+            [min]="startDate || undefined"
+            data-testid="analytics-reports-end-date"
+          />
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+
+        @if (hasExplicitRange()) {
+          <button
+            mat-icon-button
+            (click)="clearRange()"
+            [matTooltip]="t('dashboard.analyticsReports.clearRangeTooltip')"
+            data-testid="analytics-reports-clear-range"
+          >
+            <mat-icon>clear</mat-icon>
+          </button>
+        }
       </div>
     </div>
+
+    @if (rangeInverted()) {
+      <div class="range-error" data-testid="analytics-reports-range-error">
+        <mat-icon>error_outline</mat-icon>
+        {{ t('dashboard.analyticsReports.rangeInverted') }}
+      </div>
+    }
 
     <ul class="report-list">
       <li class="report-row" data-testid="analytics-report-velocity">
@@ -33,7 +78,7 @@
           <button
             mat-stroked-button
             (click)="download('velocity', 'csv')"
-            [disabled]="isBusy('velocity', 'csv')"
+            [disabled]="isBusy('velocity', 'csv') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
             data-testid="velocity-export-csv"
           >
@@ -43,7 +88,7 @@
           <button
             mat-stroked-button
             (click)="download('velocity', 'pdf')"
-            [disabled]="isBusy('velocity', 'pdf')"
+            [disabled]="isBusy('velocity', 'pdf') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
             data-testid="velocity-export-pdf"
           >
@@ -65,7 +110,7 @@
           <button
             mat-stroked-button
             (click)="download('margin', 'csv')"
-            [disabled]="isBusy('margin', 'csv')"
+            [disabled]="isBusy('margin', 'csv') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
             data-testid="margin-export-csv"
           >
@@ -75,7 +120,7 @@
           <button
             mat-stroked-button
             (click)="download('margin', 'pdf')"
-            [disabled]="isBusy('margin', 'pdf')"
+            [disabled]="isBusy('margin', 'pdf') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
             data-testid="margin-export-pdf"
           >
@@ -97,7 +142,7 @@
           <button
             mat-stroked-button
             (click)="download('stockout', 'csv')"
-            [disabled]="isBusy('stockout', 'csv')"
+            [disabled]="isBusy('stockout', 'csv') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
             data-testid="stockout-export-csv"
           >
@@ -107,7 +152,7 @@
           <button
             mat-stroked-button
             (click)="download('stockout', 'pdf')"
-            [disabled]="isBusy('stockout', 'pdf')"
+            [disabled]="isBusy('stockout', 'pdf') || rangeInverted()"
             [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
             data-testid="stockout-export-pdf"
           >

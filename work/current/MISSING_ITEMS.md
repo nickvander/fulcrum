@@ -27,11 +27,18 @@ _(none active)_
       Backend wires `POST /v1/payments/{id}/refunds` on the MP
       connector; frontend exposes a "Refund" button on the detail
       dialog (full + partial amounts) with confirmation + reason.
-- [ ] AI content generation (product descriptions, marketing copy) —
-      plan in `work/future/ai-content-generation.md`.
-- [ ] Phase 8 Advanced Analytics — ETL pipeline, cost engine,
-      interactive charts, alerting. Plan in
-      `work/future/80-advanced-analytics.md`.
+- [ ] AI content generation backend + UI hooks **shipped** —
+      `/ai/generate-description` + `/ai/generate-listing-description`
+      both exist, frontend buttons gate on
+      `AiService.isReady$()`. Remaining: extend the description
+      AI to incorporate product images (multi-modal prompt) +
+      per-marketplace tone tuning beyond the current 3-marketplace
+      static map.
+- [ ] Phase 8 Advanced Analytics — ad-spend attribution from the
+      marketing `Campaign` table (currently always 0). Needs a
+      per-campaign-per-order link or a last-touch heuristic.
+      Geographic heatmaps still deferred — needs new data
+      primitives. Plan in `work/future/80-advanced-analytics.md`.
 
 ## Done This Past Week
 

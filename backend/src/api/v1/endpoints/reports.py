@@ -3,7 +3,8 @@ Operational reports surface. Exposes the low-stock report used by the
 dashboard widget plus reusable export endpoints (CSV + PDF) that all share
 the same `report_export` helpers — see `src/services/report_export.py`.
 """
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from datetime import date, datetime, time, timedelta, timezone
 from typing import List, Optional
 
 
@@ -766,12 +767,78 @@ def reorder_low_stock_products(
 # ---------------------------------------------------------------------------
 # Velocity / margin / stockout reports
 #
-# All three reports operate over a configurable window (`window_days`, default
-# 30, capped at 365) and share an aggregation pass over SalesOrderItem joined
-# to SalesOrder filtered to status IN ("COMPLETED", "SHIPPED") — same filter
+# All three reports operate over a configurable window. By default they look
+# at "last N days" (`window_days`, default 30, capped at 365) — back-compat
+# with the original API. Optional `start_date` + `end_date` query params let
+# operators pin an explicit calendar range ("last quarter") without having
+# to do day-math. When either is set, it wins over `window_days`.
+#
+# They all share an aggregation pass over SalesOrderItem joined to SalesOrder
+# filtered to status IN ("COMPLETED", "SHIPPED") — same filter
 # `InventoryService.calculate_sales_velocity` uses, so the numbers line up
 # with the low-stock report's `daily_velocity` column.
 # ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class _DateWindow:
+    """Resolved analytics window. `start_dt` and `end_dt` are inclusive
+    UTC datetimes; `label` is the human-readable form rendered into the
+    report subtitle ("window 30d" for the legacy path, "2026-01-01 →
+    2026-03-31" for an explicit range)."""
+    start_dt: datetime
+    end_dt: datetime
+    label: str
+
+    @property
+    def days(self) -> int:
+        """Calendar-day span used for `daily_velocity` math. Floored at 1
+        so a same-day range still divides cleanly."""
+        return max(1, (self.end_dt - self.start_dt).days)
+
+
+def _resolve_date_window(
+    window_days: int,
+    start_date: Optional[date],
+    end_date: Optional[date],
+) -> _DateWindow:
+    """Convert the three competing window query params into a single
+    `_DateWindow`. Rules:
+
+      - When both / either of `start_date` and `end_date` are set, build
+        an explicit range. `end_date` missing → "now". `start_date`
+        missing → `end - window_days` (so an open-ended end-date "report
+        through 2026-03-31" still has a sensible left bound).
+      - When neither is set, fall back to `(now - window_days, now)`.
+      - `start_date > end_date` is a 400 — the operator typoed.
+
+    Both bounds are interpreted in UTC at midnight (`start`) and
+    end-of-day (`end`), so a "2026-01-01 → 2026-01-01" range captures
+    every order created on that calendar day.
+    """
+    if start_date is not None or end_date is not None:
+        end_dt = (
+            datetime.combine(end_date, time.max).replace(tzinfo=timezone.utc)
+            if end_date is not None
+            else datetime.now(timezone.utc)
+        )
+        if start_date is not None:
+            start_dt = datetime.combine(start_date, time.min).replace(tzinfo=timezone.utc)
+        else:
+            start_dt = end_dt - timedelta(days=window_days)
+        if start_dt > end_dt:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.reports.invalidDateRange",
+                params={"start": start_dt.date().isoformat(), "end": end_dt.date().isoformat()},
+                detail="start_date must be on or before end_date",
+            )
+        label = f"{start_dt.date().isoformat()} → {end_dt.date().isoformat()}"
+        return _DateWindow(start_dt=start_dt, end_dt=end_dt, label=label)
+
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=window_days)
+    return _DateWindow(start_dt=start_dt, end_dt=end_dt, label=f"window {window_days}d")
 
 
 # Status values that count as realized revenue. Matches
@@ -782,7 +849,7 @@ _REALIZED_ORDER_STATUSES = ("COMPLETED", "SHIPPED")
 
 
 def _sales_aggregates_by_product(
-    db: Session, *, window_days: int
+    db: Session, *, window: _DateWindow,
 ) -> dict[int, tuple[int, float]]:
     """One pass over SalesOrderItem joined to SalesOrder, grouped by product.
 
@@ -796,7 +863,6 @@ def _sales_aggregates_by_product(
     The 2000-product cap on the snapshot report would otherwise be 2000
     queries on a full run.
     """
-    cutoff = datetime.utcnow() - timedelta(days=window_days)
     rows = (
         db.query(
             SalesOrderItem.product_id,
@@ -807,7 +873,8 @@ def _sales_aggregates_by_product(
             ),
         )
         .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
-        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.created_at >= window.start_dt)
+        .filter(SalesOrder.created_at <= window.end_dt)
         .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
         .group_by(SalesOrderItem.product_id)
         .all()
@@ -842,7 +909,9 @@ class VelocityRow(BaseModel):
     days_of_inventory: float
 
 
-def _build_velocity_rows(db: Session, *, window_days: int, limit: int) -> list[VelocityRow]:
+def _build_velocity_rows(
+    db: Session, *, window: _DateWindow, limit: int,
+) -> list[VelocityRow]:
     """Rank every non-bundle product by daily velocity over the window.
 
     Zero-sales products are included so the bottom of the list is
@@ -850,7 +919,7 @@ def _build_velocity_rows(db: Session, *, window_days: int, limit: int) -> list[V
     days"). days_of_inventory == 999.0 marks the no-velocity case, same
     convention `inventory_service.calculate_days_of_inventory` uses.
     """
-    sales = _sales_aggregates_by_product(db, window_days=window_days)
+    sales = _sales_aggregates_by_product(db, window=window)
     on_hand_map = _on_hand_by_product(db)
 
     products = (
@@ -862,9 +931,10 @@ def _build_velocity_rows(db: Session, *, window_days: int, limit: int) -> list[V
     )
 
     rows: list[VelocityRow] = []
+    days = window.days
     for product in products:
         units, _revenue = sales.get(product.id, (0, 0.0))
-        velocity = units / window_days if window_days else 0.0
+        velocity = units / days if days else 0.0
         on_hand = on_hand_map.get(product.id, 0)
         if velocity > 0:
             days_left = round(on_hand / velocity, 1)
@@ -888,13 +958,13 @@ def _build_velocity_rows(db: Session, *, window_days: int, limit: int) -> list[V
     return rows[:limit]
 
 
-def _velocity_table(rows: list[VelocityRow], *, window_days: int) -> ReportTable:
+def _velocity_table(rows: list[VelocityRow], *, window: _DateWindow) -> ReportTable:
     date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     total_units = sum(r.units_sold for r in rows)
     return ReportTable(
         title="Fulcrum — Sales Velocity Report",
         subtitle=(
-            f"Generated {date_stamp} · window {window_days}d · "
+            f"Generated {date_stamp} · {window.label} · "
             f"{len(rows)} products · {total_units:,} units sold"
         ),
         filename_stem="fulcrum-velocity",
@@ -918,12 +988,20 @@ def export_velocity_csv(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     limit: int = Query(2000, ge=1, le=10000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
-    """Per-product sales velocity over a configurable window as a CSV."""
-    rows = _build_velocity_rows(db, window_days=window_days, limit=limit)
-    return stream_csv(_velocity_table(rows, window_days=window_days))
+    """Per-product sales velocity over a configurable window as a CSV.
+
+    Pass `start_date` / `end_date` (ISO 8601 dates, YYYY-MM-DD) to pin
+    an explicit calendar range; otherwise the report covers the last
+    `window_days` days ending now.
+    """
+    window = _resolve_date_window(window_days, start_date, end_date)
+    rows = _build_velocity_rows(db, window=window, limit=limit)
+    return stream_csv(_velocity_table(rows, window=window))
 
 
 @router.get("/velocity/export-pdf")
@@ -931,12 +1009,15 @@ def export_velocity_pdf(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     limit: int = Query(2000, ge=1, le=10000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Per-product sales velocity over a configurable window as a PDF."""
-    rows = _build_velocity_rows(db, window_days=window_days, limit=limit)
-    return stream_pdf(_velocity_table(rows, window_days=window_days))
+    window = _resolve_date_window(window_days, start_date, end_date)
+    rows = _build_velocity_rows(db, window=window, limit=limit)
+    return stream_pdf(_velocity_table(rows, window=window))
 
 
 # ---- Margin report --------------------------------------------------------
@@ -954,7 +1035,9 @@ class MarginRow(BaseModel):
     margin_pct: float
 
 
-def _build_margin_rows(db: Session, *, window_days: int, limit: int) -> list[MarginRow]:
+def _build_margin_rows(
+    db: Session, *, window: _DateWindow, limit: int,
+) -> list[MarginRow]:
     """Per-product realized margin over the window.
 
     Only products with at least one realized sale show up — a zero row
@@ -972,7 +1055,6 @@ def _build_margin_rows(db: Session, *, window_days: int, limit: int) -> list[Mar
     products.cost_price))` so the mixed case (some lines captured,
     some legacy) sums correctly in a single query.
     """
-    cutoff = datetime.utcnow() - timedelta(days=window_days)
     rows_raw = (
         db.query(
             SalesOrderItem.product_id,
@@ -991,7 +1073,8 @@ def _build_margin_rows(db: Session, *, window_days: int, limit: int) -> list[Mar
         )
         .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
         .join(Product, Product.id == SalesOrderItem.product_id)
-        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.created_at >= window.start_dt)
+        .filter(SalesOrder.created_at <= window.end_dt)
         .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
         .filter(Product.is_bundle.is_(False))
         .group_by(SalesOrderItem.product_id)
@@ -1032,14 +1115,14 @@ def _build_margin_rows(db: Session, *, window_days: int, limit: int) -> list[Mar
     return rows[:limit]
 
 
-def _margin_table(rows: list[MarginRow], *, window_days: int) -> ReportTable:
+def _margin_table(rows: list[MarginRow], *, window: _DateWindow) -> ReportTable:
     date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     total_revenue = sum(r.revenue for r in rows)
     total_margin = sum(r.gross_margin for r in rows)
     return ReportTable(
         title="Fulcrum — Gross Margin Report",
         subtitle=(
-            f"Generated {date_stamp} · window {window_days}d · "
+            f"Generated {date_stamp} · {window.label} · "
             f"{len(rows)} products · revenue ${total_revenue:,.2f} · "
             f"margin ${total_margin:,.2f}"
         ),
@@ -1065,12 +1148,15 @@ def export_margin_csv(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     limit: int = Query(2000, ge=1, le=10000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Per-product realized gross margin over a window as a CSV."""
-    rows = _build_margin_rows(db, window_days=window_days, limit=limit)
-    return stream_csv(_margin_table(rows, window_days=window_days))
+    window = _resolve_date_window(window_days, start_date, end_date)
+    rows = _build_margin_rows(db, window=window, limit=limit)
+    return stream_csv(_margin_table(rows, window=window))
 
 
 @router.get("/margin/export-pdf")
@@ -1078,12 +1164,15 @@ def export_margin_pdf(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     limit: int = Query(2000, ge=1, le=10000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Per-product realized gross margin over a window as a PDF."""
-    rows = _build_margin_rows(db, window_days=window_days, limit=limit)
-    return stream_pdf(_margin_table(rows, window_days=window_days))
+    window = _resolve_date_window(window_days, start_date, end_date)
+    rows = _build_margin_rows(db, window=window, limit=limit)
+    return stream_pdf(_margin_table(rows, window=window))
 
 
 # ---- Stockout report ------------------------------------------------------
@@ -1109,7 +1198,7 @@ _STOCKOUT_SEVERITY_BG = {
 def _build_stockout_rows(
     db: Session,
     *,
-    window_days: int,
+    window: _DateWindow,
     imminent_days: int,
     watch_days: int,
     limit: int,
@@ -1128,7 +1217,7 @@ def _build_stockout_rows(
       - "watch"    — days_of_inventory <= watch_days (default 14)
     Products with more days of inventory than `watch_days` are excluded.
     """
-    sales = _sales_aggregates_by_product(db, window_days=window_days)
+    sales = _sales_aggregates_by_product(db, window=window)
     on_hand_map = _on_hand_by_product(db)
 
     products = (
@@ -1140,10 +1229,11 @@ def _build_stockout_rows(
     )
 
     rows: list[StockoutRow] = []
+    days = window.days
     for product in products:
         units, _revenue = sales.get(product.id, (0, 0.0))
         on_hand = on_hand_map.get(product.id, 0)
-        velocity = units / window_days if window_days else 0.0
+        velocity = units / days if days else 0.0
         if velocity > 0:
             days_left = round(on_hand / velocity, 1)
         else:
@@ -1176,7 +1266,7 @@ def _build_stockout_rows(
 def _stockout_table(
     rows: list[StockoutRow],
     *,
-    window_days: int,
+    window: _DateWindow,
     imminent_days: int,
     watch_days: int,
 ) -> ReportTable:
@@ -1187,7 +1277,7 @@ def _stockout_table(
     return ReportTable(
         title="Fulcrum — Projected Stockout Report",
         subtitle=(
-            f"Generated {date_stamp} · velocity window {window_days}d · "
+            f"Generated {date_stamp} · velocity {window.label} · "
             f"imminent ≤{imminent_days}d · watch ≤{watch_days}d · "
             f"{out_count} out · {imm_count} imminent · {watch_count} watch"
         ),
@@ -1215,6 +1305,8 @@ def export_stockout_csv(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     imminent_days: int = Query(7, ge=1, le=90),
     watch_days: int = Query(14, ge=1, le=180),
     limit: int = Query(2000, ge=1, le=10000),
@@ -1222,12 +1314,13 @@ def export_stockout_csv(
 ) -> StreamingResponse:
     """Projected-stockout report as a CSV. Velocity-based, distinct from
     the threshold-based low-stock report."""
+    window = _resolve_date_window(window_days, start_date, end_date)
     rows = _build_stockout_rows(
-        db, window_days=window_days, imminent_days=imminent_days,
+        db, window=window, imminent_days=imminent_days,
         watch_days=watch_days, limit=limit,
     )
     return stream_csv(_stockout_table(
-        rows, window_days=window_days,
+        rows, window=window,
         imminent_days=imminent_days, watch_days=watch_days,
     ))
 
@@ -1237,18 +1330,21 @@ def export_stockout_pdf(
     *,
     db: Session = Depends(get_db),
     window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None, description="Inclusive lower bound (UTC). Overrides window_days when set."),
+    end_date: Optional[date] = Query(None, description="Inclusive upper bound (UTC). Overrides window_days when set."),
     imminent_days: int = Query(7, ge=1, le=90),
     watch_days: int = Query(14, ge=1, le=180),
     limit: int = Query(2000, ge=1, le=10000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Projected-stockout report as a printable PDF, severity-colored."""
+    window = _resolve_date_window(window_days, start_date, end_date)
     rows = _build_stockout_rows(
-        db, window_days=window_days, imminent_days=imminent_days,
+        db, window=window, imminent_days=imminent_days,
         watch_days=watch_days, limit=limit,
     )
     return stream_pdf(_stockout_table(
-        rows, window_days=window_days,
+        rows, window=window,
         imminent_days=imminent_days, watch_days=watch_days,
     ))
 
@@ -1518,7 +1614,8 @@ def _build_dead_stock_rows(
     stock_value_at_cost desc. The capital-at-risk tiebreaker lets
     the operator's eye land on $-heavy SKUs faster.
     """
-    units_by_product = _sales_aggregates_by_product(db, window_days=window_days)
+    window = _resolve_date_window(window_days, None, None)
+    units_by_product = _sales_aggregates_by_product(db, window=window)
     on_hand_by_product = _on_hand_by_product(db)
 
     # Last-sale lookup: max(SalesOrder.created_at) joined through
