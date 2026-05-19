@@ -24,6 +24,68 @@
             </div>
         </div>
 
+        @if (marketplace) {
+            <mat-card class="fee-config-card" data-testid="fee-config-card">
+                <mat-card-content>
+                    <div class="fee-config-header">
+                        <h2>{{ t('marketing.feeConfig.title') }}</h2>
+                        <p>{{ t('marketing.feeConfig.subtitle') }}</p>
+                    </div>
+                    <div class="fee-config-form">
+                        <mat-form-field appearance="outline" class="fee-rate-field">
+                            <mat-label>{{ t('marketing.feeConfig.feeRateLabel') }}</mat-label>
+                            <input matInput type="number" [(ngModel)]="feeRatePercent"
+                                   min="0" max="100" step="0.1"
+                                   data-testid="fee-rate-input">
+                            <span matSuffix>%</span>
+                        </mat-form-field>
+                        <mat-form-field appearance="outline" class="shipping-cost-field">
+                            <mat-label>{{ t('marketing.feeConfig.shippingLabel') }}</mat-label>
+                            <input matInput type="number" [(ngModel)]="shippingCost"
+                                   min="0" step="0.5"
+                                   data-testid="shipping-cost-input">
+                            <span matSuffix>MXN</span>
+                        </mat-form-field>
+                    </div>
+                    <div class="fee-config-actions">
+                        <button mat-flat-button color="primary"
+                                (click)="saveFeeConfig()"
+                                [disabled]="savingFeeConfig || recomputing"
+                                data-testid="fee-config-save">
+                            @if (savingFeeConfig) {
+                                <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                                <mat-icon>save</mat-icon>
+                            }
+                            {{ t('marketing.feeConfig.save') }}
+                        </button>
+                        <button mat-stroked-button color="primary"
+                                (click)="recomputeBreakdowns()"
+                                [disabled]="savingFeeConfig || recomputing"
+                                [matTooltip]="t('marketing.feeConfig.recomputeTooltip')"
+                                data-testid="recompute-breakdowns">
+                            @if (recomputing) {
+                                <mat-spinner diameter="16"></mat-spinner>
+                            } @else {
+                                <mat-icon>autorenew</mat-icon>
+                            }
+                            {{ t('marketing.feeConfig.recompute') }}
+                        </button>
+                    </div>
+                    @if (recomputeResult) {
+                        <p class="recompute-result"
+                           data-testid="recompute-result">
+                            {{ t('marketing.feeConfig.recomputeSummary', {
+                                created: recomputeResult.breakdowns_created,
+                                updated: recomputeResult.breakdowns_updated,
+                                errors: recomputeResult.errors
+                            }) }}
+                        </p>
+                    }
+                </mat-card-content>
+            </mat-card>
+        }
+
         <div class="table-card mat-elevation-z2">
             <mat-table [dataSource]="(listings$ | async) || []">
                 <!-- Product ID Column -->

@@ -1015,6 +1015,19 @@
         "forceSync": "Forzar Sincronización Individual",
         "openOnMarketplace": "Abrir en Marketplace",
         "noListingsEmpty": "No se encontraron publicaciones activas para este canal. Comienza agregando productos desde el administrador de inventario.",
+        "feeConfig": {
+            "title": "Configuración del motor de costos",
+            "subtitle": "Tarifas por defecto que usa el motor Phase-8 de margen neto. Actualizarlas NO toca los breakdowns existentes — haz clic en Recalcular después para refrescarlos.",
+            "feeRateLabel": "Tarifa por defecto",
+            "shippingLabel": "Costo de envío por defecto",
+            "save": "Guardar configuración",
+            "saved": "Configuración guardada.",
+            "recompute": "Recalcular breakdowns",
+            "recomputeTooltip": "Refresca todos los cost breakdowns de las órdenes de este marketplace con la configuración actual.",
+            "recomputeSummary": "Recalculados: {{updated}} actualizados, {{created}} creados, {{errors}} errores.",
+            "recomputeFailed": "No se pudieron recalcular los breakdowns.",
+            "errorNegative": "La tarifa y el costo de envío no pueden ser negativos."
+        },
         "statusDisconnected": "Desconectado",
         "notConnected": "Sin conectar",
         "neverSynced": "Sin sincronizar",
@@ -1758,7 +1771,9 @@
             "listingNotFound": "Publicación no encontrada.",
             "noCredentialsForMarketplace": "No hay credenciales conectadas para este mercado.",
             "importFailed": "No se pudieron importar las publicaciones del mercado: {{reason}}",
-            "publishFailed": "No se pudo publicar en el mercado: {{reason}}"
+            "publishFailed": "No se pudo publicar en el mercado: {{reason}}",
+            "feeRateNegative": "La tarifa debe ser mayor o igual a 0.",
+            "shippingNegative": "El costo de envío debe ser mayor o igual a 0."
         },
         "bulkUsers": {
             "onlyCsvAllowed": "Solo se permiten archivos CSV.",

@@ -55,6 +55,46 @@
     }
 }
 
+.fee-config-card {
+    margin: 1rem 0;
+
+    .fee-config-header {
+        h2 {
+            margin: 0 0 0.25rem;
+            font-size: 1.1rem;
+        }
+        p {
+            margin: 0 0 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    }
+
+    .fee-config-form {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        .fee-rate-field,
+        .shipping-cost-field {
+            width: 200px;
+        }
+    }
+
+    .fee-config-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .recompute-result {
+        margin: 0.75rem 0 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+}
+
 .table-card {
     background: white;
     border-radius: 16px;

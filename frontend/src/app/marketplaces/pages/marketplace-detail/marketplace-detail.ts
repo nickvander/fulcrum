@@ -1,16 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
-import { MarketplacesService, MarketplaceListing } from '../../marketplaces';
-import { Observable, of } from 'rxjs';
+import {
+  Marketplace,
+  MarketplacesService,
+  MarketplaceListing,
+  MarketplaceFeeConfigRecomputeResult,
+} from '../../marketplaces';
+import { Observable, finalize, of } from 'rxjs';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 @Component({
@@ -18,11 +28,16 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     MatTableModule,
     MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
     MatIconModule,
     MatChipsModule,
+    MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTooltipModule,
     MatDialogModule,
@@ -37,6 +52,21 @@ export class MarketplaceDetailComponent implements OnInit {
   displayedColumns: string[] = ['product', 'status', 'sync', 'price', 'actions'];
 
   disconnecting = false;
+
+  // Phase 8 fee-config form state. Kept inline on the detail page
+  // rather than a separate route — operators tend to update fees
+  // and recompute breakdowns together in the same flow, so the
+  // card stays nearby.
+  marketplace: Marketplace | null = null;
+  feeRatePercent = 0;       // operator-visible form value, in PERCENT
+                            // (e.g. 16 for 16%). Converted to fraction
+                            // before sending so the API/DB stays in
+                            // the same shape as
+                            // `Marketplace.default_fee_rate`.
+  shippingCost = 0;
+  savingFeeConfig = false;
+  recomputing = false;
+  recomputeResult: MarketplaceFeeConfigRecomputeResult | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -58,6 +88,80 @@ export class MarketplaceDetailComponent implements OnInit {
   ngOnInit(): void {
     this.marketplaceId = this.route.snapshot.paramMap.get('id');
     this.listings$ = this.marketplaceService.getMarketplaceListings();
+    if (this.marketplaceId) {
+      this.loadMarketplace(parseInt(this.marketplaceId, 10));
+    }
+  }
+
+  private loadMarketplace(id: number): void {
+    this.marketplaceService.getMarketplaceById(id).subscribe({
+      next: (mp) => {
+        this.marketplace = mp;
+        // Convert the API's fraction → percent for the form.
+        this.feeRatePercent = Math.round((mp.default_fee_rate ?? 0) * 10000) / 100;
+        this.shippingCost = mp.default_shipping_cost ?? 0;
+      },
+      error: () => {
+        // Non-fatal — the listings + actions still work without the
+        // marketplace row. The fee-config card just stays hidden.
+      },
+    });
+  }
+
+  saveFeeConfig(): void {
+    if (!this.marketplace || this.savingFeeConfig) return;
+    if (this.feeRatePercent < 0 || this.shippingCost < 0) {
+      this.snackBar.open(
+        this.t('marketing.feeConfig.errorNegative'),
+        this.closeLabel, { duration: 4000 },
+      );
+      return;
+    }
+    this.savingFeeConfig = true;
+    const update = {
+      default_fee_rate: this.feeRatePercent / 100,
+      default_shipping_cost: this.shippingCost,
+    };
+    this.marketplaceService.updateFeeConfig(this.marketplace.id, update)
+      .pipe(finalize(() => (this.savingFeeConfig = false)))
+      .subscribe({
+        next: (mp) => {
+          this.marketplace = mp;
+          this.snackBar.open(
+            this.t('marketing.feeConfig.saved'),
+            this.closeLabel, { duration: 3000 },
+          );
+        },
+        error: () => {
+          // HttpErrorInterceptor surfaces the localized error from
+          // the backend (apiErrors.marketplace.feeRateNegative etc.).
+        },
+      });
+  }
+
+  recomputeBreakdowns(): void {
+    if (!this.marketplace || this.recomputing) return;
+    this.recomputing = true;
+    this.recomputeResult = null;
+    this.marketplaceService.recomputeCostBreakdowns(this.marketplace.id)
+      .pipe(finalize(() => (this.recomputing = false)))
+      .subscribe({
+        next: (result) => {
+          this.recomputeResult = result;
+          const summary = this.t('marketing.feeConfig.recomputeSummary', {
+            created: result.breakdowns_created,
+            updated: result.breakdowns_updated,
+            errors: result.errors,
+          });
+          this.snackBar.open(summary, this.closeLabel, { duration: 5000 });
+        },
+        error: () => {
+          this.snackBar.open(
+            this.t('marketing.feeConfig.recomputeFailed'),
+            this.closeLabel, { duration: 4000 },
+          );
+        },
+      });
   }
 
   syncListing(listingId: number): void {
