@@ -187,9 +187,17 @@ class MercadoLibreOrderIngestionService:
             if existing is not None:
                 # Refresh status + total, but DON'T re-decrement stock —
                 # that already happened when the order was first
-                # ingested (either via webhook or a prior poll).
+                # ingested (either via webhook or a prior poll). The
+                # lifecycle hook records the audit transition, toggles
+                # the breakdown's reversed_at, and re-credits stock if
+                # the new status is a cancel-before-ship.
                 refreshed = ml_order_to_sales_order(order_payload)
-                existing.status = refreshed.status
+                from src.services.order_lifecycle import apply_status_change
+                apply_status_change(
+                    db, existing,
+                    new_status=refreshed.status,
+                    source_signal="ml_poll",
+                )
                 if refreshed.total_price is not None:
                     existing.total_price = refreshed.total_price
                 summary["orders_updated"] += 1
@@ -198,6 +206,8 @@ class MercadoLibreOrderIngestionService:
             sales_order = ml_order_to_sales_order(order_payload)
             db.add(sales_order)
             db.flush()  # need the FK for SalesOrderItem rows below
+            from src.services.order_lifecycle import record_initial_status
+            record_initial_status(db, sales_order, source_signal="ml_poll")
 
             for line in order_payload.get("order_items", []) or []:
                 item_payload = line.get("item") or {}

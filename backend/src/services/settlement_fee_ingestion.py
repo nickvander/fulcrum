@@ -42,7 +42,7 @@ from typing import Any, Dict, Iterable, List, Optional
 from sqlalchemy.orm import Session
 
 from src.models.marketplace import Marketplace, MarketplaceCredential
-from src.models.order import OrderCostBreakdown, OrderSource, SalesOrder
+from src.models.order import AmazonOrderRefund, OrderCostBreakdown, OrderSource, SalesOrder
 from src.services import order_cost_engine
 from src.services.marketplaces.amazon import AmazonConnector
 from src.services.marketplaces.mercadolibre import MercadoLibreConnector
@@ -144,6 +144,68 @@ async def _fetch_one_amazon(
     return await connector.fetch_order_financials(order.external_order_id, access_token)
 
 
+async def _persist_amazon_refunds_for_order(
+    db: Session,
+    order: SalesOrder,
+    connector: AmazonConnector,
+    access_token: str,
+) -> None:
+    """Fetch the order's `RefundEventList` and upsert each row into
+    `amazon_order_refunds`. Idempotent on
+    `(order_id, amazon_refund_id)` so re-polling the same order
+    doesn't double-count partial-refund amounts.
+
+    Failures are logged but do not raise — refund persistence is a
+    side-effect of the fee sweep and a transient error here must not
+    leave the breakdown in a half-applied state. The next tick
+    retries.
+    """
+    try:
+        refunds = await connector.fetch_order_refunds(
+            order.external_order_id, access_token,
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception(
+            "settlement-sync: refund fetch failed for order %s", order.id,
+        )
+        return
+
+    if not refunds:
+        return
+
+    existing_ids = {
+        row.amazon_refund_id
+        for row in db.query(AmazonOrderRefund.amazon_refund_id)
+        .filter(AmazonOrderRefund.order_id == order.id)
+        .all()
+    }
+    for entry in refunds:
+        refund_id = entry.get("amazon_refund_id")
+        if not refund_id or refund_id in existing_ids:
+            continue
+        posted_raw = entry.get("posted_at")
+        posted_at: Optional[datetime] = None
+        if isinstance(posted_raw, str) and posted_raw:
+            try:
+                # SP-API returns ISO 8601 with a trailing Z; fromisoformat
+                # handles it once we swap the Z for +00:00.
+                posted_at = datetime.fromisoformat(posted_raw.replace("Z", "+00:00"))
+            except ValueError:
+                posted_at = None
+        try:
+            amount = float(entry.get("refund_amount") or 0.0)
+        except (TypeError, ValueError):
+            amount = 0.0
+        db.add(AmazonOrderRefund(
+            order_id=order.id,
+            amazon_refund_id=refund_id,
+            posted_at=posted_at,
+            refund_amount=amount,
+            currency=entry.get("currency") or "MXN",
+        ))
+    db.flush()
+
+
 async def sync_settlement_for_credential(
     db: Session,
     credential: MarketplaceCredential,
@@ -207,6 +269,13 @@ async def sync_settlement_for_credential(
                 shipping_cost_amount=settlement.get("shipping_cost_amount"),
                 synced_at=when,
             )
+            # Amazon only: persist `RefundEventList` rows so the
+            # refunds dashboard surfaces partial-refund cases where
+            # the order's top-level OrderStatus stays Shipped. ML
+            # refund tracking lives on the status-transition audit
+            # (ML payment-only refunds flip the order to cancelled).
+            if source == OrderSource.AMAZON:
+                await _persist_amazon_refunds_for_order(db, order, connector, access_token)
             summary.orders_settled += 1
         except Exception:  # noqa: BLE001
             logger.exception(

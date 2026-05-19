@@ -1,6 +1,17 @@
 # Progress Log
 
-**Status:** Settlement-fee ingestion replaces estimated marketplace
+**Status:** Marketplace-side refund + cancellation tracking now
+first-class. New `sales_order_status_events` audit (every ingestion
+path writes transitions), `order_cost_breakdowns.reversed_at` so
+rollups stop counting reversed orders silently, `amazon_order_refunds`
+captures partial-refund events from SP-API Finances, and the
+lifecycle hook re-credits stock on cancel-before-ship transitions
+(idempotent via `SalesOrder.stock_recredited_at`). New
+`GET /api/v1/reports/refunds-summary` + dashboard widget surface
+per-channel refund count / amount / rate. New `refund_rate_spike`
+alert type closes the loop.
+
+Settlement-fee ingestion replaces estimated marketplace
 fees with real per-order data from ML (`/orders/{id}` payments +
 shipping) and Amazon (SP-API Finances financialEvents). New hourly
 Celery beat `poll_settlement_fees` + manual operator endpoint
@@ -45,6 +56,70 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Refund + cancellation tracking for marketplace orders. Closes
+  the "we have no idea how many orders got refunded last week"
+  gap and the stock-leak bug discovered during the audit (cancel-
+  before-ship was silently leaving inventory decremented).
+  - New `sales_order_status_events` audit table — every
+    ingestion path (ML webhook, ML poll, Amazon poll) routes
+    status updates through `services/order_lifecycle.apply_status_change`,
+    which writes a row on every `old != new` transition.
+    `from_status` is nullable for the very first event of an
+    order. `source_signal` records which path wrote the row so
+    "the poll keeps undoing the webhook" type bugs are
+    debuggable from the audit alone.
+  - New `order_cost_breakdowns.reversed_at` column — set by the
+    same hook when the order transitions OUT of the realized
+    set, cleared on transitions back INTO it. The cost-engine
+    rollup / by-channel / daily / top-movers queries now filter
+    on `reversed_at IS NULL` so a cancelled order disappears
+    from current-period totals while staying queryable by the
+    refunds widget.
+  - New `sales_orders.stock_recredited_at` column + cancel-
+    before-ship stock re-credit. When the transition is
+    `realized → CANCELLED` AND the audit history shows the order
+    was never SHIPPED/DELIVERED AND `stock_recredited_at` is
+    NULL, the lifecycle hook credits each line item's qty back
+    via `inventory_service.adjust_stock(+qty)`. Idempotent:
+    re-polling a cancelled order can't double-credit. Cancel-
+    after-ship correctly does NOT re-credit (product is out the
+    door). Refunds (money-only, order stays realized) don't take
+    this path at all.
+  - Amazon partial-refund persistence — new `amazon_order_refunds`
+    table. `AmazonConnector.fetch_order_refunds` + parser
+    `_extract_refunds_from_events` walk the SP-API
+    `RefundEventList` payload that the settlement worker already
+    pulls for fee-netting, and the settlement worker now upserts
+    per-event refund amounts. Unique on
+    `(order_id, amazon_refund_id)` so re-polling can't double-
+    count. Captures the partial-refund case where the order's
+    top-level `OrderStatus` stays `Shipped`.
+  - New `GET /api/v1/reports/refunds-summary` endpoint —
+    per-channel rollup (`refunds_count`, `refunded_amount_mxn`,
+    `realized_orders_count`, `refund_rate_percent`). Reuses
+    `_resolve_date_window` for the same `window_days` /
+    `start_date` / `end_date` semantics as velocity/margin/
+    stockout. Numerator = distinct status transitions out of
+    realized + Amazon partial-refund events in window;
+    denominator = realized orders created in window. Rate is
+    NULL when denominator is zero so an empty channel isn't
+    misread as "perfect".
+  - New dashboard widget `RefundsWidgetComponent` — full-width
+    below the dead-stock row. Hero shows total count + MXN
+    refunded + rate (color-coded: green <2%, amber 2-5%, red
+    ≥5%). Per-channel breakdown table hidden for channels with
+    zero history.
+  - New alert type `REFUND_RATE_SPIKE` — evaluator computes
+    refunds/realized × 100 over the rule's window; fires when
+    rate >= threshold. Plumbed through email subject + body. The
+    `/alerts` create dialog picks up the new type automatically
+    via the existing `AlertType` enum.
+  - Migration `8b3f1d5e6c70` adds the three new tables /
+    columns + widens the `ck_alert_rules_type` CHECK constraint.
+  - 22 new backend tests (10 lifecycle + 9 refunds-summary + 3
+    alert evaluator) + 8 new frontend tests (6 widget + 2 service).
+    en + es-MX i18n parity green. Backend 688/8, frontend 626/0.
 
 - Settlement-fee ingestion (Phase 8 Track 1 follow-up): replaces
   estimated `marketplace_fees_amount` + `shipping_cost_amount` on
@@ -408,8 +483,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 666 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 618 passed, 0
+  → 688 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 626 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

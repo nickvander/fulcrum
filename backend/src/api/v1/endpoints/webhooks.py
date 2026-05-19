@@ -190,8 +190,16 @@ async def process_mercadolibre_event(event_id: int):
             )
             if existing:
                 # Update status/total but don't re-decrement stock for the same order.
+                # Routes through the lifecycle hook so we capture the
+                # audit row + toggle the cost-breakdown's reversed_at +
+                # re-credit stock on cancel-before-ship.
                 ml_order = _ml_order_to_sales_order(order_payload)
-                existing.status = ml_order.status
+                from src.services.order_lifecycle import apply_status_change
+                apply_status_change(
+                    db, existing,
+                    new_status=ml_order.status,
+                    source_signal="ml_webhook",
+                )
                 existing.total_price = ml_order.total_price
                 db.commit()
                 event.status = "PROCESSED"
@@ -202,6 +210,8 @@ async def process_mercadolibre_event(event_id: int):
             sales_order = _ml_order_to_sales_order(order_payload)
             db.add(sales_order)
             db.flush()
+            from src.services.order_lifecycle import record_initial_status
+            record_initial_status(db, sales_order, source_signal="ml_webhook")
 
             inventory_service = InventoryService()
             for line in order_payload.get("order_items", []) or []:

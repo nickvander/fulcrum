@@ -23,9 +23,8 @@ from .base import Base
 
 
 class AlertType(str, enum.Enum):
-    """Three first-class alert types backed by the velocity/margin/
-    stockout SQL helpers shipped in 44722bf. Keep this list narrow —
-    each new type needs an evaluator and a unit test.
+    """First-class alert types. Each new type needs an evaluator and a
+    unit test — see `services/alert_evaluation_service.py`.
 
     Stored as `String` (not a PG enum) on the column to keep the
     migration / SQLAlchemy enum-create dance out of the way; the
@@ -33,6 +32,7 @@ class AlertType(str, enum.Enum):
     LOW_MARGIN = "low_margin"
     SALES_DIP = "sales_dip"
     STOCKOUT_RISK = "stockout_risk"
+    REFUND_RATE_SPIKE = "refund_rate_spike"
 
 
 class AlertRule(Base):

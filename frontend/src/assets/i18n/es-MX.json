@@ -190,6 +190,16 @@
                 "margin": "Margen"
             }
         },
+        "refundsWidget": {
+            "title": "Reembolsos y cancelaciones",
+            "subtitle": "Reembolsos y cancelaciones del marketplace en la ventana. Incluye reembolsos parciales de Amazon.",
+            "refresh": "Actualizar",
+            "empty": "Sin reembolsos en la ventana — todas las órdenes se quedaron.",
+            "error": "No se pudo cargar el resumen de reembolsos.",
+            "refundsCount": "Reembolsos",
+            "refundedAmount": "Reembolsado (MXN)",
+            "refundRate": "Tasa"
+        },
         "deadStock": {
             "title": "Inventario muerto",
             "subtitle": "Productos con stock y velocidad ≤ {{threshold}} unidades/día en los últimos {{days}}d.",

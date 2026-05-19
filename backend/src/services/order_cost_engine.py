@@ -443,6 +443,12 @@ def aggregate_rollup(
         .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
         .filter(SalesOrder.created_at >= cutoff)
         .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        # Exclude orders that were realized at some point but later got
+        # cancelled/refunded. The lifecycle hook sets `reversed_at` on
+        # the breakdown when the order leaves the realized set;
+        # filtering on NULL keeps current-period rollups honest while
+        # leaving the rows queryable by the refunds widget.
+        .filter(OrderCostBreakdown.reversed_at.is_(None))
     )
     if source is not None:
         query = query.filter(SalesOrder.source == source)
@@ -531,6 +537,9 @@ def aggregate_daily_series(
         .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
         .filter(SalesOrder.created_at >= datetime.combine(cutoff_date, datetime.min.time()))
         .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        # Same as aggregate_rollup — exclude reversed breakdowns so a
+        # cancellation doesn't leave revenue on the line chart.
+        .filter(OrderCostBreakdown.reversed_at.is_(None))
         .all()
     )
 
@@ -632,6 +641,11 @@ def top_movers(
         .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
         .filter(SalesOrder.created_at >= cutoff)
         .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        # Defense in depth — the lifecycle hook only sets reversed_at
+        # when the order leaves the realized set, so this should be a
+        # no-op alongside the status filter, but it protects us from
+        # any future path that mutates the breakdown directly.
+        .filter(OrderCostBreakdown.reversed_at.is_(None))
         .all()
     )
     order_overhead_by_id: Dict[int, float] = {}

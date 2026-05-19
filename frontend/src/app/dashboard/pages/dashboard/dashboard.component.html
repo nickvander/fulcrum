@@ -140,6 +140,15 @@
                 <app-dead-stock-widget class="dashboard-widget"></app-dead-stock-widget>
             </div>
 
+            <!--
+                Refunds widget — full-width below dead-stock so the
+                per-channel breakdown table has room without crowding
+                the 2x2 analytics grid above.
+            -->
+            <div class="refunds-row">
+                <app-refunds-widget class="dashboard-widget"></app-refunds-widget>
+            </div>
+
             <div class="secondary-grid">
                 <div class="grid-section">
                     <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"

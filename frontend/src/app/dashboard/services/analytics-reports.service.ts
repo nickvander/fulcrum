@@ -89,6 +89,28 @@ export interface DeadStockResponse {
   rows: DeadStockRow[];
 }
 
+export interface RefundsByChannelRow {
+  /** One of 'FULCRUM' | 'MERCADOLIBRE' | 'AMAZON' for per-channel
+   *  rows, or 'ALL' for the totals row. */
+  source: string;
+  refunds_count: number;
+  refunded_amount_mxn: number;
+  realized_orders_count: number;
+  /** refunds_count / realized_orders_count × 100, rounded to 2dp.
+   *  `null` when the window has zero realized orders (avoids
+   *  misleading "0%" / "—" interpretations). */
+  refund_rate_percent: number | null;
+}
+
+export interface RefundsSummaryResponse {
+  /** Subtitle-style label mirrors the velocity/margin/stockout
+   *  endpoints' label so widgets can reuse the same wording
+   *  ('window 30d' vs. '2026-01-01 → 2026-03-31'). */
+  window_label: string;
+  totals: RefundsByChannelRow;
+  by_channel: RefundsByChannelRow[];
+}
+
 /**
  * CSV/PDF download endpoints for the velocity / margin / stockout
  * reports. These reports do not have a JSON shape on the frontend yet —
@@ -249,6 +271,23 @@ export class AnalyticsReportsService {
       .set('limit', String(limit));
     return this.http.get<DeadStockResponse>(
       `${this.apiUrl}/dead-stock`, { params },
+    );
+  }
+
+  /**
+   * Per-channel refund + cancellation rollup over the window.
+   * Powers the dashboard's `RefundsWidget`. Numerator = orders that
+   * transitioned out of the realized status set during the window
+   * + Amazon partial-refund events posted in the window;
+   * denominator = orders created in the window that are still
+   * realized.
+   */
+  refundsSummary(windowDays = 30, range?: DateRange): Observable<RefundsSummaryResponse> {
+    let params = new HttpParams().set('window_days', String(windowDays));
+    if (range?.startDate) params = params.set('start_date', range.startDate);
+    if (range?.endDate) params = params.set('end_date', range.endDate);
+    return this.http.get<RefundsSummaryResponse>(
+      `${this.apiUrl}/refunds-summary`, { params },
     );
   }
 }

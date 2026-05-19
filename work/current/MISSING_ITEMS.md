@@ -6,7 +6,15 @@ when you find them so the next session has a place to start._
 
 ## High Priority
 
-- [ ] **Refund + cancellation tracking for marketplace orders
+_(none active)_
+
+<!-- Most recent High-Priority item shipped on 2026-05-19; see
+"Done This Past Week" below. -->
+
+<details>
+<summary>Archived (shipped): Refund + cancellation tracking</summary>
+
+- [x] **Refund + cancellation tracking for marketplace orders
       (MercadoLibre + Amazon).** Today, when an ML / Amazon order
       moves from `COMPLETED` to `CANCELLED` or `REFUNDED`:
         - The poller silently overwrites `SalesOrder.status` — no
@@ -171,6 +179,13 @@ when you find them so the next session has a place to start._
       widget shows it, refunds-summary endpoint returns it. Then
       seed an Amazon order + a `RefundEventList` payload → partial-
       refund row persisted, widget total reflects it.
+
+      **Shipped 2026-05-19** — see PROGRESS.md "Most Recent
+      Shipped" for the full per-deliverable rundown. Stock-leak
+      bug fixed in the same slice (the "Known bug, in scope"
+      callout above).
+
+</details>
 
 ## Medium Priority
 

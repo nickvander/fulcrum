@@ -207,7 +207,12 @@ class AmazonOrderIngestionService:
             )
 
             if existing is not None:
-                existing.status = (order_payload.get("OrderStatus") or "PENDING").upper()
+                from src.services.order_lifecycle import apply_status_change
+                apply_status_change(
+                    db, existing,
+                    new_status=(order_payload.get("OrderStatus") or "PENDING").upper(),
+                    source_signal="amazon_poll",
+                )
                 new_total = _parse_order_total(order_payload)
                 if new_total is not None:
                     existing.total_price = new_total
@@ -217,6 +222,8 @@ class AmazonOrderIngestionService:
             sales_order = _amazon_order_to_sales_order(order_payload)
             db.add(sales_order)
             db.flush()  # populate sales_order.id for line items below
+            from src.services.order_lifecycle import record_initial_status
+            record_initial_status(db, sales_order, source_signal="amazon_poll")
 
             items = await connector.fetch_order_items(
                 order_id=str(order_id),
