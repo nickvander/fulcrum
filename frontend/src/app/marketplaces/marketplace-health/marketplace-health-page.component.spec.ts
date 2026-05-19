@@ -291,4 +291,92 @@ describe('MarketplaceHealthPageComponent', () => {
     expect(component.rows.length).toBe(0);
     expect(component.loading).toBe(false);
   });
+
+  // ---------------- auto-refresh ----------------
+
+  // The component subscribes to `interval()` during ngOnInit. Fake
+  // timers must be installed BEFORE that subscription so the rxjs
+  // scheduler picks them up; otherwise the interval handle is on the
+  // real clock and `vi.advanceTimersByTime` does nothing. Each test
+  // in this block destroys the outer fixture first, installs fakes,
+  // then creates a fresh fixture.
+  describe('auto-refresh', () => {
+    beforeEach(() => {
+      // Tear down the fixture the outer beforeEach created on real
+      // timers — we'll recreate it on fakes below.
+      fixture.destroy();
+      vi.useFakeTimers();
+      // Reset the call counter so each test starts from 0.
+      serviceStub.list.mockClear();
+      serviceStub.list.mockReturnValue(of(listResponse([])));
+      fixture = TestBed.createComponent(MarketplaceHealthPageComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();  // triggers ngOnInit with fakes active
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('polls the list at the auto-refresh cadence while the page is open', () => {
+      // After ngOnInit there's exactly 1 call (the initial refresh).
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(serviceStub.list).toHaveBeenCalledTimes(2);
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(serviceStub.list).toHaveBeenCalledTimes(3);
+    });
+
+    it('quiet refresh does NOT toggle the loading spinner', () => {
+      // After ngOnInit refresh resolves synchronously (mock returns
+      // `of(...)` immediately), `loading` is back to false.
+      expect(component.loading).toBe(false);
+      // The auto-tick should leave loading at false — the operator
+      // shouldn't see the table flash a spinner every 45s.
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(component.loading).toBe(false);
+    });
+
+    it('skips the auto-tick when a per-row action is in flight to avoid clobbering the embedded health patch', () => {
+      // Pretend a poll is in flight on row 1.
+      component.rows = [row({ credential_id: 1 })];
+      component.polling.add(1);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);  // skipped
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);  // still skipped
+
+      // Once the action clears, the next tick fires.
+      component.polling.delete(1);
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(serviceStub.list).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips while a reconcile is in flight too — the busy-check covers both action types', () => {
+      component.reconciling.add(7);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS * 3);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+    });
+
+    it('a failing auto-tick stays silent (no snackbar) so a transient hiccup does not spam the operator', () => {
+      const snackSpy = vi.spyOn(
+        component as unknown as { snack: (k: string) => void },
+        'snack',
+      );
+      serviceStub.list.mockReturnValueOnce(throwError(() => new Error('blip')));
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS);
+      expect(snackSpy).not.toHaveBeenCalled();
+    });
+
+    it('tears down the timer on destroy so navigating away does not leak HTTP requests', () => {
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+      fixture.destroy();
+      vi.advanceTimersByTime(component.AUTO_REFRESH_MS * 5);
+      expect(serviceStub.list).toHaveBeenCalledTimes(1);
+    });
+  });
 });
