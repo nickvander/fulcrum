@@ -115,6 +115,21 @@
                     [tooltip]="t('dashboard.openSalesOrdersTooltip')"></app-stat-card>
             </div>
 
+            <!--
+                Phase 8 Track 2 analytics widgets. Sourced from the
+                new cost-rollup endpoints — every widget pulls its
+                own data so the dashboard top doesn't have to
+                bundle them. Order goes today's-profit → sales-vs-
+                spend → margin-by-channel → top-movers so the
+                operator's eye lands on the headline number first.
+            -->
+            <div class="analytics-grid">
+                <app-today-profit-widget class="dashboard-widget"></app-today-profit-widget>
+                <app-sales-vs-spend-widget class="dashboard-widget"></app-sales-vs-spend-widget>
+                <app-margin-by-channel-widget class="dashboard-widget"></app-margin-by-channel-widget>
+                <app-top-movers-widget class="dashboard-widget"></app-top-movers-widget>
+            </div>
+
             <div class="secondary-grid">
                 <div class="grid-section">
                     <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"

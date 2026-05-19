@@ -1,0 +1,75 @@
+<ng-container *transloco="let t">
+  <mat-card class="sales-vs-spend" data-testid="sales-vs-spend-widget">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.salesVsSpend.title') }}</h3>
+      <span class="window-hint">{{ t('dashboard.salesVsSpend.window', { days: windowDays }) }}</span>
+    </div>
+
+    @if (loading && !data) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !data) {
+      <p class="error" data-testid="sales-vs-spend-error">
+        {{ t('dashboard.salesVsSpend.error') }}
+      </p>
+    } @else if (!hasData()) {
+      <p class="empty" data-testid="sales-vs-spend-empty">
+        {{ t('dashboard.salesVsSpend.empty') }}
+      </p>
+    } @else if (data) {
+      <div class="chart-container">
+        <svg
+          [attr.viewBox]="'0 0 ' + CANVAS_WIDTH + ' ' + CANVAS_HEIGHT"
+          preserveAspectRatio="none"
+          class="chart"
+          data-testid="sales-vs-spend-svg">
+          <polyline class="line line-revenue"
+                    [attr.points]="polyline('revenue')"
+                    data-testid="line-revenue"></polyline>
+          <polyline class="line line-cost"
+                    [attr.points]="polyline('cost')"
+                    data-testid="line-cost"></polyline>
+        </svg>
+        @if (axisLabels(); as labels) {
+          <div class="x-axis">
+            <span>{{ labels.left }}</span>
+            <span>{{ labels.right }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="legend">
+        <span class="legend-item">
+          <span class="swatch swatch-revenue"></span>
+          {{ t('dashboard.salesVsSpend.legend.revenue') }}
+        </span>
+        <span class="legend-item">
+          <span class="swatch swatch-cost"></span>
+          {{ t('dashboard.salesVsSpend.legend.cost') }}
+        </span>
+      </div>
+
+      <dl class="totals">
+        <div>
+          <dt>{{ t('dashboard.salesVsSpend.totals.revenue') }}</dt>
+          <dd>{{ formatCurrency(totals().revenue) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('dashboard.salesVsSpend.totals.cost') }}</dt>
+          <dd>{{ formatCurrency(totals().cost) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('dashboard.salesVsSpend.totals.profit') }}</dt>
+          <dd [class.negative]="totals().profit < 0">
+            {{ formatCurrency(totals().profit) }}
+          </dd>
+        </div>
+        <div>
+          <dt>{{ t('dashboard.salesVsSpend.totals.orders') }}</dt>
+          <dd>{{ totals().orders }}</dd>
+        </div>
+      </dl>
+    }
+  </mat-card>
+</ng-container>

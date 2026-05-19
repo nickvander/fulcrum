@@ -1,0 +1,49 @@
+<ng-container *transloco="let t">
+  <mat-card class="today-profit" data-testid="today-profit-widget">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.todayProfit.title') }}</h3>
+      <button type="button" class="refresh-icon" (click)="refresh()"
+              [matTooltip]="t('dashboard.todayProfit.refresh')"
+              [disabled]="loading"
+              data-testid="today-profit-refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    @if (loading && !rollup) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !rollup) {
+      <p class="error" data-testid="today-profit-error">{{ t('dashboard.todayProfit.error') }}</p>
+    } @else if (rollup) {
+      @if (rollup.orders === 0) {
+        <p class="empty" data-testid="today-profit-empty">{{ t('dashboard.todayProfit.empty') }}</p>
+      } @else {
+        <div class="hero" [ngClass]="profitClass()" data-testid="today-profit-hero">
+          <span class="hero-value">{{ formatCurrency(rollup.net_profit_amount) }}</span>
+          <span class="hero-label">{{ t('dashboard.todayProfit.profitLabel') }}</span>
+        </div>
+
+        <dl class="meta">
+          <div>
+            <dt>{{ t('dashboard.todayProfit.revenue') }}</dt>
+            <dd>{{ formatCurrency(rollup.revenue_amount_mxn) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('dashboard.todayProfit.totalCost') }}</dt>
+            <dd>{{ formatCurrency(rollup.total_cost_amount) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('dashboard.todayProfit.margin') }}</dt>
+            <dd>{{ formatMargin(rollup.net_margin_percent) }}</dd>
+          </div>
+          <div>
+            <dt>{{ t('dashboard.todayProfit.orders') }}</dt>
+            <dd>{{ rollup.orders }}</dd>
+          </div>
+        </dl>
+      }
+    }
+  </mat-card>
+</ng-container>

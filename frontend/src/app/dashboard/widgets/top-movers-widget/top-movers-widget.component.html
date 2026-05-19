@@ -1,0 +1,67 @@
+<ng-container *transloco="let t">
+  <mat-card class="top-movers" data-testid="top-movers-widget">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.topMovers.title') }}</h3>
+      <span class="window-hint">
+        {{ t('dashboard.topMovers.window', { days: windowDays, limit }) }}
+      </span>
+    </div>
+
+    @if (loading && !data) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !data) {
+      <p class="error" data-testid="top-movers-error">
+        {{ t('dashboard.topMovers.error') }}
+      </p>
+    } @else if (data && data.rows.length === 0) {
+      <p class="empty" data-testid="top-movers-empty">
+        {{ t('dashboard.topMovers.empty') }}
+      </p>
+    } @else if (data) {
+      <table mat-table [dataSource]="data.rows" class="movers-table"
+             data-testid="top-movers-table">
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.topMovers.cols.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="product-cell">
+              <span class="name">{{ row.name || '—' }}</span>
+              @if (row.sku) {
+                <span class="sku">{{ row.sku }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="units">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.topMovers.cols.units') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.units }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="revenue">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.topMovers.cols.revenue') }}</th>
+          <td mat-cell *matCellDef="let row">{{ formatCurrency(row.revenue_amount) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="profit">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.topMovers.cols.profit') }}</th>
+          <td mat-cell *matCellDef="let row">{{ formatCurrency(row.net_profit_amount) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="margin">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.topMovers.cols.margin') }}</th>
+          <td mat-cell *matCellDef="let row" [ngClass]="marginClass(row)"
+              [attr.data-testid]="'top-movers-margin-' + row.product_id">
+            {{ formatMargin(row.net_margin_percent) }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns;"
+            [attr.data-testid]="'top-movers-row-' + row.product_id"></tr>
+      </table>
+    }
+  </mat-card>
+</ng-container>

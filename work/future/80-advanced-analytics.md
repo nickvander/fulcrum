@@ -52,12 +52,23 @@ intelligence.
 
 ### Track 2: Dashboard Visualization
 
-- [ ] **Step 3: KPI Widgets**
-  - "Today's Sales" ticker (aggregated across all channels).
-  - "Top Movers" and "Dead Stock" tables.
-- [ ] **Step 4: Interactive Charts**
-  - Sales vs. Spend over time (Line/Bar charts).
-  - Geographic heatmaps of sales.
+- [~] **Step 3: KPI Widgets** — partial (2026-05-19).
+  - [x] "Today's profit" ticker (uses cost-rollup window_days=1) —
+    headline number + revenue/cost/margin/orders breakdown.
+  - [x] "Top movers" table — top 10 by revenue with per-product
+    net margin (server-side pro-rates order-level fees by revenue
+    share).
+  - [ ] "Dead stock" table — depends on a velocity-by-window
+    aggregator that doesn't exist yet; the existing low-stock
+    report covers some of this but doesn't surface dead vs
+    healthy.
+- [~] **Step 4: Interactive Charts** — partial (2026-05-19).
+  - [x] Sales vs spend over time (hand-rolled SVG line chart
+    over daily time-series).
+  - [x] Margin-by-channel stacked bar (per-channel cost
+    breakdown from the new `/cost-rollup/by-channel` endpoint).
+  - [ ] Geographic heatmaps — needs shipping-zone or
+    customer-location data we don't currently capture; defer.
 
 ### Track 3: Reporting Engine
 

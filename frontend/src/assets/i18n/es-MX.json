@@ -128,6 +128,68 @@
     },
     "dashboard": {
         "title": "Tablero",
+        "todayProfit": {
+            "title": "Ganancia de hoy",
+            "refresh": "Actualizar",
+            "profitLabel": "Ganancia neta (24h)",
+            "revenue": "Ingresos",
+            "totalCost": "Costo total",
+            "margin": "Margen",
+            "orders": "Pedidos",
+            "empty": "Sin pedidos realizados en las últimas 24h.",
+            "error": "No se pudo cargar la ganancia de hoy."
+        },
+        "marginByChannel": {
+            "title": "Margen por canal",
+            "window": "Últimos {{days}}d",
+            "empty": "Ningún canal tiene pedidos realizados en este rango.",
+            "error": "No se pudo cargar el margen por canal.",
+            "legend": {
+                "cogs": "COGS",
+                "fees": "Comisiones",
+                "shipping": "Envío",
+                "ads": "Publicidad",
+                "profit": "Ganancia"
+            },
+            "tooltip": {
+                "cogs": "COGS: {{amount}} ({{pct}}%)",
+                "fees": "Comisiones del marketplace: {{amount}} ({{pct}}%)",
+                "shipping": "Envío: {{amount}} ({{pct}}%)",
+                "ads": "Publicidad: {{amount}} ({{pct}}%)",
+                "other": "Otros: {{amount}} ({{pct}}%)",
+                "profit": "Ganancia: {{amount}} ({{pct}}%)",
+                "loss": "Sobrecosto: {{amount}} ({{pct}}%)"
+            }
+        },
+        "salesVsSpend": {
+            "title": "Ventas vs gasto",
+            "window": "Últimos {{days}}d",
+            "empty": "Sin pedidos realizados en este rango.",
+            "error": "No se pudo cargar ventas vs gasto.",
+            "legend": {
+                "revenue": "Ingresos",
+                "cost": "Costo total"
+            },
+            "totals": {
+                "revenue": "Ingresos",
+                "cost": "Costo total",
+                "profit": "Ganancia neta",
+                "orders": "Pedidos"
+            }
+        },
+        "topMovers": {
+            "title": "Productos top",
+            "window": "Top {{limit}} por ingresos · Últimos {{days}}d",
+            "empty": "Sin pedidos realizados en este rango.",
+            "error": "No se pudieron cargar los productos top.",
+            "cols": {
+                "product": "Producto",
+                "units": "Unidades",
+                "revenue": "Ingresos",
+                "profit": "Ganancia neta",
+                "margin": "Margen"
+            }
+        },
         "welcome": "Bienvenido a Fulcrum",
         "overview": "Resumen",
         "recentActivity": "Actividad Reciente",

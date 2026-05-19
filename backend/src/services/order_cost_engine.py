@@ -396,3 +396,220 @@ def aggregate_rollup(
 # rollup answers "what did I actually earn on completed sales?" not
 # "what's the theoretical margin if every pending order closes?".
 _REALIZED_ORDER_STATUSES = ("COMPLETED", "SHIPPED", "DELIVERED", "PAID")
+
+
+def aggregate_rollup_by_channel(
+    db: Session, *, window_days: int = 30,
+) -> List[Dict[str, Any]]:
+    """Per-channel rollup over the window. Returns one row per
+    `OrderSource` that has at least one realized order in scope.
+    Drives the dashboard's "Margin by channel" stacked bar — one
+    bar per channel showing the COGS / fees / shipping / profit
+    breakdown side-by-side.
+
+    Sources with zero orders in the window are omitted (rendering
+    an empty stacked bar is misleading). Ordered by revenue desc
+    so the operator's eye lands on the biggest channel first.
+    """
+    rows: List[Dict[str, Any]] = []
+    for source in OrderSource:
+        rollup = aggregate_rollup(db, window_days=window_days, source=source)
+        if rollup.get("orders", 0) == 0:
+            continue
+        rows.append({"source": source.value, **rollup})
+    rows.sort(key=lambda r: r["revenue_amount_mxn"], reverse=True)
+    return rows
+
+
+def aggregate_daily_series(
+    db: Session, *, window_days: int = 30,
+) -> List[Dict[str, Any]]:
+    """Daily revenue / cost / profit time-series for the dashboard's
+    "Sales vs spend" line chart. Returns one row per CALENDAR DAY in
+    the window — including days with zero orders (filled with zero
+    values), so the chart renders a continuous line without gaps.
+
+    Realized-status filter matches `aggregate_rollup` — pending and
+    cancelled orders don't move the line.
+    """
+    from datetime import date, timedelta
+
+    cutoff_date = (datetime.utcnow() - timedelta(days=window_days)).date()
+    end_date = datetime.utcnow().date()
+
+    rows = (
+        db.query(OrderCostBreakdown, SalesOrder)
+        .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
+        .filter(SalesOrder.created_at >= datetime.combine(cutoff_date, datetime.min.time()))
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .all()
+    )
+
+    by_day: Dict[date, Dict[str, float]] = {}
+    for breakdown, order in rows:
+        if order.created_at is None:
+            continue
+        day = order.created_at.date() if hasattr(order.created_at, "date") else order.created_at
+        bucket = by_day.setdefault(day, {
+            "revenue": 0.0, "total_cost": 0.0, "net_profit": 0.0, "orders": 0,
+        })
+        bucket["revenue"] += float(breakdown.revenue_amount_mxn or 0.0)
+        bucket["total_cost"] += float(breakdown.total_cost_amount or 0.0)
+        bucket["net_profit"] += float(breakdown.net_profit_amount or 0.0)
+        bucket["orders"] += 1
+
+    # Fill missing days so the line chart has a continuous x-axis.
+    series: List[Dict[str, Any]] = []
+    cursor = cutoff_date
+    while cursor <= end_date:
+        bucket = by_day.get(cursor, {
+            "revenue": 0.0, "total_cost": 0.0, "net_profit": 0.0, "orders": 0,
+        })
+        series.append({
+            "date": cursor.isoformat(),
+            "revenue_amount_mxn": round(bucket["revenue"], 4),
+            "total_cost_amount": round(bucket["total_cost"], 4),
+            "net_profit_amount": round(bucket["net_profit"], 4),
+            "orders": int(bucket["orders"]),
+        })
+        cursor = cursor + timedelta(days=1)
+    return series
+
+
+def top_movers(
+    db: Session, *, window_days: int = 30, limit: int = 10,
+) -> List[Dict[str, Any]]:
+    """Top N products by revenue over the window. Each row carries
+    the per-product rollup the operator needs to identify movers:
+    units sold, revenue, COGS, net profit, net margin %.
+
+    Cost basis precedence matches the gross-margin report: line
+    item's `cost_per_unit` first, else current `product.cost_price`.
+    Fees and shipping are NOT attributed at the product level (they
+    happen at the order level), so per-product net margin reflects
+    gross margin minus a pro-rata share of the order-level cost
+    components. Approximation: pro-rate by revenue share.
+
+    Returns rows ordered by revenue desc, capped at `limit`.
+    """
+    from datetime import timedelta
+    from sqlalchemy import func as _sqlfunc
+
+    from src.models.order import SalesOrderItem
+    from src.models.product import Product
+
+    cutoff = datetime.utcnow() - timedelta(days=window_days)
+
+    # Step 1: per-product aggregates (units + revenue + COGS) from
+    # the existing line-item table. Same SQL shape as the margin
+    # report; just aggregated by product_id with COALESCE on the
+    # cost basis.
+    rows_raw = (
+        db.query(
+            SalesOrderItem.product_id,
+            _sqlfunc.coalesce(_sqlfunc.sum(SalesOrderItem.quantity), 0).label("units"),
+            _sqlfunc.coalesce(
+                _sqlfunc.sum(SalesOrderItem.quantity * SalesOrderItem.price_per_unit),
+                0.0,
+            ).label("revenue"),
+            _sqlfunc.coalesce(
+                _sqlfunc.sum(
+                    SalesOrderItem.quantity
+                    * _sqlfunc.coalesce(
+                        SalesOrderItem.cost_per_unit, Product.cost_price,
+                    )
+                ),
+                0.0,
+            ).label("cogs"),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
+        .join(Product, Product.id == SalesOrderItem.product_id)
+        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .filter(Product.is_bundle.is_(False))
+        .group_by(SalesOrderItem.product_id)
+        .order_by(_sqlfunc.sum(SalesOrderItem.quantity * SalesOrderItem.price_per_unit).desc())
+        .limit(limit)
+        .all()
+    )
+    if not rows_raw:
+        return []
+
+    # Step 2: pro-rate the order-level fees/shipping share to each
+    # product by its revenue share of the order. We pull breakdowns
+    # in scope once, then compute the share factor per order.
+    in_scope_orders = (
+        db.query(OrderCostBreakdown, SalesOrder)
+        .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
+        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .all()
+    )
+    order_overhead_by_id: Dict[int, float] = {}
+    order_revenue_by_id: Dict[int, float] = {}
+    for breakdown, order in in_scope_orders:
+        overhead = (
+            float(breakdown.marketplace_fees_amount or 0.0)
+            + float(breakdown.shipping_cost_amount or 0.0)
+            + float(breakdown.ad_spend_amount or 0.0)
+            + float(breakdown.other_cost_amount or 0.0)
+        )
+        order_overhead_by_id[order.id] = overhead
+        order_revenue_by_id[order.id] = float(breakdown.revenue_amount or 0.0)
+
+    # Per-product overhead share. For each line item in scope, take
+    # its revenue share of the parent order * order overhead.
+    items_in_scope = (
+        db.query(
+            SalesOrderItem.product_id,
+            SalesOrderItem.order_id,
+            SalesOrderItem.quantity,
+            SalesOrderItem.price_per_unit,
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
+        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .all()
+    )
+    overhead_by_product: Dict[int, float] = {}
+    for product_id, order_id, qty, price in items_in_scope:
+        order_revenue = order_revenue_by_id.get(order_id, 0.0)
+        if order_revenue <= 0:
+            continue
+        line_revenue = float(qty or 0) * float(price or 0.0)
+        share = line_revenue / order_revenue
+        overhead_by_product[product_id] = (
+            overhead_by_product.get(product_id, 0.0)
+            + share * order_overhead_by_id.get(order_id, 0.0)
+        )
+
+    # Step 3: fetch product names/skus for the top N.
+    product_ids = [row.product_id for row in rows_raw]
+    products_by_id = {
+        p.id: p for p in db.query(Product).filter(Product.id.in_(product_ids)).all()
+    }
+
+    out: List[Dict[str, Any]] = []
+    for row in rows_raw:
+        revenue = float(row.revenue or 0.0)
+        cogs = float(row.cogs or 0.0)
+        overhead = round(overhead_by_product.get(row.product_id, 0.0), 4)
+        total_cost = cogs + overhead
+        net_profit = revenue - total_cost
+        margin = (
+            round((net_profit / revenue) * 100.0, 4) if revenue > 0 else None
+        )
+        product = products_by_id.get(row.product_id)
+        out.append({
+            "product_id": row.product_id,
+            "name": product.name if product else None,
+            "sku": product.sku if product else None,
+            "units": int(row.units or 0),
+            "revenue_amount": round(revenue, 4),
+            "cogs_amount": round(cogs, 4),
+            "overhead_amount": overhead,
+            "total_cost_amount": round(total_cost, 4),
+            "net_profit_amount": round(net_profit, 4),
+            "net_margin_percent": margin,
+        })
+    return out

@@ -1,0 +1,54 @@
+<ng-container *transloco="let t">
+  <mat-card class="margin-by-channel" data-testid="margin-by-channel-widget">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.marginByChannel.title') }}</h3>
+      <span class="window-hint">{{ t('dashboard.marginByChannel.window', { days: windowDays }) }}</span>
+    </div>
+
+    @if (loading && !data) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !data) {
+      <p class="error" data-testid="margin-by-channel-error">
+        {{ t('dashboard.marginByChannel.error') }}
+      </p>
+    } @else if (data && data.channels.length === 0) {
+      <p class="empty" data-testid="margin-by-channel-empty">
+        {{ t('dashboard.marginByChannel.empty') }}
+      </p>
+    } @else if (data) {
+      <ul class="channel-list">
+        @for (row of data.channels; track row.source) {
+          <li class="channel-row" [attr.data-testid]="'channel-row-' + row.source">
+            <div class="channel-header">
+              <strong>{{ row.source }}</strong>
+              <span class="channel-summary">
+                {{ formatCurrency(row.revenue_amount_mxn) }} ·
+                <span class="margin-pill"
+                      [class.negative]="(row.net_margin_percent ?? 0) < 0">
+                  {{ formatMargin(row.net_margin_percent) }}
+                </span>
+              </span>
+            </div>
+            <div class="stacked-bar">
+              @for (seg of segments(row); track seg.kind + $index) {
+                <span class="segment" [ngClass]="'seg-' + seg.kind"
+                      [style.width.%]="seg.pct"
+                      [matTooltip]="t('dashboard.marginByChannel.tooltip.' + seg.kind, { amount: formatCurrency(seg.amount), pct: seg.pct.toFixed(1) })">
+                </span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch seg-cogs"></span>{{ t('dashboard.marginByChannel.legend.cogs') }}</span>
+        <span class="legend-item"><span class="swatch seg-fees"></span>{{ t('dashboard.marginByChannel.legend.fees') }}</span>
+        <span class="legend-item"><span class="swatch seg-shipping"></span>{{ t('dashboard.marginByChannel.legend.shipping') }}</span>
+        <span class="legend-item"><span class="swatch seg-ads"></span>{{ t('dashboard.marginByChannel.legend.ads') }}</span>
+        <span class="legend-item"><span class="swatch seg-profit"></span>{{ t('dashboard.marginByChannel.legend.profit') }}</span>
+      </div>
+    }
+  </mat-card>
+</ng-container>

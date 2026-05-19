@@ -18,12 +18,6 @@ _(none active)_
 
 ## Future / Strategic
 
-- [ ] Phase 8 Track 2 — dashboard visualization. Track 1
-      scaffolding (`order_cost_breakdowns` + `/reports/cost-rollup`)
-      is in place; Track 2 builds KPI widgets ("Today's profit",
-      "Top movers", "Dead stock") + interactive charts (sales vs
-      spend over time, geographic heatmaps) on top of it. Plan in
-      `work/future/80-advanced-analytics.md` Steps 3 + 4.
 - [ ] Marketplace fee config UI — Track 1 exposed
       `Marketplace.default_fee_rate` + `default_shipping_cost` but
       there's no UI to set them yet. Operators currently have to
@@ -51,6 +45,24 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Phase 8 Track 2 dashboard widgets** — four new analytics
+      widgets consuming the Track 1 cost-rollup endpoints, laid out
+      in a 2x2 grid on the main dashboard:
+      1. Today's profit ticker (window_days=1 headline, color-coded
+         positive/negative).
+      2. Sales vs spend SVG line chart (hand-rolled, no chart library
+         dependency).
+      3. Margin by channel stacked bar (per-channel cost composition,
+         loss-overrun segment when total_cost > revenue).
+      4. Top movers Material table (top 10 by revenue with
+         per-product net margin; server pro-rates order-level fees
+         by revenue share).
+      Three new backend endpoints (`/cost-rollup/by-channel`,
+      `/cost-rollup/daily`, `/top-movers`). 17 new backend tests +
+      32 new frontend tests. en + es-MX i18n parity. Backend 607/8,
+      frontend 582/0. "Dead stock" + geographic heatmaps deferred —
+      both need new data primitives not currently captured. See
+      `work/future/80-advanced-analytics.md`.
 - [x] **Phase 8 Track 1 scaffolding** — cost engine + ETL pipeline
       for per-order net-margin analytics. New `order_cost_breakdowns`
       table populated inline by every ingestion path

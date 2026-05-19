@@ -1318,3 +1318,141 @@ def cost_rollup_report(
         source=parsed_source.value if parsed_source else None,
         **rollup,
     )
+
+
+# ---- Cost rollup: per-channel (Track 2 stacked bar) -----------------------
+
+
+class CostRollupByChannelRow(BaseModel):
+    """One row per channel that had realized orders in the window."""
+    source: str
+    orders: int
+    revenue_amount_mxn: float
+    cogs_amount: float
+    marketplace_fees_amount: float
+    shipping_cost_amount: float
+    ad_spend_amount: float
+    other_cost_amount: float
+    total_cost_amount: float
+    net_profit_amount: float
+    net_margin_percent: Optional[float] = None
+
+
+class CostRollupByChannelResponse(BaseModel):
+    window_days: int
+    channels: List[CostRollupByChannelRow]
+
+
+@router.get(
+    "/cost-rollup/by-channel",
+    response_model=CostRollupByChannelResponse,
+)
+def cost_rollup_by_channel(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_active_user),
+) -> CostRollupByChannelResponse:
+    """Per-channel net-margin rollup. Powers the dashboard's
+    "Margin by channel" stacked bar chart — one stack per source
+    showing the COGS / fees / shipping / profit breakdown.
+
+    Channels with zero orders in the window are omitted so the chart
+    doesn't render an empty bar that the operator has to mentally
+    discount.
+    """
+    from src.services.order_cost_engine import aggregate_rollup_by_channel
+
+    rows = aggregate_rollup_by_channel(db, window_days=window_days)
+    return CostRollupByChannelResponse(
+        window_days=window_days,
+        channels=[CostRollupByChannelRow(**row) for row in rows],
+    )
+
+
+# ---- Cost rollup: daily time-series (Track 2 line chart) ------------------
+
+
+class CostRollupDailyRow(BaseModel):
+    """One row per calendar day in the window. Days with zero orders
+    appear with zero values so the time-series renders a continuous
+    line."""
+    date: str  # ISO YYYY-MM-DD
+    orders: int
+    revenue_amount_mxn: float
+    total_cost_amount: float
+    net_profit_amount: float
+
+
+class CostRollupDailyResponse(BaseModel):
+    window_days: int
+    series: List[CostRollupDailyRow]
+
+
+@router.get(
+    "/cost-rollup/daily",
+    response_model=CostRollupDailyResponse,
+)
+def cost_rollup_daily(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_active_user),
+) -> CostRollupDailyResponse:
+    """Daily revenue / total-cost / net-profit time-series. Powers
+    the dashboard's "Sales vs spend" line chart. Days with zero
+    orders are emitted with zero values so the chart's x-axis
+    stays continuous — otherwise the line would have visible gaps
+    on quiet days."""
+    from src.services.order_cost_engine import aggregate_daily_series
+
+    series = aggregate_daily_series(db, window_days=window_days)
+    return CostRollupDailyResponse(
+        window_days=window_days,
+        series=[CostRollupDailyRow(**row) for row in series],
+    )
+
+
+# ---- Top movers (Track 2 leaderboard) ------------------------------------
+
+
+class TopMoverRow(BaseModel):
+    product_id: int
+    name: Optional[str] = None
+    sku: Optional[str] = None
+    units: int
+    revenue_amount: float
+    cogs_amount: float
+    overhead_amount: float  # marketplace fees + shipping + ads, pro-rated
+    total_cost_amount: float
+    net_profit_amount: float
+    net_margin_percent: Optional[float] = None
+
+
+class TopMoversResponse(BaseModel):
+    window_days: int
+    limit: int
+    rows: List[TopMoverRow]
+
+
+@router.get("/top-movers", response_model=TopMoversResponse)
+def top_movers_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_active_user),
+) -> TopMoversResponse:
+    """Top N products by revenue over the window. Each row carries
+    per-product net margin — order-level fees + shipping are pro-
+    rated by each product's revenue share of its parent order so
+    the per-product net profit reflects the true contribution to
+    the headline rollup."""
+    from src.services.order_cost_engine import top_movers
+
+    rows = top_movers(db, window_days=window_days, limit=limit)
+    return TopMoversResponse(
+        window_days=window_days,
+        limit=limit,
+        rows=[TopMoverRow(**row) for row in rows],
+    )
