@@ -6,110 +6,136 @@ when you find them so the next session has a place to start._
 
 ## High Priority
 
-- [ ] **Payments: refund + cancel actions on `/payments` admin UI.**
-      The Payments admin UI (shipped — `frontend/src/app/payments/`)
-      lists every payment but offers no way to reverse one. Build
-      the full vertical slice so an operator can refund (full or
-      partial) or cancel a pending payment from the detail dialog.
+- [ ] **Refund + cancellation tracking for marketplace orders
+      (MercadoLibre + Amazon).** Today, when an ML / Amazon order
+      moves from `COMPLETED` to `CANCELLED` or `REFUNDED`:
+        - The poller silently overwrites `SalesOrder.status` — no
+          history is kept, so we cannot answer "how many orders did
+          we refund last week?".
+        - The order falls out of `_REALIZED_ORDER_STATUSES` and the
+          rollups stop counting it, but its
+          `OrderCostBreakdown` row stays in place as if it were
+          still revenue.
+        - Stock decremented on first ingestion is never
+          re-credited (see "Known bug" below).
+        - The Amazon settlement worker parses `RefundEventList` but
+          only uses it for fee-netting — partial-refund amounts are
+          never persisted.
 
-      Note: the candidate list initially said "backend already
-      wires `POST /v1/payments/{id}/refunds`". That was wrong — the
-      `MercadoPagoConnector` (`backend/src/services/mercado_pago.py`)
-      currently has only `create_payment`, `fetch_payment`, and
-      `verify_webhook_signature`. The connector methods + Fulcrum
-      endpoints + UI all still need to be built.
+      This slice surfaces refunds + cancellations as first-class
+      data the operator can monitor and alert on.
+
+      **Scope:** read-only tracking of refunds/cancellations
+      originated on the marketplace side. Operator-initiated
+      refunds on a Fulcrum-hosted Mercado Pago storefront stay
+      out of scope (that storefront has no production caller yet
+      — see PROGRESS.md "no production caller today").
 
       **Deliverables (in order):**
 
-      1. **Connector — `MercadoPagoConnector.refund_payment`** in
-         `backend/src/services/mercado_pago.py`. Wraps MP's
-         `POST /v1/payments/{external_id}/refunds`:
-           - No body → full refund.
-           - Body `{"amount": <number>}` → partial refund.
-         Returns a `RefundResult` dataclass with the MP refund id,
-         amount, status, raw response. Stub branch for dev mirrors
-         the `_stub_create_payment` convention.
+      1. **Status-transition audit table.** New
+         `sales_order_status_events` table + model + migration:
+           - `id`, `order_id` (FK), `from_status`, `to_status`,
+             `changed_at`, `source_signal` (one of `ml_webhook`,
+             `ml_poll`, `amazon_poll`, `manual`).
+         Both pollers
+         (`services/mercadolibre_order_ingestion.py:192` and
+         `services/amazon_order_ingestion.py:210`) and the ML
+         webhook (`endpoints/webhooks.py`) write a row whenever
+         `existing.status != new.status`. Idempotent — if the most-
+         recent event row for this order already matches
+         `(from_status, to_status)`, skip the insert.
 
-      2. **Connector — `MercadoPagoConnector.cancel_payment`** in
-         the same file. Wraps MP's `PUT /v1/payments/{external_id}`
-         with body `{"status": "cancelled"}`. Per MP docs only
-         `pending` / `in_process` payments are cancellable —
-         anything else returns 400 from MP, which the connector
-         propagates as a `RefundResult`/`CancelResult` with an
-         error field instead of raising.
+      2. **Cost-engine "reversed" marker.** New column on
+         `order_cost_breakdowns`: `reversed_at: datetime | None`.
+         Set automatically (by the same hook that writes the
+         status-transition event) when an order leaves
+         `_REALIZED_ORDER_STATUSES`. The rollup / by-channel /
+         daily aggregators filter on
+         `reversed_at IS NULL` so a reversed order disappears from
+         current period totals while staying queryable for the
+         refunds widget. Mirrors `fees_source` semantics — strictly
+         additive, no rebuild required.
 
-      3. **Model — add reversal audit columns to `Payment`** in
-         `backend/src/models/payment.py`. New columns + migration:
-           - `refunded_amount: float` (sum across refunds; 0 default)
-           - `last_refund_id: str | None` (MP refund id, for idempotency)
-           - `last_reversal_at: datetime | None`
-           - `reversal_reason: str(255) | None` (operator-supplied)
-         `PaymentStatus.REFUNDED` already exists — partial refunds
-         keep `APPROVED` until `refunded_amount >= amount`, then
-         flip to `REFUNDED`.
+      3. **Amazon partial-refund persistence.** Extend the
+         settlement-fee ingestion path
+         (`services/settlement_fee_ingestion.py`) to also write
+         per-refund-event rows into a new
+         `amazon_order_refunds` table when
+         `RefundEventList[].ShipmentItemList` is non-empty. Keys
+         on `(order_id, amazon_refund_id)` for idempotency.
+         Captures the partial-refund case where the order's
+         top-level `OrderStatus` stays `SHIPPED` but a buyer
+         returned one line item.
 
-      4. **Endpoint — `POST /api/v1/payments/{id}/refund`** in
-         `backend/src/api/v1/endpoints/payments.py`. Body:
-         `{amount?: float, reason?: str}`. Loads the Payment row,
-         validates state (only `APPROVED` is refundable, and
-         `amount <= remaining`), calls the connector, persists the
-         result + audit columns, returns the updated `PaymentSchema`.
-         Localized errors: `apiErrors.payment.notRefundable`,
-         `apiErrors.payment.refundExceedsRemaining`,
-         `apiErrors.payment.providerError` (with the MP reason).
+      4. **Reports endpoint —
+         `GET /api/v1/reports/refunds-summary`.** Returns
+         per-channel rollup over a window:
+           - `refunds_count` (orders that moved into a non-realized
+             status during the window)
+           - `refunded_amount_mxn` (sum of those orders'
+             `revenue_amount_mxn` + Amazon partial-refund rows in
+             window)
+           - `refund_rate` (refunds / total orders in window)
+         Supports the same `window_days` + `start_date` /
+         `end_date` params the velocity/margin/stockout endpoints
+         do — uses the shared `_resolve_date_window` resolver.
 
-      5. **Endpoint — `POST /api/v1/payments/{id}/cancel`** —
-         similar shape. Only `PENDING` is cancellable. Errors:
-         `apiErrors.payment.notCancellable`,
-         `apiErrors.payment.providerError`.
+      5. **Dashboard widget — "Refunds (last 30d)".** New widget
+         on the analytics grid. Single-pane card showing total
+         count + refunded MXN + rate by channel (Amazon vs ML vs
+         FULCRUM). Drill-down link to a future
+         `/reports/refunds` list view (out of scope for this
+         slice — link is a no-op placeholder).
 
-      6. **Frontend service** — extend
-         `frontend/src/app/payments/services/payments.service.ts`
-         with `refund(paymentId, {amount?, reason?})` and
-         `cancel(paymentId, {reason?})`. Both return the updated
-         `PaymentSchema` so the dialog can patch in place.
+      6. **Alert rule — refund-rate spike.** Extend
+         `services/alert_evaluation_service.py` with a new
+         `refund_rate_spike` rule type. Triggers when the trailing
+         7d refund rate exceeds the rule's
+         `threshold_value` (percentage). Reuses the existing
+         `AlertRule` schema; no new schema columns. New rule type
+         appears in the `/alerts` create dialog's type select.
 
-      7. **Frontend — detail dialog actions** in
-         `frontend/src/app/payments/pages/payment-detail-dialog/`:
-           - **Refund** button: visible only when status is
-             `APPROVED` and `refunded_amount < amount`. Opens a
-             nested modal asking for amount (defaulted to the
-             remaining balance) + reason. Confirmation step that
-             surfaces the connector's reply on success / error.
-           - **Cancel** button: visible only when status is
-             `PENDING`. Single confirmation dialog with reason
-             field.
-           - Result snackbar + in-place patch of the Payment row
-             so the user sees the new status without reopening the
-             dialog.
+      **Known bug (separate slice):** the cancellation path does
+      NOT re-credit stock. When an ML/Amazon order moves to
+      `CANCELLED`, the decremented inventory stays decremented.
+      This is a correctness bug, but fixing it cleanly requires
+      handling repeated-cancellation idempotency and the case
+      where the cancelled units have already been resold to
+      someone else. Track separately once this surface-level
+      tracking is in.
 
-      8. **Tests:**
-           - Backend: connector refund + cancel against the stub
-             branch + real-HTTP branch + provider-error branch
-             (10+ tests across the two methods); endpoint state-
-             gating tests (refund a pending = 400, refund > remaining
-             = 400, refund happy path, partial → partial → full
-             status transition, cancel an approved = 400, idempotent
-             re-call of the same operation).
-           - Frontend: service spec covers the two new methods + the
-             error pathways; dialog spec covers button visibility per
-             status + nested-modal flow + result patch.
+      **Tests:**
+        - Backend: status-event idempotency, reversed_at-on-
+          transition hook fires from each ingestion path, refunds-
+          summary endpoint contract (per-source filter, window/
+          date-range params, realized-vs-reversed math), Amazon
+          partial-refund row persistence, alert rule evaluator.
+          ~25 new tests.
+        - Frontend: widget renders three channels with correct
+          totals, service spec covers the new endpoint, alert
+          dialog spec covers the new rule type's threshold hint.
+          ~12 new tests.
 
-      9. **i18n** — en + es-MX parity. New keys go under
-         `payments.actions.*` (button labels + tooltips +
-         confirmation copy) and `apiErrors.payment.*` (the four new
-         error codes).
+      **i18n** — en + es-MX parity. New keys under
+      `dashboard.refundsWidget.*` and `alerts.types.refundRate.*`.
 
-      **Out of scope:** chargebacks (MP webhook already sets
-      `PaymentStatus.REFUNDED` on `charged_back`); refund reversals
-      (rare; would only matter if MP supports it on this account
-      tier); per-line-item partial refunds (the Payment row is
-      order-level, not item-level).
+      **Out of scope (explicit non-goals):**
+        - Operator-initiated refunds against Mercado Pago Checkout
+          (storefront-only; no production caller).
+        - Stock re-credit on cancellation (correctness bug; needs
+          its own slice).
+        - Refund-reason classification (returns vs fraud vs
+          unhappy-customer). Marketplaces give us a status only,
+          not a reason; classifying it adds operator workflow that
+          isn't justified yet.
 
-      **Verification surface:** end-to-end against the dev MP
-      account — create a stub payment, refund it $1, refund it
-      again for the rest, status flips to `REFUNDED`. Repeat for
-      cancel on a `PENDING` payment.
+      **Verification surface:** seed an ML order → flip to
+      `CANCELLED` via a webhook fixture → status-event row
+      written, `OrderCostBreakdown.reversed_at` set, dashboard
+      widget shows it, refunds-summary endpoint returns it. Then
+      seed an Amazon order + a `RefundEventList` payload → partial-
+      refund row persisted, widget total reflects it.
 
 ## Medium Priority
 
