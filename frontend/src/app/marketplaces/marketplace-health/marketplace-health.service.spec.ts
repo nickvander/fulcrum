@@ -30,6 +30,7 @@ describe('MarketplaceHealthService', () => {
       items: [],
       order_poll_stale_minutes: 30,
       inbound_reconcile_stale_minutes: 90,
+      webhook_disconnect_hours: 24,
     });
   });
 

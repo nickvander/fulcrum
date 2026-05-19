@@ -35,6 +35,25 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- ML webhook subscription health check (folded into the existing
+  marketplace health page). New `Webhooks (24h)` column shows the
+  most-recent `WebhookEvent.received_at` for each credential's
+  marketplace plus a 24h count, and flags
+  `webhook_likely_disconnected=True` when the credential has been
+  connected longer than 24h AND no events have arrived in 24h.
+  Catches both "subscription never configured" and "subscription
+  died" failure modes without false-positives on a freshly-connected
+  credential (the two-part age + freshness guard is the key). The
+  signal is read-only over the existing `WebhookEvent` table — no
+  new schema, no extra API call to the marketplace. Defensive
+  complement to the order back-fill poller (which still catches
+  missed deliveries automatically); the column tells the operator
+  the push channel itself is broken even though no orders are
+  silently lost. 6 new backend tests (last-24h window, per-
+  marketplace isolation, the disconnect flag's two-part guard, fresh
+  credential negative case, shared rollup across credentials for the
+  same marketplace) + 2 new frontend tests (classifier + column DOM).
+  Backend 564/8, frontend 539/0.
 - Marketplace pipeline health page: new `/marketplaces/health`
   surfaces a per-credential rollup of the three automatic pipelines
   (Amazon order poll, ML order poll, ML+Amazon inbound reconciliation).
@@ -232,12 +251,10 @@ Roughly in order of impact / unblock value:
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **ML webhook subscription auto-create** — the order poller now
-  back-fills missed webhooks, but a credential's webhook subscription
-  itself could go missing (operator never subscribed, or ML expired
-  the subscription). Add a startup check that POSTs to ML's
-  `/applications/{app_id}/notifications` to ensure every healthy ML
-  credential has an active subscription for the `orders` topic.
+- **Phase 8 advanced analytics** — track 1 of
+  `work/future/80-advanced-analytics.md` (cost engine + ETL pipeline
+  scaffolding). Larger scope. The operational observability needed to
+  support a heavier analytics layer is now in place.
 - **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
   Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
@@ -245,8 +262,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 558 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 537 passed, 0
+  → 564 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 539 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

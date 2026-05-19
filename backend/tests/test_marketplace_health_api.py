@@ -27,6 +27,7 @@ from src.models.marketplace import (
     Marketplace,
     MarketplaceCredential,
     MarketplaceListing,
+    WebhookEvent,
 )
 from src.models.stock_transfer import (
     LOCATION_AMAZON_FBA,
@@ -39,6 +40,7 @@ from src.models.stock_transfer import (
 from src.schemas.marketplace_health import (
     INBOUND_RECONCILE_STALE_MINUTES,
     ORDER_POLL_STALE_MINUTES,
+    WEBHOOK_DISCONNECT_HOURS,
 )
 from src.schemas.product import ProductCreate
 from src.services.marketplaces.base import (
@@ -239,6 +241,186 @@ def test_list_skips_received_and_cancelled_transfers(
 def test_list_requires_auth(client: TestClient):
     response = client.get("/api/v1/marketplaces/health/")
     assert response.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Webhook freshness signals (covers the ML "is the subscription still
+# delivering?" health check requested in MISSING_ITEMS.md).
+# ---------------------------------------------------------------------------
+
+
+def _make_webhook(db, marketplace, *, received_at, topic="orders"):
+    """Insert a WebhookEvent at a specific timestamp. The model uses
+    server_default=func.now() for `received_at`, so we have to
+    explicitly assign it after creation to land in the past."""
+    event = WebhookEvent(
+        marketplace_id=marketplace.id,
+        topic=topic,
+        external_resource_id=f"/{topic}/{int(received_at.timestamp())}",
+        payload={"sent": received_at.isoformat()},
+    )
+    db.add(event)
+    db.flush()
+    event.received_at = received_at
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+def test_list_webhook_count_reflects_last_24h_only(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """3 events within 24h, 2 events older than 24h. The rollup shows
+    `webhooks_received_last_24h == 3` — only the recent window
+    counts. The last_received timestamp reflects the most-recent
+    event regardless of window."""
+    cred = _make_credential(db, ml_marketplace, test_admin_user)
+    now = datetime.now(timezone.utc)
+
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(minutes=5))
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(hours=2))
+    most_recent = _make_webhook(db, ml_marketplace, received_at=now - timedelta(minutes=1))
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(hours=30))
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(days=5))
+
+    response = client.get("/api/v1/marketplaces/health/", headers=admin_headers)
+    body = response.json()
+    assert body["webhook_disconnect_hours"] == WEBHOOK_DISCONNECT_HOURS
+    row = next(r for r in body["items"] if r["credential_id"] == cred.id)
+    assert row["webhooks_received_last_24h"] == 3
+    # `received_at` round-trips as ISO via the response model. We can't
+    # use direct equality because of trailing microseconds; substring
+    # is enough to confirm it's the right event.
+    assert row["webhook_last_received_at"].startswith(
+        most_recent.received_at.strftime("%Y-%m-%dT%H:%M"),
+    )
+
+
+def test_list_webhook_stats_isolated_per_marketplace(
+    client: TestClient, db, admin_headers, test_admin_user,
+    amazon_marketplace, ml_marketplace,
+):
+    """Amazon credential's webhook stats must NOT include events
+    from the ML marketplace, and vice versa. WebhookEvent.marketplace_id
+    is the partition key."""
+    amzn_cred = _make_credential(db, amazon_marketplace, test_admin_user)
+    ml_cred = _make_credential(db, ml_marketplace, test_admin_user)
+    now = datetime.now(timezone.utc)
+
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(minutes=10))
+    _make_webhook(db, ml_marketplace, received_at=now - timedelta(minutes=5))
+    _make_webhook(db, amazon_marketplace, received_at=now - timedelta(minutes=3))
+
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    by_cred = {r["credential_id"]: r for r in body["items"]}
+    assert by_cred[ml_cred.id]["webhooks_received_last_24h"] == 2
+    assert by_cred[amzn_cred.id]["webhooks_received_last_24h"] == 1
+
+
+def test_likely_disconnected_when_credential_old_and_no_recent_webhooks(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """A credential that's been around longer than the disconnect
+    threshold AND has never received a webhook (or only old ones)
+    should flag `webhook_likely_disconnected=True`. Catches both
+    "subscription never configured" and "subscription died" cases
+    via one signal."""
+    cred = _make_credential(db, ml_marketplace, test_admin_user)
+    # Force the credential to look old by rewriting created_at.
+    cred.created_at = datetime.now(timezone.utc) - timedelta(
+        hours=WEBHOOK_DISCONNECT_HOURS + 5,
+    )
+    db.commit()
+
+    # No webhooks at all → likely disconnected.
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    row = next(r for r in body["items"] if r["credential_id"] == cred.id)
+    assert row["webhook_likely_disconnected"] is True
+    assert row["webhooks_received_last_24h"] == 0
+    assert row["webhook_last_received_at"] is None
+
+    # Add an OLD webhook (older than the disconnect threshold) — still
+    # flagged disconnected because the freshness window is empty.
+    _make_webhook(
+        db, ml_marketplace,
+        received_at=datetime.now(timezone.utc) - timedelta(
+            hours=WEBHOOK_DISCONNECT_HOURS + 1,
+        ),
+    )
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    row = next(r for r in body["items"] if r["credential_id"] == cred.id)
+    assert row["webhook_likely_disconnected"] is True
+
+
+def test_likely_disconnected_false_for_fresh_credential_with_no_webhooks(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """A credential that's just been connected hasn't had time to
+    receive webhooks yet — DON'T flag as disconnected, otherwise
+    every operator just-connecting their account would see a false
+    alarm. The two-part guard (age + freshness) is what prevents
+    this."""
+    cred = _make_credential(db, ml_marketplace, test_admin_user)
+    cred.created_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    db.commit()
+
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    row = next(r for r in body["items"] if r["credential_id"] == cred.id)
+    assert row["webhook_likely_disconnected"] is False
+    assert row["webhooks_received_last_24h"] == 0
+
+
+def test_likely_disconnected_false_when_a_recent_webhook_exists(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """A credential of any age with at least one webhook in the
+    freshness window is clearly NOT disconnected — clears the flag."""
+    cred = _make_credential(db, ml_marketplace, test_admin_user)
+    cred.created_at = datetime.now(timezone.utc) - timedelta(days=30)
+    _make_webhook(
+        db, ml_marketplace,
+        received_at=datetime.now(timezone.utc) - timedelta(hours=2),
+    )
+    db.commit()
+
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    row = next(r for r in body["items"] if r["credential_id"] == cred.id)
+    assert row["webhook_likely_disconnected"] is False
+    assert row["webhooks_received_last_24h"] == 1
+
+
+def test_webhook_stats_shared_across_credentials_for_same_marketplace(
+    client: TestClient, db, admin_headers, test_admin_user, ml_marketplace,
+):
+    """ML webhooks are scoped to the app, not the user. Two ML
+    credentials for the same marketplace see the SAME
+    webhook_last_received_at and same recent count — they share the
+    underlying subscription."""
+    cred_a = _make_credential(db, ml_marketplace, test_admin_user)
+    cred_b = _make_credential(db, ml_marketplace, test_admin_user)
+    _make_webhook(
+        db, ml_marketplace,
+        received_at=datetime.now(timezone.utc) - timedelta(minutes=15),
+    )
+
+    body = client.get(
+        "/api/v1/marketplaces/health/", headers=admin_headers,
+    ).json()
+    by_cred = {r["credential_id"]: r for r in body["items"]}
+    assert by_cred[cred_a.id]["webhooks_received_last_24h"] == 1
+    assert by_cred[cred_b.id]["webhooks_received_last_24h"] == 1
+    assert by_cred[cred_a.id]["webhook_last_received_at"] == \
+        by_cred[cred_b.id]["webhook_last_received_at"]
 
 
 # ---------------------------------------------------------------------------

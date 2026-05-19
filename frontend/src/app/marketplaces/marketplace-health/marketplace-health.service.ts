@@ -18,12 +18,30 @@ export interface MarketplaceCredentialHealth {
 
   inbound_open_count: number;
   inbound_stale_count: number;
+
+  /**
+   * Most recent `WebhookEvent.received_at` for this credential's
+   * marketplace (any topic). null when no events have arrived yet.
+   * Webhooks are app-scoped, not user-scoped, so credentials for the
+   * same marketplace share this value.
+   */
+  webhook_last_received_at?: string | null;
+  webhooks_received_last_24h: number;
+  /**
+   * True when the credential is older than the disconnect threshold
+   * AND no webhook events have arrived for its marketplace in the
+   * same period. Catches both "subscription never configured" and
+   * "subscription died" without false-positives on a freshly-
+   * connected credential.
+   */
+  webhook_likely_disconnected: boolean;
 }
 
 export interface HealthListResponse {
   items: MarketplaceCredentialHealth[];
   order_poll_stale_minutes: number;
   inbound_reconcile_stale_minutes: number;
+  webhook_disconnect_hours: number;
 }
 
 export interface PollOrdersResult {

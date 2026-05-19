@@ -1561,7 +1561,7 @@
     },
     "marketplaceHealth": {
         "title": "Marketplace Health",
-        "subtitle": "Status of the order-poll + inbound-reconciliation pipelines. Order polls flag stale after {{pollMins}} minutes; inbound reconciliation flags stale after {{reconcileMins}} minutes.",
+        "subtitle": "Status of the order-poll + webhook + inbound-reconciliation pipelines. Order polls flag stale after {{pollMins}} minutes; inbound reconciliation after {{reconcileMins}} minutes; webhook subscriptions after {{webhookHours}} hours of silence.",
         "refresh": "Refresh",
         "never": "Never",
         "justNow": "Just now",
@@ -1574,6 +1574,7 @@
             "marketplace": "Marketplace",
             "auth": "Auth",
             "orderPoll": "Last order poll",
+            "webhooks": "Webhooks (24h)",
             "inbound": "Inbound transfers",
             "actions": "Actions"
         },
@@ -1585,6 +1586,13 @@
             "none": "None open",
             "openCount": "{{count}} open",
             "staleCount": "{{count}} stale"
+        },
+        "webhooks": {
+            "disconnected": "Subscription likely broken",
+            "none24h": "No events",
+            "count24h": "{{count}} received",
+            "lastReceived": "Last event: {{when}} ago",
+            "neverTooltip": "No webhooks received in the last {{hours}}h. Check the marketplace's developer panel — the orders subscription may need to be re-configured."
         },
         "actions": {
             "pollNow": "Poll orders",

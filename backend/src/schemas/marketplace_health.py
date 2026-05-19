@@ -22,6 +22,13 @@ from pydantic import BaseModel
 # the beat schedule changes.
 ORDER_POLL_STALE_MINUTES = 30      # cron fires every 15min → 30min = 2x
 INBOUND_RECONCILE_STALE_MINUTES = 90  # cron fires hourly → 90min = 1.5x
+# Webhook freshness: if a credential has been connected for at least
+# this long AND zero webhook events have arrived for its marketplace
+# in the same period, we flag the subscription as likely disconnected.
+# 24h is conservative — it leaves plenty of room for low-volume
+# sellers without false-positives, while still catching subscriptions
+# that were never configured or that ML expired.
+WEBHOOK_DISCONNECT_HOURS = 24
 
 
 class MarketplaceCredentialHealth(BaseModel):
@@ -53,6 +60,20 @@ class MarketplaceCredentialHealth(BaseModel):
     # in flight for hours but the reconciler hasn't checked recently".
     inbound_stale_count: int = 0
 
+    # --- webhook subscription freshness ---
+    # ML push webhooks (and Amazon EventBridge events) land in
+    # WebhookEvent. The order poller back-fills missed deliveries, so
+    # the operator never sees a silent failure of the webhook channel
+    # itself. These three fields surface that: when the webhook last
+    # fired, how many came in over the last day, and a single derived
+    # flag for "this subscription is probably broken — go check ML's
+    # developer panel". Webhooks are scoped to the marketplace's app,
+    # not per-user, so the marketplace-level values are repeated on
+    # every credential row for the same marketplace.
+    webhook_last_received_at: Optional[datetime] = None
+    webhooks_received_last_24h: int = 0
+    webhook_likely_disconnected: bool = False
+
 
 class HealthListResponse(BaseModel):
     """Envelope for `GET /marketplaces/health`. The constants are
@@ -61,6 +82,7 @@ class HealthListResponse(BaseModel):
     items: List[MarketplaceCredentialHealth]
     order_poll_stale_minutes: int = ORDER_POLL_STALE_MINUTES
     inbound_reconcile_stale_minutes: int = INBOUND_RECONCILE_STALE_MINUTES
+    webhook_disconnect_hours: int = WEBHOOK_DISCONNECT_HOURS
 
 
 class PollOrdersResult(BaseModel):
