@@ -80,6 +80,7 @@
                       <textarea matInput formControlName="description" [placeholder]="t('common.description')"
                         rows="4"></textarea>
                     </mat-form-field>
+                    @if (aiReady) {
                     <button type="button" mat-stroked-button color="accent" (click)="generateAiDescription()"
                       [disabled]="isGeneratingDescription || !productForm.get('name')?.value"
                       style="height: 56px; margin-top: 4px;" [matTooltip]="t('products.aiGenerate')">
@@ -90,6 +91,7 @@
                       }
                       AI
                     </button>
+                    }
                   </div>
                 </mat-card-content>
               </mat-card>

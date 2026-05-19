@@ -76,6 +76,7 @@ export class ProductForm implements OnInit {
   availableProducts: Product[] = [];
   returnToPO = false;
   isGeneratingDescription = false;
+  aiReady = false;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -115,6 +116,12 @@ export class ProductForm implements OnInit {
 
   ngOnInit(): void {
     console.log('ProductForm: ngOnInit started');
+
+    // Gate the "Generate with AI" button on workspace-level AI readiness so
+    // the button never appears when /ai/* endpoints would refuse.
+    this.aiService.isReady$().pipe(takeUntil(this.destroy$)).subscribe(ready => {
+      this.aiReady = ready;
+    });
 
     // Initialize staged images if provided
     if (this.initialStagedImages && this.initialStagedImages.length > 0) {

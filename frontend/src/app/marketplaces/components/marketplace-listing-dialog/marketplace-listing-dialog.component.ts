@@ -13,7 +13,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule } from '@ngneat/transloco';
 import { AiService, ListingDescriptionResponse } from '../../../core/services/ai.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { SettingsService, StoreSettings } from '../../../core/services/settings.service';
 import { MarketplacesService, MarketplaceListingCreate } from '../../marketplaces';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -66,7 +65,6 @@ export class MarketplaceListingDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: MarketplaceListingDialogData,
         private aiService: AiService,
         private notificationService: NotificationService,
-        private settingsService: SettingsService,
         private marketplacesService: MarketplacesService
     ) {
         this.listingForm = this.fb.group({
@@ -77,14 +75,12 @@ export class MarketplaceListingDialogComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Check if AI is enabled in settings
-        this.settingsService.getStoreSettings().subscribe({
-            next: (settings: StoreSettings | null) => {
-                this.aiEnabled = settings?.ai_config?.enabled || false;
-            },
-            error: () => {
-                this.aiEnabled = false;
-            }
+        // Use AiService.isReady$() so the button is hidden when AI is either
+        // disabled in Settings or the active provider has no API key — matches
+        // the backend gate on /api/v1/ai/* endpoints.
+        this.aiService.isReady$().subscribe({
+            next: (ready) => { this.aiEnabled = ready; },
+            error: () => { this.aiEnabled = false; },
         });
     }
 

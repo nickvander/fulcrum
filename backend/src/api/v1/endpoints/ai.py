@@ -10,10 +10,59 @@ from typing import Optional, List
 from sqlalchemy.orm import Session
 
 from src.api.dependencies import get_db
+from src.core.errors import LocalizedHTTPException
 from src.services.adk.manager import ADKManager
 from src.services.adk.orchestrator import AgentOrchestrator
 
 router = APIRouter()
+
+
+class AICapabilities(BaseModel):
+    """Per-workspace AI readiness, used by the frontend to gate AI UI controls.
+
+    `ready` is the single predicate UI should branch on; `enabled` and
+    `configured` are exposed only so the Settings screen can tell the user
+    *which* gate is closed when buttons are hidden.
+    """
+    ready: bool = False
+    enabled: bool = False
+    configured: bool = False
+    provider: Optional[str] = None
+
+
+def _require_ai_ready(db: Session) -> ADKManager:
+    """Return an ADKManager when AI is ready, otherwise raise a localized 400.
+
+    Centralized so every AI endpoint refuses the same way; the frontend keys
+    off the `apiErrors.ai.disabled` code to localize the message.
+    """
+    manager = ADKManager(db)
+    if not manager.is_ready():
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.ai.disabled",
+            detail=(
+                "AI features are disabled. Enable AI and configure an API key "
+                "for the active provider in Settings."
+            ),
+        )
+    return manager
+
+
+@router.get("/capabilities", response_model=AICapabilities)
+def get_ai_capabilities(db: Session = Depends(get_db)) -> AICapabilities:
+    """Tell the frontend whether AI-backed actions are available right now."""
+    manager = ADKManager(db)
+    settings = manager.settings
+    enabled = bool(settings and settings.ai_enabled)
+    provider = (settings.ai_provider if settings else None) or "google"
+    configured = manager.is_configured(provider)
+    return AICapabilities(
+        ready=enabled and configured,
+        enabled=enabled,
+        configured=configured,
+        provider=provider,
+    )
 
 class ImageIdentificationResponse(BaseModel):
     name: str = "Unknown"
@@ -77,22 +126,18 @@ async def identify_product(
         tmp_path = tmp.name
 
     try:
-        # 2. Initialize ADK Manager & Orchestrator
-        adk_manager = ADKManager(db)
+        adk_manager = _require_ai_ready(db)
         orchestrator = AgentOrchestrator(adk_manager)
-        
-        # 3. Process with Vision Agent (via Orchestrator)
         result = await orchestrator.process_product_image(tmp_path)
-        
-        # 4. Format Response
         return ImageIdentificationResponse(**result)
 
+    except LocalizedHTTPException:
+        raise
     except Exception as e:
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        # Cleanup
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
@@ -109,28 +154,27 @@ async def generate_description(
     product descriptions based on the provided product name and context.
     """
     try:
-        # Initialize ADK Manager & Orchestrator
-        adk_manager = ADKManager(db)
+        adk_manager = _require_ai_ready(db)
         orchestrator = AgentOrchestrator(adk_manager)
-        
-        # Generate description via orchestrator
+
         result = await orchestrator.generate_product_description(
             product_name=request.product_name,
             context=request.context,
             tone=request.tone,
             length=request.length
         )
-        
-        # Format Response
+
         if "error" in result:
             return DescriptionGenerationResponse(error=result["error"])
-        
+
         return DescriptionGenerationResponse(
             description=result.get("description"),
             seo_keywords=result.get("seo_keywords", []),
             tone_used=result.get("tone_used")
         )
 
+    except LocalizedHTTPException:
+        raise
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -149,8 +193,11 @@ async def generate_listing_description(
     for specific marketplaces like Amazon, MercadoLibre, or eBay.
     """
     from src.crud.crud_product import product as product_crud
-    
+
     try:
+        # Gate first — refuse cleanly before any DB lookups when AI is off.
+        adk_manager = _require_ai_ready(db)
+
         # 1. Fetch product details
         product = product_crud.get(db, id=request.product_id)
         if not product:
@@ -178,10 +225,9 @@ async def generate_listing_description(
         }
         tone = tone_map.get(marketplace, "Professional")
         
-        # 4. Initialize ADK Manager & Orchestrator
-        adk_manager = ADKManager(db)
+        # 4. Initialize orchestrator (manager already verified ready above)
         orchestrator = AgentOrchestrator(adk_manager)
-        
+
         # 5. Generate listing content via orchestrator
         result = await orchestrator.generate_product_description(
             product_name=product.name,
@@ -212,6 +258,8 @@ async def generate_listing_description(
             marketplace=request.marketplace_name
         )
 
+    except LocalizedHTTPException:
+        raise
     except Exception as e:
         import traceback
         traceback.print_exc()

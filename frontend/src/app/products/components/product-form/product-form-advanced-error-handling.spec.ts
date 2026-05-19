@@ -18,6 +18,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AiService } from '../../../core/services/ai.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceAsyncMock } from '../../services/product-form-initializer.service.async.mock';
 import { TranslocoTestingModule } from '@ngneat/transloco';
@@ -107,6 +108,7 @@ describe('ProductForm: Advanced Error Handling with Async Mock', () => {
                 { provide: Router, useValue: routerMock },
                 { provide: ActivatedRoute, useValue: activatedRouteMock },
                 // Using the async mock that simulates async behavior but with small delay
+                { provide: AiService, useValue: { isReady$: () => of(true), getCapabilities: () => of({ ready: true, enabled: true, configured: true, provider: 'google' }), invalidateCapabilities: () => {} } },
                 { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceAsyncMock }
             ]
         }).compileComponents();

@@ -1,7 +1,22 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of, shareReplay, tap } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+
+export interface AiCapabilities {
+    ready: boolean;
+    enabled: boolean;
+    configured: boolean;
+    provider: string | null;
+}
+
+const DISABLED_CAPABILITIES: AiCapabilities = {
+    ready: false,
+    enabled: false,
+    configured: false,
+    provider: null,
+};
 
 export interface ProductIdentificationResponse {
     name: string;
@@ -50,7 +65,42 @@ export interface ListingDescriptionResponse {
 export class AiService {
     private apiUrl = `${environment.apiUrl}/ai`;
 
+    private readonly _capabilities = new BehaviorSubject<AiCapabilities>(DISABLED_CAPABILITIES);
+    readonly capabilities$ = this._capabilities.asObservable();
+    private capabilitiesRequest$?: Observable<AiCapabilities>;
+
     constructor(private http: HttpClient) { }
+
+    /**
+     * Fetch (and cache) the AI readiness signal. UI components should call
+     * this in ngOnInit and gate AI buttons on `capabilities$ | async` so the
+     * button never appears when the backend would refuse it.
+     */
+    getCapabilities(forceRefresh = false): Observable<AiCapabilities> {
+        if (!forceRefresh && this.capabilitiesRequest$) {
+            return this.capabilitiesRequest$;
+        }
+        this.capabilitiesRequest$ = this.http
+            .get<AiCapabilities>(`${this.apiUrl}/capabilities`)
+            .pipe(
+                catchError(() => of(DISABLED_CAPABILITIES)),
+                tap(caps => this._capabilities.next(caps)),
+                shareReplay(1),
+            );
+        return this.capabilitiesRequest$;
+    }
+
+    /** Stream of just the `ready` boolean — most consumers only want this. */
+    isReady$(): Observable<boolean> {
+        return this.getCapabilities().pipe(map(c => c.ready));
+    }
+
+    /** Drop the cached capabilities — call after a settings update so the
+     * very next AI button check re-reads the backend. */
+    invalidateCapabilities(): void {
+        this.capabilitiesRequest$ = undefined;
+        this._capabilities.next(DISABLED_CAPABILITIES);
+    }
 
     identifyProduct(imageFile: File): Observable<ProductIdentificationResponse> {
         const formData = new FormData();

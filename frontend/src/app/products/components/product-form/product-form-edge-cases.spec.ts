@@ -19,6 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AiService } from '../../../core/services/ai.service';
 import { ProductFormInitializerService } from '../../services/product-form-initializer.service';
 import { ProductFormInitializerServiceMock } from '../../services/product-form-initializer.service.mock';
 
@@ -114,6 +115,7 @@ describe('ProductForm: Edge Cases', () => {
                 { provide: MatDialog, useValue: dialogMock },
                 { provide: Router, useValue: routerMock },
                 { provide: ActivatedRoute, useValue: activatedRouteMock },
+                { provide: AiService, useValue: { isReady$: () => of(true), getCapabilities: () => of({ ready: true, enabled: true, configured: true, provider: 'google' }), invalidateCapabilities: () => {} } },
                 { provide: ProductFormInitializerService, useClass: ProductFormInitializerServiceMock }
             ]
         }).compileComponents();
