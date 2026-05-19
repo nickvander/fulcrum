@@ -308,6 +308,36 @@ inbound id. The endpoint returns the per-transfer summary plus the
 refreshed transfer row, so the UI can render the new status without a
 follow-up GET.
 
+### Pipeline health page
+
+`/marketplaces/health` (under **Marketplaces** in the sidenav) gives
+operators a single view of whether the three automatic pipelines
+(Amazon order poll, ML order poll, ML+Amazon inbound reconciliation)
+are healthy:
+
+| Column          | Source                                              |
+| --------------- | --------------------------------------------------- |
+| Auth            | `MarketplaceCredential.needs_reauthorization` + `last_refresh_error` |
+| Last order poll | `MarketplaceCredential.last_orders_polled_at` (flags stale at 30min) |
+| Inbound         | rollup of open `StockTransfer`s for this marketplace; stale = `last_reconciled_at` NULL or > 90min |
+| Actions         | "Poll orders" + "Reconcile inbound" buttons        |
+
+The buttons run the per-credential entrypoints synchronously, so the
+operator gets immediate feedback ("Poll found 3 new orders, 8 line
+items"). Both share the same code path as the Celery beat tasks; they
+just invoke the per-credential function instead of the bulk runner.
+
+API surface:
+
+| Method | Path                                                      | Notes                          |
+| ------ | --------------------------------------------------------- | ------------------------------ |
+| GET    | `/api/v1/marketplaces/health/`                            | List rollup, problems first    |
+| POST   | `/api/v1/marketplaces/health/{credential_id}/poll-orders` | Synchronous order ingestion    |
+| POST   | `/api/v1/marketplaces/health/{credential_id}/reconcile-inbound` | Synchronous inbound poll  |
+
+Both action endpoints embed a refreshed health row in the response so
+the UI can patch the table without a follow-up list call.
+
 The REST surface follows the same shape:
 
 | Method | Path                                  | Notes                                                    |

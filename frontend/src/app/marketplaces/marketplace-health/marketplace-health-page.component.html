@@ -1,0 +1,170 @@
+<ng-container *transloco="let t">
+  <div class="health-container">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('marketplaceHealth.title') }}</h1>
+        <p>{{ t('marketplaceHealth.subtitle', {
+          pollMins: orderPollStaleMinutes,
+          reconcileMins: inboundReconcileStaleMinutes
+        }) }}</p>
+      </div>
+      <button mat-stroked-button (click)="refresh()"
+              [disabled]="loading"
+              data-testid="health-refresh-button">
+        <mat-icon>refresh</mat-icon>
+        {{ t('marketplaceHealth.refresh') }}
+      </button>
+    </div>
+
+    @if (loading) {
+      <div class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    } @else if (rows.length === 0) {
+      <mat-card class="empty-state" data-testid="health-empty-state">
+        <mat-icon class="empty-icon">cable</mat-icon>
+        <h2>{{ t('marketplaceHealth.empty.title') }}</h2>
+        <p>{{ t('marketplaceHealth.empty.subtitle') }}</p>
+        <a mat-flat-button color="primary" routerLink="/marketplaces">
+          {{ t('marketplaceHealth.empty.cta') }}
+        </a>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="rows" class="health-table"
+               data-testid="health-table">
+
+          <ng-container matColumnDef="marketplace">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.marketplace') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="marketplace-cell">
+                <strong>{{ row.marketplace_name }}</strong>
+                <small class="muted">#{{ row.credential_id }}</small>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="auth">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.auth') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="authClass(row)"
+                    [attr.data-testid]="'auth-pill-' + row.credential_id">
+                @if (row.needs_reauthorization) {
+                  <mat-icon class="pill-icon">error_outline</mat-icon>
+                  {{ t('marketplaceHealth.auth.reauthRequired') }}
+                } @else {
+                  <mat-icon class="pill-icon">check_circle</mat-icon>
+                  {{ t('marketplaceHealth.auth.ok') }}
+                }
+              </span>
+              @if (row.needs_reauthorization && row.last_refresh_error) {
+                <div class="error-text" [matTooltip]="row.last_refresh_error">
+                  {{ row.last_refresh_error }}
+                </div>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="order_poll">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.orderPoll') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="pollClass(row)"
+                    [attr.data-testid]="'poll-pill-' + row.credential_id">
+                @if (row.last_orders_polled_at) {
+                  {{ ago(row.last_orders_polled_at) }}
+                } @else {
+                  {{ t('marketplaceHealth.never') }}
+                }
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="inbound">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.inbound') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="inboundClass(row)"
+                    [attr.data-testid]="'inbound-pill-' + row.credential_id">
+                @if (row.inbound_open_count === 0) {
+                  {{ t('marketplaceHealth.inbound.none') }}
+                } @else {
+                  {{ t('marketplaceHealth.inbound.openCount', { count: row.inbound_open_count }) }}
+                  @if (row.inbound_stale_count > 0) {
+                    · {{ t('marketplaceHealth.inbound.staleCount', { count: row.inbound_stale_count }) }}
+                  }
+                }
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.actions') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="row-actions">
+                <button mat-stroked-button
+                        (click)="pollOrders(row)"
+                        [disabled]="isBusy(row)"
+                        [matTooltip]="t('marketplaceHealth.actions.pollTooltip')"
+                        [attr.data-testid]="'poll-button-' + row.credential_id">
+                  @if (polling.has(row.credential_id)) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>sync</mat-icon>
+                  }
+                  {{ t('marketplaceHealth.actions.pollNow') }}
+                </button>
+                <button mat-stroked-button
+                        (click)="reconcileInbound(row)"
+                        [disabled]="isBusy(row) || row.inbound_open_count === 0"
+                        [matTooltip]="t('marketplaceHealth.actions.reconcileTooltip')"
+                        [attr.data-testid]="'reconcile-button-' + row.credential_id">
+                  @if (reconciling.has(row.credential_id)) {
+                    <mat-spinner diameter="16"></mat-spinner>
+                  } @else {
+                    <mat-icon>autorenew</mat-icon>
+                  }
+                  {{ t('marketplaceHealth.actions.reconcileNow') }}
+                </button>
+              </div>
+
+              @if (lastPollResult.get(row.credential_id); as poll) {
+                <div class="last-result"
+                     [attr.data-testid]="'poll-result-' + row.credential_id">
+                  @if (poll.error) {
+                    {{ t('marketplaceHealth.results.pollError', { error: poll.error }) }}
+                  } @else {
+                    {{ t('marketplaceHealth.results.pollSummary', {
+                      new: poll.orders_new,
+                      updated: poll.orders_updated,
+                      items: poll.items_created
+                    }) }}
+                  }
+                </div>
+              }
+
+              @if (lastReconcileResult.get(row.credential_id); as recon) {
+                <div class="last-result"
+                     [attr.data-testid]="'reconcile-result-' + row.credential_id">
+                  @if (recon.error) {
+                    {{ t('marketplaceHealth.results.reconcileError', { error: recon.error }) }}
+                  } @else if (recon.transfers_processed === 0) {
+                    {{ t('marketplaceHealth.results.reconcileEmpty') }}
+                  } @else {
+                    {{ t('marketplaceHealth.results.reconcileSummary', {
+                      processed: recon.transfers_processed,
+                      updated: recon.transfers_updated,
+                      units: recon.total_received_added
+                    }) }}
+                  }
+                </div>
+              }
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"
+              [attr.data-testid]="'health-row-' + row.credential_id"></tr>
+        </table>
+      </mat-card>
+    }
+  </div>
+</ng-container>

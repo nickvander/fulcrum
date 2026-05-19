@@ -29,6 +29,7 @@ from src.api.v1.endpoints import (
     catalog_imports,
     alerts,
     payments,
+    marketplace_health,
 )
 
 api_router = APIRouter()
@@ -60,4 +61,9 @@ api_router.include_router(sales_orders.router, prefix="/sales-orders", tags=["sa
 api_router.include_router(catalog_imports.router, prefix="/catalog-imports", tags=["catalog-imports"])
 api_router.include_router(alerts.router, prefix="/alerts", tags=["alerts"])
 api_router.include_router(payments.router, prefix="/payments", tags=["payments"])
+api_router.include_router(
+    marketplace_health.router,
+    prefix="/marketplaces/health",
+    tags=["marketplace-health"],
+)
 
