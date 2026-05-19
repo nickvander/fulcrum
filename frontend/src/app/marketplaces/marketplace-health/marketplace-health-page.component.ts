@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,7 +10,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
-import { finalize } from 'rxjs';
+import { Subject, finalize, interval, takeUntil } from 'rxjs';
 
 import {
   HealthListResponse,
@@ -39,17 +39,25 @@ import {
   templateUrl: './marketplace-health-page.component.html',
   styleUrls: ['./marketplace-health-page.component.scss'],
 })
-export class MarketplaceHealthPageComponent implements OnInit {
+export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
   rows: MarketplaceCredentialHealth[] = [];
   loading = false;
   orderPollStaleMinutes = 30;
   inboundReconcileStaleMinutes = 90;
   webhookDisconnectHours = 24;
 
+  /** Cadence for the auto-refresh that runs while the page is open.
+   *  Long enough that the operator's poll/reconcile clicks don't
+   *  contend with the background fetch; short enough that a flipped
+   *  reauth state is visible without an explicit refresh. */
+  readonly AUTO_REFRESH_MS = 45_000;
+
   /** Per-row busy keyed by credential_id, so the spinner shows only
    *  on the row whose button was clicked. */
   polling = new Set<number>();
   reconciling = new Set<number>();
+
+  private destroy$ = new Subject<void>();
 
   /** Last action's result, keyed by credential_id, surfaced as a
    *  result chip on the row + as a snackbar. */
@@ -73,12 +81,45 @@ export class MarketplaceHealthPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.refresh();
+    // Auto-refresh the rollup while the operator has the page open.
+    // Skips ticks when any per-row action is in flight so the action
+    // endpoint's embedded `health` patch isn't clobbered by an
+    // overlapping bulk list. The teardown subject stops the timer
+    // on navigate-away so we don't leak HTTP requests.
+    interval(this.AUTO_REFRESH_MS)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.polling.size > 0 || this.reconciling.size > 0) return;
+        this.quietRefresh();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   refresh(): void {
     this.loading = true;
+    this.loadRollup(/* quiet */ false);
+  }
+
+  /** Background refresh that doesn't toggle the `loading` flag, so
+   *  the table doesn't blink to a spinner every 45s while the
+   *  operator is reading a row. Error path also stays quiet to avoid
+   *  spamming a snackbar if the backend hiccups briefly. */
+  private quietRefresh(): void {
+    this.loadRollup(/* quiet */ true);
+  }
+
+  private loadRollup(quiet: boolean): void {
     this.health.list()
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          if (!quiet) this.loading = false;
+        }),
+      )
       .subscribe({
         next: (resp: HealthListResponse) => {
           this.rows = resp.items;
@@ -86,7 +127,9 @@ export class MarketplaceHealthPageComponent implements OnInit {
           this.inboundReconcileStaleMinutes = resp.inbound_reconcile_stale_minutes;
           this.webhookDisconnectHours = resp.webhook_disconnect_hours;
         },
-        error: () => this.snack('marketplaceHealth.errors.loadFailed'),
+        error: () => {
+          if (!quiet) this.snack('marketplaceHealth.errors.loadFailed');
+        },
       });
   }
 
