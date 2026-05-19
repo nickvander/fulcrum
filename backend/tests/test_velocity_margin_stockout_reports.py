@@ -567,3 +567,126 @@ def test_margin_mixes_captured_and_legacy_rows_for_same_product(
     assert line[6] == "USD 30.00"
     assert line[7] == "USD 90.00"
     assert line[8] == "75.0%"
+
+
+# ---------------------------------------------------------------------------
+# start_date / end_date overrides for window_days
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.db
+def test_velocity_export_honors_start_date_end_date_range(
+    client: TestClient, db: Session, admin_headers, seeded_sales,
+):
+    """Passing an explicit calendar range pins the window — only orders
+    inside `[start_date, end_date]` are counted. The seeded HOT order
+    is 5 days ago, the SLOW order is 15 days ago. An 8-day window
+    ending today should include HOT but exclude SLOW."""
+    now = datetime.utcnow().date()
+    response = client.get(
+        "/api/v1/reports/velocity/export",
+        params={
+            "start_date": (now - timedelta(days=8)).isoformat(),
+            "end_date": now.isoformat(),
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    text = response.text
+    # HOT was in scope.
+    assert "HOT-1" in text
+    # SLOW had its only order 15 days ago, outside the 8-day window —
+    # it still appears as a row (zero-sales products are listed) but its
+    # daily_velocity should be 0.
+    rows = list(csv.reader(io.StringIO(text)))
+    by_sku = {row[1]: row for row in rows[1:]}
+    slow_line = by_sku["SLOW-1"]
+    assert slow_line[5] == "0"          # units_sold
+    assert slow_line[6] == "0.00"       # daily_velocity
+
+
+@pytest.mark.db
+def test_margin_export_honors_start_date_end_date_range(
+    client: TestClient, db: Session, admin_headers, seeded_sales,
+):
+    """SLOW's only order is 15 days ago; an explicit range that excludes
+    it should NOT include the SLOW product in margin output (margin rows
+    only include products with realized sales in the window)."""
+    now = datetime.utcnow().date()
+    response = client.get(
+        "/api/v1/reports/margin/export",
+        params={
+            "start_date": (now - timedelta(days=8)).isoformat(),
+            "end_date": now.isoformat(),
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    rows = list(csv.reader(io.StringIO(response.text)))
+    skus = {row[1] for row in rows[1:]}
+    assert "HOT-1" in skus       # in range
+    assert "SLOW-1" not in skus  # out of range
+    assert "DEAD-1" not in skus  # never sold
+
+
+@pytest.mark.db
+def test_stockout_export_honors_start_date_end_date_range(
+    client: TestClient, db: Session, admin_headers, seeded_sales,
+):
+    """Stockout severity flips when the window shrinks to exclude
+    HOT's sales — its velocity becomes 0 over the new window, so its
+    days_of_inventory jumps to 999 and the row no longer appears."""
+    now = datetime.utcnow().date()
+    response = client.get(
+        "/api/v1/reports/stockout/export",
+        params={
+            "start_date": (now - timedelta(days=1)).isoformat(),
+            "end_date": now.isoformat(),
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    text = response.text
+    # HOT now has zero realized sales in the 1-day window → no longer
+    # imminent. (DEAD never had sales either, but its on_hand is > 0
+    # and velocity is 0 → also filtered out.)
+    assert "HOT-1" not in text
+
+
+@pytest.mark.db
+def test_velocity_export_rejects_inverted_date_range(
+    client: TestClient, db: Session, admin_headers, seeded_sales,
+):
+    """An end_date before start_date is a typo, not an empty result —
+    return 400 with the localized error code."""
+    response = client.get(
+        "/api/v1/reports/velocity/export",
+        params={
+            "start_date": "2026-04-01",
+            "end_date": "2026-03-01",
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 400
+    body = response.json()
+    assert body["code"] == "apiErrors.reports.invalidDateRange"
+
+
+def test_resolve_date_window_renders_explicit_label():
+    """The shared helper builds the subtitle label embedded in CSV / PDF
+    output. When start/end are set, the label is the calendar range; the
+    legacy code path renders `window Nd`."""
+    from src.api.v1.endpoints.reports import _resolve_date_window
+    from datetime import date as _date
+
+    explicit = _resolve_date_window(
+        window_days=30,
+        start_date=_date(2026, 1, 1),
+        end_date=_date(2026, 3, 31),
+    )
+    assert explicit.label == "2026-01-01 → 2026-03-31"
+    assert explicit.days == (explicit.end_dt - explicit.start_dt).days
+
+    legacy = _resolve_date_window(window_days=14, start_date=None, end_date=None)
+    assert legacy.label == "window 14d"
+    assert legacy.days == 14

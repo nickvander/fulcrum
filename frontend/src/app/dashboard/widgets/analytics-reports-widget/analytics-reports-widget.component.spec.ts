@@ -69,7 +69,7 @@ describe('AnalyticsReportsWidgetComponent', () => {
 
   it('velocity CSV button calls the service with the current windowDays and routes the blob to the downloader', () => {
     clickButton('velocity-export-csv');
-    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(30, 2000, undefined);
     expect(downloaderStub.download).toHaveBeenCalledTimes(1);
     expect(downloaderStub.download.mock.calls[0][1]).toBe('fulcrum-velocity');
     expect(downloaderStub.download.mock.calls[0][2]).toBe('csv');
@@ -77,7 +77,7 @@ describe('AnalyticsReportsWidgetComponent', () => {
 
   it('velocity PDF button calls the PDF service method', () => {
     clickButton('velocity-export-pdf');
-    expect(analyticsStub.exportVelocityPdf).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportVelocityPdf).toHaveBeenCalledWith(30, 2000, undefined);
     expect(downloaderStub.download.mock.calls[0][2]).toBe('pdf');
   });
 
@@ -85,12 +85,12 @@ describe('AnalyticsReportsWidgetComponent', () => {
 
   it('margin CSV / PDF buttons route to the margin service methods with the right stem', () => {
     clickButton('margin-export-csv');
-    expect(analyticsStub.exportMarginCsv).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportMarginCsv).toHaveBeenCalledWith(30, 2000, undefined);
     expect(downloaderStub.download.mock.calls[0][1]).toBe('fulcrum-margin');
     expect(downloaderStub.download.mock.calls[0][2]).toBe('csv');
 
     clickButton('margin-export-pdf');
-    expect(analyticsStub.exportMarginPdf).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportMarginPdf).toHaveBeenCalledWith(30, 2000, undefined);
     expect(downloaderStub.download.mock.calls[1][2]).toBe('pdf');
   });
 
@@ -98,12 +98,12 @@ describe('AnalyticsReportsWidgetComponent', () => {
 
   it('stockout CSV / PDF buttons route to the stockout service methods with the right stem', () => {
     clickButton('stockout-export-csv');
-    expect(analyticsStub.exportStockoutCsv).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportStockoutCsv).toHaveBeenCalledWith(30, 7, 14, 2000, undefined);
     expect(downloaderStub.download.mock.calls[0][1]).toBe('fulcrum-stockout');
     expect(downloaderStub.download.mock.calls[0][2]).toBe('csv');
 
     clickButton('stockout-export-pdf');
-    expect(analyticsStub.exportStockoutPdf).toHaveBeenCalledWith(30);
+    expect(analyticsStub.exportStockoutPdf).toHaveBeenCalledWith(30, 7, 14, 2000, undefined);
     expect(downloaderStub.download.mock.calls[1][2]).toBe('pdf');
   });
 
@@ -117,9 +117,9 @@ describe('AnalyticsReportsWidgetComponent', () => {
     clickButton('margin-export-pdf');
     clickButton('stockout-export-csv');
 
-    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(90);
-    expect(analyticsStub.exportMarginPdf).toHaveBeenCalledWith(90);
-    expect(analyticsStub.exportStockoutCsv).toHaveBeenCalledWith(90);
+    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(90, 2000, undefined);
+    expect(analyticsStub.exportMarginPdf).toHaveBeenCalledWith(90, 2000, undefined);
+    expect(analyticsStub.exportStockoutCsv).toHaveBeenCalledWith(90, 7, 14, 2000, undefined);
   });
 
   // ---- Busy guard ----------------------------------------------------------
@@ -137,5 +137,62 @@ describe('AnalyticsReportsWidgetComponent', () => {
     expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledTimes(1);
     expect(analyticsStub.exportVelocityPdf).toHaveBeenCalledTimes(1);
     expect(downloaderStub.download).toHaveBeenCalledTimes(2);
+  });
+
+  // ---- Date range ----------------------------------------------------------
+
+  it('passes the start/end picker values to the service as a DateRange', () => {
+    component.startDate = new Date(2026, 0, 15);  // Jan 15
+    component.endDate = new Date(2026, 2, 31);    // Mar 31
+    fixture.detectChanges();
+
+    clickButton('velocity-export-csv');
+    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(30, 2000, {
+      startDate: '2026-01-15',
+      endDate: '2026-03-31',
+    });
+  });
+
+  it('passes a partial range when only one picker is set', () => {
+    component.startDate = new Date(2026, 0, 15);
+    component.endDate = null;
+    fixture.detectChanges();
+
+    clickButton('margin-export-csv');
+    expect(analyticsStub.exportMarginCsv).toHaveBeenCalledWith(30, 2000, {
+      startDate: '2026-01-15',
+      endDate: null,
+    });
+  });
+
+  it('omits the range param when both pickers are empty so windowDays is the only filter', () => {
+    component.startDate = null;
+    component.endDate = null;
+    clickButton('velocity-export-csv');
+    expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledWith(30, 2000, undefined);
+  });
+
+  it('clearRange() resets both pickers and re-enables the window selector', () => {
+    component.startDate = new Date(2026, 0, 1);
+    component.endDate = new Date(2026, 2, 31);
+    component.clearRange();
+    expect(component.startDate).toBeNull();
+    expect(component.endDate).toBeNull();
+    expect(component.hasExplicitRange()).toBe(false);
+  });
+
+  it('rangeInverted() flags start > end so download buttons disable', () => {
+    component.startDate = new Date(2026, 2, 31);
+    component.endDate = new Date(2026, 0, 1);
+    fixture.detectChanges();
+
+    expect(component.rangeInverted()).toBe(true);
+    // Inverted-range banner renders.
+    expect(fixture.debugElement.query(By.css('[data-testid="analytics-reports-range-error"]'))).not.toBeNull();
+
+    // Click is gated — the click handler still fires but the disabled
+    // attribute is set on every CSV/PDF button. Verify one:
+    const btn = fixture.debugElement.query(By.css('[data-testid="velocity-export-csv"]'));
+    expect(btn.nativeElement.disabled).toBe(true);
   });
 });

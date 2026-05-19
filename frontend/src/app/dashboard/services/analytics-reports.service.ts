@@ -100,26 +100,39 @@ export interface DeadStockResponse {
  * defaults are mirrored from the backend Query defaults so a caller
  * that just wants "now" can pass no arguments.
  */
+/**
+ * Optional explicit calendar range. When both `startDate` and
+ * `endDate` are set the backend pins the report to that range and
+ * ignores `windowDays`. Set either alone and the missing bound is
+ * filled in (`endDate` → now, `startDate` → end - windowDays). The
+ * values should be ISO YYYY-MM-DD strings — the backend parses with
+ * `date.fromisoformat`.
+ */
+export interface DateRange {
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsReportsService {
   private apiUrl = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 
-  exportVelocityCsv(windowDays = 30, limit = 2000): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/velocity/export`, { window_days: windowDays, limit });
+  exportVelocityCsv(windowDays = 30, limit = 2000, range?: DateRange): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/velocity/export`, this.withRange({ window_days: windowDays, limit }, range));
   }
 
-  exportVelocityPdf(windowDays = 30, limit = 2000): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/velocity/export-pdf`, { window_days: windowDays, limit });
+  exportVelocityPdf(windowDays = 30, limit = 2000, range?: DateRange): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/velocity/export-pdf`, this.withRange({ window_days: windowDays, limit }, range));
   }
 
-  exportMarginCsv(windowDays = 30, limit = 2000): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/margin/export`, { window_days: windowDays, limit });
+  exportMarginCsv(windowDays = 30, limit = 2000, range?: DateRange): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/margin/export`, this.withRange({ window_days: windowDays, limit }, range));
   }
 
-  exportMarginPdf(windowDays = 30, limit = 2000): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/margin/export-pdf`, { window_days: windowDays, limit });
+  exportMarginPdf(windowDays = 30, limit = 2000, range?: DateRange): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/margin/export-pdf`, this.withRange({ window_days: windowDays, limit }, range));
   }
 
   exportStockoutCsv(
@@ -127,13 +140,14 @@ export class AnalyticsReportsService {
     imminentDays = 7,
     watchDays = 14,
     limit = 2000,
+    range?: DateRange,
   ): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/stockout/export`, {
+    return this.blobGet(`${this.apiUrl}/stockout/export`, this.withRange({
       window_days: windowDays,
       imminent_days: imminentDays,
       watch_days: watchDays,
       limit,
-    });
+    }, range));
   }
 
   exportStockoutPdf(
@@ -141,16 +155,27 @@ export class AnalyticsReportsService {
     imminentDays = 7,
     watchDays = 14,
     limit = 2000,
+    range?: DateRange,
   ): Observable<Blob> {
-    return this.blobGet(`${this.apiUrl}/stockout/export-pdf`, {
+    return this.blobGet(`${this.apiUrl}/stockout/export-pdf`, this.withRange({
       window_days: windowDays,
       imminent_days: imminentDays,
       watch_days: watchDays,
       limit,
-    });
+    }, range));
   }
 
-  private blobGet(url: string, params: Record<string, number>): Observable<Blob> {
+  private withRange(
+    base: Record<string, number | string>,
+    range?: DateRange,
+  ): Record<string, number | string> {
+    if (!range) return base;
+    if (range.startDate) base['start_date'] = range.startDate;
+    if (range.endDate) base['end_date'] = range.endDate;
+    return base;
+  }
+
+  private blobGet(url: string, params: Record<string, number | string>): Observable<Blob> {
     let httpParams = new HttpParams();
     for (const [k, v] of Object.entries(params)) {
       httpParams = httpParams.set(k, String(v));
