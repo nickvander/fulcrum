@@ -406,6 +406,119 @@ class AmazonConnector(BaseMarketplaceConnector):
     # practice).
     FINANCES_PATH = "/finances/v0/orders/{order_id}/financialEvents"
 
+    async def fetch_order_refunds(
+        self,
+        order_id: str,
+        access_token: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Return persisted-able refund events for one Amazon order.
+
+        Same SP-API endpoint as `fetch_order_financials`
+        (`/finances/v0/orders/{orderId}/financialEvents`); we just
+        parse the `RefundEventList` slice instead of the fee /
+        shipping totals. Each returned dict has:
+
+          - `amazon_refund_id` (synthesized from PostedDate + event
+            index — SP-API doesn't give a stable per-event id, but
+            the timestamp + ordering within an order is sufficient
+            for idempotency on re-polls)
+          - `posted_at` (ISO 8601 string when provided, else None)
+          - `refund_amount` (sum of principal + tax + shipping
+            refund amounts; SP-API reports these as negative —
+            we return the absolute value so the dashboard shows
+            "$25.00 refunded" not "$-25.00")
+          - `currency` (ISO 4217; defaults to "MXN" when absent)
+
+        Empty list when the order has no refund events. Stub-token
+        branch returns a single deterministic refund so the
+        ingestion worker can be exercised end-to-end without a live
+        SP-API session.
+        """
+        if not access_token or access_token.startswith("STUB-"):
+            return [{
+                "amazon_refund_id": "STUB-REFUND-1",
+                "posted_at": None,
+                "refund_amount": 25.0,
+                "currency": "MXN",
+            }]
+
+        url = f"{self.api_base_url}{self.FINANCES_PATH.format(order_id=order_id)}"
+        headers = {"x-amz-access-token": access_token}
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            payload = (response.json() or {}).get("payload") or {}
+
+        return self._extract_refunds_from_events(
+            payload.get("FinancialEvents") or {},
+        )
+
+    @staticmethod
+    def _extract_refunds_from_events(
+        events: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Pure parser for `FinancialEvents.RefundEventList` → list of
+        per-event refund summaries.
+
+        Sums the customer-facing charge adjustments (Principal + Tax
+        + ShippingCharge etc.) and returns the absolute value so the
+        dashboard reads "$25 refunded" rather than "$-25". Fee
+        adjustments (which are positive — fees credited back to the
+        seller) are NOT included in `refund_amount` because they net
+        against the fee total in `_extract_settlement_from_events`,
+        not against revenue.
+
+        Tolerant of SP-API's two payload shapes:
+          - Newer: `ShipmentItemAdjustmentList[].ItemChargeAdjustmentList`
+          - Older: `ShipmentItemList[].ItemChargeList`
+        Both carry the same fields under different names.
+        """
+        out: List[Dict[str, Any]] = []
+        for idx, event in enumerate(events.get("RefundEventList") or []):
+            if not isinstance(event, dict):
+                continue
+            posted = event.get("PostedDate")
+            currency = "MXN"
+            total = 0.0
+            items = (
+                event.get("ShipmentItemAdjustmentList")
+                or event.get("ShipmentItemList")
+                or []
+            )
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                charges = (
+                    item.get("ItemChargeAdjustmentList")
+                    or item.get("ItemChargeList")
+                    or []
+                )
+                for charge in charges:
+                    if not isinstance(charge, dict):
+                        continue
+                    charge_amount = charge.get("ChargeAmount") or {}
+                    amount = charge_amount.get("Amount")
+                    cc = charge_amount.get("CurrencyCode")
+                    if amount is None:
+                        continue
+                    try:
+                        total += abs(float(amount))
+                    except (TypeError, ValueError):
+                        continue
+                    if cc:
+                        currency = cc
+            # Per-order, per-event synthetic id: stable across re-polls
+            # because SP-API returns RefundEventList in deterministic
+            # PostedDate-asc order.
+            refund_id = f"{posted}-{idx}" if posted else f"refund-{idx}"
+            out.append({
+                "amazon_refund_id": refund_id,
+                "posted_at": posted,
+                "refund_amount": round(total, 4),
+                "currency": currency,
+            })
+        return out
+
     async def fetch_order_financials(
         self,
         order_id: str,

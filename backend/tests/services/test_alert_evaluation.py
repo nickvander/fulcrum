@@ -422,3 +422,108 @@ def test_disabled_rules_are_skipped(db, test_admin_user):
 
     batch = evaluate_all_enabled_rules(db)
     assert batch.rules_evaluated == 0
+
+
+# ---------------------------------------------------------------------------
+# Refund-rate-spike evaluator
+# ---------------------------------------------------------------------------
+
+
+def _seed_realized_orders_with_refunds(
+    db: Session, *, total_orders: int, refunded: int,
+) -> None:
+    """Helper: seeds `total_orders` realized ML orders; flips
+    `refunded` of them out of the realized set so the evaluator
+    sees a refund_rate."""
+    from src.services.order_lifecycle import apply_status_change, record_initial_status
+    from src.services import order_cost_engine
+    from src.crud import crud_product
+    from src.schemas.product import ProductCreate
+
+    orders: list[SalesOrder] = []
+    for i in range(total_orders):
+        product = crud_product.product.create(
+            db=db,
+            obj_in=ProductCreate(
+                name=f"RA-{i}", sku=f"RA-{i}",
+                default_resale_price=100.0, cost_price=40.0,
+            ),
+        )
+        db.add(InventoryItem(product_id=product.id, quantity=10, location="default"))
+        order = SalesOrder(
+            status="PAID",
+            total_price=100.0,
+            currency="MXN",
+            created_at=datetime.utcnow(),
+            source=OrderSource.MERCADOLIBRE,
+            external_order_id=f"RA-{i}",
+        )
+        db.add(order)
+        db.flush()
+        db.add(SalesOrderItem(
+            order_id=order.id, product_id=product.id,
+            quantity=1, price_per_unit=100.0, cost_per_unit=40.0,
+        ))
+        db.commit()
+        db.refresh(order)
+        order_cost_engine.upsert_breakdown(db, order)
+        record_initial_status(db, order, source_signal="ml_poll")
+        db.commit()
+        orders.append(order)
+
+    for order in orders[:refunded]:
+        apply_status_change(db, order, new_status="cancelled", source_signal="ml_poll")
+    db.commit()
+
+
+def test_refund_rate_evaluator_triggers_above_threshold(db, test_admin_user):
+    """4 ML orders seeded; 2 get cancelled. After cancellation only
+    2 orders are still realized in the window (cancelled ones drop
+    out), so refunds/realized = 2/2 = 100%. A 20% threshold fires;
+    a 250% threshold doesn't (intentionally above the 100% ceiling
+    so we exercise the under-threshold branch)."""
+    _seed_realized_orders_with_refunds(db, total_orders=4, refunded=2)
+
+    fires = _make_rule(
+        db, test_admin_user, alert_type=AlertType.REFUND_RATE_SPIKE,
+        threshold=20.0,
+    )
+    quiet = _make_rule(
+        db, test_admin_user, alert_type=AlertType.REFUND_RATE_SPIKE,
+        threshold=250.0,
+    )
+
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        fires_result = evaluate_rule(db, fires)
+        quiet_result = evaluate_rule(db, quiet)
+
+    assert fires_result.triggered is True
+    assert fires_result.payload["refund_rate_percent"] == pytest.approx(100.0)
+    assert quiet_result.triggered is False
+
+
+def test_refund_rate_evaluator_zero_denominator_does_not_fire(db, test_admin_user):
+    """No realized orders in the window — rate is None, never triggers."""
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.REFUND_RATE_SPIKE,
+        threshold=1.0,
+    )
+    result = evaluate_rule(db, rule)
+    assert result.triggered is False
+    assert result.payload["realized_orders_count"] == 0
+
+
+def test_refund_rate_evaluator_below_threshold_does_not_fire(db, test_admin_user):
+    """1 refund out of 10 realized = 10% rate. Threshold 25% → quiet."""
+    _seed_realized_orders_with_refunds(db, total_orders=10, refunded=1)
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.REFUND_RATE_SPIKE,
+        threshold=25.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+    assert result.triggered is False
+    # 1 refund / 9 still-realized = ~11.11%
+    assert result.payload["refund_rate_percent"] == pytest.approx(11.11)

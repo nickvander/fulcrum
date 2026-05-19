@@ -5,7 +5,7 @@ the same `report_export` helpers — see `src/services/report_export.py`.
 """
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 from fastapi import APIRouter, Depends, Query
@@ -1723,4 +1723,183 @@ def dead_stock_report(
         window_days=window_days,
         threshold_daily_velocity=threshold_daily_velocity,
         rows=rows,
+    )
+
+
+# ---- Refunds summary ------------------------------------------------------
+#
+# Surface marketplace-side refunds + cancellations as a single rolled-up
+# count per channel. Two data sources:
+#
+#   1. `sales_order_status_events` — every transition `realized →
+#      non-realized` represents an order moving into a refund / cancel
+#      state. Counts these as full-order refunds.
+#   2. `amazon_order_refunds` — Amazon partial refunds, where the order
+#      stays Shipped but the buyer got money back for some lines.
+#
+# Both sources sum into the per-channel totals. Rate denominator is the
+# count of realized orders created in the same window — same cutoff for
+# both numerator and denominator so a 30d window gives a sensible
+# 30d-rolling rate.
+
+
+class RefundsByChannelRow(BaseModel):
+    """One row per source. `refund_rate_percent` is the count of
+    refunds divided by realized-orders-in-window, expressed as a
+    percentage. NULL when no orders existed in the window (avoid
+    divide-by-zero / 0%-of-0 misleading the operator)."""
+    source: str
+    refunds_count: int
+    refunded_amount_mxn: float
+    realized_orders_count: int
+    refund_rate_percent: Optional[float] = None
+
+
+class RefundsSummaryResponse(BaseModel):
+    """Cross-channel rollup. The `label` mirrors what the velocity /
+    margin / stockout endpoints render in their subtitle line so the
+    dashboard widget can reuse the same wording ('window 30d' vs.
+    '2026-01-01 → 2026-03-31')."""
+    window_label: str
+    totals: RefundsByChannelRow
+    by_channel: List[RefundsByChannelRow]
+
+
+@router.get("/refunds-summary", response_model=RefundsSummaryResponse)
+def refunds_summary_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None,
+        description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None,
+        description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> RefundsSummaryResponse:
+    """Per-channel refund + cancellation rollup over the window.
+
+    Counts every status transition out of the realized set
+    (full-order refund or cancellation) plus every Amazon partial-
+    refund event posted in the window. The denominator for the rate
+    is realized orders created in the same window — close enough for
+    a rolling-rate signal at the dashboard level.
+    """
+    from src.models.order import (
+        AmazonOrderRefund,
+        OrderCostBreakdown,
+        OrderSource,
+        SalesOrder,
+        SalesOrderStatusEvent,
+    )
+    from src.services.order_lifecycle import REALIZED_STATUSES
+
+    window = _resolve_date_window(window_days, start_date, end_date)
+
+    # --- 1. Full-order refunds: transitions out of realized.
+    transitions = (
+        db.query(SalesOrder.source, SalesOrderStatusEvent.order_id)
+        .join(SalesOrder, SalesOrder.id == SalesOrderStatusEvent.order_id)
+        .filter(SalesOrderStatusEvent.changed_at >= window.start_dt)
+        .filter(SalesOrderStatusEvent.changed_at <= window.end_dt)
+        .filter(SalesOrderStatusEvent.from_status.in_(REALIZED_STATUSES))
+        .filter(SalesOrderStatusEvent.to_status.notin_(REALIZED_STATUSES))
+        .all()
+    )
+    # Dedup by (source, order_id) so an order that bounced
+    # realized→cancelled→realized→cancelled in-window counts once.
+    refunded_orders: Dict[OrderSource, set] = {}
+    for source, oid in transitions:
+        refunded_orders.setdefault(source, set()).add(oid)
+
+    # --- 2. Refund amounts for full-order refunds: revenue from breakdown.
+    refund_revenue_mxn: Dict[OrderSource, float] = {}
+    if any(refunded_orders.values()):
+        all_oids: List[int] = [
+            oid for oids in refunded_orders.values() for oid in oids
+        ]
+        rev_rows = (
+            db.query(SalesOrder.source, OrderCostBreakdown.revenue_amount_mxn)
+            .join(OrderCostBreakdown, OrderCostBreakdown.order_id == SalesOrder.id)
+            .filter(SalesOrder.id.in_(all_oids))
+            .all()
+        )
+        for source, rev in rev_rows:
+            refund_revenue_mxn[source] = (
+                refund_revenue_mxn.get(source, 0.0) + float(rev or 0.0)
+            )
+
+    # --- 3. Amazon partial refunds posted in the window.
+    partial_rows = (
+        db.query(AmazonOrderRefund.refund_amount)
+        .filter(AmazonOrderRefund.posted_at.isnot(None))
+        .filter(AmazonOrderRefund.posted_at >= window.start_dt)
+        .filter(AmazonOrderRefund.posted_at <= window.end_dt)
+        .all()
+    )
+    partial_count = len(partial_rows)
+    partial_amount = sum(float(r.refund_amount or 0.0) for r in partial_rows)
+
+    # --- 4. Denominator: realized orders created in window per source.
+    denom_rows = (
+        db.query(SalesOrder.source, func.count(SalesOrder.id))
+        .filter(SalesOrder.created_at >= window.start_dt)
+        .filter(SalesOrder.created_at <= window.end_dt)
+        .filter(SalesOrder.status.in_(REALIZED_STATUSES))
+        .group_by(SalesOrder.source)
+        .all()
+    )
+    realized_by_source: Dict[OrderSource, int] = {s: int(c) for s, c in denom_rows}
+
+    # --- 5. Build per-channel rows. Include every source the operator
+    # would expect to see — even with zero refunds + zero orders — so
+    # the dashboard widget renders a stable layout.
+    by_channel: List[RefundsByChannelRow] = []
+    for source in OrderSource:
+        full_orders = refunded_orders.get(source, set())
+        full_count = len(full_orders)
+        full_amount = refund_revenue_mxn.get(source, 0.0)
+        # Amazon partial refunds attribute to AMAZON only.
+        if source == OrderSource.AMAZON:
+            refunds_count = full_count + partial_count
+            refunded_mxn = full_amount + partial_amount
+        else:
+            refunds_count = full_count
+            refunded_mxn = full_amount
+
+        realized_count = realized_by_source.get(source, 0)
+        rate: Optional[float] = None
+        if realized_count > 0:
+            rate = round((refunds_count / realized_count) * 100.0, 2)
+
+        by_channel.append(RefundsByChannelRow(
+            source=source.value,
+            refunds_count=refunds_count,
+            refunded_amount_mxn=round(refunded_mxn, 2),
+            realized_orders_count=realized_count,
+            refund_rate_percent=rate,
+        ))
+
+    # --- 6. Cross-channel totals.
+    total_refunds = sum(r.refunds_count for r in by_channel)
+    total_refunded = sum(r.refunded_amount_mxn for r in by_channel)
+    total_realized = sum(r.realized_orders_count for r in by_channel)
+    total_rate: Optional[float] = None
+    if total_realized > 0:
+        total_rate = round((total_refunds / total_realized) * 100.0, 2)
+    totals = RefundsByChannelRow(
+        source="ALL",
+        refunds_count=total_refunds,
+        refunded_amount_mxn=round(total_refunded, 2),
+        realized_orders_count=total_realized,
+        refund_rate_percent=total_rate,
+    )
+
+    return RefundsSummaryResponse(
+        window_label=window.label,
+        totals=totals,
+        by_channel=by_channel,
     )

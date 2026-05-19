@@ -244,10 +244,85 @@ def _evaluate_stockout_risk(db: Session, rule: AlertRule) -> AlertEvaluationResu
     )
 
 
+def _evaluate_refund_rate_spike(db: Session, rule: AlertRule) -> AlertEvaluationResult:
+    """Trigger when the trailing refund rate exceeds `rule.threshold`
+    (interpreted as a percentage).
+
+    Numerator: distinct orders whose status transitioned out of the
+    realized set during the window + Amazon partial-refund events
+    posted in the window.
+    Denominator: realized orders created in the same window.
+    Rate = numerator / denominator * 100.
+
+    Uses the same data sources as `GET /reports/refunds-summary` so
+    the alert and the dashboard widget agree on what fired.
+    """
+    from src.models.order import (
+        AmazonOrderRefund,
+        SalesOrderStatusEvent,
+    )
+    from src.services.order_lifecycle import REALIZED_STATUSES
+
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=rule.window_days)
+
+    transitions = (
+        db.query(SalesOrder.source, SalesOrderStatusEvent.order_id)
+        .join(SalesOrder, SalesOrder.id == SalesOrderStatusEvent.order_id)
+        .filter(SalesOrderStatusEvent.changed_at >= start_dt)
+        .filter(SalesOrderStatusEvent.changed_at <= end_dt)
+        .filter(SalesOrderStatusEvent.from_status.in_(REALIZED_STATUSES))
+        .filter(SalesOrderStatusEvent.to_status.notin_(REALIZED_STATUSES))
+        .all()
+    )
+    refunded_order_ids = {oid for _, oid in transitions}
+    partial_count = (
+        db.query(AmazonOrderRefund)
+        .filter(AmazonOrderRefund.posted_at.isnot(None))
+        .filter(AmazonOrderRefund.posted_at >= start_dt)
+        .filter(AmazonOrderRefund.posted_at <= end_dt)
+        .count()
+    )
+    refunds_count = len(refunded_order_ids) + partial_count
+
+    realized_count = (
+        db.query(func.count(SalesOrder.id))
+        .filter(SalesOrder.created_at >= start_dt)
+        .filter(SalesOrder.created_at <= end_dt)
+        .filter(SalesOrder.status.in_(REALIZED_STATUSES))
+        .scalar()
+        or 0
+    )
+
+    if realized_count == 0:
+        # Zero-denominator: don't fire. An empty channel isn't a
+        # high-refund-rate channel; it's a sleepy one.
+        return AlertEvaluationResult(
+            rule_id=rule.id, triggered=False, payload={
+                "refunds_count": refunds_count, "realized_orders_count": 0,
+                "refund_rate_percent": None, "threshold": rule.threshold,
+            },
+        )
+
+    rate = (refunds_count / realized_count) * 100.0
+    triggered = rate >= rule.threshold
+    return AlertEvaluationResult(
+        rule_id=rule.id,
+        triggered=triggered,
+        payload={
+            "refunds_count": refunds_count,
+            "realized_orders_count": int(realized_count),
+            "refund_rate_percent": round(rate, 2),
+            "threshold": rule.threshold,
+        },
+    )
+
+
 _EVALUATORS = {
     AlertType.LOW_MARGIN: _evaluate_low_margin,
     AlertType.SALES_DIP: _evaluate_sales_dip,
     AlertType.STOCKOUT_RISK: _evaluate_stockout_risk,
+    AlertType.REFUND_RATE_SPIKE: _evaluate_refund_rate_spike,
 }
 
 
@@ -261,6 +336,11 @@ def _email_subject(rule: AlertRule, payload: Dict[str, Any]) -> str:
         return f"Fulcrum alert: {payload.get('offender_count', '?')} products below {rule.threshold:.1f}% margin"
     if rule.alert_type == AlertType.SALES_DIP:
         return f"Fulcrum alert: sales dropped {payload.get('drop_pct', 0):.1f}% over {rule.window_days}d"
+    if rule.alert_type == AlertType.REFUND_RATE_SPIKE:
+        return (
+            f"Fulcrum alert: refund rate {payload.get('refund_rate_percent', 0):.1f}% "
+            f"over the last {rule.window_days}d"
+        )
     return f"Fulcrum alert: {payload.get('at_risk_count', '?')} products at stockout risk"
 
 
@@ -305,6 +385,26 @@ def _email_body(rule: AlertRule, payload: Dict[str, Any]) -> tuple[str, str]:
             f"Revenue dropped {payload.get('drop_pct', 0):.1f}% over "
             f"{rule.window_days}d (current ${payload.get('curr_revenue', 0):,.2f} "
             f"vs previous ${payload.get('prev_revenue', 0):,.2f})."
+        )
+        return body_html, body_text
+
+    if rule.alert_type == AlertType.REFUND_RATE_SPIKE:
+        rate = payload.get("refund_rate_percent", 0) or 0
+        body_html = (
+            f"<p>Refund rate over the last {rule.window_days} days is "
+            f"<strong>{rate:.1f}%</strong> — above your "
+            f"{rule.threshold:.1f}% threshold.</p>"
+            f"<p>{payload.get('refunds_count', 0)} refund(s) against "
+            f"{payload.get('realized_orders_count', 0)} realized order(s) "
+            f"in the window.</p>"
+            f"<p>Open the <a href='/dashboard'>refunds widget</a> for the "
+            f"per-channel breakdown.</p>"
+        )
+        body_text = (
+            f"Refund rate {rate:.1f}% over {rule.window_days}d "
+            f"(threshold {rule.threshold:.1f}%): "
+            f"{payload.get('refunds_count', 0)} refunds / "
+            f"{payload.get('realized_orders_count', 0)} realized orders."
         )
         return body_html, body_text
 

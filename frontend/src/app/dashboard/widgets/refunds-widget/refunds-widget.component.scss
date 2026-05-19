@@ -1,0 +1,144 @@
+.refunds-widget {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 220px;
+
+  .widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 8px;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    small {
+      display: block;
+      color: rgba(0, 0, 0, 0.55);
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    .refresh-icon {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.55);
+      padding: 4px;
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hero-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .hero-label {
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.55);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+  }
+
+  .rate-ok .hero-value,
+  .rate-ok {
+    color: #2e7d32;
+  }
+
+  .rate-warn .hero-value,
+  .rate-warn {
+    color: #ef6c00;
+  }
+
+  .rate-high .hero-value,
+  .rate-high {
+    color: #c62828;
+  }
+
+  .channels {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+
+    .channel-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr 1fr 0.7fr;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 0.875rem;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .channel-name {
+        font-weight: 500;
+      }
+
+      .channel-count,
+      .channel-rate {
+        text-align: right;
+      }
+
+      .channel-amount {
+        text-align: right;
+        color: rgba(0, 0, 0, 0.7);
+      }
+    }
+  }
+
+  .empty,
+  .error {
+    color: rgba(0, 0, 0, 0.55);
+    text-align: center;
+    margin: 16px 0;
+    font-size: 0.875rem;
+  }
+
+  .error {
+    color: #c62828;
+  }
+
+  .loading-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 100px;
+  }
+
+  .window-label {
+    color: rgba(0, 0, 0, 0.45);
+    font-size: 0.7rem;
+    margin-top: auto;
+    padding-top: 8px;
+    text-align: right;
+  }
+}

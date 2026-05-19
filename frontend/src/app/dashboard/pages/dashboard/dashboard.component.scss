@@ -80,6 +80,12 @@
     margin-bottom: 24px;
 }
 
+// Refunds widget sits full-width so the per-channel breakdown
+// table has horizontal room. Same shape as dead-stock-row above.
+.refunds-row {
+    margin-bottom: 24px;
+}
+
 .grid-section {
     display: flex;
     flex-direction: column;

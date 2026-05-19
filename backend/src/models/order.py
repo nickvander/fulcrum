@@ -34,6 +34,13 @@ class SalesOrder(Base):
     created_at = Column(TIMESTAMP)
     source = Column(Enum(OrderSource))
     external_order_id = Column(String)
+    # Set by `services/order_lifecycle.py` when an order's stock is
+    # credited back to inventory after a cancel-before-ship transition.
+    # Non-NULL means "already re-credited, skip on subsequent polls" —
+    # the lifecycle service uses this to stay idempotent even when the
+    # cancellation webhook fires twice or a poll re-observes the
+    # cancelled state.
+    stock_recredited_at = Column(DateTime(timezone=True), nullable=True)
 
     items = relationship("SalesOrderItem", back_populates="order")
     cost_breakdown = relationship(
@@ -41,6 +48,12 @@ class SalesOrder(Base):
         back_populates="order",
         uselist=False,
         cascade="all, delete-orphan",
+    )
+    status_events = relationship(
+        "SalesOrderStatusEvent",
+        back_populates="order",
+        cascade="all, delete-orphan",
+        order_by="SalesOrderStatusEvent.changed_at",
     )
 
 class SalesOrderItem(Base):
@@ -117,6 +130,77 @@ class OrderCostBreakdown(Base):
     )
     fees_synced_at = Column(DateTime(timezone=True), nullable=True)
 
+    # Set when the parent order leaves the realized-status set
+    # (cancellation, refund, etc.). The rollup / by-channel / daily
+    # aggregators filter on `reversed_at IS NULL` so a reversed order
+    # disappears from current-period totals without losing the row
+    # itself — the refunds dashboard widget still needs to query it.
+    # Cleared if the order ever transitions back into a realized
+    # status (rare; e.g. operator-initiated un-cancel).
+    reversed_at = Column(DateTime(timezone=True), nullable=True, index=True)
+
     computed_at = Column(DateTime(timezone=True), nullable=False)
 
     order = relationship("SalesOrder", back_populates="cost_breakdown")
+
+
+class AmazonOrderRefund(Base):
+    """Persisted SP-API Finances refund event for an Amazon order.
+
+    The settlement-fee worker parses Amazon's `RefundEventList` to net
+    fees against the cost-engine breakdown; this table additionally
+    persists the refund amount itself so the refunds dashboard can
+    surface partial-refund cases where the order's top-level
+    `OrderStatus` stays `Shipped` (e.g. the buyer returned one line
+    item out of three).
+
+    The `(order_id, amazon_refund_id)` unique constraint provides
+    idempotency — the settlement worker re-polls the same financial-
+    events payload every hour and must not double-count.
+    """
+    __tablename__ = "amazon_order_refunds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(
+        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    amazon_refund_id = Column(String(128), nullable=False)
+    posted_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    refund_amount = Column(Float, nullable=False, default=0.0)
+    currency = Column(String(8), nullable=False, default="MXN")
+
+    order = relationship("SalesOrder")
+
+
+class SalesOrderStatusEvent(Base):
+    """Append-only audit of every `SalesOrder.status` transition.
+
+    Both pollers (`mercadolibre_order_ingestion`, `amazon_order_ingestion`)
+    and the ML webhook silently overwrite `SalesOrder.status` on every
+    update, so without this table we have no way to answer "how many
+    orders did we refund last week?" — the refunds dashboard widget
+    needs history.
+
+    `from_status` is NULL for the very first event of an order (the
+    initial insert). All subsequent events carry both bounds.
+    `source_signal` records which ingestion path wrote the event so a
+    "poll keeps undoing the webhook" type bug is debuggable from the
+    audit alone.
+
+    Insertion is gated on `old != new` — pollers that re-observe the
+    same status don't generate noise rows.
+    """
+    __tablename__ = "sales_order_status_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(
+        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    from_status = Column(String(32), nullable=True)
+    to_status = Column(String(32), nullable=False, index=True)
+    changed_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    source_signal = Column(String(32), nullable=False)
+
+    order = relationship("SalesOrder", back_populates="status_events")

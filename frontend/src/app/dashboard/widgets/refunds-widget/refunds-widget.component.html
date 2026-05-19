@@ -1,0 +1,62 @@
+<ng-container *transloco="let t">
+  <mat-card class="refunds-widget" data-testid="refunds-widget">
+    <div class="widget-header">
+      <div>
+        <h3>{{ t('dashboard.refundsWidget.title') }}</h3>
+        <small>{{ t('dashboard.refundsWidget.subtitle') }}</small>
+      </div>
+      <button type="button" class="refresh-icon" (click)="refresh()"
+              [matTooltip]="t('dashboard.refundsWidget.refresh')"
+              [disabled]="loading"
+              data-testid="refunds-widget-refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    @if (loading && !summary) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !summary) {
+      <p class="error" data-testid="refunds-widget-error">
+        {{ t('dashboard.refundsWidget.error') }}
+      </p>
+    } @else if (summary) {
+      <div class="hero" data-testid="refunds-widget-hero">
+        <div class="hero-count">
+          <span class="hero-value">{{ summary.totals.refunds_count }}</span>
+          <span class="hero-label">{{ t('dashboard.refundsWidget.refundsCount') }}</span>
+        </div>
+        <div class="hero-amount">
+          <span class="hero-value">{{ formatCurrency(summary.totals.refunded_amount_mxn) }}</span>
+          <span class="hero-label">{{ t('dashboard.refundsWidget.refundedAmount') }}</span>
+        </div>
+        <div class="hero-rate" [ngClass]="rateClass(summary.totals.refund_rate_percent)">
+          <span class="hero-value">{{ formatRate(summary.totals.refund_rate_percent) }}</span>
+          <span class="hero-label">{{ t('dashboard.refundsWidget.refundRate') }}</span>
+        </div>
+      </div>
+
+      @if (visibleChannels().length === 0) {
+        <p class="empty" data-testid="refunds-widget-empty">
+          {{ t('dashboard.refundsWidget.empty') }}
+        </p>
+      } @else {
+        <ul class="channels" data-testid="refunds-widget-channels">
+          @for (row of visibleChannels(); track row.source) {
+            <li class="channel-row" [attr.data-testid]="'refunds-channel-' + row.source">
+              <span class="channel-name">{{ channelLabel(row.source) }}</span>
+              <span class="channel-count">{{ row.refunds_count }}</span>
+              <span class="channel-amount">{{ formatCurrency(row.refunded_amount_mxn) }}</span>
+              <span class="channel-rate" [ngClass]="rateClass(row.refund_rate_percent)">
+                {{ formatRate(row.refund_rate_percent) }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+
+      <small class="window-label">{{ summary.window_label }}</small>
+    }
+  </mat-card>
+</ng-container>
