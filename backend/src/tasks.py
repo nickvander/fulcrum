@@ -71,6 +71,36 @@ def poll_amazon_orders():
         db.close()
 
 
+@celery_app.task(name="src.tasks.backfill_order_cost_breakdowns")
+def backfill_order_cost_breakdowns():
+    """
+    Phase-8 cost-engine backfill. Scheduled by celery beat
+    (`src/celery_worker.py::celery_app.conf.beat_schedule`).
+
+    The ingestion paths (Amazon poll, ML poll, ML webhook) already
+    call `upsert_breakdown_safe` after each new order, so 99% of
+    new orders are populated immediately. This task catches:
+
+      - Orders ingested before the cost engine landed.
+      - Orders whose post-ingest upsert failed (logged + swallowed
+        in the ingestion path so the order itself isn't blocked).
+      - Future operator action: changing `Marketplace.default_fee_rate`
+        — though that needs an explicit "recompute all" trigger, not
+        just this `only_missing` pass. Wire that when fee-config UI
+        lands.
+
+    Returns a {created, updated, errors} summary for ad-hoc
+    inspection. Beat ignores the return value.
+    """
+    from src.services.order_cost_engine import recompute_for_orders
+
+    db = SessionLocal()
+    try:
+        return recompute_for_orders(db, only_missing=True, limit=500)
+    finally:
+        db.close()
+
+
 @celery_app.task(name="src.tasks.reconcile_amazon_inbound_shipments")
 def reconcile_amazon_inbound_shipments():
     """

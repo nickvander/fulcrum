@@ -10,6 +10,18 @@ class Marketplace(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     api_base_url = Column(String)
+    # Default per-order platform-fee rate (fraction, e.g. 0.16 for ML
+    # Mexico). The Phase-8 cost engine multiplies revenue by this when
+    # the marketplace doesn't return per-order fee data in its API
+    # response. Defaults to 0.0 so engine output matches the existing
+    # gross-margin report exactly until an operator configures real
+    # rates.
+    default_fee_rate = Column(Float, nullable=False, default=0.0, server_default="0.0")
+    # Default per-order flat shipping cost (paid by seller, in the
+    # marketplace's currency). Same fallback semantics as default_fee_rate.
+    default_shipping_cost = Column(
+        Float, nullable=False, default=0.0, server_default="0.0",
+    )
 
 class MarketplaceCredential(Base):
     __tablename__ = "marketplace_credentials"

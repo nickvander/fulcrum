@@ -35,6 +35,31 @@ candidates, or pick from "Suggested Next Slices" below.)_
 
 ## Most Recent Shipped (last ~10 commits)
 
+- Phase 8 Track 1 scaffolding (cost engine + ETL pipeline): new
+  per-order `order_cost_breakdowns` analytics row populated inline
+  by every ingestion path (Amazon poll, ML poll, ML webhook) +
+  `backfill_order_cost_breakdowns` Celery beat (every 10 min)
+  catches anything missed. Engine computes `cogs + fees + shipping
+  + ad_spend + other = total_cost`, then `net_profit` and a blended
+  `net_margin_percent`. Per-marketplace fee config exposed as
+  `Marketplace.default_fee_rate` + `default_shipping_cost`
+  (operator-configurable; defaults to 0.0 so v1 matches the
+  existing gross-margin report exactly until rates are set). New
+  `GET /api/v1/reports/cost-rollup?window_days=N&source=...`
+  returns the aggregate ready for Track 2 dashboard widgets.
+  Currency wired (`SalesOrder.currency` + breakdown's
+  `exchange_rate_to_mxn`) but v1-stubbed to MXN/1.0 — FX path is a
+  follow-up. Migration `4f7a9c1e3b22` adds the breakdown table +
+  fee columns + currency column. 26 new backend tests (pure
+  computation edge cases, upsert idempotency, ingest hooks,
+  recompute filters, rollup aggregation + filtering by source +
+  realized-status enforcement, endpoint HTTP contract). Backend
+  590/8, frontend 545/0.
+- Auto-refresh /marketplaces/health every 45s while open. Pauses
+  on per-row action in flight to avoid clobbering the embedded
+  health patch. Background path is silent (no loading spinner
+  flash, no snackbar on transient hiccup). 6 new frontend tests
+  including fake-timer cadence + teardown coverage. Frontend 545/0.
 - ML webhook subscription health check (folded into the existing
   marketplace health page). New `Webhooks (24h)` column shows the
   most-recent `WebhookEvent.received_at` for each credential's
@@ -251,10 +276,15 @@ Roughly in order of impact / unblock value:
   enough vs. proceed to Rust" is capturing p50/p95/p99 latency on
   realistic 1k / 10k / 100k catalogs. Add request timing + query
   count metrics around `/api/v1/products`.
-- **Phase 8 advanced analytics** — track 1 of
-  `work/future/80-advanced-analytics.md` (cost engine + ETL pipeline
-  scaffolding). Larger scope. The operational observability needed to
-  support a heavier analytics layer is now in place.
+- **Phase 8 Track 2 — dashboard visualization** — Track 1 scaffolding
+  shipped; the `cost-rollup` endpoint + per-order breakdown rows are
+  ready to power KPI widgets and interactive charts.
+  `work/future/80-advanced-analytics.md` Steps 3 + 4.
+- **Marketplace fee config UI** — Phase 8 Track 1 exposed
+  `Marketplace.default_fee_rate` + `default_shipping_cost` but
+  there's no UI to set them yet. Operators have to update via DB
+  shell. Small slice — a single form on the marketplace detail page
+  + a "Recompute all breakdowns" button.
 - **Phase 2 of Rust migration** — only after Phase 0 numbers say so.
   Skeleton an Axum `services/catalog-api` crate beside FastAPI.
 
@@ -262,8 +292,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 564 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 539 passed, 0
+  → 590 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 545 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

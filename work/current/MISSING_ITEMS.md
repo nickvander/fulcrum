@@ -18,6 +18,18 @@ _(none active)_
 
 ## Future / Strategic
 
+- [ ] Phase 8 Track 2 — dashboard visualization. Track 1
+      scaffolding (`order_cost_breakdowns` + `/reports/cost-rollup`)
+      is in place; Track 2 builds KPI widgets ("Today's profit",
+      "Top movers", "Dead stock") + interactive charts (sales vs
+      spend over time, geographic heatmaps) on top of it. Plan in
+      `work/future/80-advanced-analytics.md` Steps 3 + 4.
+- [ ] Marketplace fee config UI — Track 1 exposed
+      `Marketplace.default_fee_rate` + `default_shipping_cost` but
+      there's no UI to set them yet. Operators currently have to
+      update via DB. Single-form slice on the marketplace detail
+      page + a "Recompute all breakdowns" button that triggers the
+      `recompute_for_orders(only_missing=False)` path.
 - [ ] Rust backend migration — Phase 0 instrumentation
       (request timing + query count + slow-query log around
       `/api/v1/products`). Required gate before committing to
@@ -39,6 +51,31 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Phase 8 Track 1 scaffolding** — cost engine + ETL pipeline
+      for per-order net-margin analytics. New `order_cost_breakdowns`
+      table populated inline by every ingestion path
+      (`upsert_breakdown_safe` post-order-flush on Amazon poll, ML
+      poll, ML webhook); `backfill_order_cost_breakdowns` Celery
+      beat (every 10min) catches anything inline missed. Engine
+      computes `cogs + fees + shipping + ad_spend + other =
+      total_cost → net_profit → net_margin_percent`. Per-marketplace
+      fee config: `Marketplace.default_fee_rate` +
+      `default_shipping_cost`. `GET /api/v1/reports/cost-rollup`
+      returns the aggregate ready for Track 2. Currency wired
+      (`SalesOrder.currency` + `exchange_rate_to_mxn` on breakdown)
+      but v1-stubbed to MXN/1.0. Migration `4f7a9c1e3b22`. 26 new
+      backend tests covering pure-computation edge cases, upsert
+      idempotency, ingest hooks, backfill filters, rollup
+      aggregation (filter by source + realized-status enforcement
+      + blended margin math), and endpoint HTTP contract. Backend
+      590/8, frontend 545/0.
+- [x] **Marketplace health page auto-refresh** — 45s background
+      polling while the page is open. Pauses while a per-row poll
+      or reconcile is in flight (so the embedded health-row patch
+      isn't clobbered). Background path stays silent — no loading-
+      spinner flash, no snackbar on transient hiccup. Timer torn
+      down on destroy. 6 new frontend tests (fake-timer cadence +
+      busy-guard + teardown). Frontend 545/0.
 - [x] **ML webhook subscription health check** — folded into the
       `/marketplaces/health` page rather than ML's
       `/applications/{app_id}/notifications` (which the docs say is a

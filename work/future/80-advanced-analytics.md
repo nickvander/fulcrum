@@ -23,13 +23,32 @@ intelligence.
 
 ### Track 1: Data Aggregation & Normalization
 
-- [ ] **Step 1: ETL Pipeline**
-  - Implement background jobs to normalize order data from Amazon/ML into a
-    common `AnalyticsOrder` model.
-  - Currency conversion handling for international sales.
-- [ ] **Step 2: Cost Engine**
-  - Breakdown of costs: COGS + Platform Fees + Shipping + Ad Spend = Total Cost.
-  - Calculate `NetProfit` per order.
+- [~] **Step 1: ETL Pipeline** — scaffolding shipped 2026-05-18.
+  - [x] Per-order analytics row (`order_cost_breakdowns`) populated
+    inline by the Amazon poll, ML poll, and ML webhook ingestion
+    paths via `services/order_cost_engine.upsert_breakdown_safe`.
+  - [x] Celery beat backfill (`backfill_order_cost_breakdowns`,
+    every 10 min) catches anything ingested before the engine
+    landed or anything whose inline upsert failed.
+  - [x] `SalesOrder.currency` + `OrderCostBreakdown.exchange_rate_to_mxn`
+    wired but v1-stubbed to 1.0 (every order is MXN today). FX-
+    aware path is a follow-up.
+- [~] **Step 2: Cost Engine** — scaffolding shipped 2026-05-18.
+  - [x] `services/order_cost_engine.py` computes `cogs + fees +
+    shipping + ad_spend + other = total_cost` per order, then
+    `net_profit = revenue - total_cost` and the blended margin %.
+  - [x] Per-marketplace fee config: `Marketplace.default_fee_rate`
+    + `Marketplace.default_shipping_cost` (operator-configurable;
+    defaults to 0.0 so v1 matches the existing gross-margin report
+    exactly until rates are set).
+  - [x] `GET /api/v1/reports/cost-rollup?window_days=N&source=...`
+    returns the aggregate rollup ready for Track 2's dashboard
+    widgets.
+  - [ ] Per-order settlement fee data from MP / SP-API settlement
+    reports (instead of fee-rate estimation). Follow-up.
+  - [ ] Ad-spend attribution from the existing marketing `Campaign`
+    table. v1 emits 0. Needs a per-campaign-per-order link model
+    or a heuristic (last-touch on the channel).
 
 ### Track 2: Dashboard Visualization
 
