@@ -39,6 +39,17 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Phase 8 Track 2 dead-stock widget** — closes the last open
+      Track-2 KPI widget. New `GET /api/v1/reports/dead-stock`
+      surfaces products with on-hand stock but near-zero recent
+      velocity. Per-row info covers on-hand qty, units sold in
+      window, daily velocity, days_since_last_sale (NULL for
+      never-sold), cost_price, and stock_value_at_cost. Ordering:
+      never-sold first, then longest-dead, then highest capital-
+      at-risk. Bundles excluded. Dashboard widget renders full-
+      width below the 2x2 analytics grid with a capital-at-risk
+      tag. 15 new backend tests + 10 new frontend tests. en + es-MX
+      i18n parity. Backend 632/8, frontend 604/0.
 - [x] **Marketplace fee-config UI** — form + recompute-all button
       on the marketplace detail page. New backend endpoints
       `PATCH /api/v1/marketplace/{id}/fee-config` (partial update,

@@ -1,0 +1,85 @@
+<ng-container *transloco="let t">
+  <mat-card class="dead-stock" data-testid="dead-stock-widget">
+    <div class="widget-header">
+      <div class="header-text">
+        <h3>{{ t('dashboard.deadStock.title') }}</h3>
+        @if (data) {
+          <p class="header-sub">
+            {{ t('dashboard.deadStock.subtitle', {
+              days: data.window_days,
+              threshold: data.threshold_daily_velocity
+            }) }}
+          </p>
+        }
+      </div>
+      @if (data && data.rows.length > 0) {
+        <div class="at-risk-tag" data-testid="dead-stock-at-risk">
+          <span class="at-risk-label">{{ t('dashboard.deadStock.atRiskLabel') }}</span>
+          <span class="at-risk-value">{{ formatCurrency(totalAtRisk()) }}</span>
+        </div>
+      }
+    </div>
+
+    @if (loading && !data) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !data) {
+      <p class="error" data-testid="dead-stock-error">
+        {{ t('dashboard.deadStock.error') }}
+      </p>
+    } @else if (data && data.rows.length === 0) {
+      <p class="empty" data-testid="dead-stock-empty">
+        {{ t('dashboard.deadStock.empty') }}
+      </p>
+    } @else if (data) {
+      <table mat-table [dataSource]="data.rows" class="dead-stock-table"
+             data-testid="dead-stock-table">
+
+        <ng-container matColumnDef="product">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.deadStock.cols.product') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="product-cell">
+              <span class="name">{{ row.product_name || '—' }}</span>
+              @if (row.product_sku) {
+                <span class="sku">{{ row.product_sku }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="on_hand">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.deadStock.cols.onHand') }}</th>
+          <td mat-cell *matCellDef="let row">{{ row.on_hand }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="last_sale">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.deadStock.cols.lastSale') }}</th>
+          <td mat-cell *matCellDef="let row" [ngClass]="ageClass(row)"
+              [attr.data-testid]="'dead-stock-age-' + row.product_id">
+            @if (row.days_since_last_sale === null) {
+              {{ t('dashboard.deadStock.neverSold') }}
+            } @else {
+              {{ t('dashboard.deadStock.daysAgo', { days: row.days_since_last_sale }) }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.deadStock.cols.value') }}</th>
+          <td mat-cell *matCellDef="let row"
+              [matTooltip]="row.cost_price !== null ? t('dashboard.deadStock.valueTooltip', {
+                onHand: row.on_hand,
+                cost: formatCurrency(row.cost_price)
+              }) : ''">
+            {{ formatCurrency(row.stock_value_at_cost) }}
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns;"
+            [attr.data-testid]="'dead-stock-row-' + row.product_id"></tr>
+      </table>
+    }
+  </mat-card>
+</ng-container>

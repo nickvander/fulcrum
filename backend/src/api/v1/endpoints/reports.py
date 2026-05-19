@@ -1456,3 +1456,174 @@ def top_movers_report(
         limit=limit,
         rows=[TopMoverRow(**row) for row in rows],
     )
+
+
+# ---- Dead stock (Track 2 follow-up) ---------------------------------------
+#
+# "Dead stock" = products with on-hand inventory but near-zero recent sales
+# velocity. Operator scans this to identify SKUs to discount, bundle, stop
+# reordering, or eventually write off.
+#
+# Implementation note on the velocity threshold: defaults to 0.1 units/day,
+# i.e. < 1 sale per 10 days. The threshold is configurable per request so
+# operators can tune it for their channel mix (an Amazon-Mexico seller might
+# call 0.05/day dead; an ML-Full seller with higher SKU velocity might use
+# 0.5/day). Frontend default is 0.1 to match.
+
+
+class DeadStockRow(BaseModel):
+    product_id: int
+    product_name: str
+    product_sku: Optional[str] = None
+    on_hand: int
+    units_sold: int
+    daily_velocity: float
+    # Calendar days since the product's most-recent realized sale.
+    # None when the product has NEVER sold (existed long enough to
+    # qualify for dead-stock but no realized order line has ever
+    # referenced it). Sorted to the top of the list because never-
+    # sold inventory is the worst kind.
+    days_since_last_sale: Optional[int] = None
+    cost_price: Optional[float] = None
+    # On-hand qty × current cost_price — the dollars "frozen" in this
+    # SKU. Lets the operator triage by capital at risk, not just unit
+    # count.
+    stock_value_at_cost: Optional[float] = None
+
+
+class DeadStockResponse(BaseModel):
+    window_days: int
+    threshold_daily_velocity: float
+    rows: List[DeadStockRow]
+
+
+def _build_dead_stock_rows(
+    db: Session,
+    *,
+    window_days: int,
+    threshold_daily_velocity: float,
+    limit: int,
+) -> List[DeadStockRow]:
+    """Per-product dead-stock candidates over the window.
+
+    Filter:
+      - on_hand > 0 (zero-stock products aren't "dead", they're
+        out — the stockout report handles those).
+      - daily_velocity <= threshold.
+      - is_bundle = False (bundles are virtual; the underlying
+        component products carry the real stock).
+
+    Order: never-sold first (days_since_last_sale IS NULL), then by
+    days_since_last_sale desc (longest-dead first), then by
+    stock_value_at_cost desc. The capital-at-risk tiebreaker lets
+    the operator's eye land on $-heavy SKUs faster.
+    """
+    units_by_product = _sales_aggregates_by_product(db, window_days=window_days)
+    on_hand_by_product = _on_hand_by_product(db)
+
+    # Last-sale lookup: max(SalesOrder.created_at) joined through
+    # SalesOrderItem.product_id for realized orders only. We grab
+    # every product (not just window-scoped) so a SKU dead for 6
+    # months in a 30-day window still shows its real last-sale age.
+    last_sale_rows = (
+        db.query(
+            SalesOrderItem.product_id,
+            func.max(SalesOrder.created_at),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .group_by(SalesOrderItem.product_id)
+        .all()
+    )
+    last_sale_by_product = {pid: ts for pid, ts in last_sale_rows}
+
+    candidate_ids = list(on_hand_by_product.keys())
+    if not candidate_ids:
+        return []
+
+    products = (
+        db.query(Product)
+        .filter(Product.id.in_(candidate_ids))
+        .filter(Product.is_bundle.is_(False))
+        .all()
+    )
+
+    today = datetime.utcnow().date()
+    rows: List[DeadStockRow] = []
+    for product in products:
+        on_hand = int(on_hand_by_product.get(product.id, 0) or 0)
+        if on_hand <= 0:
+            continue
+        units, _revenue = units_by_product.get(product.id, (0, 0.0))
+        velocity = float(units) / float(window_days) if window_days > 0 else 0.0
+        if velocity > threshold_daily_velocity:
+            continue
+
+        last_sale = last_sale_by_product.get(product.id)
+        days_since_last_sale: Optional[int] = None
+        if last_sale is not None:
+            last_date = (
+                last_sale.date() if hasattr(last_sale, "date") else last_sale
+            )
+            days_since_last_sale = max(0, (today - last_date).days)
+
+        cost_price = (
+            float(product.cost_price) if product.cost_price is not None else None
+        )
+        value = (
+            round(on_hand * cost_price, 4) if cost_price is not None else None
+        )
+
+        rows.append(DeadStockRow(
+            product_id=product.id,
+            product_name=product.name,
+            product_sku=product.sku,
+            on_hand=on_hand,
+            units_sold=int(units),
+            daily_velocity=round(velocity, 4),
+            days_since_last_sale=days_since_last_sale,
+            cost_price=cost_price,
+            stock_value_at_cost=value,
+        ))
+
+    # Never-sold first (None sorts as "infinitely dead"), then by
+    # days desc, then by stock value desc.
+    rows.sort(key=lambda r: (
+        0 if r.days_since_last_sale is None else 1,
+        -(r.days_since_last_sale or 0),
+        -(r.stock_value_at_cost or 0.0),
+    ))
+    return rows[:limit]
+
+
+@router.get("/dead-stock", response_model=DeadStockResponse)
+def dead_stock_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    threshold_daily_velocity: float = Query(
+        0.1, ge=0.0, le=10.0,
+        description=(
+            "Daily velocity ceiling for inclusion (units/day). 0.1 ≈ <1 "
+            "sale every 10 days. Tune per channel mix."
+        ),
+    ),
+    limit: int = Query(50, ge=1, le=500),
+    current_user: User = Depends(get_current_active_user),
+) -> DeadStockResponse:
+    """Products with on-hand inventory but near-zero recent sales
+    velocity. The dashboard's dead-stock widget surfaces this so
+    the operator can discount, bundle, or stop reordering before
+    capital sits idle.
+    """
+    rows = _build_dead_stock_rows(
+        db,
+        window_days=window_days,
+        threshold_daily_velocity=threshold_daily_velocity,
+        limit=limit,
+    )
+    return DeadStockResponse(
+        window_days=window_days,
+        threshold_daily_velocity=threshold_daily_velocity,
+        rows=rows,
+    )

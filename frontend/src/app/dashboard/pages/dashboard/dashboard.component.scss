@@ -73,6 +73,13 @@
     }
 }
 
+// Dead-stock widget is table-heavy — full-width row gives the
+// SKU name + counters + capital-at-risk columns the breathing
+// room they need without forcing the operator to scroll.
+.dead-stock-row {
+    margin-bottom: 24px;
+}
+
 .grid-section {
     display: flex;
     flex-direction: column;

@@ -190,6 +190,22 @@
                 "margin": "Margen"
             }
         },
+        "deadStock": {
+            "title": "Inventario muerto",
+            "subtitle": "Productos con stock y velocidad ≤ {{threshold}} unidades/día en los últimos {{days}}d.",
+            "atRiskLabel": "Capital en riesgo",
+            "empty": "Nada muerto — todo el inventario está rotando.",
+            "error": "No se pudo cargar el inventario muerto.",
+            "neverSold": "Nunca vendido",
+            "daysAgo": "Hace {{days}}d",
+            "valueTooltip": "{{onHand}} unidades × {{cost}} costo unitario",
+            "cols": {
+                "product": "Producto",
+                "onHand": "En stock",
+                "lastSale": "Última venta",
+                "value": "Capital en riesgo"
+            }
+        },
         "welcome": "Bienvenido a Fulcrum",
         "overview": "Resumen",
         "recentActivity": "Actividad Reciente",

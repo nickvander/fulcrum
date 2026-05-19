@@ -130,6 +130,16 @@
                 <app-top-movers-widget class="dashboard-widget"></app-top-movers-widget>
             </div>
 
+            <!--
+                Dead-stock widget sits full-width below the 2x2
+                analytics grid because it's table-heavy and benefits
+                from horizontal space (SKU name + counters + capital-
+                at-risk all need a column each).
+            -->
+            <div class="dead-stock-row">
+                <app-dead-stock-widget class="dashboard-widget"></app-dead-stock-widget>
+            </div>
+
             <div class="secondary-grid">
                 <div class="grid-section">
                     <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"

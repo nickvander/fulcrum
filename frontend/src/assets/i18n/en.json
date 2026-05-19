@@ -192,6 +192,22 @@
                 "margin": "Margin"
             }
         },
+        "deadStock": {
+            "title": "Dead stock",
+            "subtitle": "Products with on-hand stock and ≤ {{threshold}} units/day over the last {{days}}d.",
+            "atRiskLabel": "Capital at risk",
+            "empty": "Nothing dead — every SKU with stock is moving.",
+            "error": "Could not load dead stock.",
+            "neverSold": "Never sold",
+            "daysAgo": "{{days}}d ago",
+            "valueTooltip": "{{onHand}} units × {{cost}} unit cost",
+            "cols": {
+                "product": "Product",
+                "onHand": "On hand",
+                "lastSale": "Last sale",
+                "value": "Capital at risk"
+            }
+        },
         "recentActivity": "Recent Activity",
         "quickActions": "Quick Actions",
         "totalProducts": "Total Products",
