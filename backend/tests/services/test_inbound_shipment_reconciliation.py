@@ -425,25 +425,20 @@ def test_bulk_runner_skips_transfer_without_credential_and_keeps_going(
     fake_connector.get_inbound_shipment_status = AsyncMock(side_effect=_status)
 
     # Detach the first credential temporarily so transfer A's fallback
-    # path returns None. We do this by ALSO simulating a state where
-    # `_ml_credential_for_transfer` returns None for transfer A —
-    # easiest path is to delete the credential before A is processed.
-    # Since the bulk runner orders by transfer id, A is processed
-    # first; we delete the credential AFTER the connector lookup but
-    # BEFORE the runner queries it. The cleanest test is to never
-    # create the credential before this point — but transfer B needs
-    # one. So we patch _ml_credential_for_transfer to return None for
-    # A and the real credential for B.
+    # path returns None. We do this by patching the (now
+    # marketplace-agnostic) `_credential_for_transfer` helper to return
+    # None for transfer A and the real credential for B. The bulk
+    # runner orders by transfer id ascending, so A is processed first.
     from src.services import inbound_shipment_reconciliation as recon_mod
-    original = recon_mod._ml_credential_for_transfer
+    original = recon_mod._credential_for_transfer
 
-    def _stub_cred(db_arg, transfer, ml_id):
+    def _stub_cred(db_arg, transfer, marketplace_id):
         if transfer.id == transfer_a.id:
             return None
-        return original(db_arg, transfer, ml_id)
+        return original(db_arg, transfer, marketplace_id)
 
     with (
-        patch.object(recon_mod, "_ml_credential_for_transfer", new=_stub_cred),
+        patch.object(recon_mod, "_credential_for_transfer", new=_stub_cred),
         patch(
             "src.services.marketplace_service.marketplace_service.get_valid_access_token",
             new=AsyncMock(return_value="LIVE-TOKEN"),

@@ -109,8 +109,23 @@ class StockTransfer(StockTransferBase):
     external_inbound_id: Optional[str] = None
     shipped_at: Optional[datetime] = None
     received_at: Optional[datetime] = None
+    last_reconciled_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     items: List[StockTransferItem] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ReconcileResult(BaseModel):
+    """Returned by `POST /stock-transfers/{id}/reconcile`. Mirrors the
+    summary `InboundShipmentReconciliationService.reconcile_for_transfer`
+    builds, plus a `transfer` field carrying the updated row so the UI
+    doesn't need a follow-up GET to show the new status / counts."""
+    items_updated: int = 0
+    total_received_added: int = 0
+    status_before: str
+    status_after: str
+    skipped_reason: Optional[str] = None
+    unmapped_listings: List[str] = []
+    transfer: StockTransfer

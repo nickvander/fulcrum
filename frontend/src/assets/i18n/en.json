@@ -1074,7 +1074,8 @@
             "shipWithMarketplace": "Ship + reserve inbound",
             "receive": "Receive items",
             "cancel": "Cancel draft",
-            "syncListings": "Push qty to listings"
+            "syncListings": "Push qty to listings",
+            "reconcileNow": "Reconcile inbound now"
         },
         "detail": {
             "title": "Stock transfer #{{id}}",
@@ -1083,8 +1084,14 @@
             "shippedAt": "Shipped",
             "receivedAt": "Received",
             "externalInboundId": "Marketplace inbound id",
+            "lastReconciledAt": "Last reconciled",
             "notFound": "Stock transfer not found.",
             "lastSync": "Last listing-quantity push",
+            "lastReconcile": "Last reconcile result",
+            "reconcileSkipped": "Reconcile skipped: {{reason}}",
+            "reconcileApplied": "Applied {{items}} item(s), {{units}} units received (status {{before}} → {{after}}).",
+            "reconcileNoChange": "Reconciled — marketplace reported no new receipts.",
+            "reconcileUnmapped": "{{count}} marketplace row(s) could not be mapped to a local product:",
             "reauthRequired": "{{marketplace}} needs re-authorization before listings can sync.",
             "reauthCta": "Open marketplace settings",
             "missingListings": "{{count}} product(s) have no marketplace listing yet — create those listings before they will sync.",

@@ -36,6 +36,13 @@ class StockTransfer(Base):
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     shipped_at = Column(DateTime(timezone=True), nullable=True)
     received_at = Column(DateTime(timezone=True), nullable=True)
+    # Wall-clock of the most recent successful inbound-shipment poll
+    # against the marketplace (`inbound_shipment_reconciliation`).
+    # Lets the UI surface "Last reconciled: 3m ago" so operators can
+    # tell at a glance whether the auto-reconciliation is healthy
+    # without grepping Celery logs. Stays NULL for transfers whose
+    # destination isn't a marketplace fulfillment warehouse.
+    last_reconciled_at = Column(DateTime(timezone=True), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

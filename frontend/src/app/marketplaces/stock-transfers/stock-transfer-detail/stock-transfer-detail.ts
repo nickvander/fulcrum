@@ -12,6 +12,7 @@ import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule } from '@ngneat/transloco';
 
 import {
+  ReconcileResult,
   STOCK_LOCATION_AMAZON_FBA,
   STOCK_LOCATION_ML_FULL,
   StockTransfer,
@@ -44,6 +45,7 @@ export class StockTransferDetailComponent implements OnInit {
   loading = false;
   acting = false;
   lastSync: SyncListingsResult | null = null;
+  lastReconcile: ReconcileResult | null = null;
   readonly columns = ['product', 'qty_planned', 'qty_shipped', 'qty_received'];
 
   constructor(
@@ -141,6 +143,55 @@ export class StockTransferDetailComponent implements OnInit {
       (this.transfer.dest_location === STOCK_LOCATION_ML_FULL ||
         this.transfer.dest_location === STOCK_LOCATION_AMAZON_FBA)
     );
+  }
+
+  /**
+   * The Reconcile button is offered only for an in-flight marketplace
+   * transfer with an external inbound id — i.e. there's something to
+   * poll AND `qty_received` can still advance. The hourly Celery beat
+   * still runs in the background; this is the "do it now" affordance.
+   */
+  canReconcile(): boolean {
+    return (
+      !!this.transfer &&
+      this.isMarketplaceDestination() &&
+      !!this.transfer.external_inbound_id &&
+      (this.transfer.status === 'shipped' ||
+        this.transfer.status === 'partially_received') &&
+      !this.acting
+    );
+  }
+
+  reconcileNow(): void {
+    if (!this.transfer || this.acting) {
+      return;
+    }
+    this.acting = true;
+    this.service.reconcile(this.transfer.id).subscribe({
+      next: result => {
+        this.acting = false;
+        this.lastReconcile = result;
+        // Endpoint embeds the refreshed transfer so we don't need a
+        // follow-up GET to render the new status/counts.
+        this.transfer = result.transfer;
+
+        let message: string;
+        if (result.skipped_reason) {
+          message = `Reconcile skipped: ${result.skipped_reason}`;
+        } else if (result.items_updated > 0) {
+          message =
+            `${result.items_updated} item(s) updated, ` +
+            `${result.total_received_added} units received`;
+        } else {
+          message = 'Reconciled — no new receipts from the marketplace';
+        }
+        this.snackBar.open(message, 'Close', { duration: 4000 });
+      },
+      error: () => {
+        this.acting = false;
+        // HttpErrorInterceptor surfaces the localized backend message.
+      },
+    });
   }
 
   canSyncListings(): boolean {

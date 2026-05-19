@@ -53,6 +53,13 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.reconcile_ml_inbound_shipments",
         "schedule": crontab(minute="10"),  # 10 past every hour
     },
+    # Amazon FBA inbound reconciliation: same shape as ML Full, offset
+    # 20 minutes so the two reconcilers don't both wake up at the same
+    # moment and pile on the marketplace_service DB connection.
+    "amazon-inbound-reconcile": {
+        "task": "src.tasks.reconcile_amazon_inbound_shipments",
+        "schedule": crontab(minute="30"),  # 30 past every hour
+    },
     # Alerting (Track 3 Step 6 of 80-advanced-analytics.md). Hourly is
     # the conservative default — most thresholds (margin %, sales dip
     # over 30 days) move slowly. Per-rule cooldowns prevent spam when
