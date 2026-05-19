@@ -255,6 +255,15 @@ class AmazonOrderIngestionService:
                         user_id="amazon-poll",
                     )
 
+            # Phase-8 cost engine: best-effort compute breakdown so
+            # the analytics rollup sees the new order on the next
+            # tick. Any failure here is swallowed by `_safe` and
+            # logged — the beat backfill will retry. Must run AFTER
+            # SalesOrderItem inserts so the COGS sum has the line
+            # items to read.
+            from src.services.order_cost_engine import upsert_breakdown_safe
+            upsert_breakdown_safe(db, sales_order)
+
             summary["orders_new"] += 1
 
         # Advance the cursor once everything for this run is in the

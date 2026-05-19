@@ -235,6 +235,12 @@ class MercadoLibreOrderIngestionService:
                         user_id="mercadolibre-poll",
                     )
 
+            # Phase-8 cost engine: best-effort compute breakdown so
+            # the analytics rollup picks up the new order. The beat
+            # backfill catches failures on the next tick.
+            from src.services.order_cost_engine import upsert_breakdown_safe
+            upsert_breakdown_safe(db, sales_order)
+
             summary["orders_new"] += 1
 
         credential.last_orders_polled_at = run_started_at

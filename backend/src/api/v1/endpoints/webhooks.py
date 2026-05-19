@@ -241,6 +241,12 @@ async def process_mercadolibre_event(event_id: int):
                         user_id="mercadolibre-webhook",
                     )
 
+            # Phase-8 cost engine: best-effort compute breakdown so
+            # the analytics rollup sees the new order immediately
+            # instead of waiting for the beat backfill tick.
+            from src.services.order_cost_engine import upsert_breakdown_safe
+            upsert_breakdown_safe(db, sales_order)
+
             event.status = "PROCESSED"
             event.processed_at = datetime.now(timezone.utc)
             db.commit()

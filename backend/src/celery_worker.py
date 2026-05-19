@@ -60,6 +60,15 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.reconcile_amazon_inbound_shipments",
         "schedule": crontab(minute="30"),  # 30 past every hour
     },
+    # Phase-8 cost engine backfill: the ingestion paths already
+    # populate breakdowns inline on each new order, so this task is
+    # the safety net — catches orders that pre-date the feature +
+    # anything whose inline upsert raised. Every 10 min is fast
+    # enough that an analytics dashboard's data lag is bounded.
+    "cost-engine-backfill": {
+        "task": "src.tasks.backfill_order_cost_breakdowns",
+        "schedule": crontab(minute="*/10"),
+    },
     # Alerting (Track 3 Step 6 of 80-advanced-analytics.md). Hourly is
     # the conservative default — most thresholds (margin %, sales dip
     # over 30 days) move slowly. Per-rule cooldowns prevent spam when

@@ -1251,3 +1251,70 @@ def export_stockout_pdf(
         rows, window_days=window_days,
         imminent_days=imminent_days, watch_days=watch_days,
     ))
+
+
+# ---- Cost rollup (Phase 8 Track 1) -----------------------------------------
+
+
+class CostRollupResponse(BaseModel):
+    """Aggregate net-margin rollup over a window. Sets up Track 2's
+    dashboard charts — frontend can consume this to plot "today's
+    profit" or "margin vs. spend" without re-implementing the cost
+    formula client-side.
+    """
+    window_days: int
+    source: Optional[str] = None
+    orders: int
+    revenue_amount_mxn: float
+    cogs_amount: float
+    marketplace_fees_amount: float
+    shipping_cost_amount: float
+    ad_spend_amount: float
+    other_cost_amount: float
+    total_cost_amount: float
+    net_profit_amount: float
+    net_margin_percent: Optional[float] = None
+
+
+@router.get("/cost-rollup", response_model=CostRollupResponse)
+def cost_rollup_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    source: Optional[str] = Query(
+        None,
+        description=(
+            "Optional channel filter: amazon / mercadolibre / fulcrum. "
+            "Lowercase or mixed case. Omit for cross-channel rollup."
+        ),
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> CostRollupResponse:
+    """Aggregate net-margin rollup over the last N days.
+
+    Pulls from the `order_cost_breakdowns` table populated by the
+    cost engine. Restricts to realized order statuses
+    (COMPLETED/SHIPPED/DELIVERED/PAID) so cancelled and pending
+    orders don't pollute the headline margin number.
+    """
+    from src.models.order import OrderSource
+    from src.services.order_cost_engine import aggregate_rollup
+
+    parsed_source: Optional[OrderSource] = None
+    if source:
+        try:
+            parsed_source = OrderSource(source.upper())
+        except ValueError:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.report.unknownSource",
+                params={"source": source},
+                detail=f"Unknown source '{source}'",
+            )
+
+    rollup = aggregate_rollup(db, window_days=window_days, source=parsed_source)
+    return CostRollupResponse(
+        window_days=window_days,
+        source=parsed_source.value if parsed_source else None,
+        **rollup,
+    )

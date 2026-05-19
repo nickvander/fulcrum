@@ -5,7 +5,7 @@ from .password_reset_token import PasswordResetToken
 from .supplier import Supplier
 from .product import Product, ProductImage, BundleComponent
 from .product_variant import ProductVariant
-from .order import SalesOrder, SalesOrderItem
+from .order import OrderCostBreakdown, SalesOrder, SalesOrderItem
 from .marketplace import Marketplace, MarketplaceCredential, MarketplaceListing, WebhookSubscription, WebhookEvent
 from .inventory import InventoryItem, InventoryAdjustment
 
@@ -56,6 +56,7 @@ __all__ = [
     "ProductVariant",
     "SalesOrder",
     "SalesOrderItem",
+    "OrderCostBreakdown",
     "Marketplace",
     "MarketplaceCredential",
     "MarketplaceListing",
