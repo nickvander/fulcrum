@@ -21,6 +21,7 @@ from src.schemas.marketplace_health import (
     HealthListResponse,
     PollOrdersResult,
     ReconcileInboundResult,
+    SettlementSyncResult,
 )
 from src.services import marketplace_health_service
 
@@ -77,5 +78,24 @@ def reconcile_inbound_now(
     code path as the per-transfer `POST /stock-transfers/{id}/reconcile`
     endpoint, just bulk over all the credential's open transfers."""
     return marketplace_health_service.reconcile_inbound_for_credential(
+        db, credential_id,
+    )
+
+
+@router.post(
+    "/{credential_id}/sync-settlement-fees",
+    response_model=SettlementSyncResult,
+)
+def sync_settlement_fees_now(
+    *,
+    db: Session = Depends(get_db),
+    credential_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> SettlementSyncResult:
+    """Run settlement-fee ingestion synchronously for one credential.
+    The hourly `poll_settlement_fees` Celery beat is the primary
+    surface; this exists so an operator who just wired up real fees
+    can backfill on demand instead of waiting an hour."""
+    return marketplace_health_service.sync_settlement_for_credential(
         db, credential_id,
     )

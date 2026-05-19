@@ -67,4 +67,21 @@ describe('MarketplaceHealthService', () => {
       per_transfer: [],
     });
   });
+
+  it('syncSettlementFees(id) POSTs to the per-credential settlement endpoint', () => {
+    service.syncSettlementFees(9).subscribe();
+    const req = httpMock.expectOne(
+      `${environment.apiUrl}/marketplaces/health/9/sync-settlement-fees`,
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({
+      credential_id: 9,
+      marketplace_name: 'Amazon',
+      orders_settled: 5,
+      orders_pending: 2,
+      errors: 0,
+      scanned: 7,
+    });
+  });
 });

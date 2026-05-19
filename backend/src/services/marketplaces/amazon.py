@@ -395,6 +395,135 @@ class AmazonConnector(BaseMarketplaceConnector):
 
         return results
 
+    # -- Settlement / Finances ---------------------------------------------
+
+    # SP-API Finances v0 — per-order financial events. Returns a
+    # ShipmentEventList with FeeList entries (Commission, FBAFee,
+    # FBAPerOrderFulfillmentFee, ...) plus a separate ShippingChargeList
+    # for the buyer-paid shipping (refunded back via shipping cost when
+    # FBM). Single GET per order, paginated via NextToken if Amazon
+    # decided to split the order into multiple events (rare in
+    # practice).
+    FINANCES_PATH = "/finances/v0/orders/{order_id}/financialEvents"
+
+    async def fetch_order_financials(
+        self,
+        order_id: str,
+        access_token: Optional[str] = None,
+    ) -> Dict[str, Optional[float]]:
+        """Return real per-order settlement fees + shipping cost for one
+        Amazon order, used by the settlement-fee ingestion worker.
+
+        Endpoint: GET /finances/v0/orders/{orderId}/financialEvents
+            - Returns a FinancialEvents payload whose ShipmentEventList
+              contains per-line ShipmentItemList entries; each item has
+              an `ItemFeeList` of `{FeeType, FeeAmount: {Amount,
+              CurrencyCode}}` rows. We sum every fee across all items
+              of all shipments — Commission + FBAPerOrderFulfillmentFee
+              + FBAWeightBasedFee + ... — to produce the single
+              `marketplace_fees_amount` value the cost engine consumes.
+            - Shipping is treated separately: the order can carry both
+              charges (positive) and refunds (negative). We sum across
+              both lists so a partially-refunded order shows the net.
+
+        Returns the canonical settlement-summary dict; both values may
+        be `None` when the event list is empty (Amazon hasn't settled
+        the order yet — typical for pending shipments). Caller treats
+        `None` as "skip, retry next tick".
+
+        Stub-token branch returns a deterministic value so the
+        worker can be exercised end-to-end without a live SP-API
+        session.
+        """
+        if not access_token or access_token.startswith("STUB-"):
+            return {
+                "marketplace_fees_amount": 19.50,
+                "shipping_cost_amount": 0.0,
+            }
+
+        url = f"{self.api_base_url}{self.FINANCES_PATH.format(order_id=order_id)}"
+        headers = {"x-amz-access-token": access_token}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            payload = (response.json() or {}).get("payload") or {}
+
+        return self._extract_settlement_from_events(
+            payload.get("FinancialEvents") or {},
+        )
+
+    @staticmethod
+    def _extract_settlement_from_events(
+        events: Dict[str, Any],
+    ) -> Dict[str, Optional[float]]:
+        """Pure parser for the SP-API FinancialEvents payload → settlement
+        summary. Extracted so tests can run on fixture JSON without
+        touching the network.
+
+        Sum rules:
+          - `marketplace_fees_amount`: sum of all `ItemFeeList[].FeeAmount.Amount`
+            across all shipment items in all shipment events. Refund
+            events also contribute (their fees are typically negative,
+            net out to the residual).
+          - `shipping_cost_amount`: sum of `ShippingChargeList[].ChargeAmount.Amount`
+            across all events; refunds in the refund event list net
+            against charges.
+
+        Returns `None` for either field when no events of that type
+        exist in the payload, so the caller can tell "not settled yet"
+        from "actually zero".
+        """
+        fees_seen = False
+        fees_total = 0.0
+        shipping_seen = False
+        shipping_total = 0.0
+
+        def _add_amount(value: Any, acc: float, seen: bool) -> tuple[float, bool]:
+            try:
+                num = float(value)
+            except (TypeError, ValueError):
+                return acc, seen
+            return acc + num, True
+
+        shipment_lists = (
+            ("ShipmentEventList", 1.0),
+            ("RefundEventList", 1.0),
+            ("ChargebackEventList", 1.0),
+        )
+        for key, _sign in shipment_lists:
+            for event in events.get(key) or []:
+                if not isinstance(event, dict):
+                    continue
+                for item in event.get("ShipmentItemList") or []:
+                    if not isinstance(item, dict):
+                        continue
+                    for fee in item.get("ItemFeeList") or []:
+                        if not isinstance(fee, dict):
+                            continue
+                        amount = (fee.get("FeeAmount") or {}).get("Amount")
+                        if amount is None:
+                            continue
+                        fees_total, fees_seen = _add_amount(amount, fees_total, fees_seen)
+                for charge in event.get("ShippingChargeList") or []:
+                    if not isinstance(charge, dict):
+                        continue
+                    amount = (charge.get("ChargeAmount") or {}).get("Amount")
+                    if amount is None:
+                        continue
+                    shipping_total, shipping_seen = _add_amount(
+                        amount, shipping_total, shipping_seen,
+                    )
+
+        return {
+            "marketplace_fees_amount": (
+                abs(fees_total) if fees_seen else None
+            ),
+            "shipping_cost_amount": (
+                shipping_total if shipping_seen else None
+            ),
+        }
+
     # -- Inbound shipments (FBA) -------------------------------------------
 
     # Amazon's FBA Inbound v0 API is split across two endpoints — the

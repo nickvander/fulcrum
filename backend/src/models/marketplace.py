@@ -45,6 +45,12 @@ class MarketplaceCredential(Base):
     # the wall-clock at the END of a successful poll so a mid-run
     # failure doesn't skip orders on the retry.
     last_orders_polled_at = Column(DateTime(timezone=True), nullable=True)
+    # Cursor used by the settlement-fee poller — when set, the next run
+    # only re-syncs orders whose breakdown was last touched (or created)
+    # after this timestamp. NULL means no settlement sync has succeeded
+    # yet → the worker falls back to the connector's default lookback
+    # window so a freshly connected credential still backfills.
+    last_settlement_synced_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

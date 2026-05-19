@@ -77,4 +77,14 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.evaluate_alerts",
         "schedule": crontab(minute="5"),  # 5 past every hour
     },
+    # Settlement-fee ingestion: replaces estimated marketplace fees /
+    # shipping on `OrderCostBreakdown` rows with real settled numbers
+    # from each marketplace's finance API. Hourly + offset to 40 past
+    # so the three reconcilers (ML inbound :10, Amazon inbound :30,
+    # settlement :40) don't all wake up together. Per-credential batch
+    # cap (200 orders) keeps a busy tick well under the SP-API budget.
+    "settlement-fee-poll": {
+        "task": "src.tasks.poll_settlement_fees",
+        "schedule": crontab(minute="40"),
+    },
 }

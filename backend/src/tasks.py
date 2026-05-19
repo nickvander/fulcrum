@@ -178,6 +178,36 @@ def poll_mercadolibre_orders():
         db.close()
 
 
+@celery_app.task(name="src.tasks.poll_settlement_fees")
+def poll_settlement_fees():
+    """
+    Periodic settlement-fee ingestion. Scheduled by celery beat
+    (`src/celery_worker.py::celery_app.conf.beat_schedule`).
+
+    Replaces estimated `marketplace_fees_amount` /
+    `shipping_cost_amount` on `OrderCostBreakdown` rows with real
+    settled values fetched from each marketplace's finance API:
+
+      - MercadoLibre: order payload's payments[].marketplace_fee /
+        fee_details[] + shipping.shipping_cost.
+      - Amazon: SP-API `/finances/v0/orders/{orderId}/financialEvents`
+        — sums every Commission / FBAFee / fulfillment fee.
+
+    Per-credential SAVEPOINT pattern + per-credential commit. One bad
+    credential's settlement fetch failing does not abort the loop.
+    Returns a `{credential_id: summary}` dict.
+    """
+    from src.services.settlement_fee_ingestion import (
+        poll_all_credentials_for_settlement,
+    )
+
+    db = SessionLocal()
+    try:
+        return poll_all_credentials_for_settlement(db)
+    finally:
+        db.close()
+
+
 @celery_app.task
 def generate_product_embedding(product_id: int):
     """
