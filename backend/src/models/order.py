@@ -173,6 +173,61 @@ class AmazonOrderRefund(Base):
     order = relationship("SalesOrder")
 
 
+class SalesOrderReturn(Base):
+    """One operator-recorded return event against a sales order.
+
+    Marketplaces tell us when a refund was issued (status transition
+    + Amazon partial-refund events) but rarely tell us when a
+    physical product came back. The operator uses the "Record return"
+    dialog on the sales-order detail page to log it; the service
+    layer also calls `InventoryService.adjust_stock(+qty,
+    reason_code='return')` so the inventory audit catches the credit
+    automatically.
+
+    `order_item_id` is nullable because legacy orders may have
+    line items whose product_id never mapped — the operator can
+    still record the physical return against the product directly.
+
+    `quantity` is always positive (the DB CHECK enforces it). Each
+    row is a discrete "N units came back" event; partial returns
+    against a 5-unit order line typically produce two or three rows
+    over time as the buyer ships items back.
+
+    The breakdown row of the parent order is intentionally NOT
+    touched — returns are physical, not financial. The Phase-8
+    cost engine's revenue math reflects what the marketplace paid
+    us, which is unaffected by whether the customer kept the product
+    or not.
+    """
+    __tablename__ = "sales_order_returns"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(
+        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    order_item_id = Column(
+        Integer, ForeignKey("sales_order_items.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    product_id = Column(
+        Integer, ForeignKey("products.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    quantity = Column(Integer, nullable=False)
+    received_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    recorded_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    reason = Column(String(500), nullable=True)
+    notes = Column(String, nullable=True)  # Text in PG via String
+
+    order = relationship("SalesOrder")
+    order_item = relationship("SalesOrderItem")
+    product = relationship("Product")
+
+
 class SalesOrderStatusEvent(Base):
     """Append-only audit of every `SalesOrder.status` transition.
 

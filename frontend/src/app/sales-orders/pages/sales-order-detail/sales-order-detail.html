@@ -81,6 +81,46 @@
                     {{ t('orders.noItems') }}
                 </div>
             </section>
+
+            <section class="returns-card" data-testid="returns-section">
+                <header class="returns-header">
+                    <h2>{{ t('orders.recordReturn.sectionTitle') }}</h2>
+                    <button mat-flat-button color="primary"
+                        (click)="openRecordReturnDialog()"
+                        [disabled]="!order.items.length"
+                        data-testid="record-return-button">
+                        <mat-icon>assignment_return</mat-icon>
+                        {{ t('orders.recordReturn.openDialog') }}
+                    </button>
+                </header>
+
+                @if (loadingReturns) {
+                    <p class="returns-loading">{{ t('common.loading') }}</p>
+                } @else if (returns.length === 0) {
+                    <p class="returns-empty" data-testid="returns-empty">
+                        {{ t('orders.recordReturn.empty') }}
+                    </p>
+                } @else {
+                    <ul class="returns-list" data-testid="returns-list">
+                        @for (ret of returns; track ret.id) {
+                            <li class="return-row" [attr.data-testid]="'return-row-' + ret.id">
+                                <div class="return-when">
+                                    <strong>{{ ret.received_at | date:'medium' }}</strong>
+                                    <small *ngIf="ret.recorded_by_email">{{ ret.recorded_by_email }}</small>
+                                </div>
+                                <div class="return-product">
+                                    {{ ret.product_name || ('#' + ret.product_id) }}
+                                    <small *ngIf="ret.product_sku">SKU: {{ ret.product_sku }}</small>
+                                </div>
+                                <div class="return-qty">
+                                    {{ t('orders.recordReturn.unitsBack', { n: ret.quantity }) }}
+                                </div>
+                                <div class="return-reason" *ngIf="ret.reason">{{ ret.reason }}</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
         </ng-container>
 
         <ng-template #loading>

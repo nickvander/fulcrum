@@ -170,3 +170,66 @@ mat-chip[class*=" status-"] {
     background: var(--error-bg) !important;
     color: var(--error-color) !important;
 }
+
+.returns-card {
+    margin-top: 2rem;
+    background: var(--card-bg, #fff);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    .returns-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+
+        h2 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+    }
+
+    .returns-empty,
+    .returns-loading {
+        color: rgba(0, 0, 0, 0.55);
+        text-align: center;
+        margin: 1rem 0;
+    }
+
+    .returns-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .return-row {
+        display: grid;
+        grid-template-columns: 1.2fr 1.5fr 1fr 1fr;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        align-items: center;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        small {
+            display: block;
+            color: rgba(0, 0, 0, 0.55);
+            font-size: 0.75rem;
+        }
+
+        .return-qty {
+            font-weight: 600;
+            color: #1e7a3a;
+        }
+
+        .return-reason {
+            color: rgba(0, 0, 0, 0.7);
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+    }
+}

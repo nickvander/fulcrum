@@ -1,6 +1,17 @@
 # Progress Log
 
-**Status:** Refund/cancellation tracking surface now complete:
+**Status:** Returns workflow + inventory-adjustment reason codes
+shipped. Operators can now record a physical return against a
+sales order from the order detail page (multi-line dialog, partial
+quantities, free-text reason/notes); the inventory side credits
+back automatically with `reason_code='return'` so the audit page
+filter and "how much came back last month?" query both work. The
+audit page itself gained a reason-code dropdown over every system
+flow (sale, cancellation, transfer, purchase, return) plus the
+operator-facing categories (shrinkage, recount, damage, theft,
+correction, manual).
+
+Refund/cancellation tracking surface now complete:
 drill-down list page at `/reports/refunds` (linked from the widget
 hero), CSV + PDF exports of the refunds-summary rollup, and a new
 `settlement_variance` alert type that catches FBA overages /
@@ -63,6 +74,70 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Returns workflow + inventory-adjustment reason codes. Two
+  coupled slices that close the "did the product come back?"
+  gap and give the audit log a real diagnostic dimension.
+  - **Reason-code taxonomy.** New
+    `InventoryAdjustmentReasonCode` enum (12 values: shrinkage,
+    recount, damage, return, theft, correction, sale,
+    cancellation, transfer, purchase, manual, other) + nullable
+    `reason_code` column on `inventory_adjustments` (migration
+    `a1d7e3c4b829`). CHECK constraint enforces the set at the
+    DB layer; legacy rows pre-migration carry NULL and the
+    audit page filter exposes them via a magic `none`
+    sentinel ("Uncategorized").
+  - **Service-layer wiring.** `InventoryService.adjust_stock`
+    accepts a `reason_code` kwarg. Every semantic caller
+    stamps the right code: ML/Amazon ingestion paths and the
+    webhook handler set `SALE`, the lifecycle hook's cancel-
+    before-ship re-credit sets `CANCELLATION`, stock-transfer
+    ship/receive + inbound reconciliation set `TRANSFER`, PO
+    receiving sets `PURCHASE`, the bundle-assembly helper
+    sets `TRANSFER` on both legs, and operator-initiated
+    adjustments default to `MANUAL` (the form accepts an
+    optional explicit code via a new `reason_code` field on
+    `StockAdjustment`, validated against the enum at the API
+    boundary).
+  - **Audit endpoint + page filter.**
+    `GET /reports/inventory-adjustments` and its CSV/PDF
+    exports gain a `reason_code` query param; new
+    `/reason-codes` endpoint exposes the canonical list so the
+    frontend dropdown doesn't hard-code the enum. The audit
+    page UI gains a Material select with every code + an
+    "All reasons" default + an "Uncategorized" sentinel option.
+    CSV export adds a new `reason_code` column between
+    `adjustment` and `reason`.
+  - **Returns workflow — backend.** New
+    `sales_order_returns` table (migration `b3e9f2c5a740`) with
+    `order_id`, `order_item_id`, `product_id`, `quantity`,
+    `received_at`, `recorded_by_user_id`, `reason`, `notes` +
+    a CHECK constraint forcing quantity > 0. New
+    `services/sales_order_returns.py` with `record_return` +
+    `list_returns`. Two endpoints under sales-orders:
+    `POST /sales-orders/{id}/returns` (multi-line, validates
+    item-belongs-to-order, accepts `product_id`-only lines for
+    legacy unmapped items) + `GET /sales-orders/{id}/returns`
+    (joined with the User table once for the recorder email,
+    no N+1). Each return line also calls
+    `inventory_service.adjust_stock(+qty, reason_code='return')`
+    so the audit log picks it up automatically.
+  - **Returns workflow — frontend.** New
+    `RecordReturnDialogComponent` lets the operator pick line
+    items (multi-select checkboxes) with per-row quantity
+    defaulting to the ordered qty (editable down for partial
+    returns), plus a reason + notes field. Dialog opens from
+    a new "Returns" section on the order detail page; the
+    section lists every prior return event newest-first with
+    timestamp + recorder + product + units + reason. On a
+    successful save the dialog returns the new rows so the
+    parent prepends them without a refetch.
+
+  Tests: +35 backend (4 reason-code service-defaults + 8
+  audit-filter contract + 11 returns endpoint contract + 1
+  existing CSV column migration), +18 frontend (7 audit
+  service + 2 sales-orders service + 8 dialog + 1 existing).
+  en + es-MX i18n parity green. Backend 728/8, frontend 657/0.
 
 - Refund tracking follow-ups: drill-down list page + summary
   CSV/PDF + settlement-variance alert. Three small slices that
@@ -528,8 +603,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 705 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 640 passed, 0
+  → 728 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 657 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

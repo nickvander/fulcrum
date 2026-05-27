@@ -110,4 +110,49 @@ export class SalesOrdersService {
   get(orderId: number): Observable<SalesOrderDetail> {
     return this.http.get<SalesOrderDetail>(`${this.apiUrl}/${orderId}`);
   }
+
+  // --- Returns ------------------------------------------------------------
+
+  listReturns(orderId: number): Observable<SalesOrderReturn[]> {
+    return this.http.get<SalesOrderReturn[]>(
+      `${this.apiUrl}/${orderId}/returns`,
+    );
+  }
+
+  recordReturn(orderId: number, payload: RecordReturnPayload): Observable<SalesOrderReturn[]> {
+    return this.http.post<SalesOrderReturn[]>(
+      `${this.apiUrl}/${orderId}/returns`,
+      payload,
+    );
+  }
+}
+
+export interface SalesOrderReturn {
+  id: number;
+  order_id: number;
+  order_item_id?: number | null;
+  product_id?: number | null;
+  product_name?: string | null;
+  product_sku?: string | null;
+  quantity: number;
+  received_at: string;
+  recorded_by_user_id?: number | null;
+  recorded_by_email?: string | null;
+  reason?: string | null;
+  notes?: string | null;
+}
+
+export interface RecordReturnLine {
+  /** Send `order_item_id` when the return is against a known line
+   *  item; the backend falls back to the item's product_id. Use
+   *  `product_id` only for legacy unmapped line items. */
+  order_item_id?: number | null;
+  product_id?: number | null;
+  quantity: number;
+}
+
+export interface RecordReturnPayload {
+  lines: RecordReturnLine[];
+  reason?: string | null;
+  notes?: string | null;
 }

@@ -28,6 +28,8 @@ from src.schemas.sales_order import (
     SalesOrderChannelBreakdown,
     SalesOrderDetail,
     SalesOrderItem as SalesOrderItemSchema,
+    SalesOrderReturnCreate,
+    SalesOrderReturnRead,
     SalesOrderSummary,
 )
 from src.services.report_export import (
@@ -351,3 +353,145 @@ def get_sales_order(
 
     base = _serialize_order(order)
     return SalesOrderDetail(**base.model_dump(), items=items)
+
+
+# ---------------------------------------------------------------------------
+# Returns workflow
+# ---------------------------------------------------------------------------
+
+
+def _load_order_or_404(db: Session, order_id: int) -> SalesOrder:
+    """Shared order lookup for the returns endpoints. Eager-loads
+    `items` because the service needs to validate `order_item_id`
+    membership and grab `product_id` when only the item id was sent.
+    """
+    order = (
+        db.query(SalesOrder)
+        .options(joinedload(SalesOrder.items))
+        .filter(SalesOrder.id == order_id)
+        .first()
+    )
+    if order is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.salesOrder.notFound",
+            params={"id": order_id},
+            detail="Sales order not found",
+        )
+    return order
+
+
+def _serialize_return(ret) -> SalesOrderReturnRead:
+    """Hydrate a `SalesOrderReturn` row into its read schema, joining
+    in product name/sku + recorder email so the UI doesn't need a
+    follow-up call per row."""
+    product = ret.product
+    return SalesOrderReturnRead(
+        id=ret.id,
+        order_id=ret.order_id,
+        order_item_id=ret.order_item_id,
+        product_id=ret.product_id,
+        product_name=product.name if product else None,
+        product_sku=product.sku if product else None,
+        quantity=ret.quantity,
+        received_at=ret.received_at,
+        recorded_by_user_id=ret.recorded_by_user_id,
+        # The relationship isn't eager-loaded on the list query
+        # (it's a single FK per row; lazy is fine), but we use it
+        # opportunistically to surface the recorder's email.
+        recorded_by_email=None,  # filled by the endpoint below when available
+        reason=ret.reason,
+        notes=ret.notes,
+    )
+
+
+@router.post(
+    "/{order_id}/returns",
+    response_model=List[SalesOrderReturnRead],
+    status_code=201,
+)
+def record_sales_order_return(
+    order_id: int,
+    payload: SalesOrderReturnCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """Record one or more physical returns against a sales order.
+
+    For each line: persists a `SalesOrderReturn` row + credits the
+    quantity back to inventory with `reason_code='return'`. Returns
+    the newly-created rows so the UI can append them to the
+    on-screen history without a follow-up GET.
+    """
+    from src.services.sales_order_returns import (
+        ReturnLineInput,
+        record_return as svc_record,
+    )
+
+    order = _load_order_or_404(db, order_id)
+    lines = [
+        ReturnLineInput(
+            order_item_id=line.order_item_id,
+            product_id=line.product_id,
+            quantity=line.quantity,
+        )
+        for line in payload.lines
+    ]
+    created = svc_record(
+        db,
+        order=order,
+        lines=lines,
+        reason=payload.reason,
+        notes=payload.notes,
+        actor=current_user,
+    )
+    db.commit()
+    # Refresh so `product` relationship is populated for the response.
+    for ret in created:
+        db.refresh(ret)
+
+    rows: List[SalesOrderReturnRead] = []
+    for ret in created:
+        out = _serialize_return(ret)
+        # The endpoint knows who recorded it (current_user); save a
+        # roundtrip by surfacing the email here.
+        if current_user and current_user.email:
+            out.recorded_by_email = current_user.email
+        rows.append(out)
+    return rows
+
+
+@router.get(
+    "/{order_id}/returns",
+    response_model=List[SalesOrderReturnRead],
+)
+def list_sales_order_returns(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """List all return events recorded for an order, newest first."""
+    from src.models.user import User as UserModel
+    from src.services.sales_order_returns import list_returns as svc_list
+
+    order = _load_order_or_404(db, order_id)
+    returns = svc_list(db, order)
+
+    # Resolve recorder emails in one extra query to avoid N+1.
+    user_ids = {r.recorded_by_user_id for r in returns if r.recorded_by_user_id}
+    emails: dict[int, str] = {}
+    if user_ids:
+        for uid, email in (
+            db.query(UserModel.id, UserModel.email)
+            .filter(UserModel.id.in_(user_ids))
+            .all()
+        ):
+            emails[uid] = email
+
+    rows: List[SalesOrderReturnRead] = []
+    for ret in returns:
+        out = _serialize_return(ret)
+        if ret.recorded_by_user_id is not None:
+            out.recorded_by_email = emails.get(ret.recorded_by_user_id)
+        rows.append(out)
+    return rows

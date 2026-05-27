@@ -1,0 +1,77 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>
+    {{ t('orders.recordReturn.title') }} #{{ data.order.id }}
+  </h2>
+  <div mat-dialog-content class="dialog-body">
+    <p class="hint">{{ t('orders.recordReturn.hint') }}</p>
+
+    @if (lines.length === 0) {
+      <p class="empty" data-testid="record-return-empty">
+        {{ t('orders.recordReturn.noLines') }}
+      </p>
+    } @else {
+      <ul class="line-list" data-testid="record-return-line-list">
+        @for (row of lines; track row.item.id) {
+          <li class="line-row">
+            <mat-checkbox
+              [(ngModel)]="row.selected"
+              [attr.data-testid]="'record-return-line-' + row.item.id">
+              <div class="line-info">
+                <strong>{{ row.item.product_name || ('#' + row.item.product_id) }}</strong>
+                <small *ngIf="row.item.product_sku">SKU: {{ row.item.product_sku }}</small>
+              </div>
+            </mat-checkbox>
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="qty-field">
+              <mat-label>{{ t('orders.recordReturn.qty') }}</mat-label>
+              <input
+                matInput
+                type="number"
+                min="1"
+                [max]="row.item.quantity || 99"
+                [(ngModel)]="row.quantity"
+                [disabled]="!row.selected"
+                [attr.data-testid]="'record-return-qty-' + row.item.id" />
+              <mat-hint>{{ t('orders.recordReturn.ofN', { n: row.item.quantity || 0 }) }}</mat-hint>
+            </mat-form-field>
+          </li>
+        }
+      </ul>
+    }
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ t('orders.recordReturn.reason') }}</mat-label>
+      <input matInput [(ngModel)]="reason" maxlength="200"
+             data-testid="record-return-reason" />
+      <mat-hint>{{ t('orders.recordReturn.reasonHint') }}</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ t('orders.recordReturn.notes') }}</mat-label>
+      <textarea
+        matInput
+        rows="3"
+        [(ngModel)]="notes"
+        maxlength="1000"
+        data-testid="record-return-notes"></textarea>
+    </mat-form-field>
+
+    @if (errorMessage) {
+      <p class="error" data-testid="record-return-error">{{ errorMessage }}</p>
+    }
+  </div>
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="cancel()" [disabled]="saving"
+            data-testid="record-return-cancel">
+      {{ t('common.cancel') }}
+    </button>
+    <button mat-flat-button color="primary"
+            (click)="submit()"
+            [disabled]="!canSubmit()"
+            data-testid="record-return-submit">
+      @if (saving) {
+        <mat-spinner diameter="18"></mat-spinner>
+      }
+      {{ t('orders.recordReturn.submit') }}
+    </button>
+  </div>
+</ng-container>
