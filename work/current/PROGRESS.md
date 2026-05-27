@@ -1,7 +1,14 @@
 # Progress Log
 
-**Status:** Marketplace-side refund + cancellation tracking now
-first-class. New `sales_order_status_events` audit (every ingestion
+**Status:** Refund/cancellation tracking surface now complete:
+drill-down list page at `/reports/refunds` (linked from the widget
+hero), CSV + PDF exports of the refunds-summary rollup, and a new
+`settlement_variance` alert type that catches FBA overages /
+promo deductions / quiet fee-schedule changes by comparing settled
+fees against the operator's configured `default_fee_rate`.
+
+Marketplace-side refund + cancellation tracking shipped earlier
+this week — `sales_order_status_events` audit (every ingestion
 path writes transitions), `order_cost_breakdowns.reversed_at` so
 rollups stop counting reversed orders silently, `amazon_order_refunds`
 captures partial-refund events from SP-API Finances, and the
@@ -56,6 +63,44 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Refund tracking follow-ups: drill-down list page + summary
+  CSV/PDF + settlement-variance alert. Three small slices that
+  finish off the refund-tracking surface so it's complete for an
+  operator rather than just a widget on the dashboard.
+  - **Refunds drill-down page (`/reports/refunds`).** New
+    `GET /api/v1/reports/refunds-list` returns one row per refund
+    event — status transitions out of realized
+    (`refund_kind='order_cancelled'`) and Amazon partial-refund
+    events from `amazon_order_refunds`
+    (`refund_kind='amazon_partial'`). Sorted most-recent first,
+    paginated, with an optional `source` filter. Frontend page
+    renders a Material table with date / channel / order id /
+    type chip / status / amount + a per-row link to the parent
+    sales order. The dashboard widget's footer gained a "See
+    every refund" link that deep-links to the page.
+  - **Refunds-summary CSV + PDF exports.** New
+    `/refunds-summary/export` + `/export-pdf` endpoints share the
+    `report_export` module — one row per channel followed by a
+    `TOTAL` row. Wired as a fourth row in the analytics-reports
+    widget on the dashboard, alongside velocity / margin /
+    stockout.
+  - **`settlement_variance` alert type.** New evaluator compares
+    each marketplace's settled `marketplace_fees_amount` to the
+    expected `revenue × default_fee_rate` across the window;
+    fires when any channel's absolute variance % is at or above
+    the rule's threshold. Skips marketplaces with no
+    `default_fee_rate` configured (zero-denominator) and
+    `fees_source='estimated'` orders (they tautologically match
+    the predicted rate). Reversed (cancelled) orders fall out via
+    the existing `reversed_at IS NULL` filter. Migration
+    `9c4a2d8e5b30` widens `ck_alert_rules_type` to accept the new
+    enum value. Email subject/body surface the worst-offender
+    marketplace.
+  - 17 new backend tests (7 refunds-list contract + 4 export
+    contract + 6 variance evaluator) + 14 new frontend tests
+    (9 page + 3 widget + 2 service). en + es-MX i18n parity
+    green. Backend 705/8, frontend 640/0.
 
 - Refund + cancellation tracking for marketplace orders. Closes
   the "we have no idea how many orders got refunded last week"
@@ -483,8 +528,8 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite: `docker compose -f docker-compose.test.yml run --rm
   backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 688 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 626 passed, 0
+  → 705 passed, 8 skipped at last green.
+- Frontend full suite: `npx ng test --watch=false` → 640 passed, 0
   skipped at last green.
 - Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
 

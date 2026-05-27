@@ -318,11 +318,123 @@ def _evaluate_refund_rate_spike(db: Session, rule: AlertRule) -> AlertEvaluation
     )
 
 
+def _evaluate_settlement_variance(db: Session, rule: AlertRule) -> AlertEvaluationResult:
+    """Trigger when the per-marketplace variance between *settled*
+    marketplace fees and what `Marketplace.default_fee_rate` would
+    have predicted exceeds `rule.threshold` (interpreted as a
+    percentage, absolute value).
+
+    Why: the operator's configured `default_fee_rate` is the
+    estimator the cost engine uses for pre-settlement breakdowns.
+    Once the settlement worker captures real fees, the variance from
+    the predicted amount surfaces three real-world things the
+    operator should react to:
+      - FBA per-unit overage charges (Amazon billed more than the
+        flat rate suggested).
+      - Promo / coupon deductions (ML charged less than expected
+        because a marketplace-funded promo lowered the gross).
+      - Account-level rate changes the operator didn't capture yet
+        (the marketplace bumped the fee schedule).
+
+    Per-marketplace because each channel has its own
+    `default_fee_rate`. The rule fires when ANY marketplace's
+    absolute variance % is at or above the threshold; the payload
+    enumerates every marketplace with its actual / expected /
+    variance numbers so the email body can point at the offender.
+
+    Implementation notes:
+      - Only orders with `fees_source = 'settled'` enter the
+        calculation. Estimated orders would tautologically match
+        the predicted fee since that's how the estimate is
+        computed.
+      - A marketplace with `default_fee_rate = 0` has no
+        prediction → skipped (zero-denominator is meaningless;
+        the operator just hasn't configured a rate yet).
+      - Orders whose breakdown is `reversed_at IS NOT NULL` are
+        excluded — a cancelled order's fees shouldn't drive the
+        alert.
+    """
+    from src.models.marketplace import Marketplace
+    from src.models.order import OrderCostBreakdown, OrderSource
+
+    end_dt = datetime.now(timezone.utc)
+    start_dt = end_dt - timedelta(days=rule.window_days)
+
+    # Map OrderSource → marketplace name → default_fee_rate. We hit
+    # the marketplaces table once instead of joining inside the
+    # group-by — keeps the SQL readable and per-marketplace logic
+    # cleanly Pythonic.
+    name_by_source: Dict[OrderSource, str] = {
+        OrderSource.AMAZON: "amazon",
+        OrderSource.MERCADOLIBRE: "mercadolibre",
+    }
+    rate_by_source: Dict[OrderSource, float] = {}
+    for source, name in name_by_source.items():
+        mp = db.query(Marketplace).filter(Marketplace.name.ilike(name)).first()
+        if mp is not None and mp.default_fee_rate:
+            rate_by_source[source] = float(mp.default_fee_rate)
+
+    rows: list[Dict[str, Any]] = []
+    triggered = False
+    for source, rate in rate_by_source.items():
+        agg = (
+            db.query(
+                func.coalesce(func.sum(OrderCostBreakdown.revenue_amount), 0.0),
+                func.coalesce(func.sum(OrderCostBreakdown.marketplace_fees_amount), 0.0),
+                func.count(OrderCostBreakdown.id),
+            )
+            .join(SalesOrder, SalesOrder.id == OrderCostBreakdown.order_id)
+            .filter(SalesOrder.source == source)
+            .filter(SalesOrder.created_at >= start_dt)
+            .filter(SalesOrder.created_at <= end_dt)
+            .filter(OrderCostBreakdown.fees_source == "settled")
+            .filter(OrderCostBreakdown.reversed_at.is_(None))
+            .one()
+        )
+        revenue = float(agg[0] or 0.0)
+        actual_fees = float(agg[1] or 0.0)
+        orders = int(agg[2] or 0)
+
+        if orders == 0:
+            # No settled orders for this marketplace in the window —
+            # there's nothing to compare against, so skip.
+            continue
+
+        expected_fees = revenue * rate
+        if expected_fees <= 0:
+            # Zero or negative expected (rate=0 already filtered, but
+            # belt-and-braces). Don't divide.
+            continue
+
+        variance_pct = (actual_fees - expected_fees) / expected_fees * 100.0
+        rows.append({
+            "source": source.value,
+            "orders": orders,
+            "revenue_amount": round(revenue, 2),
+            "expected_fees_amount": round(expected_fees, 2),
+            "actual_fees_amount": round(actual_fees, 2),
+            "variance_percent": round(variance_pct, 2),
+        })
+        if abs(variance_pct) >= rule.threshold:
+            triggered = True
+
+    return AlertEvaluationResult(
+        rule_id=rule.id,
+        triggered=triggered,
+        payload={
+            "threshold": rule.threshold,
+            "window_days": rule.window_days,
+            "marketplaces": rows,
+        },
+    )
+
+
 _EVALUATORS = {
     AlertType.LOW_MARGIN: _evaluate_low_margin,
     AlertType.SALES_DIP: _evaluate_sales_dip,
     AlertType.STOCKOUT_RISK: _evaluate_stockout_risk,
     AlertType.REFUND_RATE_SPIKE: _evaluate_refund_rate_spike,
+    AlertType.SETTLEMENT_VARIANCE: _evaluate_settlement_variance,
 }
 
 
@@ -340,6 +452,16 @@ def _email_subject(rule: AlertRule, payload: Dict[str, Any]) -> str:
         return (
             f"Fulcrum alert: refund rate {payload.get('refund_rate_percent', 0):.1f}% "
             f"over the last {rule.window_days}d"
+        )
+    if rule.alert_type == AlertType.SETTLEMENT_VARIANCE:
+        marketplaces = payload.get("marketplaces") or []
+        worst = max(
+            (abs(m.get("variance_percent") or 0.0) for m in marketplaces),
+            default=0.0,
+        )
+        return (
+            f"Fulcrum alert: settlement fees off by {worst:.1f}% over "
+            f"the last {rule.window_days}d"
         )
     return f"Fulcrum alert: {payload.get('at_risk_count', '?')} products at stockout risk"
 
@@ -405,6 +527,46 @@ def _email_body(rule: AlertRule, payload: Dict[str, Any]) -> tuple[str, str]:
             f"(threshold {rule.threshold:.1f}%): "
             f"{payload.get('refunds_count', 0)} refunds / "
             f"{payload.get('realized_orders_count', 0)} realized orders."
+        )
+        return body_html, body_text
+
+    if rule.alert_type == AlertType.SETTLEMENT_VARIANCE:
+        marketplaces = payload.get("marketplaces") or []
+        # Highlight the worst variance per marketplace so the email
+        # body points at the channel that actually triggered the alert.
+        offenders = sorted(
+            marketplaces,
+            key=lambda m: abs(m.get("variance_percent") or 0.0),
+            reverse=True,
+        )
+        rows_html = "".join(
+            f"<li><strong>{m['source']}</strong>: "
+            f"actual ${m['actual_fees_amount']:,.2f} vs expected "
+            f"${m['expected_fees_amount']:,.2f} on "
+            f"{m['orders']} order(s) → "
+            f"{m['variance_percent']:+.1f}% variance</li>"
+            for m in offenders
+        )
+        body_html = (
+            f"<p>Settled marketplace fees diverged from your configured "
+            f"<code>default_fee_rate</code> by at least "
+            f"<strong>{rule.threshold:.1f}%</strong> over the last "
+            f"{rule.window_days} days.</p>"
+            f"<ul>{rows_html or '<li>(no marketplaces in scope)</li>'}</ul>"
+            f"<p>Open the <a href='/marketplaces'>marketplaces page</a> to "
+            f"review the configured rate, or "
+            f"<a href='/reports/refunds'>refunds list</a> for partial-"
+            f"refund context.</p>"
+        )
+        rows_text = "\n".join(
+            f"- {m['source']}: actual ${m['actual_fees_amount']:,.2f} vs "
+            f"expected ${m['expected_fees_amount']:,.2f} on {m['orders']} order(s) "
+            f"({m['variance_percent']:+.1f}%)"
+            for m in offenders
+        ) or "(no marketplaces in scope)"
+        body_text = (
+            f"Settlement fees off by >= {rule.threshold:.1f}% over "
+            f"{rule.window_days}d:\n\n{rows_text}"
         )
         return body_html, body_text
 

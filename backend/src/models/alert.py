@@ -33,6 +33,7 @@ class AlertType(str, enum.Enum):
     SALES_DIP = "sales_dip"
     STOCKOUT_RISK = "stockout_risk"
     REFUND_RATE_SPIKE = "refund_rate_spike"
+    SETTLEMENT_VARIANCE = "settlement_variance"
 
 
 class AlertRule(Base):

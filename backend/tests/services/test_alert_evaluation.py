@@ -527,3 +527,250 @@ def test_refund_rate_evaluator_below_threshold_does_not_fire(db, test_admin_user
     assert result.triggered is False
     # 1 refund / 9 still-realized = ~11.11%
     assert result.payload["refund_rate_percent"] == pytest.approx(11.11)
+
+
+# ---------------------------------------------------------------------------
+# Settlement-variance evaluator
+# ---------------------------------------------------------------------------
+
+
+def _seed_settled_orders(
+    db: Session,
+    *,
+    marketplace_name: str,
+    default_fee_rate: float,
+    orders: list[tuple[float, float]],  # [(revenue, actual_fee), ...]
+) -> None:
+    """Seed `Marketplace.default_fee_rate` + N settled orders with
+    the supplied actual fee amounts. Used by the settlement-variance
+    evaluator tests."""
+    from src.models.marketplace import Marketplace
+    from src.models.order import OrderCostBreakdown, OrderSource
+    from src.services import order_cost_engine
+    from src.services.order_lifecycle import record_initial_status
+    from datetime import datetime as _dt
+
+    source = (
+        OrderSource.MERCADOLIBRE
+        if marketplace_name.lower() == "mercadolibre"
+        else OrderSource.AMAZON
+    )
+
+    mp = db.query(Marketplace).filter(Marketplace.name.ilike(marketplace_name)).first()
+    if mp is None:
+        mp = Marketplace(name=marketplace_name, api_base_url="https://example.com")
+        db.add(mp)
+        db.flush()
+    mp.default_fee_rate = default_fee_rate
+    db.commit()
+
+    for i, (revenue, actual_fee) in enumerate(orders):
+        order = SalesOrder(
+            status="PAID",
+            total_price=revenue,
+            currency="MXN",
+            created_at=_dt.utcnow(),
+            source=source,
+            external_order_id=f"VAR-{marketplace_name}-{i}",
+        )
+        db.add(order)
+        db.flush()
+        db.add(SalesOrderItem(
+            order_id=order.id, product_id=None,
+            quantity=1, price_per_unit=revenue, cost_per_unit=0.0,
+        ))
+        db.commit()
+        db.refresh(order)
+        order_cost_engine.upsert_breakdown(db, order)
+        # Flip to settled with the supplied actual fee.
+        order_cost_engine.apply_settlement_fees(
+            db, order,
+            marketplace_fees_amount=actual_fee,
+        )
+        record_initial_status(db, order, source_signal="ml_poll")
+        db.commit()
+        # Manually pin the breakdown's reversed_at to None just in
+        # case (apply_settlement_fees leaves it alone, but make the
+        # invariant explicit).
+        breakdown = (
+            db.query(OrderCostBreakdown)
+            .filter(OrderCostBreakdown.order_id == order.id)
+            .first()
+        )
+        assert breakdown.reversed_at is None
+        assert breakdown.fees_source == "settled"
+
+
+def test_settlement_variance_fires_when_actual_above_expected(db, test_admin_user):
+    """Marketplace default_fee_rate = 10% but Amazon actually charged
+    15% across the window → variance ≈ +50%. Threshold 25% → fires."""
+    _seed_settled_orders(
+        db, marketplace_name="Amazon", default_fee_rate=0.10,
+        orders=[(100.0, 15.0), (100.0, 15.0), (100.0, 15.0)],
+    )
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=25.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    assert result.triggered is True
+    amzn = next(m for m in result.payload["marketplaces"] if m["source"] == "AMAZON")
+    assert amzn["orders"] == 3
+    assert amzn["actual_fees_amount"] == pytest.approx(45.0)
+    assert amzn["expected_fees_amount"] == pytest.approx(30.0)
+    assert amzn["variance_percent"] == pytest.approx(50.0)
+
+
+def test_settlement_variance_fires_when_actual_below_expected(db, test_admin_user):
+    """Below-expected variance (promo deduction, marketplace-funded
+    discount) also fires — operator wants the signal in both
+    directions. abs(variance) is what's compared to the threshold."""
+    _seed_settled_orders(
+        db, marketplace_name="MercadoLibre", default_fee_rate=0.16,
+        orders=[(100.0, 8.0)],  # expected 16, actual 8 → -50%
+    )
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=25.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    assert result.triggered is True
+    ml = next(m for m in result.payload["marketplaces"] if m["source"] == "MERCADOLIBRE")
+    assert ml["variance_percent"] == pytest.approx(-50.0)
+
+
+def test_settlement_variance_quiet_when_within_threshold(db, test_admin_user):
+    """5% variance with a 10% threshold → quiet. Real-world fees
+    won't match estimates exactly; the threshold absorbs noise."""
+    _seed_settled_orders(
+        db, marketplace_name="Amazon", default_fee_rate=0.10,
+        orders=[(100.0, 10.5)],  # 5% high
+    )
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=10.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    assert result.triggered is False
+    amzn = next(m for m in result.payload["marketplaces"] if m["source"] == "AMAZON")
+    assert amzn["variance_percent"] == pytest.approx(5.0)
+
+
+def test_settlement_variance_skips_marketplaces_without_rate(db, test_admin_user):
+    """A marketplace with `default_fee_rate=0` has no prediction —
+    the evaluator skips it instead of dividing by zero. Other
+    marketplaces with rates configured still drive the alert."""
+    _seed_settled_orders(
+        db, marketplace_name="Amazon", default_fee_rate=0.0,
+        orders=[(100.0, 20.0)],  # would be "infinite" variance
+    )
+    _seed_settled_orders(
+        db, marketplace_name="MercadoLibre", default_fee_rate=0.10,
+        orders=[(100.0, 20.0)],  # +100% variance
+    )
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=25.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    assert result.triggered is True
+    sources = {m["source"] for m in result.payload["marketplaces"]}
+    # Amazon (rate=0) skipped; MercadoLibre present.
+    assert "AMAZON" not in sources
+    assert "MERCADOLIBRE" in sources
+
+
+def test_settlement_variance_skips_estimated_orders(db, test_admin_user):
+    """Orders still in `fees_source='estimated'` MUST NOT enter the
+    calculation — they tautologically match the predicted rate (that
+    rate is literally how they were generated). Only settled orders
+    drive the alert."""
+    from src.models.marketplace import Marketplace
+    from src.models.order import OrderSource
+    from src.services import order_cost_engine
+
+    mp = Marketplace(name="Amazon", api_base_url="x", default_fee_rate=0.10)
+    db.add(mp)
+    db.flush()
+    db.commit()
+
+    # One estimated order; cost engine fills marketplace_fees_amount
+    # at 10% by default — but the evaluator should still report no
+    # in-scope orders for Amazon.
+    order = SalesOrder(
+        status="PAID", total_price=100.0, currency="MXN",
+        created_at=datetime.utcnow(), source=OrderSource.AMAZON,
+        external_order_id="EST-1",
+    )
+    db.add(order)
+    db.flush()
+    db.add(SalesOrderItem(
+        order_id=order.id, product_id=None,
+        quantity=1, price_per_unit=100.0, cost_per_unit=0.0,
+    ))
+    db.commit()
+    db.refresh(order)
+    order_cost_engine.upsert_breakdown(db, order)
+    db.commit()
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=25.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    # Estimated orders excluded → Amazon row absent (orders=0 was
+    # the skip path).
+    sources = {m["source"] for m in result.payload["marketplaces"]}
+    assert "AMAZON" not in sources
+    assert result.triggered is False
+
+
+def test_settlement_variance_skips_reversed_orders(db, test_admin_user):
+    """Reversed (cancelled-after-settlement) orders fall out of the
+    rollup so a cancellation doesn't pollute the variance signal."""
+    from src.services.order_lifecycle import apply_status_change
+
+    _seed_settled_orders(
+        db, marketplace_name="Amazon", default_fee_rate=0.10,
+        orders=[(100.0, 20.0)],  # would be +100% variance
+    )
+    # Flip the single seeded order's status to CANCELLED — that
+    # toggles reversed_at on its breakdown.
+    only_order = (
+        db.query(SalesOrder)
+        .filter(SalesOrder.source == OrderSource.AMAZON)
+        .first()
+    )
+    apply_status_change(db, only_order, new_status="cancelled", source_signal="amazon_poll")
+    db.commit()
+
+    rule = _make_rule(
+        db, test_admin_user, alert_type=AlertType.SETTLEMENT_VARIANCE,
+        threshold=10.0,
+    )
+    with patch("src.services.alert_evaluation_service.get_email_service") as mock_email:
+        mock_email.return_value.send_email.return_value = True
+        result = evaluate_rule(db, rule)
+
+    sources = {m["source"] for m in result.payload["marketplaces"]}
+    assert "AMAZON" not in sources
+    assert result.triggered is False
