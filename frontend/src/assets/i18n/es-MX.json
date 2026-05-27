@@ -456,7 +456,23 @@
         "unitPrice": "Precio unitario",
         "subtotal": "Subtotal",
         "unmatched": "Sin producto local vinculado",
-        "noItems": "No hay productos registrados para este pedido."
+        "noItems": "No hay productos registrados para este pedido.",
+        "recordReturn": {
+            "sectionTitle": "Devoluciones",
+            "openDialog": "Registrar devolución",
+            "title": "Registrar devolución — pedido",
+            "hint": "Selecciona los artículos que el comprador devolvió. El stock se acreditará al inventario con código de motivo 'return'.",
+            "noLines": "No hay artículos para devolver.",
+            "qty": "Unidades",
+            "ofN": "de {{n}} pedidas",
+            "reason": "Motivo (opcional)",
+            "reasonHint": "p. ej. \"Comprador cambió de opinión\", \"Dañado en tránsito\"",
+            "notes": "Notas (opcional)",
+            "submit": "Registrar devolución",
+            "savedSnackbar": "Devolución registrada para {{n}} línea(s).",
+            "empty": "Aún no hay devoluciones registradas para este pedido.",
+            "unitsBack": "{{n}} unidad(es) devuelta(s)"
+        }
     },
     "products": {
         "title": "Productos",
@@ -1539,13 +1555,17 @@
     },
     "inventoryAudit": {
         "title": "Historial de ajustes de inventario",
-        "subtitle": "Cada cambio de cantidad en el espacio, del más reciente al más antiguo. Usa los filtros para acotar por producto o fecha; luego exporta para un registro sellado.",
+        "subtitle": "Cada cambio de cantidad en el espacio, del más reciente al más antiguo. Usa los filtros para acotar por producto, fecha o motivo; luego exporta para un registro sellado.",
         "productIdFilter": "ID de producto",
         "from": "Desde",
         "to": "Hasta",
+        "reasonCodeFilter": "Motivo",
+        "reasonCodeAll": "Todos los motivos",
+        "reasonCodeUncategorized": "Sin categoría (histórico)",
         "when": "Cuándo",
         "product": "Producto",
         "delta": "Δ",
+        "reasonCode": "Código de motivo",
         "reason": "Motivo",
         "createdBy": "Realizado por",
         "empty": "Ningún ajuste de inventario coincide con estos filtros.",
@@ -1896,6 +1916,9 @@
         },
         "reports": {
             "invalidDateRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin (se recibió {{start}} → {{end}})."
+        },
+        "inventoryAdjustment": {
+            "unknownReasonCode": "Código de motivo desconocido '{{value}}'."
         }
     }
 }

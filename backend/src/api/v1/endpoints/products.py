@@ -692,12 +692,19 @@ def adjust_stock(
             detail="Product not found",
         )
 
+    # Operator-initiated adjustments default to MANUAL if the
+    # frontend didn't pick a more specific reason code from the
+    # dropdown (shrinkage / recount / damage / etc.).
+    from src.models.inventory import InventoryAdjustmentReasonCode
+    reason_code = stock_adjustment.reason_code or InventoryAdjustmentReasonCode.MANUAL.value
+
     # Use centralized service
     inventory_service.adjust_stock(
         db=db,
         product_id=product_id,
         adjustment=stock_adjustment.adjustment,
         reason=stock_adjustment.reason,
+        reason_code=reason_code,
         location=getattr(stock_adjustment, 'location', 'default'),
         user_id=current_user.email if current_user.email else f"user_{current_user.id}"
     )

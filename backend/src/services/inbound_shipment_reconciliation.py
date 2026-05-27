@@ -155,6 +155,7 @@ def _apply_received_delta(
     on reconciliation because a marketplace reducing its reported
     received count (e.g., warehouse correction) doesn't mean Fulcrum
     should automatically yank inventory back out of the destination."""
+    from src.models.inventory import InventoryAdjustmentReasonCode
     inventory_service = InventoryService()
     inventory_service.adjust_stock(
         db=db,
@@ -165,6 +166,7 @@ def _apply_received_delta(
             f"Stock transfer #{transfer.id} received at "
             f"{transfer.dest_location} (inbound reconciliation)"
         ),
+        reason_code=InventoryAdjustmentReasonCode.TRANSFER,
         location=transfer.dest_location,
         user_id=actor,
     )

@@ -78,6 +78,14 @@
     color: rgba(0, 0, 0, 0.5);
     font-style: italic;
   }
+
+  .reason-chip {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 0.8em;
+    display: inline-block;
+  }
 }
 
 .empty-cell {

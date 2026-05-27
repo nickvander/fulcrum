@@ -243,11 +243,13 @@ async def process_mercadolibre_event(event_id: int):
                 )
 
                 if product_id and quantity > 0:
+                    from src.models.inventory import InventoryAdjustmentReasonCode
                     inventory_service.adjust_stock(
                         db,
                         product_id=product_id,
                         adjustment=-quantity,
                         reason=f"MercadoLibre order {external_order_id}",
+                        reason_code=InventoryAdjustmentReasonCode.SALE,
                         user_id="mercadolibre-webhook",
                     )
 

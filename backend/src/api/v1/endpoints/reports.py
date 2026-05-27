@@ -407,6 +407,7 @@ def _build_inventory_adjustment_rows(
     product_id: Optional[int],
     after: Optional[datetime],
     before: Optional[datetime],
+    reason_code: Optional[str],
     limit: int,
 ) -> list[dict]:
     from sqlalchemy.orm import joinedload as _joinedload  # local to avoid widening top imports
@@ -422,6 +423,15 @@ def _build_inventory_adjustment_rows(
         query = query.filter(InventoryAdjustment.timestamp >= after)
     if before is not None:
         query = query.filter(InventoryAdjustment.timestamp <= before)
+    if reason_code is not None:
+        # Magic string `"none"` filters to NULL rows (legacy
+        # uncategorized adjustments), matching the audit-page
+        # dropdown's "Uncategorized" option. Any other value is
+        # validated upstream as a known enum.
+        if reason_code == "none":
+            query = query.filter(InventoryAdjustment.reason_code.is_(None))
+        else:
+            query = query.filter(InventoryAdjustment.reason_code == reason_code)
 
     rows: list[dict] = []
     for adj in query.limit(limit).all():
@@ -432,10 +442,31 @@ def _build_inventory_adjustment_rows(
             "product_sku":  product.sku if product else "",
             "product_name": product.name if product else "",
             "adjustment":   adj.adjustment,
+            "reason_code":  adj.reason_code or "",
             "reason":       adj.reason or "",
             "created_by":   adj.created_by or "",
         })
     return rows
+
+
+def _validate_reason_code_query(value: Optional[str]) -> Optional[str]:
+    """Accept either a known enum value or the special string 'none'
+    (for filtering to NULL legacy rows). Anything else is a 400."""
+    if value is None:
+        return None
+    from src.models.inventory import InventoryAdjustmentReasonCode
+
+    if value == "none":
+        return value
+    valid = {code.value for code in InventoryAdjustmentReasonCode}
+    if value not in valid:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.inventoryAdjustment.unknownReasonCode",
+            params={"value": value},
+            detail=f"Unknown reason_code '{value}'",
+        )
+    return value
 
 
 def _inventory_adjustment_table(rows: list[dict]) -> ReportTable:
@@ -455,6 +486,7 @@ def _inventory_adjustment_table(rows: list[dict]) -> ReportTable:
             ReportColumn("product_sku",  "SKU"),
             ReportColumn("product_name", "Product"),
             ReportColumn("adjustment",   "Delta",      align="right", formatter=fmt_int),
+            ReportColumn("reason_code",  "Reason code"),
             ReportColumn("reason",       "Reason"),
             ReportColumn("created_by",   "Created by"),
         ],
@@ -471,6 +503,7 @@ class InventoryAdjustmentRow(BaseModel):
     product_sku: Optional[str] = None
     product_name: Optional[str] = None
     adjustment: int
+    reason_code: Optional[str] = None
     reason: Optional[str] = None
     created_by: Optional[str] = None
 
@@ -482,6 +515,20 @@ class InventoryAdjustmentList(BaseModel):
     render a paginator without a second round-trip."""
 
 
+@router.get("/inventory-adjustments/reason-codes", response_model=List[str])
+def list_inventory_adjustment_reason_codes(
+    current_user: User = Depends(get_current_active_user),
+) -> List[str]:
+    """Return the canonical reason-code list so the audit-page
+    dropdown can render it without hard-coding the enum on both
+    sides. Order is enum declaration order — that's the order the
+    operator sees in the dropdown.
+    """
+    from src.models.inventory import InventoryAdjustmentReasonCode
+
+    return [code.value for code in InventoryAdjustmentReasonCode]
+
+
 @router.get("/inventory-adjustments", response_model=InventoryAdjustmentList)
 def list_inventory_adjustments(
     *,
@@ -489,6 +536,15 @@ def list_inventory_adjustments(
     product_id: Optional[int] = Query(None),
     after: Optional[datetime] = Query(None),
     before: Optional[datetime] = Query(None),
+    reason_code: Optional[str] = Query(
+        None,
+        description=(
+            "Filter by reason code (shrinkage / recount / damage / return / "
+            "theft / correction / sale / cancellation / transfer / purchase / "
+            "manual / other). Pass 'none' to filter for legacy uncategorized "
+            "rows."
+        ),
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=500),
     current_user: User = Depends(get_current_active_user),
@@ -498,6 +554,8 @@ def list_inventory_adjustments(
     the rows on screen, then click Export to get the full filtered set."""
     from sqlalchemy.orm import joinedload as _joinedload
 
+    reason_code = _validate_reason_code_query(reason_code)
+
     base = db.query(InventoryAdjustment)
     if product_id is not None:
         base = base.filter(InventoryAdjustment.product_id == product_id)
@@ -505,6 +563,11 @@ def list_inventory_adjustments(
         base = base.filter(InventoryAdjustment.timestamp >= after)
     if before is not None:
         base = base.filter(InventoryAdjustment.timestamp <= before)
+    if reason_code is not None:
+        if reason_code == "none":
+            base = base.filter(InventoryAdjustment.reason_code.is_(None))
+        else:
+            base = base.filter(InventoryAdjustment.reason_code == reason_code)
 
     total = base.count()
 
@@ -528,6 +591,7 @@ def list_inventory_adjustments(
                 product_sku=product.sku if product else None,
                 product_name=product.name if product else None,
                 adjustment=adj.adjustment,
+                reason_code=adj.reason_code,
                 reason=adj.reason,
                 created_by=adj.created_by,
             )
@@ -542,14 +606,17 @@ def export_inventory_adjustments_csv(
     product_id: Optional[int] = Query(None),
     after: Optional[datetime] = Query(None),
     before: Optional[datetime] = Query(None),
+    reason_code: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=20000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Stream the inventory-adjustment audit log as a CSV. Sorted newest
     first. Default limit is 5000 (cap 20000) for "give me the whole
     quarter" audit requests."""
+    reason_code = _validate_reason_code_query(reason_code)
     rows = _build_inventory_adjustment_rows(
-        db, product_id=product_id, after=after, before=before, limit=limit,
+        db, product_id=product_id, after=after, before=before,
+        reason_code=reason_code, limit=limit,
     )
     return stream_csv(_inventory_adjustment_table(rows))
 
@@ -561,12 +628,15 @@ def export_inventory_adjustments_pdf(
     product_id: Optional[int] = Query(None),
     after: Optional[datetime] = Query(None),
     before: Optional[datetime] = Query(None),
+    reason_code: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=20000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Stream the inventory-adjustment audit log as a printable PDF."""
+    reason_code = _validate_reason_code_query(reason_code)
     rows = _build_inventory_adjustment_rows(
-        db, product_id=product_id, after=after, before=before, limit=limit,
+        db, product_id=product_id, after=after, before=before,
+        reason_code=reason_code, limit=limit,
     )
     return stream_pdf(_inventory_adjustment_table(rows))
 

@@ -42,6 +42,7 @@ from typing import Iterable, Optional
 
 from sqlalchemy.orm import Session
 
+from src.models.inventory import InventoryAdjustmentReasonCode
 from src.models.order import (
     OrderCostBreakdown,
     SalesOrder,
@@ -151,6 +152,7 @@ def _recredit_stock(
                 product_id=item.product_id,
                 adjustment=int(item.quantity),
                 reason=f"{source_signal}: order {order.external_order_id or order.id} cancelled before ship",
+                reason_code=InventoryAdjustmentReasonCode.CANCELLATION,
                 user_id=source_signal,
             )
         except Exception:  # noqa: BLE001

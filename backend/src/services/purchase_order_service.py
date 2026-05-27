@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from src.crud.crud_purchase_order import purchase_order as crud_purchase_order
 from src.crud.crud_product import product as crud_product
 from src.schemas.purchase_order import PurchaseOrderStatus
-from src.models.inventory import InventoryItem
+from src.models.inventory import InventoryAdjustmentReasonCode, InventoryItem
 from sqlalchemy.sql import func
 
 class PurchaseOrderService:
@@ -157,6 +157,7 @@ class PurchaseOrderService:
                 adjustment=qty,
                 variant_id=item.variant_id,
                 reason=f"Received PO #{po.id}",
+                reason_code=InventoryAdjustmentReasonCode.PURCHASE,
 
                 user_id=user.email if user else "system" 
             )
@@ -249,6 +250,7 @@ class PurchaseOrderService:
                 adjustment=-qty,
                 variant_id=item.variant_id,
                 reason=correction_reason,
+                reason_code=InventoryAdjustmentReasonCode.CORRECTION,
                 user_id=user.email if user else "system",
             )
             corrected_count += 1

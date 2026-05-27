@@ -494,6 +494,69 @@ def test_adjust_stock_product_not_found(client: TestClient, admin_headers: dict)
 
 
 @pytest.mark.db
+def test_adjust_stock_defaults_reason_code_to_manual(
+    client: TestClient, test_product: Product, db: Session, admin_headers: dict,
+):
+    """When the operator submits an adjustment without specifying a
+    reason_code, it lands as `manual` — the catch-all bucket for
+    operator-initiated tweaks that don't fit a more specific category."""
+    from src.models.inventory import InventoryAdjustment
+
+    response = client.post(
+        f"/api/v1/products/{test_product.id}/adjust-stock",
+        json={"adjustment": 3, "reason": "small tweak"},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    adj = (
+        db.query(InventoryAdjustment)
+        .filter(InventoryAdjustment.product_id == test_product.id)
+        .order_by(InventoryAdjustment.id.desc())
+        .first()
+    )
+    assert adj.reason_code == "manual"
+
+
+@pytest.mark.db
+def test_adjust_stock_honors_explicit_reason_code(
+    client: TestClient, test_product: Product, db: Session, admin_headers: dict,
+):
+    """An operator picking `shrinkage` from the dropdown lands a
+    `shrinkage`-coded row so the audit-page filter + "how much did I
+    lose to shrinkage last month?" report can find it."""
+    from src.models.inventory import InventoryAdjustment
+
+    response = client.post(
+        f"/api/v1/products/{test_product.id}/adjust-stock",
+        json={"adjustment": -2, "reason": "missing on shelf", "reason_code": "shrinkage"},
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+    adj = (
+        db.query(InventoryAdjustment)
+        .filter(InventoryAdjustment.product_id == test_product.id)
+        .order_by(InventoryAdjustment.id.desc())
+        .first()
+    )
+    assert adj.reason_code == "shrinkage"
+
+
+@pytest.mark.db
+def test_adjust_stock_rejects_unknown_reason_code(
+    client: TestClient, test_product: Product, admin_headers: dict,
+):
+    """An unknown reason_code is a 422 (Pydantic validation) — the
+    schema-level field validator enforces the enum so we never write
+    a row that violates the DB CHECK constraint."""
+    response = client.post(
+        f"/api/v1/products/{test_product.id}/adjust-stock",
+        json={"adjustment": 1, "reason_code": "ufo-abduction"},
+        headers=admin_headers,
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.db
 def test_delete_multiple_products(client: TestClient, test_product: Product, db: Session):
     """
     Test deleting multiple products successfully.

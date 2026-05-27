@@ -46,6 +46,22 @@
             data-testid="audit-end-date-input" />
       </mat-form-field>
 
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+        <mat-label>{{ t('inventoryAudit.reasonCodeFilter') }}</mat-label>
+        <mat-select
+            [(ngModel)]="reasonCode"
+            (selectionChange)="onFilterChange()"
+            data-testid="audit-reason-code-select">
+          <mat-option value="">{{ t('inventoryAudit.reasonCodeAll') }}</mat-option>
+          <mat-option *ngFor="let code of reasonCodes" [value]="code">
+            {{ reasonCodeLabel(code) }}
+          </mat-option>
+          <mat-option value="none">
+            {{ t('inventoryAudit.reasonCodeUncategorized') }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <button mat-button
           *ngIf="hasActiveFilters()"
           (click)="clearFilters()">
@@ -91,6 +107,18 @@
             <span [class]="deltaClass(row.adjustment)">
               {{ row.adjustment > 0 ? '+' + row.adjustment : row.adjustment }}
             </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="reason_code">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.reasonCode') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <span *ngIf="row.reason_code; else uncategorized" class="reason-chip">
+              {{ reasonCodeLabel(row.reason_code) }}
+            </span>
+            <ng-template #uncategorized>
+              <span class="muted">—</span>
+            </ng-template>
           </td>
         </ng-container>
 

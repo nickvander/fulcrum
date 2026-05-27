@@ -3,7 +3,11 @@ from typing import Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from src.models.inventory import InventoryItem, InventoryAdjustment
+from src.models.inventory import (
+    InventoryAdjustment,
+    InventoryAdjustmentReasonCode,
+    InventoryItem,
+)
 from src.models.order import SalesOrder, SalesOrderItem
 
 class InventoryService:
@@ -14,20 +18,32 @@ class InventoryService:
         adjustment: int,
         variant_id: Optional[int] = None,
         reason: Optional[str] = None,
+        reason_code: Optional[InventoryAdjustmentReasonCode] = None,
         location: str = "default",
         user_id: Optional[str] = "system"
     ) -> InventoryItem:
         """
         Adjust stock for a product at a specific location.
         Creates an audit trail (InventoryAdjustment) and updates/creates the InventoryItem.
+
+        `reason_code` is the typed taxonomy that drives the audit
+        filter (shrinkage / recount / damage / return / theft / etc.).
+        Callers with semantic context (order ingestion, returns,
+        transfers) MUST set it; opaque callers can leave it None and
+        the row lands as "uncategorized" in the audit log.
         """
-        
+
         # 1. Create audit log
         inventory_adjustment = InventoryAdjustment(
             product_id=product_id,
             variant_id=variant_id,
             adjustment=adjustment,
             reason=reason,
+            reason_code=(
+                reason_code.value
+                if isinstance(reason_code, InventoryAdjustmentReasonCode)
+                else reason_code
+            ),
             timestamp=datetime.utcnow(),
             created_by=str(user_id)
         )
@@ -93,23 +109,28 @@ class InventoryService:
                 comp_name = comp.component.name if comp.component else f"ID {comp.component_id}"
                 raise ValueError(f"Insufficient stock for {comp_name}. Required: {required}, Available: {current}")
 
-        # Execute deductions
+        # Execute deductions. Bundle assembly is internal stock movement
+        # — components move OUT of inventory and a bundle SKU appears
+        # IN inventory; classify as TRANSFER on both legs so the audit
+        # paginator can show the two sides together.
         for comp in bundle.bundle_components:
             self.adjust_stock(
-                db, 
-                comp.component_id, 
-                -(comp.quantity * quantity), 
-                reason=f"Used for Bundle {bundle.sku or bundle.id}", 
-                user_id=user_id
+                db,
+                comp.component_id,
+                -(comp.quantity * quantity),
+                reason=f"Used for Bundle {bundle.sku or bundle.id}",
+                reason_code=InventoryAdjustmentReasonCode.TRANSFER,
+                user_id=user_id,
             )
 
         # Add bundle stock
         self.adjust_stock(
-            db, 
-            bundle_id, 
-            quantity, 
-            reason="Bundle Assembly", 
-            user_id=user_id
+            db,
+            bundle_id,
+            quantity,
+            reason="Bundle Assembly",
+            reason_code=InventoryAdjustmentReasonCode.TRANSFER,
+            user_id=user_id,
         )
 
     def calculate_sales_velocity(self, db: Session, product_id: int, days: int = 30) -> float:

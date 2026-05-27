@@ -456,7 +456,23 @@
         "unitPrice": "Unit price",
         "subtotal": "Subtotal",
         "unmatched": "No local product match",
-        "noItems": "No line items recorded for this order."
+        "noItems": "No line items recorded for this order.",
+        "recordReturn": {
+            "sectionTitle": "Returns",
+            "openDialog": "Record return",
+            "title": "Record return — order",
+            "hint": "Pick the line items the buyer sent back. Stock will be credited to inventory with reason code 'return'.",
+            "noLines": "No line items to return.",
+            "qty": "Units",
+            "ofN": "of {{n}} ordered",
+            "reason": "Reason (optional)",
+            "reasonHint": "e.g. \"Buyer changed mind\", \"Damaged in transit\"",
+            "notes": "Notes (optional)",
+            "submit": "Record return",
+            "savedSnackbar": "Return recorded for {{n}} line(s).",
+            "empty": "No returns recorded for this order yet.",
+            "unitsBack": "{{n}} unit(s) back"
+        }
     },
     "products": {
         "title": "Products",
@@ -1539,13 +1555,17 @@
     },
     "inventoryAudit": {
         "title": "Inventory adjustment audit log",
-        "subtitle": "Every quantity change in the workspace, newest first. Use the filters to narrow by product or date, then Export for a stamped record.",
+        "subtitle": "Every quantity change in the workspace, newest first. Use the filters to narrow by product, date, or reason, then Export for a stamped record.",
         "productIdFilter": "Product ID",
         "from": "From",
         "to": "To",
+        "reasonCodeFilter": "Reason",
+        "reasonCodeAll": "All reasons",
+        "reasonCodeUncategorized": "Uncategorized (legacy)",
         "when": "When",
         "product": "Product",
         "delta": "Delta",
+        "reasonCode": "Reason code",
         "reason": "Reason",
         "createdBy": "Created by",
         "empty": "No inventory adjustments match these filters.",
@@ -1896,6 +1916,9 @@
         },
         "reports": {
             "invalidDateRange": "Start date must be on or before end date (got {{start}} → {{end}})."
+        },
+        "inventoryAdjustment": {
+            "unknownReasonCode": "Unknown reason code '{{value}}'."
         }
     }
 }

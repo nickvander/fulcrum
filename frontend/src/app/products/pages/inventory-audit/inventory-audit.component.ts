@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
@@ -33,6 +34,7 @@ import {
     MatInputModule,
     MatPaginatorModule,
     MatProgressBarModule,
+    MatSelectModule,
     MatTableModule,
     MatTooltipModule,
     TranslocoModule,
@@ -44,12 +46,20 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   rows: InventoryAdjustmentRow[] = [];
   total = 0;
   loading = false;
-  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason', 'created_by'];
+  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason_code', 'reason', 'created_by'];
+
+  /** Reason-code dropdown options. Loaded once on init from
+   *  `GET /reports/inventory-adjustments/reason-codes` so the
+   *  client doesn't hard-code the enum. The `''` option is "all
+   *  reasons" and `'none'` is the magic value for legacy
+   *  uncategorized (NULL) rows. */
+  reasonCodes: string[] = [];
 
   // Filters
   searchProductId: number | null = null;
   startDate: string = '';  // YYYY-MM-DD
   endDate: string = '';
+  reasonCode: string = '';
 
   // Pagination
   pageIndex = 0;
@@ -68,6 +78,16 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
     this.refresh$
       .pipe(debounceTime(150), distinctUntilChanged((a, b) => false), takeUntil(this.destroy$))
       .subscribe(() => this.loadPage());
+    // Fetch the canonical reason-code list for the dropdown. Failure
+    // is benign — without the list the dropdown stays empty and the
+    // operator can still browse the unfiltered audit.
+    this.auditService
+      .listReasonCodes()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (codes) => (this.reasonCodes = codes),
+        error: () => (this.reasonCodes = []),
+      });
     this.loadPage();
   }
 
@@ -85,6 +105,7 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
       // inclusive on both ends.
       after: this.startDate ? `${this.startDate}T00:00:00` : null,
       before: this.endDate ? `${this.endDate}T23:59:59` : null,
+      reasonCode: this.reasonCode || null,
     };
   }
 
@@ -121,15 +142,25 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    if (this.searchProductId == null && !this.startDate && !this.endDate) return;
+    if (this.searchProductId == null && !this.startDate && !this.endDate && !this.reasonCode) return;
     this.searchProductId = null;
     this.startDate = '';
     this.endDate = '';
+    this.reasonCode = '';
     this.onFilterChange();
   }
 
   hasActiveFilters(): boolean {
-    return this.searchProductId != null || !!this.startDate || !!this.endDate;
+    return this.searchProductId != null || !!this.startDate || !!this.endDate || !!this.reasonCode;
+  }
+
+  /** Human-readable label for a reason code. The codes are
+   *  lowercase enum values; we capitalize for display without
+   *  routing through a full per-code i18n key. */
+  reasonCodeLabel(code: string): string {
+    if (!code) return '';
+    if (code === 'none') return 'Uncategorized';
+    return code.charAt(0).toUpperCase() + code.slice(1);
   }
 
   exportCsv(): void {

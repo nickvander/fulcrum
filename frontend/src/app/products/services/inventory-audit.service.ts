@@ -11,6 +11,12 @@ export interface InventoryAdjustmentRow {
   product_sku: string | null;
   product_name: string | null;
   adjustment: number;
+  /** Typed taxonomy (`shrinkage` / `recount` / `damage` / `return` /
+   *  `theft` / `correction` / `sale` / `cancellation` / `transfer` /
+   *  `purchase` / `manual` / `other`). NULL on legacy pre-migration
+   *  rows — the audit-page dropdown renders those as
+   *  "Uncategorized". */
+  reason_code: string | null;
   reason: string | null;
   created_by: string | null;
 }
@@ -24,6 +30,9 @@ export interface InventoryAuditFilters {
   productId?: number | null;
   after?: string | null;   // ISO datetime
   before?: string | null;  // ISO datetime
+  /** Send a known enum value to filter to that reason, or the magic
+   *  string `'none'` to filter to legacy uncategorized (NULL) rows. */
+  reasonCode?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -37,9 +46,17 @@ export class InventoryAuditService {
     if (opts.productId != null) params = params.set('product_id', String(opts.productId));
     if (opts.after) params = params.set('after', opts.after);
     if (opts.before) params = params.set('before', opts.before);
+    if (opts.reasonCode) params = params.set('reason_code', opts.reasonCode);
     if (opts.skip != null) params = params.set('skip', String(opts.skip));
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
     return this.http.get<InventoryAdjustmentList>(this.apiUrl, { params });
+  }
+
+  /** Fetch the canonical reason-code list for the dropdown. Cached
+   *  by the browser between page visits via the standard HTTP cache;
+   *  the values rarely change. */
+  listReasonCodes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/reason-codes`);
   }
 
   exportCsv(filters: InventoryAuditFilters = {}): Observable<Blob> {
@@ -61,6 +78,7 @@ export class InventoryAuditService {
     if (filters.productId != null) params = params.set('product_id', String(filters.productId));
     if (filters.after) params = params.set('after', filters.after);
     if (filters.before) params = params.set('before', filters.before);
+    if (filters.reasonCode) params = params.set('reason_code', filters.reasonCode);
     return params;
   }
 }
