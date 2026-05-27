@@ -198,7 +198,39 @@
             "error": "No se pudo cargar el resumen de reembolsos.",
             "refundsCount": "Reembolsos",
             "refundedAmount": "Reembolsado (MXN)",
-            "refundRate": "Tasa"
+            "refundRate": "Tasa",
+            "drillDown": "Ver cada reembolso"
+        },
+        "refundsPage": {
+            "title": "Reembolsos y cancelaciones",
+            "subtitle": "Detalle por evento del widget del dashboard. Incluye cancelaciones de órdenes completas y reembolsos parciales de Amazon.",
+            "backToDashboard": "Volver al dashboard",
+            "windowLabel": "Ventana",
+            "window30": "Últimos 30 días",
+            "window60": "Últimos 60 días",
+            "window90": "Últimos 90 días",
+            "window180": "Últimos 180 días",
+            "sourceLabel": "Canal",
+            "sourceAll": "Todos los canales",
+            "sourceMercadoLibre": "MercadoLibre",
+            "sourceAmazon": "Amazon",
+            "sourceFulcrum": "Fulcrum",
+            "empty": "Sin reembolsos en la ventana para estos filtros.",
+            "error": "No se pudieron cargar los reembolsos.",
+            "retry": "Reintentar",
+            "viewOrder": "Abrir la orden",
+            "cols": {
+                "refundedAt": "Cuándo",
+                "source": "Canal",
+                "externalOrderId": "Orden #",
+                "refundKind": "Tipo",
+                "orderStatus": "Estado",
+                "amount": "Reembolso"
+            },
+            "kinds": {
+                "orderCancelled": "Orden cancelada",
+                "amazonPartial": "Parcial Amazon"
+            }
         },
         "deadStock": {
             "title": "Inventario muerto",
@@ -258,6 +290,8 @@
             "marginDesc": "Ingreso, costo, margen y porcentaje por producto",
             "stockoutTitle": "Desabasto proyectado",
             "stockoutDesc": "Agotado / inminente / a vigilar, por días de cobertura",
+            "refundsTitle": "Reembolsos y cancelaciones",
+            "refundsDesc": "Reembolsos por canal, monto MXN y tasa con fila TOTAL",
             "startLabel": "Fecha de inicio",
             "endLabel": "Fecha de fin",
             "clearRangeTooltip": "Borrar rango de fechas y usar el selector de ventana",

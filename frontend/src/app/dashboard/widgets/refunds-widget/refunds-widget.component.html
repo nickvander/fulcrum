@@ -56,7 +56,16 @@
         </ul>
       }
 
-      <small class="window-label">{{ summary.window_label }}</small>
+      <div class="footer-row">
+        <small class="window-label">{{ summary.window_label }}</small>
+        <a mat-button
+           routerLink="/reports/refunds"
+           class="drill-down-link"
+           data-testid="refunds-widget-drilldown">
+          {{ t('dashboard.refundsWidget.drillDown') }}
+          <mat-icon>chevron_right</mat-icon>
+        </a>
+      </div>
     }
   </mat-card>
 </ng-container>

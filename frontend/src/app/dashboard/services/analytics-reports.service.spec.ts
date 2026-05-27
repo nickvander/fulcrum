@@ -157,4 +157,27 @@ describe('AnalyticsReportsService', () => {
     expect(req.request.params.get('end_date')).toBe('2026-03-31');
     req.flush({ window_label: 'window 30d', totals: {}, by_channel: [] });
   });
+
+  it('refundsList() GETs /reports/refunds-list with pagination defaults', () => {
+    service.refundsList().subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/refunds-list`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('skip')).toBe('0');
+    expect(req.request.params.get('limit')).toBe('50');
+    expect(req.request.params.get('source')).toBeNull();
+    req.flush({ window_label: 'window 30d', items: [], total: 0 });
+  });
+
+  it('refundsList() forwards source + pagination + date range params', () => {
+    service.refundsList(60, 100, 25, 'amazon', { startDate: '2026-02-01' }).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/refunds-list`);
+    expect(req.request.params.get('window_days')).toBe('60');
+    expect(req.request.params.get('skip')).toBe('100');
+    expect(req.request.params.get('limit')).toBe('25');
+    expect(req.request.params.get('source')).toBe('amazon');
+    expect(req.request.params.get('start_date')).toBe('2026-02-01');
+    expect(req.request.params.get('end_date')).toBeNull();
+    req.flush({ window_label: 'window 60d', items: [], total: 0 });
+  });
 });

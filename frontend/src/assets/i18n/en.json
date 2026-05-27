@@ -200,7 +200,39 @@
             "error": "Could not load refund summary.",
             "refundsCount": "Refunds",
             "refundedAmount": "Refunded (MXN)",
-            "refundRate": "Rate"
+            "refundRate": "Rate",
+            "drillDown": "See every refund"
+        },
+        "refundsPage": {
+            "title": "Refunds & cancellations",
+            "subtitle": "Per-event detail behind the dashboard widget. Mixes full-order cancellations and Amazon partial-refund events.",
+            "backToDashboard": "Back to dashboard",
+            "windowLabel": "Window",
+            "window30": "Last 30 days",
+            "window60": "Last 60 days",
+            "window90": "Last 90 days",
+            "window180": "Last 180 days",
+            "sourceLabel": "Channel",
+            "sourceAll": "All channels",
+            "sourceMercadoLibre": "MercadoLibre",
+            "sourceAmazon": "Amazon",
+            "sourceFulcrum": "Fulcrum",
+            "empty": "No refunds in the window for these filters.",
+            "error": "Could not load refunds.",
+            "retry": "Retry",
+            "viewOrder": "Open the parent order",
+            "cols": {
+                "refundedAt": "When",
+                "source": "Channel",
+                "externalOrderId": "Order #",
+                "refundKind": "Type",
+                "orderStatus": "Status",
+                "amount": "Refunded"
+            },
+            "kinds": {
+                "orderCancelled": "Cancelled order",
+                "amazonPartial": "Amazon partial"
+            }
         },
         "deadStock": {
             "title": "Dead stock",
@@ -258,6 +290,8 @@
             "marginDesc": "Per-product revenue, cost, margin and margin %",
             "stockoutTitle": "Projected stockout",
             "stockoutDesc": "Out / imminent / watch, by velocity-projected days of cover",
+            "refundsTitle": "Refunds & cancellations",
+            "refundsDesc": "Per-channel refund count, refunded MXN, and rate with a TOTAL row",
             "startLabel": "Start date",
             "endLabel": "End date",
             "clearRangeTooltip": "Clear date range and use the window selector",

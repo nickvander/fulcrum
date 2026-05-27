@@ -111,6 +111,31 @@ export interface RefundsSummaryResponse {
   by_channel: RefundsByChannelRow[];
 }
 
+export interface RefundsListRow {
+  /** Discriminator: `order_cancelled` rows came from a status
+   *  transition out of the realized set; `amazon_partial` rows came
+   *  from the `amazon_order_refunds` table (Amazon-specific
+   *  partial-refund events that don't flip the top-level status). */
+  refund_kind: 'order_cancelled' | 'amazon_partial';
+  order_id: number;
+  source: string;
+  external_order_id: string | null;
+  /** ISO 8601 timestamp — transition `changed_at` for full refunds,
+   *  SP-API `PostedDate` for Amazon partials. */
+  refunded_at: string;
+  refunded_amount_mxn: number;
+  /** The order's status as of this row. Lets the UI distinguish a
+   *  `CANCELLED` order from a `SHIPPED` order that took a partial
+   *  refund. */
+  order_status: string | null;
+}
+
+export interface RefundsListResponse {
+  window_label: string;
+  items: RefundsListRow[];
+  total: number;
+}
+
 /**
  * CSV/PDF download endpoints for the velocity / margin / stockout
  * reports. These reports do not have a JSON shape on the frontend yet —
@@ -185,6 +210,20 @@ export class AnalyticsReportsService {
       watch_days: watchDays,
       limit,
     }, range));
+  }
+
+  exportRefundsSummaryCsv(windowDays = 30, range?: DateRange): Observable<Blob> {
+    return this.blobGet(
+      `${this.apiUrl}/refunds-summary/export`,
+      this.withRange({ window_days: windowDays }, range),
+    );
+  }
+
+  exportRefundsSummaryPdf(windowDays = 30, range?: DateRange): Observable<Blob> {
+    return this.blobGet(
+      `${this.apiUrl}/refunds-summary/export-pdf`,
+      this.withRange({ window_days: windowDays }, range),
+    );
   }
 
   private withRange(
@@ -288,6 +327,31 @@ export class AnalyticsReportsService {
     if (range?.endDate) params = params.set('end_date', range.endDate);
     return this.http.get<RefundsSummaryResponse>(
       `${this.apiUrl}/refunds-summary`, { params },
+    );
+  }
+
+  /**
+   * Per-event refund list — drill-down behind the dashboard widget.
+   * Mixes `order_cancelled` rows (status transitions out of realized)
+   * and `amazon_partial` rows (Amazon partial-refund events). Sorted
+   * most-recent first.
+   */
+  refundsList(
+    windowDays = 30,
+    skip = 0,
+    limit = 50,
+    source?: string,
+    range?: DateRange,
+  ): Observable<RefundsListResponse> {
+    let params = new HttpParams()
+      .set('window_days', String(windowDays))
+      .set('skip', String(skip))
+      .set('limit', String(limit));
+    if (source) params = params.set('source', source);
+    if (range?.startDate) params = params.set('start_date', range.startDate);
+    if (range?.endDate) params = params.set('end_date', range.endDate);
+    return this.http.get<RefundsListResponse>(
+      `${this.apiUrl}/refunds-list`, { params },
     );
   }
 }

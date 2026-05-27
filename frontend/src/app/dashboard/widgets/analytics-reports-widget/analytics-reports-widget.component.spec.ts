@@ -18,6 +18,8 @@ describe('AnalyticsReportsWidgetComponent', () => {
     exportMarginPdf: ReturnType<typeof vi.fn>;
     exportStockoutCsv: ReturnType<typeof vi.fn>;
     exportStockoutPdf: ReturnType<typeof vi.fn>;
+    exportRefundsSummaryCsv: ReturnType<typeof vi.fn>;
+    exportRefundsSummaryPdf: ReturnType<typeof vi.fn>;
   };
   let downloaderStub: { download: ReturnType<typeof vi.fn> };
 
@@ -29,6 +31,8 @@ describe('AnalyticsReportsWidgetComponent', () => {
       exportMarginPdf:   vi.fn().mockReturnValue(of(new Blob())),
       exportStockoutCsv: vi.fn().mockReturnValue(of(new Blob())),
       exportStockoutPdf: vi.fn().mockReturnValue(of(new Blob())),
+      exportRefundsSummaryCsv: vi.fn().mockReturnValue(of(new Blob())),
+      exportRefundsSummaryPdf: vi.fn().mockReturnValue(of(new Blob())),
     };
     downloaderStub = { download: vi.fn() };
 
@@ -137,6 +141,31 @@ describe('AnalyticsReportsWidgetComponent', () => {
     expect(analyticsStub.exportVelocityCsv).toHaveBeenCalledTimes(1);
     expect(analyticsStub.exportVelocityPdf).toHaveBeenCalledTimes(1);
     expect(downloaderStub.download).toHaveBeenCalledTimes(2);
+  });
+
+  // ---- Refunds row ---------------------------------------------------------
+
+  it('refunds CSV / PDF buttons route to the refunds-summary service methods with the right stem', () => {
+    clickButton('refunds-export-csv');
+    expect(analyticsStub.exportRefundsSummaryCsv).toHaveBeenCalledWith(30, undefined);
+    expect(downloaderStub.download.mock.calls[0][1]).toBe('fulcrum-refunds-summary');
+    expect(downloaderStub.download.mock.calls[0][2]).toBe('csv');
+
+    clickButton('refunds-export-pdf');
+    expect(analyticsStub.exportRefundsSummaryPdf).toHaveBeenCalledWith(30, undefined);
+    expect(downloaderStub.download.mock.calls[1][2]).toBe('pdf');
+  });
+
+  it('refunds row forwards the date range alongside the existing reports', () => {
+    component.startDate = new Date(2026, 0, 15);
+    component.endDate = new Date(2026, 2, 31);
+    fixture.detectChanges();
+
+    clickButton('refunds-export-csv');
+    expect(analyticsStub.exportRefundsSummaryCsv).toHaveBeenCalledWith(30, {
+      startDate: '2026-01-15',
+      endDate: '2026-03-31',
+    });
   });
 
   // ---- Date range ----------------------------------------------------------

@@ -17,7 +17,7 @@ import {
 } from '../../services/analytics-reports.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
 
-type ReportKey = 'velocity' | 'margin' | 'stockout';
+type ReportKey = 'velocity' | 'margin' | 'stockout' | 'refunds';
 
 /**
  * Compact dashboard card that exposes the velocity / margin / stockout
@@ -104,6 +104,7 @@ export class AnalyticsReportsWidgetComponent {
       case 'velocity': return 'fulcrum-velocity';
       case 'margin':   return 'fulcrum-margin';
       case 'stockout': return 'fulcrum-stockout';
+      case 'refunds':  return 'fulcrum-refunds-summary';
     }
   }
 
@@ -118,6 +119,11 @@ export class AnalyticsReportsWidgetComponent {
       return ext === 'csv'
         ? this.analyticsReports.exportMarginCsv(this.windowDays, 2000, range)
         : this.analyticsReports.exportMarginPdf(this.windowDays, 2000, range);
+    }
+    if (report === 'refunds') {
+      return ext === 'csv'
+        ? this.analyticsReports.exportRefundsSummaryCsv(this.windowDays, range)
+        : this.analyticsReports.exportRefundsSummaryPdf(this.windowDays, range);
     }
     return ext === 'csv'
       ? this.analyticsReports.exportStockoutCsv(this.windowDays, 7, 14, 2000, range)

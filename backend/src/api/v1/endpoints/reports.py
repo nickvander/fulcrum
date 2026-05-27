@@ -1903,3 +1903,281 @@ def refunds_summary_report(
         totals=totals,
         by_channel=by_channel,
     )
+
+
+# ---- Refunds list (drill-down for the widget) ------------------------------
+#
+# Per-event detail behind the refunds-summary rollup. The dashboard
+# widget shows aggregate count + MXN per channel; clicking through
+# lands here for "which orders, when, how much". One row per refund
+# event — a single order that bounced cancelled→reopened→cancelled
+# produces two rows so the operator can see the bounce.
+#
+# Sources, in order they appear on the list:
+#   1. Status transitions out of the realized set (full-order refunds
+#      / cancellations) — joins through `sales_order_status_events`.
+#   2. Amazon partial-refund events from `amazon_order_refunds`.
+#
+# Pagination is offset-based to match the existing reports surface;
+# bounded at 1000 rows per page to keep responses sane.
+
+
+class RefundsListRow(BaseModel):
+    """One refund event. `refund_kind` is `'order_cancelled'` for a
+    full-order transition or `'amazon_partial'` for a partial-refund
+    event."""
+    refund_kind: str  # 'order_cancelled' | 'amazon_partial'
+    order_id: int
+    source: str
+    external_order_id: Optional[str] = None
+    # For order_cancelled rows: the transition timestamp.
+    # For amazon_partial rows: the SP-API PostedDate.
+    refunded_at: datetime
+    # For order_cancelled rows: revenue from the OrderCostBreakdown
+    # (full refund). For amazon_partial rows: the partial amount.
+    refunded_amount_mxn: float
+    # Status the order moved INTO (for cancellations) or the order's
+    # current status (for partial refunds). Lets the operator
+    # distinguish a `CANCELLED` order from a `SHIPPED`-with-partial-
+    # refund.
+    order_status: Optional[str] = None
+
+
+class RefundsListResponse(BaseModel):
+    """Envelope mirrors `/payments/` paging conventions: `items`
+    array + `total` for the `{N–M of Total}` UI."""
+    window_label: str
+    items: List[RefundsListRow]
+    total: int
+
+
+@router.get("/refunds-list", response_model=RefundsListResponse)
+def refunds_list_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None, description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    source: Optional[str] = Query(
+        None, description="Optional channel filter (amazon / mercadolibre / fulcrum).",
+    ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+    current_user: User = Depends(get_current_active_user),
+) -> RefundsListResponse:
+    """Per-event refund list. Used by the `/reports/refunds` page
+    behind the dashboard widget's drill-down link.
+
+    Returns rows for both full-order refunds (status transitions out
+    of the realized set) and Amazon partial-refund events, sorted by
+    refunded_at desc so the most-recent activity lands first.
+
+    `source` filter applies to both kinds — for partial refunds the
+    filter is implicit (`amazon_order_refunds` rows are by definition
+    Amazon).
+    """
+    from src.models.order import (
+        AmazonOrderRefund,
+        OrderCostBreakdown,
+        OrderSource,
+        SalesOrder,
+        SalesOrderStatusEvent,
+    )
+    from src.services.order_lifecycle import REALIZED_STATUSES
+
+    window = _resolve_date_window(window_days, start_date, end_date)
+
+    parsed_source: Optional[OrderSource] = None
+    if source:
+        try:
+            parsed_source = OrderSource(source.upper())
+        except ValueError:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.report.unknownSource",
+                params={"source": source},
+                detail=f"Unknown source '{source}'",
+            )
+
+    # --- 1. Full-order refunds: dedup per (order_id, latest exit
+    # transition in window). An order that bounced realized→cancel
+    # several times still gets distinct rows here because each
+    # transition row is a distinct event the operator might want to
+    # see.
+    txn_query = (
+        db.query(
+            SalesOrderStatusEvent.id.label("event_id"),
+            SalesOrderStatusEvent.order_id,
+            SalesOrderStatusEvent.changed_at,
+            SalesOrderStatusEvent.to_status,
+            SalesOrder.source,
+            SalesOrder.external_order_id,
+            SalesOrder.status,
+            OrderCostBreakdown.revenue_amount_mxn,
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderStatusEvent.order_id)
+        .outerjoin(OrderCostBreakdown, OrderCostBreakdown.order_id == SalesOrder.id)
+        .filter(SalesOrderStatusEvent.changed_at >= window.start_dt)
+        .filter(SalesOrderStatusEvent.changed_at <= window.end_dt)
+        .filter(SalesOrderStatusEvent.from_status.in_(REALIZED_STATUSES))
+        .filter(SalesOrderStatusEvent.to_status.notin_(REALIZED_STATUSES))
+    )
+    if parsed_source is not None:
+        txn_query = txn_query.filter(SalesOrder.source == parsed_source)
+
+    # --- 2. Amazon partial refunds in window.
+    partial_query = (
+        db.query(
+            AmazonOrderRefund.id.label("refund_id"),
+            AmazonOrderRefund.order_id,
+            AmazonOrderRefund.posted_at,
+            AmazonOrderRefund.refund_amount,
+            SalesOrder.source,
+            SalesOrder.external_order_id,
+            SalesOrder.status,
+        )
+        .join(SalesOrder, SalesOrder.id == AmazonOrderRefund.order_id)
+        .filter(AmazonOrderRefund.posted_at.isnot(None))
+        .filter(AmazonOrderRefund.posted_at >= window.start_dt)
+        .filter(AmazonOrderRefund.posted_at <= window.end_dt)
+    )
+    if parsed_source is not None and parsed_source != OrderSource.AMAZON:
+        # Partial-refund rows are Amazon-only; a non-Amazon filter
+        # drops them all.
+        partial_query = partial_query.filter(False)
+
+    txn_rows = txn_query.all()
+    partial_rows = partial_query.all()
+
+    rows: List[RefundsListRow] = []
+    for r in txn_rows:
+        rows.append(RefundsListRow(
+            refund_kind="order_cancelled",
+            order_id=r.order_id,
+            source=r.source.value if r.source else "",
+            external_order_id=r.external_order_id,
+            refunded_at=r.changed_at,
+            refunded_amount_mxn=round(float(r.revenue_amount_mxn or 0.0), 2),
+            order_status=r.to_status,
+        ))
+    for r in partial_rows:
+        rows.append(RefundsListRow(
+            refund_kind="amazon_partial",
+            order_id=r.order_id,
+            source=r.source.value if r.source else "",
+            external_order_id=r.external_order_id,
+            refunded_at=r.posted_at,
+            refunded_amount_mxn=round(float(r.refund_amount or 0.0), 2),
+            order_status=r.status,
+        ))
+
+    # Most-recent first; ties broken by order_id desc so the order
+    # the operator just clicked on stays near the top.
+    rows.sort(key=lambda x: (x.refunded_at, x.order_id), reverse=True)
+
+    total = len(rows)
+    paged = rows[skip : skip + limit]
+    return RefundsListResponse(
+        window_label=window.label,
+        items=paged,
+        total=total,
+    )
+
+
+# ---- Refunds-summary export (CSV + PDF) ------------------------------------
+
+
+def _refunds_summary_table(response: RefundsSummaryResponse) -> ReportTable:
+    """Build the `ReportTable` for the refunds-summary export. Both
+    CSV and PDF share this definition so the column order, headers,
+    and number formatting stay aligned. The export shows one row
+    per channel plus a `TOTAL` row appended at the bottom — that
+    second pass matches what the operator reads on the dashboard
+    widget (per-channel cards + a single hero totals row).
+    """
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    rows = [
+        {
+            "source": row.source,
+            "refunds_count": row.refunds_count,
+            "refunded_amount_mxn": row.refunded_amount_mxn,
+            "realized_orders_count": row.realized_orders_count,
+            "refund_rate_percent": row.refund_rate_percent,
+        }
+        for row in response.by_channel
+    ]
+    rows.append({
+        "source": "TOTAL",
+        "refunds_count": response.totals.refunds_count,
+        "refunded_amount_mxn": response.totals.refunded_amount_mxn,
+        "realized_orders_count": response.totals.realized_orders_count,
+        "refund_rate_percent": response.totals.refund_rate_percent,
+    })
+    return ReportTable(
+        title="Fulcrum — Refunds & Cancellations Summary",
+        subtitle=(
+            f"Generated {date_stamp} · {response.window_label} · "
+            f"{response.totals.refunds_count} refund(s) · "
+            f"${response.totals.refunded_amount_mxn:,.2f} refunded"
+        ),
+        filename_stem="fulcrum-refunds-summary",
+        empty_message="No channels in the rollup.",
+        columns=[
+            ReportColumn("source",                "Channel"),
+            ReportColumn("refunds_count",         "Refunds",          align="right", formatter=fmt_int),
+            ReportColumn("refunded_amount_mxn",   "Refunded (MXN)",   align="right", formatter=fmt_currency),
+            ReportColumn("realized_orders_count", "Realized orders",  align="right", formatter=fmt_int),
+            ReportColumn("refund_rate_percent",   "Rate %",           align="right", formatter=fmt_percent),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/refunds-summary/export")
+def export_refunds_summary_csv(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None, description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-channel refund rollup as a CSV. Same data as
+    `/refunds-summary` plus a `TOTAL` row at the bottom — handy for
+    handing to accounting at month-end."""
+    summary = refunds_summary_report(
+        db=db, window_days=window_days,
+        start_date=start_date, end_date=end_date,
+        current_user=current_user,
+    )
+    return stream_csv(_refunds_summary_table(summary))
+
+
+@router.get("/refunds-summary/export-pdf")
+def export_refunds_summary_pdf(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None, description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-channel refund rollup as a printable PDF."""
+    summary = refunds_summary_report(
+        db=db, window_days=window_days,
+        start_date=start_date, end_date=end_date,
+        current_user=current_user,
+    )
+    return stream_pdf(_refunds_summary_table(summary))

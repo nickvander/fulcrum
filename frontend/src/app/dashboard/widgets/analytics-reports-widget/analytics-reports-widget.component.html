@@ -161,6 +161,38 @@
           </button>
         </div>
       </li>
+
+      <li class="report-row" data-testid="analytics-report-refunds">
+        <div class="row-icon refunds">
+          <mat-icon>currency_exchange</mat-icon>
+        </div>
+        <div class="row-info">
+          <strong>{{ t('dashboard.analyticsReports.refundsTitle') }}</strong>
+          <small>{{ t('dashboard.analyticsReports.refundsDesc') }}</small>
+        </div>
+        <div class="row-actions">
+          <button
+            mat-stroked-button
+            (click)="download('refunds', 'csv')"
+            [disabled]="isBusy('refunds', 'csv') || rangeInverted()"
+            [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
+            data-testid="refunds-export-csv"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.analyticsReports.csv') }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="download('refunds', 'pdf')"
+            [disabled]="isBusy('refunds', 'pdf') || rangeInverted()"
+            [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
+            data-testid="refunds-export-pdf"
+          >
+            <mat-icon>picture_as_pdf</mat-icon>
+            {{ t('dashboard.analyticsReports.pdf') }}
+          </button>
+        </div>
+      </li>
     </ul>
   </div>
 </ng-container>

@@ -62,6 +62,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/refunds',
+    loadComponent: () =>
+      import('./dashboard/pages/refunds-page/refunds-page.component').then(
+        (m) => m.RefundsPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'settings',
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of, throwError } from 'rxjs';
 
@@ -43,6 +44,7 @@ describe('RefundsWidgetComponent', () => {
       imports: [
         RefundsWidgetComponent,
         NoopAnimationsModule,
+        RouterTestingModule,
         TranslocoTestingModule.forRoot({
           langs: { en: {}, 'es-MX': {} },
           translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' },
@@ -116,5 +118,21 @@ describe('RefundsWidgetComponent', () => {
     expect(component.channelLabel('AMAZON')).toBe('Amazon');
     expect(component.channelLabel('FULCRUM')).toBe('Fulcrum');
     expect(component.channelLabel('UNKNOWN')).toBe('UNKNOWN');
+  });
+
+  it('renders the drill-down link pointing at /reports/refunds', () => {
+    const link = fixture.debugElement.query(By.css('[data-testid="refunds-widget-drilldown"]'));
+    expect(link).not.toBeNull();
+    // RouterLink renders as an `href` once the router resolves it.
+    // Use the directive-bound attribute or fall back to the rendered
+    // href — Angular's RouterTestingModule converts the input either
+    // way. Both forms are valid; checking the routerLink directive
+    // input directly is more robust than the rendered href which
+    // depends on routing config.
+    const routerLink = link.injector.get<any>('RouterLink' as any, null);
+    // Fallback: inspect the property bag.
+    const props: any = link.properties || {};
+    const href = link.nativeElement.getAttribute('href');
+    expect(href === '/reports/refunds' || props['routerLink'] === '/reports/refunds').toBe(true);
   });
 });
