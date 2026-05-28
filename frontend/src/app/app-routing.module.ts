@@ -70,6 +70,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/returns',
+    loadComponent: () =>
+      import('./dashboard/pages/returns-page/returns-page.component').then(
+        (m) => m.ReturnsPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'inventory/count',
     loadComponent: () =>
       import('./inventory-count/pages/list/inventory-count-list.component').then(

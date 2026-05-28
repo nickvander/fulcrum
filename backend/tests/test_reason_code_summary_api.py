@@ -31,6 +31,7 @@ pytestmark = pytest.mark.db
 def _seed_adj(
     db: Session, *, sku: str, adjustment: int, cost_price: float,
     reason_code: str | None, when: datetime | None = None,
+    location: str | None = None,
 ) -> int:
     product = crud_product.product.create(
         db=db,
@@ -44,6 +45,7 @@ def _seed_adj(
         adjustment=adjustment,
         reason="seed",
         reason_code=reason_code,
+        location=location,
         timestamp=when or datetime.utcnow(),
         created_by="test",
     ))
@@ -196,6 +198,100 @@ def test_summary_rejects_inverted_range(client: TestClient, admin_headers):
     )
     assert resp.status_code == 400
     assert resp.json()["code"] == "apiErrors.reports.invalidDateRange"
+
+
+# ---------------------------------------------------------------------------
+# Per-location breakdown
+# ---------------------------------------------------------------------------
+
+
+def test_summary_filters_by_location(client: TestClient, db, admin_headers):
+    """`location=aisle-3` narrows the rollup to that warehouse only.
+    The aisle-1 row drops out entirely."""
+    _seed_adj(
+        db, sku="A1", adjustment=-2, cost_price=10.0,
+        reason_code="shrinkage", location="aisle-1",
+    )
+    _seed_adj(
+        db, sku="A3", adjustment=-5, cost_price=10.0,
+        reason_code="shrinkage", location="aisle-3",
+    )
+    resp = client.get(
+        "/api/v1/reports/reason-code-summary",
+        params={"location": "aisle-3"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["rows"]) == 1
+    row = body["rows"][0]
+    assert row["reason_code"] == "shrinkage"
+    assert row["total_units_delta"] == -5
+    assert row["total_capital_at_cost"] == pytest.approx(50.0)
+
+
+def test_summary_group_by_location_splits_per_warehouse(
+    client: TestClient, db, admin_headers,
+):
+    """`group_by_location=true` emits one row per (reason, location).
+    Same reason at two warehouses shows up as two rows."""
+    _seed_adj(
+        db, sku="W1", adjustment=-2, cost_price=10.0,
+        reason_code="shrinkage", location="warehouse-1",
+    )
+    _seed_adj(
+        db, sku="W2", adjustment=-5, cost_price=10.0,
+        reason_code="shrinkage", location="warehouse-2",
+    )
+    resp = client.get(
+        "/api/v1/reports/reason-code-summary",
+        params={"group_by_location": "true"},
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert len(body["rows"]) == 2
+    # Capital-at-risk desc: warehouse-2 (5*10 = 50) before warehouse-1 (20).
+    assert body["rows"][0]["location"] == "warehouse-2"
+    assert body["rows"][0]["total_units_delta"] == -5
+    assert body["rows"][1]["location"] == "warehouse-1"
+    assert body["rows"][1]["total_units_delta"] == -2
+
+
+def test_summary_group_by_location_uses_unknown_sentinel_for_null(
+    client: TestClient, db, admin_headers,
+):
+    """Legacy adjustments without a location surface under
+    `'(unknown)'` so the operator can see how much historical data
+    pre-dates the column."""
+    _seed_adj(
+        db, sku="UNK", adjustment=-3, cost_price=5.0,
+        reason_code="shrinkage", location=None,
+    )
+    resp = client.get(
+        "/api/v1/reports/reason-code-summary",
+        params={"group_by_location": "true"},
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert len(body["rows"]) == 1
+    assert body["rows"][0]["location"] == "(unknown)"
+
+
+def test_summary_without_group_by_location_omits_location_field(
+    client: TestClient, db, admin_headers,
+):
+    """Default response shape stays backward compatible: `location`
+    is None on rows when the caller didn't ask for the split."""
+    _seed_adj(
+        db, sku="X", adjustment=-1, cost_price=5.0,
+        reason_code="shrinkage", location="aisle-1",
+    )
+    resp = client.get(
+        "/api/v1/reports/reason-code-summary",
+        headers=admin_headers,
+    )
+    body = resp.json()
+    assert body["rows"][0].get("location") is None
 
 
 # ---------------------------------------------------------------------------

@@ -136,6 +136,32 @@ export interface RefundsListResponse {
   total: number;
 }
 
+export interface ReturnsListRow {
+  return_id: number;
+  /** ISO 8601 timestamp from `sales_order_returns.received_at`. */
+  received_at: string;
+  order_id: number;
+  external_order_id: string | null;
+  /** Channel code: 'MERCADOLIBRE' | 'AMAZON' | 'FULCRUM' | null. */
+  source: string | null;
+  product_id: number | null;
+  product_sku: string | null;
+  product_name: string | null;
+  quantity: number;
+  reason: string | null;
+  notes: string | null;
+  recorded_by_email: string | null;
+  /** `product.cost_price × quantity`, rounded. Lets the UI surface
+   *  where the cost-of-returns concentrates. */
+  value_at_cost: number;
+}
+
+export interface ReturnsListResponse {
+  window_label: string;
+  items: ReturnsListRow[];
+  total: number;
+}
+
 export interface ReturnsByChannelRow {
   /** Channel code: 'FULCRUM' | 'MERCADOLIBRE' | 'AMAZON' | 'UNKNOWN'
    *  for per-channel rows; 'ALL' for the totals row. */
@@ -400,6 +426,30 @@ export class AnalyticsReportsService {
     if (range?.endDate) params = params.set('end_date', range.endDate);
     return this.http.get<RefundsListResponse>(
       `${this.apiUrl}/refunds-list`, { params },
+    );
+  }
+
+  /**
+   * Per-event physical-returns list — drill-down behind the dashboard
+   * returns widget. One row per `sales_order_returns` entry, sorted
+   * most-recent first.
+   */
+  returnsList(
+    windowDays = 30,
+    skip = 0,
+    limit = 50,
+    source?: string,
+    range?: DateRange,
+  ): Observable<ReturnsListResponse> {
+    let params = new HttpParams()
+      .set('window_days', String(windowDays))
+      .set('skip', String(skip))
+      .set('limit', String(limit));
+    if (source) params = params.set('source', source);
+    if (range?.startDate) params = params.set('start_date', range.startDate);
+    if (range?.endDate) params = params.set('end_date', range.endDate);
+    return this.http.get<ReturnsListResponse>(
+      `${this.apiUrl}/returns-list`, { params },
     );
   }
 }

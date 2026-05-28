@@ -1,0 +1,142 @@
+<ng-container *transloco="let t">
+  <div class="returns-page">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('dashboard.returnsPage.title') }}</h1>
+        <p>{{ t('dashboard.returnsPage.subtitle') }}</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard" data-testid="returns-page-back">
+        <mat-icon>arrow_back</mat-icon>
+        {{ t('dashboard.returnsPage.backToDashboard') }}
+      </a>
+    </div>
+
+    <mat-card class="filters">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('dashboard.returnsPage.windowLabel') }}</mat-label>
+        <mat-select
+          [(value)]="windowDays"
+          (selectionChange)="onFilterChange()"
+          data-testid="returns-window-select"
+        >
+          <mat-option *ngFor="let opt of windowOptions" [value]="opt.value">
+            {{ t(opt.labelKey) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('dashboard.returnsPage.sourceLabel') }}</mat-label>
+        <mat-select
+          [(value)]="sourceFilter"
+          (selectionChange)="onFilterChange()"
+          data-testid="returns-source-select"
+        >
+          <mat-option *ngFor="let opt of sourceOptions" [value]="opt.value">
+            {{ t(opt.labelKey) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <span class="window-label" *ngIf="windowLabel">{{ windowLabel }}</span>
+    </mat-card>
+
+    @if (loading && rows.length === 0) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (errored && rows.length === 0) {
+      <mat-card class="error-card" data-testid="returns-page-error">
+        <p>{{ t('dashboard.returnsPage.error') }}</p>
+        <button mat-flat-button color="primary" (click)="load()">
+          {{ t('dashboard.returnsPage.retry') }}
+        </button>
+      </mat-card>
+    } @else if (rows.length === 0) {
+      <mat-card class="empty-state" data-testid="returns-page-empty">
+        <mat-icon>sentiment_satisfied</mat-icon>
+        <p>{{ t('dashboard.returnsPage.empty') }}</p>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="rows" class="returns-table" data-testid="returns-table">
+          <ng-container matColumnDef="received_at">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.returnsPage.cols.receivedAt') }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.received_at | date:'short' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="source">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.returnsPage.cols.source') }}</th>
+            <td mat-cell *matCellDef="let row">{{ channelLabel(row.source) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="external_order_id">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.returnsPage.cols.externalOrderId') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="external-id">{{ row.external_order_id || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="product">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.returnsPage.cols.product') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="product-cell">
+                <strong>{{ row.product_name || '—' }}</strong>
+                <code class="sku" *ngIf="row.product_sku">{{ row.product_sku }}</code>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef class="num-col">
+              {{ t('dashboard.returnsPage.cols.qty') }}
+            </th>
+            <td mat-cell *matCellDef="let row" class="num-col">{{ row.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.returnsPage.cols.reason') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="reason-text" [matTooltip]="row.notes || ''">{{ row.reason || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="value_at_cost">
+            <th mat-header-cell *matHeaderCellDef class="num-col">
+              {{ t('dashboard.returnsPage.cols.valueAtCost') }}
+            </th>
+            <td mat-cell *matCellDef="let row" class="num-col">
+              {{ formatCurrency(row.value_at_cost) }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <a mat-icon-button
+                 [routerLink]="['/orders', row.order_id]"
+                 [matTooltip]="t('dashboard.returnsPage.viewOrder')"
+                 [attr.data-testid]="'returns-row-link-' + row.return_id">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [attr.data-testid]="'returns-row-' + row.return_id">
+          </tr>
+        </table>
+
+        <mat-paginator
+          [length]="totalRows"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[25, 50, 100]"
+          (page)="onPage($event)"
+          data-testid="returns-paginator"
+        ></mat-paginator>
+      </mat-card>
+    }
+  </div>
+</ng-container>

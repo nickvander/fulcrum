@@ -44,6 +44,11 @@ class InventoryService:
                 if isinstance(reason_code, InventoryAdjustmentReasonCode)
                 else reason_code
             ),
+            # Stamp the location so the shrinkage / reason-code rollup
+            # can answer "where am I bleeding stock?" per warehouse
+            # without joining back through InventoryItem (which would
+            # be ambiguous for multi-location SKUs).
+            location=location,
             timestamp=datetime.utcnow(),
             created_by=str(user_id)
         )

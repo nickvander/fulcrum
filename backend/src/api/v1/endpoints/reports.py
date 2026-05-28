@@ -2275,14 +2275,22 @@ def export_refunds_summary_pdf(
 
 
 class ReasonCodeSummaryRow(BaseModel):
-    """One row per `reason_code` that had at least one adjustment in
-    the window. NULL rows are surfaced under `reason_code='none'` so
-    the operator can see how much legacy uncategorized data is still
-    around without writing a custom query."""
+    """One row per `reason_code` (and optionally `location`) that had
+    at least one adjustment in the window. NULL reason_code rows are
+    surfaced under `reason_code='none'` so the operator can see how
+    much legacy uncategorized data is still around without writing a
+    custom query.
+
+    `location` is None when the response wasn't grouped by location.
+    When `group_by_location=True`, rows are emitted per
+    (reason_code, location) tuple and the unknown-location sentinel
+    is `'(unknown)'`.
+    """
     reason_code: str
     adjustments_count: int
     total_units_delta: int
     total_capital_at_cost: float
+    location: Optional[str] = None
 
 
 class ReasonCodeSummaryResponse(BaseModel):
@@ -2294,7 +2302,11 @@ class ReasonCodeSummaryResponse(BaseModel):
 
 
 def _build_reason_code_summary(
-    db: Session, *, window,
+    db: Session,
+    *,
+    window,
+    location: Optional[str] = None,
+    group_by_location: bool = False,
 ) -> ReasonCodeSummaryResponse:
     """Compute the per-reason-code rollup over the resolved window.
 
@@ -2303,40 +2315,54 @@ def _build_reason_code_summary(
     on `product_id`, though the schema doesn't currently set null —
     the relationship is plain FK) carry `cost_price=0` for that row
     via COALESCE — surfaced as zero capital rather than crashing.
+
+    Optional `location` filter narrows to a single warehouse/shelf.
+    Optional `group_by_location` emits one row per
+    (reason_code, location) so the dashboard can split a single
+    reason across multiple sites — typical use: "where is the
+    shrinkage concentrated?" NULL `location` rows (legacy data
+    before the column existed) surface as `'(unknown)'`.
     """
     from src.models.inventory import InventoryAdjustment
     from src.models.product import Product
 
-    rows_raw = (
-        db.query(
-            # Coalesce to literal 'none' so NULL legacy rows aggregate
-            # under a single label instead of vanishing.
-            func.coalesce(InventoryAdjustment.reason_code, "none").label("reason_code"),
-            func.count(InventoryAdjustment.id).label("adjustments_count"),
-            func.coalesce(func.sum(InventoryAdjustment.adjustment), 0).label("total_units_delta"),
-            func.coalesce(
-                func.sum(
-                    func.abs(InventoryAdjustment.adjustment)
-                    * func.coalesce(Product.cost_price, 0.0)
-                ),
-                0.0,
-            ).label("total_capital_at_cost"),
-        )
+    reason_label = func.coalesce(InventoryAdjustment.reason_code, "none").label("reason_code")
+    location_label = func.coalesce(InventoryAdjustment.location, "(unknown)").label("location")
+    capital_expr = func.coalesce(
+        func.sum(
+            func.abs(InventoryAdjustment.adjustment)
+            * func.coalesce(Product.cost_price, 0.0)
+        ),
+        0.0,
+    )
+
+    group_cols = [reason_label]
+    select_cols = [
+        reason_label,
+        func.count(InventoryAdjustment.id).label("adjustments_count"),
+        func.coalesce(func.sum(InventoryAdjustment.adjustment), 0).label("total_units_delta"),
+        capital_expr.label("total_capital_at_cost"),
+    ]
+    if group_by_location:
+        group_cols.append(location_label)
+        select_cols.append(location_label)
+
+    q = (
+        db.query(*select_cols)
         .outerjoin(Product, Product.id == InventoryAdjustment.product_id)
         .filter(InventoryAdjustment.timestamp >= window.start_dt)
         .filter(InventoryAdjustment.timestamp <= window.end_dt)
-        .group_by(func.coalesce(InventoryAdjustment.reason_code, "none"))
+    )
+    if location is not None:
+        q = q.filter(InventoryAdjustment.location == location)
+    q = (
+        q.group_by(*group_cols)
         # Sort by capital-at-risk desc so the operator's eye lands on
         # the biggest dollar impact first, regardless of category.
-        .order_by(func.coalesce(
-            func.sum(
-                func.abs(InventoryAdjustment.adjustment)
-                * func.coalesce(Product.cost_price, 0.0)
-            ),
-            0.0,
-        ).desc())
-        .all()
+        .order_by(capital_expr.desc())
     )
+
+    rows_raw = q.all()
 
     return ReasonCodeSummaryResponse(
         window_label=window.label,
@@ -2346,6 +2372,7 @@ def _build_reason_code_summary(
                 adjustments_count=int(r.adjustments_count or 0),
                 total_units_delta=int(r.total_units_delta or 0),
                 total_capital_at_cost=round(float(r.total_capital_at_cost or 0.0), 2),
+                location=(r.location if group_by_location else None),
             )
             for r in rows_raw
         ],
@@ -2363,6 +2390,12 @@ def reason_code_summary_report(
     end_date: Optional[date] = Query(
         None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
     ),
+    location: Optional[str] = Query(
+        None, description="Optional warehouse / shelf filter (matches inventory_adjustments.location exactly).",
+    ),
+    group_by_location: bool = Query(
+        False, description="When true, emit one row per (reason_code, location).",
+    ),
     current_user: User = Depends(get_current_active_user),
 ) -> ReasonCodeSummaryResponse:
     """Per-reason-code rollup of inventory adjustments. Answers
@@ -2372,17 +2405,40 @@ def reason_code_summary_report(
     Counts every adjustment regardless of sign — the operator gets
     the unsigned units sum to read "how much moved through this
     bucket?" and `total_units_delta` to read "net direction".
+
+    `location` filter narrows to one warehouse; `group_by_location`
+    splits the rollup into per-(reason, location) rows so the
+    dashboard can show "shrinkage is concentrated at aisle-3".
+    Legacy rows pre-dating the location column surface under
+    `'(unknown)'`.
     """
     window = _resolve_date_window(window_days, start_date, end_date)
-    return _build_reason_code_summary(db, window=window)
+    return _build_reason_code_summary(
+        db, window=window,
+        location=location, group_by_location=group_by_location,
+    )
 
 
-def _reason_code_summary_table(response: ReasonCodeSummaryResponse) -> ReportTable:
+def _reason_code_summary_table(
+    response: ReasonCodeSummaryResponse, *, include_location: bool = False,
+) -> ReportTable:
     """Shared ReportTable for the CSV + PDF exports. Same row order
-    as the JSON endpoint (capital-at-risk desc)."""
+    as the JSON endpoint (capital-at-risk desc). When the response
+    was grouped by location, an extra `location` column shows up
+    between reason_code and the numeric columns."""
     date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     total_capital = sum(r.total_capital_at_cost for r in response.rows)
     total_count = sum(r.adjustments_count for r in response.rows)
+    columns = [
+        ReportColumn("reason_code", "Reason"),
+    ]
+    if include_location:
+        columns.append(ReportColumn("location", "Location"))
+    columns.extend([
+        ReportColumn("adjustments_count",     "Adjustments",       align="right", formatter=fmt_int),
+        ReportColumn("total_units_delta",     "Net units (signed)", align="right", formatter=fmt_int),
+        ReportColumn("total_capital_at_cost", "Capital (MXN)",     align="right", formatter=fmt_currency),
+    ])
     return ReportTable(
         title="Fulcrum — Inventory Adjustments by Reason Code",
         subtitle=(
@@ -2392,12 +2448,7 @@ def _reason_code_summary_table(response: ReasonCodeSummaryResponse) -> ReportTab
         ),
         filename_stem="fulcrum-reason-code-summary",
         empty_message="No inventory adjustments in the window.",
-        columns=[
-            ReportColumn("reason_code",           "Reason"),
-            ReportColumn("adjustments_count",     "Adjustments",       align="right", formatter=fmt_int),
-            ReportColumn("total_units_delta",     "Net units (signed)", align="right", formatter=fmt_int),
-            ReportColumn("total_capital_at_cost", "Capital (MXN)",     align="right", formatter=fmt_currency),
-        ],
+        columns=columns,
         rows=[r.model_dump() for r in response.rows],
     )
 
@@ -2409,14 +2460,23 @@ def export_reason_code_summary_csv(
     window_days: int = Query(30, ge=1, le=365),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
+    location: Optional[str] = Query(None),
+    group_by_location: bool = Query(False),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Per-reason-code rollup as a CSV — operator-facing answer to
     "how much did I lose / move through each bucket last month?".
+    Honors the same location / group_by_location params as the JSON
+    endpoint.
     """
     window = _resolve_date_window(window_days, start_date, end_date)
-    summary = _build_reason_code_summary(db, window=window)
-    return stream_csv(_reason_code_summary_table(summary))
+    summary = _build_reason_code_summary(
+        db, window=window,
+        location=location, group_by_location=group_by_location,
+    )
+    return stream_csv(_reason_code_summary_table(
+        summary, include_location=group_by_location,
+    ))
 
 
 @router.get("/reason-code-summary/export-pdf")
@@ -2426,12 +2486,19 @@ def export_reason_code_summary_pdf(
     window_days: int = Query(30, ge=1, le=365),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
+    location: Optional[str] = Query(None),
+    group_by_location: bool = Query(False),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Per-reason-code rollup as a printable PDF."""
     window = _resolve_date_window(window_days, start_date, end_date)
-    summary = _build_reason_code_summary(db, window=window)
-    return stream_pdf(_reason_code_summary_table(summary))
+    summary = _build_reason_code_summary(
+        db, window=window,
+        location=location, group_by_location=group_by_location,
+    )
+    return stream_pdf(_reason_code_summary_table(
+        summary, include_location=group_by_location,
+    ))
 
 
 # ---- Returns summary (dashboard widget) ------------------------------------
@@ -2544,4 +2611,137 @@ def returns_summary_report(
         window_label=window.label,
         totals=totals,
         by_channel=by_channel,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Returns drill-down list (used by /reports/returns frontend page)
+# ---------------------------------------------------------------------------
+
+
+class ReturnsListRow(BaseModel):
+    """One row per `sales_order_returns` event. The frontend page
+    renders these in a Material table; the dashboard widget hero
+    links here when the operator wants to drill in.
+
+    `value_at_cost` uses `Product.cost_price × quantity` so the
+    operator can sort by where the cost-of-returns concentrates.
+    """
+    return_id: int
+    received_at: datetime
+    order_id: int
+    external_order_id: Optional[str]
+    source: Optional[str]
+    product_id: Optional[int]
+    product_sku: Optional[str]
+    product_name: Optional[str]
+    quantity: int
+    reason: Optional[str]
+    notes: Optional[str]
+    recorded_by_email: Optional[str]
+    value_at_cost: float
+
+
+class ReturnsListResponse(BaseModel):
+    """Envelope mirrors `/refunds-list`: `items` array + `total`."""
+    window_label: str
+    items: List[ReturnsListRow]
+    total: int
+
+
+@router.get("/returns-list", response_model=ReturnsListResponse)
+def returns_list_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None, description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    source: Optional[str] = Query(
+        None, description="Optional channel filter (amazon / mercadolibre / fulcrum).",
+    ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+    current_user: User = Depends(get_current_active_user),
+) -> ReturnsListResponse:
+    """Per-event returns drill-down. One row per
+    `sales_order_returns` entry in the window, sorted by
+    received_at desc.
+
+    Page-friendly: returns `total` so the UI can render N–M of T.
+    Joins to `sales_orders` for source + external_order_id, to
+    `products` for sku/name/cost, and to `users` for the operator
+    email."""
+    from src.models.order import OrderSource, SalesOrder, SalesOrderReturn
+    from src.models.product import Product
+
+    window = _resolve_date_window(window_days, start_date, end_date)
+
+    parsed_source: Optional[OrderSource] = None
+    if source:
+        try:
+            parsed_source = OrderSource(source.upper())
+        except ValueError:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.report.unknownSource",
+                params={"source": source},
+                detail=f"Unknown source '{source}'",
+            )
+
+    base = (
+        db.query(
+            SalesOrderReturn,
+            SalesOrder.source.label("source"),
+            SalesOrder.external_order_id.label("external_order_id"),
+            Product.sku.label("product_sku"),
+            Product.name.label("product_name"),
+            Product.cost_price.label("cost_price"),
+            User.email.label("recorder_email"),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderReturn.order_id)
+        .outerjoin(Product, Product.id == SalesOrderReturn.product_id)
+        .outerjoin(User, User.id == SalesOrderReturn.recorded_by_user_id)
+        .filter(SalesOrderReturn.received_at >= window.start_dt)
+        .filter(SalesOrderReturn.received_at <= window.end_dt)
+    )
+    if parsed_source is not None:
+        base = base.filter(SalesOrder.source == parsed_source)
+
+    total = base.count()
+
+    rows = (
+        base.order_by(SalesOrderReturn.received_at.desc(), SalesOrderReturn.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    items: List[ReturnsListRow] = []
+    for r, src, ext_id, sku, name, cost, recorder in rows:
+        cost_val = float(cost or 0)
+        qty = int(r.quantity or 0)
+        items.append(ReturnsListRow(
+            return_id=r.id,
+            received_at=r.received_at,
+            order_id=r.order_id,
+            external_order_id=ext_id,
+            source=src.value if src is not None else None,
+            product_id=r.product_id,
+            product_sku=sku,
+            product_name=name,
+            quantity=qty,
+            reason=r.reason,
+            notes=r.notes,
+            recorded_by_email=recorder,
+            value_at_cost=round(cost_val * qty, 2),
+        ))
+
+    return ReturnsListResponse(
+        window_label=window.label,
+        items=items,
+        total=total,
     )

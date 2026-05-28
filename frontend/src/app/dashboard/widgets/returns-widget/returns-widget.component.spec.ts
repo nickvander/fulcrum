@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of, throwError } from 'rxjs';
 
@@ -38,6 +39,7 @@ describe('ReturnsWidgetComponent', () => {
       imports: [
         ReturnsWidgetComponent,
         NoopAnimationsModule,
+        RouterTestingModule,
         TranslocoTestingModule.forRoot({
           langs: { en: {}, 'es-MX': {} },
           translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' },

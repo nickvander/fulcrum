@@ -80,6 +80,12 @@ class InventoryAdjustment(Base):
     # rows ingested before the column existed — the audit page renders
     # those as "uncategorized".
     reason_code = Column(String(32), nullable=True, index=True)
+    # Warehouse / shelf the adjustment happened at. Mirrors
+    # InventoryItem.location so the shrinkage report can answer
+    # "where am I bleeding stock?" per-location. NULL on legacy rows
+    # ingested before the column existed — the report surfaces those
+    # under a "(unknown)" sentinel.
+    location = Column(String(64), nullable=True, index=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=True)  # Timestamp of the adjustment
     created_by = Column(String, nullable=False)  # User who made the adjustment
     created_at = Column(DateTime, default=datetime.utcnow)

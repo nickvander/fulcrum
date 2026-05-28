@@ -54,7 +54,16 @@
         </ul>
       }
 
-      <small class="window-label">{{ summary.window_label }}</small>
+      <div class="footer-row">
+        <small class="window-label">{{ summary.window_label }}</small>
+        <a mat-button
+           routerLink="/reports/returns"
+           class="drill-down-link"
+           data-testid="returns-widget-drilldown">
+          {{ t('dashboard.returnsWidget.drillDown') }}
+          <mat-icon>chevron_right</mat-icon>
+        </a>
+      </div>
     }
   </mat-card>
 </ng-container>

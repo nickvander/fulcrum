@@ -122,8 +122,27 @@
   .window-label {
     color: rgba(0, 0, 0, 0.45);
     font-size: 0.7rem;
+    text-align: right;
+  }
+
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-top: auto;
     padding-top: 8px;
-    text-align: right;
+
+    .drill-down-link {
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
   }
 }
