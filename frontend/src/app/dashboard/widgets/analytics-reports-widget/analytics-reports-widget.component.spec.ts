@@ -20,6 +20,8 @@ describe('AnalyticsReportsWidgetComponent', () => {
     exportStockoutPdf: ReturnType<typeof vi.fn>;
     exportRefundsSummaryCsv: ReturnType<typeof vi.fn>;
     exportRefundsSummaryPdf: ReturnType<typeof vi.fn>;
+    exportReasonCodeSummaryCsv: ReturnType<typeof vi.fn>;
+    exportReasonCodeSummaryPdf: ReturnType<typeof vi.fn>;
   };
   let downloaderStub: { download: ReturnType<typeof vi.fn> };
 
@@ -33,6 +35,8 @@ describe('AnalyticsReportsWidgetComponent', () => {
       exportStockoutPdf: vi.fn().mockReturnValue(of(new Blob())),
       exportRefundsSummaryCsv: vi.fn().mockReturnValue(of(new Blob())),
       exportRefundsSummaryPdf: vi.fn().mockReturnValue(of(new Blob())),
+      exportReasonCodeSummaryCsv: vi.fn().mockReturnValue(of(new Blob())),
+      exportReasonCodeSummaryPdf: vi.fn().mockReturnValue(of(new Blob())),
     };
     downloaderStub = { download: vi.fn() };
 
@@ -166,6 +170,19 @@ describe('AnalyticsReportsWidgetComponent', () => {
       startDate: '2026-01-15',
       endDate: '2026-03-31',
     });
+  });
+
+  // ---- Reason-codes row ----------------------------------------------------
+
+  it('reason-codes CSV / PDF buttons route to the reason-code-summary service methods', () => {
+    clickButton('reason-codes-export-csv');
+    expect(analyticsStub.exportReasonCodeSummaryCsv).toHaveBeenCalledWith(30, undefined);
+    expect(downloaderStub.download.mock.calls[0][1]).toBe('fulcrum-reason-code-summary');
+    expect(downloaderStub.download.mock.calls[0][2]).toBe('csv');
+
+    clickButton('reason-codes-export-pdf');
+    expect(analyticsStub.exportReasonCodeSummaryPdf).toHaveBeenCalledWith(30, undefined);
+    expect(downloaderStub.download.mock.calls[1][2]).toBe('pdf');
   });
 
   // ---- Date range ----------------------------------------------------------

@@ -141,12 +141,15 @@
             </div>
 
             <!--
-                Refunds widget — full-width below dead-stock so the
-                per-channel breakdown table has room without crowding
-                the 2x2 analytics grid above.
+                Refunds + returns widgets side-by-side below the
+                analytics grid. Refunds is the financial side
+                ("money out"); returns is the physical side ("stock
+                in"). Side-by-side because operators read them
+                together when triaging a bad week.
             -->
             <div class="refunds-row">
                 <app-refunds-widget class="dashboard-widget"></app-refunds-widget>
+                <app-returns-widget class="dashboard-widget"></app-returns-widget>
             </div>
 
             <div class="secondary-grid">

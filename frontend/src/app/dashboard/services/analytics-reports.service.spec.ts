@@ -180,4 +180,39 @@ describe('AnalyticsReportsService', () => {
     expect(req.request.params.get('end_date')).toBeNull();
     req.flush({ window_label: 'window 60d', items: [], total: 0 });
   });
+
+  it('exportReasonCodeSummaryCsv() forwards window + date range as a blob request', () => {
+    service.exportReasonCodeSummaryCsv(60, { startDate: '2026-02-01', endDate: '2026-02-28' }).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/reason-code-summary/export`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.responseType).toBe('blob');
+    expect(req.request.params.get('window_days')).toBe('60');
+    expect(req.request.params.get('start_date')).toBe('2026-02-01');
+    expect(req.request.params.get('end_date')).toBe('2026-02-28');
+    req.flush(new Blob());
+  });
+
+  it('exportReasonCodeSummaryPdf() targets the export-pdf endpoint', () => {
+    service.exportReasonCodeSummaryPdf().subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/reason-code-summary/export-pdf`);
+    expect(req.request.params.get('window_days')).toBe('30');
+    req.flush(new Blob());
+  });
+
+  it('returnsSummary() GETs /reports/returns-summary with the window', () => {
+    service.returnsSummary(30).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/returns-summary`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('start_date')).toBeNull();
+    req.flush({ window_label: 'window 30d', totals: {}, by_channel: [] });
+  });
+
+  it('returnsSummary() forwards an explicit date range', () => {
+    service.returnsSummary(60, { startDate: '2026-02-01', endDate: '2026-02-28' }).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/returns-summary`);
+    expect(req.request.params.get('start_date')).toBe('2026-02-01');
+    expect(req.request.params.get('end_date')).toBe('2026-02-28');
+    req.flush({ window_label: 'window 60d', totals: {}, by_channel: [] });
+  });
 });

@@ -136,6 +136,25 @@ export interface RefundsListResponse {
   total: number;
 }
 
+export interface ReturnsByChannelRow {
+  /** Channel code: 'FULCRUM' | 'MERCADOLIBRE' | 'AMAZON' | 'UNKNOWN'
+   *  for per-channel rows; 'ALL' for the totals row. */
+  source: string;
+  returns_count: number;
+  units_returned: number;
+  /** Capital that came back, computed as units × current product
+   *  cost_price (not retail). The dashboard signal is "how much
+   *  inventory value is now in the returns pile"; cost basis is
+   *  what the operator can actually recover or write off. */
+  value_at_cost_mxn: number;
+}
+
+export interface ReturnsSummaryResponse {
+  window_label: string;
+  totals: ReturnsByChannelRow;
+  by_channel: ReturnsByChannelRow[];
+}
+
 /**
  * CSV/PDF download endpoints for the velocity / margin / stockout
  * reports. These reports do not have a JSON shape on the frontend yet —
@@ -222,6 +241,20 @@ export class AnalyticsReportsService {
   exportRefundsSummaryPdf(windowDays = 30, range?: DateRange): Observable<Blob> {
     return this.blobGet(
       `${this.apiUrl}/refunds-summary/export-pdf`,
+      this.withRange({ window_days: windowDays }, range),
+    );
+  }
+
+  exportReasonCodeSummaryCsv(windowDays = 30, range?: DateRange): Observable<Blob> {
+    return this.blobGet(
+      `${this.apiUrl}/reason-code-summary/export`,
+      this.withRange({ window_days: windowDays }, range),
+    );
+  }
+
+  exportReasonCodeSummaryPdf(windowDays = 30, range?: DateRange): Observable<Blob> {
+    return this.blobGet(
+      `${this.apiUrl}/reason-code-summary/export-pdf`,
       this.withRange({ window_days: windowDays }, range),
     );
   }
@@ -327,6 +360,21 @@ export class AnalyticsReportsService {
     if (range?.endDate) params = params.set('end_date', range.endDate);
     return this.http.get<RefundsSummaryResponse>(
       `${this.apiUrl}/refunds-summary`, { params },
+    );
+  }
+
+  /**
+   * Per-channel physical-return rollup over the window. Powers the
+   * dashboard returns widget. Mirrors `refundsSummary` (financial
+   * side) but reads from `sales_order_returns` rows (physical
+   * side). Cost-basis value, not retail.
+   */
+  returnsSummary(windowDays = 30, range?: DateRange): Observable<ReturnsSummaryResponse> {
+    let params = new HttpParams().set('window_days', String(windowDays));
+    if (range?.startDate) params = params.set('start_date', range.startDate);
+    if (range?.endDate) params = params.set('end_date', range.endDate);
+    return this.http.get<ReturnsSummaryResponse>(
+      `${this.apiUrl}/returns-summary`, { params },
     );
   }
 

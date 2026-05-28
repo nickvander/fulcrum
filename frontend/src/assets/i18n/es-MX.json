@@ -95,6 +95,7 @@
         "dashboard": "Tablero",
         "products": "Productos",
         "inventoryAudit": "Historial de stock",
+        "inventoryCount": "Conteo físico",
         "orders": "Pedidos",
         "alerts": "Alertas",
         "payments": "Pagos",
@@ -201,6 +202,16 @@
             "refundRate": "Tasa",
             "drillDown": "Ver cada reembolso"
         },
+        "returnsWidget": {
+            "title": "Devoluciones recibidas",
+            "subtitle": "Devoluciones físicas registradas desde la página de detalle de cada pedido. Valor al costo actual.",
+            "refresh": "Actualizar",
+            "empty": "Sin devoluciones físicas en la ventana.",
+            "error": "No se pudo cargar el resumen de devoluciones.",
+            "returnsCount": "Devoluciones",
+            "unitsReturned": "Unidades",
+            "valueAtCost": "Valor (costo)"
+        },
         "refundsPage": {
             "title": "Reembolsos y cancelaciones",
             "subtitle": "Detalle por evento del widget del dashboard. Incluye cancelaciones de órdenes completas y reembolsos parciales de Amazon.",
@@ -292,6 +303,8 @@
             "stockoutDesc": "Agotado / inminente / a vigilar, por días de cobertura",
             "refundsTitle": "Reembolsos y cancelaciones",
             "refundsDesc": "Reembolsos por canal, monto MXN y tasa con fila TOTAL",
+            "reasonCodesTitle": "Ajustes por motivo",
+            "reasonCodesDesc": "Cuántas unidades + cuánto capital pasó por cada motivo (mermas, daños, robo, …) en la ventana",
             "startLabel": "Fecha de inicio",
             "endLabel": "Fecha de fin",
             "clearRangeTooltip": "Borrar rango de fechas y usar el selector de ventana",
@@ -1575,6 +1588,64 @@
         "exportCsvTooltip": "Descargar el historial filtrado como hoja de cálculo",
         "exportPdfTooltip": "Descargar el historial filtrado como PDF imprimible"
     },
+    "inventoryCount": {
+        "list": {
+            "title": "Sesiones de conteo físico",
+            "subtitle": "Cuenta SKUs en bulk en una bodega o estante, luego confirma los deltas como ajustes de reconteo.",
+            "viewAuditLink": "Ver historial",
+            "startNew": "Iniciar nueva sesión",
+            "location": "Ubicación",
+            "notesOptional": "Notas (opcional)",
+            "startButton": "Iniciar sesión",
+            "startFailed": "No se pudo iniciar la sesión de conteo.",
+            "statusFilter": "Estado",
+            "statusAll": "Todas",
+            "statusInProgress": "En progreso",
+            "statusCommitted": "Confirmada",
+            "statusCancelled": "Cancelada",
+            "empty": "Aún no hay sesiones de conteo. Inicia una arriba para comenzar.",
+            "cols": {
+                "started": "Inicio",
+                "status": "Estado",
+                "location": "Ubicación",
+                "items": "Ítems",
+                "startedBy": "Iniciada por"
+            }
+        },
+        "detail": {
+            "backToList": "Volver a sesiones",
+            "title": "Sesión de conteo",
+            "loadFailed": "No se pudo cargar esta sesión de conteo.",
+            "addSku": "Agregar un SKU al conteo",
+            "skuOrBarcode": "SKU o escanear",
+            "add": "Agregar",
+            "addFailed": "No se pudo agregar el SKU {{sku}}.",
+            "skuNotFound": "No se encontró un producto con SKU {{sku}}.",
+            "skuAlreadyAdded": "El SKU {{sku}} ya está en esta sesión.",
+            "itemsTitle": "Ítems ({{n}})",
+            "itemsEmpty": "Aún no hay SKUs agregados. Usa el input de arriba para agregar uno.",
+            "removeRow": "Quitar de la sesión",
+            "removeFailed": "No se pudo quitar esa fila.",
+            "updateFailed": "No se pudo guardar el conteo.",
+            "cols": {
+                "sku": "SKU",
+                "name": "Producto",
+                "expected": "Esperado",
+                "counted": "Contado",
+                "delta": "Δ"
+            },
+            "cancelButton": "Cancelar sesión",
+            "cancelConfirmTitle": "¿Cancelar esta sesión de conteo?",
+            "cancelConfirmBody": "Cancelar descarta todos los conteos. No se escribirán ajustes de stock. La sesión queda registrada para auditoría.",
+            "cancelFailed": "No se pudo cancelar la sesión.",
+            "commitButton": "Confirmar conteo",
+            "commitTooltip": "Se escribirá(n) {{n}} ajuste(s)",
+            "commitConfirmTitle": "¿Confirmar este conteo físico?",
+            "commitConfirmBody": "Se escribirán {{n}} ajuste(s) de stock con motivo 'reconteo'. Las filas sin conteo se omiten.",
+            "commitSnackbar": "Confirmado — {{n}} ajuste(s) escritos.",
+            "commitFailed": "No se pudo confirmar la sesión."
+        }
+    },
     "catalogImportTemplates": {
         "title": "Plantillas de importación de catálogo",
         "empty": "Aún no hay plantillas guardadas. Crea una para mapear los encabezados no estándar de un proveedor a campos de Fulcrum y reusarla en cada importación.",
@@ -1919,6 +1990,15 @@
         },
         "inventoryAdjustment": {
             "unknownReasonCode": "Código de motivo desconocido '{{value}}'."
+        },
+        "inventoryCount": {
+            "sessionNotFound": "Sesión de conteo {{id}} no encontrada.",
+            "sessionNotInProgress": "Solo las sesiones en progreso pueden modificarse.",
+            "skuRequired": "Se requiere un SKU.",
+            "skuAlreadyInSession": "El SKU {{sku}} ya está en esta sesión.",
+            "negativeCount": "La cantidad contada no puede ser negativa.",
+            "itemNotFound": "Ítem de conteo {{id}} no encontrado en esta sesión.",
+            "unknownStatus": "Estado de sesión de conteo desconocido '{{status}}'."
         }
     }
 }

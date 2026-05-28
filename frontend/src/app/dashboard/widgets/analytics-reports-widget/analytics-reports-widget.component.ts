@@ -17,7 +17,7 @@ import {
 } from '../../services/analytics-reports.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
 
-type ReportKey = 'velocity' | 'margin' | 'stockout' | 'refunds';
+type ReportKey = 'velocity' | 'margin' | 'stockout' | 'refunds' | 'reasonCodes';
 
 /**
  * Compact dashboard card that exposes the velocity / margin / stockout
@@ -101,10 +101,11 @@ export class AnalyticsReportsWidgetComponent {
 
   private stemFor(report: ReportKey): string {
     switch (report) {
-      case 'velocity': return 'fulcrum-velocity';
-      case 'margin':   return 'fulcrum-margin';
-      case 'stockout': return 'fulcrum-stockout';
-      case 'refunds':  return 'fulcrum-refunds-summary';
+      case 'velocity':    return 'fulcrum-velocity';
+      case 'margin':      return 'fulcrum-margin';
+      case 'stockout':    return 'fulcrum-stockout';
+      case 'refunds':     return 'fulcrum-refunds-summary';
+      case 'reasonCodes': return 'fulcrum-reason-code-summary';
     }
   }
 
@@ -124,6 +125,11 @@ export class AnalyticsReportsWidgetComponent {
       return ext === 'csv'
         ? this.analyticsReports.exportRefundsSummaryCsv(this.windowDays, range)
         : this.analyticsReports.exportRefundsSummaryPdf(this.windowDays, range);
+    }
+    if (report === 'reasonCodes') {
+      return ext === 'csv'
+        ? this.analyticsReports.exportReasonCodeSummaryCsv(this.windowDays, range)
+        : this.analyticsReports.exportReasonCodeSummaryPdf(this.windowDays, range);
     }
     return ext === 'csv'
       ? this.analyticsReports.exportStockoutCsv(this.windowDays, 7, 14, 2000, range)

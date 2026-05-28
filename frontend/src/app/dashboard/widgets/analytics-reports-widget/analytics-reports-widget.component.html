@@ -193,6 +193,38 @@
           </button>
         </div>
       </li>
+
+      <li class="report-row" data-testid="analytics-report-reason-codes">
+        <div class="row-icon reason-codes">
+          <mat-icon>category</mat-icon>
+        </div>
+        <div class="row-info">
+          <strong>{{ t('dashboard.analyticsReports.reasonCodesTitle') }}</strong>
+          <small>{{ t('dashboard.analyticsReports.reasonCodesDesc') }}</small>
+        </div>
+        <div class="row-actions">
+          <button
+            mat-stroked-button
+            (click)="download('reasonCodes', 'csv')"
+            [disabled]="isBusy('reasonCodes', 'csv') || rangeInverted()"
+            [matTooltip]="t('dashboard.analyticsReports.exportCsvTooltip')"
+            data-testid="reason-codes-export-csv"
+          >
+            <mat-icon>download</mat-icon>
+            {{ t('dashboard.analyticsReports.csv') }}
+          </button>
+          <button
+            mat-stroked-button
+            (click)="download('reasonCodes', 'pdf')"
+            [disabled]="isBusy('reasonCodes', 'pdf') || rangeInverted()"
+            [matTooltip]="t('dashboard.analyticsReports.exportPdfTooltip')"
+            data-testid="reason-codes-export-pdf"
+          >
+            <mat-icon>picture_as_pdf</mat-icon>
+            {{ t('dashboard.analyticsReports.pdf') }}
+          </button>
+        </div>
+      </li>
     </ul>
   </div>
 </ng-container>

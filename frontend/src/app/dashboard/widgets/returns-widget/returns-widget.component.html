@@ -1,0 +1,60 @@
+<ng-container *transloco="let t">
+  <mat-card class="returns-widget" data-testid="returns-widget">
+    <div class="widget-header">
+      <div>
+        <h3>{{ t('dashboard.returnsWidget.title') }}</h3>
+        <small>{{ t('dashboard.returnsWidget.subtitle') }}</small>
+      </div>
+      <button type="button" class="refresh-icon" (click)="refresh()"
+              [matTooltip]="t('dashboard.returnsWidget.refresh')"
+              [disabled]="loading"
+              data-testid="returns-widget-refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+
+    @if (loading && !summary) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !summary) {
+      <p class="error" data-testid="returns-widget-error">
+        {{ t('dashboard.returnsWidget.error') }}
+      </p>
+    } @else if (summary) {
+      <div class="hero" data-testid="returns-widget-hero">
+        <div class="hero-count">
+          <span class="hero-value">{{ summary.totals.returns_count }}</span>
+          <span class="hero-label">{{ t('dashboard.returnsWidget.returnsCount') }}</span>
+        </div>
+        <div class="hero-units">
+          <span class="hero-value">{{ summary.totals.units_returned }}</span>
+          <span class="hero-label">{{ t('dashboard.returnsWidget.unitsReturned') }}</span>
+        </div>
+        <div class="hero-value-at-cost">
+          <span class="hero-value">{{ formatCurrency(summary.totals.value_at_cost_mxn) }}</span>
+          <span class="hero-label">{{ t('dashboard.returnsWidget.valueAtCost') }}</span>
+        </div>
+      </div>
+
+      @if (visibleChannels().length === 0) {
+        <p class="empty" data-testid="returns-widget-empty">
+          {{ t('dashboard.returnsWidget.empty') }}
+        </p>
+      } @else {
+        <ul class="channels" data-testid="returns-widget-channels">
+          @for (row of visibleChannels(); track row.source) {
+            <li class="channel-row" [attr.data-testid]="'returns-channel-' + row.source">
+              <span class="channel-name">{{ channelLabel(row.source) }}</span>
+              <span class="channel-count">{{ row.returns_count }}</span>
+              <span class="channel-units">{{ row.units_returned }}</span>
+              <span class="channel-value">{{ formatCurrency(row.value_at_cost_mxn) }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <small class="window-label">{{ summary.window_label }}</small>
+    }
+  </mat-card>
+</ng-container>

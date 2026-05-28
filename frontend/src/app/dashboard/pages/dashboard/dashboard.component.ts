@@ -23,6 +23,7 @@ import { MarginByChannelWidgetComponent } from '../../widgets/margin-by-channel-
 import { TopMoversWidgetComponent } from '../../widgets/top-movers-widget/top-movers-widget.component';
 import { DeadStockWidgetComponent } from '../../widgets/dead-stock-widget/dead-stock-widget.component';
 import { RefundsWidgetComponent } from '../../widgets/refunds-widget/refunds-widget.component';
+import { ReturnsWidgetComponent } from '../../widgets/returns-widget/returns-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TranslocoModule } from '@ngneat/transloco';
@@ -53,6 +54,7 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
         TopMoversWidgetComponent,
         DeadStockWidgetComponent,
         RefundsWidgetComponent,
+        ReturnsWidgetComponent,
         RouterModule,
         TranslocoModule
     ]

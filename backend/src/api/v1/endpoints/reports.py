@@ -2251,3 +2251,297 @@ def export_refunds_summary_pdf(
         current_user=current_user,
     )
     return stream_pdf(_refunds_summary_table(summary))
+
+
+# ---- Reason-code summary (shrinkage, damage, theft, return, ...) -----------
+#
+# Per-reason-code rollup of inventory adjustments. Answers the literal
+# operator question: "how much did I lose to shrinkage last month?".
+#
+# Uses the `inventory_adjustments.reason_code` column shipped alongside
+# the audit-filter slice. Two metrics per code:
+#   - `adjustments_count` — number of audit rows in the window.
+#   - `total_units_delta` — signed sum of `adjustment` (negative for
+#     write-offs like shrinkage; positive for purchases / returns).
+#   - `total_capital_at_cost` — sum of |adjustment| × current
+#     `Product.cost_price`. Lets the operator translate "5 units of
+#     SKU X disappeared" into pesos. Uses current cost because we
+#     don't snapshot cost on the adjustment row (the audit tracks
+#     quantity moves, not value moves).
+#
+# Window + date-range params via the shared `_resolve_date_window`
+# helper. Legacy (NULL) reason_code rows roll up under the literal
+# `"none"` source.
+
+
+class ReasonCodeSummaryRow(BaseModel):
+    """One row per `reason_code` that had at least one adjustment in
+    the window. NULL rows are surfaced under `reason_code='none'` so
+    the operator can see how much legacy uncategorized data is still
+    around without writing a custom query."""
+    reason_code: str
+    adjustments_count: int
+    total_units_delta: int
+    total_capital_at_cost: float
+
+
+class ReasonCodeSummaryResponse(BaseModel):
+    """Subtitle-style label mirrors the velocity/margin/stockout
+    endpoints so dashboard widgets can reuse the same wording
+    ('window 30d' vs. '2026-01-01 → 2026-03-31')."""
+    window_label: str
+    rows: List[ReasonCodeSummaryRow]
+
+
+def _build_reason_code_summary(
+    db: Session, *, window,
+) -> ReasonCodeSummaryResponse:
+    """Compute the per-reason-code rollup over the resolved window.
+
+    Joins through `Product` to pull `cost_price` for the capital
+    calculation. Adjustments whose product was deleted (FK SET NULL
+    on `product_id`, though the schema doesn't currently set null —
+    the relationship is plain FK) carry `cost_price=0` for that row
+    via COALESCE — surfaced as zero capital rather than crashing.
+    """
+    from src.models.inventory import InventoryAdjustment
+    from src.models.product import Product
+
+    rows_raw = (
+        db.query(
+            # Coalesce to literal 'none' so NULL legacy rows aggregate
+            # under a single label instead of vanishing.
+            func.coalesce(InventoryAdjustment.reason_code, "none").label("reason_code"),
+            func.count(InventoryAdjustment.id).label("adjustments_count"),
+            func.coalesce(func.sum(InventoryAdjustment.adjustment), 0).label("total_units_delta"),
+            func.coalesce(
+                func.sum(
+                    func.abs(InventoryAdjustment.adjustment)
+                    * func.coalesce(Product.cost_price, 0.0)
+                ),
+                0.0,
+            ).label("total_capital_at_cost"),
+        )
+        .outerjoin(Product, Product.id == InventoryAdjustment.product_id)
+        .filter(InventoryAdjustment.timestamp >= window.start_dt)
+        .filter(InventoryAdjustment.timestamp <= window.end_dt)
+        .group_by(func.coalesce(InventoryAdjustment.reason_code, "none"))
+        # Sort by capital-at-risk desc so the operator's eye lands on
+        # the biggest dollar impact first, regardless of category.
+        .order_by(func.coalesce(
+            func.sum(
+                func.abs(InventoryAdjustment.adjustment)
+                * func.coalesce(Product.cost_price, 0.0)
+            ),
+            0.0,
+        ).desc())
+        .all()
+    )
+
+    return ReasonCodeSummaryResponse(
+        window_label=window.label,
+        rows=[
+            ReasonCodeSummaryRow(
+                reason_code=r.reason_code,
+                adjustments_count=int(r.adjustments_count or 0),
+                total_units_delta=int(r.total_units_delta or 0),
+                total_capital_at_cost=round(float(r.total_capital_at_cost or 0.0), 2),
+            )
+            for r in rows_raw
+        ],
+    )
+
+
+@router.get("/reason-code-summary", response_model=ReasonCodeSummaryResponse)
+def reason_code_summary_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(
+        None, description="Inclusive lower bound (UTC). Overrides window_days when set.",
+    ),
+    end_date: Optional[date] = Query(
+        None, description="Inclusive upper bound (UTC). Overrides window_days when set.",
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> ReasonCodeSummaryResponse:
+    """Per-reason-code rollup of inventory adjustments. Answers
+    "how much did I lose to shrinkage last month?" + the same
+    question for every other code (damage, theft, correction, etc.).
+
+    Counts every adjustment regardless of sign — the operator gets
+    the unsigned units sum to read "how much moved through this
+    bucket?" and `total_units_delta` to read "net direction".
+    """
+    window = _resolve_date_window(window_days, start_date, end_date)
+    return _build_reason_code_summary(db, window=window)
+
+
+def _reason_code_summary_table(response: ReasonCodeSummaryResponse) -> ReportTable:
+    """Shared ReportTable for the CSV + PDF exports. Same row order
+    as the JSON endpoint (capital-at-risk desc)."""
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    total_capital = sum(r.total_capital_at_cost for r in response.rows)
+    total_count = sum(r.adjustments_count for r in response.rows)
+    return ReportTable(
+        title="Fulcrum — Inventory Adjustments by Reason Code",
+        subtitle=(
+            f"Generated {date_stamp} · {response.window_label} · "
+            f"{total_count:,} adjustment(s) · "
+            f"${total_capital:,.2f} capital affected"
+        ),
+        filename_stem="fulcrum-reason-code-summary",
+        empty_message="No inventory adjustments in the window.",
+        columns=[
+            ReportColumn("reason_code",           "Reason"),
+            ReportColumn("adjustments_count",     "Adjustments",       align="right", formatter=fmt_int),
+            ReportColumn("total_units_delta",     "Net units (signed)", align="right", formatter=fmt_int),
+            ReportColumn("total_capital_at_cost", "Capital (MXN)",     align="right", formatter=fmt_currency),
+        ],
+        rows=[r.model_dump() for r in response.rows],
+    )
+
+
+@router.get("/reason-code-summary/export")
+def export_reason_code_summary_csv(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-reason-code rollup as a CSV — operator-facing answer to
+    "how much did I lose / move through each bucket last month?".
+    """
+    window = _resolve_date_window(window_days, start_date, end_date)
+    summary = _build_reason_code_summary(db, window=window)
+    return stream_csv(_reason_code_summary_table(summary))
+
+
+@router.get("/reason-code-summary/export-pdf")
+def export_reason_code_summary_pdf(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Per-reason-code rollup as a printable PDF."""
+    window = _resolve_date_window(window_days, start_date, end_date)
+    summary = _build_reason_code_summary(db, window=window)
+    return stream_pdf(_reason_code_summary_table(summary))
+
+
+# ---- Returns summary (dashboard widget) ------------------------------------
+#
+# Mirror of the refunds-summary surface, but for *physical* returns
+# captured by the returns workflow (`sales_order_returns` rows). The
+# refunds widget answers "how many money-out events happened?"; this
+# widget answers "how much stock came back?". Both are operator-
+# facing dashboard signals; together they cover the financial and
+# physical sides of the return relationship.
+#
+# Per channel:
+#   - `returns_count` — number of return events.
+#   - `units_returned` — sum of `quantity` across events.
+#   - `value_at_cost_mxn` — sum of quantity × current
+#     `Product.cost_price`. Cost-basis (not retail) because the
+#     dashboard signal is "how much inventory value came back",
+#     which is the operator's exposure if they discount or write
+#     off the returned units.
+
+
+class ReturnsByChannelRow(BaseModel):
+    source: str
+    returns_count: int
+    units_returned: int
+    value_at_cost_mxn: float
+
+
+class ReturnsSummaryResponse(BaseModel):
+    window_label: str
+    totals: ReturnsByChannelRow
+    by_channel: List[ReturnsByChannelRow]
+
+
+@router.get("/returns-summary", response_model=ReturnsSummaryResponse)
+def returns_summary_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_active_user),
+) -> ReturnsSummaryResponse:
+    """Per-channel physical-return rollup over the window. Powers
+    the dashboard's returns widget.
+
+    Joins `sales_order_returns` through `sales_orders.source` for
+    the channel attribution + `products.cost_price` for the value
+    calculation. Returns rows for sources that recorded any return
+    activity in the window; channels with zero activity are omitted
+    so the widget doesn't render empty rows."""
+    from src.models.order import SalesOrder, SalesOrderReturn
+    from src.models.product import Product
+
+    window = _resolve_date_window(window_days, start_date, end_date)
+
+    rows_raw = (
+        db.query(
+            SalesOrder.source,
+            func.count(SalesOrderReturn.id).label("returns_count"),
+            func.coalesce(func.sum(SalesOrderReturn.quantity), 0).label("units_returned"),
+            func.coalesce(
+                func.sum(
+                    SalesOrderReturn.quantity
+                    * func.coalesce(Product.cost_price, 0.0)
+                ),
+                0.0,
+            ).label("value_at_cost_mxn"),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderReturn.order_id)
+        .outerjoin(Product, Product.id == SalesOrderReturn.product_id)
+        .filter(SalesOrderReturn.received_at >= window.start_dt)
+        .filter(SalesOrderReturn.received_at <= window.end_dt)
+        .group_by(SalesOrder.source)
+        .all()
+    )
+
+    by_channel: List[ReturnsByChannelRow] = []
+    total_count = 0
+    total_units = 0
+    total_value = 0.0
+    for source, count_, units, value in rows_raw:
+        # `source` is the SQLAlchemy enum on SalesOrder.source. If a
+        # legacy order has a NULL source the row falls into an "UNKNOWN"
+        # bucket so the operator can see the orphan instead of silently
+        # losing it.
+        source_label = source.value if source is not None else "UNKNOWN"
+        by_channel.append(ReturnsByChannelRow(
+            source=source_label,
+            returns_count=int(count_ or 0),
+            units_returned=int(units or 0),
+            value_at_cost_mxn=round(float(value or 0.0), 2),
+        ))
+        total_count += int(count_ or 0)
+        total_units += int(units or 0)
+        total_value += float(value or 0.0)
+
+    # Sort by value desc so the operator's eye lands on the biggest
+    # capital-came-back channel first.
+    by_channel.sort(key=lambda r: r.value_at_cost_mxn, reverse=True)
+
+    totals = ReturnsByChannelRow(
+        source="ALL",
+        returns_count=total_count,
+        units_returned=total_units,
+        value_at_cost_mxn=round(total_value, 2),
+    )
+
+    return ReturnsSummaryResponse(
+        window_label=window.label,
+        totals=totals,
+        by_channel=by_channel,
+    )

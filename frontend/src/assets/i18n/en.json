@@ -95,6 +95,7 @@
         "dashboard": "Dashboard",
         "products": "Products",
         "inventoryAudit": "Stock audit log",
+        "inventoryCount": "Physical count",
         "orders": "Orders",
         "alerts": "Alerts",
         "payments": "Payments",
@@ -203,6 +204,16 @@
             "refundRate": "Rate",
             "drillDown": "See every refund"
         },
+        "returnsWidget": {
+            "title": "Returns received",
+            "subtitle": "Physical returns recorded from each order's detail page. Value is at current product cost.",
+            "refresh": "Refresh",
+            "empty": "No physical returns in the window.",
+            "error": "Could not load returns summary.",
+            "returnsCount": "Returns",
+            "unitsReturned": "Units back",
+            "valueAtCost": "Value (cost)"
+        },
         "refundsPage": {
             "title": "Refunds & cancellations",
             "subtitle": "Per-event detail behind the dashboard widget. Mixes full-order cancellations and Amazon partial-refund events.",
@@ -292,6 +303,8 @@
             "stockoutDesc": "Out / imminent / watch, by velocity-projected days of cover",
             "refundsTitle": "Refunds & cancellations",
             "refundsDesc": "Per-channel refund count, refunded MXN, and rate with a TOTAL row",
+            "reasonCodesTitle": "Adjustments by reason",
+            "reasonCodesDesc": "How many units + how much capital moved through each reason code (shrinkage, damage, theft, …) in the window",
             "startLabel": "Start date",
             "endLabel": "End date",
             "clearRangeTooltip": "Clear date range and use the window selector",
@@ -1575,6 +1588,64 @@
         "exportCsvTooltip": "Download the filtered audit log as a spreadsheet",
         "exportPdfTooltip": "Download the filtered audit log as a print-ready PDF"
     },
+    "inventoryCount": {
+        "list": {
+            "title": "Physical count sessions",
+            "subtitle": "Bulk-count SKUs at a warehouse or shelf, then commit the deltas as recount adjustments.",
+            "viewAuditLink": "View audit log",
+            "startNew": "Start a new session",
+            "location": "Location",
+            "notesOptional": "Notes (optional)",
+            "startButton": "Start session",
+            "startFailed": "Could not start a new count session.",
+            "statusFilter": "Status",
+            "statusAll": "All",
+            "statusInProgress": "In progress",
+            "statusCommitted": "Committed",
+            "statusCancelled": "Cancelled",
+            "empty": "No count sessions yet. Start one above to begin.",
+            "cols": {
+                "started": "Started",
+                "status": "Status",
+                "location": "Location",
+                "items": "Items",
+                "startedBy": "Started by"
+            }
+        },
+        "detail": {
+            "backToList": "Back to sessions",
+            "title": "Count session",
+            "loadFailed": "Could not load this count session.",
+            "addSku": "Add a SKU to count",
+            "skuOrBarcode": "SKU or scan",
+            "add": "Add",
+            "addFailed": "Could not add SKU {{sku}}.",
+            "skuNotFound": "No product found with SKU {{sku}}.",
+            "skuAlreadyAdded": "SKU {{sku}} is already in this session.",
+            "itemsTitle": "Items ({{n}})",
+            "itemsEmpty": "No SKUs added yet. Use the input above to add one.",
+            "removeRow": "Remove from session",
+            "removeFailed": "Could not remove that row.",
+            "updateFailed": "Could not save that count.",
+            "cols": {
+                "sku": "SKU",
+                "name": "Product",
+                "expected": "Expected",
+                "counted": "Counted",
+                "delta": "Δ"
+            },
+            "cancelButton": "Cancel session",
+            "cancelConfirmTitle": "Cancel this count session?",
+            "cancelConfirmBody": "Cancelling discards all counts. No stock adjustments will be written. The session row stays for the audit log.",
+            "cancelFailed": "Could not cancel the session.",
+            "commitButton": "Commit count",
+            "commitTooltip": "{{n}} adjustment(s) will be written",
+            "commitConfirmTitle": "Commit this physical count?",
+            "commitConfirmBody": "{{n}} stock adjustment(s) will be written with reason 'recount'. Rows you did not count are skipped.",
+            "commitSnackbar": "Committed — {{n}} adjustment(s) written.",
+            "commitFailed": "Could not commit the session."
+        }
+    },
     "catalogImportTemplates": {
         "title": "Catalog import templates",
         "empty": "No saved templates yet. Create one to map non-standard supplier headers to Fulcrum fields once and reuse it on every future upload.",
@@ -1919,6 +1990,15 @@
         },
         "inventoryAdjustment": {
             "unknownReasonCode": "Unknown reason code '{{value}}'."
+        },
+        "inventoryCount": {
+            "sessionNotFound": "Count session {{id}} not found.",
+            "sessionNotInProgress": "Only in-progress sessions can be modified.",
+            "skuRequired": "A SKU is required.",
+            "skuAlreadyInSession": "SKU {{sku}} is already in this session.",
+            "negativeCount": "Counted quantity cannot be negative.",
+            "itemNotFound": "Count item {{id}} not found in this session.",
+            "unknownStatus": "Unknown count session status '{{status}}'."
         }
     }
 }
