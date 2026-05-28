@@ -1,7 +1,44 @@
 # Progress Log
 
-**Status:** Physical-count session workflow + shrinkage report +
-returns dashboard widget shipped. Operators can now run a
+**Status:** Polish + drill-down + cold-start hardening. A smoke
+run of the new count-session + dashboard widgets surfaced a punch
+list of rough edges. Fixed in one slice:
+  - Backend cold-start now works on a fresh checkout: pgvector
+    auto-installed via `db_init/`, an entrypoint waits for the DB +
+    runs `alembic upgrade head` before uvicorn so the
+    FIRST_SUPERUSER bootstrap doesn't race migrations.
+  - `POST /api/v1/products` no longer 307-redirects (route now
+    declares a trailing slash to match the frontend convention).
+  - Optional packages (`python-barcode`, `qrcode`, `aiosmtplib`)
+    degrade silently if a stale image is missing them, replacing
+    the previous "ImportError on every product create" log spam.
+  - Analytics-reports widget moved out of the 4-up secondary grid
+    onto its own full-width row so descriptions don't wrap one
+    word per line.
+  - Count-detail page now mobile-friendly: items table scrolls
+    horizontally inside its card, count inputs grow to 48px on
+    phones, commit/cancel stack full-width below 640px.
+  - New `/reports/returns` drill-down page mirroring
+    `/reports/refunds`. Backend endpoint
+    `GET /reports/returns-list` + frontend `ReturnsPageComponent`
+    + dashboard widget hero now links here.
+  - Locale-switch via `?lang=es-MX` URL param works app-wide
+    (deep-links, smoke tests, bug reports). Persists via the
+    settings service.
+  - Per-location shrinkage breakdown: new `location` column on
+    `inventory_adjustments` (migration `d6f1a92c4b85`) +
+    `location` / `group_by_location` params on
+    `/reports/reason-code-summary`. CSV/PDF exports honor the
+    same params and add a Location column when grouping.
+  - Mobile-first scan flow on the count-detail "Add SKU" row.
+    New `ScanSkuDialogComponent` opens the back camera, detects
+    barcodes via the native `BarcodeDetector` API (with a
+    `barcode-detector` polyfill for Safari/Firefox), and falls
+    back to a manual-entry text field if the camera is
+    unavailable.
+
+**Earlier this cycle:** Physical-count session workflow + shrinkage
+report + returns dashboard widget. Operators can now run a
 warehouse / shelf count session end-to-end — start a session at a
 location, add SKUs one-by-one (or by scan), enter counted
 quantities, then commit the whole batch as `reason_code='recount'`
@@ -85,6 +122,57 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Polish + drill-down + cold-start hardening. Hands-on smoke run
+  of the count-session + dashboard slices surfaced a punch list of
+  rough edges (CSS layout bug, missing drill-down link, mobile
+  overflow, 307 redirect, fragile cold start). Fixed in one slice
+  with new product surface as well:
+  - **Cold-start works on a clean checkout.** New `backend/db_init/`
+    dir mounted into the postgres image's
+    `/docker-entrypoint-initdb.d/` auto-creates the `vector`
+    extension on a fresh data dir. New
+    `backend/entrypoint.sh` waits for the DB + runs
+    `alembic upgrade head` before exec-ing uvicorn so the
+    FIRST_SUPERUSER bootstrap doesn't race migrations. Stale
+    images that lack `python-barcode` / `qrcode` / `aiosmtplib`
+    now degrade silently instead of spamming "ImportError" on
+    every product create.
+  - **No more 307 on product writes.** `/api/v1/products` POST +
+    DELETE routes declared with trailing slashes to match the
+    frontend convention, removing the redirect round-trip.
+  - **Dashboard layout fixes.** Analytics-reports widget moved to
+    its own full-width row so descriptions don't wrap one word
+    per line. Returns widget gained a "See every return"
+    drill-down link mirroring the refunds widget. Count-detail
+    page now mobile-friendly (horizontal-scroll items table, 48px
+    count inputs, stacked action buttons below 640px).
+  - **Returns drill-down page.** New
+    `GET /api/v1/reports/returns-list` + `/reports/returns`
+    frontend page rendering one row per `sales_order_returns`
+    event with source filter + paginator. 6 new backend tests +
+    7 new frontend tests.
+  - **Per-location shrinkage.** Migration `d6f1a92c4b85` adds
+    `inventory_adjustments.location`, stamped from
+    `InventoryService.adjust_stock`'s existing `location` param
+    (every semantic caller already passes it). The reason-code
+    summary endpoint now accepts `location` (filter) +
+    `group_by_location` (split rollup by location) params,
+    surfaced on JSON + CSV + PDF exports. 4 new tests.
+  - **Mobile-first scan flow.** New `ScanSkuDialogComponent`
+    opens the back camera, runs the native `BarcodeDetector` API
+    (polyfilled by `barcode-detector` for Safari/Firefox) and
+    detects code_128 / EAN / QR. Manual-entry fallback when the
+    camera is denied / absent. Wired into the count-detail "Add
+    SKU" row as a new "Scan" button next to "Add".
+  - **URL-driven locale switch.** `?lang=es-MX` anywhere in the
+    app now switches + persists the language via the settings
+    service. Closes the gap where deep-links / smoke-test
+    fixtures couldn't pre-select a locale.
+
+  Tests: backend 781/2 (was 761/8 — 6 new returns-list + 4 new
+  per-location). Frontend 710/0 (was 703/0 — 7 new returns-page).
+  en + es-MX i18n parity green.
 
 - Physical-count session workflow + shrinkage report + returns
   dashboard widget. Three slices that build directly on the
