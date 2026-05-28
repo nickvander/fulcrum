@@ -1,0 +1,165 @@
+<ng-container *transloco="let t">
+  <div class="count-detail-page">
+    <nav class="breadcrumb">
+      <a routerLink="/inventory/count" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        <span>{{ t('inventoryCount.detail.backToList') }}</span>
+      </a>
+    </nav>
+
+    @if (loading && !session) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (errored && !session) {
+      <mat-card class="error-card" data-testid="count-detail-error">
+        <p>{{ t('inventoryCount.detail.loadFailed') }}</p>
+      </mat-card>
+    } @else if (session) {
+      <header class="session-header">
+        <div>
+          <h1>{{ t('inventoryCount.detail.title') }} #{{ session.id }}</h1>
+          <p class="meta">
+            {{ session.location }} ·
+            {{ session.started_at | date:'medium' }}
+            <ng-container *ngIf="session.started_by_email">
+              · {{ session.started_by_email }}
+            </ng-container>
+          </p>
+          <p class="notes" *ngIf="session.notes">{{ session.notes }}</p>
+        </div>
+        <div class="header-side">
+          <mat-chip [ngClass]="'chip-' + session.status">{{ session.status }}</mat-chip>
+        </div>
+      </header>
+
+      @if (isInProgress) {
+        <mat-card class="add-card">
+          <h2>{{ t('inventoryCount.detail.addSku') }}</h2>
+          <div class="add-row">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="grow">
+              <mat-label>{{ t('inventoryCount.detail.skuOrBarcode') }}</mat-label>
+              <input matInput
+                     [(ngModel)]="addingSku"
+                     (keyup.enter)="addItem()"
+                     [disabled]="addingInFlight"
+                     placeholder="SKU"
+                     data-testid="count-add-sku-input" />
+            </mat-form-field>
+            <button mat-flat-button color="primary"
+                    (click)="addItem()"
+                    [disabled]="addingInFlight || !addingSku.trim()"
+                    data-testid="count-add-sku-button">
+              @if (addingInFlight) {
+                <mat-spinner diameter="18"></mat-spinner>
+              } @else {
+                <mat-icon>add</mat-icon>
+              }
+              {{ t('inventoryCount.detail.add') }}
+            </button>
+          </div>
+        </mat-card>
+      }
+
+      <mat-card class="items-card">
+        <h2>{{ t('inventoryCount.detail.itemsTitle', { n: session.items.length }) }}</h2>
+
+        @if (session.items.length === 0) {
+          <p class="empty" data-testid="count-detail-empty">
+            {{ t('inventoryCount.detail.itemsEmpty') }}
+          </p>
+        } @else {
+          <table mat-table [dataSource]="session.items" class="items-table"
+                 data-testid="count-items-table">
+            <ng-container matColumnDef="sku">
+              <th mat-header-cell *matHeaderCellDef>{{ t('inventoryCount.detail.cols.sku') }}</th>
+              <td mat-cell *matCellDef="let row">
+                <code class="sku">{{ row.product_sku }}</code>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>{{ t('inventoryCount.detail.cols.name') }}</th>
+              <td mat-cell *matCellDef="let row">{{ row.product_name }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="expected">
+              <th mat-header-cell *matHeaderCellDef class="numeric">{{ t('inventoryCount.detail.cols.expected') }}</th>
+              <td mat-cell *matCellDef="let row" class="numeric">{{ row.expected_quantity }}</td>
+            </ng-container>
+
+            <ng-container matColumnDef="counted">
+              <th mat-header-cell *matHeaderCellDef class="numeric">{{ t('inventoryCount.detail.cols.counted') }}</th>
+              <td mat-cell *matCellDef="let row" class="numeric">
+                @if (isInProgress) {
+                  <input type="number"
+                         min="0"
+                         [value]="row.counted_quantity ?? ''"
+                         (change)="saveCount(row, $any($event.target).value)"
+                         [attr.data-testid]="'count-input-' + row.id"
+                         class="count-input" />
+                } @else {
+                  {{ row.counted_quantity ?? '—' }}
+                }
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="delta">
+              <th mat-header-cell *matHeaderCellDef class="numeric">{{ t('inventoryCount.detail.cols.delta') }}</th>
+              <td mat-cell *matCellDef="let row" class="numeric">
+                <span [class]="deltaClass(row)">
+                  {{ delta(row) === null ? '—' : (delta(row)! > 0 ? '+' + delta(row) : delta(row)) }}
+                </span>
+              </td>
+            </ng-container>
+
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let row">
+                @if (isInProgress) {
+                  <button mat-icon-button
+                          (click)="removeItem(row)"
+                          [matTooltip]="t('inventoryCount.detail.removeRow')"
+                          [attr.data-testid]="'count-remove-' + row.id">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                }
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                [attr.data-testid]="'count-row-' + row.id"></tr>
+          </table>
+        }
+      </mat-card>
+
+      @if (isInProgress) {
+        <div class="commit-actions">
+          <button mat-stroked-button color="warn"
+                  (click)="cancelSession()"
+                  [disabled]="cancelling"
+                  data-testid="count-cancel-button">
+            <mat-icon>cancel</mat-icon>
+            {{ t('inventoryCount.detail.cancelButton') }}
+          </button>
+          <button mat-flat-button color="primary"
+                  (click)="commit()"
+                  [disabled]="committing || pendingAdjustmentCount() === 0"
+                  [matTooltip]="t('inventoryCount.detail.commitTooltip', { n: pendingAdjustmentCount() })"
+                  data-testid="count-commit-button">
+            @if (committing) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <mat-icon>check</mat-icon>
+            }
+            {{ t('inventoryCount.detail.commitButton') }}
+            <span class="commit-badge" *ngIf="pendingAdjustmentCount() > 0">
+              {{ pendingAdjustmentCount() }}
+            </span>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</ng-container>

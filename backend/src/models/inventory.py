@@ -1,6 +1,7 @@
 import enum
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from datetime import datetime
 
 from .base import Base
@@ -86,3 +87,99 @@ class InventoryAdjustment(Base):
     # Relationships
     product = relationship("Product", back_populates="inventory_adjustments")
     variant = relationship("ProductVariant", back_populates="inventory_adjustments")
+
+
+class InventoryCountSessionStatus(str, enum.Enum):
+    """Lifecycle of an `InventoryCountSession`. Linear:
+    `IN_PROGRESS` → `COMMITTED` | `CANCELLED`. Both end-states are
+    terminal; a committed session has written its
+    `InventoryAdjustment` rows, a cancelled session is a no-op
+    audit record so the operator's "I started and walked away"
+    history isn't lost."""
+    IN_PROGRESS = "in_progress"
+    COMMITTED = "committed"
+    CANCELLED = "cancelled"
+
+
+class InventoryCountSession(Base):
+    """One operator-led physical count of stock.
+
+    Scoped to a single `location` so multi-warehouse workspaces
+    don't double-count a SKU stored in two places. The header
+    row tracks the lifecycle (in_progress → committed | cancelled);
+    detail rows live in `InventoryCountSessionItem`.
+
+    Commit policy:
+      - Iterates every detail row where `counted_quantity IS NOT NULL`.
+      - Computes `delta = counted_quantity - expected_quantity`.
+      - When `delta != 0`, writes an `InventoryAdjustment` with
+        `reason_code='recount'` and a reason referencing the
+        session id.
+      - Sets the session's `status = COMMITTED` and `ended_at = now`.
+      - Idempotent on a `COMMITTED` session — re-calling returns
+        the existing summary without writing duplicate adjustments
+        (gated on `status` not being `IN_PROGRESS`).
+    """
+    __tablename__ = "inventory_count_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    status = Column(String(16), nullable=False, default="in_progress", server_default="in_progress")
+    location = Column(String(64), nullable=False, default="default", server_default="default")
+    notes = Column(String(1000), nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+    started_by_user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+
+    items = relationship(
+        "InventoryCountSessionItem",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="InventoryCountSessionItem.added_at",
+    )
+
+
+class InventoryCountSessionItem(Base):
+    """One SKU within a count session.
+
+    `expected_quantity` is a snapshot from `InventoryItem.quantity`
+    at add-time. If stock moves between the operator adding the SKU
+    and committing the session, the snapshot remains — same as a
+    paper count form where the operator wrote down "system says
+    50" when they started counting.
+
+    `counted_quantity` is NULL until the operator enters their
+    physical count. Commit ignores NULL rows (operator added the
+    SKU but didn't count it yet — no adjustment) so an in-progress
+    count can be saved and resumed without writing wrong adjustments.
+    """
+    __tablename__ = "inventory_count_session_items"
+    __table_args__ = (
+        UniqueConstraint(
+            "session_id", "product_id", "variant_id",
+            name="uq_inventory_count_session_items_sku",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(
+        Integer, ForeignKey("inventory_count_sessions.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    product_id = Column(
+        Integer, ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    variant_id = Column(
+        Integer, ForeignKey("product_variants.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    expected_quantity = Column(Integer, nullable=False)
+    counted_quantity = Column(Integer, nullable=True)
+    added_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+
+    session = relationship("InventoryCountSession", back_populates="items")
+    product = relationship("Product")
+    variant = relationship("ProductVariant")

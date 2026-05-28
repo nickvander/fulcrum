@@ -30,6 +30,7 @@ from src.api.v1.endpoints import (
     alerts,
     payments,
     marketplace_health,
+    inventory_counts,
 )
 
 api_router = APIRouter()
@@ -65,5 +66,10 @@ api_router.include_router(
     marketplace_health.router,
     prefix="/marketplaces/health",
     tags=["marketplace-health"],
+)
+api_router.include_router(
+    inventory_counts.router,
+    prefix="/inventory-counts",
+    tags=["inventory-counts"],
 )
 

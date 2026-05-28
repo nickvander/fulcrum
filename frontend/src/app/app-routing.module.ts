@@ -70,6 +70,22 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'inventory/count',
+    loadComponent: () =>
+      import('./inventory-count/pages/list/inventory-count-list.component').then(
+        (m) => m.InventoryCountListComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'inventory/count/:id',
+    loadComponent: () =>
+      import('./inventory-count/pages/detail/inventory-count-detail.component').then(
+        (m) => m.InventoryCountDetailComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'settings',
     loadChildren: () => import('./settings/settings-module').then(m => m.SettingsModule),
     canActivate: [AuthGuard]

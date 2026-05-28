@@ -1,0 +1,75 @@
+.count-list-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.875rem;
+    }
+  }
+
+  .start-card,
+  .list-card {
+    padding: 16px;
+    margin-bottom: 16px;
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+    }
+  }
+
+  .start-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    .grow {
+      flex: 1;
+    }
+  }
+
+  .list-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .loading-state,
+  .empty {
+    text-align: center;
+    padding: 24px;
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  .count-table {
+    width: 100%;
+  }
+
+  .chip-progress {
+    background-color: #fff4d6;
+    color: #b26500;
+  }
+  .chip-committed {
+    background-color: #e6f4ea;
+    color: #1e7a3a;
+  }
+  .chip-cancelled {
+    background-color: #fde7e7;
+    color: #b71c1c;
+  }
+}
