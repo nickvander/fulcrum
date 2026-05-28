@@ -93,6 +93,15 @@
     }
 }
 
+// Reports widget is full-width on its own row. Inside the widget,
+// each report row lays out as {icon | title+desc | CSV+PDF buttons}
+// horizontally — that only reads well at full width. When it was
+// crammed into a 4-up grid cell the description text wrapped to
+// one word per line.
+.reports-row {
+    margin-bottom: 24px;
+}
+
 .grid-section {
     display: flex;
     flex-direction: column;

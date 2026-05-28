@@ -165,9 +165,18 @@
                     <app-inventory-health-widget class="dashboard-widget"
                         [title]="t('dashboard.inventoryHealth')"></app-inventory-health-widget>
                 </div>
-                <div class="grid-section">
-                    <app-analytics-reports-widget class="dashboard-widget"></app-analytics-reports-widget>
-                </div>
+            </div>
+
+            <!--
+                Analytics-reports widget is full-width on its own row.
+                Inside the widget it lays out as a horizontal-scrolling
+                row of report cards (velocity / margin / stockout /
+                refunds / reason-codes). Cramming it into a narrow
+                grid-section cell collapsed each card's title +
+                description to one word per line — see #16.
+            -->
+            <div class="reports-row">
+                <app-analytics-reports-widget class="dashboard-widget"></app-analytics-reports-widget>
             </div>
         </ng-container>
 

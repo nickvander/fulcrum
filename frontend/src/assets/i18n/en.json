@@ -212,7 +212,36 @@
             "error": "Could not load returns summary.",
             "returnsCount": "Returns",
             "unitsReturned": "Units back",
-            "valueAtCost": "Value (cost)"
+            "valueAtCost": "Value (cost)",
+            "drillDown": "See every return"
+        },
+        "returnsPage": {
+            "title": "Physical returns",
+            "subtitle": "Per-event detail behind the dashboard widget. One row per recorded return.",
+            "backToDashboard": "Back to dashboard",
+            "windowLabel": "Window",
+            "window30": "Last 30 days",
+            "window60": "Last 60 days",
+            "window90": "Last 90 days",
+            "window180": "Last 180 days",
+            "sourceLabel": "Channel",
+            "sourceAll": "All channels",
+            "sourceMercadoLibre": "MercadoLibre",
+            "sourceAmazon": "Amazon",
+            "sourceFulcrum": "Fulcrum",
+            "empty": "No returns in the window for these filters.",
+            "error": "Could not load returns.",
+            "retry": "Retry",
+            "viewOrder": "Open the parent order",
+            "cols": {
+                "receivedAt": "When",
+                "source": "Channel",
+                "externalOrderId": "Order #",
+                "product": "Product",
+                "qty": "Qty",
+                "reason": "Reason",
+                "valueAtCost": "Value (cost)"
+            }
         },
         "refundsPage": {
             "title": "Refunds & cancellations",
@@ -1589,6 +1618,15 @@
         "exportPdfTooltip": "Download the filtered audit log as a print-ready PDF"
     },
     "inventoryCount": {
+        "scan": {
+            "title": "Scan a SKU",
+            "hint": "Line up the barcode in the box. Detection happens automatically.",
+            "starting": "Starting camera…",
+            "orType": "or type it",
+            "errorPermissionDenied": "Camera access was denied. Type the SKU below to continue.",
+            "errorNoMedia": "This browser does not support camera scanning. Type the SKU below to continue.",
+            "errorUnavailable": "Camera unavailable on this device. Type the SKU below to continue."
+        },
         "list": {
             "title": "Physical count sessions",
             "subtitle": "Bulk-count SKUs at a warehouse or shelf, then commit the deltas as recount adjustments.",
@@ -1619,6 +1657,8 @@
             "addSku": "Add a SKU to count",
             "skuOrBarcode": "SKU or scan",
             "add": "Add",
+            "scan": "Scan",
+            "scanTooltip": "Open the camera to scan a SKU barcode",
             "addFailed": "Could not add SKU {{sku}}.",
             "skuNotFound": "No product found with SKU {{sku}}.",
             "skuAlreadyAdded": "SKU {{sku}} is already in this session.",

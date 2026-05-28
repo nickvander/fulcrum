@@ -1,0 +1,63 @@
+<ng-container *transloco="let t">
+  <h2 mat-dialog-title>{{ t('inventoryCount.scan.title') }}</h2>
+
+  <mat-dialog-content class="scan-content">
+    @if (cameraError) {
+      <p class="camera-error" data-testid="scan-camera-error">
+        @switch (cameraError) {
+          @case ('denied') {
+            {{ t('inventoryCount.scan.errorPermissionDenied') }}
+          }
+          @case ('no-media') {
+            {{ t('inventoryCount.scan.errorNoMedia') }}
+          }
+          @default {
+            {{ t('inventoryCount.scan.errorUnavailable') }}
+          }
+        }
+      </p>
+    } @else {
+      <div class="video-wrap" [class.scanning]="scanning" data-testid="scan-video-wrap">
+        <video #videoElement playsinline muted></video>
+        <div class="overlay">
+          <div class="reticle"></div>
+        </div>
+        @if (!scanning) {
+          <div class="initializing">
+            <mat-spinner diameter="28"></mat-spinner>
+            <span>{{ t('inventoryCount.scan.starting') }}</span>
+          </div>
+        }
+      </div>
+      <p class="scan-hint">{{ t('inventoryCount.scan.hint') }}</p>
+    }
+
+    <div class="manual-divider">{{ t('inventoryCount.scan.orType') }}</div>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="manual-field">
+      <mat-label>{{ t('inventoryCount.detail.skuOrBarcode') }}</mat-label>
+      <input matInput
+             [(ngModel)]="manualValue"
+             (keyup.enter)="submitManual()"
+             autocomplete="off"
+             autocapitalize="characters"
+             autocorrect="off"
+             spellcheck="false"
+             inputmode="search"
+             data-testid="scan-manual-input" />
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" data-testid="scan-cancel">
+      {{ t('common.cancel') }}
+    </button>
+    <button mat-flat-button color="primary"
+            (click)="submitManual()"
+            [disabled]="!manualValue.trim()"
+            data-testid="scan-manual-submit">
+      <mat-icon>add</mat-icon>
+      {{ t('inventoryCount.detail.add') }}
+    </button>
+  </mat-dialog-actions>
+</ng-container>

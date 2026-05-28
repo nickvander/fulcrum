@@ -17,6 +17,7 @@ import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Subject, takeUntil } from 'rxjs';
 
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { ScanSkuDialogComponent } from '../../components/scan-sku-dialog/scan-sku-dialog.component';
 import {
   InventoryCountItem,
   InventoryCountService,
@@ -121,6 +122,27 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
 
   get isInProgress(): boolean {
     return this.session?.status === 'in_progress';
+  }
+
+  /** Open the lightweight scan dialog. On a successful scan or
+   *  manual submit it returns the SKU string; we plug it into the
+   *  add-SKU input and submit immediately. The operator's flow is:
+   *  tap "Scan" → point camera at label → row appears on the page.
+   */
+  openScanner(): void {
+    if (!this.session || !this.isInProgress || this.addingInFlight) return;
+    const ref = this.dialog.open(ScanSkuDialogComponent, {
+      width: '92vw',
+      maxWidth: '500px',
+      // The scan dialog manages its own video lifecycle in
+      // ngOnDestroy, so closing via backdrop or escape is safe.
+    });
+    ref.afterClosed().subscribe((value?: string) => {
+      const v = (value || '').trim();
+      if (!v) return;
+      this.addingSku = v;
+      this.addItem();
+    });
   }
 
   addItem(): void {

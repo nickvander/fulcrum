@@ -1,0 +1,85 @@
+.scan-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 280px;
+  // Don't let the dialog grow taller than the viewport on phones —
+  // Material's default behavior crops content under the bottom safe
+  // area on iOS. Bottoming out at 80vh keeps the manual-entry input
+  // visible without scrolling.
+  max-height: 80vh;
+}
+
+.video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border-radius: 8px;
+  overflow: hidden;
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .reticle {
+    width: 80%;
+    height: 32%;
+    border: 2px solid #00bfa5;
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
+  }
+
+  .initializing {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.45);
+    font-size: 0.9rem;
+  }
+}
+
+.scan-hint {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.85rem;
+  margin: 0;
+  text-align: center;
+}
+
+.camera-error {
+  color: #b26500;
+  background: #fff8e1;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.manual-divider {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 0.8rem;
+  margin: 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.manual-field {
+  width: 100%;
+}

@@ -51,7 +51,14 @@ export class AppComponent {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(event => {
-      this.isLoginPage = (event as NavigationEnd).url === '/login';
+      const navEnd = event as NavigationEnd;
+      this.isLoginPage = navEnd.url === '/login';
+      // URL-driven locale switch: deep-link / share / smoke-test
+      // friendly. `?lang=es-MX` (anywhere in the app) sets the
+      // active language AND persists it into localStorage via the
+      // settings service so the next visit retains it. Invalid
+      // codes are ignored.
+      this.applyUrlLangParam(navEnd.url);
     });
 
     this.loading$ = this.loadingService.loading$.pipe(delay(0));
@@ -72,6 +79,36 @@ export class AppComponent {
     // Subscribe to language changes to update date adapter
     this.translocoService.langChanges$.subscribe(lang => {
       this.dateAdapter.setLocale(lang);
+    });
+  }
+
+  /** Pull `?lang=` out of the URL and, if it's a valid app locale,
+   *  switch + persist it. Without this the only path to a language
+   *  switch was the settings page — share-links + smoke-tests + bug
+   *  reports all suffered.
+   *
+   *  Parses with `URL` instead of `ActivatedRoute` because the
+   *  router's event firing `NavigationEnd` gives us the full URL
+   *  string already, and we don't want to pull in the snapshot
+   *  hierarchy here. */
+  private applyUrlLangParam(url: string): void {
+    const supported = new Set(['en', 'es-MX']);
+    const queryStart = url.indexOf('?');
+    if (queryStart === -1) return;
+    const params = new URLSearchParams(url.slice(queryStart + 1));
+    const lang = params.get('lang');
+    if (!lang || !supported.has(lang)) return;
+    if (this.translocoService.getActiveLang() === lang) return;
+    this.translocoService.setActiveLang(lang);
+    // Persist via the settings service so the next page-load picks
+    // it up. Merge with existing settings rather than overwriting
+    // unrelated keys (theme, ai_*).
+    const current = (this.settingsService as any)['_settings']?.value || {};
+    this.settingsService.saveSettings({
+      ai_provider: current.ai_provider ?? '',
+      ai_api_key: current.ai_api_key ?? '',
+      theme: current.theme ?? 'light',
+      language: lang as 'en' | 'es-MX',
     });
   }
 }

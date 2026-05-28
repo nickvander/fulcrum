@@ -44,8 +44,22 @@
                      (keyup.enter)="addItem()"
                      [disabled]="addingInFlight"
                      placeholder="SKU"
+                     autocomplete="off"
+                     autocapitalize="characters"
+                     autocorrect="off"
+                     spellcheck="false"
+                     inputmode="search"
                      data-testid="count-add-sku-input" />
             </mat-form-field>
+            <button mat-stroked-button
+                    (click)="openScanner()"
+                    [disabled]="addingInFlight"
+                    [matTooltip]="t('inventoryCount.detail.scanTooltip')"
+                    class="scan-button"
+                    data-testid="count-scan-button">
+              <mat-icon>qr_code_scanner</mat-icon>
+              {{ t('inventoryCount.detail.scan') }}
+            </button>
             <button mat-flat-button color="primary"
                     (click)="addItem()"
                     [disabled]="addingInFlight || !addingSku.trim()"

@@ -210,7 +210,36 @@
             "error": "No se pudo cargar el resumen de devoluciones.",
             "returnsCount": "Devoluciones",
             "unitsReturned": "Unidades",
-            "valueAtCost": "Valor (costo)"
+            "valueAtCost": "Valor (costo)",
+            "drillDown": "Ver cada devolución"
+        },
+        "returnsPage": {
+            "title": "Devoluciones físicas",
+            "subtitle": "Detalle por evento del widget del dashboard. Una fila por devolución registrada.",
+            "backToDashboard": "Volver al dashboard",
+            "windowLabel": "Ventana",
+            "window30": "Últimos 30 días",
+            "window60": "Últimos 60 días",
+            "window90": "Últimos 90 días",
+            "window180": "Últimos 180 días",
+            "sourceLabel": "Canal",
+            "sourceAll": "Todos los canales",
+            "sourceMercadoLibre": "MercadoLibre",
+            "sourceAmazon": "Amazon",
+            "sourceFulcrum": "Fulcrum",
+            "empty": "Sin devoluciones en la ventana para estos filtros.",
+            "error": "No se pudieron cargar las devoluciones.",
+            "retry": "Reintentar",
+            "viewOrder": "Abrir la orden",
+            "cols": {
+                "receivedAt": "Cuándo",
+                "source": "Canal",
+                "externalOrderId": "Orden #",
+                "product": "Producto",
+                "qty": "Cant.",
+                "reason": "Motivo",
+                "valueAtCost": "Valor (costo)"
+            }
         },
         "refundsPage": {
             "title": "Reembolsos y cancelaciones",
@@ -1589,6 +1618,15 @@
         "exportPdfTooltip": "Descargar el historial filtrado como PDF imprimible"
     },
     "inventoryCount": {
+        "scan": {
+            "title": "Escanear un SKU",
+            "hint": "Alinea el código de barras en el recuadro. La detección es automática.",
+            "starting": "Iniciando cámara…",
+            "orType": "o escríbelo",
+            "errorPermissionDenied": "Se denegó el acceso a la cámara. Escribe el SKU abajo para continuar.",
+            "errorNoMedia": "Este navegador no admite escaneo con cámara. Escribe el SKU abajo para continuar.",
+            "errorUnavailable": "Cámara no disponible en este dispositivo. Escribe el SKU abajo para continuar."
+        },
         "list": {
             "title": "Sesiones de conteo físico",
             "subtitle": "Cuenta SKUs en bulk en una bodega o estante, luego confirma los deltas como ajustes de reconteo.",
@@ -1619,6 +1657,8 @@
             "addSku": "Agregar un SKU al conteo",
             "skuOrBarcode": "SKU o escanear",
             "add": "Agregar",
+            "scan": "Escanear",
+            "scanTooltip": "Abrir la cámara para escanear el código de barras de un SKU",
             "addFailed": "No se pudo agregar el SKU {{sku}}.",
             "skuNotFound": "No se encontró un producto con SKU {{sku}}.",
             "skuAlreadyAdded": "El SKU {{sku}} ya está en esta sesión.",
