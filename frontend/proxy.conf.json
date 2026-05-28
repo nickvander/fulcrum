@@ -1,10 +1,10 @@
 {
   "/api": {
-    "target": "http://localhost:8000",
+    "target": "http://localhost:8200",
     "secure": false
   },
   "/uploads": {
-    "target": "http://localhost:8000",
+    "target": "http://localhost:8200",
     "secure": false
   }
 }

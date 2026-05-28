@@ -22,12 +22,15 @@ logger = logging.getLogger(__name__)
 # Connector Registry - maps connector_type to connector class
 CONNECTOR_REGISTRY: Dict[str, Type[MarketingConnectorBase]] = {}
 
-# Try to import optional connectors
+# Try to import optional connectors. `aiosmtplib` is in
+# requirements.txt — if it's missing the backend image is stale and
+# needs a `docker compose build`. We only emit this at INFO level so
+# operators don't see a scary WARNING for an optional feature.
 try:
     from .smtp import SMTPConnector
     CONNECTOR_REGISTRY["smtp"] = SMTPConnector
 except ImportError as e:
-    logger.warning(f"SMTP connector not available: {e}. Install aiosmtplib to enable.")
+    logger.info(f"SMTP connector not available: {e}. (rebuild backend image to enable)")
     SMTPConnector = None  # type: ignore
 
 # Social Connectors

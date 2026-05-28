@@ -34,6 +34,11 @@ services:
     command: -c listen_addresses='*'
     volumes:
       - pg_data:/var/lib/postgresql/data
+      # postgres images execute any .sql / .sh in this dir on a
+      # *fresh* data dir (i.e. before pg_data exists). We use it to
+      # create the `vector` extension so the very first migration
+      # doesn't fail with `type "vector" does not exist`.
+      - ./backend/db_init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fulcrum} -d ${POSTGRES_DB:-fulcrum}" ]
       interval: 5s

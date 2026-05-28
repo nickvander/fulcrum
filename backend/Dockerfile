@@ -38,6 +38,13 @@ COPY --from=builder --chown=appuser:appgroup /app/venv /app/venv
 COPY --chown=appuser:appgroup ./src /app/src
 COPY --chown=appuser:appgroup ./pytest.ini /app/pytest.ini
 
+# Copy the entrypoint script that waits for the DB + runs migrations
+# BEFORE handing off to uvicorn. Without this, the FIRST_SUPERUSER
+# bootstrap in `src.main:lifespan` races migrations and silently
+# fails the first time the stack comes up.
+COPY --chown=appuser:appgroup ./entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Create and set permissions for the uploads directory
 RUN mkdir -p /app/uploads && chown -R appuser:appgroup /app/uploads
 
@@ -53,5 +60,6 @@ USER appuser
 # Activate the virtual environment for subsequent commands
 ENV PATH="/app/venv/bin:$PATH"
 
-# Command to run the application
+# Run migrations + bootstrap via the entrypoint, then start uvicorn.
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -240,7 +240,15 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
                 db_obj.qrcode_value = f"fulcrum-product:{db_obj.id}" # Standard logic in BarcodeService
                 
         except Exception as e:
-            print(f"Error generating barcodes for product {db_obj.id}: {e}")
+            # Optional feature — degrades silently when the image
+            # hasn't been rebuilt against the python-barcode package
+            # (BarcodeService now returns None in that case). Use
+            # `logger.warning` rather than `print` so test runs stay
+            # clean and ops can grep logs for real issues.
+            import logging
+            logging.getLogger(__name__).warning(
+                "Error generating barcodes for product %s: %s", db_obj.id, e,
+            )
             # Don't fail the transaction just for barcodes
         
         if bundle_components:

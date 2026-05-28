@@ -67,8 +67,10 @@ describe('ProductService', () => {
                 expect(product).toEqual(createdProduct);
             });
 
-            // Expect and flush the POST request
-            const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+            // Expect and flush the POST request. No trailing slash —
+            // the service was updated to match the backend's
+            // declared route, removing a 307 redirect on every create.
+            const req = httpMock.expectOne(`${environment.apiUrl}/products`);
             expect(req.request.method).toBe('POST');
             req.flush(createdProduct);
 
@@ -189,7 +191,7 @@ describe('ProductService', () => {
 
             service.deleteMultipleProducts(productIds).subscribe();
 
-            const req = httpMock.expectOne(`${environment.apiUrl}/products/`);
+            const req = httpMock.expectOne(`${environment.apiUrl}/products`);
             expect(req.request.method).toBe('DELETE');
             expect(req.request.body).toEqual({ ids: productIds });
             req.flush({ message: 'Successfully deleted 3 products', deleted_count: 3 });

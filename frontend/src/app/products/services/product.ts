@@ -209,7 +209,7 @@ export class ProductService {
   }
 
   createProduct(product: Omit<Product, 'id'>): Observable<Product> {
-    return this.http.post<Product>(`${this.apiUrl}/`, product).pipe(
+    return this.http.post<Product>(this.apiUrl, product).pipe(
       tap(() => this.notificationService.showSuccess('Product created successfully!')),
       switchMap(newProduct =>
         this.getProducts().pipe(
@@ -325,7 +325,7 @@ export class ProductService {
   }
 
   deleteMultipleProducts(ids: number[]): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/`, {
+    return this.http.delete(this.apiUrl, {
       body: { ids }
     }).pipe(
       tap(() => this.notificationService.showSuccess('Selected products deleted successfully!'))
