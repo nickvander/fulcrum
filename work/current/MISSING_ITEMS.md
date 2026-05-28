@@ -194,6 +194,14 @@ _(none active)_
       which Fulcrum is not today. ML sales already flow through
       `endpoints/webhooks.py::process_mercadolibre_event` + the new
       `poll_mercadolibre_orders` back-fill worker.
+- [ ] **Low-stock → one-click PO dialog** — DEFERRED per operator
+      feedback (2026-05-27): purchase orders are created on the
+      supplier's side (their order portal, WhatsApp, email) — not
+      inside Fulcrum. A pre-filled "create PO from low-stock alert"
+      dialog in Fulcrum would be solving the wrong problem. The
+      low-stock-list dashboard widget + alert types already cover
+      the visibility side. Revisit only if a customer asks for
+      first-class supplier PO emission from Fulcrum.
 
 ## Future / Strategic
 
@@ -221,6 +229,28 @@ _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
 
+- [x] **Physical-count session workflow + shrinkage report +
+      returns dashboard widget** — three coupled slices built on the
+      reason-code infrastructure.
+      Count sessions: new `inventory_count_sessions` +
+      `inventory_count_session_items` tables, eight endpoints under
+      `/api/v1/inventory-counts`, two pages (`/inventory/count` list
+      + `/inventory/count/:id` detail). Commit writes one
+      `reason_code='recount'` adjustment per row where counted !=
+      expected and skips NULLs/zeros (idempotent). State machine
+      `in_progress → committed | cancelled`.
+      Shrinkage report: new
+      `GET /api/v1/reports/reason-code-summary` rolls up adjustments
+      by reason_code with units lost/gained + value_at_cost; CSV +
+      PDF exports share `report_export`. NULL legacy rows surface
+      as `'none'`. Wired into the dashboard analytics-reports widget
+      as a fifth row.
+      Returns widget: new `GET /api/v1/reports/returns-summary`
+      aggregates `sales_order_returns` rows by source. Frontend
+      `ReturnsWidgetComponent` mirrors the refunds widget; dashboard
+      now lays refunds + returns side-by-side at desktop widths.
+      +33 backend tests + 35 frontend tests. en + es-MX i18n parity.
+      Backend 761/8, frontend 703/0.
 - [x] **Phase 8 Track 2 dead-stock widget** — closes the last open
       Track-2 KPI widget. New `GET /api/v1/reports/dead-stock`
       surfaces products with on-hand stock but near-zero recent

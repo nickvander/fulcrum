@@ -1,15 +1,26 @@
 # Progress Log
 
-**Status:** Returns workflow + inventory-adjustment reason codes
-shipped. Operators can now record a physical return against a
-sales order from the order detail page (multi-line dialog, partial
-quantities, free-text reason/notes); the inventory side credits
-back automatically with `reason_code='return'` so the audit page
-filter and "how much came back last month?" query both work. The
-audit page itself gained a reason-code dropdown over every system
-flow (sale, cancellation, transfer, purchase, return) plus the
-operator-facing categories (shrinkage, recount, damage, theft,
-correction, manual).
+**Status:** Physical-count session workflow + shrinkage report +
+returns dashboard widget shipped. Operators can now run a
+warehouse / shelf count session end-to-end — start a session at a
+location, add SKUs one-by-one (or by scan), enter counted
+quantities, then commit the whole batch as `reason_code='recount'`
+adjustments in one click. Two read-only complements landed at the
+same time: a monthly shrinkage / reason-code summary (JSON + CSV +
+PDF) rolling up loss-at-cost by reason, and a returns dashboard
+widget that mirrors the refunds widget for `sales_order_returns`
+rows.
+
+**Earlier this cycle:** Returns workflow + inventory-adjustment
+reason codes shipped. Operators can now record a physical return
+against a sales order from the order detail page (multi-line
+dialog, partial quantities, free-text reason/notes); the inventory
+side credits back automatically with `reason_code='return'` so the
+audit page filter and "how much came back last month?" query both
+work. The audit page itself gained a reason-code dropdown over
+every system flow (sale, cancellation, transfer, purchase, return)
+plus the operator-facing categories (shrinkage, recount, damage,
+theft, correction, manual).
 
 Refund/cancellation tracking surface now complete:
 drill-down list page at `/reports/refunds` (linked from the widget
@@ -74,6 +85,66 @@ candidates, or pick from "Suggested Next Slices" below.)_
   onto `main`. No PR workflow.
 
 ## Most Recent Shipped (last ~10 commits)
+
+- Physical-count session workflow + shrinkage report + returns
+  dashboard widget. Three slices that build directly on the
+  reason-codes infrastructure shipped last cycle.
+  - **Physical-count session workflow — backend.** New
+    `inventory_count_sessions` + `inventory_count_session_items`
+    tables (migration `c5d1e8a3b072`). Status state machine
+    `in_progress → committed | cancelled` with a CHECK constraint;
+    items are unique on `(session_id, product_id, variant_id)`.
+    New service `services/inventory_count_service.py` owns the
+    state machine: `start_session` (snapshots location +
+    operator), `add_item_by_sku` (looks up the product, snapshots
+    expected_quantity from the live `InventoryItem` at the
+    session's location so a concurrent sale doesn't move the
+    target underneath the operator), `update_count`, `remove_item`,
+    `commit_session` (writes one `InventoryAdjustment` with
+    `reason_code=RECOUNT` per row where counted != expected and
+    skips NULL/zero deltas — idempotent, re-committing 409s),
+    `cancel_session` (no adjustments, session preserved for
+    audit). Eight endpoints under `/api/v1/inventory-counts`.
+  - **Physical-count session workflow — frontend.** New
+    `/inventory/count` list page + `/inventory/count/:id` detail
+    page, both lazy-loaded standalone components. List page has
+    an inline "Start session" row (location + optional notes) +
+    status filter + table. Detail page has an "Add SKU" input
+    that supports Enter/scan submission, a Material table with
+    {SKU, name, expected, counted (editable), Δ, delete} columns,
+    and a Commit / Cancel pair gated behind a confirmation
+    dialog summarizing how many adjustments will fire. Operator
+    sees a live "pending adjustments" badge on the Commit button.
+    New sidenav entry "Physical count" under the Stock audit
+    link.
+  - **Shrinkage / reason-code summary report.** New
+    `GET /api/v1/reports/reason-code-summary` rolls up
+    `inventory_adjustments` by `reason_code` for a window —
+    `count`, `units_lost` (negative deltas), `units_gained`
+    (positive deltas), `value_at_cost_lost` (uses
+    `Product.cost_price × |delta|`). NULL legacy rows surface
+    as a `'none'` sentinel so the operator sees them. CSV + PDF
+    exports share the `report_export` module. Uses
+    `_resolve_date_window` for the same window_days /
+    start_date / end_date semantics as the other reports.
+    Added as a fifth row in the dashboard analytics-reports
+    widget.
+  - **Returns dashboard widget.** New
+    `GET /api/v1/reports/returns-summary` aggregates
+    `sales_order_returns` rows by source (channel of the parent
+    order), returning `returns_count`, `units_returned`, and
+    `value_at_cost` per channel + a totals row. Frontend
+    `ReturnsWidgetComponent` mirrors the refunds widget — hero
+    with the headline numbers, per-channel table sorted by
+    value desc. The dashboard now stacks refunds + returns
+    side-by-side at desktop widths (collapses to stacked at
+    900 px).
+
+  Tests: +33 backend (16 count-session endpoint contract + 11
+  reason-code summary + 6 returns summary), +35 frontend
+  (10 inventory-count service + 8 list page + 17 detail page +
+  net widget/service deltas). Backend 761/8, frontend 703/0.
+  en + es-MX i18n parity green.
 
 - Returns workflow + inventory-adjustment reason codes. Two
   coupled slices that close the "did the product come back?"
