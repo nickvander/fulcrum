@@ -24,6 +24,7 @@ from src.models.product import Product
 from src.models.product_inventory_settings import ProductInventorySettings
 from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
 from src.models.purchase_order_item import PurchaseOrderItem
+from src.services import marketplace_catalog
 from src.models.supplier_product import SupplierProduct
 from src.models.user import User
 from src.services.inventory_service import inventory_service
@@ -1463,25 +1464,23 @@ def cost_rollup_report(
     (COMPLETED/SHIPPED/DELIVERED/PAID) so cancelled and pending
     orders don't pollute the headline margin number.
     """
-    from src.models.order import OrderSource
     from src.services.order_cost_engine import aggregate_rollup
 
-    parsed_source: Optional[OrderSource] = None
+    parsed_source: Optional[str] = None
     if source:
-        try:
-            parsed_source = OrderSource(source.upper())
-        except ValueError:
+        if not marketplace_catalog.is_valid_order_source(source):
             raise LocalizedHTTPException(
                 status_code=400,
                 code="apiErrors.report.unknownSource",
                 params={"source": source},
                 detail=f"Unknown source '{source}'",
             )
+        parsed_source = source.strip().upper()
 
     rollup = aggregate_rollup(db, window_days=window_days, source=parsed_source)
     return CostRollupResponse(
         window_days=window_days,
-        source=parsed_source.value if parsed_source else None,
+        source=parsed_source if parsed_source else None,
         **rollup,
     )
 
@@ -1928,7 +1927,10 @@ def refunds_summary_report(
     # would expect to see — even with zero refunds + zero orders — so
     # the dashboard widget renders a stable layout.
     by_channel: List[RefundsByChannelRow] = []
-    for source in OrderSource:
+    # Catalog-governed source list (strings) — a marketplace added to
+    # the catalog automatically gets a channel row here. `source` is a
+    # plain string; it compares equal to the str-enum constants.
+    for source in marketplace_catalog.order_sources():
         full_orders = refunded_orders.get(source, set())
         full_count = len(full_orders)
         full_amount = refund_revenue_mxn.get(source, 0.0)
@@ -1946,7 +1948,7 @@ def refunds_summary_report(
             rate = round((refunds_count / realized_count) * 100.0, 2)
 
         by_channel.append(RefundsByChannelRow(
-            source=source.value,
+            source=source,
             refunds_count=refunds_count,
             refunded_amount_mxn=round(refunded_mxn, 2),
             realized_orders_count=realized_count,
@@ -2061,17 +2063,16 @@ def refunds_list_report(
 
     window = _resolve_date_window(window_days, start_date, end_date)
 
-    parsed_source: Optional[OrderSource] = None
+    parsed_source: Optional[str] = None
     if source:
-        try:
-            parsed_source = OrderSource(source.upper())
-        except ValueError:
+        if not marketplace_catalog.is_valid_order_source(source):
             raise LocalizedHTTPException(
                 status_code=400,
                 code="apiErrors.report.unknownSource",
                 params={"source": source},
                 detail=f"Unknown source '{source}'",
             )
+        parsed_source = source.strip().upper()
 
     # --- 1. Full-order refunds: dedup per (order_id, latest exit
     # transition in window). An order that bounced realized→cancel
@@ -2128,7 +2129,7 @@ def refunds_list_report(
         rows.append(RefundsListRow(
             refund_kind="order_cancelled",
             order_id=r.order_id,
-            source=r.source.value if r.source else "",
+            source=r.source if r.source else "",
             external_order_id=r.external_order_id,
             refunded_at=r.changed_at,
             refunded_amount_mxn=round(float(r.revenue_amount_mxn or 0.0), 2),
@@ -2138,7 +2139,7 @@ def refunds_list_report(
         rows.append(RefundsListRow(
             refund_kind="amazon_partial",
             order_id=r.order_id,
-            source=r.source.value if r.source else "",
+            source=r.source if r.source else "",
             external_order_id=r.external_order_id,
             refunded_at=r.posted_at,
             refunded_amount_mxn=round(float(r.refund_amount or 0.0), 2),
@@ -2585,7 +2586,7 @@ def returns_summary_report(
         # legacy order has a NULL source the row falls into an "UNKNOWN"
         # bucket so the operator can see the orphan instead of silently
         # losing it.
-        source_label = source.value if source is not None else "UNKNOWN"
+        source_label = source if source is not None else "UNKNOWN"
         by_channel.append(ReturnsByChannelRow(
             source=source_label,
             returns_count=int(count_ or 0),
@@ -2675,22 +2676,21 @@ def returns_list_report(
     Joins to `sales_orders` for source + external_order_id, to
     `products` for sku/name/cost, and to `users` for the operator
     email."""
-    from src.models.order import OrderSource, SalesOrder, SalesOrderReturn
+    from src.models.order import SalesOrder, SalesOrderReturn
     from src.models.product import Product
 
     window = _resolve_date_window(window_days, start_date, end_date)
 
-    parsed_source: Optional[OrderSource] = None
+    parsed_source: Optional[str] = None
     if source:
-        try:
-            parsed_source = OrderSource(source.upper())
-        except ValueError:
+        if not marketplace_catalog.is_valid_order_source(source):
             raise LocalizedHTTPException(
                 status_code=400,
                 code="apiErrors.report.unknownSource",
                 params={"source": source},
                 detail=f"Unknown source '{source}'",
             )
+        parsed_source = source.strip().upper()
 
     base = (
         db.query(
@@ -2729,7 +2729,7 @@ def returns_list_report(
             received_at=r.received_at,
             order_id=r.order_id,
             external_order_id=ext_id,
-            source=src.value if src is not None else None,
+            source=src if src is not None else None,
             product_id=r.product_id,
             product_sku=sku,
             product_name=name,

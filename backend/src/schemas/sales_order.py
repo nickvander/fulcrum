@@ -27,7 +27,10 @@ class SalesOrder(BaseModel):
     total_price: Optional[float] = None
     currency: Optional[str] = "MXN"
     created_at: Optional[datetime] = None
-    source: Optional[OrderSourceSchema] = None
+    # Plain string (catalog-governed) rather than a fixed enum, so an
+    # order from a marketplace newly added to the catalog still
+    # serializes instead of failing schema validation.
+    source: Optional[str] = None
     external_order_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -38,7 +41,7 @@ class SalesOrderDetail(SalesOrder):
 
 
 class SalesOrderChannelBreakdown(BaseModel):
-    source: OrderSourceSchema
+    source: str
     count: int
     revenue: float
 

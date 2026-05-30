@@ -1,7 +1,6 @@
 from sqlalchemy import (
     Column,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -13,7 +12,21 @@ import enum
 
 from .base import Base
 
-class OrderSource(enum.Enum):
+class OrderSource(str, enum.Enum):
+    """Named constants for the core order sources.
+
+    This is intentionally NOT the exhaustive list — `SalesOrder.source`
+    is a plain string column whose valid values come from the
+    marketplace catalog (`marketplace_catalog.order_sources()`). These
+    members are convenience constants for the channels referenced by
+    name in code; a marketplace added to the catalog is a valid source
+    without being added here.
+
+    Subclassing `str` means each member IS its string value, so
+    `OrderSource.AMAZON == "AMAZON"` is True and the members are
+    interchangeable with the raw strings the DB column stores — in
+    comparisons, dict keys, and SQL binds alike.
+    """
     FULCRUM = "FULCRUM"
     MERCADOLIBRE = "MERCADOLIBRE"
     AMAZON = "AMAZON"
@@ -32,7 +45,10 @@ class SalesOrder(Base):
     # channel aggregations.
     currency = Column(String(8), nullable=False, default="MXN", server_default="MXN")
     created_at = Column(TIMESTAMP)
-    source = Column(Enum(OrderSource))
+    # Plain string (not a DB enum) so adding a marketplace to the catalog
+    # doesn't require an `ALTER TYPE ... ADD VALUE` migration. Valid
+    # values are governed by `marketplace_catalog.order_sources()`.
+    source = Column(String, index=True)
     external_order_id = Column(String)
     # Set by `services/order_lifecycle.py` when an order's stock is
     # credited back to inventory after a cancel-before-ship transition.

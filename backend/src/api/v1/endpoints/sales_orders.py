@@ -19,11 +19,11 @@ from sqlalchemy.orm import Session, joinedload
 from src.api import dependencies
 from src.core.errors import LocalizedHTTPException
 from src.database import get_db
-from src.models.order import OrderSource, SalesOrder, SalesOrderItem
+from src.models.order import SalesOrder, SalesOrderItem
 from src.models.product import Product
 from src.models.user import User
+from src.services import marketplace_catalog
 from src.schemas.sales_order import (
-    OrderSourceSchema,
     SalesOrder as SalesOrderSchema,
     SalesOrderChannelBreakdown,
     SalesOrderDetail,
@@ -51,8 +51,10 @@ def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
         id=order.id,
         status=order.status,
         total_price=order.total_price,
+        currency=order.currency,
         created_at=order.created_at,
-        source=order.source.value if order.source else None,
+        # `source` is a plain string column now (catalog-governed).
+        source=order.source,
         external_order_id=order.external_order_id,
     )
 
@@ -61,7 +63,7 @@ def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
 def list_sales_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
-    source: Optional[OrderSourceSchema] = Query(None, description="Filter by channel"),
+    source: Optional[str] = Query(None, description="Filter by channel (order source, e.g. MERCADOLIBRE)"),
     status: Optional[str] = Query(None, description="Filter by status"),
     days: Optional[int] = Query(None, ge=1, le=365, description="Only orders from the last N days"),
     skip: int = 0,
@@ -70,7 +72,7 @@ def list_sales_orders(
     """List sales orders, optionally filtered by channel, status, or recency."""
     q = db.query(SalesOrder)
     if source is not None:
-        q = q.filter(SalesOrder.source == OrderSource(source.value))
+        q = q.filter(SalesOrder.source == source.strip().upper())
     if status is not None:
         q = q.filter(SalesOrder.status == status)
     if days is not None:
@@ -111,10 +113,9 @@ def sales_order_summary(
     for source_value, count, revenue in rows:
         if source_value is None:
             continue
-        source_str = source_value.value if hasattr(source_value, "value") else source_value
         by_channel.append(
             SalesOrderChannelBreakdown(
-                source=OrderSourceSchema(source_str),
+                source=str(source_value),
                 count=count,
                 revenue=float(revenue or 0.0),
             )
@@ -122,9 +123,11 @@ def sales_order_summary(
         total_orders += count
         total_revenue += float(revenue or 0.0)
 
-    # Ensure each known channel appears, even with zero, so the widget can render a stable axis.
+    # Ensure each catalog channel appears, even with zero, so the widget
+    # renders a stable axis — and a marketplace added to the catalog
+    # shows up here automatically.
     seen = {row.source for row in by_channel}
-    for channel in OrderSourceSchema:
+    for channel in marketplace_catalog.order_sources():
         if channel not in seen:
             by_channel.append(SalesOrderChannelBreakdown(source=channel, count=0, revenue=0.0))
 
@@ -169,7 +172,7 @@ def _channel_summary_rows(summary: SalesOrderSummary) -> list[dict]:
     for row in summary.by_channel:
         share = (row.revenue / total * 100.0) if total > 0 else 0.0
         rows.append({
-            "channel": _CHANNEL_LABELS.get(row.source.value, row.source.value),
+            "channel": _CHANNEL_LABELS.get(row.source, row.source),
             "orders": row.count,
             "revenue": row.revenue,
             "share": share,
@@ -205,14 +208,14 @@ def _channel_summary_table(summary: SalesOrderSummary) -> ReportTable:
 def _build_sales_order_export_rows(
     db: Session,
     *,
-    source: Optional[OrderSourceSchema],
+    source: Optional[str],
     status: Optional[str],
     days: Optional[int],
     limit: int,
 ) -> list[dict]:
     q = db.query(SalesOrder)
     if source is not None:
-        q = q.filter(SalesOrder.source == OrderSource(source.value))
+        q = q.filter(SalesOrder.source == source.strip().upper())
     if status is not None:
         q = q.filter(SalesOrder.status == status)
     if days is not None:
@@ -224,7 +227,7 @@ def _build_sales_order_export_rows(
     for o in q.limit(limit).all():
         rows.append({
             "order_id":          o.id,
-            "channel":           _CHANNEL_LABELS.get(o.source.value, o.source.value) if o.source else "",
+            "channel":           _CHANNEL_LABELS.get(o.source, o.source) if o.source else "",
             "external_order_id": o.external_order_id or "",
             "status":            o.status or "",
             "total_price":       float(o.total_price or 0.0),
@@ -260,7 +263,7 @@ def _sales_order_export_table(rows: list[dict]) -> ReportTable:
 def export_sales_orders_csv(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
-    source: Optional[OrderSourceSchema] = Query(None),
+    source: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     days: Optional[int] = Query(None, ge=1, le=365),
     limit: int = Query(5000, ge=1, le=10000),
@@ -278,7 +281,7 @@ def export_sales_orders_csv(
 def export_sales_orders_pdf(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
-    source: Optional[OrderSourceSchema] = Query(None),
+    source: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     days: Optional[int] = Query(None, ge=1, le=365),
     limit: int = Query(5000, ge=1, le=10000),

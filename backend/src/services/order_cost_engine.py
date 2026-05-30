@@ -57,19 +57,16 @@ from sqlalchemy.orm import Session
 
 from src.models.marketplace import Marketplace
 from src.models.order import OrderCostBreakdown, OrderSource, SalesOrder
+from src.services import marketplace_catalog
 
 
 logger = logging.getLogger(__name__)
 
 
-# Map `OrderSource` enum → `Marketplace.name` so we can look up the
-# fee/shipping config from the source field on the order. FULCRUM is
-# a non-marketplace channel (storefront-style sales), so it has no
-# marketplace row to read from; fees default to 0 for it.
-_SOURCE_TO_MARKETPLACE_NAME: Dict[OrderSource, str] = {
-    OrderSource.AMAZON: "amazon",
-    OrderSource.MERCADOLIBRE: "mercadolibre",
-}
+# Source → Marketplace.name resolution is catalog-driven (see
+# `marketplace_catalog.marketplace_name_for_source`). FULCRUM is a
+# non-marketplace channel (storefront-style sales) with no marketplace
+# row; fees default to 0 for it.
 
 
 @dataclass(frozen=True)
@@ -122,7 +119,7 @@ def _marketplace_for_order(
     as "no fees, no shipping cost"."""
     if order.source is None:
         return None
-    name = _SOURCE_TO_MARKETPLACE_NAME.get(order.source)
+    name = marketplace_catalog.marketplace_name_for_source(order.source)
     if name is None:
         return None
     return (
@@ -507,11 +504,13 @@ def aggregate_rollup_by_channel(
     so the operator's eye lands on the biggest channel first.
     """
     rows: List[Dict[str, Any]] = []
-    for source in OrderSource:
+    # Iterate the catalog-governed source list (not the enum) so a
+    # marketplace added to the catalog automatically gets a channel bar.
+    for source in marketplace_catalog.order_sources():
         rollup = aggregate_rollup(db, window_days=window_days, source=source)
         if rollup.get("orders", 0) == 0:
             continue
-        rows.append({"source": source.value, **rollup})
+        rows.append({"source": source, **rollup})
     rows.sort(key=lambda r: r["revenue_amount_mxn"], reverse=True)
     return rows
 

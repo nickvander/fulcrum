@@ -121,6 +121,53 @@ def get_definition(key: str) -> Optional[MarketplaceDefinition]:
     return None
 
 
+# The order source for direct / Fulcrum-storefront sales — not a
+# marketplace, so it's not in the catalog, but it's a valid value for
+# `SalesOrder.source`.
+INTERNAL_ORDER_SOURCE = "FULCRUM"
+
+
+def order_sources() -> list[str]:
+    """Every valid `SalesOrder.source` value: the internal FULCRUM
+    source plus each catalog marketplace's `order_source`, in priority
+    order (FULCRUM first, then catalog order). The by-channel reports +
+    source-filter validation iterate this, so a marketplace added to the
+    catalog automatically becomes a recognized order source — no DB enum
+    migration, no code edit."""
+    sources = [INTERNAL_ORDER_SOURCE]
+    for entry in MARKETPLACE_CATALOG:
+        if entry.order_source and entry.order_source not in sources:
+            sources.append(entry.order_source)
+    return sources
+
+
+def is_valid_order_source(source: str) -> bool:
+    """Case-insensitive membership check against `order_sources()`."""
+    if not source:
+        return False
+    return source.strip().upper() in {s.upper() for s in order_sources()}
+
+
+def marketplace_name_for_source(source: str) -> Optional[str]:
+    """Map an `order_source` value to its marketplace key
+    (e.g. 'AMAZON' -> 'amazon'). None for FULCRUM / unknown — used to
+    resolve an order's channel to its `Marketplace` row + fee config."""
+    if not source:
+        return None
+    s = source.strip().upper()
+    for entry in MARKETPLACE_CATALOG:
+        if entry.order_source and entry.order_source.upper() == s:
+            return entry.key
+    return None
+
+
+def source_for_marketplace_name(name: str) -> Optional[str]:
+    """Inverse of `marketplace_name_for_source`: marketplace key
+    ('amazon') -> order_source ('AMAZON'). None for unknown."""
+    entry = get_definition(name)
+    return entry.order_source if entry else None
+
+
 def connector_registry() -> dict[str, Type[BaseMarketplaceConnector]]:
     """`{key: connector_class}` for every entry that ships a connector.
 

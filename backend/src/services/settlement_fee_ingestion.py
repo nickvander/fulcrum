@@ -43,7 +43,7 @@ from sqlalchemy.orm import Session
 
 from src.models.marketplace import Marketplace, MarketplaceCredential
 from src.models.order import AmazonOrderRefund, OrderCostBreakdown, OrderSource, SalesOrder
-from src.services import order_cost_engine
+from src.services import marketplace_catalog, order_cost_engine
 from src.services.marketplaces.amazon import AmazonConnector
 from src.services.marketplaces.mercadolibre import MercadoLibreConnector
 
@@ -85,12 +85,6 @@ class SettlementSyncSummary:
             "errors": self.errors,
             "scanned": self.scanned,
         }
-
-
-_SOURCE_BY_MARKETPLACE_NAME: Dict[str, OrderSource] = {
-    "amazon": OrderSource.AMAZON,
-    "mercadolibre": OrderSource.MERCADOLIBRE,
-}
 
 
 def _unsettled_orders_for_source(
@@ -225,7 +219,7 @@ async def sync_settlement_for_credential(
     summary = SettlementSyncSummary()
 
     marketplace_name = (credential.marketplace.name or "").lower() if credential.marketplace else ""
-    source = _SOURCE_BY_MARKETPLACE_NAME.get(marketplace_name)
+    source = marketplace_catalog.source_for_marketplace_name(marketplace_name)
     if source is None:
         logger.warning(
             "settlement-sync: credential %s has unknown marketplace name %r — skipping",

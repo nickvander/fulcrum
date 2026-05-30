@@ -355,21 +355,21 @@ def _evaluate_settlement_variance(db: Session, rule: AlertRule) -> AlertEvaluati
         alert.
     """
     from src.models.marketplace import Marketplace
-    from src.models.order import OrderCostBreakdown, OrderSource
+    from src.models.order import OrderCostBreakdown
+    from src.services import marketplace_catalog
 
     end_dt = datetime.now(timezone.utc)
     start_dt = end_dt - timedelta(days=rule.window_days)
 
-    # Map OrderSource → marketplace name → default_fee_rate. We hit
-    # the marketplaces table once instead of joining inside the
-    # group-by — keeps the SQL readable and per-marketplace logic
-    # cleanly Pythonic.
-    name_by_source: Dict[OrderSource, str] = {
-        OrderSource.AMAZON: "amazon",
-        OrderSource.MERCADOLIBRE: "mercadolibre",
-    }
-    rate_by_source: Dict[OrderSource, float] = {}
-    for source, name in name_by_source.items():
+    # order source → marketplace name → default_fee_rate, derived from
+    # the marketplace catalog so a channel added there is covered with
+    # no edit here. One marketplaces-table hit per source instead of a
+    # join inside the group-by — keeps the SQL readable.
+    rate_by_source: Dict[str, float] = {}
+    for source in marketplace_catalog.order_sources():
+        name = marketplace_catalog.marketplace_name_for_source(source)
+        if name is None:  # FULCRUM / non-marketplace channel — no fees
+            continue
         mp = db.query(Marketplace).filter(Marketplace.name.ilike(name)).first()
         if mp is not None and mp.default_fee_rate:
             rate_by_source[source] = float(mp.default_fee_rate)
@@ -408,7 +408,7 @@ def _evaluate_settlement_variance(db: Session, rule: AlertRule) -> AlertEvaluati
 
         variance_pct = (actual_fees - expected_fees) / expected_fees * 100.0
         rows.append({
-            "source": source.value,
+            "source": source,
             "orders": orders,
             "revenue_amount": round(revenue, 2),
             "expected_fees_amount": round(expected_fees, 2),

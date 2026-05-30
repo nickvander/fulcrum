@@ -53,6 +53,41 @@ def test_connector_registry_only_includes_entries_with_a_connector():
 
 
 # --------------------------------------------------------------------------- #
+# Order-source helpers — the unification with the OrderSource column
+# --------------------------------------------------------------------------- #
+
+
+def test_order_sources_includes_internal_and_catalog_marketplaces():
+    sources = marketplace_catalog.order_sources()
+    # FULCRUM (internal/direct) is first, then the catalog marketplaces
+    # that produce orders.
+    assert sources[0] == "FULCRUM"
+    assert "MERCADOLIBRE" in sources
+    assert "AMAZON" in sources
+    # eBay is planned with no order_source → not a valid order source yet.
+    assert "EBAY" not in sources
+
+
+def test_is_valid_order_source_is_case_insensitive():
+    assert marketplace_catalog.is_valid_order_source("mercadolibre") is True
+    assert marketplace_catalog.is_valid_order_source("AMAZON") is True
+    assert marketplace_catalog.is_valid_order_source("FULCRUM") is True
+    assert marketplace_catalog.is_valid_order_source("ebay") is False
+    assert marketplace_catalog.is_valid_order_source("walmart") is False
+    assert marketplace_catalog.is_valid_order_source("") is False
+
+
+def test_source_marketplace_name_round_trips():
+    assert marketplace_catalog.marketplace_name_for_source("AMAZON") == "amazon"
+    assert marketplace_catalog.marketplace_name_for_source("MERCADOLIBRE") == "mercadolibre"
+    # FULCRUM is not a marketplace → no name.
+    assert marketplace_catalog.marketplace_name_for_source("FULCRUM") is None
+    # Inverse direction.
+    assert marketplace_catalog.source_for_marketplace_name("amazon") == "AMAZON"
+    assert marketplace_catalog.source_for_marketplace_name("ebay") is None  # planned, no order_source
+
+
+# --------------------------------------------------------------------------- #
 # MarketplaceService derives from the catalog
 # --------------------------------------------------------------------------- #
 
