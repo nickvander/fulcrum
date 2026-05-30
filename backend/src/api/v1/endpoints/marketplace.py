@@ -5,14 +5,54 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Dict
 
+from pydantic import BaseModel
+
 from src.api import dependencies
 from src.core.errors import LocalizedHTTPException
 from src.models.user import User
 from src.schemas import marketplace as marketplace_schema
 from src.database import get_db
 from src.crud import crud_marketplace
+from src.services import marketplace_catalog
 
 router = APIRouter()
+
+
+class MarketplaceCatalogEntry(BaseModel):
+    """Serializable view of a `MarketplaceDefinition` — everything the
+    frontend needs to render a channel, minus the backend connector
+    class. This endpoint is the single source the UI reads, so adding a
+    marketplace to the catalog automatically surfaces it in the app."""
+    key: str
+    display_name: str
+    status: str
+    supports_oauth: bool
+    is_primary: bool
+    is_connectable: bool
+    recommended_region: str | None
+    brand_color: str
+
+
+@router.get("/catalog", response_model=List[MarketplaceCatalogEntry])
+def read_marketplace_catalog(
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """The marketplaces Fulcrum supports (or plans to), in priority
+    order. Drives the channels page, add-channel dialog, and
+    listing-type dropdown so the frontend never hardcodes the list."""
+    return [
+        MarketplaceCatalogEntry(
+            key=d.key,
+            display_name=d.display_name,
+            status=d.status,
+            supports_oauth=d.supports_oauth,
+            is_primary=d.is_primary,
+            is_connectable=d.is_connectable,
+            recommended_region=d.recommended_region,
+            brand_color=d.brand_color,
+        )
+        for d in marketplace_catalog.get_catalog()
+    ]
 
 @router.post("/", response_model=marketplace_schema.Marketplace)
 def create_marketplace(

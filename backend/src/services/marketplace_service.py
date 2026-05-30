@@ -3,8 +3,7 @@ from typing import Awaitable, Callable, Dict, Any, Type, TypeVar
 import httpx
 from sqlalchemy.orm import Session
 from src.services.marketplaces.base import BaseMarketplaceConnector
-from src.services.marketplaces.mercadolibre import MercadoLibreConnector
-from src.services.marketplaces.amazon import AmazonConnector
+from src.services import marketplace_catalog
 
 T = TypeVar("T")
 
@@ -41,10 +40,12 @@ class MarketplaceService:
     """
 
     def __init__(self):
-        self._connectors: Dict[str, Type[BaseMarketplaceConnector]] = {
-            "mercadolibre": MercadoLibreConnector,
-            "amazon": AmazonConnector
-        }
+        # Connector strategy map is derived from the marketplace catalog
+        # (the single source of truth). Wiring a new connector is just
+        # attaching it to a catalog entry — no edit here.
+        self._connectors: Dict[str, Type[BaseMarketplaceConnector]] = (
+            marketplace_catalog.connector_registry()
+        )
         self._instances: Dict[str, BaseMarketplaceConnector] = {}
 
     def get_connector(self, marketplace_name: str) -> BaseMarketplaceConnector:
