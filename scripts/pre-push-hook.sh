@@ -4,6 +4,18 @@
 
 echo "Running pre-push checks for Fulcrum..."
 
+# Load nvm so `node` / `npm` / `npx` resolve to the project's expected
+# version (v20+). Without this, Git hooks run with the shell's login
+# PATH which often points at the system Node (v12 on Ubuntu 22.04)
+# and Angular CLI refuses to run on Node < v20.
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+# shellcheck disable=SC1091
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh" --no-use
+# Use the nvm default (or fall back to whatever is on PATH)
+if command -v nvm &> /dev/null; then
+    nvm use default --silent 2>/dev/null || true
+fi
+
 # Run fast backend tests (non-db tests only) - this is much quicker
 echo "Running fast backend tests..."
 if [ -f ".venv/bin/activate" ]; then
