@@ -55,9 +55,13 @@ sweep. Building on the catalog + multi-currency arcs below:
     fees (→ shipping) and captures `ProductAdsPaymentEvent` → ad_spend —
     both already in the payload we ingest.
   - **B5 — Buyer Q&A + SLA.** `marketplace_questions` + ML
-    `fetch_questions` + a 30-min poll + `GET /reports/questions` (SLA:
+    `fetch_questions` ingested two ways — the **`questions` webhook**
+    (real-time hydration via `GET /questions/{id}?api_version=4`,
+    idempotent when ML re-fires on answer) **and** a 30-min poll
+    back-fill — surfaced via `GET /reports/questions` (SLA:
     answered/pending/breached@24h) + a `/reports/qa` inbox page under the
-    Marketplaces sidenav group.
+    Marketplaces sidenav group. Open: answer-from-Fulcrum write path
+    (`POST /answers`, documented in `95`).
 
   **Next:** B3, B1, B2, Amazon fee-split, and B5 all shipped. Remaining
   ML-seller backlog (B4 replenishment planner, B6 repricing, B7 CFDI, B8

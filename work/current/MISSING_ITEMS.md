@@ -237,17 +237,37 @@ All six "Best Next Improvements" from
       AI to incorporate product images (multi-modal prompt) +
       per-marketplace tone tuning beyond the current 3-marketplace
       static map.
-- [ ] Phase 8 Advanced Analytics — ad-spend attribution from the
-      marketing `Campaign` table (currently always 0). Needs a
-      per-campaign-per-order link or a last-touch heuristic.
-      Geographic heatmaps still deferred — needs new data
-      primitives. Plan in `work/future/80-advanced-analytics.md`.
+- [ ] Phase 8 Advanced Analytics — ad-spend attribution. **Re-scoped +
+      partially shipped:** B2 (ML settlement promo/ads classification)
+      and the Amazon `ProductAdsPaymentEvent` capture now populate
+      `OrderCostBreakdown.ad_spend_amount` from settlement, so it's no
+      longer always 0. Remaining: pull true ad spend from the **ML
+      Product Ads API** (`cost` metric, per-campaign/day — see `95`) and
+      the **ML Billing API** for settled-fee truth; the disconnected
+      marketing `Campaign` per-order link + geographic heatmaps stay
+      deferred. Plans in `work/future/80-advanced-analytics.md` + `95`.
 
 ## Done This Past Week
 
 _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
+
+- [x] **ML-seller feature arc (2026-05-30)** — backlog + research in
+      `work/future/93` + `95`:
+      - **B3** ML Full stockout / lost-buy-box risk alert
+        (`ml_full_stockout_risk`).
+      - **B1** ML reputation monitor (`marketplace_reputation_snapshots`,
+        health-page reputation column, `reputation_risk` alert) + a
+        rate-units fix (ML returns 0–1 fractions → normalized to %).
+      - **B2** MELI promo/ads cost capture into `ad_spend`/`other_cost`.
+      - **Amazon** settlement fee-type split (Commission vs FBA→shipping)
+        + `ProductAdsPaymentEvent` → ad_spend.
+      - **B5** Buyer Q&A: `marketplace_questions` + ML `fetch_questions`,
+        the `questions` webhook (real-time) + a 30-min poll, a SLA
+        reports endpoint, and a `/reports/qa` inbox page.
+      - **Docs**: marketplace API research (`95`), stale-doc sweep,
+        test-stack port fix (8300/6380).
 
 - [x] **Physical-count session workflow + shrinkage report +
       returns dashboard widget** — three coupled slices built on the
