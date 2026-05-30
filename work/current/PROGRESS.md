@@ -44,10 +44,25 @@ sweep. Building on the catalog + multi-currency arcs below:
     `OrderCostBreakdown.ad_spend_amount` / `other_cost_amount`, so net
     margin stops being inflated by an assumed-zero ad spend.
 
-  **Next:** B3+B1+B2 shipped (plan archived as
-  `work/archive/94-ml-reputation-and-ad-cost.md`). Remaining ML-seller
-  backlog (B4 replenishment planner, B5 Q&A SLA, B6 repricing, B7
-  CFDI, B8 stock-locations) in `work/future/93-ml-seller-feature-backlog.md`.
+  - **API research + corrections.** Two web-research passes validated the
+    B1/B2 payload shapes against official ML + Amazon docs
+    (`work/future/95-marketplace-api-research.md`). Surfaced + fixed a real
+    bug: ML `seller_reputation` rates are 0–1 fractions, not percent — the
+    parser now normalizes ×100 (and fetches `/users/{id}` for reliable
+    metrics).
+  - **Amazon fee-type split + ad capture.** The SP-API Finances parser now
+    splits referral Commission (→ marketplace fee) from FBA fulfillment
+    fees (→ shipping) and captures `ProductAdsPaymentEvent` → ad_spend —
+    both already in the payload we ingest.
+  - **B5 — Buyer Q&A + SLA.** `marketplace_questions` + ML
+    `fetch_questions` + a 30-min poll + `GET /reports/questions` (SLA:
+    answered/pending/breached@24h) + a `/reports/qa` inbox page under the
+    Marketplaces sidenav group.
+
+  **Next:** B3, B1, B2, Amazon fee-split, and B5 all shipped. Remaining
+  ML-seller backlog (B4 replenishment planner, B6 repricing, B7 CFDI, B8
+  stock-locations; ML Billing API + Product Ads API for true settled
+  ad/fee data) in `work/future/93` + `95`.
 
 **Earlier this cycle:** Marketplace extensibility + multi-currency. Two arcs
 landed after a hands-on ML-seller walkthrough + critique:
