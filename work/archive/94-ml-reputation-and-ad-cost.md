@@ -33,15 +33,19 @@
 **Goal:** stop `ad_spend = 0` from inflating net margin; capture
 marketplace-native promo discounts + advertising fees per order.
 
-- [ ] Backend: extend `_extract_settlement_from_order` (ML connector) to
-      parse promotion/discount + advertising fee detail (defensive —
-      unknown fields default to 0).
-- [ ] Route the parsed amounts into `OrderCostBreakdown.ad_spend_amount`
-      / `other_cost_amount` via `order_cost_engine.apply_settlement_fees`.
-- [ ] Replace the hardcoded `ad_spend = 0.0` path.
-- [ ] Tests (parser + cost-engine routing + margin impact). Commit + push.
-- [ ] Margin-by-channel widget ad-spend segment lights up (no FE change
-      expected — verify).
+- [x] Backend: `_extract_settlement_from_order` now classifies each ML
+      `fee_details[]` line via `_classify_fee_detail` into marketplace /
+      advertising / promotion buckets (no double-counting) + a top-level
+      `advertising_fee` fallback. Returns `ad_spend_amount` +
+      `other_cost_amount` (None when absent — defensive).
+- [x] `apply_settlement_fees` gained optional `ad_spend_amount` /
+      `other_cost_amount` params (None → leave the estimate untouched);
+      settlement ingestion threads them through. Net margin now reflects
+      real ad/promo spend instead of an assumed zero.
+- [x] Tests (parser buckets, top-level fallback, cost-engine routing +
+      margin impact, None-leaves-untouched). Backend-only: the order
+      economics card + margin-by-channel widget already render
+      `ad_spend_amount` — they just light up. **Shipped.**
 
 ## Progress log
 
@@ -51,3 +55,7 @@ marketplace-native promo discounts + advertising fees per order.
   reputation_service + health-page reputation column/refresh +
   reputation_risk alert. Backend reputation/alert/health suites green;
   frontend 755 passed. Next: B2.
+- 2026-05-30 — **B2 shipped.** ML settlement parse splits advertising +
+  seller-funded promotion out of marketplace fees; cost engine routes
+  them into ad_spend/other_cost. Backend 832 passed. Both B1 + B2 done —
+  archiving this plan.

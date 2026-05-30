@@ -261,6 +261,12 @@ async def sync_settlement_for_credential(
                 order,
                 marketplace_fees_amount=fees,
                 shipping_cost_amount=settlement.get("shipping_cost_amount"),
+                # MELI Product-Ads + seller-funded promotion charges, when
+                # the settlement carries them. None → leave the estimate
+                # untouched (don't zero out on marketplaces that don't
+                # report these).
+                ad_spend_amount=settlement.get("ad_spend_amount"),
+                other_cost_amount=settlement.get("other_cost_amount"),
                 synced_at=when,
             )
             # Amazon only: persist `RefundEventList` rows so the

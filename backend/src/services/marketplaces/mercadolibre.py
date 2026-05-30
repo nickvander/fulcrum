@@ -10,6 +10,30 @@ from .base import (
     InboundShipmentResult,
 )
 
+_ADVERTISING_FEE_KEYWORDS = ("advertis", "product_ad", "product ads", "ads_fee", "publicidad")
+_PROMOTION_FEE_KEYWORDS = ("promotion", "promo", "deal", "campaign", "discount", "oferta", "descuento")
+
+
+def _classify_fee_detail(detail: Dict[str, Any]) -> str:
+    """Classify a ML `fee_details[]` line into one of:
+    'advertising' (Product Ads), 'promotion' (seller-funded deal /
+    discount), or 'marketplace' (the plain sale/listing/payment fee).
+
+    Keys off the line's `type` / `fee_type` / `name` text. Defensive —
+    anything unrecognized counts as a marketplace fee so we never
+    silently drop a real channel cost.
+    """
+    label = " ".join(
+        str(detail.get(k) or "")
+        for k in ("type", "fee_type", "name", "description")
+    ).lower()
+    if any(kw in label for kw in _ADVERTISING_FEE_KEYWORDS):
+        return "advertising"
+    if any(kw in label for kw in _PROMOTION_FEE_KEYWORDS):
+        return "promotion"
+    return "marketplace"
+
+
 def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize the `seller_reputation` object from a ML `GET /users/{id}`
     payload into a flat dict. Defensive — every field is optional and
@@ -623,6 +647,8 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
         without HTTP fixtures.
         """
         fees: Optional[float] = None
+        ad_spend: Optional[float] = None
+        other_cost: Optional[float] = None
         for payment in data.get("payments") or []:
             if not isinstance(payment, dict):
                 continue
@@ -632,18 +658,29 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
             if status in {"refunded", "cancelled", "rejected"}:
                 continue
             payment_fee: Optional[float] = None
-            # 1) Newer revision: `fee_details: [{amount, ...}, ...]`
+            # 1) Newer revision: `fee_details: [{amount, type, ...}, ...]`.
+            #    Classify each line so advertising + seller-funded
+            #    promotion charges land in their own buckets instead of
+            #    inflating the plain marketplace fee.
             details = payment.get("fee_details")
             if isinstance(details, list) and details:
                 acc = 0.0
                 any_value = False
                 for detail in details:
-                    if isinstance(detail, dict) and detail.get("amount") is not None:
-                        try:
-                            acc += float(detail["amount"])
-                            any_value = True
-                        except (TypeError, ValueError):
-                            continue
+                    if not isinstance(detail, dict) or detail.get("amount") is None:
+                        continue
+                    try:
+                        amount = float(detail["amount"])
+                    except (TypeError, ValueError):
+                        continue
+                    bucket = _classify_fee_detail(detail)
+                    if bucket == "advertising":
+                        ad_spend = (ad_spend or 0.0) + amount
+                    elif bucket == "promotion":
+                        other_cost = (other_cost or 0.0) + amount
+                    else:
+                        acc += amount
+                        any_value = True
                 if any_value:
                     payment_fee = acc
             # 2) Older revision: top-level `marketplace_fee`.
@@ -667,7 +704,20 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                     except (TypeError, ValueError):
                         continue
 
+        # Top-level advertising charge fallback (some revisions report ad
+        # spend outside the per-payment fee_details).
+        for key in ("advertising_fee", "ads_fee", "advertising_amount"):
+            value = data.get(key)
+            if value is not None:
+                try:
+                    ad_spend = (ad_spend or 0.0) + float(value)
+                    break
+                except (TypeError, ValueError):
+                    continue
+
         return {
             "marketplace_fees_amount": fees,
             "shipping_cost_amount": shipping_cost,
+            "ad_spend_amount": ad_spend,
+            "other_cost_amount": other_cost,
         }

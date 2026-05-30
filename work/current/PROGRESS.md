@@ -34,9 +34,20 @@ sweep. Building on the catalog + multi-currency arcs below:
     roadmap items. Gave the test stack distinct host ports (8300/6380)
     so it stops colliding with the dev stack on 8200.
 
-  **Next:** B1 (ML reputation monitor) → B2 (MELI ad/promo cost capture).
-  Active plan in `work/current/94-ml-reputation-and-ad-cost.md`; full
-  backlog in `work/future/93-ml-seller-feature-backlog.md`.
+  - **B1 — ML reputation monitor.** `fetch_seller_reputation` +
+    `marketplace_reputation_snapshots` + a reputation column/refresh on
+    the health page + a `reputation_risk` alert (worst of claims /
+    cancellations / delayed-handling rate vs threshold).
+  - **B2 — MELI ad/promo cost capture.** The ML settlement parser now
+    splits advertising + seller-funded promotion charges out of the
+    plain marketplace fee and routes them into
+    `OrderCostBreakdown.ad_spend_amount` / `other_cost_amount`, so net
+    margin stops being inflated by an assumed-zero ad spend.
+
+  **Next:** B3+B1+B2 shipped (plan archived as
+  `work/archive/94-ml-reputation-and-ad-cost.md`). Remaining ML-seller
+  backlog (B4 replenishment planner, B5 Q&A SLA, B6 repricing, B7
+  CFDI, B8 stock-locations) in `work/future/93-ml-seller-feature-backlog.md`.
 
 **Earlier this cycle:** Marketplace extensibility + multi-currency. Two arcs
 landed after a hands-on ML-seller walkthrough + critique:

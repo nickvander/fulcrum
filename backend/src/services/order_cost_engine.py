@@ -301,17 +301,23 @@ def apply_settlement_fees(
     *,
     marketplace_fees_amount: float,
     shipping_cost_amount: Optional[float] = None,
+    ad_spend_amount: Optional[float] = None,
+    other_cost_amount: Optional[float] = None,
     synced_at: Optional[datetime] = None,
 ) -> OrderCostBreakdown:
     """Overwrite the breakdown row's fee components with real settled
     data from the marketplace's finance API and flip `fees_source` to
     'settled' so future recomputes preserve it.
 
-    `shipping_cost_amount` is optional because some marketplaces (ML's
-    `total_fee_amount`, Amazon's Commission) only carry a single fee
-    bucket — in that case the caller leaves shipping untouched and the
-    row keeps whatever the cost engine estimated. When it IS provided,
-    it overwrites in full.
+    `shipping_cost_amount`, `ad_spend_amount`, and `other_cost_amount`
+    are optional because not every marketplace settlement carries them
+    (ML's `total_fee_amount`, Amazon's Commission only carry a single
+    fee bucket). When a value is None the corresponding component is
+    left untouched (keeps whatever the cost engine estimated); when it
+    IS provided it overwrites in full. `ad_spend_amount` captures
+    MercadoLibre Product-Ads charges and `other_cost_amount` captures
+    seller-funded promotion/deal contributions, so net margin stops
+    being inflated by an assumed-zero ad spend.
 
     If the breakdown row doesn't exist yet (rare — ingestion paths
     upsert one inline), we create a stub by calling `upsert_breakdown`
@@ -333,6 +339,10 @@ def apply_settlement_fees(
     breakdown.marketplace_fees_amount = round(fees, 4)
     if shipping_cost_amount is not None:
         breakdown.shipping_cost_amount = round(max(0.0, float(shipping_cost_amount)), 4)
+    if ad_spend_amount is not None:
+        breakdown.ad_spend_amount = round(max(0.0, float(ad_spend_amount)), 4)
+    if other_cost_amount is not None:
+        breakdown.other_cost_amount = round(max(0.0, float(other_cost_amount)), 4)
     breakdown.fees_source = SETTLED_FEES_SOURCE
     breakdown.fees_synced_at = when
     breakdown.computed_at = when
