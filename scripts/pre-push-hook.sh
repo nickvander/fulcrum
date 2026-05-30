@@ -48,8 +48,10 @@ fi
 # Run frontend tests
 echo "Running frontend tests..."
 if command -v npm &> /dev/null; then
-    # Run frontend tests
-    npm run test:frontend -- --watch=false
+    # The `test:frontend` script already runs `ng test --watch=false`,
+    # so no extra `-- --watch=false` here (passing it makes npm warn
+    # "Unknown cli config --watch").
+    npm run test:frontend
     frontend_result=$?
 
     if [ $frontend_result -eq 0 ]; then

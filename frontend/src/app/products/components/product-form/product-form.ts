@@ -543,18 +543,27 @@ export class ProductForm implements OnInit {
 
   renderQrCode(): void {
     const qrValue = this.productForm.get('qrcode_value')?.value;
-    if (qrValue && this.qrCanvas) {
-      QRCode.toCanvas(this.qrCanvas.nativeElement, qrValue, {
-        width: 128,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      }, function (error: any) {
-        if (error) console.error(error);
-      });
+    if (!qrValue || !this.qrCanvas) {
+      return;
     }
+    const canvas = this.qrCanvas.nativeElement;
+    // Skip when no 2D canvas context is available — e.g. jsdom in unit
+    // tests or any headless environment. The qrcode lib would otherwise
+    // fail on a null context and log a noisy
+    // "Cannot read properties of null (reading 'createImageData')".
+    if (typeof canvas.getContext !== 'function' || !canvas.getContext('2d')) {
+      return;
+    }
+    QRCode.toCanvas(canvas, qrValue, {
+      width: 128,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff'
+      }
+    }, function (error: any) {
+      if (error) console.error(error);
+    });
   }
 
   regenerateSku(): void {
