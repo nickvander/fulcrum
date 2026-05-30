@@ -19,7 +19,7 @@
                 <p>{{ t('marketing.selectMarketplace') }}</p>
 
                 <div class="marketplace-options">
-                    <button mat-stroked-button class="marketplace-option mercadolibre recommended"
+                    <button mat-stroked-button class="marketplace-option recommended"
                         routerLink="/marketplaces/settings/mercadolibre" (click)="showAddDialog = false">
                         <img src="images/marketplaces/mercadolibre.png" alt="MercadoLibre" class="marketplace-logo">
                         <div class="marketplace-info">
@@ -32,7 +32,7 @@
                         <mat-icon class="arrow-icon">arrow_forward</mat-icon>
                     </button>
 
-                    <button mat-stroked-button class="marketplace-option amazon secondary"
+                    <button mat-stroked-button class="marketplace-option"
                         routerLink="/marketplaces/settings/amazon" (click)="showAddDialog = false">
                         <img src="images/marketplaces/amazon.png" alt="Amazon" class="marketplace-logo">
                         <div class="marketplace-info">
@@ -40,6 +40,17 @@
                             <span class="marketplace-desc">{{ t('marketing.connectAmazon') }}</span>
                         </div>
                         <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                    </button>
+
+                    <button mat-stroked-button class="marketplace-option coming-soon" disabled>
+                        <span class="logo-icon-fallback"><mat-icon>storefront</mat-icon></span>
+                        <div class="marketplace-info">
+                            <div class="name-row">
+                                <span class="marketplace-name">eBay</span>
+                                <span class="soon-badge">{{ t('marketing.comingSoon') }}</span>
+                            </div>
+                            <span class="marketplace-desc">{{ t('marketing.connectEbay') }}</span>
+                        </div>
                     </button>
                 </div>
 
@@ -51,102 +62,135 @@
         }
 
         <div class="marketplace-grid">
-            @for (market of cards$ | async; track market.id) {
-            <mat-card class="channel-card">
-                <div class="card-glow" [ngClass]="market.name.toLowerCase()"></div>
-                <div class="card-header-overlay">
+            @for (vm of channels$ | async; track vm.key) {
+            <mat-card class="channel-card"
+                      [class.is-connected]="isConnected(vm)"
+                      [class.is-primary]="vm.primary"
+                      [class.is-disabled]="vm.comingSoon">
+                <div class="card-accent" [ngClass]="vm.key"></div>
+
+                <div class="card-top">
                     <div class="logo-container">
-                        <img [src]="getMarketplaceLogo(market.name)" [alt]="market.name" class="mp-logo-img">
+                        @if (vm.key === 'ebay') {
+                        <span class="logo-icon-fallback"><mat-icon>storefront</mat-icon></span>
+                        } @else {
+                        <img [src]="getMarketplaceLogo(vm.displayName)" [alt]="vm.displayName" class="mp-logo-img">
+                        }
                     </div>
                     <div class="header-info">
-                        <mat-card-title>{{ market.name }}</mat-card-title>
-                        <mat-card-subtitle>
-                            @if (market.summary?.credential_connected) {
-                            {{ t('marketing.activeConnection') }} • {{ formatLastSyncTranslated(market.summary?.last_sync_at, t) }}
-                            } @else {
-                            {{ t('marketing.notConnected') }} • ID: {{ market.id }}
+                        <div class="title-row">
+                            <span class="channel-title">{{ vm.displayName }}</span>
+                            @if (vm.primary) {
+                            <span class="primary-badge">{{ t('marketing.primaryChannel') }}</span>
                             }
-                        </mat-card-subtitle>
+                        </div>
+                        <span class="channel-subtitle">
+                            @if (isConnected(vm)) {
+                            {{ t('marketing.activeConnection') }} ·
+                            {{ formatLastSyncTranslated(vm.marketplace?.summary?.last_sync_at, t) }}
+                            } @else if (vm.comingSoon) {
+                            {{ t('marketing.comingSoonDesc') }}
+                            } @else {
+                            {{ t('marketing.notConnectedYet') }}
+                            }
+                        </span>
                     </div>
                 </div>
 
-                <mat-card-content>
-                    <div class="status-indicator">
-                        @if (market.summary?.credential_connected) {
-                        <span class="status-dot online"></span>
-                        <span class="status-text">{{ t('marketing.operational') }}</span>
+                <!-- Status row -->
+                <div class="status-row"
+                     [class.connected]="isConnected(vm)"
+                     [class.soon]="vm.comingSoon">
+                    <span class="status-dot"
+                          [class.online]="isConnected(vm)"
+                          [class.offline]="!isConnected(vm)"></span>
+                    <span class="status-text">
+                        @if (isConnected(vm)) {
+                        {{ t('marketing.operational') }}
+                        } @else if (vm.comingSoon) {
+                        {{ t('marketing.comingSoon') }}
                         } @else {
-                        <span class="status-dot offline"></span>
-                        <span class="status-text offline">{{ t('marketing.statusDisconnected') }}</span>
+                        {{ t('marketing.statusDisconnected') }}
                         }
-                        <span class="spacer"></span>
-                        @if (tokenChipState(market.summary) !== 'none') {
-                        <mat-chip-set>
-                            <mat-chip class="token-chip"
-                                      [ngClass]="tokenChipState(market.summary)"
-                                      [matTooltip]="tokenChipTooltipTranslated(market.summary, t)"
-                                      matTooltipPosition="above">
-                                @if (tokenChipState(market.summary) === 'reauth') {
-                                <mat-icon class="chip-icon" matChipAvatar>warning</mat-icon>
-                                }
-                                {{ tokenChipLabelTranslated(market.summary, t) }}
-                            </mat-chip>
-                        </mat-chip-set>
-                        }
-                    </div>
+                    </span>
+                    <span class="spacer"></span>
+                    @if (isConnected(vm) && tokenChipState(vm.marketplace?.summary ?? null) !== 'none') {
+                    <mat-chip-set>
+                        <mat-chip class="token-chip"
+                                  [ngClass]="tokenChipState(vm.marketplace?.summary ?? null)"
+                                  [matTooltip]="tokenChipTooltipTranslated(vm.marketplace?.summary ?? null, t)"
+                                  matTooltipPosition="above">
+                            @if (tokenChipState(vm.marketplace?.summary ?? null) === 'reauth') {
+                            <mat-icon class="chip-icon" matChipAvatar>warning</mat-icon>
+                            }
+                            {{ tokenChipLabelTranslated(vm.marketplace?.summary ?? null, t) }}
+                        </mat-chip>
+                    </mat-chip-set>
+                    }
+                </div>
 
-                    <div class="quick-stats">
-                        <div class="stat-item">
-                            <span class="stat-value">{{ market.summary?.listing_count ?? '--' }}</span>
-                            <span class="stat-label">{{ t('marketing.listings') }}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value success">{{ market.summary?.healthy_count ?? '--' }}</span>
-                            <span class="stat-label">{{ t('marketing.healthy') }}</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value" [class.warning]="(market.summary?.issues_count ?? 0) > 0">
-                                {{ market.summary?.issues_count ?? '--' }}
-                            </span>
-                            <span class="stat-label">{{ t('marketing.issues') }}</span>
-                        </div>
+                <!-- Body: stats when connected, prompt otherwise -->
+                @if (isConnected(vm)) {
+                <div class="quick-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ vm.marketplace?.summary?.listing_count ?? '--' }}</span>
+                        <span class="stat-label">{{ t('marketing.listings') }}</span>
                     </div>
-                </mat-card-content>
+                    <div class="stat-item">
+                        <span class="stat-value success">{{ vm.marketplace?.summary?.healthy_count ?? '--' }}</span>
+                        <span class="stat-label">{{ t('marketing.healthy') }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" [class.warning]="(vm.marketplace?.summary?.issues_count ?? 0) > 0">
+                            {{ vm.marketplace?.summary?.issues_count ?? '--' }}
+                        </span>
+                        <span class="stat-label">{{ t('marketing.issues') }}</span>
+                    </div>
+                </div>
+                } @else {
+                <p class="connect-prompt">
+                    @if (vm.comingSoon) {
+                    {{ t('marketing.comingSoonBody') }}
+                    } @else if (vm.primary) {
+                    {{ t('marketing.connectPromptPrimary') }}
+                    } @else {
+                    {{ t('marketing.connectPrompt') }}
+                    }
+                </p>
+                }
 
                 <mat-divider></mat-divider>
 
                 <mat-card-actions align="end">
-                    @if (tokenChipState(market.summary) === 'reauth') {
-                    <button mat-flat-button color="warn"
-                            [routerLink]="['/marketplaces/settings', market.name.toLowerCase()]">
-                        <mat-icon>autorenew</mat-icon>
-                        {{ t('marketing.reconnect') }}
-                    </button>
+                    @if (isConnected(vm)) {
+                        @if (tokenChipState(vm.marketplace?.summary ?? null) === 'reauth') {
+                        <button mat-flat-button color="warn" [routerLink]="connectRoute(vm)">
+                            <mat-icon>autorenew</mat-icon>
+                            {{ t('marketing.reconnect') }}
+                        </button>
+                        } @else {
+                        <button mat-button (click)="syncMarketplace(vm.marketplace!.id)" [disabled]="syncing">
+                            <mat-icon>sync</mat-icon>
+                            {{ syncing ? t('marketing.syncing') : t('marketing.syncNow') }}
+                        </button>
+                        }
+                        <button mat-stroked-button color="primary" [routerLink]="['/marketplaces', vm.marketplace!.id]">
+                            <mat-icon>list</mat-icon>
+                            {{ t('marketing.manage') }}
+                        </button>
+                    } @else if (vm.comingSoon) {
+                        <button mat-stroked-button disabled>
+                            <mat-icon>schedule</mat-icon>
+                            {{ t('marketing.comingSoon') }}
+                        </button>
                     } @else {
-                    <button mat-button (click)="syncMarketplace(market.id)"
-                            [disabled]="syncing || !market.summary?.credential_connected">
-                        <mat-icon>sync</mat-icon>
-                        {{ syncing ? t('marketing.syncing') : t('marketing.syncNow') }}
-                    </button>
+                        <button mat-flat-button color="primary" [routerLink]="connectRoute(vm)">
+                            <mat-icon>link</mat-icon>
+                            {{ t('marketing.connect') }}
+                        </button>
                     }
-                    <button mat-stroked-button color="primary" [routerLink]="['/marketplaces', market.id]">
-                        <mat-icon>list</mat-icon>
-                        {{ t('marketing.manage') }}
-                    </button>
                 </mat-card-actions>
             </mat-card>
-            } @empty {
-            <div class="empty-state">
-                <div class="empty-icon-wrapper">
-                    <mat-icon>cloud_off</mat-icon>
-                </div>
-                <h2>{{ t('marketing.noMarketplaces') }}</h2>
-                <p>{{ t('marketing.noMarketplacesDesc') }}</p>
-                <button mat-flat-button color="primary" (click)="showAddDialog = true">
-                    <mat-icon>add</mat-icon>
-                    {{ t('marketing.addFirstMarketplace') }}
-                </button>
-            </div>
             }
         </div>
     </div>

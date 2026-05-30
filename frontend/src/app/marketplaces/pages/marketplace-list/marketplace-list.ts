@@ -19,6 +19,36 @@ export interface MarketplaceCardModel extends Marketplace {
   summary: MarketplaceSummary | null;
 }
 
+/**
+ * The channels Fulcrum knows about, in operator priority order.
+ * MercadoLibre is first + flagged primary because Mexico + ML Full is
+ * the primary market. A channel renders even when the workspace hasn't
+ * connected it yet, so the operator can always start the connect flow
+ * from this page (the old behavior only showed channels that already
+ * existed in the DB — so a fresh workspace never saw MercadoLibre).
+ *
+ * `comingSoon` channels (eBay today) have no OAuth connect flow yet, so
+ * they render as a planned-channel card rather than a dead "Connect"
+ * button that routes nowhere useful.
+ */
+interface KnownChannel {
+  key: 'mercadolibre' | 'amazon' | 'ebay';
+  displayName: string;
+  primary: boolean;
+  comingSoon: boolean;
+}
+
+const KNOWN_CHANNELS: KnownChannel[] = [
+  { key: 'mercadolibre', displayName: 'MercadoLibre', primary: true, comingSoon: false },
+  { key: 'amazon', displayName: 'Amazon', primary: false, comingSoon: false },
+  { key: 'ebay', displayName: 'eBay', primary: false, comingSoon: true },
+];
+
+/** A channel + whichever DB marketplace row backs it (null if none). */
+export interface ChannelViewModel extends KnownChannel {
+  marketplace: MarketplaceCardModel | null;
+}
+
 @Component({
   selector: 'app-marketplace-list',
   standalone: true,
@@ -38,7 +68,8 @@ export interface MarketplaceCardModel extends Marketplace {
   styleUrl: './marketplace-list.scss',
 })
 export class MarketplaceListComponent implements OnInit {
-  cards$: Observable<MarketplaceCardModel[]> = of([]);
+  /** Ordered ML → Amazon → eBay channel cards (always all three). */
+  channels$: Observable<ChannelViewModel[]> = of([]);
   syncing = false;
   showAddDialog = false;
 
@@ -53,7 +84,27 @@ export class MarketplaceListComponent implements OnInit {
   }
 
   refresh(): void {
-    this.cards$ = this.loadCards();
+    this.channels$ = this.loadChannels();
+  }
+
+  /**
+   * Load the connected marketplaces + their summaries, then project
+   * them onto the fixed KNOWN_CHANNELS list so every known channel
+   * always has a card (connected or not), in priority order.
+   */
+  private loadChannels(): Observable<ChannelViewModel[]> {
+    return this.loadCards().pipe(
+      map((cards) =>
+        KNOWN_CHANNELS.map((channel) => ({
+          ...channel,
+          marketplace:
+            cards.find(
+              (c) => c.name.toLowerCase().includes(channel.key)
+                || (channel.key === 'mercadolibre' && c.name.toLowerCase().includes('mercado')),
+            ) ?? null,
+        })),
+      ),
+    );
   }
 
   private loadCards(): Observable<MarketplaceCardModel[]> {
@@ -70,8 +121,19 @@ export class MarketplaceListComponent implements OnInit {
             )
           )
         );
-      })
+      }),
+      catchError(() => of([] as MarketplaceCardModel[])),
     );
+  }
+
+  /** Connected = backed by a DB marketplace with a live credential. */
+  isConnected(vm: ChannelViewModel): boolean {
+    return !!vm.marketplace?.summary?.credential_connected;
+  }
+
+  /** Route to the connect / settings flow for this channel. */
+  connectRoute(vm: ChannelViewModel): string {
+    return `/marketplaces/settings/${vm.key}`;
   }
 
   syncMarketplace(marketplaceId: number): void {
@@ -103,6 +165,7 @@ export class MarketplaceListComponent implements OnInit {
     const n = name.toLowerCase();
     if (n.includes('amazon')) return 'images/marketplaces/amazon.png';
     if (n.includes('mercado')) return 'images/marketplaces/mercadolibre.png';
+    if (n.includes('ebay')) return 'images/marketplaces/ebay.png';
     return 'images/marketplaces/default.png';
   }
 

@@ -1,169 +1,220 @@
+// Marketplace Channels — clean, token-driven layout.
+// Everything here consumes the shared design tokens in
+// theme/variables.scss (colors, radius, shadows) so the page reads
+// consistently with the rest of the app and adapts to dark mode.
+
 .marketplace-container {
-    padding: 2rem;
-    max-width: 1400px;
+    padding: 24px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
 .page-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 3rem;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 1.5rem;
+
+    .header-text {
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0 0 4px 0;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+            max-width: 640px;
+        }
+    }
 }
 
-.header-text {
-    h1 {
-        font-size: 2.25rem;
-        font-weight: 800;
-        color: var(--text-main);
-        margin: 0 0 0.5rem 0;
-        letter-spacing: -0.025em;
-    }
-
-    p {
-        color: var(--text-secondary);
-        font-size: 1.1rem;
-        margin: 0;
-    }
-}
-
+// ── Channel grid ──────────────────────────────────────────────────
 .marketplace-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
 }
 
-// Channel Card
 .channel-card {
     position: relative;
     overflow: hidden;
-    border: none;
-    box-shadow: var(--shadow-md);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
     background: var(--bg-card);
-    border-radius: 24px;
-    padding: 1.5rem;
+    padding: 20px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 
     &:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
 
-        .card-glow {
-            height: 6px;
-            opacity: 1;
-        }
+    // The primary channel (MercadoLibre) gets a subtle accent ring so
+    // it reads as the home base without shouting.
+    &.is-primary {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 1px var(--accent-color), var(--shadow-sm);
+    }
 
+    // Unconnected / coming-soon cards sit back visually.
+    &:not(.is-connected) {
+        background: var(--bg-app);
+    }
+
+    &.is-disabled {
+        opacity: 0.75;
+
+        .logo-icon-fallback,
         .mp-logo-img {
-            transform: scale(1.1);
+            filter: grayscale(1);
+            opacity: 0.7;
         }
     }
 }
 
-.card-glow {
+// Thin brand accent stripe at the top of each card.
+.card-accent {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    opacity: 0.8;
-    transition: all 0.3s ease;
+    height: 3px;
 
-    &.amazon {
-        background: linear-gradient(90deg, #ff9900, #ffc400);
-    }
-
-    &.mercadolibre {
-        background: linear-gradient(90deg, #ffe600, #ffcc00);
-    }
+    &.mercadolibre { background: linear-gradient(90deg, #ffe600, #ffcc00); }
+    &.amazon       { background: linear-gradient(90deg, #ff9900, #ffc400); }
+    &.ebay         { background: linear-gradient(90deg, #e53238, #0064d2 35%, #f5af02 70%, #86b817); }
 }
 
-.card-header-overlay {
+.card-top {
     display: flex;
     align-items: center;
-    gap: 1.25rem;
-    margin-bottom: 1.5rem;
+    gap: 14px;
+    margin-bottom: 16px;
 
     .logo-container {
-        width: 64px;
-        height: 64px;
-        background: var(--bg-app);
-        border-radius: 18px;
+        width: 52px;
+        height: 52px;
+        flex-shrink: 0;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-        padding: 12px;
-        transition: all 0.3s ease;
+        padding: 10px;
 
         .mp-logo-img {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: transform 0.3s ease;
         }
     }
 
     .header-info {
-        mat-card-title {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text-main);
-            letter-spacing: -0.025em;
+        min-width: 0;
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        mat-card-subtitle {
-            margin: 4px 0 0 0;
-            font-size: 0.875rem;
-            font-weight: 500;
+        .channel-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .channel-subtitle {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.8rem;
             color: var(--text-secondary);
         }
     }
 }
 
-// Status Indicator
-.status-indicator {
+.logo-icon-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        color: var(--text-hint);
+    }
+}
+
+// "Primary" pill on the MercadoLibre card.
+.primary-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    padding: 2px 8px;
+    border-radius: 999px;
+    line-height: 1.5;
+}
+
+// ── Status row ────────────────────────────────────────────────────
+.status-row {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.25rem;
-    background: var(--success-bg);
-    border-radius: 12px;
-    margin-bottom: 1.5rem;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--bg-app);
     border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 16px;
+
+    &.connected {
+        background: var(--success-bg);
+        border-color: transparent;
+    }
+
+    .spacer {
+        flex: 1;
+    }
 }
 
 .status-dot {
-    width: 10px;
-    height: 10px;
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
-    margin-right: 10px;
-    position: relative;
+    flex-shrink: 0;
 
     &.online {
-        background-color: var(--success-color);
-
-        &::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 50%;
-            background: var(--success-color);
-            animation: pulse 2s infinite;
-        }
+        background: var(--success-color);
     }
 
     &.offline {
-        background-color: var(--text-hint);
+        background: var(--text-hint);
     }
 }
 
-.status-text.offline {
+.status-text {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--text-secondary);
+
+    .status-row.connected & {
+        color: var(--success-color);
+    }
 }
 
 .token-chip {
@@ -177,25 +228,14 @@
         color: var(--success-color) !important;
     }
 
-    &.warning {
-        background: var(--warning-bg) !important;
-        color: var(--warning-color) !important;
-    }
-
-    &.expired,
-    &.disconnected {
-        background: var(--error-bg) !important;
-        color: var(--error-color) !important;
-    }
-
-    // Reauth state matches the stock-transfer reauth banner — orange
-    // border, warning color text, so it's distinguishable from "expired"
-    // (red) at a glance.
+    &.warning,
     &.reauth {
         background: var(--warning-bg) !important;
         color: var(--warning-color) !important;
+    }
+
+    &.reauth {
         border-color: var(--warning-color);
-        border-width: 1.5px;
 
         .chip-icon {
             font-size: 14px;
@@ -204,52 +244,23 @@
             margin-right: 2px;
         }
     }
-}
 
-.status-indicator {
-    &:has(.status-dot.offline) {
-        background: var(--bg-app);
+    &.expired,
+    &.disconnected {
+        background: var(--error-bg) !important;
+        color: var(--error-color) !important;
     }
 }
 
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: scale(2.5);
-        opacity: 0;
-    }
-}
-
-.status-text {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--success-color);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.sync-chip {
-    font-size: 10px;
-    font-weight: 800;
-    height: 22px;
-    background: var(--bg-card) !important;
-    color: var(--success-color) !important;
-    border: 1px solid var(--border-color);
-}
-
-// Quick Stats
+// ── Quick stats (connected cards) ─────────────────────────────────
 .quick-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    padding: 1.25rem;
+    gap: 8px;
+    padding: 14px;
     background: var(--bg-app);
-    border-radius: 20px;
-    margin-bottom: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 16px;
 }
 
 .stat-item {
@@ -260,88 +271,42 @@
 }
 
 .stat-value {
-    display: block;
-    font-size: 1.75rem;
-    font-weight: 800;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--text-main);
     line-height: 1.2;
 
-    &.success {
-        color: var(--success-color);
-    }
-
-    &.warning {
-        color: var(--warning-color);
-    }
+    &.success { color: var(--success-color); }
+    &.warning { color: var(--warning-color); }
 }
 
 .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 700;
     color: var(--text-hint);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-top: 4px;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
 }
 
-.channel-description {
-    font-size: 0.875rem;
-    color: #64748b;
+// ── Connect prompt (unconnected cards) ────────────────────────────
+.connect-prompt {
+    margin: 0 0 16px 0;
+    font-size: 0.85rem;
     line-height: 1.5;
-    margin: 0.5rem 0 1rem 0;
+    color: var(--text-secondary);
 }
 
-// Empty State
-.empty-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 5rem 2rem;
-    background: #f8fafc;
-    border-radius: 24px;
-    border: 2px dashed #e2e8f0;
-
-    h2 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #334155;
-        margin-bottom: 0.5rem;
-    }
-
-    p {
-        color: #64748b;
-        max-width: 400px;
-        margin: 0 auto 2rem auto;
-        line-height: 1.6;
-    }
+mat-card-actions {
+    padding: 12px 0 0 0 !important;
+    margin: 0;
+    gap: 8px;
 }
 
-.empty-icon-wrapper {
-    width: 80px;
-    height: 80px;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem auto;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-
-    mat-icon {
-        font-size: 40px;
-        width: 40px;
-        height: 40px;
-        color: #cbd5e1;
-    }
-}
-
-// Dialog
-.dialog-overlay,
-.connect-overlay {
+// ── Add-channel dialog ────────────────────────────────────────────
+.dialog-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -349,67 +314,60 @@
     z-index: 1000;
 }
 
-.dialog-content,
-
-.connect-dialog {
+.dialog-content {
     background: var(--bg-card);
-    border-radius: 16px;
-    padding: 2rem;
+    border-radius: var(--border-radius);
+    padding: 24px;
     width: 90%;
     max-width: 480px;
     box-shadow: var(--shadow-lg);
 
     h2 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.5rem;
+        margin: 0 0 4px 0;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--text-main);
     }
 
-    >p {
+    > p {
         color: var(--text-secondary);
-        margin: 0 0 1.5rem 0;
+        margin: 0 0 20px 0;
+        font-size: 0.9rem;
     }
 }
 
 .marketplace-options {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .marketplace-option {
     display: flex !important;
     align-items: center !important;
-    gap: 1rem !important;
-    padding: 1rem 1.25rem !important;
-    border-radius: 12px;
+    gap: 14px !important;
+    padding: 14px 16px !important;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
     text-align: left;
     height: auto !important;
-    min-height: 72px;
-    transition: all 0.2s ease;
+    min-height: 68px;
     width: 100%;
+    transition: background 0.15s ease, border-color 0.15s ease;
 
-    &:hover {
-        transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    &:not(.coming-soon):hover {
+        background: var(--bg-hover);
+        border-color: var(--border-hover);
     }
 
-    &.amazon {
-        border-color: #ff9900;
-
-        &:hover {
-            background: #fff7ed;
-        }
+    &.recommended {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 1px var(--accent-color);
     }
 
-    &.mercadolibre {
-        border-color: #ffe600;
-
-        &:hover {
-            background: #fefce8;
-        }
+    &.coming-soon {
+        opacity: 0.7;
     }
 
     .mdc-button__label {
@@ -418,8 +376,8 @@
 }
 
 .marketplace-logo {
-    width: 48px;
-    height: 32px;
+    width: 44px;
+    height: 30px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -431,38 +389,17 @@
     min-width: 0;
 }
 
-.marketplace-name {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--text-main);
-}
-
 .name-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     flex-wrap: wrap;
 }
 
-.recommended-badge {
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--accent-dark);
-    background: var(--accent-light);
-    padding: 2px 8px;
-    border-radius: 999px;
-    line-height: 1.4;
-}
-
-.marketplace-option.recommended {
-    border-width: 2px !important;
-    box-shadow: 0 0 0 1px var(--accent-light);
-}
-
-.marketplace-option.secondary {
-    opacity: 0.85;
+.marketplace-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-main);
 }
 
 .marketplace-desc {
@@ -471,54 +408,34 @@
     margin-top: 2px;
 }
 
-.region-tag {
-    margin-left: auto;
-    font-size: 0.75rem;
-    background: #f1f5f9;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    color: #64748b;
+.recommended-badge,
+.soon-badge {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    line-height: 1.4;
+}
+
+.recommended-badge {
+    color: var(--accent-dark);
+    background: var(--accent-light);
+}
+
+.soon-badge {
+    color: var(--text-secondary);
+    background: var(--bg-app);
+    border: 1px solid var(--border-color);
+}
+
+.arrow-icon {
+    color: var(--text-hint);
+    flex-shrink: 0;
 }
 
 .dialog-actions {
     display: flex;
     justify-content: flex-end;
-}
-
-.arrow-icon {
-    color: #94a3b8;
-    flex-shrink: 0;
-}
-
-.setup-notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: #f0f9ff;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    border: 1px solid #bae6fd;
-
-    mat-icon {
-        color: #0284c7;
-        flex-shrink: 0;
-    }
-
-    p {
-        margin: 0;
-        font-size: 0.875rem;
-        color: #0369a1;
-        line-height: 1.4;
-
-        a {
-            color: #0284c7;
-            font-weight: 600;
-            text-decoration: none;
-
-            &:hover {
-                text-decoration: underline;
-            }
-        }
-    }
 }
