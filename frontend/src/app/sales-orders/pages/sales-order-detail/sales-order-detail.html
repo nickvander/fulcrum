@@ -40,6 +40,81 @@
                 </a>
             </section>
 
+            <!-- Economics: revenue → costs = net profit + margin -->
+            @if (order.cost_breakdown; as cb) {
+            <section class="economics-card" data-testid="order-economics">
+                <header class="econ-header">
+                    <h2>{{ t('orders.economics.title') }}</h2>
+                    <span class="fees-badge"
+                          [class.settled]="cb.fees_source === 'settled'"
+                          [matTooltip]="cb.fees_source === 'settled'
+                            ? t('orders.economics.settledTooltip')
+                            : t('orders.economics.estimatedTooltip')">
+                        {{ cb.fees_source === 'settled'
+                            ? t('orders.economics.settled')
+                            : t('orders.economics.estimated') }}
+                    </span>
+                </header>
+
+                <div class="econ-grid">
+                    <div class="econ-row revenue">
+                        <span class="econ-label">{{ t('orders.economics.revenue') }}</span>
+                        <span class="econ-val">{{ cb.revenue_amount | money:cb.currency }}</span>
+                    </div>
+                    <div class="econ-row cost">
+                        <span class="econ-label">− {{ t('orders.economics.cogs') }}</span>
+                        <span class="econ-val">{{ cb.cogs_amount | money:cb.currency }}</span>
+                    </div>
+                    <div class="econ-row cost">
+                        <span class="econ-label">− {{ t('orders.economics.fees') }}</span>
+                        <span class="econ-val">{{ cb.marketplace_fees_amount | money:cb.currency }}</span>
+                    </div>
+                    <div class="econ-row cost">
+                        <span class="econ-label">− {{ t('orders.economics.shipping') }}</span>
+                        <span class="econ-val">{{ cb.shipping_cost_amount | money:cb.currency }}</span>
+                    </div>
+                    @if (cb.ad_spend_amount) {
+                    <div class="econ-row cost">
+                        <span class="econ-label">− {{ t('orders.economics.adSpend') }}</span>
+                        <span class="econ-val">{{ cb.ad_spend_amount | money:cb.currency }}</span>
+                    </div>
+                    }
+                    @if (cb.other_cost_amount) {
+                    <div class="econ-row cost">
+                        <span class="econ-label">− {{ t('orders.economics.other') }}</span>
+                        <span class="econ-val">{{ cb.other_cost_amount | money:cb.currency }}</span>
+                    </div>
+                    }
+                    <div class="econ-row net">
+                        <span class="econ-label">{{ t('orders.economics.netProfit') }}</span>
+                        <span class="econ-val">
+                            {{ cb.net_profit_amount | money:cb.currency }}
+                            <span class="margin-pct" [ngClass]="marginClass(cb.net_margin_percent)"
+                                  *ngIf="cb.net_margin_percent !== null && cb.net_margin_percent !== undefined">
+                                {{ cb.net_margin_percent | number:'1.0-1' }}%
+                            </span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- MXN equivalent line for non-MXN orders -->
+                @if (showMxnEquivalent(order)) {
+                <p class="mxn-equivalent" data-testid="mxn-equivalent">
+                    {{ t('orders.economics.mxnEquivalent', {
+                        rate: cb.exchange_rate_to_mxn,
+                        amount: (cb.revenue_amount_mxn | money:'MXN')
+                    }) }}
+                </p>
+                }
+                @if (cb.reversed_at) {
+                <p class="reversed-note" data-testid="reversed-note">
+                    <mat-icon>warning</mat-icon>
+                    {{ t('orders.economics.reversed') }}
+                </p>
+                }
+            </section>
+            }
+
             <section class="items-card">
                 <h2>{{ t('orders.lineItems') }}</h2>
                 <mat-table [dataSource]="order.items">
@@ -70,6 +145,17 @@
                         <mat-header-cell *matHeaderCellDef>{{ t('orders.subtotal') }}</mat-header-cell>
                         <mat-cell *matCellDef="let item">
                             {{ (item.price_per_unit || 0) * (item.quantity || 0) | money:order.currency }}
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="margin">
+                        <mat-header-cell *matHeaderCellDef>{{ t('orders.lineMargin') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let item">
+                            @if (lineMargin(item) !== null) {
+                                {{ lineMargin(item) | money:order.currency }}
+                            } @else {
+                                <span class="muted">—</span>
+                            }
                         </mat-cell>
                     </ng-container>
 
@@ -121,6 +207,43 @@
                     </ul>
                 }
             </section>
+
+            <!-- Amazon partial-refund events recorded against this order -->
+            @if (order.refund_events?.length) {
+            <section class="refunds-card" data-testid="refund-events">
+                <h2>{{ t('orders.refundEvents.title') }}</h2>
+                <ul class="refund-list">
+                    @for (rf of order.refund_events; track rf.refund_id) {
+                    <li class="refund-row">
+                        <span class="refund-when">{{ rf.posted_at | date:'medium' }}</span>
+                        <span class="refund-id">{{ rf.refund_id }}</span>
+                        <span class="refund-amt">{{ rf.refund_amount | money:rf.currency }}</span>
+                    </li>
+                    }
+                </ul>
+            </section>
+            }
+
+            <!-- Status timeline -->
+            @if (order.status_timeline?.length) {
+            <section class="timeline-card" data-testid="status-timeline">
+                <h2>{{ t('orders.timeline.title') }}</h2>
+                <ol class="timeline">
+                    @for (ev of order.status_timeline; track $index) {
+                    <li class="timeline-row">
+                        <span class="dot"></span>
+                        <div class="timeline-body">
+                            <span class="transition">
+                                <ng-container *ngIf="ev.from_status">{{ ev.from_status }} →
+                                </ng-container>{{ ev.to_status }}
+                            </span>
+                            <small class="when">{{ ev.changed_at | date:'medium' }} · {{ ev.source_signal }}</small>
+                        </div>
+                    </li>
+                    }
+                </ol>
+            </section>
+            }
         </ng-container>
 
         <ng-template #loading>

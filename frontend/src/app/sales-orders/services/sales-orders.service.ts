@@ -21,12 +21,50 @@ export interface SalesOrderItem {
   product_id?: number | null;
   quantity?: number | null;
   price_per_unit?: number | null;
+  /** Captured cost basis per unit — drives per-line margin. */
+  cost_per_unit?: number | null;
   product_name?: string | null;
   product_sku?: string | null;
 }
 
+export interface OrderCostBreakdown {
+  currency: string;
+  exchange_rate_to_mxn: number;
+  revenue_amount: number;
+  revenue_amount_mxn: number;
+  cogs_amount: number;
+  marketplace_fees_amount: number;
+  shipping_cost_amount: number;
+  ad_spend_amount: number;
+  other_cost_amount: number;
+  total_cost_amount: number;
+  net_profit_amount: number;
+  net_margin_percent?: number | null;
+  /** 'estimated' (default fee rate) | 'settled' (real finance-API numbers). */
+  fees_source: string;
+  fees_synced_at?: string | null;
+  reversed_at?: string | null;
+}
+
+export interface OrderStatusEvent {
+  from_status?: string | null;
+  to_status: string;
+  changed_at: string;
+  source_signal: string;
+}
+
+export interface OrderRefundEvent {
+  refund_id: string;
+  posted_at?: string | null;
+  refund_amount: number;
+  currency: string;
+}
+
 export interface SalesOrderDetail extends SalesOrder {
   items: SalesOrderItem[];
+  cost_breakdown?: OrderCostBreakdown | null;
+  status_timeline?: OrderStatusEvent[];
+  refund_events?: OrderRefundEvent[];
 }
 
 export interface SalesOrderChannelBreakdown {

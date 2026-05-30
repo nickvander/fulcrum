@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -35,6 +36,7 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
     MatCardModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatTooltipModule,
     TranslocoModule,
     MoneyPipe,
   ],
@@ -47,7 +49,7 @@ export class SalesOrderDetailComponent implements OnInit {
   order$: Observable<SalesOrderDetail | null> = of(null);
   returns: SalesOrderReturn[] = [];
   loadingReturns = false;
-  displayedColumns = ['product', 'quantity', 'unit_price', 'subtotal'];
+  displayedColumns = ['product', 'quantity', 'unit_price', 'subtotal', 'margin'];
 
   constructor(
     private route: ActivatedRoute,
@@ -83,6 +85,28 @@ export class SalesOrderDetailComponent implements OnInit {
       return `https://www.mercadolibre.com.mx/ventas/${order.external_order_id}/detalle`;
     }
     return null;
+  }
+
+  /** Show the MXN-equivalent column only when the order isn't already
+   *  in MXN — otherwise it's redundant. */
+  showMxnEquivalent(order: SalesOrderDetail | null): boolean {
+    return !!(order && order.cost_breakdown && (order.currency || 'MXN') !== 'MXN');
+  }
+
+  /** Net margin is "healthy" ≥ 15%, "thin" 0–15%, "loss" < 0. Drives
+   *  the color of the margin figure. */
+  marginClass(pct: number | null | undefined): string {
+    if (pct === null || pct === undefined) return '';
+    if (pct < 0) return 'margin-loss';
+    if (pct < 15) return 'margin-thin';
+    return 'margin-healthy';
+  }
+
+  /** Per-line gross margin (revenue − cost) when a cost basis exists. */
+  lineMargin(item: { price_per_unit?: number | null; cost_per_unit?: number | null; quantity?: number | null }): number | null {
+    if (item.cost_per_unit === null || item.cost_per_unit === undefined) return null;
+    const qty = item.quantity ?? 0;
+    return ((item.price_per_unit ?? 0) - item.cost_per_unit) * qty;
   }
 
   /** Fetch the history of recorded return events for this order. */
