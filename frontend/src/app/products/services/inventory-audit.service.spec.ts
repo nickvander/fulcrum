@@ -92,4 +92,19 @@ describe('InventoryAuditService', () => {
     expect(req.request.params.get('reason_code')).toBe('recount');
     req.flush(new Blob());
   });
+
+  it('reverse() POSTs to the per-row reverse endpoint with a null note by default', () => {
+    service.reverse(42).subscribe();
+    const req = httpMock.expectOne(r => r.url === `${baseUrl}/42/reverse`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ note: null });
+    req.flush({ id: 99, adjustment: 5, reverses_adjustment_id: 42 });
+  });
+
+  it('reverse() forwards a note when provided', () => {
+    service.reverse(7, 'miscount').subscribe();
+    const req = httpMock.expectOne(r => r.url === `${baseUrl}/7/reverse`);
+    expect(req.request.body).toEqual({ note: 'miscount' });
+    req.flush({ id: 100, adjustment: -2, reverses_adjustment_id: 7 });
+  });
 });

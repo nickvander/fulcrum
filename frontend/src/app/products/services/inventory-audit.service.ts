@@ -19,6 +19,13 @@ export interface InventoryAdjustmentRow {
   reason_code: string | null;
   reason: string | null;
   created_by: string | null;
+  /** Set when THIS row is a correction undoing an earlier adjustment. */
+  reverses_adjustment_id?: number | null;
+  /** Set when this row HAS BEEN reversed by a later correction. */
+  reversed_by_id?: number | null;
+  /** Whether the operator can reverse this row (operator-reversible
+   *  reason code, not already reversed, not itself a reversal). */
+  reversible?: boolean;
 }
 
 export interface InventoryAdjustmentList {
@@ -57,6 +64,15 @@ export class InventoryAuditService {
    *  the values rarely change. */
   listReasonCodes(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/reason-codes`);
+  }
+
+  /** Reverse an operator adjustment — books an equal-and-opposite
+   *  `correction` row linked to the original. Returns the new row. */
+  reverse(adjustmentId: number, note?: string): Observable<InventoryAdjustmentRow> {
+    return this.http.post<InventoryAdjustmentRow>(
+      `${this.apiUrl}/${adjustmentId}/reverse`,
+      { note: note ?? null },
+    );
   }
 
   exportCsv(filters: InventoryAuditFilters = {}): Observable<Blob> {

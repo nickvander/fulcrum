@@ -8,13 +8,19 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { ReportDownloadService } from '../../../core/services/report-download.service';
+import {
+  ConfirmationDialog,
+  ConfirmationDialogData,
+} from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 import {
   InventoryAdjustmentRow,
   InventoryAuditFilters,
@@ -35,8 +41,10 @@ import {
     MatPaginatorModule,
     MatProgressBarModule,
     MatSelectModule,
+    MatSnackBarModule,
     MatTableModule,
     MatTooltipModule,
+    MatDialogModule,
     TranslocoModule,
   ],
   templateUrl: './inventory-audit.component.html',
@@ -46,7 +54,9 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   rows: InventoryAdjustmentRow[] = [];
   total = 0;
   loading = false;
-  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason_code', 'reason', 'created_by'];
+  /** Adjustment id currently being reversed (disables its button). */
+  reversingId: number | null = null;
+  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason_code', 'reason', 'created_by', 'actions'];
 
   /** Reason-code dropdown options. Loaded once on init from
    *  `GET /reports/inventory-adjustments/reason-codes` so the
@@ -72,6 +82,9 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   constructor(
     private auditService: InventoryAuditService,
     private reportDownloader: ReportDownloadService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -184,5 +197,49 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
     if (delta > 0) return 'delta-positive';
     if (delta < 0) return 'delta-negative';
     return '';
+  }
+
+  /** Confirm + reverse an operator adjustment. Books an
+   *  equal-and-opposite correction on the server, then reloads the
+   *  page so the new row + "reversed" badge appear. */
+  reverseRow(row: InventoryAdjustmentRow): void {
+    if (!row.reversible || this.reversingId != null) return;
+
+    const data: ConfirmationDialogData = {
+      title: this.transloco.translate('inventoryAudit.reverse.confirmTitle'),
+      message: this.transloco.translate('inventoryAudit.reverse.confirmMessage', {
+        delta: row.adjustment > 0 ? `+${row.adjustment}` : row.adjustment,
+        product: row.product_name || (row.product_sku ?? `#${row.product_id}`),
+      }),
+    };
+    this.dialog
+      .open(ConfirmationDialog, { data, width: '420px', autoFocus: false })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.reversingId = row.id;
+        this.auditService
+          .reverse(row.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: () => {
+              this.reversingId = null;
+              this.snackBar.open(
+                this.transloco.translate('inventoryAudit.reverse.savedSnackbar'),
+                this.transloco.translate('common.close'),
+                { duration: 4000 },
+              );
+              this.loadPage();
+            },
+            error: () => {
+              this.reversingId = null;
+              this.snackBar.open(
+                this.transloco.translate('inventoryAudit.reverse.error'),
+                this.transloco.translate('common.close'),
+                { duration: 5000 },
+              );
+            },
+          });
+      });
   }
 }

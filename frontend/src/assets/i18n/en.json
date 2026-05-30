@@ -1676,7 +1676,17 @@
     "exportCsv": "Export CSV",
     "exportPdf": "Export PDF",
     "exportCsvTooltip": "Download the filtered audit log as a spreadsheet",
-    "exportPdfTooltip": "Download the filtered audit log as a print-ready PDF"
+    "exportPdfTooltip": "Download the filtered audit log as a print-ready PDF",
+    "reverse": {
+      "tooltip": "Reverse this adjustment",
+      "confirmTitle": "Reverse adjustment?",
+      "confirmMessage": "Book an equal-and-opposite correction to undo the {{delta}} change to {{product}}? Stock will be restored and both rows stay in the audit log.",
+      "savedSnackbar": "Adjustment reversed.",
+      "error": "Couldn't reverse this adjustment.",
+      "reversed": "Reversed",
+      "reversedTooltip": "Reversed by correction #{{id}}",
+      "reversalOf": "Reversal of #{{id}}"
+    }
   },
   "inventoryCount": {
     "scan": {
@@ -2090,7 +2100,11 @@
       "invalidDateRange": "Start date must be on or before end date (got {{start}} → {{end}})."
     },
     "inventoryAdjustment": {
-      "unknownReasonCode": "Unknown reason code '{{value}}'."
+      "unknownReasonCode": "Unknown reason code '{{value}}'.",
+      "not_found": "That adjustment no longer exists.",
+      "already_reversed": "This adjustment has already been reversed.",
+      "is_reversal": "A reversal row can't itself be reversed.",
+      "not_reversible": "This adjustment is managed by its own workflow and can't be reversed here."
     },
     "inventoryCount": {
       "sessionNotFound": "Count session {{id}} not found.",

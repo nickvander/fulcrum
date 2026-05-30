@@ -507,6 +507,21 @@ class InventoryAdjustmentRow(BaseModel):
     reason_code: Optional[str] = None
     reason: Optional[str] = None
     created_by: Optional[str] = None
+    # Reversal linkage (stock-movement audit). `reverses_adjustment_id`
+    # is set when THIS row is a correction undoing an earlier one;
+    # `reversed_by_id` is set when this row HAS BEEN reversed by a later
+    # correction. `reversible` tells the UI whether to show a Reverse
+    # action (operator-reversible reason code, not already reversed, not
+    # itself a reversal).
+    reverses_adjustment_id: Optional[int] = None
+    reversed_by_id: Optional[int] = None
+    reversible: bool = False
+
+
+class ReverseAdjustmentRequest(BaseModel):
+    """Optional free-text note appended to the auto-generated reversal
+    reason ("Reversal of adjustment #N — <note>")."""
+    note: Optional[str] = None
 
 
 class InventoryAdjustmentList(BaseModel):
@@ -572,8 +587,15 @@ def list_inventory_adjustments(
 
     total = base.count()
 
+    from src.models.inventory import OPERATOR_REVERSIBLE_REASON_CODES
+
     page_q = (
-        base.options(_joinedload(InventoryAdjustment.product))
+        base.options(
+            _joinedload(InventoryAdjustment.product),
+            # Eager-load the backref so "has this been reversed?" doesn't
+            # fire a query per row.
+            _joinedload(InventoryAdjustment.reversed_by),
+        )
         .order_by(
             InventoryAdjustment.timestamp.desc().nullslast(),
             InventoryAdjustment.id.desc(),
@@ -584,6 +606,13 @@ def list_inventory_adjustments(
     rows: list[InventoryAdjustmentRow] = []
     for adj in page_q.all():
         product = adj.product
+        reversed_by = adj.reversed_by
+        reversed_by_id = reversed_by.id if reversed_by else None
+        reversible = (
+            (adj.reason_code or "") in OPERATOR_REVERSIBLE_REASON_CODES
+            and reversed_by_id is None
+            and adj.reverses_adjustment_id is None
+        )
         rows.append(
             InventoryAdjustmentRow(
                 id=adj.id,
@@ -595,9 +624,68 @@ def list_inventory_adjustments(
                 reason_code=adj.reason_code,
                 reason=adj.reason,
                 created_by=adj.created_by,
+                reverses_adjustment_id=adj.reverses_adjustment_id,
+                reversed_by_id=reversed_by_id,
+                reversible=reversible,
             )
         )
     return InventoryAdjustmentList(rows=rows, total=total)
+
+
+@router.post(
+    "/inventory-adjustments/{adjustment_id}/reverse",
+    response_model=InventoryAdjustmentRow,
+    status_code=201,
+)
+def reverse_inventory_adjustment(
+    *,
+    db: Session = Depends(get_db),
+    adjustment_id: int,
+    payload: ReverseAdjustmentRequest = ReverseAdjustmentRequest(),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Reverse an operator-entered inventory adjustment by booking an
+    equal-and-opposite `correction` row linked back to the original.
+
+    Only operator-reversible reason codes (shrinkage / recount / damage /
+    theft / manual / other) can be reversed here — system rows (sale,
+    cancellation, return, purchase, transfer, marketplace_sync) are owned
+    by their order / PO / transfer workflow. Reversing is idempotent: a
+    second attempt on the same row returns 409.
+    """
+    from src.services.inventory_service import AdjustmentReversalError
+
+    actor = current_user.email or f"user_{current_user.id}"
+    try:
+        reversal = inventory_service.reverse_adjustment(
+            db, adjustment_id, actor=actor, note=payload.note,
+        )
+    except AdjustmentReversalError as exc:
+        status = 404 if exc.code == "not_found" else 409
+        raise LocalizedHTTPException(
+            status_code=status,
+            code=f"apiErrors.inventoryAdjustment.{exc.code}",
+            params={"id": adjustment_id},
+            detail=str(exc),
+        )
+    db.commit()
+    db.refresh(reversal)
+
+    product = reversal.product
+    return InventoryAdjustmentRow(
+        id=reversal.id,
+        timestamp=reversal.timestamp or reversal.created_at,
+        product_id=reversal.product_id,
+        product_sku=product.sku if product else None,
+        product_name=product.name if product else None,
+        adjustment=reversal.adjustment,
+        reason_code=reversal.reason_code,
+        reason=reversal.reason,
+        created_by=reversal.created_by,
+        reverses_adjustment_id=reversal.reverses_adjustment_id,
+        reversed_by_id=None,
+        reversible=False,
+    )
 
 
 @router.get("/inventory-adjustments/export")

@@ -1676,7 +1676,17 @@
     "exportCsv": "Exportar CSV",
     "exportPdf": "Exportar PDF",
     "exportCsvTooltip": "Descargar el historial filtrado como hoja de cálculo",
-    "exportPdfTooltip": "Descargar el historial filtrado como PDF imprimible"
+    "exportPdfTooltip": "Descargar el historial filtrado como PDF imprimible",
+    "reverse": {
+      "tooltip": "Revertir este ajuste",
+      "confirmTitle": "¿Revertir ajuste?",
+      "confirmMessage": "¿Registrar una corrección igual y opuesta para deshacer el cambio de {{delta}} en {{product}}? Se restaurará el inventario y ambos registros quedan en la bitácora.",
+      "savedSnackbar": "Ajuste revertido.",
+      "error": "No se pudo revertir este ajuste.",
+      "reversed": "Revertido",
+      "reversedTooltip": "Revertido por la corrección #{{id}}",
+      "reversalOf": "Reversión de #{{id}}"
+    }
   },
   "inventoryCount": {
     "scan": {
@@ -2090,7 +2100,11 @@
       "invalidDateRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin (se recibió {{start}} → {{end}})."
     },
     "inventoryAdjustment": {
-      "unknownReasonCode": "Código de motivo desconocido '{{value}}'."
+      "unknownReasonCode": "Código de motivo desconocido '{{value}}'.",
+      "not_found": "Ese ajuste ya no existe.",
+      "already_reversed": "Este ajuste ya fue revertido.",
+      "is_reversal": "Una reversión no puede revertirse a sí misma.",
+      "not_reversible": "Este ajuste lo gestiona su propio flujo y no puede revertirse aquí."
     },
     "inventoryCount": {
       "sessionNotFound": "Sesión de conteo {{id}} no encontrada.",

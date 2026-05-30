@@ -1,6 +1,6 @@
 import enum
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from datetime import datetime
 
@@ -45,8 +45,31 @@ class InventoryAdjustmentReasonCode(str, enum.Enum):
     CANCELLATION = "cancellation"
     TRANSFER = "transfer"
     PURCHASE = "purchase"
+    MARKETPLACE_SYNC = "marketplace_sync"
     MANUAL = "manual"
     OTHER = "other"
+
+
+# Reason codes an operator is allowed to *reverse* from the audit log.
+# These are the manual / investigation entries a human keys in by hand
+# and might mis-enter (wrong delta, wrong SKU). The system-owned codes
+# (`sale` / `cancellation` / `return` / `purchase` / `transfer` /
+# `marketplace_sync`) are deliberately excluded: they're driven by an
+# order / PO / transfer lifecycle that has its own correction path, so
+# letting the audit log reverse them out from under that workflow would
+# desync stock from the owning entity. A `correction` row (which is
+# what a reversal itself records as) is also excluded — you can't
+# reverse a reversal.
+OPERATOR_REVERSIBLE_REASON_CODES = frozenset(
+    {
+        InventoryAdjustmentReasonCode.SHRINKAGE.value,
+        InventoryAdjustmentReasonCode.RECOUNT.value,
+        InventoryAdjustmentReasonCode.DAMAGE.value,
+        InventoryAdjustmentReasonCode.THEFT.value,
+        InventoryAdjustmentReasonCode.MANUAL.value,
+        InventoryAdjustmentReasonCode.OTHER.value,
+    }
+)
 
 class InventoryItem(Base):
     __tablename__ = "inventory_items"
@@ -89,10 +112,32 @@ class InventoryAdjustment(Base):
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=True)  # Timestamp of the adjustment
     created_by = Column(String, nullable=False)  # User who made the adjustment
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+    # When this row is itself a *reversal* of an earlier adjustment, this
+    # points back at the row it undoes (and that row's `reversed_by`
+    # backref points here). `unique=True` enforces the idempotency rule
+    # at the DB layer: an adjustment can be reversed at most once.
+    # NULL for ordinary (non-reversal) rows. ON DELETE SET NULL so a
+    # product cascade-delete that removes the original doesn't orphan
+    # the reversal.
+    reverses_adjustment_id = Column(
+        Integer,
+        ForeignKey("inventory_adjustments.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
     # Relationships
     product = relationship("Product", back_populates="inventory_adjustments")
     variant = relationship("ProductVariant", back_populates="inventory_adjustments")
+    # `reverses` → the original row this one undoes; `reversed_by` (the
+    # backref on that original) → the reversal row. uselist=False because
+    # the unique constraint guarantees at most one reversal per row.
+    reverses = relationship(
+        "InventoryAdjustment",
+        remote_side=[id],
+        backref=backref("reversed_by", uselist=False),
+    )
 
 
 class InventoryCountSessionStatus(str, enum.Enum):

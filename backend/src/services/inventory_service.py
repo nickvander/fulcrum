@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Tuple
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -7,11 +7,23 @@ from src.models.inventory import (
     InventoryAdjustment,
     InventoryAdjustmentReasonCode,
     InventoryItem,
+    OPERATOR_REVERSIBLE_REASON_CODES,
 )
 from src.models.order import SalesOrder, SalesOrderItem
 
+
+class AdjustmentReversalError(Exception):
+    """Raised when an inventory adjustment can't be reversed. `code`
+    is a stable machine-readable reason the API layer maps to an HTTP
+    status + localized message."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
 class InventoryService:
-    def adjust_stock(
+    def record_adjustment(
         self,
         db: Session,
         product_id: int,
@@ -20,19 +32,17 @@ class InventoryService:
         reason: Optional[str] = None,
         reason_code: Optional[InventoryAdjustmentReasonCode] = None,
         location: str = "default",
-        user_id: Optional[str] = "system"
-    ) -> InventoryItem:
-        """
-        Adjust stock for a product at a specific location.
-        Creates an audit trail (InventoryAdjustment) and updates/creates the InventoryItem.
+        user_id: Optional[str] = "system",
+        reverses_adjustment_id: Optional[int] = None,
+    ) -> Tuple[InventoryItem, InventoryAdjustment]:
+        """Core stock mutation: write one `InventoryAdjustment` audit row
+        and update/create the matching `InventoryItem`. Returns BOTH so
+        callers that need the audit row (e.g. the reversal flow, which
+        links rows together) don't have to re-query for it.
 
-        `reason_code` is the typed taxonomy that drives the audit
-        filter (shrinkage / recount / damage / return / theft / etc.).
-        Callers with semantic context (order ingestion, returns,
-        transfers) MUST set it; opaque callers can leave it None and
-        the row lands as "uncategorized" in the audit log.
+        Most callers want :meth:`adjust_stock`, which returns just the
+        item for backward compatibility.
         """
-
         # 1. Create audit log
         inventory_adjustment = InventoryAdjustment(
             product_id=product_id,
@@ -50,10 +60,11 @@ class InventoryService:
             # be ambiguous for multi-location SKUs).
             location=location,
             timestamp=datetime.utcnow(),
-            created_by=str(user_id)
+            created_by=str(user_id),
+            reverses_adjustment_id=reverses_adjustment_id,
         )
         db.add(inventory_adjustment)
-        
+
         # 2. Get existing stock record
         existing_inventory = db.query(InventoryItem).filter(
             InventoryItem.product_id == product_id,
@@ -76,8 +87,112 @@ class InventoryService:
                 location=location
             )
             db.add(final_item)
-            
-        return final_item
+
+        return final_item, inventory_adjustment
+
+    def adjust_stock(
+        self,
+        db: Session,
+        product_id: int,
+        adjustment: int,
+        variant_id: Optional[int] = None,
+        reason: Optional[str] = None,
+        reason_code: Optional[InventoryAdjustmentReasonCode] = None,
+        location: str = "default",
+        user_id: Optional[str] = "system"
+    ) -> InventoryItem:
+        """
+        Adjust stock for a product at a specific location.
+        Creates an audit trail (InventoryAdjustment) and updates/creates the InventoryItem.
+
+        `reason_code` is the typed taxonomy that drives the audit
+        filter (shrinkage / recount / damage / return / theft / etc.).
+        Callers with semantic context (order ingestion, returns,
+        transfers) MUST set it; opaque callers can leave it None and
+        the row lands as "uncategorized" in the audit log.
+        """
+        item, _adjustment = self.record_adjustment(
+            db,
+            product_id=product_id,
+            adjustment=adjustment,
+            variant_id=variant_id,
+            reason=reason,
+            reason_code=reason_code,
+            location=location,
+            user_id=user_id,
+        )
+        return item
+
+    def reverse_adjustment(
+        self,
+        db: Session,
+        adjustment_id: int,
+        *,
+        actor: Optional[str] = "system",
+        note: Optional[str] = None,
+    ) -> InventoryAdjustment:
+        """Undo an operator-entered inventory adjustment by booking an
+        equal-and-opposite `correction` row that points back at the
+        original.
+
+        Guardrails (each raises `AdjustmentReversalError` with a stable
+        code the API maps to 404/409):
+          - the original must exist (`not_found`)
+          - its reason code must be operator-reversible (`not_reversible`)
+            — system/lifecycle rows (sale, cancellation, return, …) are
+            owned by their order/PO/transfer workflow
+          - it must not itself be a reversal (`is_reversal`)
+          - it must not already be reversed (`already_reversed`)
+
+        Does NOT commit — the caller owns the transaction.
+        """
+        original = (
+            db.query(InventoryAdjustment)
+            .filter(InventoryAdjustment.id == adjustment_id)
+            .first()
+        )
+        if original is None:
+            raise AdjustmentReversalError("not_found", f"Adjustment {adjustment_id} not found")
+
+        if original.reverses_adjustment_id is not None:
+            raise AdjustmentReversalError(
+                "is_reversal", "A reversal row cannot itself be reversed"
+            )
+
+        if (original.reason_code or "") not in OPERATOR_REVERSIBLE_REASON_CODES:
+            raise AdjustmentReversalError(
+                "not_reversible",
+                f"Reason code '{original.reason_code}' is managed by its own "
+                "workflow and can't be reversed from the audit log",
+            )
+
+        # Idempotency: a unique index also guards this at the DB layer,
+        # but checking first lets us return a clean 409 instead of an
+        # IntegrityError.
+        already = (
+            db.query(InventoryAdjustment.id)
+            .filter(InventoryAdjustment.reverses_adjustment_id == original.id)
+            .first()
+        )
+        if already is not None:
+            raise AdjustmentReversalError(
+                "already_reversed", f"Adjustment {adjustment_id} was already reversed"
+            )
+
+        note_suffix = f" — {note}" if note else ""
+        _item, reversal = self.record_adjustment(
+            db,
+            product_id=original.product_id,
+            adjustment=-original.adjustment,
+            variant_id=original.variant_id,
+            reason=f"Reversal of adjustment #{original.id}{note_suffix}",
+            reason_code=InventoryAdjustmentReasonCode.CORRECTION,
+            location=original.location or "default",
+            user_id=actor,
+            reverses_adjustment_id=original.id,
+        )
+        db.flush()
+        return reversal
 
     def assemble_bundle(
         self,
