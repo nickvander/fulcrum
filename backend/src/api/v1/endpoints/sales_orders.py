@@ -19,11 +19,14 @@ from sqlalchemy.orm import Session, joinedload
 from src.api import dependencies
 from src.core.errors import LocalizedHTTPException
 from src.database import get_db
-from src.models.order import SalesOrder, SalesOrderItem
+from src.models.order import AmazonOrderRefund, SalesOrder, SalesOrderItem
 from src.models.product import Product
 from src.models.user import User
 from src.services import marketplace_catalog
 from src.schemas.sales_order import (
+    OrderCostBreakdownRead,
+    OrderRefundEventRead,
+    OrderStatusEventRead,
     SalesOrder as SalesOrderSchema,
     SalesOrderChannelBreakdown,
     SalesOrderDetail,
@@ -325,10 +328,16 @@ def get_sales_order(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
 ):
-    """Get a single sales order with line items."""
+    """Get a single sales order with the full picture: line items (with
+    per-line cost), the cost/fee/margin breakdown, the status timeline,
+    and any Amazon partial-refund events."""
     order = (
         db.query(SalesOrder)
-        .options(joinedload(SalesOrder.items).joinedload(SalesOrderItem.product))
+        .options(
+            joinedload(SalesOrder.items).joinedload(SalesOrderItem.product),
+            joinedload(SalesOrder.cost_breakdown),
+            joinedload(SalesOrder.status_events),
+        )
         .filter(SalesOrder.id == order_id)
         .first()
     )
@@ -349,13 +358,49 @@ def get_sales_order(
                 product_id=item.product_id,
                 quantity=item.quantity,
                 price_per_unit=item.price_per_unit,
+                cost_per_unit=item.cost_per_unit,
                 product_name=product.name if product else None,
                 product_sku=product.sku if product else None,
             )
         )
 
+    # Cost/fee/margin breakdown (1:1, may be absent on un-computed orders).
+    breakdown: Optional[OrderCostBreakdownRead] = (
+        OrderCostBreakdownRead.model_validate(order.cost_breakdown)
+        if order.cost_breakdown is not None
+        else None
+    )
+
+    # Status timeline, oldest → newest (relationship is order_by changed_at).
+    timeline = [
+        OrderStatusEventRead.model_validate(ev) for ev in order.status_events
+    ]
+
+    # Amazon partial-refund events for this order, newest first.
+    refunds = (
+        db.query(AmazonOrderRefund)
+        .filter(AmazonOrderRefund.order_id == order.id)
+        .order_by(AmazonOrderRefund.posted_at.desc().nullslast())
+        .all()
+    )
+    refund_events = [
+        OrderRefundEventRead(
+            refund_id=r.amazon_refund_id,
+            posted_at=r.posted_at,
+            refund_amount=float(r.refund_amount or 0.0),
+            currency=r.currency,
+        )
+        for r in refunds
+    ]
+
     base = _serialize_order(order)
-    return SalesOrderDetail(**base.model_dump(), items=items)
+    return SalesOrderDetail(
+        **base.model_dump(),
+        items=items,
+        cost_breakdown=breakdown,
+        status_timeline=timeline,
+        refund_events=refund_events,
+    )
 
 
 # ---------------------------------------------------------------------------

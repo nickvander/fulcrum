@@ -57,7 +57,7 @@ from sqlalchemy.orm import Session
 
 from src.models.marketplace import Marketplace
 from src.models.order import OrderCostBreakdown, OrderSource, SalesOrder
-from src.services import marketplace_catalog
+from src.services import currency_service, marketplace_catalog
 
 
 logger = logging.getLogger(__name__)
@@ -213,8 +213,21 @@ def upsert_breakdown(
     inputs = _build_cost_inputs(db, order)
     computed = compute_breakdown(inputs)
     currency = (order.currency or "MXN").upper()
-    rate = 1.0  # v1: every order is MXN; future FX work fills this
-    revenue_mxn = computed["revenue_amount"] * rate
+    # Normalize revenue to MXN at the FX rate that was true on the order
+    # date (CurrencyService picks the most-recent recorded rate
+    # on-or-before that day). Same-currency orders get rate 1.0; a
+    # non-MXN order with no recorded rate also falls back to 1.0 (the
+    # MXN amount then equals the native amount until a rate is entered).
+    on_date = order.created_at.date() if order.created_at else None
+    conversion = currency_service.convert(
+        db,
+        amount=computed["revenue_amount"],
+        base_currency=currency,
+        quote_currency="MXN",
+        on_date=on_date,
+    )
+    rate = conversion.rate
+    revenue_mxn = conversion.amount
 
     existing = (
         db.query(OrderCostBreakdown)

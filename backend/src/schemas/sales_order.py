@@ -15,6 +15,10 @@ class SalesOrderItem(BaseModel):
     product_id: Optional[int] = None
     quantity: Optional[int] = None
     price_per_unit: Optional[float] = None
+    # Captured cost basis per unit (NULL on legacy rows). Lets the
+    # detail page show per-line margin without re-deriving from the
+    # product's current cost.
+    cost_per_unit: Optional[float] = None
     product_name: Optional[str] = None
     product_sku: Optional[str] = None
 
@@ -36,8 +40,55 @@ class SalesOrder(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OrderCostBreakdownRead(BaseModel):
+    """The Phase-8 cost engine's per-order economics. `*_mxn` fields
+    are the MXN-normalized equivalents at the order-date FX rate."""
+    currency: str
+    exchange_rate_to_mxn: float
+    revenue_amount: float
+    revenue_amount_mxn: float
+    cogs_amount: float
+    marketplace_fees_amount: float
+    shipping_cost_amount: float
+    ad_spend_amount: float
+    other_cost_amount: float
+    total_cost_amount: float
+    net_profit_amount: float
+    net_margin_percent: Optional[float] = None
+    # 'estimated' (from the marketplace's default fee rate) or
+    # 'settled' (real numbers from the finance API).
+    fees_source: str
+    fees_synced_at: Optional[datetime] = None
+    reversed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderStatusEventRead(BaseModel):
+    """One row of the order's status timeline."""
+    from_status: Optional[str] = None
+    to_status: str
+    changed_at: datetime
+    source_signal: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderRefundEventRead(BaseModel):
+    """An Amazon partial-refund event recorded against the order."""
+    refund_id: str
+    posted_at: Optional[datetime] = None
+    refund_amount: float
+    currency: str
+
+
 class SalesOrderDetail(SalesOrder):
     items: List[SalesOrderItem] = []
+    # Full economics + lifecycle, surfaced so the detail page shows the
+    # complete picture the API knows about — not just the total.
+    cost_breakdown: Optional[OrderCostBreakdownRead] = None
+    status_timeline: List[OrderStatusEventRead] = []
+    refund_events: List[OrderRefundEventRead] = []
 
 
 class SalesOrderChannelBreakdown(BaseModel):
