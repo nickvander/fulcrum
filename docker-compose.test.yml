@@ -19,7 +19,9 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "${FULCRUM_TEST_REDIS_PORT:-6379}:6379"
+      # Distinct host port from the dev stack's redis (6379) so the test
+      # stack can run alongside `docker compose up` without a bind clash.
+      - "${FULCRUM_TEST_REDIS_PORT:-6380}:6379"
 
   backend:
     build:
@@ -34,7 +36,10 @@ services:
       - ./backend/alembic.ini:/app/alembic.ini
       - ./backend/pytest.ini:/app/pytest.ini
     ports:
-      - "${FULCRUM_TEST_BACKEND_PORT:-8200}:8000"
+      # Distinct host port from the dev stack's backend (8200). Sharing
+      # 8200 meant a "live" curl against :8200 could silently hit the
+      # TEST database depending on which stack bound the port first.
+      - "${FULCRUM_TEST_BACKEND_PORT:-8300}:8000"
     depends_on:
       db-test:
         condition: service_healthy
