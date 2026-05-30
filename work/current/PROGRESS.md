@@ -1,6 +1,44 @@
 # Progress Log
 
-**Status:** Marketplace extensibility + multi-currency. Two arcs
+**Status (2026-05-30):** Order economics + ML-Full risk + a docs/roadmap
+sweep. Building on the catalog + multi-currency arcs below:
+
+  - **Enriched order detail + real cross-currency margins.** The
+    order-detail API now returns the full `OrderCostBreakdown` (revenue →
+    COGS/fees/shipping/ad-spend/other = net profit + margin %), the
+    status timeline, and Amazon refund events; the page renders all of
+    it with colour-banded margin, a settled/estimated fees badge, an
+    MXN-equivalent line for foreign-currency orders, and per-line margin.
+    The cost engine stopped hard-coding `rate = 1.0` — it normalizes
+    revenue to MXN at the FX rate recorded for the order date
+    (`currency_service.convert`). New operator **Settings → Currency**
+    tab records/lists FX rates via `/currency/rates`.
+  - **Stock-movement audit, now reversible.** `InventoryAdjustment`
+    gained a self-FK `reverses_adjustment_id` (unique → reverse-once);
+    `POST /reports/inventory-adjustments/{id}/reverse` books an
+    equal-and-opposite `correction`, idempotent, restricted to
+    operator-reversible reason codes (system rows stay owned by their
+    workflow). The marketplace listing sync/import paths now classify
+    their adjustments as `marketplace_sync` instead of NULL. Audit page
+    gained a Reverse action + reversed/reversal-of badges.
+  - **B3 — ML Full stockout / lost-buy-box risk alert.** New
+    `ml_full_stockout_risk` AlertType: per-SKU risk = Full on-hand
+    (`location='ml-full'`) + in-transit transfers vs ML-channel sales
+    velocity over a 14-day Full replenishment horizon. The most
+    consequential day-to-day ML-Full risk, previously unmonitored.
+  - **Docs + roadmap sweep.** Audited every doc against code: fixed
+    stale facts (auto-migrations, env vars, Vitest, port 8200),
+    documented shipped-but-undocumented features (multi-currency, audit
+    reversibility, the marketplace catalog, a new Orders user guide,
+    rewritten Settings guide), and closed out six already-shipped
+    roadmap items. Gave the test stack distinct host ports (8300/6380)
+    so it stops colliding with the dev stack on 8200.
+
+  **Next:** B1 (ML reputation monitor) → B2 (MELI ad/promo cost capture).
+  Active plan in `work/current/94-ml-reputation-and-ad-cost.md`; full
+  backlog in `work/future/93-ml-seller-feature-backlog.md`.
+
+**Earlier this cycle:** Marketplace extensibility + multi-currency. Two arcs
 landed after a hands-on ML-seller walkthrough + critique:
 
   - **Marketplace catalog as the single source of truth.** A
