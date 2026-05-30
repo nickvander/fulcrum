@@ -207,14 +207,16 @@ side-effect of receiving a PO.
 
 ## Order Management
 
-Incoming orders from marketplaces appear in the **Orders** section (if enabled).
-Fulcrum can:
+Incoming orders from MercadoLibre and Amazon are ingested automatically (via
+webhooks plus a back-fill poller) and appear in the **Orders** section. Fulcrum:
 
-- Automatically import new orders.
-- Update stock levels upon order placement.
-- Provide fulfillment status updates.
+- Imports new orders and keeps their status in sync.
+- Decrements local stock on order placement.
+- Tracks refunds, cancellations, and recorded returns.
+- Shows an enriched per-order detail page with a full cost / net-margin
+  breakdown.
 
-> **Note**: Full order management features are in active development.
+See the [Orders guide](orders.md) for a walkthrough of the order-detail page.
 
 ---
 

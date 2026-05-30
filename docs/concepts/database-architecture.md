@@ -65,6 +65,14 @@ Support for sales order management with full itemization.
 - **sales_orders**: Main order records with status and pricing information.
 - **sales_order_items**: Individual line items for each order.
 
+### Currency / FX
+
+Multi-currency support so figures sourced or sold in a non-MXN currency stay
+unambiguous and can be normalized to MXN.
+
+- **exchange_rates**: Dated FX rates between two currencies, so a transaction is
+  converted at the rate that was true on its date rather than today's rate.
+
 ### Suppliers
 
 Supplier management for tracking product sources.
@@ -116,6 +124,7 @@ erDiagram
         int supplier_id FK
         float default_resale_price
         float cost_price
+        string currency
         string properties
         vector embedding
         string manufacturer
@@ -220,6 +229,9 @@ erDiagram
         int variant_id FK
         int adjustment
         string reason
+        string reason_code
+        string location
+        int reverses_adjustment_id FK
         string created_by
         datetime created_at
     }
@@ -228,7 +240,31 @@ erDiagram
     products ||--o{ inventory_adjustments : adjusts
     product_variants ||--o{ inventory_items : tracks
     product_variants ||--o{ inventory_adjustments : adjusts
+    inventory_adjustments ||--o| inventory_adjustments : reverses
 ```
+
+**Stock-movement reason codes & reversibility**
+
+Every adjustment carries a typed `reason_code` (a `String`, not a PG enum, so
+adding a code is a single migration) recording _why_ stock moved, plus a
+`location` mirroring `inventory_items.location` so the shrinkage report can
+answer "where am I bleeding stock?" per location. Reason codes split into two
+families:
+
+- **Operator-initiated** (`shrinkage`, `recount`, `damage`, `theft`, `manual`,
+  `other`) — entered by a human via the adjustment / count workflow.
+- **System-initiated** (`sale`, `cancellation`, `return`, `purchase`,
+  `transfer`, `marketplace_sync`) — written by an order, PO, transfer, or sync
+  lifecycle that owns its own correction path.
+
+`POST /api/v1/reports/inventory-adjustments/{id}/reverse` undoes an adjustment
+by booking an **equal-and-opposite `correction`** row, linked back to the
+original via the self-referential `reverses_adjustment_id` foreign key (a unique
+constraint enforces at most one reversal per row, which makes reversing
+**idempotent** — a second attempt returns `409`). Only the operator-initiated
+codes are reversible from the audit log; the system-initiated codes (and a
+`correction` row itself) are deliberately excluded, since reversing them would
+desync stock from the order/PO/transfer that owns it.
 
 ### Stock Transfer Schema
 
@@ -293,6 +329,47 @@ erDiagram
     products ||--o{ sales_order_items : sold_in
     sales_orders ||--o{ sales_order_items : contains
 ```
+
+### Currency / FX Schema
+
+Fulcrum supports multiple currencies so figures sourced or sold outside the
+primary MXN market stay unambiguous. Each product carries a native pricing
+`currency` (ISO 4217, defaulting to `MXN`); a product sourced/listed in USD
+(e.g. an Alibaba import) carries `USD` so its cost/price figures are clear and
+can be converted to MXN at the rate on the transaction date.
+
+```mermaid
+erDiagram
+    exchange_rates {
+        int id PK
+        string base_currency
+        string quote_currency
+        float rate
+        date rate_date
+        string source
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+**Key Concepts**:
+
+- `rate` is read as: 1 unit of `base_currency` = `rate` units of
+  `quote_currency` (e.g. base `USD`, quote `MXN`, rate `17.10` → US$1 =
+  MX$17.10).
+- A unique constraint on `(base_currency, quote_currency, rate_date)` keeps one
+  rate per pair per day; re-recording the same day upserts in place.
+- `source` records provenance (`manual`, `banxico`, `ecb`, …) so a manual
+  override is distinguishable from a fed rate.
+- Conversions look up the **most-recent rate on or before** the transaction
+  date, so historical orders convert at the rate that was true on their date.
+
+The `/api/v1/currency` endpoints expose this table: `GET`/`POST /currency/rates`
+list and record rates, and `GET /currency/convert` converts an amount
+historically. Conversion logic lives in `services/currency_service.py`. On the
+frontend, the `MoneyPipe` renders every amount with an unambiguous,
+currency-tagged symbol (`MX$`, `US$`, …) driven by the record's own currency
+code, so a peso and a dollar never both collapse to a bare `$`.
 
 ### Marketplace Integration Schema
 

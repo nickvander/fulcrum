@@ -9,7 +9,7 @@ This integration is completely modular—your Fulcrum app works 100% without it.
 
 ## Prerequisites
 
-- A running Fulcrum backend (`http://localhost:8000` for local development)
+- A running Fulcrum backend (`http://localhost:8200` for local development)
 - A Google account with access to Google Sheets
 - A Fulcrum API Key (generated from Settings)
 
@@ -52,7 +52,7 @@ This integration is completely modular—your Fulcrum app works 100% without it.
 
 1. After refreshing, you should see a new **⚙️ Fulcrum** menu in the menu bar
 2. Click **⚙️ Fulcrum > 🔧 Setup Connection**
-3. Enter your **API URL** (e.g., `http://localhost:8000/api/v1` for local dev)
+3. Enter your **API URL** (e.g., `http://localhost:8200/api/v1` for local dev)
 4. Paste your **API Key** from Step 1
 5. Click **Save & Connect**
 
@@ -60,7 +60,7 @@ This integration is completely modular—your Fulcrum app works 100% without it.
 
 ## Testing with a Local VM / Development Server
 
-If you're running Fulcrum on a local VM (e.g., `localhost:8000`), Google Sheets
+If you're running Fulcrum on a local VM (e.g., `localhost:8200`), Google Sheets
 **cannot directly reach it** because Apps Script runs on Google's servers.
 
 ### Option A: Use ngrok (Recommended for Testing)

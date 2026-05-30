@@ -18,6 +18,35 @@ marketplaces (Amazon SP-API and MercadoLibre) for Fulcrum.
 
 ---
 
+## Marketplace catalog (single source of truth)
+
+Every marketplace Fulcrum knows about is declared **once**, in
+`backend/src/services/marketplace_catalog.py`. The module exposes a single
+declarative list, `MARKETPLACE_CATALOG` (read via `get_catalog()`), and that
+list drives:
+
+- the connector registry that `MarketplaceService` builds its strategy map from;
+- the `GET /api/v1/marketplace/catalog` API;
+- the **Channels** page, the add-channel dialog, and the listing-type dropdown
+  in the frontend;
+- the set of valid `SalesOrder.source` values returned by `order_sources()`
+  (the internal `FULCRUM` source plus each catalog marketplace's
+  `order_source`).
+
+`SalesOrder.source` is a plain **string** column — there is no PostgreSQL enum
+(migration `f3b6c1d92a47` converted it from an enum to a string for exactly this
+reason). Because the by-channel reports and source-filter validation iterate
+`order_sources()`, a marketplace added to the catalog automatically becomes a
+recognized order source with **no DB enum migration and no code edit**.
+
+> **Adding a marketplace = one catalog entry.** Add a `MarketplaceDefinition` to
+> `MARKETPLACE_CATALOG`; when going live, implement a `BaseMarketplaceConnector`
+> and reference it on the entry. Every backend and frontend surface derives from
+> the list. An entry with `status="planned"` (currently **eBay**) renders as
+> "coming soon" with no dead connect button and no connector wired.
+
+---
+
 ## Amazon SP-API Integration
 
 ### 2025 Updates

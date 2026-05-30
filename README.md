@@ -50,12 +50,16 @@ This is the central source of truth for developers.
     docker compose up --build
     ```
 
-4.  **Run database migrations:** Open a new terminal and run:
+4.  **Database migrations:** Migrations are applied **automatically** on
+    container start — the backend's `entrypoint.sh` runs
+    `alembic upgrade head` before launching uvicorn, so a fresh stack comes
+    up fully migrated with no manual step. If you ever need to re-run them
+    (e.g. troubleshooting), open a new terminal and run:
     ```bash
     docker compose exec backend alembic upgrade head
     ```
 
-The backend API will be available at `http://localhost:8000`.
+The backend API will be available at `http://localhost:8200`.
 
 #### Frontend
 

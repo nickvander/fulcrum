@@ -11,6 +11,26 @@ _(none active)_
 <!-- Most recent High-Priority item shipped on 2026-05-19; see
 "Done This Past Week" below. -->
 
+### Closed: Platform Improvements Roadmap (#83)
+
+All six "Best Next Improvements" from
+`work/archive/83-platform-improvements-roadmap.md` are now shipped:
+
+- ✅ **Marketplace allocation planning** — Allocation planner → one DRAFT
+  transfer per destination; only approved transfers sync to a marketplace.
+- ✅ **Supplier document review queue** — imported documents route through a
+  review queue before stock movement.
+- ✅ **Supplier alias learning** — confirmed Alibaba SKU/name → Fulcrum
+  product/variant mappings, reused on future parsing, with review/undo.
+- ✅ **Inventory-adjustment safety / reversal** — typed `reason_code` +
+  `location`; operator adjustments reversible via
+  `POST /api/v1/reports/inventory-adjustments/{id}/reverse` (idempotent,
+  equal-and-opposite `correction`).
+- ✅ **Operational dashboards** — low-stock, dead-stock, stockout-risk, and
+  marketplace pipeline-health surfaces.
+- ✅ **CSV export reporting** — CSV (+ PDF) exports for velocity / margin /
+  stockout / shrinkage / inventory-adjustment reports.
+
 <details>
 <summary>Archived (shipped): Refund + cancellation tracking</summary>
 

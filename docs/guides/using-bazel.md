@@ -136,7 +136,7 @@ cd frontend && pnpm ng serve
 This gives you:
 
 - **Frontend**: http://localhost:4200 (with hot reload + API proxy)
-- **Backend API**: http://localhost:8000
+- **Backend API**: http://localhost:8200
 
 ### Production Containers
 

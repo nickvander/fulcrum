@@ -34,6 +34,7 @@ from the left sidebar:
 | **Products**     | Full product catalog management (CRUD, bundles, images)  |
 | **Suppliers**    | Manage suppliers and create Purchase Orders              |
 | **Marketplaces** | Connect and manage Amazon, MercadoLibre accounts         |
+| **Orders**       | Marketplace + internal orders with cost / net-margin detail |
 | **Marketing**    | Multi-channel campaigns, social scheduling, and calendar |
 | **Expenses**     | Track operating expenses for profitability analysis      |
 | **Settings**     | Application and marketplace API configuration            |
@@ -52,6 +53,7 @@ from the left sidebar:
 - [Products](products.md)
 - [Suppliers & Purchase Orders](suppliers.md)
 - [Marketplaces](marketplaces.md)
+- [Orders](orders.md)
 - [Marketing](marketing.md)
 - [Expenses](expenses.md)
 - [Settings](settings.md)

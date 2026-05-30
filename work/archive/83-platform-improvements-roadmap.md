@@ -21,6 +21,8 @@ purchase order receiving, product inventory, or marketplace behavior.
 ## Best Next Improvements
 
 1. Supplier document review queue
+   - **✅ Shipped** — imported supplier documents now route through a review
+     queue before stock movement.
    - Add a queue for imported Alibaba/PDF/image documents that need human
      confirmation before stock movement.
    - Show extracted item, matched product/variant, confidence, proposed receive
@@ -28,24 +30,35 @@ purchase order receiving, product inventory, or marketplace behavior.
    - Keep the existing direct receive dialog working.
 
 2. Supplier alias learning
+   - **✅ Shipped** — confirmed mappings are stored and reused during future
+     parsing, with review/undo (see "Completed This Round" below).
    - Store approved mappings like "Alibaba item name/SKU -> Fulcrum
      product/variant."
    - Use mappings to improve future PO/invoice matching.
    - Add review and undo so bad mappings do not poison future imports.
 
 3. Marketplace allocation planning
+   - **✅ Shipped** — the Allocation planner creates one DRAFT transfer per
+     destination (ML Full / Amazon FBA) from per-product allocations; only
+     approved transfers sync to a marketplace.
    - Create a separate workflow that decides how much internal inventory is
      allocated to each marketplace/listing.
    - Show internal on-hand, reserved, allocated, and unallocated quantities.
    - Sync only approved marketplace allocations, not raw warehouse stock.
 
 4. Inventory adjustment safety
+   - **✅ Shipped** — adjustments carry a typed `reason_code` (by source) and a
+     `location`, and operator-entered adjustments are reversible via
+     `POST /api/v1/reports/inventory-adjustments/{id}/reverse` (idempotent,
+     equal-and-opposite `correction` row).
    - Add clearer stock movement history by source: PO receive, manual
      adjustment, bundle assembly, marketplace order, and correction.
    - Add reversal/correction flows for receiving mistakes instead of editing
      received quantities silently.
 
 5. Operational dashboards
+   - **✅ Shipped** — low-stock, dead-stock, stockout-risk, and marketplace
+     pipeline-health dashboards are live (see PROGRESS / MISSING_ITEMS).
    - Low-stock and stockout-risk dashboard based on sales velocity and reorder
      lead time.
    - Supplier receiving aging: ordered, partially received, overdue, and
@@ -54,6 +67,8 @@ purchase order receiving, product inventory, or marketplace behavior.
      and sync errors.
 
 6. Export and audit reporting
+   - **✅ Shipped** — CSV (and PDF) exports ship for the velocity / margin /
+     stockout / shrinkage / inventory-adjustment reports.
    - CSV exports for inventory valuation, stock movement history, PO receiving,
      supplier performance, and marketplace allocations.
    - Keep PDF exports secondary until CSV workflows are reliable.

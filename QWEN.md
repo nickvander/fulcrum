@@ -94,17 +94,18 @@ following principles:
     - Database fixtures are session-scoped to improve test performance.
     - Reusable data fixtures are used to keep tests clean and DRY.
 
-5.  **Frontend Testing:** The frontend application uses the Web Test Runner with
-    Playwright for unit testing. All new components and services must be
-    accompanied by a corresponding `.spec.ts` file with adequate test coverage.
+5.  **Frontend Testing:** The frontend application uses Vitest (via the Angular
+    CLI `@angular/build:unit-test` builder) for unit testing. All new components
+    and services must be accompanied by a corresponding `.spec.ts` file with
+    adequate test coverage.
 
 6.  **Centralized & Thematic Documentation:** All technical documentation is
     maintained within the `/docs` directory and built with Sphinx. It follows a
     thematic structure to ensure information is easy to find:
-    - `/docs/source/getting-started`: For essential setup guides.
-    - `/docs/source/guides`: For practical, step-by-step "how-to" documents.
-    - `/docs/source/explanation`: For deep dives into architecture and concepts.
-    - `/docs/source/reference`: For technical references like API specs or
+    - `docs/getting-started/`: For essential setup guides.
+    - `docs/guides/`: For practical, step-by-step "how-to" documents.
+    - `docs/concepts/`: For deep dives into architecture and concepts.
+    - `docs/reference/`: For technical references like API specs or
       config. This centralized hub is the single source of truth for the
       project.
 
@@ -230,7 +231,8 @@ The backend is tested using `pytest`. Code quality is enforced with `ruff`.
   docker compose exec backend ruff check .
   ```
 
-The frontend is tested using the Web Test Runner with Playwright.
+The frontend is tested using Vitest (via the Angular CLI
+`@angular/build:unit-test` builder).
 
 - **Run all frontend tests:**
   ```bash
@@ -248,7 +250,7 @@ developers to understand the architecture, setup, and development workflows.
 
 When adding a new feature or making a significant change, the corresponding
 documentation must be added or updated. Please place new content in the
-appropriate thematic directory (`getting-started`, `guides`, `explanation`, or
+appropriate thematic directory (`getting-started`, `guides`, `concepts`, or
 `reference`) to maintain the organized structure.
 
 ## Troubleshooting

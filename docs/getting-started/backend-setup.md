@@ -66,10 +66,17 @@ of the project.
   - Add the `-d` flag (`docker compose up -d --build`) to run the containers in
     detached mode (in the background).
 
+- **Database Migrations:** Migrations are applied **automatically** on startup.
+  The backend container's `entrypoint.sh` waits for Postgres, runs
+  `alembic upgrade head`, and only then launches uvicorn, so a fresh stack
+  always comes up fully migrated with no manual step. You only need to run
+  migrations by hand to re-apply them while troubleshooting (see
+  [Common Docker Compose Commands](#common-docker-compose-commands)).
+
 - **Accessing Services:**
-  - **API:** The API will be running at `http://localhost:8000`.
+  - **API:** The API will be running at `http://localhost:8200`.
   - **Interactive Docs:** The interactive Swagger UI documentation is available
-    at `http://localhost:8000/docs`.
+    at `http://localhost:8200/docs`.
   - **Task Monitoring:** The Flower dashboard for monitoring background tasks is
     at `http://localhost:5555`.
 
@@ -92,12 +99,16 @@ of the project.
   ```
 
 - **Run a Command Inside a Container:** Use `docker compose exec` to run a
-  command inside a _running_ container. This is the standard way to run tests or
-  database migrations.
+  command inside a _running_ container. This is the standard way to run tests
+  or to re-apply migrations while troubleshooting (they already run
+  automatically on startup — see above).
 
   ```bash
   # Example: Run the test suite
   docker compose exec backend python -m pytest
+
+  # Re-run migrations manually (normally automatic on startup)
+  docker compose exec backend alembic upgrade head
   ```
 
 ## Default Superuser

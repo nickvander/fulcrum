@@ -73,20 +73,21 @@ sudo apt-get update && sudo apt-get install -y nodejs npm
     > pnpm ng test
     > ```
 
-2.  **Create an Initial User:** If this is your first time running the
-    application, the database will be empty. The system does not have a public
-    user registration page, so you must create the first user via the API.
+2.  **Log In:** A default superuser is **created automatically** on backend
+    startup, so you don't need to register one. Log in using the
+    `FIRST_SUPERUSER_EMAIL` / `FIRST_SUPERUSER_PASSWORD` values from your
+    `.env` file (the defaults shipped in `backend/.env.example` are
+    `admin@example.com` / `SecurePass123!`).
 
-    With the backend services running, open a new terminal and run the following
-    command:
-
-    ```bash
-    curl -X POST "http://localhost:8000/api/v1/users/" \
-         -H "Content-Type: application/json" \
-         -d '{"email": "admin@example.com", "password": "SecurePass123!"}'
-    ```
-
-    You can now use these credentials to log into the frontend application.
+    > **Optional — create an additional user:** The system has no public
+    > registration page, so further users are created via the API. With the
+    > backend running, open a new terminal and run:
+    >
+    > ```bash
+    > curl -X POST "http://localhost:8200/api/v1/users/" \
+    >      -H "Content-Type: application/json" \
+    >      -d '{"email": "teammate@example.com", "password": "SecurePass123!"}'
+    > ```
 
 ## Development Server
 
@@ -106,7 +107,7 @@ change any of the source files.
 The frontend development server is configured to proxy API requests to the
 backend. The file `frontend/proxy.conf.json` is configured to forward any
 request to a path starting with `/api` to the backend server running at
-`http://localhost:8000`. This avoids CORS issues during development.
+`http://localhost:8200`. This avoids CORS issues during development.
 
 ## Key `npm` Scripts
 

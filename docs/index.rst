@@ -20,6 +20,7 @@ Welcome to Fulcrum's documentation!
    user-guides/products.md
    user-guides/suppliers.md
    user-guides/marketplaces.md
+   user-guides/orders.md
    user-guides/expenses.md
    user-guides/settings.md
 
