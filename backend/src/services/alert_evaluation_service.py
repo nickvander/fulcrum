@@ -23,8 +23,14 @@ from sqlalchemy.orm import Session
 
 from src.models.alert import AlertEvent, AlertRule, AlertType
 from src.models.inventory import InventoryItem
-from src.models.order import SalesOrder, SalesOrderItem
+from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.models.product import Product
+from src.models.stock_transfer import (
+    LOCATION_ML_FULL,
+    StockTransfer,
+    StockTransferItem,
+    StockTransferStatus,
+)
 from src.schemas.alert import (
     AlertEvaluationBatchResult,
     AlertEvaluationResult,
@@ -39,6 +45,22 @@ logger = logging.getLogger(__name__)
 # velocity reports' filter so an alert and a manual export agree on
 # what counts.
 _REALIZED_ORDER_STATUSES = ("COMPLETED", "SHIPPED")
+
+# How many days of forward cover a MercadoLibre-Full SKU needs before
+# it counts as "imminent". Longer than the 7-day internal stockout
+# horizon because replenishing Full isn't instant — you have to ship an
+# inbound shipment to ML's warehouse and wait for it to be received, so
+# the operator needs more lead time to react before the listing loses
+# its buy-box.
+_ML_FULL_COVER_HORIZON_DAYS = 14
+
+# Transfer states whose units are still on the way to the destination
+# (counted as in-transit Full stock so we don't false-alarm on stock
+# that's already shipped).
+_IN_TRANSIT_TRANSFER_STATUSES = (
+    StockTransferStatus.SHIPPED.value,
+    StockTransferStatus.PARTIALLY_RECEIVED.value,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -244,6 +266,130 @@ def _evaluate_stockout_risk(db: Session, rule: AlertRule) -> AlertEvaluationResu
     )
 
 
+def _evaluate_ml_full_stockout_risk(db: Session, rule: AlertRule) -> AlertEvaluationResult:
+    """Trigger when the number of MercadoLibre-Full SKUs at risk of a
+    Full stockout is >= rule.threshold.
+
+    A Full stockout silently kills a listing's buy-box and ranking, so
+    this is the most consequential day-to-day risk for an ML-Full
+    seller. "At risk" is computed per SKU as:
+
+      available_full = on_hand(location='ml-full')
+                       + in_transit(open transfers → 'ml-full')
+      velocity        = ML-channel realized units / window_days
+
+    A SKU is:
+      - "out"      — selling on ML (velocity > 0) but available_full <= 0
+                     (losing sales / buy-box right now), or
+      - "imminent" — available_full / velocity <= the Full replenishment
+                     horizon (won't cover demand before a restock lands).
+
+    Velocity is scoped to MercadoLibre orders (not all channels) because
+    Full inventory is consumed by ML sales — an Amazon sale doesn't draw
+    down Full stock. SKUs with no ML velocity are ignored even at zero
+    stock (nothing to lose).
+    """
+    cutoff = datetime.utcnow() - timedelta(days=rule.window_days)
+
+    # ML-channel realized sales per product (Full depletion signal).
+    ml_sales_rows = (
+        db.query(
+            SalesOrderItem.product_id,
+            func.coalesce(func.sum(SalesOrderItem.quantity), 0),
+        )
+        .join(SalesOrder, SalesOrder.id == SalesOrderItem.order_id)
+        .filter(SalesOrder.created_at >= cutoff)
+        .filter(SalesOrder.status.in_(_REALIZED_ORDER_STATUSES))
+        .filter(SalesOrder.source == OrderSource.MERCADOLIBRE.value)
+        .group_by(SalesOrderItem.product_id)
+        .all()
+    )
+    ml_sales = {pid: int(units or 0) for pid, units in ml_sales_rows if pid is not None}
+
+    # On-hand at the Full location.
+    on_hand_rows = (
+        db.query(
+            InventoryItem.product_id,
+            func.coalesce(func.sum(InventoryItem.quantity), 0),
+        )
+        .filter(InventoryItem.location == LOCATION_ML_FULL)
+        .group_by(InventoryItem.product_id)
+        .all()
+    )
+    full_on_hand = {pid: int(qty or 0) for pid, qty in on_hand_rows if pid is not None}
+
+    # In-transit units headed to Full (shipped/partially-received
+    # transfers), so stock already on its way doesn't read as a stockout.
+    in_transit_rows = (
+        db.query(
+            StockTransferItem.product_id,
+            func.coalesce(
+                func.sum(StockTransferItem.qty_shipped - StockTransferItem.qty_received), 0
+            ),
+        )
+        .join(StockTransfer, StockTransfer.id == StockTransferItem.transfer_id)
+        .filter(StockTransfer.dest_location == LOCATION_ML_FULL)
+        .filter(StockTransfer.status.in_(_IN_TRANSIT_TRANSFER_STATUSES))
+        .group_by(StockTransferItem.product_id)
+        .all()
+    )
+    in_transit = {pid: max(int(qty or 0), 0) for pid, qty in in_transit_rows if pid is not None}
+
+    # Candidate SKUs: anything with ML velocity, Full stock, or an
+    # inbound transfer. (Only velocity > 0 ends up at risk, but we union
+    # so a velocity-only SKU with no Full row is still considered "out".)
+    candidate_ids = set(ml_sales) | set(full_on_hand) | set(in_transit)
+    products = {
+        p.id: p
+        for p in db.query(Product).filter(Product.id.in_(candidate_ids)).all()
+    } if candidate_ids else {}
+
+    out: list[Dict[str, Any]] = []
+    imminent: list[Dict[str, Any]] = []
+    for pid in candidate_ids:
+        product = products.get(pid)
+        if product is None or getattr(product, "is_bundle", False):
+            continue
+        units = ml_sales.get(pid, 0)
+        velocity = units / rule.window_days if rule.window_days else 0.0
+        if velocity <= 0:
+            # Not selling on ML → no Full depletion risk, even at 0 stock.
+            continue
+        available = full_on_hand.get(pid, 0) + in_transit.get(pid, 0)
+        info = {"product_id": pid, "sku": product.sku, "name": product.name}
+        if available <= 0:
+            out.append(info)
+            continue
+        days_left = round(available / velocity, 1)
+        if days_left <= _ML_FULL_COVER_HORIZON_DAYS:
+            imminent.append({
+                **info,
+                "available": available,
+                "in_transit": in_transit.get(pid, 0),
+                "days_of_cover": days_left,
+            })
+
+    # Stable, operator-friendly ordering: most-urgent first.
+    out.sort(key=lambda r: r["sku"] or "")
+    imminent.sort(key=lambda r: r["days_of_cover"])
+
+    total = len(out) + len(imminent)
+    triggered = total >= rule.threshold
+    return AlertEvaluationResult(
+        rule_id=rule.id,
+        triggered=triggered,
+        payload={
+            "at_risk_count": total,
+            "out_count": len(out),
+            "imminent_count": len(imminent),
+            "horizon_days": _ML_FULL_COVER_HORIZON_DAYS,
+            "threshold": rule.threshold,
+            "out_examples": out[:3],
+            "imminent_examples": imminent[:3],
+        },
+    )
+
+
 def _evaluate_refund_rate_spike(db: Session, rule: AlertRule) -> AlertEvaluationResult:
     """Trigger when the trailing refund rate exceeds `rule.threshold`
     (interpreted as a percentage).
@@ -433,6 +579,7 @@ _EVALUATORS = {
     AlertType.LOW_MARGIN: _evaluate_low_margin,
     AlertType.SALES_DIP: _evaluate_sales_dip,
     AlertType.STOCKOUT_RISK: _evaluate_stockout_risk,
+    AlertType.ML_FULL_STOCKOUT_RISK: _evaluate_ml_full_stockout_risk,
     AlertType.REFUND_RATE_SPIKE: _evaluate_refund_rate_spike,
     AlertType.SETTLEMENT_VARIANCE: _evaluate_settlement_variance,
 }
@@ -462,6 +609,11 @@ def _email_subject(rule: AlertRule, payload: Dict[str, Any]) -> str:
         return (
             f"Fulcrum alert: settlement fees off by {worst:.1f}% over "
             f"the last {rule.window_days}d"
+        )
+    if rule.alert_type == AlertType.ML_FULL_STOCKOUT_RISK:
+        return (
+            f"Fulcrum alert: {payload.get('at_risk_count', '?')} "
+            f"MercadoLibre Full SKUs at stockout risk"
         )
     return f"Fulcrum alert: {payload.get('at_risk_count', '?')} products at stockout risk"
 
@@ -567,6 +719,38 @@ def _email_body(rule: AlertRule, payload: Dict[str, Any]) -> tuple[str, str]:
         body_text = (
             f"Settlement fees off by >= {rule.threshold:.1f}% over "
             f"{rule.window_days}d:\n\n{rows_text}"
+        )
+        return body_html, body_text
+
+    if rule.alert_type == AlertType.ML_FULL_STOCKOUT_RISK:
+        horizon = payload.get("horizon_days", _ML_FULL_COVER_HORIZON_DAYS)
+        out_examples = payload.get("out_examples") or []
+        imm_examples = payload.get("imminent_examples") or []
+        out_html = "".join(f"<li>{r['name']} ({r['sku']})</li>" for r in out_examples)
+        imm_html = "".join(
+            f"<li>{r['name']} ({r['sku']}): {r['days_of_cover']:.1f}d of Full cover</li>"
+            for r in imm_examples
+        )
+        body_html = (
+            f"<p><strong>{payload.get('at_risk_count', 0)}</strong> MercadoLibre "
+            f"Full SKUs are at stockout risk: {payload.get('out_count', 0)} with no "
+            f"Full stock, {payload.get('imminent_count', 0)} that won't cover ML "
+            f"demand for the next {horizon} days (includes in-transit transfers).</p>"
+            f"<h4>No Full stock</h4><ul>{out_html or '<li>None</li>'}</ul>"
+            f"<h4>Running low</h4><ul>{imm_html or '<li>None</li>'}</ul>"
+            f"<p>Replenish Full via an inbound shipment before these listings lose "
+            f"their buy-box. Open the <a href='/marketplaces'>marketplaces page</a>.</p>"
+        )
+        out_text = "\n".join(f"- {r['name']} ({r['sku']})" for r in out_examples) or "(none)"
+        imm_text = "\n".join(
+            f"- {r['name']} ({r['sku']}): {r['days_of_cover']:.1f}d cover"
+            for r in imm_examples
+        ) or "(none)"
+        body_text = (
+            f"{payload.get('at_risk_count', 0)} MercadoLibre Full SKUs at risk "
+            f"({payload.get('out_count', 0)} with no Full stock, "
+            f"{payload.get('imminent_count', 0)} below {horizon}d cover).\n\n"
+            f"No Full stock:\n{out_text}\n\nRunning low:\n{imm_text}"
         )
         return body_html, body_text
 

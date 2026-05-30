@@ -34,6 +34,7 @@ class AlertType(str, enum.Enum):
     STOCKOUT_RISK = "stockout_risk"
     REFUND_RATE_SPIKE = "refund_rate_spike"
     SETTLEMENT_VARIANCE = "settlement_variance"
+    ML_FULL_STOCKOUT_RISK = "ml_full_stockout_risk"
 
 
 class AlertRule(Base):
@@ -50,6 +51,11 @@ class AlertRule(Base):
     #                  >= threshold.
     #   stockout_risk: count — alert when the number of products in
     #                  the "out" + "imminent" buckets >= threshold.
+    #   ml_full_stockout_risk: count — alert when the number of
+    #                  MercadoLibre-Full SKUs at risk (Full on-hand +
+    #                  in-transit transfers won't cover ML sales
+    #                  velocity over the Full replenishment horizon)
+    #                  >= threshold.
     threshold = Column(Float, nullable=False)
     window_days = Column(Integer, nullable=False, default=30)
     # Suppresses notifications for `cooldown_minutes` after a successful

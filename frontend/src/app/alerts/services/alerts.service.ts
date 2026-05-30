@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
-export type AlertType = 'low_margin' | 'sales_dip' | 'stockout_risk';
+export type AlertType = 'low_margin' | 'sales_dip' | 'stockout_risk' | 'ml_full_stockout_risk';
 
 export interface AlertRule {
   id: number;

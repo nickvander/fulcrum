@@ -1792,7 +1792,8 @@
     "type": {
       "low_margin": "Margen bajo",
       "sales_dip": "Caída de ventas",
-      "stockout_risk": "Riesgo de desabasto"
+      "stockout_risk": "Riesgo de desabasto",
+      "ml_full_stockout_risk": "Riesgo de desabasto en MercadoLibre Full"
     },
     "empty": {
       "title": "Aún no hay reglas de alerta",
@@ -1827,7 +1828,8 @@
       "cooldownMinutes": "Cooldown (minutos)",
       "cooldownHint": "No se enviará otro correo de esta regla hasta que pasen estos minutos.",
       "notifyEmail": "Correo de aviso",
-      "enabled": "Activa"
+      "enabled": "Activa",
+      "thresholdHintMlFullStockout": "Número de SKUs de MercadoLibre Full en riesgo de desabasto que dispara la alerta (el inventario en Full + traslados en tránsito no cubrirán la demanda de ML)."
     },
     "delete": {
       "title": "¿Eliminar regla de alerta?",

@@ -54,7 +54,7 @@ export interface AlertFormDialogResult {
 })
 export class AlertFormDialogComponent {
   form: FormGroup;
-  alertTypes: AlertType[] = ['low_margin', 'sales_dip', 'stockout_risk'];
+  alertTypes: AlertType[] = ['low_margin', 'sales_dip', 'stockout_risk', 'ml_full_stockout_risk'];
 
   constructor(
     private fb: FormBuilder,
@@ -87,6 +87,7 @@ export class AlertFormDialogComponent {
     const t = this.form.get('alert_type')?.value as AlertType;
     if (t === 'low_margin') return 'alerts.form.thresholdHintLowMargin';
     if (t === 'sales_dip') return 'alerts.form.thresholdHintSalesDip';
+    if (t === 'ml_full_stockout_risk') return 'alerts.form.thresholdHintMlFullStockout';
     return 'alerts.form.thresholdHintStockoutRisk';
   }
 

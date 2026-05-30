@@ -1792,7 +1792,8 @@
     "type": {
       "low_margin": "Low margin",
       "sales_dip": "Sales dip",
-      "stockout_risk": "Stockout risk"
+      "stockout_risk": "Stockout risk",
+      "ml_full_stockout_risk": "MercadoLibre Full stockout risk"
     },
     "empty": {
       "title": "No alert rules yet",
@@ -1827,7 +1828,8 @@
       "cooldownMinutes": "Cooldown (minutes)",
       "cooldownHint": "Don't send another email for this rule until this many minutes have passed.",
       "notifyEmail": "Notify email",
-      "enabled": "Enabled"
+      "enabled": "Enabled",
+      "thresholdHintMlFullStockout": "Number of MercadoLibre Full SKUs at stockout risk that triggers the alert (Full on-hand + in-transit transfers won't cover ML demand)."
     },
     "delete": {
       "title": "Delete alert rule?",
