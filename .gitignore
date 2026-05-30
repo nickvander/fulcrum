@@ -34,3 +34,10 @@ bazel-fulcrum/
 frontend.log
 *.log
 .env
+
+# Claude Code local agent/session config
+.claude/
+
+# Celery beat runtime schedule (written on worker startup)
+backend/celerybeat-schedule
+backend/celerybeat-schedule.db
