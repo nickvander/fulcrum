@@ -33,7 +33,8 @@ WEBHOOK_DISCONNECT_HOURS = 24
 
 class ReputationSnapshotRead(BaseModel):
     """Latest persisted `MarketplaceReputationSnapshot` for a credential.
-    Rates are percentages as MercadoLibre returns them (1.5 == 1.5%)."""
+    Rates are percentages (1.5 == 1.5%), normalized from MercadoLibre's
+    native 0–1 fraction at parse time."""
     captured_at: Optional[datetime] = None
     level_id: Optional[str] = None
     power_seller_status: Optional[str] = None

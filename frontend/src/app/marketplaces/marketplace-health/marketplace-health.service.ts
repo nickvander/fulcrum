@@ -10,7 +10,8 @@ export interface ReputationSnapshot {
   transactions_total?: number | null;
   transactions_completed?: number | null;
   sales_completed?: number | null;
-  /** Rates are percentages as ML returns them (1.5 == 1.5%). */
+  /** Rates are percentages (1.5 == 1.5%); the backend normalizes ML's
+   *  native 0–1 fraction at parse time. */
   claims_rate?: number | null;
   claims_value?: number | null;
   cancellations_rate?: number | null;

@@ -34,14 +34,26 @@ def _classify_fee_detail(detail: Dict[str, Any]) -> str:
     return "marketplace"
 
 
+def _rate_to_percent(value: Any) -> Optional[float]:
+    """ML reports `metrics.*.rate` as a FRACTION in [0, 1] (e.g. 0.0912
+    == 9.12%). We store + threshold + display in percent, so normalize
+    here. None passes through. See work/future/95-marketplace-api-research.md."""
+    if value is None:
+        return None
+    try:
+        return round(float(value) * 100.0, 4)
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize the `seller_reputation` object from a ML `GET /users/{id}`
     payload into a flat dict. Defensive — every field is optional and
     missing data lands as None (ML omits metrics for brand-new sellers).
 
-    The metric `rate` values are surfaced as-is (ML returns them as a
-    percentage, e.g. 1.5 == 1.5%); the reputation_risk alert threshold is
-    interpreted in the same unit.
+    Metric `rate` values are normalized from ML's 0–1 fraction to a
+    percentage (×100); the reputation_risk alert threshold + the health
+    pill + the UI display all interpret these as percentages.
     """
     rep = (user_payload or {}).get("seller_reputation") or {}
     metrics = rep.get("metrics") or {}
@@ -49,7 +61,7 @@ def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
 
     def _metric(name: str) -> tuple:
         m = metrics.get(name) or {}
-        return m.get("rate"), m.get("value")
+        return _rate_to_percent(m.get("rate")), m.get("value")
 
     claims_rate, claims_value = _metric("claims")
     canc_rate, canc_value = _metric("cancellations")
@@ -67,7 +79,7 @@ def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
         "claims_value": claims_value,
         "cancellations_rate": canc_rate,
         "cancellations_value": canc_value,
-        "delayed_handling_rate": delayed.get("rate"),
+        "delayed_handling_rate": _rate_to_percent(delayed.get("rate")),
         "delayed_handling_value": delayed.get("value"),
     }
 
@@ -128,18 +140,28 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
     async def fetch_seller_reputation(self, access_token: Optional[str] = None) -> Dict[str, Any]:
         """Fetch the authenticated seller's reputation metrics.
 
-        `GET /users/me` returns the full user object including the
-        `seller_reputation` block (level, power-seller status, and the
-        claims / cancellations / delayed-handling metrics). Returns the
+        Two-step: `GET /users/me` resolves the numeric id, then
+        `GET /users/{id}` returns the full `seller_reputation` block. The
+        lightweight `/users/me` form can omit the `metrics` object, so we
+        always read the canonical `/users/{id}` for reliable claims /
+        cancellations / delayed-handling rates (see
+        work/future/95-marketplace-api-research.md). Returns the
         normalized dict from :func:`parse_seller_reputation`.
         """
         if not access_token:
             raise ValueError("Access token is required to fetch seller reputation")
         async with httpx.AsyncClient() as client:
             headers = {"Authorization": f"Bearer {access_token}"}
-            response = await client.get(f"{self.API_URL}/users/me", headers=headers)
-            response.raise_for_status()
-            return parse_seller_reputation(response.json())
+            me = await client.get(f"{self.API_URL}/users/me", headers=headers)
+            me.raise_for_status()
+            me_json = me.json()
+            user_id = me_json.get("id")
+            if user_id:
+                resp = await client.get(f"{self.API_URL}/users/{user_id}", headers=headers)
+                resp.raise_for_status()
+                return parse_seller_reputation(resp.json())
+            # No id (unexpected) — fall back to whatever /users/me carried.
+            return parse_seller_reputation(me_json)
 
     async def fetch_all_listings(self, access_token: Optional[str] = None) -> list:
         """

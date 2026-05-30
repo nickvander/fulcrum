@@ -36,12 +36,13 @@ _SAMPLE = {
     "seller_reputation": {
         "level_id": "5_green",
         "power_seller_status": "platinum",
-        "transactions": {"total": 500, "completed": 480},
+        "transactions": {"total": 500, "completed": 480, "canceled": 6},
         "metrics": {
-            "sales": {"period": "365 days", "completed": 480},
-            "claims": {"rate": 1.5, "value": 7},
-            "cancellations": {"rate": 0.8, "value": 4},
-            "delayed_handling_time": {"rate": 3.2, "value": 15},
+            # ML reports rate as a 0–1 fraction; parse normalizes ×100.
+            "sales": {"period": "60 days", "completed": 480},
+            "claims": {"rate": 0.015, "value": 7},
+            "cancellations": {"rate": 0.008, "value": 4},
+            "delayed_handling_time": {"rate": 0.032, "value": 15},
         },
     },
 }
@@ -66,17 +67,26 @@ def _ml_credential(db: Session, user) -> MarketplaceCredential:
 # --------------------------------------------------------------------------- #
 
 
-def test_parse_extracts_all_fields():
+def test_parse_extracts_all_fields_and_normalizes_rates_to_percent():
     r = parse_seller_reputation(_SAMPLE)
     assert r["level_id"] == "5_green"
     assert r["power_seller_status"] == "platinum"
     assert r["transactions_total"] == 500
     assert r["sales_completed"] == 480
-    assert r["claims_rate"] == 1.5
+    # Rates normalized from ML's 0–1 fraction to percent.
+    assert r["claims_rate"] == pytest.approx(1.5)         # 0.015 → 1.5%
     assert r["claims_value"] == 7
-    assert r["cancellations_rate"] == 0.8
-    assert r["delayed_handling_rate"] == 3.2
+    assert r["cancellations_rate"] == pytest.approx(0.8)  # 0.008 → 0.8%
+    assert r["delayed_handling_rate"] == pytest.approx(3.2)  # 0.032 → 3.2%
     assert r["delayed_handling_value"] == 15
+
+
+def test_parse_rate_normalization_examples():
+    # ML doc example: real_rate 0.0912 == 9.12%.
+    out = parse_seller_reputation(
+        {"seller_reputation": {"metrics": {"claims": {"rate": 0.0912, "value": 24}}}}
+    )
+    assert out["claims_rate"] == pytest.approx(9.12)
 
 
 def test_parse_is_defensive_on_empty_payload():

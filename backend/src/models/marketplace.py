@@ -124,9 +124,9 @@ class MarketplaceReputationSnapshot(Base):
     no marketplace auth — can read the latest values without a live API
     call, and so the health page can show a short trend.
 
-    Rates are stored as MercadoLibre returns them (a percentage, e.g.
-    1.5 == 1.5%). NULLs are expected for brand-new sellers ML hasn't
-    scored yet.
+    Rates are stored as percentages (e.g. 1.5 == 1.5%) — normalized from
+    MercadoLibre's native 0–1 fraction at parse time. NULLs are expected
+    for brand-new sellers ML hasn't scored yet.
     """
     __tablename__ = "marketplace_reputation_snapshots"
 
