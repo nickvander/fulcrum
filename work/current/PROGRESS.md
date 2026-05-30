@@ -1,8 +1,32 @@
 # Progress Log
 
-**Status:** Polish + drill-down + cold-start hardening. A smoke
-run of the new count-session + dashboard widgets surfaced a punch
-list of rough edges. Fixed in one slice:
+**Status:** Marketplace extensibility + multi-currency. Two arcs
+landed after a hands-on ML-seller walkthrough + critique:
+
+  - **Marketplace catalog as the single source of truth.** A
+    declarative `marketplace_catalog.py` (key, display_name, status
+    live/planned, oauth, primary, region, brand_color, order_source,
+    connector) now drives *everything*: the connector registry, the
+    `/marketplace/catalog` API, the Channels page (ML-first,
+    always-visible, token-themed), the add-channel dialog, the
+    listing-type dropdown, and — the last holdout — `OrderSource`.
+    `SalesOrder.source` moved from a native PG enum to a
+    catalog-governed string column (migration `f3b6c1d92a47`), so
+    **adding a marketplace is now one catalog entry: no enum/DB
+    migration, no per-surface edits.** By-channel reports, source
+    filters, and source→fee-config maps all derive from the catalog.
+    Proven end-to-end (`scripts/demo_cross_marketplace.py`): a
+    runtime-added "Walmart" channel accepted orders + showed up in
+    margin-by-channel with zero migration.
+  - **Multi-currency foundation.** `exchange_rates` table +
+    `CurrencyService` (record / historical on-or-before lookup /
+    inverse-pair / convert), `Product.currency`, `/currency`
+    endpoints, and a shared `MoneyPipe` (MX$ vs US$ unambiguous).
+    Product + order detail now show the native currency.
+
+**Earlier this cycle:** Polish + drill-down + cold-start hardening.
+A smoke run of the new count-session + dashboard widgets surfaced a
+punch list of rough edges. Fixed in one slice:
   - Backend cold-start now works on a fresh checkout: pgvector
     auto-installed via `db_init/`, an entrypoint waits for the DB +
     runs `alembic upgrade head` before uvicorn so the
