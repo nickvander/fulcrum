@@ -452,4 +452,47 @@ export class AnalyticsReportsService {
       `${this.apiUrl}/returns-list`, { params },
     );
   }
+
+  questionsList(
+    windowDays = 30,
+    skip = 0,
+    limit = 50,
+    status?: string,
+  ): Observable<QuestionsListResponse> {
+    let params = new HttpParams()
+      .set('window_days', String(windowDays))
+      .set('skip', String(skip))
+      .set('limit', String(limit));
+    if (status) params = params.set('status', status);
+    return this.http.get<QuestionsListResponse>(
+      `${this.apiUrl}/questions`, { params },
+    );
+  }
+}
+
+export interface QuestionRow {
+  id: number;
+  external_question_id: string;
+  source: string;
+  item_id: string | null;
+  buyer_id: string | null;
+  question_text: string | null;
+  answer_text: string | null;
+  status: string | null;
+  asked_at: string | null;
+  answered_at: string | null;
+  answered: boolean;
+  /** Response time if answered, current open age otherwise (hours). */
+  hours_open: number | null;
+  /** 'answered' | 'pending' | 'breached'. */
+  sla_status: string;
+}
+
+export interface QuestionsListResponse {
+  rows: QuestionRow[];
+  total: number;
+  sla_hours: number;
+  unanswered_count: number;
+  breached_count: number;
+  answered_count: number;
 }

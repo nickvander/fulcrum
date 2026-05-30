@@ -1,0 +1,107 @@
+.qa-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 16px;
+
+    h1 { margin: 0; font-size: 1.5rem; }
+    p { margin: 4px 0 0; color: rgba(0, 0, 0, 0.6); font-size: 0.875rem; }
+  }
+
+  .qa-counters {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+
+    .counter {
+      flex: 1 1 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 12px;
+
+      .num { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+      .label { font-size: 0.75rem; color: rgba(0, 0, 0, 0.6); margin-top: 2px; text-align: center; }
+
+      &.breached .num { color: #c62828; }
+    }
+  }
+
+  .filters {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    mat-form-field { min-width: 200px; }
+  }
+
+  .loading-state {
+    display: flex;
+    justify-content: center;
+    padding: 48px;
+  }
+
+  .empty-state,
+  .error-card {
+    text-align: center;
+    padding: 32px;
+    color: rgba(0, 0, 0, 0.6);
+
+    mat-icon { font-size: 36px; width: 36px; height: 36px; margin-bottom: 8px; }
+    button { margin-top: 12px; }
+  }
+
+  .error-card { border-left: 4px solid #c62828; }
+
+  .table-card {
+    padding: 0;
+    overflow-x: auto;
+
+    .qa-table {
+      width: 100%;
+      min-width: 720px;
+    }
+
+    .num-col { text-align: right; }
+
+    .sku {
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.75em;
+    }
+
+    .q-text {
+      display: inline-block;
+      max-width: 360px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    .sla-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 2px 9px;
+      border-radius: 999px;
+
+      &.sla-answered { background: rgba(30, 122, 58, 0.12); color: #1e7a3a; }
+      &.sla-pending  { background: rgba(0, 0, 0, 0.07); color: rgba(0, 0, 0, 0.65); }
+      &.sla-breached { background: rgba(198, 40, 40, 0.12); color: #c62828; }
+    }
+  }
+}

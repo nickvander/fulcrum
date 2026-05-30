@@ -112,7 +112,8 @@
     "management": "Management",
     "users": "Users",
     "settings": "Settings",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "buyerQuestions": "Buyer Q&A"
   },
   "auth": {
     "login": "Login",
@@ -371,6 +372,39 @@
       "exportCsvTooltip": "Download the full low-stock list as a spreadsheet.",
       "exportPdf": "Export PDF",
       "exportPdfTooltip": "Download the report as a print-ready PDF with severity-colored rows."
+    },
+    "qaPage": {
+      "title": "Buyer Q&A",
+      "subtitle": "Unanswered buyer questions and response-time SLA. Fast answers protect your MercadoLibre reputation.",
+      "backToDashboard": "Back to dashboard",
+      "windowLabel": "Window",
+      "window30": "Last 30 days",
+      "window60": "Last 60 days",
+      "window90": "Last 90 days",
+      "window180": "Last 180 days",
+      "statusLabel": "Status",
+      "statusAll": "All",
+      "statusUnanswered": "Unanswered",
+      "statusAnswered": "Answered",
+      "unanswered": "Unanswered",
+      "breached": "Past {{hours}}h SLA",
+      "answered": "Answered",
+      "error": "Couldn't load buyer questions.",
+      "retry": "Retry",
+      "empty": "No buyer questions in this window.",
+      "cols": {
+        "askedAt": "Asked",
+        "source": "Channel",
+        "item": "Item",
+        "question": "Question",
+        "sla": "SLA",
+        "open": "Open"
+      },
+      "sla": {
+        "answered": "Answered",
+        "pending": "Pending",
+        "breached": "Breached"
+      }
     }
   },
   "onboarding": {

@@ -78,6 +78,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/qa',
+    loadComponent: () =>
+      import('./dashboard/pages/qa-page/qa-page.component').then(
+        (m) => m.QaPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'inventory/count',
     loadComponent: () =>
       import('./inventory-count/pages/list/inventory-count-list.component').then(

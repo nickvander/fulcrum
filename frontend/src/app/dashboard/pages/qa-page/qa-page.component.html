@@ -1,0 +1,120 @@
+<ng-container *transloco="let t">
+  <div class="qa-page">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('dashboard.qaPage.title') }}</h1>
+        <p>{{ t('dashboard.qaPage.subtitle') }}</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard" data-testid="qa-page-back">
+        <mat-icon>arrow_back</mat-icon>
+        {{ t('dashboard.qaPage.backToDashboard') }}
+      </a>
+    </div>
+
+    <div class="qa-counters">
+      <mat-card class="counter" data-testid="qa-counter-unanswered">
+        <span class="num">{{ unansweredCount }}</span>
+        <span class="label">{{ t('dashboard.qaPage.unanswered') }}</span>
+      </mat-card>
+      <mat-card class="counter breached" data-testid="qa-counter-breached">
+        <span class="num">{{ breachedCount }}</span>
+        <span class="label">{{ t('dashboard.qaPage.breached', { hours: slaHours }) }}</span>
+      </mat-card>
+      <mat-card class="counter" data-testid="qa-counter-answered">
+        <span class="num">{{ answeredCount }}</span>
+        <span class="label">{{ t('dashboard.qaPage.answered') }}</span>
+      </mat-card>
+    </div>
+
+    <mat-card class="filters">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('dashboard.qaPage.windowLabel') }}</mat-label>
+        <mat-select [(value)]="windowDays" (selectionChange)="onFilterChange()"
+                    data-testid="qa-window-select">
+          <mat-option *ngFor="let opt of windowOptions" [value]="opt.value">
+            {{ t(opt.labelKey) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('dashboard.qaPage.statusLabel') }}</mat-label>
+        <mat-select [(value)]="statusFilter" (selectionChange)="onFilterChange()"
+                    data-testid="qa-status-select">
+          <mat-option *ngFor="let opt of statusOptions" [value]="opt.value">
+            {{ t(opt.labelKey) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </mat-card>
+
+    @if (loading && rows.length === 0) {
+      <div class="loading-state"><mat-spinner diameter="32"></mat-spinner></div>
+    } @else if (errored && rows.length === 0) {
+      <mat-card class="error-card" data-testid="qa-page-error">
+        <p>{{ t('dashboard.qaPage.error') }}</p>
+        <button mat-flat-button color="primary" (click)="load()">
+          {{ t('dashboard.qaPage.retry') }}
+        </button>
+      </mat-card>
+    } @else if (rows.length === 0) {
+      <mat-card class="empty-state" data-testid="qa-page-empty">
+        <mat-icon>sentiment_satisfied</mat-icon>
+        <p>{{ t('dashboard.qaPage.empty') }}</p>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="rows" class="qa-table" data-testid="qa-table">
+          <ng-container matColumnDef="asked_at">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.askedAt') }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.asked_at ? (row.asked_at | date:'short') : '—' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="source">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.source') }}</th>
+            <td mat-cell *matCellDef="let row">{{ channelLabel(row.source) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="item">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.item') }}</th>
+            <td mat-cell *matCellDef="let row"><code class="sku">{{ row.item_id || '—' }}</code></td>
+          </ng-container>
+
+          <ng-container matColumnDef="question">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.question') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="q-text" [matTooltip]="row.answer_text || ''">{{ row.question_text || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="sla">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.sla') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="sla-pill" [ngClass]="slaClass(row.sla_status)">
+                {{ t('dashboard.qaPage.sla.' + row.sla_status) }}
+              </span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="hours_open">
+            <th mat-header-cell *matHeaderCellDef class="num-col">{{ t('dashboard.qaPage.cols.open') }}</th>
+            <td mat-cell *matCellDef="let row" class="num-col">{{ hoursLabel(row.hours_open) }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [attr.data-testid]="'qa-row-' + row.id"></tr>
+        </table>
+
+        <mat-paginator
+          [length]="totalRows"
+          [pageSize]="pageSize"
+          [pageIndex]="pageIndex"
+          [pageSizeOptions]="[25, 50, 100]"
+          (page)="onPage($event)"
+          data-testid="qa-paginator"
+        ></mat-paginator>
+      </mat-card>
+    }
+  </div>
+</ng-container>

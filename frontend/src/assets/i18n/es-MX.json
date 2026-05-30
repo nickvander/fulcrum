@@ -112,7 +112,8 @@
     "management": "Administración",
     "users": "Usuarios",
     "settings": "Configuración",
-    "signOut": "Cerrar Sesión"
+    "signOut": "Cerrar Sesión",
+    "buyerQuestions": "Preguntas"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -371,6 +372,39 @@
       "exportCsvTooltip": "Descargar la lista completa de stock bajo como hoja de cálculo.",
       "exportPdf": "Exportar PDF",
       "exportPdfTooltip": "Descargar el reporte como un PDF imprimible con filas por severidad."
+    },
+    "qaPage": {
+      "title": "Preguntas de compradores",
+      "subtitle": "Preguntas sin responder y SLA de tiempo de respuesta. Responder rápido protege tu reputación en MercadoLibre.",
+      "backToDashboard": "Volver al panel",
+      "windowLabel": "Periodo",
+      "window30": "Últimos 30 días",
+      "window60": "Últimos 60 días",
+      "window90": "Últimos 90 días",
+      "window180": "Últimos 180 días",
+      "statusLabel": "Estado",
+      "statusAll": "Todas",
+      "statusUnanswered": "Sin responder",
+      "statusAnswered": "Respondidas",
+      "unanswered": "Sin responder",
+      "breached": "Más de {{hours}}h SLA",
+      "answered": "Respondidas",
+      "error": "No se pudieron cargar las preguntas.",
+      "retry": "Reintentar",
+      "empty": "No hay preguntas en este periodo.",
+      "cols": {
+        "askedAt": "Preguntada",
+        "source": "Canal",
+        "item": "Artículo",
+        "question": "Pregunta",
+        "sla": "SLA",
+        "open": "Abierta"
+      },
+      "sla": {
+        "answered": "Respondida",
+        "pending": "Pendiente",
+        "breached": "Vencida"
+      }
     }
   },
   "onboarding": {
