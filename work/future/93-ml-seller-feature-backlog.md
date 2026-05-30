@@ -9,6 +9,14 @@
 This is the prioritized backlog of net-new features. Items move to
 `work/current/` when active and to `work/archive/` when shipped.
 
+> **API reality check:** `work/future/95-marketplace-api-research.md`
+> validates the real MercadoLibre + Amazon payload shapes against
+> official docs. It corrects B1/B2 field assumptions (ML reputation
+> rates are 0–1 fractions; ML ad spend is a separate Product Ads API,
+> not order `fee_details`) and scopes follow-ups (ML Billing API,
+> Product Ads API, `/seller-promotions`, Amazon fee-type split +
+> `ProductAdsPaymentEvent` + `GET_V2_SELLER_PERFORMANCE_REPORT`).
+
 ## Build order (committed)
 
 1. **B3 — ML Full stockout / lost-buy-box risk alert** — ✅ **SHIPPED**
