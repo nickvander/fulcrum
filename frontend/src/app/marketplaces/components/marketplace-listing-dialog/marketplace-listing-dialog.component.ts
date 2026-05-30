@@ -14,6 +14,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 import { AiService, ListingDescriptionResponse } from '../../../core/services/ai.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { MarketplacesService, MarketplaceListingCreate } from '../../marketplaces';
+import { MarketplaceCatalogService } from '../../marketplace-catalog.service';
 import { switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 
@@ -53,10 +54,13 @@ export class MarketplaceListingDialogComponent implements OnInit {
     generatedKeywords: string[] = [];
     aiEnabled = false;
 
-    availableMarketplaces = [
-        { value: 'amazon', label: 'Amazon' },
+    // Populated from the marketplace catalog in ngOnInit — no hardcoded
+    // list, so a marketplace added to the catalog automatically becomes
+    // a listing target. Seeded with MercadoLibre (the primary channel)
+    // so the dropdown is never momentarily empty before the catalog
+    // resolves.
+    availableMarketplaces: { value: string; label: string }[] = [
         { value: 'mercadolibre', label: 'MercadoLibre' },
-        { value: 'ebay', label: 'eBay' }
     ];
 
     constructor(
@@ -65,16 +69,37 @@ export class MarketplaceListingDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: MarketplaceListingDialogData,
         private aiService: AiService,
         private notificationService: NotificationService,
-        private marketplacesService: MarketplacesService
+        private marketplacesService: MarketplacesService,
+        private catalogService: MarketplaceCatalogService
     ) {
         this.listingForm = this.fb.group({
-            marketplace: [data.marketplace || 'amazon', Validators.required],
+            // Default to the primary channel (MercadoLibre), not Amazon —
+            // overridden below once the catalog loads / when data.marketplace
+            // is provided by the caller.
+            marketplace: [data.marketplace || 'mercadolibre', Validators.required],
             title: [data.existingTitle || data.productName || '', Validators.required],
             description: [data.existingDescription || '', Validators.required]
         });
     }
 
     ngOnInit(): void {
+        // Catalog-driven marketplace options. Falls back to the seeded
+        // single entry if the catalog can't be fetched.
+        this.catalogService.getCatalog().subscribe((catalog) => {
+            if (catalog.length) {
+                this.availableMarketplaces = catalog.map((c) => ({
+                    value: c.key,
+                    label: c.display_name,
+                }));
+                // If the caller didn't pin a marketplace, default to the
+                // primary one from the catalog.
+                if (!this.data.marketplace) {
+                    const primary = catalog.find((c) => c.is_primary) ?? catalog[0];
+                    this.listingForm.patchValue({ marketplace: primary.key });
+                }
+            }
+        });
+
         // Use AiService.isReady$() so the button is hidden when AI is either
         // disabled in Settings or the active provider has no API key — matches
         // the backend gate on /api/v1/ai/* endpoints.

@@ -1136,6 +1136,8 @@
         "comingSoon": "Coming soon",
         "comingSoonDesc": "Planned channel",
         "connectEbay": "eBay support is on the roadmap",
+        "connectSeller": "Connect your {{name}} seller account",
+        "onTheRoadmap": "On the roadmap",
         "comingSoonBody": "eBay integration is planned. It will connect the same way as MercadoLibre and Amazon once available.",
         "channelListings": "Channel Listings",
         "channelListingsDesc": "Review and manage individual product status for Channel:",

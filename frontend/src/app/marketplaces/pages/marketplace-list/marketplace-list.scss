@@ -80,17 +80,15 @@
     }
 }
 
-// Thin brand accent stripe at the top of each card.
+// Thin brand accent stripe at the top of each card. Color comes from
+// the catalog's `brand_color` via an inline style binding, so a new
+// marketplace's stripe needs no CSS change here.
 .card-accent {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 3px;
-
-    &.mercadolibre { background: linear-gradient(90deg, #ffe600, #ffcc00); }
-    &.amazon       { background: linear-gradient(90deg, #ff9900, #ffc400); }
-    &.ebay         { background: linear-gradient(90deg, #e53238, #0064d2 35%, #f5af02 70%, #86b817); }
 }
 
 .card-top {

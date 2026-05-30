@@ -12,7 +12,11 @@ import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 import { MarketplacesService, Marketplace, MarketplaceSummary } from '../../marketplaces';
-import { forkJoin, Observable, of } from 'rxjs';
+import {
+  MarketplaceCatalogService,
+  MarketplaceCatalogEntry,
+} from '../../marketplace-catalog.service';
+import { combineLatest, forkJoin, Observable, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 
 export interface MarketplaceCardModel extends Marketplace {
@@ -20,32 +24,21 @@ export interface MarketplaceCardModel extends Marketplace {
 }
 
 /**
- * The channels Fulcrum knows about, in operator priority order.
- * MercadoLibre is first + flagged primary because Mexico + ML Full is
- * the primary market. A channel renders even when the workspace hasn't
- * connected it yet, so the operator can always start the connect flow
- * from this page (the old behavior only showed channels that already
- * existed in the DB — so a fresh workspace never saw MercadoLibre).
+ * A catalog channel + whichever DB marketplace row backs it (null if
+ * the workspace hasn't connected it yet). The channel list itself comes
+ * from the backend catalog (`/marketplace/catalog`) — there's no
+ * hardcoded list here, so a marketplace added to the catalog
+ * automatically appears on this page in priority order.
  *
- * `comingSoon` channels (eBay today) have no OAuth connect flow yet, so
- * they render as a planned-channel card rather than a dead "Connect"
- * button that routes nowhere useful.
+ * `comingSoon` channels (those that aren't connectable yet, e.g. eBay)
+ * render as a planned-channel card instead of a dead "Connect" button.
  */
-interface KnownChannel {
-  key: 'mercadolibre' | 'amazon' | 'ebay';
+export interface ChannelViewModel {
+  key: string;
   displayName: string;
   primary: boolean;
   comingSoon: boolean;
-}
-
-const KNOWN_CHANNELS: KnownChannel[] = [
-  { key: 'mercadolibre', displayName: 'MercadoLibre', primary: true, comingSoon: false },
-  { key: 'amazon', displayName: 'Amazon', primary: false, comingSoon: false },
-  { key: 'ebay', displayName: 'eBay', primary: false, comingSoon: true },
-];
-
-/** A channel + whichever DB marketplace row backs it (null if none). */
-export interface ChannelViewModel extends KnownChannel {
+  brandColor: string;
   marketplace: MarketplaceCardModel | null;
 }
 
@@ -68,18 +61,22 @@ export interface ChannelViewModel extends KnownChannel {
   styleUrl: './marketplace-list.scss',
 })
 export class MarketplaceListComponent implements OnInit {
-  /** Ordered ML → Amazon → eBay channel cards (always all three). */
+  /** Channel cards, catalog-ordered (primary first). */
   channels$: Observable<ChannelViewModel[]> = of([]);
+  /** Raw catalog — drives the add-channel dialog options. */
+  catalog$: Observable<MarketplaceCatalogEntry[]> = of([]);
   syncing = false;
   showAddDialog = false;
 
   constructor(
     private marketplaceService: MarketplacesService,
+    private catalogService: MarketplaceCatalogService,
     private snackBar: MatSnackBar,
     private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
+    this.catalog$ = this.catalogService.getCatalog();
     this.refresh();
   }
 
@@ -88,23 +85,39 @@ export class MarketplaceListComponent implements OnInit {
   }
 
   /**
-   * Load the connected marketplaces + their summaries, then project
-   * them onto the fixed KNOWN_CHANNELS list so every known channel
-   * always has a card (connected or not), in priority order.
+   * Project the backend catalog onto the connected marketplaces so
+   * every catalog channel always has a card (connected or not), in the
+   * catalog's priority order. No hardcoded channel list — adding a
+   * marketplace to the catalog is enough to make it appear here.
    */
   private loadChannels(): Observable<ChannelViewModel[]> {
-    return this.loadCards().pipe(
-      map((cards) =>
-        KNOWN_CHANNELS.map((channel) => ({
-          ...channel,
-          marketplace:
-            cards.find(
-              (c) => c.name.toLowerCase().includes(channel.key)
-                || (channel.key === 'mercadolibre' && c.name.toLowerCase().includes('mercado')),
-            ) ?? null,
-        })),
+    return combineLatest([this.catalogService.getCatalog(), this.loadCards()]).pipe(
+      map(([catalog, cards]) =>
+        catalog.map((entry) => this.toChannelViewModel(entry, cards)),
       ),
     );
+  }
+
+  private toChannelViewModel(
+    entry: MarketplaceCatalogEntry,
+    cards: MarketplaceCardModel[],
+  ): ChannelViewModel {
+    return {
+      key: entry.key,
+      displayName: entry.display_name,
+      primary: entry.is_primary,
+      // Not connectable yet (planned / no OAuth) → render as coming soon.
+      comingSoon: !entry.is_connectable,
+      brandColor: entry.brand_color,
+      marketplace:
+        cards.find((c) => c.name.toLowerCase().includes(entry.key))
+        // MercadoLibre's DB row is named "MercadoLibre"; match on the
+        // common stem so the slug ('mercadolibre') still resolves it.
+        ?? cards.find(
+          (c) => entry.key === 'mercadolibre' && c.name.toLowerCase().includes('mercado'),
+        )
+        ?? null,
+    };
   }
 
   private loadCards(): Observable<MarketplaceCardModel[]> {
@@ -161,12 +174,15 @@ export class MarketplaceListComponent implements OnInit {
     });
   }
 
-  getMarketplaceLogo(name: string): string {
-    const n = name.toLowerCase();
-    if (n.includes('amazon')) return 'images/marketplaces/amazon.png';
-    if (n.includes('mercado')) return 'images/marketplaces/mercadolibre.png';
-    if (n.includes('ebay')) return 'images/marketplaces/ebay.png';
-    return 'images/marketplaces/default.png';
+  /** Logo path for a channel — convention-based via the catalog
+   *  service (images/marketplaces/{key}.png). */
+  logoFor(key: string): string {
+    return this.catalogService.logoFor(key);
+  }
+
+  /** Connect / settings route for a catalog entry by slug. */
+  connectRouteForKey(key: string): string {
+    return `/marketplaces/settings/${key}`;
   }
 
   /**

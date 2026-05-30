@@ -10,9 +10,33 @@ import {
   MarketplaceSummary,
   MarketplacesService,
 } from '../../marketplaces';
+import {
+  MarketplaceCatalogEntry,
+  MarketplaceCatalogService,
+} from '../../marketplace-catalog.service';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslocoTestingModule } from '@ngneat/transloco';
+
+function makeCatalog(): MarketplaceCatalogEntry[] {
+  return [
+    {
+      key: 'mercadolibre', display_name: 'MercadoLibre', status: 'live',
+      supports_oauth: true, is_primary: true, is_connectable: true,
+      recommended_region: 'MX', brand_color: '#FFE600',
+    },
+    {
+      key: 'amazon', display_name: 'Amazon', status: 'live',
+      supports_oauth: true, is_primary: false, is_connectable: true,
+      recommended_region: null, brand_color: '#FF9900',
+    },
+    {
+      key: 'ebay', display_name: 'eBay', status: 'planned',
+      supports_oauth: false, is_primary: false, is_connectable: false,
+      recommended_region: null, brand_color: '#E53238',
+    },
+  ];
+}
 
 function makeSummary(overrides: Partial<MarketplaceSummary> = {}): MarketplaceSummary {
   return {
@@ -38,12 +62,20 @@ describe('MarketplaceListComponent', () => {
     getMarketplaceSummary: ReturnType<typeof vi.fn>;
     importListings: ReturnType<typeof vi.fn>;
   };
+  let catalogStub: {
+    getCatalog: ReturnType<typeof vi.fn>;
+    logoFor: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     serviceStub = {
       getMarketplaces: vi.fn().mockReturnValue(of([])),
       getMarketplaceSummary: vi.fn().mockImplementation(() => of(makeSummary())),
       importListings: vi.fn().mockReturnValue(of({})),
+    };
+    catalogStub = {
+      getCatalog: vi.fn().mockReturnValue(of(makeCatalog())),
+      logoFor: vi.fn().mockImplementation((k: string) => `images/marketplaces/${k}.png`),
     };
 
     await TestBed.configureTestingModule({
@@ -96,6 +128,7 @@ describe('MarketplaceListComponent', () => {
       ],
       providers: [
         { provide: MarketplacesService, useValue: serviceStub },
+        { provide: MarketplaceCatalogService, useValue: catalogStub },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
       ],
     }).compileComponents();

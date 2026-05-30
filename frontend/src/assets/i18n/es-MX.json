@@ -1136,6 +1136,8 @@
         "comingSoon": "Próximamente",
         "comingSoonDesc": "Canal planificado",
         "connectEbay": "El soporte para eBay está en el roadmap",
+        "connectSeller": "Conecta tu cuenta de vendedor de {{name}}",
+        "onTheRoadmap": "En el roadmap",
         "comingSoonBody": "La integración con eBay está planificada. Se conectará igual que MercadoLibre y Amazon cuando esté disponible.",
         "channelListings": "Publicaciones del Canal",
         "channelListingsDesc": "Revisa y administra el estado de cada producto para el Canal:",

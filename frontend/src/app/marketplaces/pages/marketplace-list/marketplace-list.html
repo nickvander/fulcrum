@@ -19,39 +19,38 @@
                 <p>{{ t('marketing.selectMarketplace') }}</p>
 
                 <div class="marketplace-options">
-                    <button mat-stroked-button class="marketplace-option recommended"
-                        routerLink="/marketplaces/settings/mercadolibre" (click)="showAddDialog = false">
-                        <img src="images/marketplaces/mercadolibre.png" alt="MercadoLibre" class="marketplace-logo">
-                        <div class="marketplace-info">
-                            <div class="name-row">
-                                <span class="marketplace-name">MercadoLibre</span>
-                                <span class="recommended-badge">{{ t('marketing.recommendedForMexico') }}</span>
+                    @for (entry of catalog$ | async; track entry.key) {
+                        @if (entry.is_connectable) {
+                        <button mat-stroked-button class="marketplace-option"
+                            [class.recommended]="entry.recommended_region"
+                            [routerLink]="connectRouteForKey(entry.key)" (click)="showAddDialog = false">
+                            <img [src]="logoFor(entry.key)" [alt]="entry.display_name" class="marketplace-logo">
+                            <div class="marketplace-info">
+                                <div class="name-row">
+                                    <span class="marketplace-name">{{ entry.display_name }}</span>
+                                    @if (entry.recommended_region) {
+                                    <span class="recommended-badge">{{ t('marketing.recommendedForMexico') }}</span>
+                                    }
+                                </div>
+                                <span class="marketplace-desc">
+                                    {{ t('marketing.connectSeller', { name: entry.display_name }) }}
+                                </span>
                             </div>
-                            <span class="marketplace-desc">{{ t('marketing.connectMercadoLibre') }}</span>
-                        </div>
-                        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
-                    </button>
-
-                    <button mat-stroked-button class="marketplace-option"
-                        routerLink="/marketplaces/settings/amazon" (click)="showAddDialog = false">
-                        <img src="images/marketplaces/amazon.png" alt="Amazon" class="marketplace-logo">
-                        <div class="marketplace-info">
-                            <span class="marketplace-name">Amazon Seller Central</span>
-                            <span class="marketplace-desc">{{ t('marketing.connectAmazon') }}</span>
-                        </div>
-                        <mat-icon class="arrow-icon">arrow_forward</mat-icon>
-                    </button>
-
-                    <button mat-stroked-button class="marketplace-option coming-soon" disabled>
-                        <span class="logo-icon-fallback"><mat-icon>storefront</mat-icon></span>
-                        <div class="marketplace-info">
-                            <div class="name-row">
-                                <span class="marketplace-name">eBay</span>
-                                <span class="soon-badge">{{ t('marketing.comingSoon') }}</span>
+                            <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+                        </button>
+                        } @else {
+                        <button mat-stroked-button class="marketplace-option coming-soon" disabled>
+                            <span class="logo-icon-fallback"><mat-icon>storefront</mat-icon></span>
+                            <div class="marketplace-info">
+                                <div class="name-row">
+                                    <span class="marketplace-name">{{ entry.display_name }}</span>
+                                    <span class="soon-badge">{{ t('marketing.comingSoon') }}</span>
+                                </div>
+                                <span class="marketplace-desc">{{ t('marketing.onTheRoadmap') }}</span>
                             </div>
-                            <span class="marketplace-desc">{{ t('marketing.connectEbay') }}</span>
-                        </div>
-                    </button>
+                        </button>
+                        }
+                    }
                 </div>
 
                 <div class="dialog-actions">
@@ -67,14 +66,14 @@
                       [class.is-connected]="isConnected(vm)"
                       [class.is-primary]="vm.primary"
                       [class.is-disabled]="vm.comingSoon">
-                <div class="card-accent" [ngClass]="vm.key"></div>
+                <div class="card-accent" [style.background]="vm.brandColor"></div>
 
                 <div class="card-top">
                     <div class="logo-container">
-                        @if (vm.key === 'ebay') {
+                        @if (vm.comingSoon) {
                         <span class="logo-icon-fallback"><mat-icon>storefront</mat-icon></span>
                         } @else {
-                        <img [src]="getMarketplaceLogo(vm.displayName)" [alt]="vm.displayName" class="mp-logo-img">
+                        <img [src]="logoFor(vm.key)" [alt]="vm.displayName" class="mp-logo-img">
                         }
                     </div>
                     <div class="header-info">
