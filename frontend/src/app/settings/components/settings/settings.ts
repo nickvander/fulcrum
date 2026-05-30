@@ -10,6 +10,7 @@ import { MarketingTabComponent } from '../tabs/marketing-tab.component';
 import { InventoryTabComponent } from '../tabs/inventory-tab.component';
 import { DataTabComponent } from '../tabs/data-tab.component';
 import { AiTabComponent } from '../tabs/ai-tab.component';
+import { CurrencyTabComponent } from '../tabs/currency-tab.component';
 
 @Component({
   selector: 'app-settings',
@@ -23,7 +24,8 @@ import { AiTabComponent } from '../tabs/ai-tab.component';
     MarketingTabComponent,
     InventoryTabComponent,
     DataTabComponent,
-    AiTabComponent
+    AiTabComponent,
+    CurrencyTabComponent
   ],
 })
 

@@ -1,0 +1,97 @@
+<div class="tab-content" *transloco="let t">
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.currency.recordTitle') }}</h2>
+        <p class="section-desc">{{ t('settings.currency.recordDesc') }}</p>
+
+        <div class="settings-card">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()">
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="sleek-field pair-field">
+                        <mat-label>{{ t('settings.currency.base') }}</mat-label>
+                        <mat-select formControlName="base_currency" data-testid="base-select">
+                            @for (c of currencyOptions; track c) {
+                                <mat-option [value]="c">{{ c }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-icon class="pair-arrow">arrow_forward</mat-icon>
+
+                    <mat-form-field appearance="outline" class="sleek-field pair-field">
+                        <mat-label>{{ t('settings.currency.quote') }}</mat-label>
+                        <mat-select formControlName="quote_currency" data-testid="quote-select">
+                            @for (c of currencyOptions; track c) {
+                                <mat-option [value]="c">{{ c }}</mat-option>
+                            }
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.currency.rate') }}</mat-label>
+                        <input matInput type="number" step="any" min="0"
+                               formControlName="rate" data-testid="rate-input">
+                        <mat-hint>{{ t('settings.currency.rateHint', {
+                            base: form.value.base_currency,
+                            quote: form.value.quote_currency
+                        }) }}</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="sleek-field">
+                        <mat-label>{{ t('settings.currency.date') }}</mat-label>
+                        <input matInput type="date" formControlName="rate_date" data-testid="date-input">
+                        <mat-hint>{{ t('settings.currency.dateHint') }}</mat-hint>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" mat-flat-button color="primary"
+                            [disabled]="!form.valid || saving" data-testid="save-rate">
+                        {{ saving ? t('common.saving') : t('settings.currency.record') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h2 class="section-title">{{ t('settings.currency.historyTitle') }}</h2>
+        <p class="section-desc">{{ t('settings.currency.historyDesc') }}</p>
+
+        <div class="settings-card">
+            @if (loading) {
+                <p class="muted">{{ t('common.loading') }}</p>
+            } @else if (rates.length === 0) {
+                <p class="muted" data-testid="rates-empty">{{ t('settings.currency.empty') }}</p>
+            } @else {
+                <mat-table [dataSource]="rates" data-testid="rates-table">
+                    <ng-container matColumnDef="pair">
+                        <mat-header-cell *matHeaderCellDef>{{ t('settings.currency.pair') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let r">
+                            <span class="pair">{{ r.base_currency }} → {{ r.quote_currency }}</span>
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="rate">
+                        <mat-header-cell *matHeaderCellDef>{{ t('settings.currency.rate') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let r">
+                            <span class="rate-val">{{ r.rate | number:'1.0-6' }}</span>
+                        </mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="date">
+                        <mat-header-cell *matHeaderCellDef>{{ t('settings.currency.date') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let r">{{ r.rate_date | date:'mediumDate' }}</mat-cell>
+                    </ng-container>
+
+                    <ng-container matColumnDef="source">
+                        <mat-header-cell *matHeaderCellDef>{{ t('settings.currency.source') }}</mat-header-cell>
+                        <mat-cell *matCellDef="let r"><span class="source-chip">{{ r.source }}</span></mat-cell>
+                    </ng-container>
+
+                    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+                </mat-table>
+            }
+        </div>
+    </div>
+</div>

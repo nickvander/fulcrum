@@ -1,0 +1,79 @@
+.tab-content {
+    padding: 24px;
+}
+
+.settings-section {
+    margin-bottom: 32px;
+}
+
+.settings-card {
+    background: var(--bg-app);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.sleek-field {
+    flex: 1;
+    min-width: 140px;
+}
+
+.pair-field {
+    flex: 0 0 130px;
+}
+
+.pair-arrow {
+    align-self: center;
+    margin-top: 6px;
+    color: var(--text-secondary);
+}
+
+.form-actions {
+    margin-top: 8px;
+}
+
+.muted {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+mat-table {
+    background: transparent;
+    width: 100%;
+}
+
+.pair {
+    font-weight: 600;
+}
+
+.rate-val {
+    font-variant-numeric: tabular-nums;
+}
+
+.source-chip {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--bg-app);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+@media (max-width: 720px) {
+    .pair-arrow {
+        display: none;
+    }
+    .form-row {
+        gap: 12px;
+    }
+}

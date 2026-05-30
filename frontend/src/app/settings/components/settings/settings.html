@@ -45,7 +45,16 @@
         <app-inventory-tab></app-inventory-tab>
       </mat-tab>
 
-      <!-- TAB 5: Data Management -->
+      <!-- TAB 5: Currency / FX -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>currency_exchange</mat-icon>
+          <span>{{ t('settings.currency.tab') }}</span>
+        </ng-template>
+        <app-currency-tab></app-currency-tab>
+      </mat-tab>
+
+      <!-- TAB 6: Data Management -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>storage</mat-icon>

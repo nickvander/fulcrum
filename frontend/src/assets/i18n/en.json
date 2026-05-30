@@ -88,7 +88,8 @@
     },
     "dialogs": {
       "imageDetails": "Image Details"
-    }
+    },
+    "saving": "Saving…"
   },
   "nav": {
     "menu": "Menu",
@@ -1612,6 +1613,27 @@
     "dialogs": {
       "addCustomField": "Add Custom Field",
       "editCustomField": "Edit Custom Field"
+    },
+    "currency": {
+      "tab": "Currency",
+      "recordTitle": "Record an FX rate",
+      "recordDesc": "Rates power historical conversions — a foreign-currency order's revenue is normalised to MXN at the rate that was true on its date. Without a rate on file, conversions fall back to an estimate.",
+      "base": "From",
+      "quote": "To",
+      "rate": "Rate",
+      "rateHint": "1 {{base}} = ? {{quote}}",
+      "date": "Effective date",
+      "dateHint": "Defaults to today",
+      "record": "Record rate",
+      "historyTitle": "Recorded rates",
+      "historyDesc": "Newest first. Recording the same pair and date again updates the existing rate.",
+      "empty": "No rates recorded yet.",
+      "pair": "Pair",
+      "source": "Source",
+      "savedSnackbar": "Saved {{base}} → {{quote}} rate.",
+      "samePairError": "Pick two different currencies.",
+      "loadError": "Couldn't load exchange rates.",
+      "saveError": "Couldn't save the exchange rate."
     }
   },
   "notifications": {

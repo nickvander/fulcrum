@@ -88,7 +88,8 @@
     },
     "dialogs": {
       "imageDetails": "Detalles de la imagen"
-    }
+    },
+    "saving": "Guardando…"
   },
   "nav": {
     "menu": "Menú",
@@ -1612,6 +1613,27 @@
     "dialogs": {
       "addCustomField": "Agregar campo personalizado",
       "editCustomField": "Editar campo personalizado"
+    },
+    "currency": {
+      "tab": "Moneda",
+      "recordTitle": "Registrar un tipo de cambio",
+      "recordDesc": "Los tipos de cambio alimentan las conversiones históricas: los ingresos de un pedido en moneda extranjera se normalizan a MXN al tipo de cambio vigente en su fecha. Sin un tipo registrado, la conversión usa una estimación.",
+      "base": "De",
+      "quote": "A",
+      "rate": "Tipo de cambio",
+      "rateHint": "1 {{base}} = ? {{quote}}",
+      "date": "Fecha de vigencia",
+      "dateHint": "Por defecto, hoy",
+      "record": "Registrar tipo",
+      "historyTitle": "Tipos registrados",
+      "historyDesc": "Más recientes primero. Registrar de nuevo el mismo par y fecha actualiza el tipo existente.",
+      "empty": "Aún no hay tipos registrados.",
+      "pair": "Par",
+      "source": "Origen",
+      "savedSnackbar": "Tipo {{base}} → {{quote}} guardado.",
+      "samePairError": "Elige dos monedas distintas.",
+      "loadError": "No se pudieron cargar los tipos de cambio.",
+      "saveError": "No se pudo guardar el tipo de cambio."
     }
   },
   "notifications": {
