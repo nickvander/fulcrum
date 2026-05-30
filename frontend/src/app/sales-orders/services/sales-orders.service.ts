@@ -9,6 +9,8 @@ export interface SalesOrder {
   id: number;
   status?: string | null;
   total_price?: number | null;
+  /** Order's currency (ISO 4217). Defaults to MXN. */
+  currency?: string | null;
   created_at?: string | null;
   source?: OrderSource | null;
   external_order_id?: string | null;

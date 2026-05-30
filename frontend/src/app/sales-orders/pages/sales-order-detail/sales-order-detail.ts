@@ -20,6 +20,7 @@ import {
   RecordReturnDialogComponent,
   RecordReturnDialogData,
 } from '../../components/record-return-dialog/record-return-dialog.component';
+import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-sales-order-detail',
@@ -35,6 +36,7 @@ import {
     MatDialogModule,
     MatSnackBarModule,
     TranslocoModule,
+    MoneyPipe,
   ],
   templateUrl: './sales-order-detail.html',
   styleUrl: './sales-order-detail.scss',

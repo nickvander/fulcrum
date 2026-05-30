@@ -276,6 +276,18 @@
         letter-spacing: 0.5px;
         color: var(--text-secondary);
         font-weight: 600;
+
+        // Native-currency tag next to the Price label, e.g. "USD".
+        .currency-tag {
+            margin-left: 4px;
+            padding: 1px 5px;
+            border-radius: 999px;
+            background: var(--bg-app);
+            border: 1px solid var(--border-color);
+            color: var(--text-hint);
+            font-size: 0.85em;
+            letter-spacing: 0.04em;
+        }
     }
 
     .price-stack {

@@ -2053,6 +2053,9 @@
             "negativeCount": "La cantidad contada no puede ser negativa.",
             "itemNotFound": "Ítem de conteo {{id}} no encontrado en esta sesión.",
             "unknownStatus": "Estado de sesión de conteo desconocido '{{status}}'."
+        },
+        "currency": {
+            "invalidRate": "Tipo de cambio inválido: {{reason}}"
         }
     }
 }

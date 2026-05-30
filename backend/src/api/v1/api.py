@@ -31,6 +31,7 @@ from src.api.v1.endpoints import (
     payments,
     marketplace_health,
     inventory_counts,
+    currency,
 )
 
 api_router = APIRouter()
@@ -72,4 +73,5 @@ api_router.include_router(
     prefix="/inventory-counts",
     tags=["inventory-counts"],
 )
+api_router.include_router(currency.router, prefix="/currency", tags=["currency"])
 

@@ -22,7 +22,7 @@
                     </mat-chip>
                     <div class="total">
                         <span class="label">{{ t('orders.total') }}</span>
-                        <span class="value">{{ order.total_price | currency:'MXN':'symbol-narrow' }}</span>
+                        <span class="value">{{ order.total_price | money:order.currency }}</span>
                     </div>
                 </div>
             </header>
@@ -62,14 +62,14 @@
                     <ng-container matColumnDef="unit_price">
                         <mat-header-cell *matHeaderCellDef>{{ t('orders.unitPrice') }}</mat-header-cell>
                         <mat-cell *matCellDef="let item">
-                            {{ item.price_per_unit | currency:'MXN':'symbol-narrow' }}
+                            {{ item.price_per_unit | money:order.currency }}
                         </mat-cell>
                     </ng-container>
 
                     <ng-container matColumnDef="subtotal">
                         <mat-header-cell *matHeaderCellDef>{{ t('orders.subtotal') }}</mat-header-cell>
                         <mat-cell *matCellDef="let item">
-                            {{ (item.price_per_unit || 0) * (item.quantity || 0) | currency:'MXN':'symbol-narrow' }}
+                            {{ (item.price_per_unit || 0) * (item.quantity || 0) | money:order.currency }}
                         </mat-cell>
                     </ng-container>
 

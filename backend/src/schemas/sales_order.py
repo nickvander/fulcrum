@@ -25,6 +25,7 @@ class SalesOrder(BaseModel):
     id: int
     status: Optional[str] = None
     total_price: Optional[float] = None
+    currency: Optional[str] = "MXN"
     created_at: Optional[datetime] = None
     source: Optional[OrderSourceSchema] = None
     external_order_id: Optional[str] = None

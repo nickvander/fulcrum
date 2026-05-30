@@ -56,27 +56,30 @@
                             <span class="value">{{ product.sku || '—' }}</span>
                         </div>
                         <div class="stat-pill price">
-                            <span class="label">{{ t('common.price') }}</span>
+                            <span class="label">
+                                {{ t('common.price') }}
+                                <span class="currency-tag">{{ (product.currency || 'MXN') }}</span>
+                            </span>
                             <div class="price-stack">
                                 @if (getBestMarketplacePromo(); as promo) {
-                                <span class="value promo-price">{{ promo.marketplace_price | currency }}</span>
+                                <span class="value promo-price">{{ promo.marketplace_price | money:product.currency }}</span>
                                 <div class="promo-hint">
-                                    <span class="original">{{ promo.original_price | currency }}</span>
+                                    <span class="original">{{ promo.original_price | money:product.currency }}</span>
                                     <span class="discount">-{{ promo.discount_percentage }}%</span>
                                 </div>
                                 } @else {
-                                <span class="value">{{ product.default_resale_price | currency }}</span>
+                                <span class="value">{{ product.default_resale_price | money:product.currency }}</span>
                                 }
                             </div>
                         </div>
                         <div class="stat-pill cost">
                             <span class="label">{{ t('products.avgCost') }}</span>
-                            <span class="value">{{ product.average_cost | currency }}</span>
+                            <span class="value">{{ product.average_cost | money:product.currency }}</span>
                         </div>
                         <div class="stat-pill cost">
                             <span class="label">{{ product.is_bundle ? t('products.estCost') : t('products.lastCost')
                                 }}</span>
-                            <span class="value">{{ getEffectiveCost() | currency }}</span>
+                            <span class="value">{{ getEffectiveCost() | money:product.currency }}</span>
                         </div>
                         <div class="stat-pill stock" [class.low]="getAvailablePhysicalStock() <= 10"
                             [class.out]="getAvailablePhysicalStock() === 0">

@@ -257,7 +257,7 @@ def read_products(
     return products
 
 
-@router.post("/", response_model=product_schema.Product)
+@router.post("", response_model=product_schema.Product)
 def create_product(
     *,
     db: Session = Depends(get_db),

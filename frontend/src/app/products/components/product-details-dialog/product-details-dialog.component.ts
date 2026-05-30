@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { CodeDisplayComponent } from '../../../shared/components/code-display/code-display.component';
+import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { MarketplaceListingDialogComponent, MarketplaceListingDialogData } from '../../../marketplaces/components/marketplace-listing-dialog/marketplace-listing-dialog.component';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ImagePreviewDialogComponent } from './image-preview-dialog.component';
@@ -34,7 +35,8 @@ import { ImagePreviewDialogComponent } from './image-preview-dialog.component';
         MatInputModule,
         MatTooltipModule,
         TranslocoModule,
-        CodeDisplayComponent
+        CodeDisplayComponent,
+        MoneyPipe
     ]
 })
 export class ProductDetailsDialogComponent implements OnInit {

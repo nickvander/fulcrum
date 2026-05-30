@@ -65,6 +65,8 @@ export interface Product {
   supplier_id?: number;
   default_resale_price: number;
   cost_price?: number;
+  /** Native pricing currency (ISO 4217), e.g. 'MXN' | 'USD'. Defaults to MXN. */
+  currency?: string;
   average_cost?: number;
   properties?: any;
   images?: ProductImage[];

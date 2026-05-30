@@ -61,6 +61,10 @@ class ProductBase(BaseModel):
     sku: Optional[str] = None  # Optional - auto-generated if not provided
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
+    # Native pricing currency (ISO 4217). Defaults to MXN — the primary
+    # market. Carried so cost/price figures are unambiguous and can be
+    # converted to MXN at the transaction-date rate.
+    currency: Optional[str] = "MXN"
     # Barcodes
     # Barcodes
     barcode_image_url: Optional[str] = None
@@ -89,6 +93,7 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     default_resale_price: Optional[float] = None
     cost_price: Optional[float] = None
+    currency: Optional[str] = None
     average_cost: Optional[float] = None
     properties: Optional[dict] = None
     manufacturer: Optional[str] = None

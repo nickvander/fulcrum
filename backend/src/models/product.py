@@ -17,6 +17,12 @@ class Product(Base):
     default_resale_price = Column(Float)
     cost_price = Column(Float) # Last Purchase Price
     average_cost = Column(Float, default=0.0) # Weighted Average Cost
+    # The product's native pricing currency (ISO 4217). Defaults to
+    # MXN — the primary market — but a product sourced/listed in USD
+    # (e.g. an Alibaba import) carries 'USD' so the cost/price figures
+    # are unambiguous and can be converted to MXN at the rate on the
+    # transaction date via CurrencyService.
+    currency = Column(String(8), nullable=False, default="MXN", server_default="MXN")
     properties = Column(String)  # Simple JSON as string for now
     embedding = Column(Vector(384)) # Example dimension
     manufacturer = Column(String, nullable=True)

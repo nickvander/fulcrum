@@ -2053,6 +2053,9 @@
             "negativeCount": "Counted quantity cannot be negative.",
             "itemNotFound": "Count item {{id}} not found in this session.",
             "unknownStatus": "Unknown count session status '{{status}}'."
+        },
+        "currency": {
+            "invalidRate": "Invalid exchange rate: {{reason}}"
         }
     }
 }
