@@ -178,6 +178,21 @@ def poll_mercadolibre_orders():
         db.close()
 
 
+@celery_app.task(name="src.tasks.poll_mercadolibre_questions")
+def poll_mercadolibre_questions():
+    """Periodic MercadoLibre buyer-question poll. Populates
+    `marketplace_questions` so the Q&A reports surface + SLA can read
+    from the DB. Per-credential commit; one bad credential doesn't abort
+    the loop. Returns a {credential_id: summary} dict."""
+    from src.services.questions_service import poll_all_credentials_for_questions
+
+    db = SessionLocal()
+    try:
+        return poll_all_credentials_for_questions(db)
+    finally:
+        db.close()
+
+
 @celery_app.task(name="src.tasks.poll_settlement_fees")
 def poll_settlement_fees():
     """

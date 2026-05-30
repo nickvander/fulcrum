@@ -46,6 +46,28 @@ def _rate_to_percent(value: Any) -> Optional[float]:
         return None
 
 
+def parse_ml_question(q: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize one ML `/questions` element into a flat dict. Defensive —
+    every field optional. `asked_at` / `answered_at` are left as the raw
+    ISO strings ML returns; the ingestion service parses them to datetimes."""
+    q = q or {}
+    answer = q.get("answer") or {}
+    frm = q.get("from") or {}
+    qid = q.get("id")
+    buyer = frm.get("id")
+    item = q.get("item_id")
+    return {
+        "external_question_id": str(qid) if qid is not None else None,
+        "item_id": str(item) if item is not None else None,
+        "buyer_id": str(buyer) if buyer is not None else None,
+        "question_text": q.get("text"),
+        "status": q.get("status"),
+        "asked_at": q.get("date_created"),
+        "answer_text": answer.get("text"),
+        "answered_at": answer.get("date_created"),
+    }
+
+
 def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
     """Normalize the `seller_reputation` object from a ML `GET /users/{id}`
     payload into a flat dict. Defensive — every field is optional and
@@ -626,6 +648,56 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                 if len(page) < page_limit:
                     # ML returned a short page → no more pages even if
                     # `paging.total` says otherwise.
+                    break
+                offset += page_limit
+        return results[:max_rows]
+
+    async def fetch_questions(
+        self,
+        access_token: str,
+        *,
+        limit: int = 50,
+    ) -> List[Dict[str, Any]]:
+        """List buyer questions for the authenticated seller via
+        `GET /questions/search?seller_id={id}`. Resolves the seller id via
+        `/users/me` (same as `fetch_orders`). Returns raw question dicts,
+        newest first; paginates 50-at-a-time up to a hard cap so a backlog
+        can't burn the request budget."""
+        max_rows = 500
+        page_limit = max(1, min(limit, 50))
+        results: List[Dict[str, Any]] = []
+
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+            me = await client.get(f"{self.API_URL}/users/me", headers=headers)
+            me.raise_for_status()
+            seller_id = me.json().get("id")
+            if seller_id is None:
+                return results
+
+            offset = 0
+            while True:
+                response = await client.get(
+                    f"{self.API_URL}/questions/search",
+                    params={
+                        "seller_id": seller_id,
+                        "sort_fields": "date_created",
+                        "sort_types": "DESC",
+                        "offset": offset,
+                        "limit": page_limit,
+                    },
+                    headers=headers,
+                )
+                response.raise_for_status()
+                data = response.json() or {}
+                # ML returns `questions`; tolerate `results` defensively.
+                page = data.get("questions") or data.get("results") or []
+                if not page:
+                    break
+                results.extend(page)
+                if len(results) >= max_rows:
+                    break
+                if len(page) < page_limit:
                     break
                 offset += page_limit
         return results[:max_rows]

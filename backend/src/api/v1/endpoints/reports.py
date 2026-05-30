@@ -2833,3 +2833,136 @@ def returns_list_report(
         items=items,
         total=total,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Buyer Q&A (marketplace questions) + response-time SLA
+# --------------------------------------------------------------------------- #
+
+# Hours a buyer question may sit unanswered before it counts as an SLA
+# breach. MercadoLibre weighs response time into seller reputation, so a
+# conservative 24h horizon flags questions that risk hurting it.
+QA_SLA_HOURS = 24
+
+
+class QuestionRow(BaseModel):
+    id: int
+    external_question_id: str
+    source: str
+    item_id: Optional[str] = None
+    buyer_id: Optional[str] = None
+    question_text: Optional[str] = None
+    answer_text: Optional[str] = None
+    status: Optional[str] = None
+    asked_at: Optional[datetime] = None
+    answered_at: Optional[datetime] = None
+    answered: bool
+    # Hours the question has been open (response time if answered, current
+    # age if still open). None when asked_at is missing.
+    hours_open: Optional[float] = None
+    sla_status: str  # 'answered' | 'pending' | 'breached'
+
+
+class QuestionsListResponse(BaseModel):
+    rows: List[QuestionRow]
+    total: int
+    sla_hours: int = QA_SLA_HOURS
+    unanswered_count: int
+    breached_count: int
+    answered_count: int
+
+
+@router.get("/questions", response_model=QuestionsListResponse)
+def questions_list_report(
+    *,
+    db: Session = Depends(get_db),
+    window_days: int = Query(30, ge=1, le=365),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    status: Optional[str] = Query(
+        None, description="'unanswered' / 'answered', or an exact marketplace status.",
+    ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=1000),
+    current_user: User = Depends(get_current_active_user),
+) -> QuestionsListResponse:
+    """Buyer-question inbox + response-time SLA. One row per
+    `marketplace_questions` entry asked in the window, newest first.
+    `sla_status` is 'answered', 'pending' (open, within SLA), or
+    'breached' (open longer than `sla_hours`)."""
+    from src.models.marketplace import Marketplace, MarketplaceQuestion
+
+    window = _resolve_date_window(window_days, start_date, end_date)
+    now = datetime.now(timezone.utc)
+    breach_cutoff = now - timedelta(hours=QA_SLA_HOURS)
+
+    base = (
+        db.query(MarketplaceQuestion, Marketplace.name.label("source"))
+        .outerjoin(Marketplace, Marketplace.id == MarketplaceQuestion.marketplace_id)
+        .filter(MarketplaceQuestion.asked_at >= window.start_dt)
+        .filter(MarketplaceQuestion.asked_at <= window.end_dt)
+    )
+    status_norm = (status or "").strip().lower()
+    if status_norm == "unanswered":
+        base = base.filter(MarketplaceQuestion.answered_at.is_(None))
+    elif status_norm == "answered":
+        base = base.filter(MarketplaceQuestion.answered_at.isnot(None))
+    elif status:
+        base = base.filter(MarketplaceQuestion.status == status)
+
+    total = base.count()
+    answered_count = base.filter(MarketplaceQuestion.answered_at.isnot(None)).count()
+    breached_count = (
+        base.filter(MarketplaceQuestion.answered_at.is_(None))
+        .filter(MarketplaceQuestion.asked_at < breach_cutoff)
+        .count()
+    )
+
+    page = (
+        base.order_by(
+            MarketplaceQuestion.asked_at.desc().nullslast(),
+            MarketplaceQuestion.id.desc(),
+        )
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    def _hours(a: datetime, b: datetime) -> float:
+        return round((b - a).total_seconds() / 3600.0, 1)
+
+    rows: List[QuestionRow] = []
+    for q, source_name in page:
+        answered = q.answered_at is not None
+        hours_open: Optional[float] = None
+        if q.asked_at is not None:
+            hours_open = _hours(q.asked_at, q.answered_at if answered else now)
+        if answered:
+            sla = "answered"
+        elif q.asked_at is not None and q.asked_at < breach_cutoff:
+            sla = "breached"
+        else:
+            sla = "pending"
+        rows.append(QuestionRow(
+            id=q.id,
+            external_question_id=q.external_question_id,
+            source=source_name or "MERCADOLIBRE",
+            item_id=q.item_id,
+            buyer_id=q.buyer_id,
+            question_text=q.question_text,
+            answer_text=q.answer_text,
+            status=q.status,
+            asked_at=q.asked_at,
+            answered_at=q.answered_at,
+            answered=answered,
+            hours_open=hours_open,
+            sla_status=sla,
+        ))
+
+    return QuestionsListResponse(
+        rows=rows,
+        total=total,
+        unanswered_count=total - answered_count,
+        breached_count=breached_count,
+        answered_count=answered_count,
+    )

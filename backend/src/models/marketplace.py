@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Float, DateTime, JSON
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, Float, DateTime, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -152,6 +152,49 @@ class MarketplaceReputationSnapshot(Base):
     raw = Column(JSON, nullable=True)
     captured_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    credential = relationship("MarketplaceCredential")
+    marketplace = relationship("Marketplace")
+
+
+class MarketplaceQuestion(Base):
+    """A buyer pre-sale question pulled from a marketplace (MercadoLibre
+    `/questions`). Persisted so the Q&A reports surface can show
+    unanswered questions + response-time SLA without a live API call.
+
+    `answered_at` is NULL while the question is open; `asked_at` +
+    `answered_at` give the response time, and `now − asked_at` on an
+    unanswered row is its current age (drives the SLA breach flag).
+    Idempotent on (credential_id, external_question_id).
+    """
+    __tablename__ = "marketplace_questions"
+    __table_args__ = (
+        UniqueConstraint(
+            "credential_id", "external_question_id",
+            name="uq_marketplace_questions_cred_extid",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    credential_id = Column(
+        Integer,
+        ForeignKey("marketplace_credentials.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    marketplace_id = Column(Integer, ForeignKey("marketplaces.id"), nullable=True)
+    external_question_id = Column(String, nullable=False, index=True)
+    item_id = Column(String, nullable=True)
+    buyer_id = Column(String, nullable=True)
+    question_text = Column(String, nullable=True)
+    answer_text = Column(String, nullable=True)
+    # Marketplace status (ML: UNANSWERED / ANSWERED / CLOSED_UNANSWERED / …).
+    status = Column(String, nullable=True, index=True)
+    asked_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    answered_at = Column(DateTime(timezone=True), nullable=True)
+    raw = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     credential = relationship("MarketplaceCredential")
     marketplace = relationship("Marketplace")

@@ -44,6 +44,13 @@ celery_app.conf.beat_schedule = {
         "task": "src.tasks.poll_mercadolibre_orders",
         "schedule": crontab(minute="*/15"),
     },
+    # Buyer Q&A poll: less urgent than orders (a 30-min cadence still
+    # comfortably beats ML's response-time SLA window). Populates
+    # marketplace_questions for the Q&A reports surface.
+    "mercadolibre-questions-poll": {
+        "task": "src.tasks.poll_mercadolibre_questions",
+        "schedule": crontab(minute="*/30"),
+    },
     # ML inbound shipment reconciliation: warehouse receipts move on
     # human/forklift time, not minute-by-minute, so hourly is sufficient.
     # Catches the operator-visible "I sent 100 units to ML Full last week
