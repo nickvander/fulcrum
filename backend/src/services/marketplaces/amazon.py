@@ -567,6 +567,18 @@ class AmazonConnector(BaseMarketplaceConnector):
         )
 
     @staticmethod
+    def _classify_amazon_fee(fee_type: Optional[str]) -> str:
+        """Bucket an SP-API `ItemFeeList[].FeeType` into 'shipping'
+        (FBA fulfillment / weight / shipping charges — a real per-unit
+        cost) or 'marketplace' (referral Commission, closing/restocking
+        fees, and anything unrecognized — the open `FeeType` enum means
+        we default unknowns to the channel fee rather than drop them)."""
+        label = (fee_type or "").lower()
+        if "fba" in label or "fulfillment" in label or "shipping" in label or "weighthandling" in label:
+            return "shipping"
+        return "marketplace"
+
+    @staticmethod
     def _extract_settlement_from_events(
         events: Dict[str, Any],
     ) -> Dict[str, Optional[float]]:
@@ -575,36 +587,37 @@ class AmazonConnector(BaseMarketplaceConnector):
         touching the network.
 
         Sum rules:
-          - `marketplace_fees_amount`: sum of all `ItemFeeList[].FeeAmount.Amount`
-            across all shipment items in all shipment events. Refund
-            events also contribute (their fees are typically negative,
-            net out to the residual).
-          - `shipping_cost_amount`: sum of `ShippingChargeList[].ChargeAmount.Amount`
-            across all events; refunds in the refund event list net
-            against charges.
+          - `marketplace_fees_amount`: `ItemFeeList[]` fees classified as
+            marketplace (Commission, closing/restocking, unknown).
+          - `shipping_cost_amount`: FBA fulfillment/weight fees +
+            `ShippingChargeList[].ChargeAmount`. FBA fulfillment is the
+            seller's per-unit shipping-equivalent cost, so it belongs in
+            the shipping bucket, not lumped with the referral commission.
+          - `ad_spend_amount`: net of `ProductAdsPaymentEventList[]`
+            (Sponsored Products billing that lands in settlement; aggregate,
+            no per-order/campaign detail — see
+            work/future/95-marketplace-api-research.md).
 
-        Returns `None` for either field when no events of that type
-        exist in the payload, so the caller can tell "not settled yet"
-        from "actually zero".
+        Amazon reports fees as negative debits; we take abs per bucket so
+        the cost engine sees positive cost components. Returns `None` for
+        a field when no events of that kind exist (so the caller can tell
+        "not settled yet" from "actually zero").
         """
-        fees_seen = False
-        fees_total = 0.0
-        shipping_seen = False
-        shipping_total = 0.0
+        any_fee_seen = False
+        marketplace_total = 0.0
+        fba_total = 0.0
+        shipping_charge_total = 0.0
+        shipping_charge_seen = False
+        ad_total = 0.0
+        ad_seen = False
 
-        def _add_amount(value: Any, acc: float, seen: bool) -> tuple[float, bool]:
+        def _num(value: Any) -> Optional[float]:
             try:
-                num = float(value)
+                return float(value)
             except (TypeError, ValueError):
-                return acc, seen
-            return acc + num, True
+                return None
 
-        shipment_lists = (
-            ("ShipmentEventList", 1.0),
-            ("RefundEventList", 1.0),
-            ("ChargebackEventList", 1.0),
-        )
-        for key, _sign in shipment_lists:
+        for key in ("ShipmentEventList", "RefundEventList", "ChargebackEventList"):
             for event in events.get(key) or []:
                 if not isinstance(event, dict):
                     continue
@@ -614,27 +627,47 @@ class AmazonConnector(BaseMarketplaceConnector):
                     for fee in item.get("ItemFeeList") or []:
                         if not isinstance(fee, dict):
                             continue
-                        amount = (fee.get("FeeAmount") or {}).get("Amount")
+                        amount = _num((fee.get("FeeAmount") or {}).get("Amount"))
                         if amount is None:
                             continue
-                        fees_total, fees_seen = _add_amount(amount, fees_total, fees_seen)
+                        any_fee_seen = True
+                        if AmazonConnector._classify_amazon_fee(fee.get("FeeType")) == "shipping":
+                            fba_total += amount
+                        else:
+                            marketplace_total += amount
                 for charge in event.get("ShippingChargeList") or []:
                     if not isinstance(charge, dict):
                         continue
-                    amount = (charge.get("ChargeAmount") or {}).get("Amount")
+                    amount = _num((charge.get("ChargeAmount") or {}).get("Amount"))
                     if amount is None:
                         continue
-                    shipping_total, shipping_seen = _add_amount(
-                        amount, shipping_total, shipping_seen,
-                    )
+                    shipping_charge_total += amount
+                    shipping_charge_seen = True
+
+        # Sponsored Products billing — `transactionValue` carries the
+        # charge (base+tax); tolerate both the codebase's `.Amount` test
+        # convention and the SP-API `.CurrencyAmount` field name.
+        for event in events.get("ProductAdsPaymentEventList") or []:
+            if not isinstance(event, dict):
+                continue
+            tv = event.get("transactionValue") or {}
+            amount = _num(tv.get("Amount"))
+            if amount is None:
+                amount = _num(tv.get("CurrencyAmount"))
+            if amount is None:
+                continue
+            ad_total += amount
+            ad_seen = True
+
+        shipping_amount: Optional[float] = None
+        if any_fee_seen or shipping_charge_seen:
+            shipping_amount = abs(fba_total) + shipping_charge_total
 
         return {
-            "marketplace_fees_amount": (
-                abs(fees_total) if fees_seen else None
-            ),
-            "shipping_cost_amount": (
-                shipping_total if shipping_seen else None
-            ),
+            "marketplace_fees_amount": abs(marketplace_total) if any_fee_seen else None,
+            "shipping_cost_amount": shipping_amount,
+            "ad_spend_amount": abs(ad_total) if ad_seen else None,
+            "other_cost_amount": None,
         }
 
     # -- Inbound shipments (FBA) -------------------------------------------

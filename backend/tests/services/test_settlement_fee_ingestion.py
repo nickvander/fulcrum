@@ -116,10 +116,9 @@ def test_ml_extract_handles_missing_payments():
 # ---------------------------------------------------------------------------
 
 
-def test_amazon_extract_sums_all_fee_types():
-    """Commission + FBA fees + per-order fee should all roll into one
-    `marketplace_fees_amount`. ShippingChargeList contributes to
-    `shipping_cost_amount`."""
+def test_amazon_extract_splits_commission_from_fba_fees():
+    """Referral Commission lands in marketplace_fees; FBA fulfillment/
+    weight fees join the buyer-paid shipping charge in shipping_cost."""
     events = {
         "ShipmentEventList": [
             {
@@ -143,11 +142,45 @@ def test_amazon_extract_sums_all_fee_types():
         ]
     }
     result = AmazonConnector._extract_settlement_from_events(events)
-    # Amazon reports fees as negative amounts (debit to seller). The
-    # parser takes the absolute value so the cost engine sees a
-    # positive cost component.
-    assert result["marketplace_fees_amount"] == pytest.approx(20.60)
-    assert result["shipping_cost_amount"] == pytest.approx(12.00)
+    # Amazon reports fees as negative debits; the parser takes abs.
+    assert result["marketplace_fees_amount"] == pytest.approx(15.00)   # Commission only
+    assert result["shipping_cost_amount"] == pytest.approx(17.60)      # |3.50+2.10| + 12.00
+    assert result["ad_spend_amount"] is None
+    assert result["other_cost_amount"] is None
+
+
+def test_amazon_extract_captures_product_ads_spend():
+    """ProductAdsPaymentEventList → ad_spend_amount (Sponsored Products
+    billing that lands in settlement)."""
+    events = {
+        "ShipmentEventList": [
+            {"ShipmentItemList": [
+                {"ItemFeeList": [{"FeeType": "Commission", "FeeAmount": {"Amount": "-10.00"}}]},
+            ]},
+        ],
+        "ProductAdsPaymentEventList": [
+            {"transactionType": "charge", "transactionValue": {"Amount": "-7.50", "CurrencyCode": "MXN"}},
+            {"transactionType": "charge", "transactionValue": {"CurrencyAmount": "-2.50"}},
+        ],
+    }
+    result = AmazonConnector._extract_settlement_from_events(events)
+    assert result["marketplace_fees_amount"] == pytest.approx(10.00)
+    assert result["ad_spend_amount"] == pytest.approx(10.00)  # |−7.50 −2.50|
+
+
+def test_amazon_extract_fees_seen_but_no_commission_is_zero_not_none():
+    """An order with only FBA fees still counts as settled — marketplace
+    fee reads 0.0 (not None, which would make the worker retry forever)."""
+    events = {
+        "ShipmentEventList": [
+            {"ShipmentItemList": [
+                {"ItemFeeList": [{"FeeType": "FBAPerUnitFulfillmentFee", "FeeAmount": {"Amount": "-4.00"}}]},
+            ]},
+        ],
+    }
+    result = AmazonConnector._extract_settlement_from_events(events)
+    assert result["marketplace_fees_amount"] == pytest.approx(0.0)
+    assert result["shipping_cost_amount"] == pytest.approx(4.00)
 
 
 def test_amazon_extract_returns_none_when_no_events():
