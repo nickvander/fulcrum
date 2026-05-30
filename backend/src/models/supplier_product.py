@@ -37,9 +37,13 @@ class SupplierProduct(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # Relationships
-    product = relationship("Product", backref="supplier_products")
-    supplier = relationship("Supplier", backref="supplier_products")
+    # Relationships.
+    # `passive_deletes=True` tells SQLAlchemy to trust the DB-level
+    # CASCADE (defined on the FK above) rather than first nulling out
+    # `product_id` before the parent is deleted — which would fire a
+    # NOT NULL violation because `product_id` is nullable=False.
+    product = relationship("Product", backref="supplier_products", passive_deletes=True)
+    supplier = relationship("Supplier", backref="supplier_products", passive_deletes=True)
 
     @property
     def product_name(self):

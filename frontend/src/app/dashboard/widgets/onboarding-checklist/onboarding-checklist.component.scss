@@ -1,3 +1,58 @@
+// ── Compact success banner ────────────────────────────────────────────────
+// Replaces the full checklist grid once all required steps are done.
+// Slim horizontal bar so the operator's analytics data gets the spotlight
+// instead of a large setup panel they've already completed.
+
+.setup-complete-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: rgba(46, 125, 50, 0.08);
+    border: 1px solid rgba(46, 125, 50, 0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+
+    .banner-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .check-icon {
+            color: #2e7d32;
+            font-size: 22px;
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        strong {
+            display: block;
+            color: #1b5e20;
+            font-size: 0.9rem;
+        }
+
+        .banner-sub {
+            color: rgba(27, 94, 32, 0.75);
+            font-size: 0.8rem;
+        }
+    }
+
+    .banner-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #2e7d32;
+
+        button {
+            color: #2e7d32;
+        }
+    }
+}
+
+// ── Full checklist panel ──────────────────────────────────────────────────
+
 .onboarding-panel {
     background: var(--bg-card);
     border: 1px solid var(--border-color);

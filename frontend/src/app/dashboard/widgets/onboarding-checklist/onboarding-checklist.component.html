@@ -1,43 +1,74 @@
 <ng-container *transloco="let t">
-<section class="onboarding-panel" *ngIf="status">
+
+  <!-- ── COMPACT SUCCESS BANNER (shown when setup is 100% done) ── -->
+  <div class="setup-complete-banner" *ngIf="showBanner" data-testid="setup-complete-banner">
+    <div class="banner-left">
+      <mat-icon class="check-icon">check_circle</mat-icon>
+      <div>
+        <strong>{{ t('onboarding.completeBannerTitle') }}</strong>
+        <span class="banner-sub">{{ t('onboarding.completeBannerSub') }}</span>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button mat-button (click)="toggleExpand()" data-testid="onboarding-view-details">
+        {{ t('onboarding.viewDetails') }}
+        <mat-icon>expand_more</mat-icon>
+      </button>
+      <button mat-icon-button (click)="dismiss()"
+              [matTooltip]="t('onboarding.dismissTooltip')"
+              data-testid="onboarding-dismiss">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── FULL CHECKLIST (shown during setup or when expanded) ── -->
+  <section class="onboarding-panel" *ngIf="showFull && status" data-testid="onboarding-panel">
     <div class="panel-header">
-        <div>
-            <p class="eyebrow">{{ t('onboarding.eyebrow') }}</p>
-            <h2>{{ t('onboarding.title') }}</h2>
-            <p class="subtitle">{{ t('onboarding.subtitle') }}</p>
+      <div>
+        <p class="eyebrow">{{ t('onboarding.eyebrow') }}</p>
+        <h2>{{ t('onboarding.title') }}</h2>
+        <p class="subtitle">{{ t('onboarding.subtitle') }}</p>
+      </div>
+      <div class="panel-actions">
+        <!-- Only show the demo button while setup is still in progress -->
+        <button *ngIf="!status.complete" mat-stroked-button type="button" color="primary"
+            (click)="requestDemoWorkspace()" [disabled]="creatingDemo"
+            [matTooltip]="t('onboarding.createDemoTooltip')">
+          <mat-icon>{{ creatingDemo ? 'hourglass_top' : 'science' }}</mat-icon>
+          {{ creatingDemo ? t('onboarding.creatingDemo') : t('onboarding.createDemo') }}
+        </button>
+        <!-- Collapse button shown only when the operator explicitly expanded -->
+        <button *ngIf="status.complete" mat-stroked-button (click)="toggleExpand()">
+          <mat-icon>expand_less</mat-icon>
+          {{ t('onboarding.collapse') }}
+        </button>
+        <div class="progress-summary" [class.complete]="status.complete">
+          <span>{{ status.completed_required }}/{{ status.total_required }}</span>
+          <small>{{ t('onboarding.requiredDone') }}</small>
         </div>
-        <div class="panel-actions">
-            <button mat-stroked-button type="button" color="primary"
-                (click)="requestDemoWorkspace()" [disabled]="creatingDemo"
-                [matTooltip]="t('onboarding.createDemoTooltip')">
-                <mat-icon>{{ creatingDemo ? 'hourglass_top' : 'science' }}</mat-icon>
-                {{ creatingDemo ? t('onboarding.creatingDemo') : t('onboarding.createDemo') }}
-            </button>
-            <div class="progress-summary" [class.complete]="status.complete">
-                <span>{{ status.completed_required }}/{{ status.total_required }}</span>
-                <small>{{ t('onboarding.requiredDone') }}</small>
-            </div>
-        </div>
+      </div>
     </div>
 
     <mat-progress-bar mode="determinate" [value]="progressValue()"></mat-progress-bar>
 
     <div class="steps">
-        <article class="step" *ngFor="let step of status.steps; trackBy: trackStep"
-            [class.done]="step.complete" [class.optional]="step.optional" [class.warning]="step.warning">
-            <mat-icon class="state-icon">{{ stateIcon(step) }}</mat-icon>
-            <div class="step-copy">
-                <div class="step-title-row">
-                    <h3>{{ step.label_key ? t(step.label_key) : step.label }}</h3>
-                    <span class="count-pill" *ngIf="step.count">{{ step.count }}</span>
-                    <span class="optional-pill" *ngIf="step.optional">{{ t('onboarding.optional') }}</span>
-                </div>
-                <p>{{ step.description_key ? t(step.description_key) : step.description }}</p>
-            </div>
-            <a mat-stroked-button color="primary" [routerLink]="step.route">
-                {{ step.action_label_key ? t(step.action_label_key) : step.action_label }}
-            </a>
-        </article>
+      <article class="step" *ngFor="let step of status.steps; trackBy: trackStep"
+          [class.done]="step.complete" [class.optional]="step.optional" [class.warning]="step.warning">
+        <mat-icon class="state-icon">{{ stateIcon(step) }}</mat-icon>
+        <div class="step-copy">
+          <div class="step-title-row">
+            <h3>{{ step.label_key ? t(step.label_key) : step.label }}</h3>
+            <span class="count-pill" *ngIf="step.count">{{ step.count }}</span>
+            <span class="optional-pill" *ngIf="step.optional">{{ t('onboarding.optional') }}</span>
+          </div>
+          <p>{{ step.description_key ? t(step.description_key) : step.description }}</p>
+        </div>
+        <a mat-stroked-button color="primary" [routerLink]="step.route">
+          {{ step.action_label_key ? t(step.action_label_key) : step.action_label }}
+        </a>
+      </article>
     </div>
-</section>
+  </section>
+
 </ng-container>

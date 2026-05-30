@@ -381,6 +381,11 @@
         "createDemoTooltip": "Create one sample supplier, product, purchase order, and receipt. No marketplace stock is changed.",
         "requiredDone": "required done",
         "optional": "Optional",
+        "completeBannerTitle": "Setup complete — all required steps done.",
+        "completeBannerSub": "Your workspace is ready to use.",
+        "viewDetails": "View details",
+        "collapse": "Collapse",
+        "dismissTooltip": "Dismiss — you can re-open this from the setup checklist any time",
         "steps": {
             "profile": {
                 "label": "Admin account",

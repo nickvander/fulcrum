@@ -381,6 +381,11 @@
         "createDemoTooltip": "Crea un proveedor, producto, orden de compra y recibo de muestra. El stock en marketplaces no se modifica.",
         "requiredDone": "obligatorios completados",
         "optional": "Opcional",
+        "completeBannerTitle": "Configuración completa — todos los pasos obligatorios realizados.",
+        "completeBannerSub": "Tu espacio de trabajo está listo para usarse.",
+        "viewDetails": "Ver detalles",
+        "collapse": "Contraer",
+        "dismissTooltip": "Cerrar — puedes volver a abrirlo desde la lista de configuración en cualquier momento",
         "steps": {
             "profile": {
                 "label": "Cuenta de administrador",

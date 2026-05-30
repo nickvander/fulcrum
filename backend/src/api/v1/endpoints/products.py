@@ -202,7 +202,7 @@ def get_product_purchase_history(
     ]
 
 
-@router.get("/", response_model=product_schema.PaginatedProducts)
+@router.get("", response_model=product_schema.PaginatedProducts)
 def read_products(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -420,7 +420,7 @@ def delete_product(*, db: Session = Depends(get_db), product_id: int):
     return product
 
 
-@router.delete("/", response_model=Dict[str, Any])
+@router.delete("", response_model=Dict[str, Any])
 def delete_multiple_products(
     *,
     db: Session = Depends(get_db),

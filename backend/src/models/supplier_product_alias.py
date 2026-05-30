@@ -36,9 +36,13 @@ class SupplierProductAlias(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    supplier = relationship("Supplier")
-    product = relationship("Product")
-    variant = relationship("ProductVariant")
+    # passive_deletes=True: let the DB-level CASCADE remove these rows
+    # when the parent product/supplier is deleted, rather than SQLAlchemy
+    # first trying to SET product_id/supplier_id to NULL (which would
+    # violate the NOT NULL constraint on those columns).
+    supplier = relationship("Supplier", passive_deletes=True)
+    product = relationship("Product", passive_deletes=True)
+    variant = relationship("ProductVariant", passive_deletes=True)
 
     @property
     def product_name(self):
