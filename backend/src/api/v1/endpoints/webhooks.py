@@ -88,6 +88,78 @@ def _extract_external_id(resource: Optional[str]) -> Optional[str]:
 
 
 
+async def _process_ml_question_event(db: Session, event: WebhookEvent) -> None:
+    """Hydrate + upsert a buyer-question notification.
+
+    ML's `questions` notification is thin (`resource: /questions/{id}`,
+    no text), so we resolve the id, GET the full question, and upsert it
+    into `marketplace_questions` via the questions service. Same
+    single-credential multi-tenant guard as the orders path (ML webhooks
+    carry no reliable user context). A 404 means the question was deleted
+    / aged out — that's PROCESSED, not an error. Other failures propagate
+    to the caller's handler, which marks the event FAILED.
+    """
+    import httpx
+
+    from src.services.marketplace_service import marketplace_service
+    from src.services import questions_service
+
+    question_id = _extract_external_id(event.external_resource_id)
+    if not question_id:
+        event.status = "FAILED"
+        event.error_message = "Could not parse question id from resource"
+        event.processed_at = datetime.now(timezone.utc)
+        db.commit()
+        return
+
+    credential_q = (
+        db.query(MarketplaceCredential)
+        .filter(MarketplaceCredential.marketplace_id == event.marketplace_id)
+        .order_by(
+            MarketplaceCredential.updated_at.desc().nullslast(),
+            MarketplaceCredential.id.desc(),
+        )
+    )
+    credential_count = credential_q.count()
+    credential = credential_q.first()
+    if not credential:
+        event.status = "FAILED"
+        event.error_message = "No marketplace credential available to fetch question"
+        event.processed_at = datetime.now(timezone.utc)
+        db.commit()
+        return
+    if credential_count > 1:
+        # Same multi-tenant ambiguity as orders — see item 8 in
+        # work/future/87-sales-orders-cherry-handoff.md.
+        event.status = "FAILED"
+        event.error_message = (
+            f"Multi-tenant credentials detected ({credential_count} for marketplace "
+            f"{event.marketplace_id}); ML webhooks carry no user context, so we "
+            "cannot determine which credential owns this question."
+        )
+        event.processed_at = datetime.now(timezone.utc)
+        db.commit()
+        return
+
+    access_token = await marketplace_service.get_valid_access_token(db, credential.id)
+    connector = marketplace_service.get_connector("MercadoLibre")
+    try:
+        payload = await connector.fetch_question(question_id, access_token)
+    except httpx.HTTPStatusError as exc:
+        if exc.response is not None and exc.response.status_code == 404:
+            event.status = "PROCESSED"
+            event.error_message = "Question not found (deleted or aged out)"
+            event.processed_at = datetime.now(timezone.utc)
+            db.commit()
+            return
+        raise
+
+    questions_service.ingest_questions_for_credential(db, credential, [payload])
+    event.status = "PROCESSED"
+    event.processed_at = datetime.now(timezone.utc)
+    db.commit()
+
+
 async def process_mercadolibre_event(event_id: int):
     """
     Background task to process a MercadoLibre webhook event.
@@ -101,7 +173,9 @@ async def process_mercadolibre_event(event_id: int):
        reservation is still reflected locally so dashboards stay accurate).
     6. Mark the WebhookEvent as PROCESSED (or FAILED with error_message).
 
-    For non-order topics we just mark PROCESSED — items/questions/etc. are no-ops for now.
+    The `questions` topic is hydrated + upserted via
+    `_process_ml_question_event`. Other non-order topics (items, etc.)
+    are still no-ops — marked PROCESSED.
     """
     # Use a fresh session — get_db() is request-scoped; background tasks need their own.
     from src.services.marketplace_service import marketplace_service
@@ -116,6 +190,14 @@ async def process_mercadolibre_event(event_id: int):
 
         try:
             topic = (event.topic or "").lower()
+            # Buyer questions: hydrate the thin notification + upsert into
+            # marketplace_questions for the Q&A surface. ML re-fires this
+            # topic when a question is *answered* too, so the idempotent
+            # upsert just flips the row to ANSWERED. (marketplace_questions
+            # is the Global-Selling variant; accepted defensively.)
+            if topic in {"questions", "marketplace_questions"}:
+                await _process_ml_question_event(db, event)
+                return
             if topic not in {"orders", "orders_v2", "created_orders"}:
                 event.status = "PROCESSED"
                 event.processed_at = datetime.now(timezone.utc)

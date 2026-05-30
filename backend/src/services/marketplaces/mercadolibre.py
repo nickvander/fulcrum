@@ -54,7 +54,11 @@ def parse_ml_question(q: Dict[str, Any]) -> Dict[str, Any]:
     answer = q.get("answer") or {}
     frm = q.get("from") or {}
     qid = q.get("id")
-    buyer = frm.get("id")
+    # v4 single-GET exposes the buyer as `buyer_id`; search results / the
+    # older shape nest it under `from.id`. Read both, prefer `buyer_id`.
+    buyer = q.get("buyer_id")
+    if buyer is None:
+        buyer = frm.get("id")
     item = q.get("item_id")
     return {
         "external_question_id": str(qid) if qid is not None else None,
@@ -652,6 +656,19 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                 offset += page_limit
         return results[:max_rows]
 
+    async def fetch_question(self, question_id: str, access_token: str) -> Dict[str, Any]:
+        """Fetch a single buyer question via `GET /questions/{id}`. Used by
+        the `questions` webhook handler to resolve the resource id ML pushes
+        into the full question payload."""
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.API_URL}/questions/{question_id}",
+                params={"api_version": 4},  # current response shape
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def fetch_questions(
         self,
         access_token: str,
@@ -681,6 +698,7 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
                     f"{self.API_URL}/questions/search",
                     params={
                         "seller_id": seller_id,
+                        "api_version": 4,
                         "sort_fields": "date_created",
                         "sort_types": "DESC",
                         "offset": offset,

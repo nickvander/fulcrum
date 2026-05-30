@@ -76,11 +76,14 @@ existing allocation planner. All inputs already exist (`reorder_point`,
 ### B5 — Buyer Q&A / messaging SLA tracking · MED · M–L — ✅ SHIPPED 2026-05-30
 `marketplace_questions` table + `MercadoLibreConnector.fetch_questions`
 + `questions_service` (ingest/refresh/poll) + a `poll_mercadolibre_questions`
-Celery beat (30 min) + `GET /reports/questions` (per-row SLA:
+Celery beat (30 min) + the ML `questions` webhook topic (real-time
+hydration via `GET /questions/{id}?api_version=4`, idempotent on
+re-delivery when answered) + `GET /reports/questions` (per-row SLA:
 answered/pending/breached at 24h) + a `/reports/qa` inbox page with SLA
 counters, surfaced under the Marketplaces sidenav group. Remaining
-(deferred): answer-from-Fulcrum write path + wiring the ML `questions`
-webhook topic (poll covers ingestion today); post-sale messages.
+(deferred): answer-from-Fulcrum write path (`POST /answers`
+`{question_id, text}`, ≤2000 chars, `write` scope — see `95`) +
+post-sale messages.
 
 ### B6 — Pricing / repricing assistant (margin-floor guard) · MED · M
 Suggest price changes from a margin floor (real settled fees + COGS) and a

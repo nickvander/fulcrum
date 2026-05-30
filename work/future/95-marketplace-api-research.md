@@ -93,7 +93,17 @@ global-selling…/mercado-ads, …/en_us/manage-promotion, …/cofunded-campaign
 ### D. Other proactive ML surfaces (future roadmap)
 - Claims: `GET /post-purchase/v1/claims/{id}` (**old `/v1/claims/`
   deprecated 2024-05-06**).
-- Questions: `GET /questions/search?seller={id}`, answer via `POST /answers` (→ B5).
+- Questions (B5 — shipped, incl. webhook): standard MX topic is
+  **`questions`** (Global-Selling variant `marketplace_questions`), thin
+  notification with `resource: /questions/{id}`; hydrate via
+  `GET /questions/{id}?api_version=4` (buyer is `buyer_id` in v4, falls
+  back to `from.id`; statuses UNANSWERED/ANSWERED/CLOSED_UNANSWERED/
+  UNDER_REVIEW/BANNED[empty text]/DISABLED/DELETED). The topic re-fires
+  when a question is *answered*, so ingestion must be idempotent. List:
+  `GET /questions/search?seller_id={id}&api_version=4`.
+  **Answer-from-Fulcrum write path (not built):** `POST /answers`
+  `{question_id, text}`, ≤2000 chars, UTF-8, `write` + `offline_access`
+  scope.
 - Full stock: `GET /marketplace/items/{id}` → `inventory_id` →
   `GET /marketplace/inventories/{inventory_id}/stock/fulfillment?seller_id={id}`
   (`available_quantity`, `not_available_detail[]` damaged/lost/…).

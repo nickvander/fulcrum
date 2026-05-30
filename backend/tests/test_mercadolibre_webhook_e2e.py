@@ -365,3 +365,149 @@ async def test_ml_webhook_refused_when_multi_tenant_credentials_present(db: Sess
         .first()
     )
     assert inventory_after.quantity == 10
+
+
+# --------------------------------------------------------------------------- #
+# questions topic
+# --------------------------------------------------------------------------- #
+
+
+def _question_payload(qid=5036111111, status="UNANSWERED", answered=False):
+    p = {
+        "id": qid,
+        "seller_id": 179571326,
+        "buyer_id": 56801932,
+        "item_id": "MLM999",
+        "status": status,
+        "text": "¿Hacen envío a Monterrey?",
+        "date_created": "2026-05-16T12:00:00.000Z",
+    }
+    if answered:
+        p["answer"] = {"text": "Sí, llega en 3 días.", "status": "ACTIVE",
+                       "date_created": "2026-05-16T13:00:00.000Z"}
+    return p
+
+
+@pytest.mark.db
+@pytest.mark.anyio
+async def test_ml_question_webhook_upserts_question(db: Session):
+    from src.models.marketplace import MarketplaceQuestion
+
+    marketplace, _credential, _product, _listing = _seed_ml_marketplace(db)
+    event = WebhookEvent(
+        marketplace_id=marketplace.id,
+        topic="questions",
+        external_resource_id="/questions/5036111111",
+        payload={"resource": "/questions/5036111111", "topic": "questions"},
+        status="RECEIVED",
+    )
+    db.add(event)
+    db.commit()
+    event_id = event.id
+
+    mock_connector = AsyncMock()
+    mock_connector.fetch_question = AsyncMock(return_value=_question_payload())
+
+    with patch(
+        "src.api.v1.endpoints.webhooks.SessionLocal", new=_patched_session_local(db),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+        new=AsyncMock(return_value="resolved-bearer"),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_connector",
+        return_value=mock_connector,
+    ):
+        await process_mercadolibre_event(event_id)
+
+    db.expire_all()
+    mock_connector.fetch_question.assert_awaited_once_with("5036111111", "resolved-bearer")
+    q = db.query(MarketplaceQuestion).filter(
+        MarketplaceQuestion.external_question_id == "5036111111").first()
+    assert q is not None
+    assert q.item_id == "MLM999"
+    assert q.buyer_id == "56801932"   # v4 buyer_id, not from.id
+    assert q.status == "UNANSWERED"
+    assert q.answered_at is None
+    refreshed = db.query(WebhookEvent).filter(WebhookEvent.id == event_id).first()
+    assert refreshed.status == "PROCESSED"
+
+
+@pytest.mark.db
+@pytest.mark.anyio
+async def test_ml_question_webhook_answered_redelivery_updates_in_place(db: Session):
+    from src.models.marketplace import MarketplaceQuestion
+
+    marketplace, credential, _product, _listing = _seed_ml_marketplace(db)
+    db.commit()
+    # Pre-existing unanswered row (as if a prior notification ingested it).
+    db.add(MarketplaceQuestion(
+        credential_id=credential.id, marketplace_id=marketplace.id,
+        external_question_id="5036111111", status="UNANSWERED", item_id="MLM999",
+    ))
+    event = WebhookEvent(
+        marketplace_id=marketplace.id, topic="questions",
+        external_resource_id="/questions/5036111111", status="RECEIVED",
+    )
+    db.add(event)
+    db.commit()
+    event_id = event.id
+
+    mock_connector = AsyncMock()
+    mock_connector.fetch_question = AsyncMock(
+        return_value=_question_payload(status="ANSWERED", answered=True))
+
+    with patch(
+        "src.api.v1.endpoints.webhooks.SessionLocal", new=_patched_session_local(db),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+        new=AsyncMock(return_value="resolved-bearer"),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_connector",
+        return_value=mock_connector,
+    ):
+        await process_mercadolibre_event(event_id)
+
+    db.expire_all()
+    rows = db.query(MarketplaceQuestion).filter(
+        MarketplaceQuestion.external_question_id == "5036111111").all()
+    assert len(rows) == 1                       # updated in place, no dup
+    assert rows[0].status == "ANSWERED"
+    assert rows[0].answered_at is not None
+
+
+@pytest.mark.db
+@pytest.mark.anyio
+async def test_ml_question_webhook_404_marks_processed(db: Session):
+    import httpx
+    from src.models.marketplace import MarketplaceQuestion
+
+    marketplace, _credential, _product, _listing = _seed_ml_marketplace(db)
+    event = WebhookEvent(
+        marketplace_id=marketplace.id, topic="questions",
+        external_resource_id="/questions/999", status="RECEIVED",
+    )
+    db.add(event)
+    db.commit()
+    event_id = event.id
+
+    req = httpx.Request("GET", "https://api.mercadolibre.com/questions/999")
+    err = httpx.HTTPStatusError("404", request=req, response=httpx.Response(404, request=req))
+    mock_connector = AsyncMock()
+    mock_connector.fetch_question = AsyncMock(side_effect=err)
+
+    with patch(
+        "src.api.v1.endpoints.webhooks.SessionLocal", new=_patched_session_local(db),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+        new=AsyncMock(return_value="resolved-bearer"),
+    ), patch(
+        "src.services.marketplace_service.marketplace_service.get_connector",
+        return_value=mock_connector,
+    ):
+        await process_mercadolibre_event(event_id)
+
+    db.expire_all()
+    assert db.query(MarketplaceQuestion).count() == 0
+    refreshed = db.query(WebhookEvent).filter(WebhookEvent.id == event_id).first()
+    assert refreshed.status == "PROCESSED"
+    assert "deleted" in (refreshed.error_message or "")
