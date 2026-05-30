@@ -3,11 +3,30 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+export interface ReputationSnapshot {
+  captured_at?: string | null;
+  level_id?: string | null;
+  power_seller_status?: string | null;
+  transactions_total?: number | null;
+  transactions_completed?: number | null;
+  sales_completed?: number | null;
+  /** Rates are percentages as ML returns them (1.5 == 1.5%). */
+  claims_rate?: number | null;
+  claims_value?: number | null;
+  cancellations_rate?: number | null;
+  cancellations_value?: number | null;
+  delayed_handling_rate?: number | null;
+  delayed_handling_value?: number | null;
+}
+
 export interface MarketplaceCredentialHealth {
   credential_id: number;
   marketplace_id: number;
   marketplace_name: string;
   user_id: number;
+
+  /** Latest seller-reputation snapshot (ML only). null until first capture. */
+  reputation?: ReputationSnapshot | null;
 
   needs_reauthorization: boolean;
   last_refresh_error?: string | null;
@@ -86,6 +105,14 @@ export interface ReconcileInboundResult {
   health?: MarketplaceCredentialHealth | null;
 }
 
+export interface RefreshReputationResult {
+  credential_id: number;
+  marketplace_name: string;
+  error?: string | null;
+  reputation?: ReputationSnapshot | null;
+  health?: MarketplaceCredentialHealth | null;
+}
+
 export interface SettlementSyncResult {
   credential_id: number;
   marketplace_name: string;
@@ -133,6 +160,12 @@ export class MarketplaceHealthService {
   syncSettlementFees(credentialId: number): Observable<SettlementSyncResult> {
     return this.http.post<SettlementSyncResult>(
       `${this.apiUrl}/${credentialId}/sync-settlement-fees`, {},
+    );
+  }
+
+  refreshReputation(credentialId: number): Observable<RefreshReputationResult> {
+    return this.http.post<RefreshReputationResult>(
+      `${this.apiUrl}/${credentialId}/refresh-reputation`, {},
     );
   }
 }

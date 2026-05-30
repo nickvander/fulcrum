@@ -390,6 +390,49 @@ def _evaluate_ml_full_stockout_risk(db: Session, rule: AlertRule) -> AlertEvalua
     )
 
 
+def _evaluate_reputation_risk(db: Session, rule: AlertRule) -> AlertEvaluationResult:
+    """Trigger when the worst of the seller's claims / cancellations /
+    delayed-handling rates (from the latest reputation snapshot) is
+    >= rule.threshold (a percentage).
+
+    Reputation gates buy-box + Full eligibility, so an operator wants to
+    know the moment a metric drifts toward MELI's penalty thresholds.
+    Reads the persisted snapshot (the evaluator has no marketplace auth);
+    if none has been captured yet there's no baseline → not triggered.
+    """
+    from src.services import reputation_service
+
+    snapshot = reputation_service.latest_for_user(db, rule.user_id)
+    if snapshot is None:
+        return AlertEvaluationResult(
+            rule_id=rule.id, triggered=False, payload={"reason": "no_snapshot"},
+        )
+
+    rates = {
+        "claims_rate": snapshot.claims_rate or 0.0,
+        "cancellations_rate": snapshot.cancellations_rate or 0.0,
+        "delayed_handling_rate": snapshot.delayed_handling_rate or 0.0,
+    }
+    worst_metric = max(rates, key=rates.get)
+    worst_rate = rates[worst_metric]
+    triggered = worst_rate >= rule.threshold
+    return AlertEvaluationResult(
+        rule_id=rule.id,
+        triggered=triggered,
+        payload={
+            "worst_metric": worst_metric,
+            "worst_rate": worst_rate,
+            "threshold": rule.threshold,
+            "level_id": snapshot.level_id,
+            "power_seller_status": snapshot.power_seller_status,
+            "claims_rate": rates["claims_rate"],
+            "cancellations_rate": rates["cancellations_rate"],
+            "delayed_handling_rate": rates["delayed_handling_rate"],
+            "captured_at": snapshot.captured_at.isoformat() if snapshot.captured_at else None,
+        },
+    )
+
+
 def _evaluate_refund_rate_spike(db: Session, rule: AlertRule) -> AlertEvaluationResult:
     """Trigger when the trailing refund rate exceeds `rule.threshold`
     (interpreted as a percentage).
@@ -580,6 +623,7 @@ _EVALUATORS = {
     AlertType.SALES_DIP: _evaluate_sales_dip,
     AlertType.STOCKOUT_RISK: _evaluate_stockout_risk,
     AlertType.ML_FULL_STOCKOUT_RISK: _evaluate_ml_full_stockout_risk,
+    AlertType.REPUTATION_RISK: _evaluate_reputation_risk,
     AlertType.REFUND_RATE_SPIKE: _evaluate_refund_rate_spike,
     AlertType.SETTLEMENT_VARIANCE: _evaluate_settlement_variance,
 }
@@ -614,6 +658,12 @@ def _email_subject(rule: AlertRule, payload: Dict[str, Any]) -> str:
         return (
             f"Fulcrum alert: {payload.get('at_risk_count', '?')} "
             f"MercadoLibre Full SKUs at stockout risk"
+        )
+    if rule.alert_type == AlertType.REPUTATION_RISK:
+        return (
+            f"Fulcrum alert: seller reputation — "
+            f"{(payload.get('worst_metric') or 'metric').replace('_rate', '').replace('_', ' ')} "
+            f"at {payload.get('worst_rate', 0):.1f}%"
         )
     return f"Fulcrum alert: {payload.get('at_risk_count', '?')} products at stockout risk"
 
@@ -719,6 +769,31 @@ def _email_body(rule: AlertRule, payload: Dict[str, Any]) -> tuple[str, str]:
         body_text = (
             f"Settlement fees off by >= {rule.threshold:.1f}% over "
             f"{rule.window_days}d:\n\n{rows_text}"
+        )
+        return body_html, body_text
+
+    if rule.alert_type == AlertType.REPUTATION_RISK:
+        body_html = (
+            f"<p>Your MercadoLibre seller reputation has a metric at or above "
+            f"your {rule.threshold:.1f}% threshold — this can cost buy-box "
+            f"visibility and Full eligibility.</p>"
+            f"<ul>"
+            f"<li>Claims: <strong>{payload.get('claims_rate', 0):.1f}%</strong></li>"
+            f"<li>Cancellations: <strong>{payload.get('cancellations_rate', 0):.1f}%</strong></li>"
+            f"<li>Delayed handling: <strong>{payload.get('delayed_handling_rate', 0):.1f}%</strong></li>"
+            f"</ul>"
+            f"<p>Level: {payload.get('level_id') or 'n/a'} · "
+            f"power-seller: {payload.get('power_seller_status') or 'n/a'}. "
+            f"Open the <a href='/marketplaces'>marketplaces page</a> for the "
+            f"current standing.</p>"
+        )
+        body_text = (
+            f"ML reputation alert — worst metric "
+            f"{(payload.get('worst_metric') or '').replace('_rate', '')} at "
+            f"{payload.get('worst_rate', 0):.1f}% (threshold {rule.threshold:.1f}%).\n"
+            f"Claims {payload.get('claims_rate', 0):.1f}%, "
+            f"cancellations {payload.get('cancellations_rate', 0):.1f}%, "
+            f"delayed handling {payload.get('delayed_handling_rate', 0):.1f}%."
         )
         return body_html, body_text
 

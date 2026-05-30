@@ -21,9 +21,10 @@ from src.schemas.marketplace_health import (
     HealthListResponse,
     PollOrdersResult,
     ReconcileInboundResult,
+    RefreshReputationResult,
     SettlementSyncResult,
 )
-from src.services import marketplace_health_service
+from src.services import marketplace_health_service, reputation_service
 
 
 router = APIRouter()
@@ -99,3 +100,20 @@ def sync_settlement_fees_now(
     return marketplace_health_service.sync_settlement_for_credential(
         db, credential_id,
     )
+
+
+@router.post(
+    "/{credential_id}/refresh-reputation",
+    response_model=RefreshReputationResult,
+)
+def refresh_reputation_now(
+    *,
+    db: Session = Depends(get_db),
+    credential_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> RefreshReputationResult:
+    """Capture a fresh seller-reputation snapshot for one credential
+    (MercadoLibre only). Persists it so the reputation card + the
+    reputation_risk alert read the latest standing. Returns the snapshot
+    + refreshed health row."""
+    return reputation_service.refresh_for_credential(db, credential_id)

@@ -117,6 +117,46 @@ class WebhookEvent(Base):
     marketplace = relationship("Marketplace")
 
 
+class MarketplaceReputationSnapshot(Base):
+    """Point-in-time capture of a seller's marketplace reputation
+    (MercadoLibre `seller_reputation`). Persisted so the reputation-risk
+    alert evaluator — which runs in a Celery beat with only a DB session,
+    no marketplace auth — can read the latest values without a live API
+    call, and so the health page can show a short trend.
+
+    Rates are stored as MercadoLibre returns them (a percentage, e.g.
+    1.5 == 1.5%). NULLs are expected for brand-new sellers ML hasn't
+    scored yet.
+    """
+    __tablename__ = "marketplace_reputation_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    credential_id = Column(
+        Integer,
+        ForeignKey("marketplace_credentials.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    marketplace_id = Column(Integer, ForeignKey("marketplaces.id"), nullable=True)
+    level_id = Column(String, nullable=True)
+    power_seller_status = Column(String, nullable=True)
+    transactions_total = Column(Integer, nullable=True)
+    transactions_completed = Column(Integer, nullable=True)
+    sales_completed = Column(Integer, nullable=True)
+    claims_rate = Column(Float, nullable=True)
+    claims_value = Column(Integer, nullable=True)
+    cancellations_rate = Column(Float, nullable=True)
+    cancellations_value = Column(Integer, nullable=True)
+    delayed_handling_rate = Column(Float, nullable=True)
+    delayed_handling_value = Column(Integer, nullable=True)
+    raw = Column(JSON, nullable=True)
+    captured_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    credential = relationship("MarketplaceCredential")
+    marketplace = relationship("Marketplace")
+
+
 class MarketplaceAppCredential(Base):
     """
     Stores developer/app credentials (client_id, client_secret) for each marketplace.

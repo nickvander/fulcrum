@@ -18,6 +18,7 @@ import {
   MarketplaceHealthService,
   PollOrdersResult,
   ReconcileInboundResult,
+  RefreshReputationResult,
   SettlementSyncResult,
 } from './marketplace-health.service';
 
@@ -58,6 +59,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
   polling = new Set<number>();
   reconciling = new Set<number>();
   settling = new Set<number>();
+  refreshingReputation = new Set<number>();
 
   private destroy$ = new Subject<void>();
 
@@ -74,6 +76,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
     'webhooks',
     'inbound',
     'settlement',
+    'reputation',
     'actions',
   ];
 
@@ -97,6 +100,7 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
           this.polling.size > 0
           || this.reconciling.size > 0
           || this.settling.size > 0
+          || this.refreshingReputation.size > 0
         ) return;
         this.quietRefresh();
       });
@@ -184,6 +188,63 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
         },
         error: () => this.snack('marketplaceHealth.errors.settlementFailed'),
       });
+  }
+
+  refreshReputation(row: MarketplaceCredentialHealth): void {
+    if (this.refreshingReputation.has(row.credential_id)) return;
+    this.refreshingReputation.add(row.credential_id);
+    this.health.refreshReputation(row.credential_id)
+      .pipe(finalize(() => this.refreshingReputation.delete(row.credential_id)))
+      .subscribe({
+        next: result => {
+          this.applyRefreshedHealth(result.health);
+          this.surfaceReputationResult(result);
+        },
+        error: () => this.snack('marketplaceHealth.errors.reputationFailed'),
+      });
+  }
+
+  private surfaceReputationResult(result: RefreshReputationResult): void {
+    if (result.error === 'needs_reauthorization') {
+      this.snack('marketplaceHealth.messages.reputationNeedsReauth');
+      return;
+    }
+    if (result.error === 'unsupported') {
+      this.snack('marketplaceHealth.messages.reputationUnsupported');
+      return;
+    }
+    if (result.error) {
+      this.snack('marketplaceHealth.errors.reputationFailed');
+      return;
+    }
+    this.snack('marketplaceHealth.messages.reputationDone');
+  }
+
+  /** Whether this marketplace reports seller reputation (ML only). */
+  isReputationSupported(row: MarketplaceCredentialHealth): boolean {
+    return (row.marketplace_name || '').toLowerCase() === 'mercadolibre';
+  }
+
+  /** Worst of the three reputation rates (claims / cancellations /
+   *  delayed handling), or null if no snapshot. Drives the pill. */
+  reputationWorstRate(row: MarketplaceCredentialHealth): number | null {
+    const r = row.reputation;
+    if (!r) return null;
+    const rates = [r.claims_rate, r.cancellations_rate, r.delayed_handling_rate]
+      .filter((v): v is number => v != null);
+    return rates.length ? Math.max(...rates) : null;
+  }
+
+  /** Reputation pill colour. ML thresholds are conservative — a worst
+   *  rate ≥ 3% is a real risk to buy-box/Full eligibility, ≥ 1.5% is a
+   *  watch. No snapshot → neutral info. */
+  reputationClass(row: MarketplaceCredentialHealth): string {
+    if (!this.isReputationSupported(row)) return 'badge-info';
+    const worst = this.reputationWorstRate(row);
+    if (worst == null) return 'badge-info';
+    if (worst >= 3) return 'badge-error';
+    if (worst >= 1.5) return 'badge-warn';
+    return 'badge-ok';
   }
 
   /** Settlement-only badge: 'ok' once a sync has happened recently
@@ -333,7 +394,8 @@ export class MarketplaceHealthPageComponent implements OnInit, OnDestroy {
   isBusy(row: MarketplaceCredentialHealth): boolean {
     return this.polling.has(row.credential_id)
       || this.reconciling.has(row.credential_id)
-      || this.settling.has(row.credential_id);
+      || this.settling.has(row.credential_id)
+      || this.refreshingReputation.has(row.credential_id);
   }
 
   private snack(keyOrMessage: string): void {

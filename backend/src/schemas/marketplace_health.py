@@ -31,6 +31,25 @@ INBOUND_RECONCILE_STALE_MINUTES = 90  # cron fires hourly → 90min = 1.5x
 WEBHOOK_DISCONNECT_HOURS = 24
 
 
+class ReputationSnapshotRead(BaseModel):
+    """Latest persisted `MarketplaceReputationSnapshot` for a credential.
+    Rates are percentages as MercadoLibre returns them (1.5 == 1.5%)."""
+    captured_at: Optional[datetime] = None
+    level_id: Optional[str] = None
+    power_seller_status: Optional[str] = None
+    transactions_total: Optional[int] = None
+    transactions_completed: Optional[int] = None
+    sales_completed: Optional[int] = None
+    claims_rate: Optional[float] = None
+    claims_value: Optional[int] = None
+    cancellations_rate: Optional[float] = None
+    cancellations_value: Optional[int] = None
+    delayed_handling_rate: Optional[float] = None
+    delayed_handling_value: Optional[int] = None
+
+    model_config = {"from_attributes": True}
+
+
 class MarketplaceCredentialHealth(BaseModel):
     """One row per `MarketplaceCredential`. Aggregates auth state +
     order-poll cursor + an inbound-reconciliation rollup so the UI
@@ -39,6 +58,12 @@ class MarketplaceCredentialHealth(BaseModel):
     marketplace_id: int
     marketplace_name: str
     user_id: int
+
+    # --- seller reputation (latest snapshot; ML only) ---
+    # NULL when no snapshot has been captured yet (or the marketplace
+    # doesn't report reputation). The operator triggers a capture via
+    # POST .../refresh-reputation.
+    reputation: Optional[ReputationSnapshotRead] = None
 
     # --- auth state ---
     needs_reauthorization: bool
@@ -127,6 +152,18 @@ class SettlementSyncResult(BaseModel):
     errors: int = 0
     scanned: int = 0
     error: Optional[str] = None
+    health: Optional[MarketplaceCredentialHealth] = None
+
+
+class RefreshReputationResult(BaseModel):
+    """Returned by `POST /marketplaces/health/{credential_id}/refresh-reputation`.
+    Captures a fresh reputation snapshot from the marketplace and returns
+    it plus the refreshed health row. `error` carries the same channel as
+    the other manual actions (needs_reauth, unsupported, exception)."""
+    credential_id: int
+    marketplace_name: str
+    error: Optional[str] = None
+    reputation: Optional[ReputationSnapshotRead] = None
     health: Optional[MarketplaceCredentialHealth] = None
 
 

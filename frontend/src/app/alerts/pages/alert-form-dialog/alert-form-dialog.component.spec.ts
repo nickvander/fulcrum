@@ -31,15 +31,18 @@ describe('AlertFormDialogComponent', () => {
     fixture.detectChanges();
   }
 
-  it('offers the ML Full stockout risk type in create mode', async () => {
+  it('offers the ML Full stockout + reputation risk types in create mode', async () => {
     await setup({ mode: 'create' });
     expect(component.alertTypes).toContain('ml_full_stockout_risk');
+    expect(component.alertTypes).toContain('reputation_risk');
   });
 
   it('maps each alert type to its own threshold hint key', async () => {
     await setup({ mode: 'create' });
     component.form.get('alert_type')?.setValue('ml_full_stockout_risk');
     expect(component.thresholdHintKey()).toBe('alerts.form.thresholdHintMlFullStockout');
+    component.form.get('alert_type')?.setValue('reputation_risk');
+    expect(component.thresholdHintKey()).toBe('alerts.form.thresholdHintReputation');
     component.form.get('alert_type')?.setValue('low_margin');
     expect(component.thresholdHintKey()).toBe('alerts.form.thresholdHintLowMargin');
     component.form.get('alert_type')?.setValue('stockout_risk');

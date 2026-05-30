@@ -10,20 +10,23 @@
 **Goal:** monitor the seller's ML reputation (the KPI that gates buy-box
 + Full eligibility) and alert before MELI throttles the account.
 
-- [ ] Backend: `MercadoLibreConnector.fetch_seller_reputation()` —
-      `GET /users/{id}` → `seller_reputation` (level_id,
-      power_seller_status, transactions.ratings) + `metrics`
-      (claims / cancellations / delayed_handling rate+value).
-- [ ] Model + migration: `marketplace_reputation_snapshots`
-      (credential/seller scope, captured_at, level, power_seller_status,
-      claims_rate, cancellations_rate, delayed_rate, sales_completed, raw JSON).
-- [ ] Persist a snapshot on demand (health refresh) and/or a Celery beat.
-- [ ] Surface a reputation block in `marketplace_health_service` + the
-      health API + the frontend health page (card + recent-history).
-- [ ] New `reputation_risk` AlertType + evaluator reading the latest
-      snapshot (threshold = claims-or-cancellation rate %); migration to
-      extend the `ck_alert_rules_type` CHECK; surface in the alert dialog.
-- [ ] i18n en + es-MX. Tests backend + frontend. Commit + push.
+- [x] Backend: `MercadoLibreConnector.fetch_seller_reputation()` +
+      `parse_seller_reputation()` (defensive). `GET /users/me` →
+      `seller_reputation` + `metrics`.
+- [x] Model + migration: `marketplace_reputation_snapshots`
+      (`d4a8c1f9e562`) — credential/marketplace scope, level,
+      power_seller_status, claims/cancellations/delayed rate+value,
+      sales_completed, raw JSON, captured_at.
+- [x] `reputation_service`: `capture_snapshot`, `latest_for_credential`,
+      `latest_for_user`, `refresh_for_credential` (on-demand capture via
+      the asyncio bridge, mirrors the health poll/reconcile actions).
+- [x] Reputation block in `marketplace_health_service` health row + the
+      `POST .../refresh-reputation` endpoint + a reputation column +
+      refresh action on the frontend health page (colour-banded pill).
+- [x] New `reputation_risk` AlertType + evaluator (worst of claims /
+      cancellations / delayed-handling rate >= threshold, reads latest
+      snapshot); migration `e6b3d9a8c741`; surfaced in the alert dialog.
+- [x] i18n en + es-MX. Tests: 10 backend + 5 frontend. **Shipped.**
 
 ## B2 — MELI promotions / Product-Ads cost capture
 
@@ -44,3 +47,7 @@ marketplace-native promo discounts + advertising fees per order.
 
 - 2026-05-30 — Plan filed. B3 shipped earlier today (`da5a9fe`).
   Starting B1.
+- 2026-05-30 — **B1 shipped.** Reputation connector + snapshot table +
+  reputation_service + health-page reputation column/refresh +
+  reputation_risk alert. Backend reputation/alert/health suites green;
+  frontend 755 passed. Next: B2.

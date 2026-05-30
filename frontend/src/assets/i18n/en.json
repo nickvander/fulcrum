@@ -1793,7 +1793,8 @@
       "low_margin": "Low margin",
       "sales_dip": "Sales dip",
       "stockout_risk": "Stockout risk",
-      "ml_full_stockout_risk": "MercadoLibre Full stockout risk"
+      "ml_full_stockout_risk": "MercadoLibre Full stockout risk",
+      "reputation_risk": "ML reputation risk"
     },
     "empty": {
       "title": "No alert rules yet",
@@ -1829,7 +1830,8 @@
       "cooldownHint": "Don't send another email for this rule until this many minutes have passed.",
       "notifyEmail": "Notify email",
       "enabled": "Enabled",
-      "thresholdHintMlFullStockout": "Number of MercadoLibre Full SKUs at stockout risk that triggers the alert (Full on-hand + in-transit transfers won't cover ML demand)."
+      "thresholdHintMlFullStockout": "Number of MercadoLibre Full SKUs at stockout risk that triggers the alert (Full on-hand + in-transit transfers won't cover ML demand).",
+      "thresholdHintReputation": "Alert when the worst of your claims / cancellations / delayed-handling rates (%) reaches this value."
     },
     "delete": {
       "title": "Delete alert rule?",
@@ -1920,7 +1922,8 @@
       "webhooks": "Webhooks (24h)",
       "inbound": "Inbound transfers",
       "settlement": "Settlement fees",
-      "actions": "Actions"
+      "actions": "Actions",
+      "reputation": "Reputation"
     },
     "auth": {
       "ok": "Healthy",
@@ -1950,7 +1953,9 @@
       "reconcileNow": "Reconcile inbound",
       "reconcileTooltip": "Run inbound reconciliation for this credential's open transfers",
       "settlementNow": "Sync settlement",
-      "settlementTooltip": "Fetch real per-order marketplace fees + shipping from the marketplace's finance API and replace the estimates on each order's cost breakdown."
+      "settlementTooltip": "Fetch real per-order marketplace fees + shipping from the marketplace's finance API and replace the estimates on each order's cost breakdown.",
+      "reputationNow": "Reputation",
+      "reputationTooltip": "Fetch the latest seller reputation from MercadoLibre"
     },
     "results": {
       "pollSummary": "Poll: {{new}} new, {{updated}} updated, {{items}} line items.",
@@ -1972,13 +1977,23 @@
       "reconcileUnsupported": "Inbound reconciliation is not supported for this marketplace.",
       "settlementDone": "Settlement sync: {{settled}} order(s) settled, {{pending}} still pending, {{scanned}} scanned.",
       "settlementNeedsReauth": "Reconnect the credential before syncing settlement fees.",
-      "settlementUnsupported": "Settlement-fee ingestion is not supported for this marketplace."
+      "settlementUnsupported": "Settlement-fee ingestion is not supported for this marketplace.",
+      "reputationDone": "Reputation snapshot captured.",
+      "reputationNeedsReauth": "Can't fetch reputation — this credential needs reauthorization.",
+      "reputationUnsupported": "Reputation isn't available for this marketplace."
     },
     "errors": {
       "loadFailed": "Could not load marketplace health.",
       "pollFailed": "Could not run the order poll.",
       "reconcileFailed": "Could not run the inbound reconciliation.",
-      "settlementFailed": "Could not run the settlement-fee sync."
+      "settlementFailed": "Could not run the settlement-fee sync.",
+      "reputationFailed": "Couldn't refresh reputation."
+    },
+    "reputation": {
+      "unsupported": "N/A",
+      "unsupportedTooltip": "This marketplace doesn't report seller reputation.",
+      "tooltip": "Claims {{claims}}% · cancellations {{cancellations}}% · delayed {{delayed}}% (captured {{when}} ago)",
+      "neverTooltip": "No reputation snapshot yet — click Reputation to capture one."
     }
   },
   "apiErrors": {

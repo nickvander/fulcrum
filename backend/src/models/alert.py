@@ -35,6 +35,7 @@ class AlertType(str, enum.Enum):
     REFUND_RATE_SPIKE = "refund_rate_spike"
     SETTLEMENT_VARIANCE = "settlement_variance"
     ML_FULL_STOCKOUT_RISK = "ml_full_stockout_risk"
+    REPUTATION_RISK = "reputation_risk"
 
 
 class AlertRule(Base):
@@ -56,6 +57,9 @@ class AlertRule(Base):
     #                  in-transit transfers won't cover ML sales
     #                  velocity over the Full replenishment horizon)
     #                  >= threshold.
+    #   reputation_risk: percent — alert when the worst of the seller's
+    #                  claims / cancellations / delayed-handling rates
+    #                  (latest reputation snapshot) >= threshold.
     threshold = Column(Float, nullable=False)
     window_days = Column(Integer, nullable=False, default=30)
     # Suppresses notifications for `cooldown_minutes` after a successful

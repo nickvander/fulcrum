@@ -52,6 +52,7 @@ describe('MarketplaceHealthPageComponent', () => {
     pollOrders: ReturnType<typeof vi.fn>;
     reconcileInbound: ReturnType<typeof vi.fn>;
     syncSettlementFees: ReturnType<typeof vi.fn>;
+    refreshReputation: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -69,6 +70,10 @@ describe('MarketplaceHealthPageComponent', () => {
       syncSettlementFees: vi.fn().mockReturnValue(of({
         credential_id: 1, marketplace_name: 'Amazon',
         orders_settled: 0, orders_pending: 0, errors: 0, scanned: 0,
+      })),
+      refreshReputation: vi.fn().mockReturnValue(of({
+        credential_id: 1, marketplace_name: 'MercadoLibre',
+        reputation: { level_id: '5_green', claims_rate: 1.5 },
       })),
     };
 
@@ -466,6 +471,37 @@ describe('MarketplaceHealthPageComponent', () => {
       expect(component.isBusy(component.rows[0])).toBe(true);
       component.settling.delete(41);
       expect(component.isBusy(component.rows[0])).toBe(false);
+    });
+  });
+
+  describe('reputation', () => {
+    it('reputationWorstRate() returns the max of the three rates, or null', () => {
+      expect(component.reputationWorstRate(row())).toBeNull();
+      const r = row({
+        marketplace_name: 'MercadoLibre',
+        reputation: { claims_rate: 1.0, cancellations_rate: 2.5, delayed_handling_rate: 0.5 },
+      });
+      expect(component.reputationWorstRate(r)).toBe(2.5);
+    });
+
+    it('reputationClass() bands by worst rate', () => {
+      const ml = (rep: any) => row({ marketplace_name: 'MercadoLibre', reputation: rep });
+      expect(component.reputationClass(ml({ claims_rate: 0.5 }))).toBe('badge-ok');
+      expect(component.reputationClass(ml({ claims_rate: 2.0 }))).toBe('badge-warn');
+      expect(component.reputationClass(ml({ claims_rate: 4.0 }))).toBe('badge-error');
+      expect(component.reputationClass(ml(null))).toBe('badge-info'); // no snapshot
+      expect(component.reputationClass(row({ marketplace_name: 'Amazon' }))).toBe('badge-info');
+    });
+
+    it('refreshReputation() calls the service with the credential id', () => {
+      component.refreshReputation(row({ credential_id: 7, marketplace_name: 'MercadoLibre' }));
+      expect(serviceStub.refreshReputation).toHaveBeenCalledWith(7);
+    });
+
+    it('refreshReputation() is a no-op while a refresh for the same row is in flight', () => {
+      component.refreshingReputation.add(7);
+      component.refreshReputation(row({ credential_id: 7, marketplace_name: 'MercadoLibre' }));
+      expect(serviceStub.refreshReputation).not.toHaveBeenCalled();
     });
   });
 });

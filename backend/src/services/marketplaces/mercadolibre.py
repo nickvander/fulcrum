@@ -10,6 +10,44 @@ from .base import (
     InboundShipmentResult,
 )
 
+def parse_seller_reputation(user_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Normalize the `seller_reputation` object from a ML `GET /users/{id}`
+    payload into a flat dict. Defensive — every field is optional and
+    missing data lands as None (ML omits metrics for brand-new sellers).
+
+    The metric `rate` values are surfaced as-is (ML returns them as a
+    percentage, e.g. 1.5 == 1.5%); the reputation_risk alert threshold is
+    interpreted in the same unit.
+    """
+    rep = (user_payload or {}).get("seller_reputation") or {}
+    metrics = rep.get("metrics") or {}
+    transactions = rep.get("transactions") or {}
+
+    def _metric(name: str) -> tuple:
+        m = metrics.get(name) or {}
+        return m.get("rate"), m.get("value")
+
+    claims_rate, claims_value = _metric("claims")
+    canc_rate, canc_value = _metric("cancellations")
+    # ML names the late-shipment metric `delayed_handling_time`; tolerate
+    # the shorter alias too in case the shape varies by site/version.
+    delayed = metrics.get("delayed_handling_time") or metrics.get("delayed_handling") or {}
+    sales = metrics.get("sales") or {}
+    return {
+        "level_id": rep.get("level_id"),
+        "power_seller_status": rep.get("power_seller_status"),
+        "transactions_total": transactions.get("total"),
+        "transactions_completed": transactions.get("completed"),
+        "sales_completed": sales.get("completed"),
+        "claims_rate": claims_rate,
+        "claims_value": claims_value,
+        "cancellations_rate": canc_rate,
+        "cancellations_value": canc_value,
+        "delayed_handling_rate": delayed.get("rate"),
+        "delayed_handling_value": delayed.get("value"),
+    }
+
+
 class MercadoLibreConnector(BaseMarketplaceConnector):
     """
     MercadoLibre Mexico (MLM) implementation of the Marketplace Connector.
@@ -62,6 +100,22 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
             )
             response.raise_for_status()
             return response.json()
+
+    async def fetch_seller_reputation(self, access_token: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch the authenticated seller's reputation metrics.
+
+        `GET /users/me` returns the full user object including the
+        `seller_reputation` block (level, power-seller status, and the
+        claims / cancellations / delayed-handling metrics). Returns the
+        normalized dict from :func:`parse_seller_reputation`.
+        """
+        if not access_token:
+            raise ValueError("Access token is required to fetch seller reputation")
+        async with httpx.AsyncClient() as client:
+            headers = {"Authorization": f"Bearer {access_token}"}
+            response = await client.get(f"{self.API_URL}/users/me", headers=headers)
+            response.raise_for_status()
+            return parse_seller_reputation(response.json())
 
     async def fetch_all_listings(self, access_token: Optional[str] = None) -> list:
         """

@@ -1793,7 +1793,8 @@
       "low_margin": "Margen bajo",
       "sales_dip": "Caída de ventas",
       "stockout_risk": "Riesgo de desabasto",
-      "ml_full_stockout_risk": "Riesgo de desabasto en MercadoLibre Full"
+      "ml_full_stockout_risk": "Riesgo de desabasto en MercadoLibre Full",
+      "reputation_risk": "Riesgo de reputación en ML"
     },
     "empty": {
       "title": "Aún no hay reglas de alerta",
@@ -1829,7 +1830,8 @@
       "cooldownHint": "No se enviará otro correo de esta regla hasta que pasen estos minutos.",
       "notifyEmail": "Correo de aviso",
       "enabled": "Activa",
-      "thresholdHintMlFullStockout": "Número de SKUs de MercadoLibre Full en riesgo de desabasto que dispara la alerta (el inventario en Full + traslados en tránsito no cubrirán la demanda de ML)."
+      "thresholdHintMlFullStockout": "Número de SKUs de MercadoLibre Full en riesgo de desabasto que dispara la alerta (el inventario en Full + traslados en tránsito no cubrirán la demanda de ML).",
+      "thresholdHintReputation": "Alerta cuando el peor de tus índices de reclamos / cancelaciones / demoras (%) alcance este valor."
     },
     "delete": {
       "title": "¿Eliminar regla de alerta?",
@@ -1920,7 +1922,8 @@
       "webhooks": "Webhooks (24h)",
       "inbound": "Transferencias inbound",
       "settlement": "Comisiones reales",
-      "actions": "Acciones"
+      "actions": "Acciones",
+      "reputation": "Reputación"
     },
     "auth": {
       "ok": "OK",
@@ -1950,7 +1953,9 @@
       "reconcileNow": "Reconciliar inbound",
       "reconcileTooltip": "Ejecuta la reconciliación inbound para las transferencias abiertas de esta credencial",
       "settlementNow": "Sincronizar comisiones",
-      "settlementTooltip": "Obtén las comisiones reales del marketplace + el costo real de envío por pedido y reemplaza las estimaciones en el desglose de costos."
+      "settlementTooltip": "Obtén las comisiones reales del marketplace + el costo real de envío por pedido y reemplaza las estimaciones en el desglose de costos.",
+      "reputationNow": "Reputación",
+      "reputationTooltip": "Obtener la reputación más reciente del vendedor desde MercadoLibre"
     },
     "results": {
       "pollSummary": "Polling: {{new}} nuevos, {{updated}} actualizados, {{items}} líneas.",
@@ -1972,13 +1977,23 @@
       "reconcileUnsupported": "La reconciliación inbound no está disponible para este marketplace.",
       "settlementDone": "Sincronización: {{settled}} pedido(s) liquidados, {{pending}} aún pendientes, {{scanned}} revisados.",
       "settlementNeedsReauth": "Reconecta la credencial antes de sincronizar las comisiones.",
-      "settlementUnsupported": "La ingesta de comisiones reales no está disponible para este marketplace."
+      "settlementUnsupported": "La ingesta de comisiones reales no está disponible para este marketplace.",
+      "reputationDone": "Captura de reputación realizada.",
+      "reputationNeedsReauth": "No se puede obtener la reputación — esta credencial necesita reautorización.",
+      "reputationUnsupported": "La reputación no está disponible para este marketplace."
     },
     "errors": {
       "loadFailed": "No se pudo cargar la salud del marketplace.",
       "pollFailed": "No se pudo ejecutar el polling de pedidos.",
       "reconcileFailed": "No se pudo ejecutar la reconciliación inbound.",
-      "settlementFailed": "No se pudo ejecutar la sincronización de comisiones."
+      "settlementFailed": "No se pudo ejecutar la sincronización de comisiones.",
+      "reputationFailed": "No se pudo actualizar la reputación."
+    },
+    "reputation": {
+      "unsupported": "N/D",
+      "unsupportedTooltip": "Este marketplace no reporta reputación del vendedor.",
+      "tooltip": "Reclamos {{claims}}% · cancelaciones {{cancellations}}% · demoras {{delayed}}% (capturado hace {{when}})",
+      "neverTooltip": "Aún no hay captura de reputación — haz clic en Reputación para capturar una."
     }
   },
   "apiErrors": {

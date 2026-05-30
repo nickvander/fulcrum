@@ -202,11 +202,19 @@ def _build_credential_health(
 
     stats = _open_transfer_stats(db, marketplace_name, credential.user_id)
     webhook = _webhook_stats(db, credential.marketplace_id, now)
+
+    # Latest reputation snapshot (ML only; NULL until first capture).
+    from src.schemas.marketplace_health import ReputationSnapshotRead
+    from src.services import reputation_service
+    snapshot = reputation_service.latest_for_credential(db, credential.id)
+    reputation = ReputationSnapshotRead.model_validate(snapshot) if snapshot else None
+
     return MarketplaceCredentialHealth(
         credential_id=credential.id,
         marketplace_id=credential.marketplace_id,
         marketplace_name=marketplace_name,
         user_id=credential.user_id,
+        reputation=reputation,
         needs_reauthorization=bool(credential.needs_reauthorization),
         last_refresh_error=credential.last_refresh_error,
         expires_at=credential.expires_at,

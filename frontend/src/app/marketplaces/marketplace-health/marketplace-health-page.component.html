@@ -137,6 +137,38 @@
             </td>
           </ng-container>
 
+          <ng-container matColumnDef="reputation">
+            <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.reputation') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="status-pill" [ngClass]="reputationClass(row)"
+                    [attr.data-testid]="'reputation-pill-' + row.credential_id"
+                    [matTooltip]="!isReputationSupported(row)
+                      ? t('marketplaceHealth.reputation.unsupportedTooltip')
+                      : (row.reputation
+                          ? t('marketplaceHealth.reputation.tooltip', {
+                              claims: (row.reputation.claims_rate ?? 0),
+                              cancellations: (row.reputation.cancellations_rate ?? 0),
+                              delayed: (row.reputation.delayed_handling_rate ?? 0),
+                              when: ago(row.reputation.captured_at)
+                            })
+                          : t('marketplaceHealth.reputation.neverTooltip'))">
+                @if (!isReputationSupported(row)) {
+                  <mat-icon class="pill-icon">block</mat-icon>
+                  {{ t('marketplaceHealth.reputation.unsupported') }}
+                } @else if (row.reputation) {
+                  <mat-icon class="pill-icon">verified_user</mat-icon>
+                  {{ row.reputation.level_id || '—' }}
+                  @if (reputationWorstRate(row) != null) {
+                    · {{ reputationWorstRate(row) | number:'1.0-1' }}%
+                  }
+                } @else {
+                  <mat-icon class="pill-icon">schedule</mat-icon>
+                  {{ t('marketplaceHealth.never') }}
+                }
+              </span>
+            </td>
+          </ng-container>
+
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>{{ t('marketplaceHealth.cols.actions') }}</th>
             <td mat-cell *matCellDef="let row">
@@ -177,6 +209,20 @@
                       <mat-icon>receipt_long</mat-icon>
                     }
                     {{ t('marketplaceHealth.actions.settlementNow') }}
+                  </button>
+                }
+                @if (isReputationSupported(row)) {
+                  <button mat-stroked-button
+                          (click)="refreshReputation(row)"
+                          [disabled]="isBusy(row)"
+                          [matTooltip]="t('marketplaceHealth.actions.reputationTooltip')"
+                          [attr.data-testid]="'reputation-button-' + row.credential_id">
+                    @if (refreshingReputation.has(row.credential_id)) {
+                      <mat-spinner diameter="16"></mat-spinner>
+                    } @else {
+                      <mat-icon>verified_user</mat-icon>
+                    }
+                    {{ t('marketplaceHealth.actions.reputationNow') }}
                   </button>
                 }
               </div>

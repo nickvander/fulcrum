@@ -84,4 +84,18 @@ describe('MarketplaceHealthService', () => {
       scanned: 7,
     });
   });
+
+  it('refreshReputation(id) POSTs to the per-credential reputation endpoint', () => {
+    service.refreshReputation(3).subscribe();
+    const req = httpMock.expectOne(
+      `${environment.apiUrl}/marketplaces/health/3/refresh-reputation`,
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({
+      credential_id: 3,
+      marketplace_name: 'MercadoLibre',
+      reputation: { level_id: '5_green', claims_rate: 1.5 },
+    });
+  });
 });
