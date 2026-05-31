@@ -6,63 +6,55 @@
   z-index: 1000;
   position: relative;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); // Subtle shadow
-
-  // Completely hide header on desktop since sidebar covers navigation
-  @media (min-width: 1024px) {
-    display: none;
-  }
+  // Header bar stays visible on desktop too: its menu button now collapses
+  // the persistent rail (248 <-> 76px) rather than opening a drawer.
 }
 
 .app-header {
   background: var(--bg-header); // Respect theme background
   color: var(--text-main);
   height: 64px;
-  padding: 0 24px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--border-color);
 }
 
-// Mobile Toggle Button
+// Toggle button: always visible (drawer on mobile, rail-collapse on desktop).
 .sidenav-toggle {
-  display: block; // Show by default (mobile)
-
-  @media (min-width: 1024px) {
-    display: none; // Hide on desktop (sidenav is permanent)
-  }
+  display: block;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-left: 8px;
 
+  // On desktop the rail already shows the brand mark; hide the duplicate here.
   @media (min-width: 1024px) {
     display: none;
   }
 }
 
-.logo-icon {
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
-  color: var(--primary-color);
+// Evolved change_history triangle -> chile-red pivot/lever wedge mark.
+.logo-mark {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  background: var(--primary-color);
+  clip-path: polygon(0 0, 100% 50%, 0 100%, 28% 50%);
 
   @media (max-width: 600px) {
     display: none;
   }
-
-  &.tablet-hide {
-    @media (max-width: 1024px) {
-      display: none;
-    }
-  }
 }
 
 .logo {
+  font-family: var(--font-display, 'Space Grotesk'), sans-serif;
   font-weight: 700;
   font-size: 1.25rem; // Match sidenav
-  letter-spacing: -0.5px;
+  letter-spacing: 0.5px;
   color: var(--text-main); // Match sidenav
 }
 

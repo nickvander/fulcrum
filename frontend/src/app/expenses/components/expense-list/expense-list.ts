@@ -22,6 +22,7 @@ import { Expense, ExpenseSummary } from '../../models/expense.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ExpenseDialogComponent } from '../expense-dialog/expense-dialog';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
+import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
@@ -49,6 +50,7 @@ import { TranslocoModule } from '@ngneat/transloco';
         MatMenuModule,
         MatPaginatorModule,
         StatCardComponent,
+        MoneyPipe,
         DateRangePresetsComponent,
         TranslocoModule
     ],
@@ -370,15 +372,15 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
         return colors[category] || '#9e9e9e';
     }
 
-    getTotalExpenses(): string {
-        return this.summary?.total_amount?.toFixed(2) || '0.00';
+    getTotalExpenses(): number {
+        return this.summary?.total_amount ?? 0;
     }
 
-    getRecurringTotal(): string {
-        return this.summary?.by_type?.recurring?.toFixed(2) || '0.00';
+    getRecurringTotal(): number {
+        return this.summary?.by_type?.recurring ?? 0;
     }
 
-    getOneTimeTotal(): string {
-        return this.summary?.by_type?.one_time?.toFixed(2) || '0.00';
+    getOneTimeTotal(): number {
+        return this.summary?.by_type?.one_time ?? 0;
     }
 }

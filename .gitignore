@@ -41,3 +41,8 @@ frontend.log
 # Celery beat runtime schedule (written on worker startup)
 backend/celerybeat-schedule
 backend/celerybeat-schedule.db
+
+# Redesign analysis scratch (screenshots + probe scripts)
+work/redesign/shots/
+work/redesign/*.js
+work/redesign/*.mjs

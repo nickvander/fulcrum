@@ -113,7 +113,12 @@
     "users": "Users",
     "settings": "Settings",
     "signOut": "Sign Out",
-    "buyerQuestions": "Buyer Q&A"
+    "buyerQuestions": "Buyer Q&A",
+    "dailyActions": "Daily actions",
+    "sendToMlFull": "Send to ML Full",
+    "buyerQuestionsShort": "Questions",
+    "expensesShort": "Expenses",
+    "more": "More"
   },
   "auth": {
     "login": "Login",
@@ -128,6 +133,19 @@
     "signUp": "Sign Up",
     "welcomeBack": "Welcome back",
     "enterCredentials": "Enter your credentials to access your account"
+  },
+  "login": {
+    "title": "Management Console",
+    "copyright": "© {{year}} Fulcrum Inc.",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email",
+    "passwordRequired": "Password is required",
+    "heroTitle": "Your control room for selling on MercadoLibre",
+    "heroLede": "Fulcrum brings your inventory, your Full shipments, and your buyer questions into one place, so you decide fast and sell more.",
+    "point1": "Inventory and margins in pesos, in real time",
+    "point2": "MercadoLibre Full shipments without losing sight of stock",
+    "point3": "Buyer questions answered on time",
+    "noAccountHelp": "No access yet? Ask your administrator to create your account."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -405,6 +423,28 @@
         "pending": "Pending",
         "breached": "Breached"
       }
+    },
+    "heroInventoryValue": "Inventory Value",
+    "heroSalesVsSpend": "Sales (30d)",
+    "heroInventoryHealth": "Inventory Health",
+    "heroQaSla": "Buyer Q&A Over SLA",
+    "heroQaTooltip": "Open the buyer Q&A report",
+    "qaUnanswered": "{{ count }} unanswered",
+    "lowStockCount": "{{ count }} low on stock",
+    "gettingStarted": {
+      "eyebrow": "Primeros pasos",
+      "title": "Welcome to Fulcrum",
+      "subtitle": "Set up your catalog and your first MercadoLibre Full shipment. Once you have products, your full control room appears here."
+    },
+    "needsAttention": {
+      "title": "Needs attention",
+      "viewAll": "View all",
+      "product": "Product",
+      "onHand": "On hand",
+      "daysLeft": "Days left",
+      "suggested": "Suggested",
+      "status": "Status",
+      "allClear": "No critical or low-stock items right now."
     }
   },
   "onboarding": {
@@ -805,7 +845,64 @@
     "reorderPointHint": "When on-hand drops to this, create a PO. Overrides the store low-stock default.",
     "reorderQuantity": "Reorder Quantity",
     "reorderQuantityPlaceholder": "Auto",
-    "reorderQuantityHint": "Suggested batch size when reordering. Defaults to ~30 days of sales."
+    "reorderQuantityHint": "Suggested batch size when reordering. Defaults to ~30 days of sales.",
+    "regenerateSku": "Regenerate SKU",
+    "generateQr": "Generate QR",
+    "regenerateBarcode": "Regenerate Barcode",
+    "barcodeUpc": "Barcode / UPC",
+    "scanOrEnter": "Scan or enter code",
+    "emptyTitle": "Build your product catalog",
+    "emptyDescription": "Add your first product manually, then connect suppliers and purchase orders so stock has a reliable source.",
+    "importSupplierPo": "Import supplier PO",
+    "activeCampaignsCount": "{{count}} active campaigns",
+    "includes": "Includes:",
+    "item": "Item",
+    "moreItems": "+ {{count}} more",
+    "unlisted": "Unlisted",
+    "moreOptions": "More options",
+    "showingCount": "Showing {{shown}} of {{total}} products",
+    "scrollForMore": "Scroll for more",
+    "dropImageToScan": "Drop image to scan",
+    "orDragDropImage": "or drag and drop an image here",
+    "unknownProduct": "Unknown product",
+    "or": "OR",
+    "scanningAlt": "Scanning…",
+    "productImageAlt": "Product image",
+    "initialQuantity": "Starting quantity",
+    "initialQuantityHint": "Stock this product starts with",
+    "titleLabel": "Product name",
+    "skuLabel": "Internal code",
+    "skuHint": "Your own code to find this product (SKU / UPC).",
+    "costLabel": "How much did it cost you?",
+    "costHint": "What you pay your supplier per unit (COGS).",
+    "priceLabel": "What do you sell it for?",
+    "priceHint": "The price your buyer pays.",
+    "startingQuantityLabel": "Starting quantity",
+    "startingQuantityHint": "How many units you have on hand right now.",
+    "lowStockThresholdLabel": "Warn me when stock drops below",
+    "lowStockThresholdHint": "We'll flag this product as low when it reaches this number.",
+    "publishTitle": "Sell on MercadoLibre",
+    "publishMlLabel": "MercadoLibre",
+    "publishMlSub": "Your main sales channel in Mexico.",
+    "publishMlAction": "Publish to MercadoLibre",
+    "publishChannelsNote": "More channels are coming. For now, MercadoLibre is the only active publishing path.",
+    "saveFirstToPublish": "Save the product before publishing.",
+    "publishingToMl": "Publishing to MercadoLibre...",
+    "compactDensity": "Compact",
+    "comfortableDensity": "Comfortable",
+    "pillSearch": "Search",
+    "clearAll": "Clear all",
+    "health": "Health",
+    "whyZero": "Why 0 available?",
+    "stockExplainerTitle": "Where your stock lives",
+    "stockExplainerIntro": "Your units can sit in different places. \"0 available\" usually means stock hasn't reached the channel yet — not that you have none.",
+    "bucketDefault": "On hand (default)",
+    "bucketDefaultDesc": "Units you physically hold. Counted here as soon as a purchase order is received.",
+    "bucketMlFull": "MercadoLibre Full",
+    "bucketMlFullDesc": "Units stored in ML's warehouse. Only these show as available on MercadoLibre.",
+    "bucketAmazonFba": "Amazon FBA",
+    "bucketAmazonFbaDesc": "Units stored in Amazon's warehouse, available only on Amazon.",
+    "bucketPoNote": "Receiving a purchase order adds to on-hand stock — it does NOT automatically make units available on MercadoLibre. Send them to ML Full first."
   },
   "suppliers": {
     "title": "Suppliers",
@@ -1083,6 +1180,21 @@
         "price_diff": "Price differs",
         "unmatched": "Unmatched"
       }
+    },
+    "ingest": {
+      "title": "Import purchase order",
+      "intro": "Upload a supplier invoice or PO document. We'll extract the line items automatically.",
+      "dropFile": "Drop a PO file here, or click to browse",
+      "fileHint": "PDF, JPG or PNG",
+      "parsing": "Extracting line items…",
+      "itemsFound": "{{count}} line items found",
+      "reviewNext": "Review and confirm on the next screen.",
+      "reviewNumber": "Import review #{{id}}",
+      "reviewContext": "Confirm the supplier and Fulcrum product matches before creating a draft PO. Stock is not changed until the PO is received.",
+      "needsReview": "Needs review",
+      "createProduct": "Create product",
+      "learnAlias": "Learn alias",
+      "approveCreatePo": "Approve & create PO"
     }
   },
   "expenses": {
@@ -1132,7 +1244,11 @@
       "utilities": "Utilities",
       "packingMaterials": "Packing Materials",
       "other": "Other"
-    }
+    },
+    "dropReceiptAttach": "Drop receipt to attach",
+    "dropReceiptAutofill": "Drop receipt to auto-fill",
+    "analyzingReceipt": "Analyzing receipt…",
+    "descriptionRequired": "Description is required"
   },
   "marketing": {
     "title": "Marketing",
@@ -1254,7 +1370,41 @@
     "needsReauth": "Reauthorize",
     "needsReauthTooltip": "Reconnect this marketplace to resume syncing.",
     "needsReauthTooltipWithReason": "Reconnect this marketplace to resume syncing. Reason: {{reason}}",
-    "reconnect": "Reconnect"
+    "reconnect": "Reconnect",
+    "quickPostDialog": {
+      "title": "Create quick post",
+      "intro": "Publish a one-off update to your social channels.",
+      "linkProducts": "Link products (required for AI)",
+      "productSelection": "Product selection",
+      "searchProducts": "Search products…",
+      "aiContentAssistant": "AI content assistant",
+      "tone": "Tone",
+      "contentPrompt": "Content prompt",
+      "contentPromptPlaceholder": "Describe the post style, key points to highlight…",
+      "contentPromptHint": "This guides the AI in writing your social media post",
+      "imagePrompt": "Image prompt",
+      "imagePromptPlaceholder": "Describe the visual style, composition, lighting…",
+      "imagePromptHint": "This guides the AI in generating product images",
+      "regenerateText": "Regenerate text",
+      "generateText": "Generate text",
+      "regenerateImage": "Regenerate image",
+      "generateImage": "Generate image",
+      "regenerateBoth": "Regenerate both",
+      "generateAll": "Generate all",
+      "linkProductHint": "Link a product above to use AI generation.",
+      "viralStrategy": "Viral strategy",
+      "selectChannel": "Select channel",
+      "noActiveConnectors": "No active connectors found",
+      "subjectLine": "Subject line",
+      "postContent": "Post content",
+      "postContentPlaceholder": "What's happening?",
+      "generatedPreview": "Generated preview",
+      "imageUrl": "Image URL",
+      "requiredSuffix": "(Required)",
+      "optionalSuffix": "(Optional)",
+      "saveDraft": "Save draft",
+      "postNow": "Post now"
+    }
   },
   "auditLogs": {
     "title": "Audit Logs",
@@ -1668,6 +1818,26 @@
       "samePairError": "Pick two different currencies.",
       "loadError": "Couldn't load exchange rates.",
       "saveError": "Couldn't save the exchange rate."
+    },
+    "aiTab": {
+      "description": "Connect an AI provider to enable product identification from photos. Only the active provider needs an API key configured.",
+      "enableFeatures": "Enable AI features",
+      "activeProvider": "Active provider",
+      "providerHint": "This provider will be used for AI features",
+      "modelOverride": "Model override (optional)",
+      "modelPlaceholder": "Leave empty for default",
+      "modelHint": "e.g. gpt-4o, claude-3-5-sonnet, gemini-1.5-flash",
+      "apiKeyFor": "API key for {{provider}}",
+      "keyConfigured": "Key configured",
+      "keyRequired": "Key required to enable AI",
+      "providerApiKey": "{{provider}} API key",
+      "enterKeyToUpdate": "Enter key to update",
+      "keyUpdateHint": "Enter a new key to update. Leave empty to keep the existing one.",
+      "showOtherKeys": "Show other provider keys",
+      "hideOtherKeys": "Hide other provider keys",
+      "configured": "✓ Configured",
+      "notConfigured": "Not configured",
+      "enterToUpdate": "Enter to update"
     }
   },
   "notifications": {
@@ -2169,5 +2339,10 @@
     "currency": {
       "invalidRate": "Invalid exchange rate: {{reason}}"
     }
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "generic": "We couldn't load this. Please try again.",
+    "retry": "Retry"
   }
 }

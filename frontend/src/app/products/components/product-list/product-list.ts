@@ -27,6 +27,7 @@ import { ScreenService } from '../../../core/services/screen.service';
 import { MarketplaceStatusComponent } from '../../../shared/components/marketplace-status/marketplace-status.component';
 import { ProductDetailsDialogComponent } from '../product-details-dialog/product-details-dialog.component';
 import { CatalogImportDialogComponent } from '../catalog-import-dialog/catalog-import-dialog';
+import { MxnPipe } from '../../../shared/pipes/mxn.pipe';
 
 @Component({
   selector: 'app-product-list',
@@ -44,7 +45,8 @@ import { CatalogImportDialogComponent } from '../catalog-import-dialog/catalog-i
     ProductDashboardComponent,
     TranslocoModule,
     LoadingSpinnerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    MxnPipe
   ],
 })
 export class ProductList implements OnInit, OnDestroy, AfterViewInit {
@@ -990,6 +992,16 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   }
 
   showAdvancedFilters = false;
+
+  // In-situ 3-bucket stock explainer (default / ml-full / amazon-fba). Surfaced
+  // from a "¿Por qué 0 disponible?" link on the first zero-stock row a seller
+  // sees, so PO-receive ≠ on-ML is explained where the confusion happens.
+  showStockExplainer = false;
+
+  toggleStockExplainer(): void {
+    this.showStockExplainer = !this.showStockExplainer;
+    this.cdr.markForCheck();
+  }
 
   toggleAdvancedFilters(): void {
     this.showAdvancedFilters = !this.showAdvancedFilters;

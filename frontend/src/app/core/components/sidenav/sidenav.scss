@@ -3,96 +3,125 @@
 :host {
   display: block;
   height: 100%;
-  background: var(--bg-header); // Use header variable, usually white in light, dark in dark
-  border-right: 1px solid var(--border-color); // Use explicit border instead of shadow for cleaner dark mode
-  overflow-x: hidden; // Prevent horizontal scrollbar
+  background: var(--bg-header);
+  border-right: 1px solid var(--border-color);
+  overflow-x: hidden;
 }
 
 .sidenav-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 260px; // Fixed width
+  width: 248px;
   overflow-x: hidden;
-  background: var(--bg-header); // Redundant but safe
-  box-sizing: border-box; // Ensure padding implies border-box
-}
+  background: var(--bg-header);
+  box-sizing: border-box;
+  transition: width 0.18s var(--ease-standard, ease);
 
-/* ===== Header ===== */
-.sidenav-header {
-  padding: 24px 24px 16px;
-  display: flex;
-  align-items: center;
-  background: transparent; // Ensure no background box
-  border: none; // Ensure no border
-
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: transparent; // No box around logo
-    border: none;
-    box-shadow: none;
-
-    .logo-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      color: var(--primary-color);
-    }
-
-    .logo-text {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--text-main);
-      letter-spacing: -0.5px;
-    }
+  &.collapsed {
+    width: 76px;
   }
 }
 
-/* ===== Scroll Content ===== */
+/* ===== Header / pivot-wedge mark ===== */
+.sidenav-header {
+  padding: 20px 18px 16px;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+}
+
+.collapsed .sidenav-header {
+  padding: 20px 0 16px;
+  justify-content: center;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  min-width: 0;
+}
+
+/* Evolved change_history triangle -> chile-red pivot/lever wedge. */
+.logo-mark {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  background: var(--primary-color);
+  clip-path: polygon(0 0, 100% 50%, 0 100%, 28% 50%);
+}
+
+.logo-text {
+  font-family: var(--font-display, 'Space Grotesk'), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* ===== Scroll content ===== */
 .nav-scroll-content {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden; // Prevent horizontal scrollbar
-  padding: 16px;
+  overflow-x: hidden;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+}
+
+.collapsed .nav-scroll-content {
+  padding: 10px 8px;
 }
 
 .group-title {
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   color: var(--text-hint);
   font-weight: 600;
-  margin: 0 0 8px 12px;
-  letter-spacing: 0.5px;
+  margin: 0 0 6px 12px;
+  letter-spacing: 0.06em;
 }
 
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
-/* ===== Nav Items ===== */
+/* ===== Nav items (leaf, group header, share base) ===== */
 .nav-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
+  min-height: 44px;
+  border: 0;
   border-radius: 8px;
+  background: transparent;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
 
   mat-icon {
+    flex: 0 0 auto;
     color: var(--text-secondary);
-    transition: color 0.2s;
-    opacity: 0.8;
+    transition: color 0.12s ease;
+    opacity: 0.85;
   }
 
   &:hover {
@@ -104,107 +133,123 @@
     }
   }
 
-  &.active {
-    background: var(--bg-layout); // Use a layout bg or light accent
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+  }
+}
+
+.collapsed .nav-item {
+  justify-content: center;
+  gap: 0;
+  padding: 10px 0;
+}
+
+.nav-label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  opacity: 0.6;
+}
+
+/* ===== Active wedge: 3px left chile-red bar ===== */
+.active-wedge {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 3px;
+  height: 60%;
+  background: var(--primary-color);
+  border-radius: 0 2px 2px 0;
+  transition: transform 0.12s ease;
+}
+
+.nav-item.active,
+.sub-nav-item.active {
+  background: var(--bg-hover);
+  color: var(--text-main);
+  font-weight: 600;
+
+  mat-icon {
     color: var(--primary-color);
+  }
 
-    mat-icon {
-      color: var(--primary-color);
-    }
-
-    // In Dark Mode, we might want a slightly distinct active state
-    // but variables should handle this if configured well. 
-    // Fallback logic could go here if needed.
+  .active-wedge {
+    transform: translateY(-50%) scaleY(1);
   }
 }
 
-/* ===== Expansion Panel Overrides ===== */
-.nav-expansion {
-  box-shadow: none !important;
-  background: transparent !important;
-  border-radius: 0 !important;
+/* Group header reflects an active (possibly hidden) child. */
+.group-header.has-active {
+  color: var(--text-main);
 
-  ::ng-deep .mat-expansion-panel-body {
-    padding: 0 0 0 0 !important;
+  mat-icon {
+    color: var(--primary-color);
   }
 
-  mat-expansion-panel-header {
-    padding: 10px 12px !important;
-    height: auto !important;
-    border-radius: 8px;
-    font-family: inherit;
-
-    &:hover {
-      background: var(--bg-hover) !important;
-    }
-
-    &.mat-expanded {
-      background: transparent !important;
-    }
-
-    mat-panel-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: var(--text-secondary);
-      font-weight: 500;
-      margin: 0;
-      font-size: 0.95rem;
-
-      mat-icon {
-        color: var(--text-secondary);
-        margin-right: 0;
-        opacity: 0.8;
-      }
-    }
-  }
-
-  // Expansion indicator (arrow) styling
-  ::ng-deep .mat-expansion-indicator::after {
-    color: var(--text-secondary) !important;
-    border-color: var(--text-secondary) !important;
+  .active-wedge {
+    transform: translateY(-50%) scaleY(1);
   }
 }
 
+/* ===== Sub-nav (children) ===== */
 .sub-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding-left: 12px;
-  margin-top: 2px;
+  margin: 2px 0 2px 23px;
   border-left: 1px solid var(--border-color);
-  margin-left: 23px; // Align with icon center
 }
 
 .sub-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
   padding: 8px 12px;
+  min-height: 38px;
+  box-sizing: border-box;
   font-size: 0.9rem;
   color: var(--text-secondary);
   text-decoration: none;
   border-radius: 6px;
-  transition: all 0.2s;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  .active-wedge {
+    height: 50%;
+    left: -13px;
+  }
 
   &:hover {
     color: var(--text-main);
     background: var(--bg-hover);
   }
 
-  &.active {
-    color: var(--primary-color);
-    font-weight: 500;
-    background: var(--bg-layout); // Or subtle primary bg
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
   }
 }
 
 /* ===== Footer ===== */
 .sidenav-footer {
-  padding: 16px;
+  padding: 12px;
   border-top: 1px solid var(--border-color);
 
   .user-card {
     display: flex;
     align-items: center;
-    justify-content: space-between; // Space out profile and action
+    justify-content: space-between;
     padding: 4px;
     border-radius: 12px;
 
@@ -215,34 +260,36 @@
       padding: 6px;
       border-radius: 8px;
       transition: background 0.2s;
-      flex: 1; // Take available space
+      flex: 1;
+      min-width: 0;
       cursor: default;
-
-      // Optional: slight hover effect on the bio part
-      // &:hover { background: #f8fafc; }
 
       .avatar-circle {
         width: 36px;
         height: 36px;
+        flex: 0 0 auto;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2E3A59 0%, #1C2336 100%); // Gradient background
-        color: white;
+        background: var(--primary-color);
+        color: var(--text-on-primary);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 0.85rem;
         font-weight: 600;
-        box-shadow: 0 2px 4px rgba(46, 58, 89, 0.2);
       }
 
       .user-info {
         display: flex;
         flex-direction: column;
+        min-width: 0;
 
         .name {
           font-size: 0.9rem;
           font-weight: 600;
           color: var(--text-main);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .role {
@@ -254,28 +301,34 @@
     }
 
     .user-menu-btn {
-      width: 32px !important;
-      height: 32px !important;
-      line-height: 32px !important;
-      color: #94a3b8; // Slate 400
-      border-radius: 50%; // Circular
+      width: 36px !important;
+      height: 36px !important;
+      line-height: 36px !important;
+      color: var(--text-secondary);
+      border-radius: 50%;
       padding: 0;
-
       transition: all 0.2s ease;
       background: transparent;
 
       mat-icon {
-        font-size: 20px;
-        width: 20px;
-        height: 20px;
-        line-height: 20px;
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
       }
 
       &:hover {
         color: var(--primary-color);
         background: var(--bg-hover);
-        transform: translateY(-1px); // Subtle lift
       }
     }
+  }
+}
+
+.collapsed .sidenav-footer {
+  padding: 12px 0;
+
+  .user-card {
+    justify-content: center;
   }
 }

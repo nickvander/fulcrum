@@ -1,114 +1,200 @@
 @use '../../../../theme/variables' as v;
 
-.login-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+// ── Split-panel shell ──────────────────────────────────────────────────────
+// Left: obsidian brand panel with the pivot-wedge mark + hero (Space Grotesk).
+// Right: warm-paper form panel. Collapses to a single column on small screens.
+.login-shell {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
   min-height: 100vh;
   background-color: var(--bg-app);
-  padding: 20px;
+
+  @media (max-width: 880px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.login-card-wrapper {
-  width: 100%;
-  max-width: 420px;
+// ── Brand panel (always dark obsidian, regardless of theme) ─────────────────
+.brand-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  animation: fadeIn 0.4s ease-out;
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-
-.branding-header {
-  text-align: center;
-  margin-bottom: 8px;
-
-  .logo-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--primary-color);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 16px;
-    box-shadow: var(--shadow-md);
-
-    mat-icon {
-      color: white;
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-    }
-  }
-
-  h1 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-main);
-    margin: 0 0 4px;
-    letter-spacing: -0.5px;
-  }
-
-  p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-}
-
-.login-card {
-  border-radius: 16px;
-  box-shadow: var(--shadow-lg) !important;
-  background: var(--bg-card);
-  padding: 32px 24px 24px !important;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 56px 56px 40px;
+  color: #F5F4F2;
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(255, 77, 46, 0.20) 0%, rgba(255, 77, 46, 0) 55%),
+    #0E0F13;
   overflow: hidden;
 
-  mat-card-content {
-    padding: 0;
+  // Subtle large wedge watermark
+  &::after {
+    content: '';
+    position: absolute;
+    right: -80px;
+    bottom: -120px;
+    width: 360px;
+    height: 360px;
+    background: rgba(255, 77, 46, 0.06);
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 880px) {
+    padding: 36px 28px 28px;
+    gap: 28px;
+  }
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+
+  .wedge {
+    width: 32px;
+    height: 32px;
+    color: var(--primary-color);
+  }
+
+  .brand-name {
+    font: var(--font-h1, 600 24px/30px var(--font-display));
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}
+
+.brand-copy {
+  z-index: 1;
+  max-width: 460px;
+}
+
+.brand-hero {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+
+.brand-lede {
+  margin: 0 0 32px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #A8ABB4;
+}
+
+.brand-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #F5F4F2;
+  }
+
+  mat-icon {
+    color: var(--primary-color);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 880px) {
+    display: none;
+  }
+}
+
+.brand-footer {
+  z-index: 1;
+  margin: 0;
+  font-size: 12px;
+  color: #6E727C;
+}
+
+// ── Form panel ──────────────────────────────────────────────────────────────
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background-color: var(--bg-app);
+}
+
+.form-inner {
+  width: 100%;
+  max-width: 400px;
+  animation: fadeIn 0.4s var(--ease-standard, ease-out);
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+// Compact brand row, shown above the form (useful when panels stack on mobile)
+.form-brand-compact {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--text-main);
+
+  .wedge {
+    width: 26px;
+    height: 26px;
+    color: var(--primary-color);
+  }
+
+  @media (max-width: 880px) {
+    display: flex;
   }
 }
 
 .welcome-text {
-  text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 
   h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     color: var(--text-main);
     margin: 0 0 8px;
   }
 
   p {
-    color: var(--text-hint);
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-size: 14px;
     margin: 0;
   }
 }
 
-// Sleek Auth Fields
+// Sleek outlined auth fields (es-MX labels), re-skinned to brand tokens
 .sleek-auth-field {
   width: 100%;
-  margin-bottom: 2px; // Space for errors
+  margin-bottom: 6px;
 
-  // Background
   ::ng-deep .mat-mdc-text-field-wrapper {
     background: var(--bg-card) !important;
   }
 
-  // Customizing Outline
   ::ng-deep .mdc-notched-outline__leading,
   ::ng-deep .mdc-notched-outline__notch,
   ::ng-deep .mdc-notched-outline__trailing {
@@ -119,7 +205,6 @@
     background-color: transparent !important;
   }
 
-  // Input text color
   ::ng-deep input {
     color: var(--text-main) !important;
 
@@ -128,14 +213,12 @@
     }
   }
 
-  // Labels
   ::ng-deep .mat-mdc-floating-label,
   ::ng-deep .mdc-floating-label {
     color: var(--text-secondary) !important;
   }
 
-  // Icons
-  mat-icon {
+  mat-icon[matPrefix] {
     color: var(--text-hint);
     margin-right: 8px;
   }
@@ -143,39 +226,43 @@
 
 .forgot-password {
   text-align: right;
-  margin-bottom: 24px;
-  margin-top: 4px;
+  margin: 2px 0 20px;
 
   a {
-    color: var(--primary-color);
+    color: var(--accent-color);
     text-decoration: none;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
 
-    &:hover {
-      text-decoration: underline;
-    }
+    &:hover { text-decoration: underline; }
   }
 }
 
+// Chile-red filled CTA
 .login-btn {
   width: 100%;
-  padding: 24px !important; // Taller button
-  font-size: 1rem !important;
-  border-radius: 99px !important;
+  height: 48px;
+  font-size: 15px !important;
   font-weight: 600 !important;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
+  border-radius: var(--radius-sm, 8px) !important;
+  background-color: var(--primary-color) !important;
+  color: var(--text-on-primary) !important;
   box-shadow: var(--shadow-md);
-  margin-top: 8px;
+  transition: background-color var(--dur-fast, 120ms) var(--ease-standard, ease);
+
+  &:hover:not([disabled]) {
+    background-color: var(--primary-hover) !important;
+  }
 }
 
-.login-footer {
+.form-help {
+  margin: 20px 0 0;
   text-align: center;
-  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--text-hint);
+}
 
-  p {
-    font-size: 0.75rem;
-    color: var(--text-hint);
-    margin: 0;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .form-inner { animation: none; }
 }

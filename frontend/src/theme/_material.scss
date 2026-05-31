@@ -1,0 +1,95 @@
+// =============================================================================
+// Angular Material M3 theme — "Obsidian & Chile"
+// Introduces the Material theme layer (there was none before) so Material
+// components inherit our brand color / Inter+Space Grotesk type / density
+// instead of MDC's Roboto+indigo defaults.
+//
+// Strategy:
+//  - mat.theme() with use-system-variables:true emits Material's --mat-sys-*
+//    tokens as CSS custom properties.
+//  - We then BIND the surface/text/outline system tokens to OUR contract
+//    (--bg-card / --text-main / --border-color / --primary-color ...), so
+//    Material surfaces track our re-pointed values WITHOUT per-rule !important.
+//  - Light on :root, dark under body.dark-theme (the existing toggle).
+//
+// Color: primary = chile-red ($red-palette ~ #FF4D2E family);
+//        tertiary = cool affordance blue ($azure-palette).
+// Type:  brand-family = Space Grotesk, plain-family = Inter.
+// =============================================================================
+
+@use '@angular/material' as mat;
+
+// ---- Theme definition (system variables ON so we can bridge to our tokens) ---
+$fulcrum-color: (
+  theme-type: light,
+  primary: mat.$red-palette,
+  tertiary: mat.$azure-palette,
+  use-system-variables: true,
+);
+$fulcrum-typography: (
+  brand-family: 'Space Grotesk',
+  plain-family: 'Inter',
+  bold-weight: 700,
+  medium-weight: 600,
+  regular-weight: 400,
+);
+
+:root {
+  @include mat.theme((
+    color: $fulcrum-color,
+    typography: $fulcrum-typography,
+    density: 0,
+  ));
+}
+
+// Dark variant reuses the EXISTING body.dark-theme switch.
+body.dark-theme {
+  @include mat.theme((
+    color: (
+      theme-type: dark,
+      primary: mat.$red-palette,
+      tertiary: mat.$azure-palette,
+      use-system-variables: true,
+    ),
+  ));
+}
+
+// -----------------------------------------------------------------------------
+// Bridge: point Material's M3 system tokens at OUR custom-property contract.
+// Because variables.scss already sets --bg-card / --text-main / etc. per mode,
+// this makes Material components match our hand-rolled components in both
+// light and dark with no !important overrides.
+// -----------------------------------------------------------------------------
+@mixin fulcrum-mat-sys-bridge {
+  // Brand / interactive
+  --mat-sys-primary: var(--primary-color);
+  --mat-sys-on-primary: var(--text-on-primary);
+  --mat-sys-tertiary: var(--accent-color);
+  --mat-sys-error: var(--error-color);
+
+  // Surfaces
+  --mat-sys-surface: var(--bg-card);
+  --mat-sys-surface-container: var(--bg-card);
+  --mat-sys-surface-container-low: var(--bg-card);
+  --mat-sys-surface-container-high: var(--bg-raised);
+  --mat-sys-surface-container-highest: var(--bg-raised);
+  --mat-sys-surface-bright: var(--bg-raised);
+  --mat-sys-surface-dim: var(--bg-app);
+  --mat-sys-background: var(--bg-app);
+
+  // Ink
+  --mat-sys-on-surface: var(--text-main);
+  --mat-sys-on-surface-variant: var(--text-secondary);
+  --mat-sys-on-background: var(--text-main);
+
+  // Hairlines
+  --mat-sys-outline: var(--border-color);
+  --mat-sys-outline-variant: var(--border-color);
+}
+
+:root {
+  @include fulcrum-mat-sys-bridge;
+}
+body.dark-theme {
+  @include fulcrum-mat-sys-bridge;
+}

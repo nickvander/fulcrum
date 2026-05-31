@@ -43,6 +43,18 @@ export class SettingsService {
   private readonly storageKey = 'fulcrum_settings';
   private apiUrl = `${environment.apiUrl}/inventory-settings`; // Use specific endpoint prefix
 
+  /**
+   * First-run defaults for a brand-new user with no saved settings.
+   * "Obsidian & Chile" is a dark-first brand and the product is Mexico-first,
+   * so the defaults are dark theme + es-MX (see work/redesign/05a-BRAND-LOCK.md).
+   */
+  static readonly DEFAULT_SETTINGS: AppSettings = {
+    ai_provider: '',
+    ai_api_key: '',
+    theme: 'dark',
+    language: 'es-MX',
+  };
+
   private readonly _settings = new BehaviorSubject<AppSettings | null>(null);
   readonly settings$ = this._settings.asObservable();
 

@@ -31,6 +31,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 })
 export class Login {
   loginForm: FormGroup;
+  readonly currentYear = new Date().getFullYear();
 
   constructor(
     private fb: FormBuilder,
@@ -44,6 +45,12 @@ export class Login {
   }
 
   onSubmit(): void {
+    if (this.loginForm.invalid) {
+      // Surface the localized validation errors on the empty/invalid fields.
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
     if (this.loginForm.valid) {
       // Disable form to prevent multiple submissions
       this.loginForm.disable();

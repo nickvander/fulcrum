@@ -1,28 +1,29 @@
+<ng-container *transloco="let t">
 <header class="dialog-header">
-    <h2>Create Quick Post</h2>
+    <h2>{{ t('marketing.quickPostDialog.title') }}</h2>
 </header>
 <form [formGroup]="postForm" (ngSubmit)="onSubmit()">
     <mat-dialog-content>
         <p class="intro-text">
-            Publish a one-off update to your social channels.
+            {{ t('marketing.quickPostDialog.intro') }}
         </p>
 
         <!-- Product Linking -->
         <mat-form-field appearance="outline" class="full-width compact-field" subscriptSizing="dynamic">
-            <mat-label>Link Products (Required for AI)</mat-label>
-            <mat-chip-grid #chipGrid aria-label="Product selection">
+            <mat-label>{{ t('marketing.quickPostDialog.linkProducts') }}</mat-label>
+            <mat-chip-grid #chipGrid [attr.aria-label]="t('marketing.quickPostDialog.productSelection')">
                 <mat-chip-row *ngFor="let product of selectedProducts" (removed)="removeProduct(product)">
                     <img matChipAvatar
                         [src]="product.primary_image?.image_path || (product.images && product.images.length > 0 ? product.images[0].image_path : '')"
                         onerror="this.src='assets/placeholder.jpg'"
                         *ngIf="product.primary_image || (product.images && product.images.length > 0)" />
                     {{product.name}}
-                    <button matChipRemove [attr.aria-label]="'remove ' + product.name">
+                    <button matChipRemove [attr.aria-label]="t('common.remove') + ' ' + product.name">
                         <mat-icon>cancel</mat-icon>
                     </button>
                 </mat-chip-row>
             </mat-chip-grid>
-            <input placeholder="Search products..." #productInput [formControl]="productSearchCtrl"
+            <input [placeholder]="t('marketing.quickPostDialog.searchProducts')" #productInput [formControl]="productSearchCtrl"
                 [matChipInputFor]="chipGrid" [matAutocomplete]="auto">
             <mat-autocomplete #auto="matAutocomplete" (optionSelected)="productSelected($event)">
                 <mat-option *ngFor="let product of filteredProducts$ | async" [value]="product">
@@ -38,7 +39,7 @@
             <div class="panel-header" (click)="toggleAiPanel()">
                 <div class="header-content">
                     <mat-icon>auto_awesome</mat-icon>
-                    <span>AI Content Assistant</span>
+                    <span>{{ t('marketing.quickPostDialog.aiContentAssistant') }}</span>
                 </div>
                 <mat-icon>{{ showAiPanel ? 'expand_less' : 'expand_more' }}</mat-icon>
             </div>
@@ -46,7 +47,7 @@
             <div class="panel-body" *ngIf="showAiPanel">
                 <!-- Tone Chips -->
                 <div class="tone-section">
-                    <label class="section-label">Tone</label>
+                    <label class="section-label">{{ t('marketing.quickPostDialog.tone') }}</label>
                     <div class="tone-chips">
                         <button mat-stroked-button type="button" *ngFor="let preset of tonePresets"
                             [class.selected]="selectedTone?.id === preset.id" (click)="selectTone(preset)"
@@ -60,12 +61,12 @@
                 <div class="prompt-section">
                     <label class="section-label">
                         <mat-icon>article</mat-icon>
-                        Content Prompt
+                        {{ t('marketing.quickPostDialog.contentPrompt') }}
                     </label>
                     <mat-form-field appearance="outline" class="full-width prompt-field" subscriptSizing="dynamic">
                         <textarea matInput [formControl]="customPromptCtrl" rows="2"
-                            placeholder="Describe the post style, key points to highlight..."></textarea>
-                        <mat-hint>This guides the AI in writing your social media post</mat-hint>
+                            [placeholder]="t('marketing.quickPostDialog.contentPromptPlaceholder')"></textarea>
+                        <mat-hint>{{ t('marketing.quickPostDialog.contentPromptHint') }}</mat-hint>
                     </mat-form-field>
                 </div>
 
@@ -73,12 +74,12 @@
                 <div class="prompt-section" *ngIf="aiImageCtrl.value">
                     <label class="section-label">
                         <mat-icon>image</mat-icon>
-                        Image Prompt
+                        {{ t('marketing.quickPostDialog.imagePrompt') }}
                     </label>
                     <mat-form-field appearance="outline" class="full-width prompt-field" subscriptSizing="dynamic">
                         <textarea matInput [formControl]="imagePromptCtrl" rows="2"
-                            placeholder="Describe the visual style, composition, lighting..."></textarea>
-                        <mat-hint>This guides the AI in generating product images</mat-hint>
+                            [placeholder]="t('marketing.quickPostDialog.imagePromptPlaceholder')"></textarea>
+                        <mat-hint>{{ t('marketing.quickPostDialog.imagePromptHint') }}</mat-hint>
                     </mat-form-field>
                 </div>
 
@@ -88,13 +89,13 @@
                         <button mat-stroked-button type="button" class="action-btn" (click)="generateText()"
                             [disabled]="generating || selectedProducts.length === 0">
                             <mat-icon>article</mat-icon>
-                            <span>{{ hasContent() ? 'Regenerate' : 'Generate' }} Text</span>
+                            <span>{{ hasContent() ? t('marketing.quickPostDialog.regenerateText') : t('marketing.quickPostDialog.generateText') }}</span>
                         </button>
 
                         <button mat-stroked-button type="button" class="action-btn" (click)="generateImage()"
                             [disabled]="generating || selectedProducts.length === 0">
                             <mat-icon>image</mat-icon>
-                            <span>{{ hasImage() ? 'Regenerate' : 'Generate' }} Image</span>
+                            <span>{{ hasImage() ? t('marketing.quickPostDialog.regenerateImage') : t('marketing.quickPostDialog.generateImage') }}</span>
                         </button>
                     </div>
 
@@ -102,7 +103,7 @@
                         (click)="generateBoth()" [disabled]="generating || selectedProducts.length === 0">
                         <mat-spinner diameter="16" *ngIf="generating"></mat-spinner>
                         <mat-icon *ngIf="!generating">auto_awesome</mat-icon>
-                        <span *ngIf="!generating">{{ hasBoth() ? 'Regenerate Both' : 'Generate All' }}</span>
+                        <span *ngIf="!generating">{{ hasBoth() ? t('marketing.quickPostDialog.regenerateBoth') : t('marketing.quickPostDialog.generateAll') }}</span>
                     </button>
                 </div>
 
@@ -114,14 +115,14 @@
 
                 <div class="error-msg" *ngIf="selectedProducts.length === 0">
                     <mat-icon>info</mat-icon>
-                    Please link a product above to use AI generation.
+                    {{ t('marketing.quickPostDialog.linkProductHint') }}
                 </div>
 
                 <!-- AI Metadata Preview -->
                 <div class="generated-info" *ngIf="aiResult">
-                    <h4>Viral Strategy</h4>
+                    <h4>{{ t('marketing.quickPostDialog.viralStrategy') }}</h4>
                     <div class="strategy-text">
-                        {{ aiResult.research?.viral_angles?.join(', ') || 'N/A' }}
+                        {{ aiResult.research?.viral_angles?.join(', ') || t('common.noResults') }}
                     </div>
                 </div>
             </div>
@@ -129,13 +130,13 @@
 
         <!-- Connector Selection -->
         <mat-form-field appearance="outline" class="full-width compact-field" subscriptSizing="dynamic">
-            <mat-label>Select Channel</mat-label>
+            <mat-label>{{ t('marketing.quickPostDialog.selectChannel') }}</mat-label>
             <mat-select formControlName="connector_id">
                 <mat-option *ngFor="let connector of connectors" [value]="connector.id">
                     {{ connector.name }} ({{ connector.connector_type | titlecase }})
                 </mat-option>
                 <mat-option *ngIf="connectors.length === 0" disabled>
-                    No active connectors found
+                    {{ t('marketing.quickPostDialog.noActiveConnectors') }}
                 </mat-option>
             </mat-select>
         </mat-form-field>
@@ -143,21 +144,21 @@
         <!-- Email Subject -->
         <mat-form-field *ngIf="isChannel('email')" appearance="outline" class="full-width compact-field"
             subscriptSizing="dynamic">
-            <mat-label>Subject Line</mat-label>
+            <mat-label>{{ t('marketing.quickPostDialog.subjectLine') }}</mat-label>
             <input matInput formControlName="content_subject">
         </mat-form-field>
 
         <!-- Content -->
         <mat-form-field appearance="outline" class="full-width content-field" subscriptSizing="dynamic">
-            <mat-label>Post Content</mat-label>
-            <textarea matInput formControlName="content_body" rows="6" placeholder="What's happening?"></textarea>
+            <mat-label>{{ t('marketing.quickPostDialog.postContent') }}</mat-label>
+            <textarea matInput formControlName="content_body" rows="6" [placeholder]="t('marketing.quickPostDialog.postContentPlaceholder')"></textarea>
             <mat-hint align="end" *ngIf="isChannel('twitter')">{{postForm.get('content_body')?.value?.length || 0}} /
                 280</mat-hint>
         </mat-form-field>
 
         <!-- Image Preview (immediately after content) -->
         <div class="image-preview-section" *ngIf="postForm.get('content_image_url')?.value">
-            <img [src]="postForm.get('content_image_url')?.value" alt="Generated Preview"
+            <img [src]="postForm.get('content_image_url')?.value" [alt]="t('marketing.quickPostDialog.generatedPreview')"
                 onerror="this.style.display='none'" class="preview-image">
         </div>
 
@@ -175,7 +176,7 @@
         <!-- Image URL input (hidden when image exists, toggle to show) -->
         <mat-form-field *ngIf="!postForm.get('content_image_url')?.value" appearance="outline"
             class="full-width compact-field image-url-field" subscriptSizing="dynamic">
-            <mat-label>Image URL {{ isChannel('instagram') ? '(Required)' : '(Optional)' }}</mat-label>
+            <mat-label>{{ t('marketing.quickPostDialog.imageUrl') }} {{ isChannel('instagram') ? t('marketing.quickPostDialog.requiredSuffix') : t('marketing.quickPostDialog.optionalSuffix') }}</mat-label>
             <input matInput formControlName="content_image_url" placeholder="https://...">
             <button mat-icon-button matSuffix type="button" (click)="fileInput.click()">
                 <mat-icon>attach_file</mat-icon>
@@ -186,13 +187,14 @@
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-        <button mat-button type="button" mat-dialog-close>Cancel</button>
+        <button mat-button type="button" mat-dialog-close>{{ t('common.cancel') }}</button>
         <button mat-button color="primary" type="button" (click)="saveDraft()" [disabled]="submitting">
-            Save Draft
+            {{ t('marketing.quickPostDialog.saveDraft') }}
         </button>
         <button mat-raised-button color="primary" type="submit" [disabled]="!postForm.valid || submitting">
             <mat-spinner diameter="18" *ngIf="submitting"></mat-spinner>
-            <span *ngIf="!submitting">Post Now</span>
+            <span *ngIf="!submitting">{{ t('marketing.quickPostDialog.postNow') }}</span>
         </button>
     </mat-dialog-actions>
 </form>
+</ng-container>

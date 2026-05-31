@@ -1,0 +1,174 @@
+// =============================================================================
+// Obsidian & Chile — design tokens (SCSS maps)
+// AUTHORITATIVE SOURCE: work/redesign/05a-BRAND-LOCK.md
+//
+// Dark = product DEFAULT (Obsidian). Light = warm-paper alternate.
+// These maps are the single source of truth for the hex values; variables.scss
+// emits them as CSS custom properties, and _material.scss derives the Angular
+// Material M3 palettes from the same brand reds/blues.
+//
+// Brand accent (chile-red) is kept SEPARATE from the cool affordance/interactive
+// blue, and from the semantic negative/loss red. Never collapse them.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Color — Obsidian (dark, default)
+// -----------------------------------------------------------------------------
+$obsidian: (
+  // Brand accent — chile-red
+  primary:           #FF4D2E,
+  primary-hover:     #FF6347,
+  primary-light:     #FF6347,
+  primary-dark:      #C9351D,
+
+  // Interactive / affordance (cool blue) — never competes with brand red
+  accent:            #4C8DFF,
+  accent-light:      #7FB0FF,
+  accent-dark:       #2F6BFF,
+  // AI / insight gold — sparingly, AI moments only
+  accent-2:          #FFC23D,
+
+  // Surfaces
+  bg-app:            #0E0F13,
+  bg-card:           #1A1C22,
+  bg-raised:         #22252E,
+  bg-hover:          #22252E,
+  bg-header:         #141519,
+
+  // Ink
+  text-main:         #F5F4F2,
+  text-secondary:    #A8ABB4,
+  text-hint:         #8B909B, // WCAG AA: ~5.1:1 on card / 4.7:1 on hover (was #6E727C @3.5:1)
+  text-on-primary:   #FFFFFF,
+
+  // Hairlines
+  border-color:      #2A2D36,
+  border-hover:      #3A3E49,
+
+  // Semantics
+  success-color:     #1FB872,
+  success-bg:        rgba(31, 184, 114, 0.14),
+  warning-color:     #F5A623,
+  warning-bg:        rgba(245, 166, 35, 0.14),
+  error-color:       #FF6B61, // WCAG AA on error-bg tint (~4.7:1; was #F0473E @3.98) — stays distinct from brand #FF4D2E
+  error-bg:          rgba(240, 71, 62, 0.14),
+  info-color:        #6BA1FF, // WCAG AA on info-bg tint (~4.6:1; was #4C8DFF @4.37)
+  info-bg:           rgba(76, 141, 255, 0.14),
+
+  // Focus
+  focus-ring:        #FF4D2E,
+
+  // ML "source" chip ONLY — never brand chrome
+  ml-yellow:         #FFE600,
+
+  // Shadows — dark leans on raised surface + hairline ring; one layer.
+  shadow-sm:         (0 1px 2px rgba(0, 0, 0, 0.4)),
+  shadow-md:         (0 2px 8px rgba(0, 0, 0, 0.5)),
+  shadow-lg:         (0 8px 24px rgba(0, 0, 0, 0.55)),
+);
+
+// -----------------------------------------------------------------------------
+// Color — Warm paper (light)
+// -----------------------------------------------------------------------------
+$warm-paper: (
+  primary:           #E5482E,
+  primary-hover:     #CC3D24,
+  primary-light:     #FF6347,
+  primary-dark:      #B8331C,
+
+  accent:            #0B5FFF,
+  accent-light:      #2F6BFF,
+  accent-dark:       #0B5FFF,
+  accent-2:          #C8860A,
+
+  bg-app:            #F7F4EE,
+  bg-card:           #FFFFFF,
+  bg-raised:         #FFFFFF,
+  bg-hover:          #EFEAE0,
+  bg-header:         #FFFFFF,
+
+  text-main:         #16140F,
+  text-secondary:    #5C574C,
+  text-hint:         #6F6A5E, // WCAG AA: ~5:1 on paper card (was #8C8678 @3.6:1)
+  text-on-primary:   #FFFFFF,
+
+  border-color:      #E6E1D7,
+  border-hover:      #D6CFC0,
+
+  success-color:     #137A4D,
+  success-bg:        #E4F2EA,
+  warning-color:     #8A5E00, // WCAG AA: ~4.6:1 on warning-bg cream (was #C8860A @2.7:1 FAIL)
+  warning-bg:        #FBF1DF,
+  error-color:       #C0392B,
+  error-bg:          #FBE7E5,
+  info-color:        #0B5FFF,
+  info-bg:           #E7EEFD,
+
+  focus-ring:        #E5482E,
+
+  ml-yellow:         #FFE600,
+
+  shadow-sm:         (0 1px 2px rgba(22, 20, 15, 0.06), 0 1px 1px rgba(22, 20, 15, 0.04)),
+  shadow-md:         (0 2px 8px rgba(22, 20, 15, 0.08), 0 1px 2px rgba(22, 20, 15, 0.05)),
+  shadow-lg:         (0 8px 24px rgba(22, 20, 15, 0.12)),
+);
+
+// -----------------------------------------------------------------------------
+// Type scale — value = (size, line-height, weight)
+// Body/UI = Inter; display/brand = Space Grotesk (applied in variables.scss).
+// -----------------------------------------------------------------------------
+$type-scale: (
+  display-lg:   (40px, 44px, 700),
+  display:      (32px, 38px, 700),
+  h1:           (24px, 30px, 600),
+  h2:           (20px, 28px, 600),
+  h3:           (16px, 24px, 600),
+  body:         (14px, 20px, 400),
+  body-strong:  (14px, 20px, 600),
+  caption:      (12.5px, 16px, 500),
+  overline:     (11px, 14px, 600),
+);
+
+$font-family-sans:    ('Inter', system-ui, 'Segoe UI', Roboto, sans-serif);
+$font-family-display: ('Space Grotesk', 'Inter', system-ui, sans-serif);
+$font-family-mono:    ('JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace);
+
+// -----------------------------------------------------------------------------
+// Spacing — 4px base
+// -----------------------------------------------------------------------------
+$spacing: (
+  1:  4px,
+  2:  8px,
+  3:  12px,
+  4:  16px,
+  5:  20px,
+  6:  24px,
+  8:  32px,
+  10: 40px,
+  12: 48px,
+  16: 64px,
+);
+
+// -----------------------------------------------------------------------------
+// Radius — --border-radius stays 12px (card radius / --radius-md)
+// -----------------------------------------------------------------------------
+$radius: (
+  xs:   4px,
+  sm:   8px,
+  md:   12px,
+  lg:   16px,
+  pill: 999px,
+);
+
+// -----------------------------------------------------------------------------
+// Motion
+// -----------------------------------------------------------------------------
+$ease: (
+  standard:   cubic-bezier(0.2, 0, 0, 1),
+  emphasized: cubic-bezier(0.2, 0, 0, 1.1),
+);
+$duration: (
+  fast: 120ms,
+  base: 180ms,
+  slow: 260ms,
+);

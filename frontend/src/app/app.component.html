@@ -9,14 +9,19 @@
   <mat-sidenav #drawer class="sidenav" fixedInViewport
     [attr.role]="(isMobileOrTablet$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isMobileOrTablet$ | async) ? 'over' : 'side'" [opened]="(isDesktop$ | async)"
-    [class.mobile-sidenav]="(isMobileOrTablet$ | async)">
-    <app-sidenav></app-sidenav>
+    [class.mobile-sidenav]="(isMobileOrTablet$ | async)"
+    [class.collapsed]="(isDesktop$ | async) && collapsed">
+    <app-sidenav [collapsed]="!!(isDesktop$ | async) && collapsed"></app-sidenav>
   </mat-sidenav>
   <mat-sidenav-content>
-    <app-header [drawer]="drawer"></app-header>
-    <main class="main-content">
+    <app-header [drawer]="drawer" [desktop]="!!(isDesktop$ | async)"
+      (collapseToggle)="toggleCollapse()"></app-header>
+    <main class="main-content" [class.with-bottom-nav]="(isMobileOrTablet$ | async)">
       <router-outlet></router-outlet>
     </main>
+    @if (isMobileOrTablet$ | async) {
+    <app-bottom-nav class="app-bottom-nav"></app-bottom-nav>
+    }
   </mat-sidenav-content>
 </mat-sidenav-container>
 } @else {

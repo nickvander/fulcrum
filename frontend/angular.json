@@ -45,7 +45,16 @@
               }
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/indigo-pink.css",
+              "node_modules/@fontsource/inter/400.css",
+              "node_modules/@fontsource/inter/500.css",
+              "node_modules/@fontsource/inter/600.css",
+              "node_modules/@fontsource/inter/700.css",
+              "node_modules/@fontsource/space-grotesk/400.css",
+              "node_modules/@fontsource/space-grotesk/500.css",
+              "node_modules/@fontsource/space-grotesk/600.css",
+              "node_modules/@fontsource/space-grotesk/700.css",
+              "node_modules/@fontsource/jetbrains-mono/400.css",
+              "node_modules/@fontsource/jetbrains-mono/500.css",
               "src/styles.scss"
             ],
             "stylePreprocessorOptions": {
@@ -93,7 +102,9 @@
           "defaultConfiguration": "development",
           "options": {
             "proxyConfig": "proxy.conf.json",
-            "allowedHosts": [".ngrok-free.app"]
+            "allowedHosts": [
+              ".ngrok-free.app"
+            ]
           }
         },
         "extract-i18n": {

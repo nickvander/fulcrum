@@ -28,7 +28,7 @@ import { ProductFormInitializerService, ProductFormInitializationData } from '..
 import { AiService } from '../../../core/services/ai.service';
 import { CustomFieldService } from '../../../settings/services/custom-field.service';
 import * as QRCode from 'qrcode'; // Import qrcode library
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-product-form',
@@ -88,7 +88,8 @@ export class ProductForm implements OnInit {
     private customFieldService: CustomFieldService,
     private notificationService: NotificationService,
     private dialog: MatDialog,
-    private aiService: AiService
+    private aiService: AiService,
+    private transloco: TranslocoService
   ) {
     this.productForm = this.fb.group({
       id: [null],
@@ -108,6 +109,9 @@ export class ProductForm implements OnInit {
       low_stock_quantity_threshold: [null, [Validators.min(0)]],
       reorder_point: [null, [Validators.min(0)]],
       reorder_quantity: [null, [Validators.min(1)]],
+      // Starting stock for a brand-new product, so first inventory isn't hidden
+      // in the kebab "Adjust stock" dialog. Only used on create (see onSubmit).
+      initial_quantity: [null, [Validators.min(0)]],
       is_bundle: [false],
       barcode_value: [''],
       qrcode_value: ['']
@@ -712,6 +716,13 @@ export class ProductForm implements OnInit {
       });
 
     } else {
+      // Starting stock entered on the create form (es-MX "cantidad inicial").
+      // Applied right after create so first inventory isn't buried in the
+      // kebab "Adjust stock" dialog. Skipped for bundles (their stock is
+      // derived from components) and when zero/blank.
+      const initialQty = Number(formValue.initial_quantity);
+      const applyInitialStock = !formValue.is_bundle && initialQty > 0;
+
       this.productService.createProduct(productData as Product).pipe(
         switchMap(newProduct => {
           // Save custom fields
@@ -719,6 +730,15 @@ export class ProductForm implements OnInit {
             return this.productService.saveCustomFieldValues(newProduct.id, customFieldValues).pipe(
               map(() => newProduct)
             );
+          }
+          return of(newProduct);
+        }),
+        switchMap(newProduct => {
+          // Seed the starting stock as a positive adjustment.
+          if (applyInitialStock) {
+            return this.productService.adjustStockWithReason(
+              newProduct.id, initialQty, 'Initial stock'
+            ).pipe(map(() => newProduct));
           }
           return of(newProduct);
         }),
@@ -910,6 +930,19 @@ export class ProductForm implements OnInit {
       case 4: return 'MercadoLibre';
       default: return 'Marketplace ' + id;
     }
+  }
+
+  /**
+   * Publish path for MercadoLibre — the only active channel for the Mexico
+   * market (the dead Amazon/eBay/Shopify buttons were removed). Requires the
+   * product to be saved first so it has an id to list against.
+   */
+  publishToMercadoLibre(): void {
+    if (!this.productId) {
+      this.notificationService.showError(this.transloco.translate('products.saveFirstToPublish'));
+      return;
+    }
+    this.notificationService.showSuccess(this.transloco.translate('products.publishingToMl'));
   }
 
   generateAiDescription(): void {

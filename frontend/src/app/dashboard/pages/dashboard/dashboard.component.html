@@ -11,178 +11,255 @@
         </div>
 
         <ng-container *ngIf="stats$ | async as stats; else loading">
-            <app-onboarding-checklist *ngIf="onboardingStatus$ | async as onboardingStatus"
-                [status]="onboardingStatus" [creatingDemo]="creatingDemoWorkspace"
-                (createDemoWorkspace)="createDemoWorkspace()" class="onboarding-widget"></app-onboarding-checklist>
+            <ng-container *ngIf="onboardingStatus$ | async as onboardingStatus">
 
-            <section class="readiness-panel" *ngIf="launchReadiness$ | async as launchReadiness"
-                [class.ready]="launchReadiness.status === 'ready'"
-                [class.blocked]="launchReadiness.status === 'blocked'"
-                [class.needs-attention]="launchReadiness.status === 'needs_attention'">
-                <div class="readiness-header">
-                    <div>
-                        <p class="eyebrow">{{ t('launchReadiness.eyebrow') }}</p>
-                        <h2>{{ launchReadiness.status === 'ready' ? t('launchReadiness.titleReady') :
-                            launchReadiness.status === 'blocked' ? t('launchReadiness.titleBlocked') :
-                            t('launchReadiness.titleNeedsAttention') }}</h2>
-                        <p>{{ t('launchReadiness.subtitle') }}</p>
-                    </div>
-                    <div class="readiness-score">
-                        <span>{{ launchReadiness.summary.ready }}</span>
-                        <small>{{ t('launchReadiness.readyAreas') }}</small>
-                    </div>
-                </div>
-
-                <div class="readiness-grid">
-                    <article class="readiness-item" *ngFor="let section of launchReadiness.sections"
-                        [class.ready]="section.status === 'ready'"
-                        [class.needs-attention]="section.status === 'needs_attention'"
-                        [class.blocked]="section.status === 'blocked'"
-                        [class.optional]="section.status === 'optional'">
-                        <mat-icon>{{ readinessIcon(section) }}</mat-icon>
-                        <div>
-                            <h3>{{ section.label_key ? t(section.label_key) : section.label }}</h3>
-                            <p>{{ section.description_key ? t(section.description_key) : section.description }}</p>
+                <!-- ============================================================
+                     EMPTY / NEW ACCOUNT — progressive disclosure.
+                     Show the primeros-pasos hero + onboarding checklist
+                     instead of ~15 zero widgets. (PM #6 / Diego guardrail.)
+                     ============================================================ -->
+                <ng-container *ngIf="isEmptyAccount(stats, onboardingStatus); else cockpit">
+                    <section class="primeros-pasos-hero">
+                        <div class="hero-wedge" aria-hidden="true">
+                            <mat-icon>change_history</mat-icon>
                         </div>
-                        <a mat-stroked-button color="primary" [routerLink]="section.route">
-                            {{ section.action_label_key ? t(section.action_label_key) : section.action_label }}
-                        </a>
-                    </article>
-                </div>
+                        <div class="hero-copy">
+                            <p class="eyebrow">{{ t('dashboard.gettingStarted.eyebrow') }}</p>
+                            <h2>{{ t('dashboard.gettingStarted.title') }}</h2>
+                            <p>{{ t('dashboard.gettingStarted.subtitle') }}</p>
+                        </div>
+                    </section>
 
-                <ng-container *ngIf="demoDataSection(launchReadiness) as demoSection">
-                    <section class="demo-guardrail" *ngIf="demoSection.records?.length"
-                        [class.blocked]="!demoSection.cleanup_available">
-                        <div class="demo-guardrail-header">
+                    <app-onboarding-checklist [status]="onboardingStatus" [creatingDemo]="creatingDemoWorkspace"
+                        (createDemoWorkspace)="createDemoWorkspace()" class="onboarding-widget"></app-onboarding-checklist>
+                </ng-container>
+
+                <!-- ============================================================
+                     POPULATED ACCOUNT — full cockpit, no widget removed.
+                     ============================================================ -->
+                <ng-template #cockpit>
+                    <app-onboarding-checklist *ngIf="!onboardingStatus.complete" [status]="onboardingStatus"
+                        [creatingDemo]="creatingDemoWorkspace" (createDemoWorkspace)="createDemoWorkspace()"
+                        class="onboarding-widget"></app-onboarding-checklist>
+
+                    <section class="readiness-panel" *ngIf="launchReadiness$ | async as launchReadiness"
+                        [class.ready]="launchReadiness.status === 'ready'"
+                        [class.blocked]="launchReadiness.status === 'blocked'"
+                        [class.needs-attention]="launchReadiness.status === 'needs_attention'">
+                        <div class="readiness-header">
                             <div>
-                                <p class="eyebrow">{{ t('launchReadiness.demoEyebrow') }}</p>
-                                <h3>{{ t('launchReadiness.demoTitle') }}</h3>
-                                <p>{{ t('launchReadiness.demoSubtitle') }}</p>
+                                <p class="eyebrow">{{ t('launchReadiness.eyebrow') }}</p>
+                                <h2>{{ launchReadiness.status === 'ready' ? t('launchReadiness.titleReady') :
+                                    launchReadiness.status === 'blocked' ? t('launchReadiness.titleBlocked') :
+                                    t('launchReadiness.titleNeedsAttention') }}</h2>
+                                <p>{{ t('launchReadiness.subtitle') }}</p>
                             </div>
-                            <button mat-raised-button color="warn" (click)="cleanupDemoData(demoSection)"
-                                [disabled]="cleaningDemoData || !demoSection.cleanup_available">
-                                <mat-icon>{{ cleaningDemoData ? 'hourglass_top' : 'delete_sweep' }}</mat-icon>
-                                {{ cleaningDemoData ? t('launchReadiness.cleaningDemo') : t('launchReadiness.cleanDemo') }}
-                            </button>
+                            <div class="readiness-score">
+                                <span>{{ launchReadiness.summary.ready }}</span>
+                                <small>{{ t('launchReadiness.readyAreas') }}</small>
+                            </div>
                         </div>
 
-                        <div class="demo-record-list">
-                            <article class="demo-record" *ngFor="let record of demoSection.records"
-                                [class.blocked]="!record.safe_to_delete">
-                                <mat-icon>{{ record.safe_to_delete ? 'fact_check' : 'lock' }}</mat-icon>
+                        <div class="readiness-grid">
+                            <article class="readiness-item" *ngFor="let section of launchReadiness.sections"
+                                [class.ready]="section.status === 'ready'"
+                                [class.needs-attention]="section.status === 'needs_attention'"
+                                [class.blocked]="section.status === 'blocked'"
+                                [class.optional]="section.status === 'optional'">
+                                <mat-icon>{{ readinessIcon(section) }}</mat-icon>
                                 <div>
-                                    <strong>{{ record.type }}</strong>
-                                    <span>{{ record.label }}</span>
-                                    <small *ngIf="record.identifier">{{ record.identifier }}</small>
-                                    <p>{{ record.description }}</p>
-                                    <p class="record-blocker" *ngFor="let blocker of record.blockers">
-                                        {{ blocker }}
-                                    </p>
+                                    <h3>{{ section.label_key ? t(section.label_key) : section.label }}</h3>
+                                    <p>{{ section.description_key ? t(section.description_key) : section.description }}</p>
                                 </div>
-                                <a *ngIf="record.route" mat-icon-button color="primary" [routerLink]="record.route"
-                                    [matTooltip]="t('launchReadiness.openRecord')">
-                                    <mat-icon>open_in_new</mat-icon>
+                                <a mat-stroked-button color="primary" [routerLink]="section.route">
+                                    {{ section.action_label_key ? t(section.action_label_key) : section.action_label }}
                                 </a>
                             </article>
                         </div>
 
-                        <div class="blocked-reasons" *ngIf="demoSection.blocked_reasons?.length">
-                            <mat-icon>shield</mat-icon>
-                            <div>
-                                <strong>{{ t('launchReadiness.cleanupPaused') }}</strong>
-                                <p *ngFor="let reason of demoSection.blocked_reasons">{{ reason }}</p>
-                            </div>
-                        </div>
+                        <ng-container *ngIf="demoDataSection(launchReadiness) as demoSection">
+                            <section class="demo-guardrail" *ngIf="demoSection.records?.length"
+                                [class.blocked]="!demoSection.cleanup_available">
+                                <div class="demo-guardrail-header">
+                                    <div>
+                                        <p class="eyebrow">{{ t('launchReadiness.demoEyebrow') }}</p>
+                                        <h3>{{ t('launchReadiness.demoTitle') }}</h3>
+                                        <p>{{ t('launchReadiness.demoSubtitle') }}</p>
+                                    </div>
+                                    <button mat-raised-button color="warn" (click)="cleanupDemoData(demoSection)"
+                                        [disabled]="cleaningDemoData || !demoSection.cleanup_available">
+                                        <mat-icon>{{ cleaningDemoData ? 'hourglass_top' : 'delete_sweep' }}</mat-icon>
+                                        {{ cleaningDemoData ? t('launchReadiness.cleaningDemo') : t('launchReadiness.cleanDemo') }}
+                                    </button>
+                                </div>
+
+                                <div class="demo-record-list">
+                                    <article class="demo-record" *ngFor="let record of demoSection.records"
+                                        [class.blocked]="!record.safe_to_delete">
+                                        <mat-icon>{{ record.safe_to_delete ? 'fact_check' : 'lock' }}</mat-icon>
+                                        <div>
+                                            <strong>{{ record.type }}</strong>
+                                            <span>{{ record.label }}</span>
+                                            <small *ngIf="record.identifier">{{ record.identifier }}</small>
+                                            <p>{{ record.description }}</p>
+                                            <p class="record-blocker" *ngFor="let blocker of record.blockers">
+                                                {{ blocker }}
+                                            </p>
+                                        </div>
+                                        <a *ngIf="record.route" mat-icon-button color="primary" [routerLink]="record.route"
+                                            [matTooltip]="t('launchReadiness.openRecord')">
+                                            <mat-icon>open_in_new</mat-icon>
+                                        </a>
+                                    </article>
+                                </div>
+
+                                <div class="blocked-reasons" *ngIf="demoSection.blocked_reasons?.length">
+                                    <mat-icon>shield</mat-icon>
+                                    <div>
+                                        <strong>{{ t('launchReadiness.cleanupPaused') }}</strong>
+                                        <p *ngFor="let reason of demoSection.blocked_reasons">{{ reason }}</p>
+                                    </div>
+                                </div>
+                            </section>
+                        </ng-container>
                     </section>
-                </ng-container>
-            </section>
 
-            <div class="dashboard-grid">
-                <app-stat-card [title]="t('dashboard.totalProducts')" [value]="stats.totalProducts" icon="inventory_2"
-                    colorType="primary" link="/products" [tooltip]="t('dashboard.totalProducts')"></app-stat-card>
+                    <!-- Hero metric cards: the four numbers an operator checks first.
+                         Money is MXN via the shared `money` pipe (no USD bug). -->
+                    <div class="dashboard-grid">
+                        <app-metric-card [label]="t('dashboard.heroInventoryValue')"
+                            [value]="stats.totalInventoryValue | money" icon="savings"></app-metric-card>
 
-                <app-stat-card [title]="t('dashboard.totalValue')"
-                    [value]="(stats.totalInventoryValue | currency:'USD':'symbol':'1.0-0') ?? ''" icon="payments"
-                    colorType="success" link="/products" [tooltip]="t('dashboard.totalValue')"></app-stat-card>
+                        <app-metric-card [label]="t('dashboard.heroSalesVsSpend')"
+                            [value]="(salesSummary$ | async)?.total_revenue ?? 0 | money" icon="trending_up">
+                        </app-metric-card>
 
-                <app-stat-card [title]="t('dashboard.openPurchaseOrders')" [value]="stats.pendingOrdersCount"
-                    icon="shopping_cart" colorType="warn" link="/suppliers/po"
-                    [tooltip]="t('dashboard.openPurchaseOrdersTooltip')"></app-stat-card>
+                        <app-metric-card [label]="t('dashboard.heroInventoryHealth')"
+                            [value]="stats.stockHealthPercentage + '%'" icon="inventory_2"
+                            [delta]="t('dashboard.lowStockCount', { count: stats.lowStockCount })"
+                            [deltaTone]="stats.lowStockCount > 0 ? 'negative' : 'neutral'"></app-metric-card>
 
-                <app-stat-card [title]="t('dashboard.openSalesOrders')"
-                    [value]="(salesSummary$ | async)?.open_orders ?? 0"
-                    icon="receipt_long" colorType="accent" link="/orders"
-                    [tooltip]="t('dashboard.openSalesOrdersTooltip')"></app-stat-card>
-            </div>
+                        <a class="metric-card-link" routerLink="/reports/qa"
+                            [matTooltip]="t('dashboard.heroQaTooltip')">
+                            <app-metric-card *ngIf="qaSla$ | async as qa; else qaLoadingCard"
+                                [label]="t('dashboard.heroQaSla')"
+                                [value]="qa.breached"
+                                icon="forum"
+                                [delta]="t('dashboard.qaUnanswered', { count: qa.unanswered })"
+                                [deltaTone]="qaTone(qa)"></app-metric-card>
+                            <ng-template #qaLoadingCard>
+                                <app-metric-card [label]="t('dashboard.heroQaSla')" [value]="'—'"
+                                    icon="forum"></app-metric-card>
+                            </ng-template>
+                        </a>
+                    </div>
 
-            <!--
-                Phase 8 Track 2 analytics widgets. Sourced from the
-                new cost-rollup endpoints — every widget pulls its
-                own data so the dashboard top doesn't have to
-                bundle them. Order goes today's-profit → sales-vs-
-                spend → margin-by-channel → top-movers so the
-                operator's eye lands on the headline number first.
-            -->
-            <div class="analytics-grid">
-                <app-today-profit-widget class="dashboard-widget"></app-today-profit-widget>
-                <app-sales-vs-spend-widget class="dashboard-widget"></app-sales-vs-spend-widget>
-                <app-margin-by-channel-widget class="dashboard-widget"></app-margin-by-channel-widget>
-                <app-top-movers-widget class="dashboard-widget"></app-top-movers-widget>
-            </div>
+                    <!-- Dense "needs attention" / low-stock table — S1 dense-table
+                         + status chips. Critical + low rows, capped for the snapshot. -->
+                    <section class="needs-attention" *ngIf="lowStock$ | async as lowStock">
+                        <div class="section-head">
+                            <h2>{{ t('dashboard.needsAttention.title') }}</h2>
+                            <a mat-stroked-button color="primary" routerLink="/products"
+                                [queryParams]="{ filter: 'low-stock' }">
+                                {{ t('dashboard.needsAttention.viewAll') }}
+                            </a>
+                        </div>
 
-            <!--
-                Dead-stock widget sits full-width below the 2x2
-                analytics grid because it's table-heavy and benefits
-                from horizontal space (SKU name + counters + capital-
-                at-risk all need a column each).
-            -->
-            <div class="dead-stock-row">
-                <app-dead-stock-widget class="dashboard-widget"></app-dead-stock-widget>
-            </div>
+                        <ng-container *ngIf="needsAttentionRows(lowStock) as rows">
+                            <table class="dense-table" *ngIf="rows.length; else allClear">
+                                <thead>
+                                    <tr>
+                                        <th class="col-sku">{{ t('dashboard.needsAttention.product') }}</th>
+                                        <th class="num">{{ t('dashboard.needsAttention.onHand') }}</th>
+                                        <th class="num">{{ t('dashboard.needsAttention.daysLeft') }}</th>
+                                        <th class="num">{{ t('dashboard.needsAttention.suggested') }}</th>
+                                        <th>{{ t('dashboard.needsAttention.status') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let row of rows">
+                                        <td class="col-sku">
+                                            <span class="product-name">{{ row.product_name }}</span>
+                                            <span class="product-sku" *ngIf="row.product_sku">{{ row.product_sku }}</span>
+                                        </td>
+                                        <td class="num">{{ row.on_hand }}</td>
+                                        <td class="num">{{ daysLeftLabel(row) }}</td>
+                                        <td class="num">{{ row.suggested_reorder_qty }}</td>
+                                        <td>
+                                            <span class="app-chip" [ngClass]="severityChipClass(row.severity)">
+                                                {{ t('dashboard.severity.' + row.severity) }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-            <!--
-                Refunds + returns widgets side-by-side below the
-                analytics grid. Refunds is the financial side
-                ("money out"); returns is the physical side ("stock
-                in"). Side-by-side because operators read them
-                together when triaging a bad week.
-            -->
-            <div class="refunds-row">
-                <app-refunds-widget class="dashboard-widget"></app-refunds-widget>
-                <app-returns-widget class="dashboard-widget"></app-returns-widget>
-            </div>
+                            <ng-template #allClear>
+                                <div class="all-clear">
+                                    <mat-icon>task_alt</mat-icon>
+                                    <span>{{ t('dashboard.needsAttention.allClear') }}</span>
+                                </div>
+                            </ng-template>
+                        </ng-container>
+                    </section>
 
-            <div class="secondary-grid">
-                <div class="grid-section">
-                    <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"
-                        class="dashboard-widget"></app-sales-by-channel-widget>
-                </div>
-                <div class="grid-section">
-                    <app-low-stock-list [report]="lowStock$ | async" (reordered)="refresh()"
-                        class="dashboard-widget"></app-low-stock-list>
-                </div>
-                <div class="grid-section">
-                    <app-inventory-health-widget class="dashboard-widget"
-                        [title]="t('dashboard.inventoryHealth')"></app-inventory-health-widget>
-                </div>
-            </div>
+                    <!--
+                        Heavy cockpit widgets are lazy-loaded with @defer so the
+                        initial dashboard paint (hero cards + needs-attention
+                        table) isn't blocked by chart bundles. They hydrate on
+                        viewport entry; a skeleton shows meanwhile.
+                    -->
+                    @defer (on viewport) {
+                    <div class="analytics-grid">
+                        <app-today-profit-widget class="dashboard-widget"></app-today-profit-widget>
+                        <app-sales-vs-spend-widget class="dashboard-widget"></app-sales-vs-spend-widget>
+                        <app-margin-by-channel-widget class="dashboard-widget"></app-margin-by-channel-widget>
+                        <app-top-movers-widget class="dashboard-widget"></app-top-movers-widget>
+                    </div>
 
-            <!--
-                Analytics-reports widget is full-width on its own row.
-                Inside the widget it lays out as a horizontal-scrolling
-                row of report cards (velocity / margin / stockout /
-                refunds / reason-codes). Cramming it into a narrow
-                grid-section cell collapsed each card's title +
-                description to one word per line — see #16.
-            -->
-            <div class="reports-row">
-                <app-analytics-reports-widget class="dashboard-widget"></app-analytics-reports-widget>
-            </div>
+                    <div class="dead-stock-row">
+                        <app-dead-stock-widget class="dashboard-widget"></app-dead-stock-widget>
+                    </div>
+
+                    <div class="refunds-row">
+                        <app-refunds-widget class="dashboard-widget"></app-refunds-widget>
+                        <app-returns-widget class="dashboard-widget"></app-returns-widget>
+                    </div>
+
+                    <div class="secondary-grid">
+                        <div class="grid-section">
+                            <app-sales-by-channel-widget [summary]="(salesSummary$ | async) ?? null"
+                                class="dashboard-widget"></app-sales-by-channel-widget>
+                        </div>
+                        <div class="grid-section">
+                            <app-low-stock-list [report]="lowStock$ | async" (reordered)="refresh()"
+                                class="dashboard-widget"></app-low-stock-list>
+                        </div>
+                        <div class="grid-section">
+                            <app-inventory-health-widget class="dashboard-widget"
+                                [title]="t('dashboard.inventoryHealth')"></app-inventory-health-widget>
+                        </div>
+                    </div>
+
+                    <div class="reports-row">
+                        <app-analytics-reports-widget class="dashboard-widget"></app-analytics-reports-widget>
+                    </div>
+                    } @placeholder {
+                    <div class="widget-skeleton-grid" aria-hidden="true">
+                        <div class="skeleton-card" *ngFor="let n of [1,2,3,4]"></div>
+                    </div>
+                    }
+                </ng-template>
+            </ng-container>
         </ng-container>
 
+        <!-- Skeleton loading (not a bare spinner) while stats resolve. -->
         <ng-template #loading>
-            <div class="loading-container">
-                <mat-spinner diameter="40"></mat-spinner>
+            <div class="skeleton-hero" aria-hidden="true">
+                <div class="skeleton-card" *ngFor="let n of [1,2,3,4]"></div>
+            </div>
+            <div class="skeleton-table" aria-hidden="true">
+                <div class="skeleton-row" *ngFor="let n of [1,2,3,4,5]"></div>
             </div>
         </ng-template>
     </div>

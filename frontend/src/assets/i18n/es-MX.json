@@ -113,7 +113,12 @@
     "users": "Usuarios",
     "settings": "Configuración",
     "signOut": "Cerrar Sesión",
-    "buyerQuestions": "Preguntas"
+    "buyerQuestions": "Preguntas",
+    "dailyActions": "Acciones diarias",
+    "sendToMlFull": "Enviar a ML Full",
+    "buyerQuestionsShort": "Preguntas",
+    "expensesShort": "Gastos",
+    "more": "Más"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -128,6 +133,19 @@
     "signUp": "Registrarse",
     "welcomeBack": "Bienvenido de nuevo",
     "enterCredentials": "Ingresa tus credenciales para acceder a tu cuenta"
+  },
+  "login": {
+    "title": "Consola de control",
+    "copyright": "© {{year}} Fulcrum Inc.",
+    "emailRequired": "El correo es obligatorio",
+    "emailInvalid": "Escribe un correo válido",
+    "passwordRequired": "La contraseña es obligatoria",
+    "heroTitle": "Tu centro de control para vender en MercadoLibre",
+    "heroLede": "Fulcrum reúne tu inventario, tus envíos a Full y tus preguntas en un solo lugar, para que decidas rápido y vendas más.",
+    "point1": "Inventario y márgenes en pesos, en tiempo real",
+    "point2": "Envíos a MercadoLibre Full sin perder de vista el stock",
+    "point3": "Preguntas de compradores respondidas a tiempo",
+    "noAccountHelp": "¿No tienes acceso? Pídele a tu administrador que te dé de alta."
   },
   "dashboard": {
     "title": "Tablero",
@@ -405,6 +423,28 @@
         "pending": "Pendiente",
         "breached": "Vencida"
       }
+    },
+    "heroInventoryValue": "Valor de inventario",
+    "heroSalesVsSpend": "Ventas (30 d)",
+    "heroInventoryHealth": "Salud del inventario",
+    "heroQaSla": "Preguntas fuera de SLA",
+    "heroQaTooltip": "Abrir el reporte de preguntas",
+    "qaUnanswered": "{{ count }} sin responder",
+    "lowStockCount": "{{ count }} con stock bajo",
+    "gettingStarted": {
+      "eyebrow": "Primeros pasos",
+      "title": "Te damos la bienvenida a Fulcrum",
+      "subtitle": "Configura tu catálogo y tu primer envío a MercadoLibre Full. Cuando tengas productos, aquí aparece tu sala de control completa."
+    },
+    "needsAttention": {
+      "title": "Requiere atención",
+      "viewAll": "Ver todo",
+      "product": "Producto",
+      "onHand": "Disponible",
+      "daysLeft": "Días restantes",
+      "suggested": "Sugerido",
+      "status": "Estado",
+      "allClear": "No hay artículos críticos ni con stock bajo por ahora."
     }
   },
   "onboarding": {
@@ -805,7 +845,64 @@
     "reorderPointHint": "Cuando el stock baje a este nivel, crea una OC. Anula el umbral predeterminado de la tienda.",
     "reorderQuantity": "Cantidad de Reorden",
     "reorderQuantityPlaceholder": "Automático",
-    "reorderQuantityHint": "Tamaño de lote sugerido al reordenar. Predeterminado: ~30 días de ventas."
+    "reorderQuantityHint": "Tamaño de lote sugerido al reordenar. Predeterminado: ~30 días de ventas.",
+    "regenerateSku": "Regenerar SKU",
+    "generateQr": "Generar QR",
+    "regenerateBarcode": "Regenerar código de barras",
+    "barcodeUpc": "Código de barras / UPC",
+    "scanOrEnter": "Escanea o escribe el código",
+    "emptyTitle": "Arma tu catálogo de productos",
+    "emptyDescription": "Agrega tu primer producto a mano, luego conecta proveedores y órdenes de compra para que el stock tenga un origen confiable.",
+    "importSupplierPo": "Importar OC del proveedor",
+    "activeCampaignsCount": "{{count}} campañas activas",
+    "includes": "Incluye:",
+    "item": "Artículo",
+    "moreItems": "+ {{count}} más",
+    "unlisted": "Sin publicar",
+    "moreOptions": "Más opciones",
+    "showingCount": "Mostrando {{shown}} de {{total}} productos",
+    "scrollForMore": "Desplázate para ver más",
+    "dropImageToScan": "Suelta la imagen para escanear",
+    "orDragDropImage": "o arrastra y suelta una imagen aquí",
+    "unknownProduct": "Producto desconocido",
+    "or": "O",
+    "scanningAlt": "Escaneando…",
+    "productImageAlt": "Imagen del producto",
+    "initialQuantity": "Cantidad inicial",
+    "initialQuantityHint": "Stock con el que arranca este producto",
+    "titleLabel": "Nombre del producto",
+    "skuLabel": "Código interno",
+    "skuHint": "Tu propio código para encontrar este producto (SKU / UPC).",
+    "costLabel": "¿Cuánto te costó?",
+    "costHint": "Lo que le pagas a tu proveedor por unidad (COGS).",
+    "priceLabel": "¿A cuánto lo vendes?",
+    "priceHint": "El precio que paga tu comprador.",
+    "startingQuantityLabel": "Cantidad inicial",
+    "startingQuantityHint": "Cuántas unidades tienes a la mano ahora mismo.",
+    "lowStockThresholdLabel": "Avísame cuando el stock baje de",
+    "lowStockThresholdHint": "Marcaremos este producto como bajo cuando llegue a este número.",
+    "publishTitle": "Vende en MercadoLibre",
+    "publishMlLabel": "MercadoLibre",
+    "publishMlSub": "Tu canal de ventas principal en México.",
+    "publishMlAction": "Publicar en MercadoLibre",
+    "publishChannelsNote": "Vienen más canales. Por ahora, MercadoLibre es la única vía de publicación activa.",
+    "saveFirstToPublish": "Guarda el producto antes de publicar.",
+    "publishingToMl": "Publicando en MercadoLibre...",
+    "compactDensity": "Compacto",
+    "comfortableDensity": "Cómodo",
+    "pillSearch": "Búsqueda",
+    "clearAll": "Limpiar todo",
+    "health": "Estado",
+    "whyZero": "¿Por qué 0 disponible?",
+    "stockExplainerTitle": "Dónde vive tu stock",
+    "stockExplainerIntro": "Tus unidades pueden estar en distintos lugares. \"0 disponible\" casi siempre significa que el stock aún no llega al canal, no que no tengas nada.",
+    "bucketDefault": "A la mano (predeterminado)",
+    "bucketDefaultDesc": "Unidades que tienes físicamente. Se cuentan aquí en cuanto recibes una orden de compra.",
+    "bucketMlFull": "MercadoLibre Full",
+    "bucketMlFullDesc": "Unidades guardadas en la bodega de ML. Solo estas aparecen como disponibles en MercadoLibre.",
+    "bucketAmazonFba": "Amazon FBA",
+    "bucketAmazonFbaDesc": "Unidades guardadas en la bodega de Amazon, disponibles solo en Amazon.",
+    "bucketPoNote": "Recibir una orden de compra suma al stock a la mano, pero NO hace que las unidades estén disponibles en MercadoLibre. Envíalas primero a ML Full."
   },
   "suppliers": {
     "title": "Proveedores",
@@ -1083,6 +1180,21 @@
         "price_diff": "Precio distinto",
         "unmatched": "Sin coincidencia"
       }
+    },
+    "ingest": {
+      "title": "Importar orden de compra",
+      "intro": "Sube una factura del proveedor o un documento de OC. Extraeremos las líneas automáticamente.",
+      "dropFile": "Suelta un archivo de OC aquí, o haz clic para buscar",
+      "fileHint": "PDF, JPG o PNG",
+      "parsing": "Extrayendo líneas de artículos…",
+      "itemsFound": "Se encontraron {{count}} líneas",
+      "reviewNext": "Revisa y confirma en la siguiente pantalla.",
+      "reviewNumber": "Revisión de importación #{{id}}",
+      "reviewContext": "Confirma el proveedor y las coincidencias de producto de Fulcrum antes de crear una OC en borrador. El stock no cambia hasta que se reciba la OC.",
+      "needsReview": "Necesita revisión",
+      "createProduct": "Crear producto",
+      "learnAlias": "Aprender alias",
+      "approveCreatePo": "Aprobar y crear OC"
     }
   },
   "expenses": {
@@ -1132,7 +1244,11 @@
       "utilities": "Servicios",
       "packingMaterials": "Materiales de Empaque",
       "other": "Otro"
-    }
+    },
+    "dropReceiptAttach": "Suelta el recibo para adjuntarlo",
+    "dropReceiptAutofill": "Suelta el recibo para autocompletar",
+    "analyzingReceipt": "Analizando recibo…",
+    "descriptionRequired": "La descripción es obligatoria"
   },
   "marketing": {
     "title": "Marketing",
@@ -1254,7 +1370,41 @@
     "needsReauth": "Reautorizar",
     "needsReauthTooltip": "Vuelve a conectar este mercado para reanudar la sincronización.",
     "needsReauthTooltipWithReason": "Vuelve a conectar este mercado para reanudar la sincronización. Motivo: {{reason}}",
-    "reconnect": "Reconectar"
+    "reconnect": "Reconectar",
+    "quickPostDialog": {
+      "title": "Crear publicación rápida",
+      "intro": "Publica una actualización puntual en tus redes sociales.",
+      "linkProducts": "Vincular productos (requerido para IA)",
+      "productSelection": "Selección de productos",
+      "searchProducts": "Buscar productos…",
+      "aiContentAssistant": "Asistente de contenido IA",
+      "tone": "Tono",
+      "contentPrompt": "Instrucción de contenido",
+      "contentPromptPlaceholder": "Describe el estilo de la publicación y los puntos clave a destacar…",
+      "contentPromptHint": "Esto guía a la IA al redactar tu publicación.",
+      "imagePrompt": "Instrucción de imagen",
+      "imagePromptPlaceholder": "Describe el estilo visual, la composición, la iluminación…",
+      "imagePromptHint": "Esto guía a la IA al generar imágenes de producto.",
+      "regenerateText": "Regenerar texto",
+      "generateText": "Generar texto",
+      "regenerateImage": "Regenerar imagen",
+      "generateImage": "Generar imagen",
+      "regenerateBoth": "Regenerar ambos",
+      "generateAll": "Generar todo",
+      "linkProductHint": "Vincula un producto arriba para usar la generación con IA.",
+      "viralStrategy": "Estrategia viral",
+      "selectChannel": "Selecciona canal",
+      "noActiveConnectors": "No se encontraron conectores activos",
+      "subjectLine": "Asunto",
+      "postContent": "Contenido de la publicación",
+      "postContentPlaceholder": "¿Qué está pasando?",
+      "generatedPreview": "Vista previa generada",
+      "imageUrl": "URL de imagen",
+      "requiredSuffix": "(Requerido)",
+      "optionalSuffix": "(Opcional)",
+      "saveDraft": "Guardar borrador",
+      "postNow": "Publicar ahora"
+    }
   },
   "auditLogs": {
     "title": "Registros de Auditoría",
@@ -1668,6 +1818,26 @@
       "samePairError": "Elige dos monedas distintas.",
       "loadError": "No se pudieron cargar los tipos de cambio.",
       "saveError": "No se pudo guardar el tipo de cambio."
+    },
+    "aiTab": {
+      "description": "Conecta un proveedor de IA para identificar productos desde fotos. Solo el proveedor activo necesita una clave API configurada.",
+      "enableFeatures": "Activar funciones de IA",
+      "activeProvider": "Proveedor activo",
+      "providerHint": "Este proveedor se usará para las funciones de IA",
+      "modelOverride": "Modelo personalizado (opcional)",
+      "modelPlaceholder": "Déjalo vacío para usar el predeterminado",
+      "modelHint": "ej. gpt-4o, claude-3-5-sonnet, gemini-1.5-flash",
+      "apiKeyFor": "Clave API para {{provider}}",
+      "keyConfigured": "Clave configurada",
+      "keyRequired": "Se necesita una clave para activar la IA",
+      "providerApiKey": "Clave API de {{provider}}",
+      "enterKeyToUpdate": "Escribe la clave para actualizar",
+      "keyUpdateHint": "Escribe una nueva clave para actualizar. Déjalo vacío para conservar la actual.",
+      "showOtherKeys": "Mostrar otras claves",
+      "hideOtherKeys": "Ocultar otras claves",
+      "configured": "✓ Configurada",
+      "notConfigured": "Sin configurar",
+      "enterToUpdate": "Escribe para actualizar"
     }
   },
   "notifications": {
@@ -2169,5 +2339,10 @@
     "currency": {
       "invalidRate": "Tipo de cambio inválido: {{reason}}"
     }
+  },
+  "errors": {
+    "title": "Ocurrió un error",
+    "generic": "No pudimos cargar la información. Intenta de nuevo.",
+    "retry": "Reintentar"
   }
 }

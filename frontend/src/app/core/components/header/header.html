@@ -1,12 +1,11 @@
-<mat-toolbar class="app-header">
-  <button type="button" aria-label="Toggle sidenav" mat-icon-button (click)="drawer.toggle()" class="sidenav-toggle">
-    <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+<mat-toolbar class="app-header" *transloco="let t">
+  <button type="button" [attr.aria-label]="t('nav.menu')" [matTooltip]="t('nav.menu')" mat-icon-button
+    (click)="onMenu()" class="sidenav-toggle">
+    <mat-icon>menu</mat-icon>
   </button>
   <div class="logo-container">
-    <mat-icon class="logo-icon tablet-hide">change_history</mat-icon>
+    <span class="logo-mark" aria-hidden="true"></span>
     <span class="logo">Fulcrum</span>
   </div>
   <span class="spacer"></span>
-
-  <!-- User Menu removed - moved to Sidenav Footer for cleaner UI -->
 </mat-toolbar>

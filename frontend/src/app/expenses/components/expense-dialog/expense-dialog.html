@@ -17,7 +17,7 @@
                 <mat-icon>cloud_upload</mat-icon>
                 <div class="drop-content">
                     <span class="drop-text">
-                        {{ isEditMode ? 'Drop receipt to attach' : 'Drop receipt to auto-fill' }}
+                        {{ isEditMode ? t('expenses.dropReceiptAttach') : t('expenses.dropReceiptAutofill') }}
                     </span>
                     <div class="ai-badge">
                         <mat-icon>auto_awesome</mat-icon> AI
@@ -28,7 +28,7 @@
 
             <div *ngIf="isParsing" class="parsing-state">
                 <mat-spinner diameter="24"></mat-spinner>
-                <span>Analyzing receipt...</span>
+                <span>{{ t('expenses.analyzingReceipt') }}</span>
             </div>
 
             <div *ngIf="pendingReceipt" class="pending-file">
@@ -86,7 +86,7 @@
                 <mat-label>{{ t('common.description') }}</mat-label>
                 <input matInput formControlName="description" [placeholder]="t('common.description')">
                 <mat-error *ngIf="expenseForm.get('description')?.hasError('required')">
-                    {{ t('common.description') }} is required
+                    {{ t('expenses.descriptionRequired') }}
                 </mat-error>
             </mat-form-field>
 
@@ -141,22 +141,6 @@
                     <mat-label>{{ t('expenses.fields.paymentMethod') }}</mat-label>
                     <mat-select formControlName="payment_method">
                         <mat-option [value]="null">{{ t('expenses.paymentMethod.none') }}</mat-option>
-                        <!-- Assuming paymentMethods in TS are just values or mapped similarly to PO. 
-                             Wait, TS has {value: 'cash', label: 'Cash'}. 
-                             I need to map 'cash' to 'purchaseOrders.paymentMethod.cash' (reusing PO keys) 
-                             OR add expense keys. I added generic keys in PO. 
-                             Let's use 'purchaseOrders.paymentMethod.' + method.value if values match.
-                             Values in ExpenseDialog TS: 'cash', 'card', 'transfer', 'check'.
-                             Values in PO (mapped): 'bankTransfer', 'creditCard', 'cash', 'check', 'other'.
-                             They don't match perfectly ('card' vs 'creditCard', 'transfer' vs 'bankTransfer').
-                             I should add a map in the template or change TS. 
-                             Let's assume I'll map them here manually or use a switch.
-                             Better: Use specific keys I added or reuse PO keys if I update TS values. 
-                             I'll stick to mapping manually in the template for safety since I can't easily change backend values right now? 
-                             Actually, I can just use a map object in the template or t('purchaseOrders.paymentMethod.' + (method.value === 'card' ? 'creditCard' : (method.value === 'transfer' ? 'bankTransfer' : method.value)))
-                             Or simpler: just translate the LABEL that is already there? No, label is hardcoded English string.
-                             I will use a switch case or map in the loop. 
-                        -->
                         @for (method of paymentMethods; track method.value) {
                         <mat-option [value]="method.value">
                             {{ t('purchaseOrders.paymentMethod.' + getPaymentMethodKey(method.value)) }}

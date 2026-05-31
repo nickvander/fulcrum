@@ -121,7 +121,7 @@
 .readiness-panel {
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--card-bg, #fff);
+    background: var(--bg-card);
     padding: 20px;
     margin: 24px 0 8px;
 
@@ -172,7 +172,7 @@
     min-height: 78px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--bg-surface-alt, #fafbfc);
+    background: var(--bg-hover);
 
     span {
         color: var(--text-main);
@@ -207,15 +207,15 @@
     }
 
     &.ready mat-icon {
-        color: #2e7d32;
+        color: var(--success-color);
     }
 
     &.blocked mat-icon {
-        color: #c62828;
+        color: var(--error-color);
     }
 
     &.needs-attention mat-icon {
-        color: #b45309;
+        color: var(--warning-color);
     }
 
     h3 {
@@ -237,12 +237,12 @@
     margin-top: 16px;
     border: 1px solid rgba(180, 83, 9, 0.4);
     border-radius: 8px;
-    background: #fff8ed;
+    background: var(--warning-bg);
     padding: 16px;
 
     &.blocked {
         border-color: rgba(198, 40, 40, 0.45);
-        background: #fff5f5;
+        background: var(--error-bg);
     }
 }
 
@@ -293,15 +293,15 @@
     gap: 10px;
     border: 1px solid rgba(180, 83, 9, 0.24);
     border-radius: 8px;
-    background: #fff;
+    background: var(--bg-card);
     padding: 12px;
 
     > mat-icon {
-        color: #b45309;
+        color: var(--warning-color);
     }
 
     &.blocked > mat-icon {
-        color: #c62828;
+        color: var(--error-color);
     }
 
     strong,
@@ -339,7 +339,7 @@
     }
 
     .record-blocker {
-        color: #c62828;
+        color: var(--error-color);
         font-weight: 600;
     }
 }
@@ -351,10 +351,10 @@
     margin-top: 12px;
     border-top: 1px solid rgba(198, 40, 40, 0.18);
     padding-top: 12px;
-    color: #9f1239;
+    color: var(--error-color);
 
     mat-icon {
-        color: #c62828;
+        color: var(--error-color);
     }
 
     strong {
@@ -365,7 +365,7 @@
 
     p {
         margin: 4px 0 0;
-        color: #9f1239;
+        color: var(--error-color);
         font-size: 12px;
     }
 }
@@ -375,6 +375,262 @@
     justify-content: center;
     align-items: center;
     min-height: 400px;
+}
+
+// ---------------------------------------------------------------------------
+// S5: progressive disclosure + hero cards + dense table + skeletons
+// ---------------------------------------------------------------------------
+
+// Primeros-pasos hero (empty / new account). Wedge motif + warm copy.
+.primeros-pasos-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 28px var(--card-padding, 24px);
+    margin: 24px 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-top: 3px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+
+    .hero-wedge {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-sm, 8px);
+        background: var(--primary-color);
+
+        mat-icon {
+            color: var(--text-on-primary);
+            font-size: 30px;
+            width: 30px;
+            height: 30px;
+        }
+    }
+
+    .hero-copy {
+        .eyebrow {
+            margin: 0 0 4px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        h2 {
+            margin: 0;
+            font-family: var(--font-display, inherit);
+            color: var(--text-main);
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        p {
+            margin: 6px 0 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+            max-width: 720px;
+        }
+    }
+}
+
+// QA-SLA hero card is wrapped in an <a> so the whole card is a tap target.
+.metric-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--border-radius);
+    transition: transform var(--dur-fast, 120ms) var(--ease-standard, ease);
+
+    &:hover {
+        transform: translateY(-2px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--focus-ring, var(--primary-color));
+        outline-offset: 2px;
+    }
+}
+
+// "Needs attention" dense table section.
+.needs-attention {
+    margin: 8px 0 24px;
+
+    .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 12px;
+
+        h2 {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 18px;
+            font-weight: 600;
+        }
+    }
+}
+
+.dense-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    font-size: 13px;
+
+    thead th {
+        position: sticky;
+        top: 0;
+        background: var(--bg-header);
+        color: var(--text-secondary);
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+    }
+
+    tbody td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+        vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover td {
+        background: var(--bg-hover);
+    }
+
+    // Right-aligned tabular numerics for money/stock/% columns.
+    .num {
+        text-align: right;
+        font-variant-numeric: tabular-nums lining-nums;
+        font-feature-settings: "tnum" 1, "lnum" 1;
+        white-space: nowrap;
+    }
+
+    .col-sku {
+        .product-name {
+            display: block;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .product-sku {
+            display: block;
+            margin-top: 2px;
+            color: var(--text-hint);
+            font-size: 11.5px;
+            font-family: var(--font-mono, monospace);
+        }
+    }
+}
+
+// Status chips (never bare colour). Re-uses semantic tokens.
+.app-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: var(--radius-pill, 999px);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.5;
+
+    &.app-chip-error {
+        color: var(--error-color);
+        background: var(--error-bg);
+    }
+
+    &.app-chip-warning {
+        color: var(--warning-color);
+        background: var(--warning-bg);
+    }
+
+    &.app-chip-neutral {
+        color: var(--text-secondary);
+        background: var(--bg-hover);
+    }
+}
+
+.all-clear {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    color: var(--text-secondary);
+    font-size: 14px;
+
+    mat-icon {
+        color: var(--success-color);
+    }
+}
+
+// Skeleton loading (replaces the bare spinner).
+@keyframes skeleton-pulse {
+    0%   { opacity: 0.55; }
+    50%  { opacity: 1; }
+    100% { opacity: 0.55; }
+}
+
+.skeleton-card {
+    height: 120px;
+    border-radius: var(--border-radius);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-row {
+    height: 44px;
+    border-radius: var(--radius-sm, 8px);
+    background: var(--bg-hover);
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-hero,
+.widget-skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin: 24px 0;
+
+    @media (max-width: 1200px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.skeleton-table {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-card,
+    .skeleton-row {
+        animation: none;
+    }
 }
 
 @media (max-width: 900px) {

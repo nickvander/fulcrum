@@ -8,7 +8,7 @@
     <!-- Scanning Overlay with Laser Effect -->
     <div class="scanner-overlay scanning-mode" *ngIf="isAnalyzing && currentImageFile">
         <div class="scan-image-wrapper">
-            <img [src]="currentImageFile | safeUrl" alt="Scanning..." class="scan-preview">
+            <img [src]="currentImageFile | safeUrl" [alt]="t('products.scanningAlt')" class="scan-preview">
             <div class="laser-scanner"></div>
             <div class="scan-overlay-text">
                 <div class="agent-status">
@@ -42,11 +42,11 @@
             <div class="card-content">
                 <div class="product-image">
                     <!-- Show found product image if available, else scanned image -->
-                    <img [src]="(foundProduct.image_url || currentImageFile) | safeUrl" alt="Product Image"
+                    <img [src]="(foundProduct.image_url || currentImageFile) | safeUrl" [alt]="t('products.productImageAlt')"
                         class="result-img">
                 </div>
                 <div class="product-details">
-                    <h3 class="product-name">{{ foundProduct.name || 'Unknown Product' }}</h3>
+                    <h3 class="product-name">{{ foundProduct.name || t('products.unknownProduct') }}</h3>
                     <div class="product-meta">
                         <span class="sku-badge" *ngIf="foundProduct.sku">{{ foundProduct.sku }}</span>
                         <!-- Add confidence score if available in future -->
@@ -88,7 +88,7 @@
                 <!-- Drag Overlay Hint -->
                 <div class="drag-hint" *ngIf="isDragOver">
                     <mat-icon>cloud_upload</mat-icon>
-                    <h3>Drop image to scan</h3>
+                    <h3>{{ t('products.dropImageToScan') }}</h3>
                 </div>
 
                 <div class="video-wrapper" [class.hidden]="!isCameraActive || isProcessing">
@@ -102,7 +102,7 @@
                     <p *ngIf="cameraError" class="error-msg">{{ t('products.cameraError') }}</p>
                     <div *ngIf="!cameraError" class="instructions">
                         <p class="main-text">{{ t('products.cameraInstruction') }}</p>
-                        <p class="sub-text">or drag and drop an image here</p>
+                        <p class="sub-text">{{ t('products.orDragDropImage') }}</p>
                     </div>
                 </div>
 
@@ -166,7 +166,7 @@
                 </div>
 
                 <div class="or-divider">
-                    <span>OR</span>
+                    <span>{{ t('products.or') }}</span>
                 </div>
 
                 <!-- Camera QR Scanner Section -->

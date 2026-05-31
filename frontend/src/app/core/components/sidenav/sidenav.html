@@ -1,133 +1,191 @@
 <ng-container *transloco="let t">
-  <div class="sidenav-wrapper">
+  <div class="sidenav-wrapper" [class.collapsed]="collapsed">
     <div class="sidenav-header">
-      <div class="logo-container">
-        <mat-icon class="logo-icon">change_history</mat-icon>
-        <span class="logo-text">Fulcrum</span>
+      <div class="logo-container" [matTooltip]="collapsed ? 'Fulcrum' : ''" matTooltipPosition="right">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text" *ngIf="!collapsed">Fulcrum</span>
       </div>
     </div>
 
     <div class="nav-scroll-content">
+      <!-- Dashboard -->
+      <div class="nav-group">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.dashboard') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>dashboard</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.dashboard') }}</span>
+        </a>
+      </div>
+
+      <!-- Promoted daily money actions: single-tap, top level -->
+      <div class="nav-group">
+        <h3 class="group-title" *ngIf="!collapsed">{{ t('nav.dailyActions') }}</h3>
+
+        <a routerLink="/marketplaces/transfers" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.sendToMlFull') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>local_shipping</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.sendToMlFull') }}</span>
+        </a>
+
+        <a routerLink="/reports/qa" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.buyerQuestions') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>forum</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.buyerQuestionsShort') }}</span>
+        </a>
+
+        <a routerLink="/expenses" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.expenses') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>payments</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.expensesShort') }}</span>
+        </a>
+      </div>
+
       <!-- Main Navigation -->
       <div class="nav-group">
-        <h3 class="group-title">{{ t('nav.menu') }}</h3>
+        <h3 class="group-title" *ngIf="!collapsed">{{ t('nav.menu') }}</h3>
 
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
-          <mat-icon>dashboard</mat-icon>
-          <span>{{ t('nav.dashboard') }}</span>
-        </a>
-
-        <a routerLink="/products" routerLinkActive="active" class="nav-item" [routerLinkActiveOptions]="{ exact: true }">
+        <a routerLink="/products" routerLinkActive="active" class="nav-item"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [matTooltip]="collapsed ? t('nav.products') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>inventory_2</mat-icon>
-          <span>{{ t('nav.products') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.products') }}</span>
         </a>
 
-        <a routerLink="/products/audit" routerLinkActive="active" class="nav-item">
+        <a routerLink="/products/audit" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.inventoryAudit') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>history</mat-icon>
-          <span>{{ t('nav.inventoryAudit') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.inventoryAudit') }}</span>
         </a>
 
-        <a routerLink="/inventory/count" routerLinkActive="active" class="nav-item">
+        <a routerLink="/inventory/count" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.inventoryCount') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>fact_check</mat-icon>
-          <span>{{ t('nav.inventoryCount') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.inventoryCount') }}</span>
         </a>
 
-        <a routerLink="/orders" routerLinkActive="active" class="nav-item">
+        <a routerLink="/orders" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.orders') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>receipt_long</mat-icon>
-          <span>{{ t('nav.orders') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.orders') }}</span>
         </a>
 
-        <a routerLink="/alerts" routerLinkActive="active" class="nav-item">
+        <a routerLink="/alerts" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.alerts') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>notifications_active</mat-icon>
-          <span>{{ t('nav.alerts') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.alerts') }}</span>
         </a>
 
-        <a routerLink="/payments" routerLinkActive="active" class="nav-item">
+        <a routerLink="/payments" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.payments') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>payments</mat-icon>
-          <span>{{ t('nav.payments') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.payments') }}</span>
         </a>
 
-        <mat-expansion-panel class="nav-expansion" [expanded]="purchasingExpanded" (opened)="purchasingExpanded = true"
-          (closed)="purchasingExpanded = false">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon>shopping_cart</mat-icon>
-              <span>{{ t('nav.purchasing') }}</span>
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-          <div class="sub-nav">
-            <a routerLink="/suppliers/po" routerLinkActive="active" class="sub-nav-item">
-              <span>{{ t('nav.purchaseOrders') }}</span>
-            </a>
-            <a routerLink="/suppliers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-              class="sub-nav-item">
-              <span>{{ t('nav.suppliers') }}</span>
-            </a>
-            <a routerLink="/expenses" routerLinkActive="active" class="sub-nav-item">
-              <span>{{ t('nav.expenses') }}</span>
-            </a>
-          </div>
-        </mat-expansion-panel>
+        <!-- Purchasing group: flattened (no mat-expansion-panel), route-derived auto-expand -->
+        <button type="button" class="nav-item group-header" [class.has-active]="groupHasActiveChild('purchasing')"
+          (click)="toggleGroup('purchasing')" [attr.aria-expanded]="expanded.purchasing"
+          [matTooltip]="collapsed ? t('nav.purchasing') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>shopping_cart</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.purchasing') }}</span>
+          <mat-icon class="chevron" *ngIf="!collapsed">{{ expanded.purchasing ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <div class="sub-nav" *ngIf="expanded.purchasing && !collapsed">
+          <a routerLink="/suppliers/po" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.purchaseOrders') }}</span>
+          </a>
+          <a routerLink="/suppliers" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+            class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.suppliers') }}</span>
+          </a>
+          <a routerLink="/expenses" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.expenses') }}</span>
+          </a>
+        </div>
 
-        <mat-expansion-panel class="nav-expansion" [expanded]="marketplacesExpanded"
-          (opened)="marketplacesExpanded = true" (closed)="marketplacesExpanded = false">
-          <mat-expansion-panel-header>
-            <mat-panel-title>
-              <mat-icon>store</mat-icon>
-              <span>{{ t('nav.marketplaces') }}</span>
-            </mat-panel-title>
-          </mat-expansion-panel-header>
-          <div class="sub-nav">
-            <a routerLink="/marketplaces" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-              class="sub-nav-item">
-              <span>{{ t('nav.marketplaceChannels') }}</span>
-            </a>
-            <a routerLink="/marketplaces/transfers" routerLinkActive="active" class="sub-nav-item">
-              <span>{{ t('nav.stockTransfers') }}</span>
-            </a>
-            <a routerLink="/marketplaces/health" routerLinkActive="active" class="sub-nav-item">
-              <span>{{ t('nav.marketplaceHealth') }}</span>
-            </a>
-            <a routerLink="/reports/qa" routerLinkActive="active" class="sub-nav-item">
-              <span>{{ t('nav.buyerQuestions') }}</span>
-            </a>
-          </div>
-        </mat-expansion-panel>
+        <!-- Marketplaces group: flattened, route-derived auto-expand -->
+        <button type="button" class="nav-item group-header" [class.has-active]="groupHasActiveChild('marketplaces')"
+          (click)="toggleGroup('marketplaces')" [attr.aria-expanded]="expanded.marketplaces"
+          [matTooltip]="collapsed ? t('nav.marketplaces') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>store</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.marketplaces') }}</span>
+          <mat-icon class="chevron" *ngIf="!collapsed">{{ expanded.marketplaces ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <div class="sub-nav" *ngIf="expanded.marketplaces && !collapsed">
+          <a routerLink="/marketplaces" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+            class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.marketplaceChannels') }}</span>
+          </a>
+          <a routerLink="/marketplaces/transfers" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.stockTransfers') }}</span>
+          </a>
+          <a routerLink="/marketplaces/health" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.marketplaceHealth') }}</span>
+          </a>
+          <a routerLink="/reports/qa" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.buyerQuestions') }}</span>
+          </a>
+        </div>
 
-        <a routerLink="/marketing" routerLinkActive="active" class="nav-item">
+        <a routerLink="/marketing" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.marketing') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>campaign</mat-icon>
-          <span>{{ t('nav.marketing') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.marketing') }}</span>
         </a>
       </div>
 
       <!-- Management Group -->
       <div class="nav-group">
-        <h3 class="group-title">{{ t('nav.management') }}</h3>
+        <h3 class="group-title" *ngIf="!collapsed">{{ t('nav.management') }}</h3>
 
-        <a routerLink="/users" routerLinkActive="active" class="nav-item">
+        <a routerLink="/users" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.users') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>people</mat-icon>
-          <span>{{ t('nav.users') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.users') }}</span>
         </a>
 
-        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.settings') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>settings</mat-icon>
-          <span>{{ t('nav.settings') }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.settings') }}</span>
         </a>
       </div>
     </div>
 
-    <!-- Bottom User Section -->
+    <!-- Bottom User Section: theme + language + sign-out (mechanism unchanged) -->
     <div class="sidenav-footer" *ngIf="currentUser$ | async as user">
       <div class="user-card">
-        <div class="user-profile">
+        <div class="user-profile" *ngIf="!collapsed">
           <div class="avatar-circle">{{ getUserInitials(user) }}</div>
           <div class="user-info">
             <span class="name">{{ getUserDisplayName(user) }}</span>
             <span class="role">{{ getUserRole(user) }}</span>
           </div>
         </div>
-        <button mat-icon-button class="user-menu-btn" [matMenuTriggerFor]="userMenu">
-          <mat-icon>more_vert</mat-icon>
+        <button mat-icon-button class="user-menu-btn" [matMenuTriggerFor]="userMenu"
+          [matTooltip]="collapsed ? getUserDisplayName(user) : ''" matTooltipPosition="right">
+          <mat-icon>{{ collapsed ? 'account_circle' : 'more_vert' }}</mat-icon>
         </button>
 
         <mat-menu #userMenu="matMenu" xPosition="after" class="user-options-menu">

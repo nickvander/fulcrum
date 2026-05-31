@@ -1,56 +1,82 @@
 <ng-container *transloco="let t">
-  <div class="login-container">
-    <div class="login-card-wrapper">
-      <!-- Branding Section -->
-      <div class="branding-header">
-        <div class="logo-icon">
-          <img src="assets/logo-source.png" alt="Fulcrum Logo" style="width: 32px; height: 32px;">
-        </div>
-        <h1>Fulcrum</h1>
-        <p>Management Console</p>
+  <div class="login-shell">
+    <!-- ── Brand panel (obsidian) ───────────────────────────────────────── -->
+    <aside class="brand-panel">
+      <div class="brand-mark">
+        <!-- Pivot / lever wedge: triangle balancing a bar (= momentum chevron) -->
+        <svg class="wedge" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <path d="M24 8 L42 38 L6 38 Z" fill="currentColor"></path>
+          <rect x="10" y="40" width="28" height="3.5" rx="1.75" fill="currentColor"></rect>
+        </svg>
+        <span class="brand-name">Fulcrum</span>
       </div>
 
-      <!-- Login Card -->
-      <mat-card class="login-card">
-        <mat-card-content>
-          <div class="welcome-text">
-            <h2>{{ t('auth.welcomeBack') }}</h2>
-            <p>{{ t('auth.enterCredentials') }}</p>
+      <div class="brand-copy">
+        <h1 class="brand-hero">{{ t('login.heroTitle') }}</h1>
+        <p class="brand-lede">{{ t('login.heroLede') }}</p>
+
+        <ul class="brand-points">
+          <li><mat-icon>insights</mat-icon><span>{{ t('login.point1') }}</span></li>
+          <li><mat-icon>local_shipping</mat-icon><span>{{ t('login.point2') }}</span></li>
+          <li><mat-icon>forum</mat-icon><span>{{ t('login.point3') }}</span></li>
+        </ul>
+      </div>
+
+      <p class="brand-footer">{{ t('login.copyright', { year: currentYear }) }}</p>
+    </aside>
+
+    <!-- ── Form panel (warm paper / card) ──────────────────────────────── -->
+    <main class="form-panel">
+      <div class="form-inner">
+        <div class="form-brand-compact">
+          <svg class="wedge" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <path d="M24 8 L42 38 L6 38 Z" fill="currentColor"></path>
+            <rect x="10" y="40" width="28" height="3.5" rx="1.75" fill="currentColor"></rect>
+          </svg>
+          <span>Fulcrum</span>
+        </div>
+
+        <div class="welcome-text">
+          <h2>{{ t('auth.welcomeBack') }}</h2>
+          <p>{{ t('auth.enterCredentials') }}</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+          <mat-form-field appearance="outline" class="sleek-auth-field">
+            <mat-label>{{ t('common.email') }}</mat-label>
+            <input matInput formControlName="email" type="email" placeholder="nombre@empresa.com"
+              autocomplete="email">
+            <mat-icon matPrefix>mail</mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+              {{ t('login.emailRequired') }}
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+              {{ t('login.emailInvalid') }}
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="sleek-auth-field">
+            <mat-label>{{ t('auth.password') }}</mat-label>
+            <input matInput formControlName="password" type="password" placeholder="••••••••"
+              autocomplete="current-password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              {{ t('login.passwordRequired') }}
+            </mat-error>
+          </mat-form-field>
+
+          <div class="forgot-password">
+            <a routerLink="/forgot-password">{{ t('auth.forgotPassword') }}</a>
           </div>
 
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            <mat-form-field appearance="outline" class="sleek-auth-field">
-              <mat-label>{{ t('common.email') }}</mat-label>
-              <input matInput formControlName="email" type="email" placeholder="name@company.com" autocomplete="email">
-              <mat-icon matPrefix>email</mat-icon>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('required')">{{ t('common.email') }} is
-                required</mat-error>
-              <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
-            </mat-form-field>
+          <button mat-flat-button color="primary" class="login-btn" type="submit"
+            [disabled]="loginForm.disabled">
+            {{ t('auth.signIn') }}
+          </button>
+        </form>
 
-            <mat-form-field appearance="outline" class="sleek-auth-field">
-              <mat-label>{{ t('auth.password') }}</mat-label>
-              <input matInput formControlName="password" type="password" placeholder="••••••••"
-                autocomplete="current-password">
-              <mat-icon matPrefix>lock</mat-icon>
-              <mat-error *ngIf="loginForm.get('password')?.hasError('required')">{{ t('auth.password') }} is
-                required</mat-error>
-            </mat-form-field>
-
-            <div class="forgot-password">
-              <a routerLink="/forgot-password">{{ t('auth.forgotPassword') }}</a>
-            </div>
-
-            <button mat-flat-button color="primary" class="login-btn" type="submit" [disabled]="!loginForm.valid">
-              {{ t('auth.signIn') }}
-            </button>
-          </form>
-        </mat-card-content>
-      </mat-card>
-
-      <div class="login-footer">
-        <p>&copy; 2025 Fulcrum Inc.</p>
+        <p class="form-help">{{ t('login.noAccountHelp') }}</p>
       </div>
-    </div>
+    </main>
   </div>
 </ng-container>

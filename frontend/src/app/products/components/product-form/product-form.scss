@@ -621,3 +621,17 @@ mat-card-content {
     transform: rotate(360deg);
   }
 }
+// --- S6 redesign additions: ML-led publish block ---
+.marketplace-actions {
+  .ml-publish-sub {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 4px 0 12px;
+  }
+
+  .ml-channels-note {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: var(--text-hint);
+  }
+}

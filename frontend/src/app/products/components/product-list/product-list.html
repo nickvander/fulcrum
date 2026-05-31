@@ -145,16 +145,44 @@
         </div>
       </div>
 
+      <!-- 3-bucket stock explainer: where a seller first hits "0 disponible" -->
+      @if (showStockExplainer) {
+      <div class="stock-explainer">
+        <div class="stock-explainer-head">
+          <h3>{{ t('products.stockExplainerTitle') }}</h3>
+          <button mat-icon-button (click)="toggleStockExplainer()" [attr.aria-label]="t('common.close')">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <p class="stock-explainer-intro">{{ t('products.stockExplainerIntro') }}</p>
+        <ul class="stock-buckets">
+          <li>
+            <span class="bucket-name">{{ t('products.bucketDefault') }}</span>
+            <span class="bucket-desc">{{ t('products.bucketDefaultDesc') }}</span>
+          </li>
+          <li>
+            <span class="bucket-name">{{ t('products.bucketMlFull') }}</span>
+            <span class="bucket-desc">{{ t('products.bucketMlFullDesc') }}</span>
+          </li>
+          <li>
+            <span class="bucket-name">{{ t('products.bucketAmazonFba') }}</span>
+            <span class="bucket-desc">{{ t('products.bucketAmazonFbaDesc') }}</span>
+          </li>
+        </ul>
+        <p class="stock-explainer-note">{{ t('products.bucketPoNote') }}</p>
+      </div>
+      }
+
       @if (products.length === 0 && !isLoading) {
-      <app-empty-state icon="inventory_2" title="Build your product catalog"
-        description="Add your first product manually, then connect suppliers and purchase orders so stock has a reliable source.">
+      <app-empty-state icon="inventory_2" [title]="t('products.emptyTitle')"
+        [description]="t('products.emptyDescription')">
         <button mat-raised-button color="primary" type="button" (click)="onAddProduct()">
           <mat-icon>add</mat-icon>
           <span>{{ t('products.addProduct') }}</span>
         </button>
         <button mat-stroked-button color="primary" type="button" routerLink="/suppliers/po">
           <mat-icon>upload_file</mat-icon>
-          <span>Import supplier PO</span>
+          <span>{{ t('products.importSupplierPo') }}</span>
         </button>
       </app-empty-state>
       }
@@ -186,13 +214,13 @@
           <!-- Bundle Badge -->
           @if (product.is_bundle) {
           <div class="bundle-badge">
-            <mat-icon>inventory_2</mat-icon> Bundle
+            <mat-icon>inventory_2</mat-icon> {{ t('products.bundle') }}
           </div>
           }
 
           <!-- Marketing Badge -->
           @if (product.active_campaign_count && product.active_campaign_count > 0) {
-          <div class="marketing-badge" [matTooltip]="product.active_campaign_count + ' Active Campaigns'">
+          <div class="marketing-badge" [matTooltip]="t('products.activeCampaignsCount', { count: product.active_campaign_count })">
             <mat-icon>campaign</mat-icon>
           </div>
           }
@@ -209,14 +237,14 @@
             <!-- Bundle Contents -->
             @if (product.is_bundle && product.bundle_components && product.bundle_components.length > 0) {
             <div class="bundle-items-preview">
-              <div class="bundle-header">Includes:</div>
+              <div class="bundle-header">{{ t('products.includes') }}</div>
               @for (comp of product.bundle_components.slice(0, 3); track comp.id) {
               <div class="bundle-item-row">
-                <span>{{ comp.quantity }}x {{ comp.component_name || 'Item' }}</span>
+                <span>{{ comp.quantity }}x {{ comp.component_name || t('products.item') }}</span>
               </div>
               }
               @if (product.bundle_components.length > 3) {
-              <div class="more-items">+ {{ product.bundle_components.length - 3 }} more</div>
+              <div class="more-items">{{ t('products.moreItems', { count: product.bundle_components.length - 3 }) }}</div>
               }
             </div>
             }
@@ -230,14 +258,14 @@
                 [simple]="true" (click)="$event.stopPropagation()"></app-marketplace-status>
               } @else {
               <div class="no-marketplaces">
-                <mat-icon>link_off</mat-icon> <span>Unlisted</span>
+                <mat-icon>link_off</mat-icon> <span>{{ t('products.unlisted') }}</span>
               </div>
               }
             </div>
 
             <!-- Metrics -->
             <div class="product-metrics">
-              <div class="price">{{ product.default_resale_price | currency }}</div>
+              <div class="price">{{ product.default_resale_price | mxn }}</div>
               <div class="stock" [class.stock-healthy]="(product.stock_quantity || 0) > 10"
                 [class.stock-low]="(product.stock_quantity || 0) > 0 && (product.stock_quantity || 0) <= 10"
                 [class.stock-out]="(product.stock_quantity || 0) === 0">
@@ -247,7 +275,7 @@
           </mat-card-content>
 
           <!-- Action Menu (Restored) -->
-          <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu" matTooltip="More options"
+          <button mat-icon-button [matMenuTriggerFor]="productMenu" class="action-menu" [matTooltip]="t('products.moreOptions')"
             (click)="$event.stopPropagation()">
             <mat-icon>more_vert</mat-icon>
           </button>
@@ -323,7 +351,7 @@
           <!-- Price Column -->
           <ng-container matColumnDef="price">
             <th mat-header-cell *matHeaderCellDef mat-sort-header> {{ t('common.price') }} </th>
-            <td mat-cell *matCellDef="let element"> {{element.default_resale_price | currency}} </td>
+            <td mat-cell *matCellDef="let element" class="num"> {{element.default_resale_price | mxn}} </td>
           </ng-container>
           <!-- Cost Column -->
           <ng-container matColumnDef="cost_price">
@@ -331,12 +359,12 @@
             <td mat-cell *matCellDef="let element">
               <div *ngIf="getEffectiveCost(element) > 0" style="font-size: 0.9em;">
                 {{ element.is_bundle ? (t('products.estCost') + ': ') : (t('products.lastCost') + ': ') }}{{
-                getEffectiveCost(element) | currency }}
+                getEffectiveCost(element) | mxn }}
               </div>
               <div class="text-muted" style="font-size: 0.8em;"
                 *ngIf="element.average_cost || (element.is_bundle && getBundleAverageCost(element) > 0)">
                 {{ t('products.avgCost') }}: {{ (element.is_bundle ? getBundleAverageCost(element) :
-                element.average_cost) | currency }}
+                element.average_cost) | mxn }}
               </div>
             </td>
           </ng-container>
@@ -350,6 +378,11 @@
                 [class.stock-out]="getCurrentStock(element) === 0">
                 {{getCurrentStock(element)}}
               </span>
+              @if (getCurrentStock(element) === 0) {
+              <button type="button" class="why-zero" (click)="$event.stopPropagation(); toggleStockExplainer()">
+                {{ t('products.whyZero') }}
+              </button>
+              }
               <div *ngIf="element.days_of_inventory !== undefined && element.days_of_inventory < 999"
                 class="days-of-inventory"
                 [class.days-warning]="element.days_of_inventory < (element.low_inventory_threshold || 30)">
@@ -416,10 +449,10 @@
       @if (useInfiniteScroll) {
       <div class="infinite-scroll-status">
         <span class="status-text">
-          Showing {{ products.length }} of {{ paginatedProducts?.totalItems || 0 }} products
+          {{ t('products.showingCount', { shown: products.length, total: paginatedProducts?.totalItems || 0 }) }}
         </span>
         @if (hasMoreProducts && !isLoading) {
-        <span class="hint-text">Scroll for more</span>
+        <span class="hint-text">{{ t('products.scrollForMore') }}</span>
         }
       </div>
       }

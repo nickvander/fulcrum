@@ -55,7 +55,7 @@ export class CustomInterceptor implements TranslocoInterceptor {
             provide: TRANSLOCO_CONFIG,
             useValue: translocoConfig({
                 availableLangs: ['en', 'es-MX'],
-                defaultLang: 'en',
+                defaultLang: 'es-MX',
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
             })

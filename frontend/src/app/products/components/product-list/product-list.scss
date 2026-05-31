@@ -1409,3 +1409,84 @@ mat-card-header {
     font-size: 9px !important;
   }
 }
+// --- S6 redesign additions: stock explainer + zero-stock entry point ---
+.stock-explainer {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+
+  .stock-explainer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      margin: 0;
+      color: var(--text-main);
+    }
+  }
+
+  .stock-explainer-intro {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 8px 0 12px;
+  }
+
+  .stock-buckets {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 12px;
+      background: var(--bg-hover);
+      border-radius: var(--border-radius);
+    }
+
+    .bucket-name {
+      font-weight: 600;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    .bucket-desc {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  }
+
+  .stock-explainer-note {
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: var(--text-hint);
+  }
+}
+
+.why-zero {
+  display: block;
+  margin-top: 2px;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-color);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+// Right-aligned tabular money cells in the dense table.
+table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}

@@ -1,160 +1,144 @@
+// =============================================================================
+// CSS custom-property contract — "Obsidian & Chile"
+// Values come from theme/_tokens.scss (AUTHORITATIVE: 05a-BRAND-LOCK.md).
+//
+// :root          -> warm-paper LIGHT
+// .dark-theme    -> obsidian DARK  (product default; applied by app.component)
+//
+// Every legacy variable NAME is preserved as the public contract; only the
+// values are re-pointed, plus new tokens are added (--primary-hover, --bg-raised,
+// --accent-2, --focus-ring, type/spacing/radius/motion). Components keep reading
+// the same names, so re-pointing flips the whole app.
+// =============================================================================
+
+@use 'sass:map';
+@use 'sass:list';
+@use 'tokens';
+
+// Emit the per-mode color contract for one palette map.
+@mixin emit-color-vars($c) {
+  --primary-color:    #{map.get($c, primary)};
+  --primary-hover:    #{map.get($c, primary-hover)};
+  --primary-light:    #{map.get($c, primary-light)};
+  --primary-dark:     #{map.get($c, primary-dark)};
+
+  --accent-color:     #{map.get($c, accent)};
+  --accent-light:     #{map.get($c, accent-light)};
+  --accent-dark:      #{map.get($c, accent-dark)};
+  --accent-2:         #{map.get($c, accent-2)};
+
+  --success-color:    #{map.get($c, success-color)};
+  --success-bg:       #{map.get($c, success-bg)};
+  --warning-color:    #{map.get($c, warning-color)};
+  --warning-bg:       #{map.get($c, warning-bg)};
+  --error-color:      #{map.get($c, error-color)};
+  --error-bg:         #{map.get($c, error-bg)};
+  --info-color:       #{map.get($c, info-color)};
+  --info-bg:          #{map.get($c, info-bg)};
+
+  --bg-app:           #{map.get($c, bg-app)};
+  --bg-card:          #{map.get($c, bg-card)};
+  --bg-raised:        #{map.get($c, bg-raised)};
+  --bg-hover:         #{map.get($c, bg-hover)};
+  --bg-header:        #{map.get($c, bg-header)};
+
+  --text-main:        #{map.get($c, text-main)};
+  --text-secondary:   #{map.get($c, text-secondary)};
+  --text-hint:        #{map.get($c, text-hint)};
+  --text-on-primary:  #{map.get($c, text-on-primary)};
+
+  --border-color:     #{map.get($c, border-color)};
+  --border-hover:     #{map.get($c, border-hover)};
+
+  --focus-ring:       #{map.get($c, focus-ring)};
+  --ml-yellow:        #{map.get($c, ml-yellow)};
+
+  --shadow-sm:        #{map.get($c, shadow-sm)};
+  --shadow-md:        #{map.get($c, shadow-md)};
+  --shadow-lg:        #{map.get($c, shadow-lg)};
+
+  // Marketing gradients re-pointed off the brand red + cool accent so they
+  // stay on-brand for the rare true-marketing surface (workspace stays neutral).
+  --gradient-primary: linear-gradient(135deg, #{map.get($c, primary)} 0%, #{map.get($c, primary-dark)} 100%);
+  --gradient-accent:  linear-gradient(135deg, #{map.get($c, accent)} 0%, #{map.get($c, accent-dark)} 100%);
+  --gradient-success: linear-gradient(135deg, #{map.get($c, success-color)} 0%, #{map.get($c, success-color)} 100%);
+  --gradient-warn:    linear-gradient(135deg, #{map.get($c, warning-color)} 0%, #{map.get($c, warning-color)} 100%);
+}
+
+// Mode-independent tokens: type scale, spacing, radius, motion.
+@mixin emit-scale-vars {
+  // Fonts
+  --font-sans:    #{tokens.$font-family-sans};
+  --font-display: #{tokens.$font-family-display};
+  --font-mono:    #{tokens.$font-family-mono};
+
+  // Type scale (size / line-height / weight) — emitted as composite + parts.
+  @each $name, $val in tokens.$type-scale {
+    --font-#{$name}-size:   #{list.nth($val, 1)};
+    --font-#{$name}-line:   #{list.nth($val, 2)};
+    --font-#{$name}-weight: #{list.nth($val, 3)};
+    --font-#{$name}: #{list.nth($val, 3)} #{list.nth($val, 1)}/#{list.nth($val, 2)} var(--font-display);
+  }
+
+  // Spacing
+  @each $name, $val in tokens.$spacing {
+    --space-#{$name}: #{$val};
+  }
+  --spacing-unit: 8px; // legacy contract
+  --card-padding: 24px; // legacy contract
+
+  // Radius — keep --border-radius at the 12px card radius.
+  @each $name, $val in tokens.$radius {
+    --radius-#{$name}: #{$val};
+  }
+  --border-radius: #{map.get(tokens.$radius, md)};
+
+  // Motion
+  @each $name, $val in tokens.$ease {
+    --ease-#{$name}: #{$val};
+  }
+  @each $name, $val in tokens.$duration {
+    --dur-#{$name}: #{$val};
+  }
+}
+
+// LIGHT = warm paper (non-dark default for legacy callers)
 :root {
-    /* Branding Colors - Calm & Professional */
-    --primary-color: #2E3A59;
-    /* Deep Slate Blue - Trust & Stability */
-    --primary-light: #57688A;
-    /* Soft Slate */
-    --primary-dark: #1C2336;
-    /* Dark Slate */
-
-    --accent-color: #00BFA5;
-    /* Soft Teal - Fresh & actionable */
-    --accent-light: #5DF2D6;
-    --accent-dark: #008E7B;
-
-    /* Status Colors - Pastel/Soft */
-    --success-color: #66BB6A;
-    /* Soft Green */
-    --success-bg: #E8F5E9;
-    --warning-color: #FFA726;
-    /* Soft Orange */
-    --warning-bg: #FFF3E0;
-    --error-color: #EF5350;
-    /* Soft Red */
-    --error-bg: #FFEBEE;
-    --info-color: #42A5F5;
-    /* Soft Blue */
-    --info-bg: #E3F2FD;
-
-    /* Backgrounds */
-    --bg-app: #F4F6F8;
-    /* Cool Light Gray - Reduces eye strain */
-    --bg-card: #FFFFFF;
-    /* Pure White */
-    --bg-hover: #F8FAFC;
-    /* Very subtle hover */
-    --bg-header: #FFFFFF;
-
-    /* Text */
-    --text-main: #2C3E50;
-    /* Dark Blue-Grey - Softer than pure black */
-    --text-secondary: #546E7A;
-    /* Slate Grey */
-    --text-hint: #90A4AE;
-    /* Light Grey */
-    --text-on-primary: #FFFFFF;
-
-    /* Borders */
-    --border-color: #E0E6ED;
-    /* Cool Light Grey */
-    --border-hover: #CFD8DC;
-
-    /* Layout */
-    --border-radius: 12px;
-    /* Modern, friendly rounded corners */
-    --spacing-unit: 8px;
-    --card-padding: 24px;
-    /* Spacious */
-
-    /* Shadows - Soft & Diffused */
-    --shadow-sm: 0 2px 8px rgba(46, 58, 89, 0.05);
-    --shadow-md: 0 4px 16px rgba(46, 58, 89, 0.08);
-    --shadow-lg: 0 8px 24px rgba(46, 58, 89, 0.12);
-
-    /* Gradients (Marketing) */
-    --gradient-primary: linear-gradient(135deg, #2E3A59 0%, #1C2336 100%);
-    --gradient-accent: linear-gradient(135deg, #00BFA5 0%, #008E7B 100%);
-    --gradient-success: linear-gradient(135deg, #66BB6A 0%, #43A047 100%);
-    --gradient-warn: linear-gradient(135deg, #FFA726 0%, #FB8C00 100%);
+  @include emit-color-vars(tokens.$warm-paper);
+  @include emit-scale-vars;
 }
 
-/* Dark Theme Overrides */
+// DARK = obsidian (product default — body.dark-theme set by app.component)
 .dark-theme {
-    /* Branding Colors - Adjusted for Dark Mode */
-    --primary-color: #8fa3d6;
-    /* Lighter Blue for contrast against dark bg */
-    --primary-light: #a3b4db;
-    --primary-dark: #121826;
-    /* Darker Slate for backgrounds */
-
-    --accent-color: #00DBBD;
-    /* brighter teal */
-    --accent-light: #80ffe6;
-    --accent-dark: #008f7a;
-
-    /* Status Colors - Slightly more vibrant for dark mode */
-    --success-color: #81c784;
-    --success-bg: rgba(129, 199, 132, 0.1);
-    --warning-color: #ffb74d;
-    --warning-bg: rgba(255, 183, 77, 0.1);
-    --error-color: #e57373;
-    --error-bg: rgba(229, 115, 115, 0.1);
-    --info-color: #64b5f6;
-    --info-bg: rgba(100, 181, 246, 0.1);
-
-    /* Backgrounds */
-    --bg-app: #0f172a;
-    /* Slate 900 - Deep Blue/Black */
-    --bg-card: #1e293b;
-    /* Slate 800 */
-    --bg-hover: #334155;
-    /* Slate 700 */
-    --bg-header: #1e293b;
-    /* Slate 800 */
-
-    /* Text */
-    --text-main: #f1f5f9;
-    /* Slate 100 */
-    --text-secondary: #cbd5e1;
-    /* Slate 300 */
-    --text-hint: #64748b;
-    /* Slate 500 */
-    --text-on-primary: #0f172a;
-    /* Slate 900 */
-
-    /* Borders */
-    --border-color: #334155;
-    /* Slate 700 */
-    --border-hover: #475569;
-    /* Slate 600 */
-
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  @include emit-color-vars(tokens.$obsidian);
 }
 
-/* Override browser autofill background color (Firefox yellow, Chrome blue) */
+// Honor OS reduced-motion: collapse durations to ~0.
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Browser autofill background overrides (kept from prior contract)
+// -----------------------------------------------------------------------------
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-    -webkit-box-shadow: 0 0 0 1000px white inset !important;
-    box-shadow: 0 0 0 1000px white inset !important;
-    -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+  box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
+  -webkit-text-fill-color: var(--text-main) !important;
 }
 
-/* Firefox autofill override */
 input:-moz-autofill,
 input:-moz-autofill:hover,
 input:-moz-autofill:focus {
-    background-color: white !important;
-    color: var(--text-main) !important;
-}
-
-/* Dark Mode autofill overrides */
-.dark-theme {
-
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus,
-    input:-webkit-autofill:active,
-    textarea:-webkit-autofill,
-    select:-webkit-autofill {
-        -webkit-box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
-        box-shadow: 0 0 0 1000px var(--bg-card) inset !important;
-        -webkit-text-fill-color: var(--text-main) !important;
-    }
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
 }

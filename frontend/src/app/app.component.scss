@@ -12,9 +12,15 @@
     flex-direction: column;
 }
 
-// Side nav width constraint
+// Side nav width: let the inner <app-sidenav> rail own its width
+// (248px full / 76px collapsed). The collapsed class is mirrored onto
+// the mat-sidenav host in app.component.html.
 .sidenav {
-    width: 260px;
+    width: 248px;
+
+    &.collapsed {
+        width: 76px;
+    }
 }
 
 .mat-drawer-content {

@@ -113,6 +113,7 @@ const routes: Routes = [
       import('./products/product-ingestion/product-ingestion').then(
         (m) => m.ProductIngestion
       ),
+    canActivate: [AuthGuard],
   },
   { path: 'users', loadChildren: () => import('./users/users-module').then(m => m.UsersModule) },
   {
@@ -126,7 +127,6 @@ const routes: Routes = [
     loadChildren: () => import('./marketing/marketing.routes').then(m => m.MARKETING_ROUTES),
     canActivate: [AuthGuard]
   },
-  { path: 'marketplaces', loadChildren: () => import('./marketplaces/marketplaces-module').then(m => m.MarketplacesModule), canActivate: [AuthGuard] },
 
   // Public QR Redirect
   {

@@ -14,6 +14,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 import { debounceTime, switchMap, startWith, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
@@ -41,7 +42,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
     MatChipsModule,
     MatSlideToggleModule,
     MatTooltipModule,
-
+    TranslocoModule,
   ],
   templateUrl: './quick-post-dialog.component.html',
   styleUrls: ['./quick-post-dialog.component.scss']

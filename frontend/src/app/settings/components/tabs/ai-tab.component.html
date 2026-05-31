@@ -2,34 +2,33 @@
     <div class="settings-section">
         <h3>{{ t('settings.aiAgents') }}</h3>
         <p class="section-description">
-            Configure AI-powered features like product identification from photos.
-            Only the active provider needs an API key configured.
+            {{ t('settings.aiTab.description') }}
         </p>
 
         <form [formGroup]="aiForm" (ngSubmit)="saveSettings()">
 
             <div class="global-settings">
                 <mat-slide-toggle formControlName="ai_enabled" color="primary">
-                    Enable AI Features
+                    {{ t('settings.aiTab.enableFeatures') }}
                 </mat-slide-toggle>
 
                 <div class="config-row" *ngIf="aiForm.get('ai_enabled')?.value">
                     <mat-form-field appearance="outline">
-                        <mat-label>Active Provider</mat-label>
+                        <mat-label>{{ t('settings.aiTab.activeProvider') }}</mat-label>
                         <mat-select formControlName="ai_provider">
                             <mat-option value="google">Google Gemini</mat-option>
                             <mat-option value="openai">OpenAI</mat-option>
                             <mat-option value="anthropic">Anthropic Claude</mat-option>
                             <mat-option value="qwen">Qwen (Alibaba)</mat-option>
                         </mat-select>
-                        <mat-hint>This provider will be used for AI features</mat-hint>
+                        <mat-hint>{{ t('settings.aiTab.providerHint') }}</mat-hint>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline">
-                        <mat-label>Model Override (Optional)</mat-label>
-                        <input matInput formControlName="ai_model" placeholder="Leave empty for default"
+                        <mat-label>{{ t('settings.aiTab.modelOverride') }}</mat-label>
+                        <input matInput formControlName="ai_model" [placeholder]="t('settings.aiTab.modelPlaceholder')"
                             autocomplete="off">
-                        <mat-hint>e.g. gpt-4o, claude-3-5-sonnet, gemini-1.5-flash</mat-hint>
+                        <mat-hint>{{ t('settings.aiTab.modelHint') }}</mat-hint>
                     </mat-form-field>
                 </div>
             </div>
@@ -38,19 +37,19 @@
             <div class="active-key-section" *ngIf="aiForm.get('ai_enabled')?.value">
                 <h4>
                     <mat-icon>key</mat-icon>
-                    API Key for {{ getProviderName(aiForm.get('ai_provider')?.value) }}
+                    {{ t('settings.aiTab.apiKeyFor', { provider: getProviderName(aiForm.get('ai_provider')?.value) }) }}
                 </h4>
 
                 <div class="key-status" [class.configured]="isActiveProviderConfigured()">
                     <mat-icon>{{ isActiveProviderConfigured() ? 'check_circle' : 'warning' }}</mat-icon>
-                    <span>{{ isActiveProviderConfigured() ? 'Key configured' : 'Key required to enable AI' }}</span>
+                    <span>{{ isActiveProviderConfigured() ? t('settings.aiTab.keyConfigured') : t('settings.aiTab.keyRequired') }}</span>
                 </div>
 
                 <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>{{ getProviderName(aiForm.get('ai_provider')?.value) }} API Key</mat-label>
+                    <mat-label>{{ t('settings.aiTab.providerApiKey', { provider: getProviderName(aiForm.get('ai_provider')?.value) }) }}</mat-label>
                     <input matInput [formControlName]="getActiveKeyControlName()" type="password"
-                        placeholder="Enter key to update" autocomplete="new-password">
-                    <mat-hint>Enter a new key to update. Leave empty to keep existing.</mat-hint>
+                        [placeholder]="t('settings.aiTab.enterKeyToUpdate')" autocomplete="new-password">
+                    <mat-hint>{{ t('settings.aiTab.keyUpdateHint') }}</mat-hint>
                 </mat-form-field>
             </div>
 
@@ -58,7 +57,7 @@
             <div class="other-keys-section" *ngIf="aiForm.get('ai_enabled')?.value">
                 <button type="button" mat-button (click)="showOtherKeys = !showOtherKeys">
                     <mat-icon>{{ showOtherKeys ? 'expand_less' : 'expand_more' }}</mat-icon>
-                    {{ showOtherKeys ? 'Hide' : 'Show' }} Other Provider Keys
+                    {{ showOtherKeys ? t('settings.aiTab.hideOtherKeys') : t('settings.aiTab.showOtherKeys') }}
                 </button>
 
                 <div class="other-keys-grid" *ngIf="showOtherKeys">
@@ -67,12 +66,12 @@
                             <div class="provider-info">
                                 <span class="provider-name">{{ getProviderName(provider) }}</span>
                                 <span class="key-status small" [class.configured]="isProviderConfigured(provider)">
-                                    {{ isProviderConfigured(provider) ? '✓ Configured' : 'Not configured' }}
+                                    {{ isProviderConfigured(provider) ? t('settings.aiTab.configured') : t('settings.aiTab.notConfigured') }}
                                 </span>
                             </div>
                             <mat-form-field appearance="outline" class="compact-field">
                                 <input matInput [formControlName]="getKeyControlName(provider)" type="password"
-                                    placeholder="Enter to update" autocomplete="new-password">
+                                    [placeholder]="t('settings.aiTab.enterToUpdate')" autocomplete="new-password">
                             </mat-form-field>
                         </div>
                     </ng-container>

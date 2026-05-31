@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -6,7 +6,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSidenav } from '@angular/material/sidenav';
+import { TranslocoModule } from '@ngneat/transloco';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -21,15 +23,29 @@ import { AuthService } from '../../services/auth.service';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatDividerModule
+    MatDividerModule,
+    MatTooltipModule,
+    TranslocoModule
   ]
 })
 export class Header {
   user$;
   @Input() drawer!: MatSidenav;
+  /** True on desktop: the menu button collapses the rail instead of opening a drawer. */
+  @Input() desktop = false;
+  /** Emitted (desktop only) to toggle the persistent rail collapse. */
+  @Output() collapseToggle = new EventEmitter<void>();
 
   constructor(private authService: AuthService) {
     this.user$ = this.authService.getCurrentUserObservable();
+  }
+
+  onMenu(): void {
+    if (this.desktop) {
+      this.collapseToggle.emit();
+    } else {
+      this.drawer.toggle();
+    }
   }
 
   logout(): void {
