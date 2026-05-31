@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TranslocoTestingModule } from '@ngneat/transloco';
 
 describe('QuickPostDialogComponent', () => {
     let component: QuickPostDialogComponent;
@@ -52,7 +53,11 @@ describe('QuickPostDialogComponent', () => {
             imports: [
                 QuickPostDialogComponent,
                 NoopAnimationsModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                TranslocoTestingModule.forRoot({
+                    langs: { en: {}, 'es-MX': {} },
+                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
+                })
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },
