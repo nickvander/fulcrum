@@ -4,7 +4,7 @@ import { AiService } from '../../../core/services/ai.service';
 import { SettingsService } from '../../../core/services/settings.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
-import { TranslocoTestingModule } from '@ngneat/transloco';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
@@ -42,7 +42,7 @@ describe('ProductScannerComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 ProductScannerComponent,
-                TranslocoTestingModule.forRoot({ langs: { en: {} }, translocoConfig: { availableLangs: ['en'], defaultLang: 'en' } }),
+                getTranslocoTestingModule(),
                 NoopAnimationsModule
             ],
             providers: [

@@ -10,6 +10,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { MarketingService, CampaignEvent, CampaignEventUpdate } from '../../services/marketing.service';
 import { ProductDetailsDialogComponent } from '../../../products/components/product-details-dialog/product-details-dialog.component';
@@ -30,7 +31,8 @@ import { ProductService } from '../../../products/services/product';
     MatChipsModule,
     MatDividerModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    TranslocoModule
   ],
   templateUrl: './quick-post-detail-dialog.component.html',
   styleUrls: ['./quick-post-detail-dialog.component.scss']
@@ -49,7 +51,8 @@ export class QuickPostDetailDialogComponent {
     private marketingService: MarketingService,
     private productService: ProductService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) {
     this.post = data.post;
     this.editForm = this.fb.group({
@@ -111,19 +114,19 @@ export class QuickPostDetailDialogComponent {
         this.post = { ...this.post, ...updated };
         this.saving = false;
         this.isEditing = false;
-        this.snackBar.open('Post updated', 'Close', { duration: 2000 });
+        this.snackBar.open(this.transloco.translate('marketing.quickPostDetailDialog.postUpdated'), this.transloco.translate('common.close'), { duration: 2000 });
       },
       error: (err) => {
         this.saving = false;
         console.error('Failed to update', err);
-        this.snackBar.open('Failed to update post', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.quickPostDetailDialog.failedToUpdatePost'), this.transloco.translate('common.close'), { duration: 3000 });
       }
     });
   }
 
   publishPost(): void {
     if (!this.post.connector_id) {
-      this.snackBar.open('No connector configured. Set up a connector first.', 'Close', { duration: 4000 });
+      this.snackBar.open(this.transloco.translate('marketing.quickPostDetailDialog.noConnectorConfigured'), this.transloco.translate('common.close'), { duration: 4000 });
       return;
     }
 
@@ -134,7 +137,7 @@ export class QuickPostDetailDialogComponent {
         this.post.status = 'published';
         this.post.external_id = result.external_id;
         this.post.external_url = result.external_url;
-        this.snackBar.open('Post published successfully!', 'View', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.quickPostDetailDialog.postPublishedSuccessfully'), this.transloco.translate('marketing.quickPostDetailDialog.view'), { duration: 3000 });
       },
       error: (err) => {
         this.publishing = false;

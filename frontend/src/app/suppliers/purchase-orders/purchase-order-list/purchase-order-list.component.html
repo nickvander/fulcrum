@@ -55,7 +55,7 @@
             *ngIf="importReviews.length > 0 || reviewFilter !== 'pending' || isLoadingReviews || staleReviewCount > 0">
             <div class="review-panel-header">
                 <div>
-                    <p class="eyebrow">Supplier import queue</p>
+                    <p class="eyebrow">{{ t('purchaseOrders.purchaseOrderList.importQueueEyebrow') }}</p>
                     <h2>{{ reviewPanelTitle() }}</h2>
                     <p>{{ reviewPanelDescription() }}</p>
                 </div>
@@ -64,26 +64,26 @@
                         *ngIf="selectedReviewIds.size > 0"
                         [disabled]="bulkRejectSelectedInFlight"
                         (click)="bulkRejectSelected()"
-                        matTooltip="Reject every checked import">
+                        [matTooltip]="t('purchaseOrders.purchaseOrderList.rejectCheckedTooltip')">
                         <mat-icon>delete_sweep</mat-icon>
-                        Reject selected ({{ selectedReviewIds.size }})
+                        {{ t('purchaseOrders.purchaseOrderList.rejectSelected', { count: selectedReviewIds.size }) }}
                     </button>
                     <button mat-stroked-button
                         *ngIf="selectedReviewIds.size > 0"
                         (click)="clearReviewSelection($event)">
-                        Clear selection
+                        {{ t('purchaseOrders.purchaseOrderList.clearSelection') }}
                     </button>
                     <button mat-stroked-button color="warn"
                         *ngIf="staleReviewCount > 0"
                         [disabled]="bulkRejectInFlight"
                         (click)="bulkRejectStale()"
-                        [matTooltip]="'Reject pending imports older than ' + staleReviewDays + ' days'">
+                        [matTooltip]="t('purchaseOrders.purchaseOrderList.rejectStaleTooltip', { days: staleReviewDays })">
                         <mat-icon>auto_delete</mat-icon>
-                        Reject stale ({{ staleReviewCount }})
+                        {{ t('purchaseOrders.purchaseOrderList.rejectStale', { count: staleReviewCount }) }}
                     </button>
                     <button mat-stroked-button color="primary" (click)="openIngestDialog()">
                         <mat-icon>upload_file</mat-icon>
-                        Add document
+                        {{ t('purchaseOrders.purchaseOrderList.addDocument') }}
                     </button>
                 </div>
             </div>
@@ -91,7 +91,7 @@
             <div class="review-filter-row">
                 <mat-form-field appearance="outline" class="review-search-field" subscriptSizing="dynamic">
                     <mat-icon matPrefix>search</mat-icon>
-                    <mat-label>Filter by file name</mat-label>
+                    <mat-label>{{ t('purchaseOrders.purchaseOrderList.filterByFileName') }}</mat-label>
                     <input matInput
                         type="search"
                         [ngModel]="reviewSearch"
@@ -101,17 +101,17 @@
                     />
                     <button *ngIf="reviewSearch" mat-icon-button matSuffix
                         (click)="onReviewSearchInput('')"
-                        aria-label="Clear search">
+                        [attr.aria-label]="t('purchaseOrders.purchaseOrderList.clearSearch')">
                         <mat-icon style="font-size: 18px; width: 18px; height: 18px; line-height: 18px;">close</mat-icon>
                     </button>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="review-supplier-filter" subscriptSizing="dynamic">
-                    <mat-label>Supplier</mat-label>
+                    <mat-label>{{ t('purchaseOrders.purchaseOrderList.supplierLabel') }}</mat-label>
                     <mat-select [ngModel]="reviewSupplierFilterId"
                         (selectionChange)="onReviewSupplierFilterChange($event.value)"
                         data-testid="review-supplier-filter">
-                        <mat-option [value]="null">All suppliers</mat-option>
+                        <mat-option [value]="null">{{ t('purchaseOrders.purchaseOrderList.allSuppliers') }}</mat-option>
                         <mat-option *ngFor="let supplier of suppliers" [value]="supplier.id">
                             {{ supplier.name }}
                         </mat-option>
@@ -121,27 +121,27 @@
                 <button mat-button
                     *ngIf="hasActiveReviewFilters()"
                     (click)="clearReviewFilters()"
-                    matTooltip="Clear search + supplier filter">
+                    [matTooltip]="t('purchaseOrders.purchaseOrderList.clearFiltersTooltip')">
                     <mat-icon>filter_alt_off</mat-icon>
-                    Clear filters
+                    {{ t('purchaseOrders.purchaseOrderList.clearFilters') }}
                 </button>
             </div>
 
-            <div class="review-filter-tabs" role="tablist" aria-label="Supplier import review filters">
+            <div class="review-filter-tabs" role="tablist" [attr.aria-label]="t('purchaseOrders.purchaseOrderList.reviewFiltersAriaLabel')">
                 <button type="button" class="review-filter-tab"
                     [class.active]="reviewFilter === 'pending'"
                     (click)="setReviewFilter('pending')">
-                    Pending
+                    {{ t('purchaseOrders.purchaseOrderList.filterPending') }}
                 </button>
                 <button type="button" class="review-filter-tab"
                     [class.active]="reviewFilter === 'history'"
                     (click)="setReviewFilter('history')">
-                    History
+                    {{ t('purchaseOrders.purchaseOrderList.filterHistory') }}
                 </button>
                 <button type="button" class="review-filter-tab"
                     [class.active]="reviewFilter === 'all'"
                     (click)="setReviewFilter('all')">
-                    All
+                    {{ t('common.all') }}
                 </button>
             </div>
 
@@ -151,9 +151,9 @@
 
             <div class="review-empty" *ngIf="!isLoadingReviews && importReviews.length === 0">
                 <mat-icon>inbox</mat-icon>
-                <p *ngIf="reviewFilter === 'history'">No approved or rejected supplier imports yet.</p>
-                <p *ngIf="reviewFilter === 'pending'">No supplier imports waiting for review.</p>
-                <p *ngIf="reviewFilter === 'all'">No supplier imports have been uploaded yet.</p>
+                <p *ngIf="reviewFilter === 'history'">{{ t('purchaseOrders.purchaseOrderList.emptyHistory') }}</p>
+                <p *ngIf="reviewFilter === 'pending'">{{ t('purchaseOrders.purchaseOrderList.emptyPending') }}</p>
+                <p *ngIf="reviewFilter === 'all'">{{ t('purchaseOrders.purchaseOrderList.emptyAll') }}</p>
             </div>
 
             <div class="review-select-all-row"
@@ -161,9 +161,9 @@
                 <button mat-stroked-button
                     (click)="selectAllPendingVisible()"
                     [disabled]="selectedReviewIds.size === pendingReviewIds().length"
-                    matTooltip="Check every visible pending row">
+                    [matTooltip]="t('purchaseOrders.purchaseOrderList.selectAllPendingTooltip')">
                     <mat-icon>checklist</mat-icon>
-                    Select all pending ({{ pendingReviewIds().length }})
+                    {{ t('purchaseOrders.purchaseOrderList.selectAllPending', { count: pendingReviewIds().length }) }}
                 </button>
             </div>
 
@@ -179,7 +179,7 @@
                         (change)="toggleReviewSelection(review.id, $event.checked)"
                         (click)="$event.stopPropagation()"
                         [attr.data-testid]="'review-select-' + review.id"
-                        [aria-label]="'Select ' + review.file_name">
+                        [attr.aria-label]="t('purchaseOrders.purchaseOrderList.selectReviewAriaLabel', { fileName: review.file_name })">
                     </mat-checkbox>
                     <div class="review-icon">
                         <mat-icon>{{ review.mode === 'match' ? 'rule' : 'description' }}</mat-icon>
@@ -194,26 +194,26 @@
                                 {{ getReviewStatusLabel(review) }}
                             </span>
                         </h3>
-                        <p>{{ getReviewVendor(review) }} · {{ getReviewItemCount(review) }} item{{ getReviewItemCount(review) === 1 ? '' : 's' }} · {{ review.created_at | date:'mediumDate':undefined:currentLang }}</p>
+                        <p>{{ getReviewVendor(review) }} · {{ t('purchaseOrders.purchaseOrderList.reviewItemCount', { count: getReviewItemCount(review) }) }} · {{ review.created_at | date:'mediumDate':undefined:currentLang }}</p>
                         <span class="review-warning" *ngIf="review.warnings.length">{{ review.warnings[0] }}</span>
                     </div>
                     <div class="review-actions">
                         <button mat-stroked-button color="primary"
                             *ngIf="review.status === 'pending'"
                             (click)="reviewImport(review); $event.stopPropagation()">
-                            Review
+                            {{ t('purchaseOrders.purchaseOrderList.reviewButton') }}
                         </button>
                         <button mat-icon-button color="warn"
                             *ngIf="review.status === 'pending'"
                             (click)="rejectImport(review, $event)"
-                            matTooltip="Reject import">
+                            [matTooltip]="t('purchaseOrders.purchaseOrderList.rejectImportTooltip')">
                             <mat-icon>delete</mat-icon>
                         </button>
                         <button mat-stroked-button color="primary"
                             *ngIf="review.status === 'approved' && review.purchase_order_id"
                             (click)="viewDetail(review.purchase_order_id!); $event.stopPropagation()"
-                            matTooltip="Open the PO this review created">
-                            <mat-icon>visibility</mat-icon> Open PO
+                            [matTooltip]="t('purchaseOrders.purchaseOrderList.openPoTooltip')">
+                            <mat-icon>visibility</mat-icon> {{ t('purchaseOrders.purchaseOrderList.openPo') }}
                         </button>
                     </div>
                 </article>
@@ -277,8 +277,8 @@
                 <ng-container *ngIf="dataSource.data.length === 0; else showTable">
                     <div class="empty-state">
                         <mat-icon class="empty-icon">receipt_long</mat-icon>
-                        <h3>Start your purchasing workflow</h3>
-                        <p>Create a PO manually or import a supplier PDF/image. Confirmed items can receive stock into internal inventory with an audit trail.</p>
+                        <h3>{{ t('purchaseOrders.purchaseOrderList.emptyStateTitle') }}</h3>
+                        <p>{{ t('purchaseOrders.purchaseOrderList.emptyStateDescription') }}</p>
                         <button mat-raised-button color="primary" (click)="createPurchaseOrder()">
                             <mat-icon>add</mat-icon> {{ t('purchaseOrders.createPO') }}
                         </button>
@@ -303,7 +303,7 @@
                         <ng-container matColumnDef="supplier">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('suppliers.supplierName') }}</th>
                             <td mat-cell *matCellDef="let po">
-                                <span [matTooltip]="'Supplier ID: ' + po.supplier_id">
+                                <span [matTooltip]="t('purchaseOrders.purchaseOrderList.supplierIdTooltip', { id: po.supplier_id })">
                                     {{getSupplierName(po.supplier_id)}}
                                 </span>
                             </td>
@@ -350,7 +350,7 @@
                             (click)="viewDetail(row.id)"></tr>
                     </table>
                     <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
-                        aria-label="Select page of purchase orders"></mat-paginator>
+                        [attr.aria-label]="t('purchaseOrders.purchaseOrderList.paginatorAriaLabel')"></mat-paginator>
                 </ng-template>
             </ng-template>
         </mat-card>

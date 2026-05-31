@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator'; // Added Paginator
 import { MatSort, MatSortModule } from '@angular/material/sort';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { MarketingService, CampaignSummary, CampaignEvent } from '../../services/marketing.service';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
@@ -84,7 +84,8 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   constructor(
     private marketingService: MarketingService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -107,7 +108,7 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
       error: (err) => {
         console.error('Failed to load campaigns', err);
         this.loading = false;
-        this.snackBar.open('Failed to load campaigns', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.campaignList.errorLoadCampaigns'), this.transloco.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -232,8 +233,8 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   deleteQuickPost(post: CampaignEvent): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Quick Post',
-        message: 'Delete this quick post?'
+        title: this.transloco.translate('marketing.campaignList.deleteQuickPostTitle'),
+        message: this.transloco.translate('marketing.campaignList.deleteQuickPostMessage')
       } as ConfirmationDialogData
     });
 
@@ -243,11 +244,11 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
           next: () => {
             this.quickPosts = this.quickPosts.filter(p => p.id !== post.id);
             this.applyFilter();
-            this.snackBar.open('Quick post deleted', 'Close', { duration: 2000 });
+            this.snackBar.open(this.transloco.translate('marketing.campaignList.quickPostDeleted'), this.transloco.translate('common.close'), { duration: 2000 });
           },
           error: (err) => {
             console.error('Failed to delete quick post', err);
-            this.snackBar.open('Failed to delete', 'Close', { duration: 3000 });
+            this.snackBar.open(this.transloco.translate('marketing.campaignList.errorDeleteQuickPost'), this.transloco.translate('common.close'), { duration: 3000 });
           }
         });
       }
@@ -279,8 +280,8 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
   deleteCampaign(campaign: CampaignSummary): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Campaign',
-        message: `Delete campaign "${campaign.name}"?`
+        title: this.transloco.translate('marketing.campaignList.deleteCampaignTitle'),
+        message: this.transloco.translate('marketing.campaignList.deleteCampaignMessage', { name: campaign.name })
       } as ConfirmationDialogData
     });
 
@@ -290,11 +291,11 @@ export class CampaignListComponent implements OnInit, AfterViewInit {
           next: () => {
             this.campaigns = this.campaigns.filter(c => c.id !== campaign.id);
             this.applyFilter();
-            this.snackBar.open('Campaign deleted', 'Close', { duration: 2000 });
+            this.snackBar.open(this.transloco.translate('marketing.campaignList.campaignDeleted'), this.transloco.translate('common.close'), { duration: 2000 });
           },
           error: (err) => {
             console.error('Failed to delete campaign', err);
-            this.snackBar.open('Failed to delete campaign', 'Close', { duration: 3000 });
+            this.snackBar.open(this.transloco.translate('marketing.campaignList.errorDeleteCampaign'), this.transloco.translate('common.close'), { duration: 3000 });
           }
         });
       }

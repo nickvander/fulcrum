@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TranslocoService } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { AuthService } from '../../../core/services/auth.service';
 import { translateApiError } from '../../../core/errors/translate-api-error';
 import { CommonModule } from '@angular/common';
@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
     templateUrl: './reset-password.component.html',
     styleUrls: ['./reset-password.component.scss'],
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule]
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoModule]
 })
 export class ResetPasswordComponent implements OnInit {
     resetPasswordForm: FormGroup;
@@ -40,7 +40,7 @@ export class ResetPasswordComponent implements OnInit {
     ngOnInit() {
         this.token = this.route.snapshot.queryParams['token'];
         if (!this.token) {
-            this.error = 'Invalid password reset token.';
+            this.error = this.transloco.translate('auth.resetPassword.errors.invalidToken');
         }
     }
 
@@ -68,7 +68,7 @@ export class ResetPasswordComponent implements OnInit {
         }
 
         if (!this.token) {
-            this.error = 'Missing reset token.';
+            this.error = this.transloco.translate('auth.resetPassword.errors.missingToken');
             return;
         }
 
@@ -77,7 +77,7 @@ export class ResetPasswordComponent implements OnInit {
             .subscribe({
                 next: (response) => {
                     this.isLoading = false;
-                    this.message = 'Password has been reset successfully. Redirecting to login...';
+                    this.message = this.transloco.translate('auth.resetPassword.successMessage');
                     setTimeout(() => {
                         this.router.navigate(['/login']);
                     }, 3000);

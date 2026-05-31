@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { TranslocoModule } from '@ngneat/transloco';
 
 
 @Component({
@@ -12,7 +13,8 @@ import { MatMenuModule } from '@angular/material/menu';
   imports: [
     MatButtonModule,
     MatIconModule,
-    MatMenuModule
+    MatMenuModule,
+    TranslocoModule
 ]
 })
 export class BatchActionToolbarComponent {

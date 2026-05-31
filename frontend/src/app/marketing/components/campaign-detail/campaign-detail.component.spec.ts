@@ -8,6 +8,7 @@ import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('CampaignDetailComponent', () => {
     let component: CampaignDetailComponent;
@@ -39,7 +40,8 @@ describe('CampaignDetailComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 CampaignDetailComponent,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                getTranslocoTestingModule()
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },

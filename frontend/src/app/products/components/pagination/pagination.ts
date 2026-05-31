@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-pagination',
@@ -12,7 +13,8 @@ import { FormsModule } from '@angular/forms';
     MatButtonModule,
     MatIconModule,
     MatInputModule,
-    FormsModule
+    FormsModule,
+    TranslocoModule
 ],
   templateUrl: './pagination.html',
   styleUrls: ['./pagination.scss']

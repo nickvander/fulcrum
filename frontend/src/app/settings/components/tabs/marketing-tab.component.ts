@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { MaterialModule } from '../../../shared/material.module';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -28,7 +28,8 @@ export class MarketingTabComponent implements OnInit {
         private fb: FormBuilder,
         private http: HttpClient,
         private notificationService: NotificationService,
-        private settingsService: SettingsService
+        private settingsService: SettingsService,
+        private transloco: TranslocoService
     ) {
         this.smtpForm = this.fb.group({
             provider: ['gmail'],
@@ -69,11 +70,11 @@ export class MarketingTabComponent implements OnInit {
             next: () => {
                 this.savingStore = false;
                 this.storeForm.markAsPristine();
-                this.notificationService.showSuccess('Store settings saved!');
+                this.notificationService.showSuccess(this.transloco.translate('settings.marketingTab.storeSettingsSaved'));
             },
             error: () => {
                 this.savingStore = false;
-                this.notificationService.showError('Failed to save store settings');
+                this.notificationService.showError(this.transloco.translate('settings.marketingTab.storeSettingsError'));
             }
         });
     }
@@ -107,11 +108,11 @@ export class MarketingTabComponent implements OnInit {
             next: () => {
                 this.savingSmtp = false;
                 this.smtpConfigured = true;
-                this.notificationService.showSuccess('Email settings saved!');
+                this.notificationService.showSuccess(this.transloco.translate('settings.marketingTab.emailSettingsSaved'));
             },
             error: (err) => {
                 this.savingSmtp = false;
-                this.notificationService.showError('Failed to save email settings');
+                this.notificationService.showError(this.transloco.translate('settings.marketingTab.emailSettingsError'));
             }
         });
     }
@@ -121,10 +122,10 @@ export class MarketingTabComponent implements OnInit {
         this.http.post<any>(`${this.apiUrl}/settings/smtp/test`, {}).subscribe({
             next: (result) => {
                 this.testingSmtp = false;
-                if (result.success) this.notificationService.showSuccess('SMTP connection successful!');
-                else this.notificationService.showError(result.error || 'Connection failed');
+                if (result.success) this.notificationService.showSuccess(this.transloco.translate('settings.marketingTab.smtpTestSuccess'));
+                else this.notificationService.showError(result.error || this.transloco.translate('settings.marketingTab.smtpTestConnectionFailed'));
             },
-            error: (err) => { this.testingSmtp = false; this.notificationService.showError('Connection test failed'); }
+            error: (err) => { this.testingSmtp = false; this.notificationService.showError(this.transloco.translate('settings.marketingTab.smtpTestError')); }
         });
     }
 }

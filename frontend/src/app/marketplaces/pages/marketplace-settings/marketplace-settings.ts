@@ -142,7 +142,7 @@ export class MarketplaceSettingsComponent implements OnInit {
                     },
                     error: (err) => {
                         console.error('Delete error:', err);
-                        this.snackBar.open('Failed to disconnect account.', 'Close', { duration: 3000 });
+                        this.snackBar.open(this.translocoService.translate('marketplaces.marketplaceSettings.errors.disconnectFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
                     }
                 });
             }

@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { ProductService } from '../../../products/services/product';
 import { Router } from '@angular/router';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-quick-product-dialog',
@@ -43,6 +43,7 @@ export class QuickProductDialogComponent implements OnInit {
         private router: Router,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<QuickProductDialogComponent>,
+        private transloco: TranslocoService,
         @Inject(MAT_DIALOG_DATA) public data: {
             suggestedName?: string;
             poFormState?: any;
@@ -90,7 +91,7 @@ export class QuickProductDialogComponent implements OnInit {
         // This will be enhanced when the ProductIngestion component is made dialog-compatible
 
         // Placeholder: Show alert for now
-        alert('Camera capture coming soon! This will use AI to identify products.');
+        alert(this.transloco.translate('purchaseOrders.quickProductDialog.cameraCaptureComingSoon'));
 
         // Future implementation:
         // const dialogRef = this.dialog.open(CameraCaptureDialogComponent, {

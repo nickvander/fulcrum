@@ -5,7 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { of, throwError } from 'rxjs';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoTestingModule } from '@ngneat/transloco';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ResetPasswordComponent', () => {
     let component: ResetPasswordComponent;
@@ -28,7 +28,7 @@ describe('ResetPasswordComponent', () => {
             imports: [
                 ResetPasswordComponent,
                 BrowserAnimationsModule,
-                TranslocoTestingModule.forRoot({ langs: { en: {}, 'es-MX': {} } }),
+                getTranslocoTestingModule(),
             ],
             providers: [
                 { provide: AuthService, useValue: authSpy },

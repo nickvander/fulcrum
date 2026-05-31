@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('CampaignWizardComponent', () => {
     let component: CampaignWizardComponent;
@@ -50,7 +51,8 @@ describe('CampaignWizardComponent', () => {
             imports: [
                 CampaignWizardComponent,
                 NoopAnimationsModule,
-                HttpClientTestingModule
+                HttpClientTestingModule,
+                getTranslocoTestingModule()
             ],
             providers: [
                 { provide: MarketingService, useValue: marketingServiceMock },

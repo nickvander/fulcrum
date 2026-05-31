@@ -10,6 +10,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ProductVariantsComponent } from './product-variants';
 import { ProductVariant } from '../../models/product.model';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ProductVariantsComponent', () => {
     let component: ProductVariantsComponent;
@@ -48,7 +49,8 @@ describe('ProductVariantsComponent', () => {
                 MatExpansionModule,
                 FormsModule,
                 ReactiveFormsModule,
-                ProductVariantsComponent
+                ProductVariantsComponent,
+                getTranslocoTestingModule()
             ]
         })
             .compileComponents();

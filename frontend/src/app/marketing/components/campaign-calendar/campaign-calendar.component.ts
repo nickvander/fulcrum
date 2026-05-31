@@ -109,7 +109,7 @@ export class CampaignCalendarComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to load events', err);
-        this.snackBar.open('Failed to load calendar events', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translocoService.translate('marketing.campaignCalendar.errors.loadFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
         // Still generate calendar grid even if no events
         this.generateCalendar();
       }
@@ -185,11 +185,11 @@ export class CampaignCalendarComponent implements OnInit, OnDestroy {
       this.marketingService.updateEvent(droppedEvent.id, { scheduled_at: newScheduledAt }).subscribe({
         next: (updated) => {
           droppedEvent.scheduled_at = updated.scheduled_at;
-          this.snackBar.open('Event rescheduled', 'Close', { duration: 2000 });
+          this.snackBar.open(this.translocoService.translate('marketing.campaignCalendar.eventRescheduled'), this.translocoService.translate('common.close'), { duration: 2000 });
         },
         error: (err) => {
           console.error('Reschedule failed', err);
-          this.snackBar.open('Failed to reschedule event', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('marketing.campaignCalendar.errors.rescheduleFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
           // Revert UI change? Ideally yes.
           // Reloading events is safest.
           this.loadEvents();

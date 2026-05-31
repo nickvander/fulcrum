@@ -10,6 +10,7 @@ import { ProductTemplateService } from '../../services/product-template.service'
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ProductTemplate } from '../../models/product-template.model';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-product-templates',
@@ -22,7 +23,8 @@ import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/comp
     MatListModule,
     MatProgressBarModule,
     RouterLink,
-    MatDialogModule
+    MatDialogModule,
+    TranslocoModule
   ],
   templateUrl: './product-templates.html',
   styleUrls: ['./product-templates.scss']
@@ -33,7 +35,8 @@ export class ProductTemplatesComponent implements OnInit {
 
   constructor(
     private templateService: ProductTemplateService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -57,8 +60,8 @@ export class ProductTemplatesComponent implements OnInit {
   deleteTemplate(id: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Template',
-        message: 'Are you sure you want to delete this template?'
+        title: this.transloco.translate('products.productTemplates.deleteDialog.title'),
+        message: this.transloco.translate('products.productTemplates.deleteDialog.message')
       } as ConfirmationDialogData
     });
 

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslocoService, TranslocoModule } from '@ngneat/transloco';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,7 +21,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    TranslocoModule
   ],
   templateUrl: './force-password-change.component.html',
   styleUrls: ['./force-password-change.component.scss']
@@ -36,7 +38,8 @@ export class ForcePasswordChangeComponent implements OnInit {
     private fb: FormBuilder,
     private userService: UserService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) {
     this.passwordForm = this.fb.group({
       currentPassword: ['', Validators.required],
@@ -60,7 +63,11 @@ export class ForcePasswordChangeComponent implements OnInit {
       this.userService.changePassword(currentPassword, newPassword).subscribe({
         next: () => {
           this.isLoading = false;
-          this.snackBar.open('Password updated successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(
+            this.transloco.translate('users.forcePasswordChange.passwordUpdated'),
+            this.transloco.translate('common.close'),
+            { duration: 3000 }
+          );
           this.router.navigate(['/']); // Navigate to home/dashboard
         },
         error: () => {

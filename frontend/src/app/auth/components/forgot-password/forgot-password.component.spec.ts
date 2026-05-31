@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { of, throwError } from 'rxjs';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute } from '@angular/router';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ForgotPasswordComponent', () => {
     let component: ForgotPasswordComponent;
@@ -17,7 +18,7 @@ describe('ForgotPasswordComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [ForgotPasswordComponent, BrowserAnimationsModule],
+            imports: [ForgotPasswordComponent, BrowserAnimationsModule, getTranslocoTestingModule()],
             providers: [
                 { provide: AuthService, useValue: spy },
                 { provide: ActivatedRoute, useValue: {} }

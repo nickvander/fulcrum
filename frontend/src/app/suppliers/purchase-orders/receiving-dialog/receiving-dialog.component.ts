@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { PurchaseOrder, PurchaseOrderItem } from '../../../shared/models/purchase-order.model';
 import { SuppliersService } from '../../suppliers.service';
 
@@ -23,7 +24,8 @@ import { SuppliersService } from '../../suppliers.service';
         MatFormFieldModule,
         MatInputModule,
         MatIconModule,
-        MatDividerModule
+        MatDividerModule,
+        TranslocoModule
     ]
 })
 export class ReceivingDialogComponent implements OnInit {
@@ -34,13 +36,14 @@ export class ReceivingDialogComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private suppliersService: SuppliersService,
+        private transloco: TranslocoService,
         public dialogRef: MatDialogRef<ReceivingDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { po: PurchaseOrder, mode?: 'receive' | 'correct' }
     ) {
         this.po = data.po;
         this.mode = data.mode || 'receive';
         this.receivingForm = this.fb.group({
-            reason: ['Receiving correction'],
+            reason: [this.transloco.translate('purchaseOrders.receivingDialog.correctionDefaultReason')],
             items: this.fb.array([])
         });
     }
@@ -76,15 +79,21 @@ export class ReceivingDialogComponent implements OnInit {
     }
 
     title(): string {
-        return this.mode === 'correct' ? `Correct Receiving - PO #${this.po.id}` : `Receive Items - PO #${this.po.id}`;
+        return this.mode === 'correct'
+            ? this.transloco.translate('purchaseOrders.receivingDialog.titleCorrect', { id: this.po.id })
+            : this.transloco.translate('purchaseOrders.receivingDialog.titleReceive', { id: this.po.id });
     }
 
     quantityLabel(): string {
-        return this.mode === 'correct' ? 'Reverse Received' : 'Receive Now';
+        return this.mode === 'correct'
+            ? this.transloco.translate('purchaseOrders.receivingDialog.quantityLabelReverse')
+            : this.transloco.translate('purchaseOrders.receivingDialog.quantityLabelReceive');
     }
 
     submitLabel(): string {
-        return this.mode === 'correct' ? 'Apply Correction' : 'Receive';
+        return this.mode === 'correct'
+            ? this.transloco.translate('purchaseOrders.receivingDialog.submitCorrect')
+            : this.transloco.translate('purchaseOrders.receivingDialog.submitReceive');
     }
 
     getImageUrl(product: any): string | null {

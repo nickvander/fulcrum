@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { ProductService } from '../../../products/services/product';
 import {
@@ -69,6 +69,7 @@ export class StockTransferCreateDialogComponent implements OnInit {
     private productService: ProductService,
     private service: StockTransferService,
     private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -152,7 +153,7 @@ export class StockTransferCreateDialogComponent implements OnInit {
     this.service.create(payload).subscribe({
       next: created => {
         this.saving = false;
-        this.snackBar.open('Transfer created', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('stockTransfers.stockTransferCreateDialog.transferCreated'), this.transloco.translate('common.close'), { duration: 3000 });
         this.dialogRef.close(created);
       },
       error: err => {

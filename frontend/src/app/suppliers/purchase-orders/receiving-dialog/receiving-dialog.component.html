@@ -1,3 +1,4 @@
+<ng-container *transloco="let t">
 <h2 mat-dialog-title>{{ title() }}</h2>
 
 <mat-dialog-content class="receiving-content">
@@ -5,14 +6,14 @@
         <div class="correction-note" *ngIf="mode === 'correct'">
             <mat-icon>history</mat-icon>
             <div>
-                <strong>Reverse a receiving mistake</strong>
-                <p>This reduces the PO received quantity and writes a negative inventory adjustment so the audit trail stays intact.</p>
+                <strong>{{ t('purchaseOrders.receivingDialog.correctTitle') }}</strong>
+                <p>{{ t('purchaseOrders.receivingDialog.correctDescription') }}</p>
             </div>
         </div>
 
         <mat-form-field appearance="outline" class="reason-field" *ngIf="mode === 'correct'">
-            <mat-label>Correction reason</mat-label>
-            <input matInput formControlName="reason" placeholder="Example: counted damaged cartons twice">
+            <mat-label>{{ t('purchaseOrders.receivingDialog.correctionReason') }}</mat-label>
+            <input matInput formControlName="reason" [placeholder]="t('purchaseOrders.receivingDialog.correctionReasonPlaceholder')">
         </mat-form-field>
 
         <div formArrayName="items" class="items-container">
@@ -22,15 +23,15 @@
                 <div class="card-header">
                     <div class="image-wrapper">
                         <img *ngIf="getImageUrl(po.items[i].product)" [src]="getImageUrl(po.items[i].product)"
-                            class="product-thumb" alt="Product">
+                            class="product-thumb" [attr.aria-label]="t('purchaseOrders.receivingDialog.productImageAlt')">
                         <div class="no-image" *ngIf="!getImageUrl(po.items[i].product)">
                             <mat-icon>image</mat-icon>
                         </div>
                     </div>
                     <div class="header-details">
-                        <h3 class="product-name">{{ po.items[i].product?.name || ('Product #' + po.items[i].product_id)
+                        <h3 class="product-name">{{ po.items[i].product?.name || (t('purchaseOrders.receivingDialog.productFallback', { id: po.items[i].product_id }))
                             }}</h3>
-                        <span class="product-sku" *ngIf="po.items[i].product?.sku">SKU: {{ po.items[i].product?.sku
+                        <span class="product-sku" *ngIf="po.items[i].product?.sku">{{ t('purchaseOrders.receivingDialog.skuLabel') }} {{ po.items[i].product?.sku
                             }}</span>
                         <span class="variant-chip" *ngIf="getVariantName(po.items[i])">
                             {{ getVariantName(po.items[i]) }}
@@ -44,15 +45,15 @@
                 <!-- Stats: Ordered vs Received -->
                 <div class="card-stats">
                     <div class="stat">
-                        <span class="label">Ordered</span>
+                        <span class="label">{{ t('purchaseOrders.receivingDialog.statOrdered') }}</span>
                         <span class="value">{{ itemControl.get('quantity_ordered')?.value }}</span>
                     </div>
                     <div class="stat">
-                        <span class="label">Received</span>
+                        <span class="label">{{ t('purchaseOrders.receivingDialog.statReceived') }}</span>
                         <span class="value success-text">{{ itemControl.get('quantity_received_so_far')?.value }}</span>
                     </div>
                     <div class="stat highlight">
-                        <span class="label">Remaining</span>
+                        <span class="label">{{ t('purchaseOrders.receivingDialog.statRemaining') }}</span>
                         <span class="value"
                             *ngIf="(itemControl.get('quantity_ordered')?.value || 0) >= ((itemControl.get('quantity_received_so_far')?.value || 0) + (itemControl.get('quantity_to_receive')?.value || 0))">
                             {{ (itemControl.get('quantity_ordered')?.value || 0) -
@@ -63,7 +64,7 @@
                             *ngIf="((itemControl.get('quantity_received_so_far')?.value || 0) + (itemControl.get('quantity_to_receive')?.value || 0)) > (itemControl.get('quantity_ordered')?.value || 0)">
                             +{{ ((itemControl.get('quantity_received_so_far')?.value || 0) +
                             (itemControl.get('quantity_to_receive')?.value || 0)) -
-                            (itemControl.get('quantity_ordered')?.value || 0) }} Bonus
+                            (itemControl.get('quantity_ordered')?.value || 0) }} {{ t('purchaseOrders.receivingDialog.bonus') }}
                         </span>
                     </div>
                 </div>
@@ -73,7 +74,7 @@
                     <mat-form-field appearance="outline" class="receive-input">
                         <mat-label>{{ quantityLabel() }}</mat-label>
                         <input matInput type="number" formControlName="quantity_to_receive" min="0">
-                        <span matSuffix>units</span>
+                        <span matSuffix>{{ t('common.units') }}</span>
                     </mat-form-field>
                 </div>
             </div>
@@ -81,6 +82,7 @@
     </div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Cancel</button>
+    <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
     <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="receivingForm.invalid">{{ submitLabel() }}</button>
 </mat-dialog-actions>
+</ng-container>

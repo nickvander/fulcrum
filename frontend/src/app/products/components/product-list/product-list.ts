@@ -15,7 +15,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { SharedModule } from '../../../shared/shared-module';
 import { ProductDashboardComponent } from '../../pages/product-dashboard/product-dashboard.component';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { StockAdjustmentDialog } from '../stock-adjustment-dialog/stock-adjustment-dialog';
 import { StockHistoryDialogComponent } from '../stock-history-dialog/stock-history-dialog.component';
@@ -100,7 +100,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef,
     private screenService: ScreenService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -356,8 +357,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   deleteProduct(id: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Product',
-        message: 'Are you sure you want to delete this product? This action cannot be undone.',
+        title: this.transloco.translate('products.productList.deleteProductTitle'),
+        message: this.transloco.translate('products.productList.deleteProductMessage'),
       },
     });
 
@@ -398,12 +399,12 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: () => {
-              this.notificationService.showSuccess('Stock adjusted successfully');
+              this.notificationService.showSuccess(this.transloco.translate('products.productList.stockAdjustedSuccess'));
               this.loadProducts(this.currentPage, this.pageSize);
             },
             error: (error) => {
               console.error('Error adjusting stock:', error);
-              this.notificationService.showError('Error adjusting stock');
+              this.notificationService.showError(this.transloco.translate('products.productList.stockAdjustedError'));
               this.loadProducts(this.currentPage, this.pageSize); // Refresh anyway
             }
           });
@@ -463,8 +464,8 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Selected Products',
-        message: `Are you sure you want to delete ${this.selectedProducts.size} product(s)? This action cannot be undone.`
+        title: this.transloco.translate('products.productList.deleteSelectedTitle'),
+        message: this.transloco.translate('products.productList.deleteSelectedMessage', { count: this.selectedProducts.size })
       }
     });
 
@@ -680,7 +681,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
   onAddBundle(): void {
     const newBundle = {
       id: 0,
-      name: 'New Bundle',
+      name: this.transloco.translate('products.productList.newBundleDefaultName'),
       sku: '',
       description: '',
       default_resale_price: 0,
@@ -710,7 +711,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
     // Create new bundle pre-filled with components
     const newBundle = {
       id: 0,
-      name: 'New Bundle',
+      name: this.transloco.translate('products.productList.newBundleDefaultName'),
       sku: '',
       description: '',
       default_resale_price: 0,
@@ -903,7 +904,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.notificationService.showSuccess(this.transloco.translate('products.productList.batchUpdatedSuccess', { count: productIds.length }));
           this.loadProducts(this.currentPage, this.pageSize);
           this.deselectAll();
         },
@@ -921,7 +922,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.notificationService.showSuccess(this.transloco.translate('products.productList.batchUpdatedSuccess', { count: productIds.length }));
           this.loadProducts(this.currentPage, this.pageSize);
           this.deselectAll();
         },
@@ -939,12 +940,12 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.notificationService.showSuccess(`${productIds.length} products updated successfully!`);
+          this.notificationService.showSuccess(this.transloco.translate('products.productList.batchUpdatedSuccess', { count: productIds.length }));
           this.loadProducts(this.currentPage, this.pageSize);
           this.deselectAll();
         },
         error: (error) => {
-          this.notificationService.showError('Error updating custom fields');
+          this.notificationService.showError(this.transloco.translate('products.productList.customFieldsUpdateError'));
         }
       });
   }
@@ -1112,7 +1113,7 @@ export class ProductList implements OnInit, OnDestroy, AfterViewInit {
 
             // Map Category name to notes for now since we need ID
             if (result.category) {
-              newProduct.notes = `Identified Category: ${result.category}`;
+              newProduct.notes = this.transloco.translate('products.productList.identifiedCategoryNote', { category: result.category });
             }
 
             // Add suggested attributes to custom fields or notes

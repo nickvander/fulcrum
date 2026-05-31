@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { ProductImage } from '../../models/product.model';
 import { ProductService } from '../../services/product';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ProductFormImageGalleryComponent', () => {
     let component: ProductFormImageGalleryComponent;
@@ -43,7 +44,7 @@ describe('ProductFormImageGalleryComponent', () => {
         } as any;
 
         await TestBed.configureTestingModule({
-            imports: [ProductFormImageGalleryComponent],
+            imports: [ProductFormImageGalleryComponent, getTranslocoTestingModule()],
             providers: [
                 { provide: MatDialog, useValue: mockDialog },
                 { provide: ProductService, useValue: mockProductService },

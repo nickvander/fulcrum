@@ -1,21 +1,23 @@
-<h2 mat-dialog-title>{{ (data ? 'settings.dialogs.editCustomField' : 'settings.dialogs.addCustomField') | transloco }}</h2>
+<ng-container *transloco="let t">
+<h2 mat-dialog-title>{{ t(data ? 'settings.dialogs.editCustomField' : 'settings.dialogs.addCustomField') }}</h2>
 <mat-dialog-content [formGroup]="form">
   <mat-form-field>
-    <mat-label>Name</mat-label>
+    <mat-label>{{ t('common.name') }}</mat-label>
     <input matInput formControlName="name">
   </mat-form-field>
   <mat-form-field>
-    <mat-label>Type</mat-label>
+    <mat-label>{{ t('settings.customFieldDialog.type') }}</mat-label>
     <mat-select formControlName="type">
       @for (type of fieldTypes; track type) {
         <mat-option [value]="type">
-          {{ type }}
+          {{ t('settings.customFieldDialog.fieldTypes.' + type) }}
         </mat-option>
       }
     </mat-select>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-button [mat-dialog-close]="form.value" [disabled]="!form.valid">Save</button>
+  <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
+  <button mat-button [mat-dialog-close]="form.value" [disabled]="!form.valid">{{ t('common.save') }}</button>
 </mat-dialog-actions>
+</ng-container>

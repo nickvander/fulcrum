@@ -206,7 +206,7 @@
 
                   <mat-form-field>
                     <mat-label>{{ t('products.lowStockDays') }}</mat-label>
-                    <input matInput formControlName="low_inventory_threshold" type="number" placeholder="Default: 30"
+                    <input matInput formControlName="low_inventory_threshold" type="number" [placeholder]="t('products.productForm.defaultDays')"
                       min="0">
                     <mat-hint>{{ t('products.overrideGlobalSetting') }}</mat-hint>
                   </mat-form-field>
@@ -214,7 +214,7 @@
                   <mat-form-field>
                     <mat-label>{{ t('products.lowStockQuantity') }}</mat-label>
                     <input matInput formControlName="low_stock_quantity_threshold" type="number"
-                      placeholder="Default: 10" min="0">
+                      [placeholder]="t('products.productForm.defaultUnits')" min="0">
                     <mat-hint>{{ t('products.overrideGlobalThreshold') }}</mat-hint>
                   </mat-form-field>
 
@@ -341,7 +341,7 @@
                           listing.status | titlecase }}</span>
                       </h3>
                       <p matListItemLine>
-                        External ID: {{ listing.external_listing_id || 'N/A' }} |
+                        {{ t('products.productForm.externalId') }}: {{ listing.external_listing_id || 'N/A' }} |
                         @if (listing.listing_url) {
                         <a [href]="listing.listing_url" target="_blank" (click)="$event.stopPropagation()">{{
                           t('common.view') }}</a>

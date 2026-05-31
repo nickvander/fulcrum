@@ -27,7 +27,7 @@ import { DateRangePresetsComponent } from '../../../shared/components/date-range
 import { DateRangeService, DateRange } from '../../../shared/services/date-range.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-expense-list',
@@ -86,6 +86,7 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
         private router: Router,
         private dateRangeService: DateRangeService,
         private reportDownloader: ReportDownloadService,
+        private transloco: TranslocoService,
     ) { }
 
     /** Build the filter shape from the current page state so the export
@@ -165,7 +166,7 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
             },
             error: (error) => {
                 console.error('Error loading expenses:', error);
-                this.notificationService.showError('Error loading expenses');
+                this.notificationService.showError(this.transloco.translate('expenses.expenseList.errorLoading'));
                 this.isLoading = false;
             }
         });
@@ -275,26 +276,26 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
                     next: (newExpense) => {
                         if (pendingReceipt) {
                             // Upload receipt
-                            this.notificationService.showSuccess('Expense created, uploading receipt...');
+                            this.notificationService.showSuccess(this.transloco.translate('expenses.expenseList.createdUploadingReceipt'));
                             this.expenseService.uploadReceipt(newExpense.id, pendingReceipt).subscribe({
                                 next: () => {
-                                    this.notificationService.showSuccess('Receipt attached successfully');
+                                    this.notificationService.showSuccess(this.transloco.translate('expenses.expenseList.receiptAttached'));
                                     this.loadAllExpenses();
                                 },
                                 error: (err) => {
                                     console.error('Receipt upload failed', err);
-                                    this.notificationService.showError('Expense added but receipt upload failed');
+                                    this.notificationService.showError(this.transloco.translate('expenses.expenseList.receiptUploadFailed'));
                                     this.loadAllExpenses();
                                 }
                             });
                         } else {
-                            this.notificationService.showSuccess('Expense added successfully');
+                            this.notificationService.showSuccess(this.transloco.translate('expenses.expenseList.addedSuccess'));
                             this.loadAllExpenses();
                         }
                     },
                     error: (error) => {
                         console.error('Error adding expense:', error);
-                        this.notificationService.showError('Error adding expense');
+                        this.notificationService.showError(this.transloco.translate('expenses.expenseList.errorAdding'));
                     }
                 });
             }
@@ -312,12 +313,12 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
             if (result) {
                 this.expenseService.updateExpense(expense.id, result).subscribe({
                     next: () => {
-                        this.notificationService.showSuccess('Expense updated');
+                        this.notificationService.showSuccess(this.transloco.translate('expenses.expenseList.updatedSuccess'));
                         this.loadAllExpenses();
                     },
                     error: (error) => {
                         console.error('Error updating expense:', error);
-                        this.notificationService.showError('Error updating expense');
+                        this.notificationService.showError(this.transloco.translate('expenses.expenseList.errorUpdating'));
                     }
                 });
             }
@@ -327,8 +328,8 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
     onDeleteExpense(id: number): void {
         const dialogRef = this.dialog.open(ConfirmationDialog, {
             data: {
-                title: 'Delete Expense',
-                message: 'Are you sure you want to delete this expense?'
+                title: this.transloco.translate('expenses.expenseList.deleteTitle'),
+                message: this.transloco.translate('expenses.expenseList.deleteMessage')
             } as ConfirmationDialogData
         });
 
@@ -336,12 +337,12 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
             if (confirmed) {
                 this.expenseService.deleteExpense(id).subscribe({
                     next: () => {
-                        this.notificationService.showSuccess('Expense deleted');
+                        this.notificationService.showSuccess(this.transloco.translate('expenses.expenseList.deletedSuccess'));
                         this.loadAllExpenses();
                     },
                     error: (error) => {
                         console.error('Error deleting expense:', error);
-                        this.notificationService.showError('Error deleting expense');
+                        this.notificationService.showError(this.transloco.translate('expenses.expenseList.errorDeleting'));
                     }
                 });
             }
@@ -353,7 +354,9 @@ export class ExpenseListComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     getTypeLabel(type: string): string {
-        return type === 'recurring' ? 'Recurring' : 'One-time';
+        return type === 'recurring'
+            ? this.transloco.translate('expenses.recurring')
+            : this.transloco.translate('expenses.oneTime');
     }
 
     getCategoryColor(category: string): string {

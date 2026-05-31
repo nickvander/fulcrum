@@ -7,6 +7,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { ProductImage } from '../../models/product.model';
 import { ImageDialogComponent } from '../../../shared/components/image-dialog/image-dialog';
 import { ConfirmationDialog } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
@@ -23,7 +24,8 @@ import { ProductService } from '../../services/product';
     MatTooltipModule,
     CdkDropList,
     CdkDrag,
-    CdkDragHandle
+    CdkDragHandle,
+    TranslocoModule
   ],
   templateUrl: './product-form-image-gallery.component.html',
   styleUrls: ['./product-form-image-gallery.component.scss']
@@ -44,7 +46,8 @@ export class ProductFormImageGalleryComponent implements OnInit {
 
   constructor(
     private dialog: MatDialog,
-    private productService: ProductService
+    private productService: ProductService,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void { }
@@ -121,8 +124,8 @@ export class ProductFormImageGalleryComponent implements OnInit {
 
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Image?',
-        message: 'Are you sure you want to delete this image? This will be permanent once you save.'
+        title: this.transloco.translate('products.productFormImageGallery.deleteImageTitle'),
+        message: this.transloco.translate('products.productFormImageGallery.deleteImageConfirm')
       }
     });
 

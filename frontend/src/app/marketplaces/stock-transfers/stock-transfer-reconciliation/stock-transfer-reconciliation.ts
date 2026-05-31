@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import {
   ReconciliationRow,
@@ -44,6 +44,7 @@ export class StockTransferReconciliationComponent implements OnInit {
   constructor(
     private service: StockTransferService,
     private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -60,9 +61,11 @@ export class StockTransferReconciliationComponent implements OnInit {
       error: err => {
         console.error('Reconciliation load failed', err);
         this.loading = false;
-        this.snackBar.open('Failed to load reconciliation', 'Close', {
-          duration: 4000,
-        });
+        this.snackBar.open(
+          this.transloco.translate('stockTransfers.stockTransferReconciliation.loadFailed'),
+          this.transloco.translate('common.close'),
+          { duration: 4000 },
+        );
       },
     });
   }

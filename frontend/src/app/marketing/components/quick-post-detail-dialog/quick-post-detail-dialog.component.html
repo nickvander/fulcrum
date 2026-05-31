@@ -1,5 +1,6 @@
 <div class="quick-post-detail-dialog">
     <!-- Header -->
+    <ng-container *transloco="let t">
     <header class="dialog-header" [ngClass]="'channel-' + post.channel_type">
         <div class="channel-badge">
             <mat-icon>{{ getChannelIcon(post.channel_type) }}</mat-icon>
@@ -11,29 +12,29 @@
     <mat-dialog-content>
         <!-- View Mode -->
         <div *ngIf="!isEditing" class="view-mode">
-            <h2 class="post-title">{{ post.name || 'Untitled Post' }}</h2>
+            <h2 class="post-title">{{ post.name || t('marketing.quickPostDetailDialog.untitledPost') }}</h2>
 
             <!-- Email Subject -->
             <div class="field-group" *ngIf="post.content_subject">
-                <label>Subject</label>
+                <label>{{ t('marketing.quickPostDetailDialog.subject') }}</label>
                 <p class="subject-line">{{ post.content_subject }}</p>
             </div>
 
             <!-- Content -->
             <div class="field-group">
-                <label>Content</label>
-                <p class="content-body">{{ post.content_body || 'No content' }}</p>
+                <label>{{ t('marketing.quickPostDetailDialog.content') }}</label>
+                <p class="content-body">{{ post.content_body || t('marketing.quickPostDetailDialog.noContent') }}</p>
             </div>
 
             <!-- Image -->
             <div class="field-group" *ngIf="post.content_image_url">
-                <label>Image</label>
+                <label>{{ t('marketing.quickPostDetailDialog.image') }}</label>
                 <img [src]="post.content_image_url" class="post-image" onerror="this.style.display='none'">
             </div>
 
             <!-- Linked Products -->
             <div class="field-group" *ngIf="post.products && post.products.length > 0">
-                <label>Linked Products</label>
+                <label>{{ t('marketing.quickPostDetailDialog.linkedProducts') }}</label>
                 <div class="products-list">
                     <div class="product-chip" *ngFor="let product of post.products"
                         (click)="openProductDialog(product)">
@@ -50,15 +51,15 @@
             <div class="metadata">
                 <div class="meta-item">
                     <mat-icon>schedule</mat-icon>
-                    <span>Created: {{ post.created_at | date:'medium' }}</span>
+                    <span>{{ t('marketing.quickPostDetailDialog.createdAt') }}: {{ post.created_at | date:'medium' }}</span>
                 </div>
                 <div class="meta-item" *ngIf="post.published_at">
                     <mat-icon>check_circle</mat-icon>
-                    <span>Published: {{ post.published_at | date:'medium' }}</span>
+                    <span>{{ t('marketing.quickPostDetailDialog.publishedAt') }}: {{ post.published_at | date:'medium' }}</span>
                 </div>
                 <div class="meta-item" *ngIf="post.external_url">
                     <mat-icon>link</mat-icon>
-                    <a [href]="post.external_url" target="_blank">View on {{ getChannelName(post.channel_type) }}</a>
+                    <a [href]="post.external_url" target="_blank">{{ t('marketing.quickPostDetailDialog.viewOn', { channel: getChannelName(post.channel_type) }) }}</a>
                 </div>
                 <div class="meta-item error" *ngIf="post.error_message">
                     <mat-icon>error</mat-icon>
@@ -70,50 +71,51 @@
         <!-- Edit Mode -->
         <form *ngIf="isEditing" [formGroup]="editForm" class="edit-mode">
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Post Name</mat-label>
-                <input matInput formControlName="name" placeholder="Give your post a name">
+                <mat-label>{{ t('marketing.quickPostDetailDialog.postName') }}</mat-label>
+                <input matInput formControlName="name" [placeholder]="t('marketing.quickPostDetailDialog.postNamePlaceholder')">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width" *ngIf="post.channel_type === 'email'">
-                <mat-label>Subject Line</mat-label>
+                <mat-label>{{ t('marketing.quickPostDetailDialog.subjectLine') }}</mat-label>
                 <input matInput formControlName="content_subject">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Content</mat-label>
+                <mat-label>{{ t('marketing.quickPostDetailDialog.content') }}</mat-label>
                 <textarea matInput formControlName="content_body" rows="6"></textarea>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Image URL</mat-label>
+                <mat-label>{{ t('marketing.quickPostDetailDialog.imageUrl') }}</mat-label>
                 <input matInput formControlName="content_image_url" placeholder="https://...">
             </mat-form-field>
         </form>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-        <button mat-button (click)="onClose()">Close</button>
+        <button mat-button (click)="onClose()">{{ t('common.close') }}</button>
 
         <!-- View Mode Actions -->
         <ng-container *ngIf="!isEditing">
             <button mat-stroked-button (click)="startEdit()">
-                <mat-icon>edit</mat-icon> Edit
+                <mat-icon>edit</mat-icon> {{ t('common.edit') }}
             </button>
             <button mat-raised-button color="primary" *ngIf="post.status === 'draft'" [disabled]="publishing"
                 (click)="publishPost()">
                 <mat-spinner diameter="18" *ngIf="publishing"></mat-spinner>
                 <mat-icon *ngIf="!publishing">send</mat-icon>
-                {{ publishing ? 'Publishing...' : 'Publish' }}
+                {{ publishing ? t('marketing.quickPostDetailDialog.publishing') : t('marketing.quickPostDetailDialog.publish') }}
             </button>
         </ng-container>
 
         <!-- Edit Mode Actions -->
         <ng-container *ngIf="isEditing">
-            <button mat-stroked-button (click)="cancelEdit()">Cancel</button>
+            <button mat-stroked-button (click)="cancelEdit()">{{ t('common.cancel') }}</button>
             <button mat-raised-button color="primary" [disabled]="saving" (click)="saveChanges()">
                 <mat-spinner diameter="18" *ngIf="saving"></mat-spinner>
-                {{ saving ? 'Saving...' : 'Save Changes' }}
+                {{ saving ? t('common.saving') : t('marketing.quickPostDetailDialog.saveChanges') }}
             </button>
         </ng-container>
     </mat-dialog-actions>
+    </ng-container>
 </div>

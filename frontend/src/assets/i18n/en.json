@@ -89,7 +89,13 @@
     "dialogs": {
       "imageDetails": "Image Details"
     },
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "attachments": "Attachments",
+    "connect": "Connect",
+    "products": "Products",
+    "messages": {
+      "copied": "Copied!"
+    }
   },
   "nav": {
     "menu": "Menu",
@@ -124,15 +130,42 @@
     "login": "Login",
     "logout": "Logout",
     "password": "Password",
-    "forgotPassword": "Forgot Password?",
-    "resetPassword": "Reset Password",
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "rememberMe": "Remember me",
     "signIn": "Sign In",
     "signUp": "Sign Up",
     "welcomeBack": "Welcome back",
-    "enterCredentials": "Enter your credentials to access your account"
+    "enterCredentials": "Enter your credentials to access your account",
+    "forgotPassword": {
+      "link": "Forgot Password?",
+      "title": "Forgot Password",
+      "subtitle": "Enter your email to receive a password reset link.",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "errors": {
+        "invalidEmail": "Email must be a valid email address"
+      },
+      "sendResetLink": "Send Reset Link",
+      "backToLogin": "Back to Login",
+      "successMessage": "If the email exists, a reset link has been sent.",
+      "errorMessage": "An error occurred. Please try again later."
+    },
+    "resetPassword": {
+      "label": "Reset Password",
+      "subtitle": "Enter your new password below.",
+      "placeholderNewPassword": "Enter new password",
+      "errors": {
+        "minLength": "Password must be at least 8 characters",
+        "confirmRequired": "Confirm password is required",
+        "passwordMismatch": "Passwords do not match",
+        "invalidToken": "Invalid password reset token.",
+        "missingToken": "Missing reset token."
+      },
+      "placeholderConfirmPassword": "Confirm new password",
+      "backToLogin": "Back to Login",
+      "successMessage": "Password has been reset successfully. Redirecting to login..."
+    }
   },
   "login": {
     "title": "Management Console",
@@ -445,6 +478,11 @@
       "suggested": "Suggested",
       "status": "Status",
       "allClear": "No critical or low-stock items right now."
+    },
+    "dashboard": {
+      "demoWorkspaceCreateError": "Demo workspace could not be created. Please try again.",
+      "cleanupDemoTitle": "Clean up demo data",
+      "cleanupDemoMessage": "This removes only records that still match Fulcrum demo fingerprints. Cleanup is blocked automatically if customer activity is detected."
     }
   },
   "onboarding": {
@@ -621,7 +659,6 @@
   },
   "products": {
     "title": "Products",
-    "productList": "Product List",
     "selected": "selected",
     "addProduct": "Add Product",
     "addImageHint": "Open the product to add an image",
@@ -881,6 +918,24 @@
     "startingQuantityHint": "How many units you have on hand right now.",
     "lowStockThresholdLabel": "Warn me when stock drops below",
     "lowStockThresholdHint": "We'll flag this product as low when it reaches this number.",
+    "productForm": {
+      "replaceQrTitle": "Replace QR Code?",
+      "replaceQrMessage": "This will replace the existing QR code. Continue?",
+      "regenerateSkuTitle": "Regenerate SKU?",
+      "regenerateSkuMessage": "This will update both SKU and Barcode. Continue?",
+      "discardChangesTitle": "Discard changes?",
+      "discardChangesMessage": "You have unsaved changes. Are you sure you want to discard them?",
+      "pleaseEnterSkuFirst": "Please enter a SKU first.",
+      "productUpdatedSuccess": "Product updated successfully",
+      "productCreatedSuccess": "Product created successfully",
+      "pleaseEnterProductName": "Please enter a product name first.",
+      "aiDescriptionSuccess": "AI description generated successfully!",
+      "aiDescriptionFailed": "Failed to generate description: {{error}}",
+      "imageOrderError": "Error updating image order",
+      "externalId": "External ID",
+      "defaultDays": "Default: 30",
+      "defaultUnits": "Default: 10"
+    },
     "publishTitle": "Sell on MercadoLibre",
     "publishMlLabel": "MercadoLibre",
     "publishMlSub": "Your main sales channel in Mexico.",
@@ -902,7 +957,150 @@
     "bucketMlFullDesc": "Units stored in ML's warehouse. Only these show as available on MercadoLibre.",
     "bucketAmazonFba": "Amazon FBA",
     "bucketAmazonFbaDesc": "Units stored in Amazon's warehouse, available only on Amazon.",
-    "bucketPoNote": "Receiving a purchase order adds to on-hand stock — it does NOT automatically make units available on MercadoLibre. Send them to ML Full first."
+    "bucketPoNote": "Receiving a purchase order adds to on-hand stock — it does NOT automatically make units available on MercadoLibre. Send them to ML Full first.",
+    "productList": {
+      "label": "Product List",
+      "quickFiltersLabel": "Quick Filters",
+      "viewModeLabel": "View Mode",
+      "selectPage": "Select page",
+      "deleteProductTitle": "Delete Product",
+      "deleteProductMessage": "Are you sure you want to delete this product? This action cannot be undone.",
+      "stockAdjustedSuccess": "Stock adjusted successfully",
+      "stockAdjustedError": "Error adjusting stock",
+      "deleteSelectedTitle": "Delete Selected Products",
+      "deleteSelectedMessage": "Are you sure you want to delete {{count}} product(s)? This action cannot be undone.",
+      "batchUpdatedSuccess": "{{count}} products updated successfully!",
+      "customFieldsUpdateError": "Error updating custom fields",
+      "newBundleDefaultName": "New Bundle",
+      "identifiedCategoryNote": "Identified Category: {{category}}"
+    },
+    "batchActionToolbar": {
+      "selectedCount": "{{count}} selected",
+      "advanced": "Advanced",
+      "updatePrices": "Update Prices",
+      "assignCategory": "Assign Category",
+      "updateCustomFields": "Update Custom Fields"
+    },
+    "enhancedImageManagement": {
+      "productImages": "Product Images",
+      "imageCount": "{{count}} images",
+      "productImageAlt": "Product Image",
+      "altTextLabel": "Alt Text:",
+      "altTextPlaceholder": "Alternative text for accessibility",
+      "dragToReorder": "Drag to reorder",
+      "primaryImage": "Primary image",
+      "setAsPrimary": "Set as primary image",
+      "deleteImage": "Delete image"
+    },
+    "pagination": {
+      "showing": "Showing {{start}} - {{end}} of {{total}} items",
+      "pageLabel": "Page:"
+    },
+    "productDashboard": {
+      "statProducts": "Products",
+      "statInventoryValue": "Inventory Value",
+      "statLowStock": "Low Stock",
+      "statStockHealth": "Stock Health",
+      "lowStockAlerts": "Low Stock Alerts",
+      "categoryBreakdown": "Category Breakdown",
+      "comingSoon": "Coming Soon"
+    },
+    "productDetailsDialog": {
+      "imageAlt": "Product image",
+      "canAssemble": "Can assemble {{count}} more",
+      "labelsAndCodes": "Labels & Codes",
+      "qrCode": "QR Code",
+      "usesQuantity": "Uses {{count}}× this item",
+      "poNumber": "PO #{{id}}",
+      "listingPrepared": "Listing prepared! Publishing integration coming soon.",
+      "bundleIncluding": "Bundle including {{name}}"
+    },
+    "productFilters": {
+      "clearFilters": "Clear all filters",
+      "category": "Category",
+      "allCategories": "All Categories",
+      "brand": "Brand",
+      "allBrands": "All Brands",
+      "priceRange": "Price Range",
+      "rangeTo": "to",
+      "max": "Max",
+      "stockLevel": "Stock Level",
+      "productType": "Product Type",
+      "typeLabel": "Type",
+      "allTypes": "All Types",
+      "productsOnly": "Products Only",
+      "bundlesOnly": "Bundles Only",
+      "inStockOnly": "In Stock Only",
+      "search": "Search",
+      "searchLabel": "Search products...",
+      "searchInputPlaceholder": "Search by name, SKU, or description"
+    },
+    "productFormImageGallery": {
+      "newImagesToUpload": "New Images (to be uploaded on save):",
+      "stagedImageAlt": "Staged image preview",
+      "currentImages": "Current Images:",
+      "setAsPrimary": "Set as primary image",
+      "deleteImage": "Delete image",
+      "noImagesYet": "No images uploaded for this product yet.",
+      "noExistingImages": "No existing images. New images will be uploaded on save.",
+      "deleteImageTitle": "Delete Image?",
+      "deleteImageConfirm": "Are you sure you want to delete this image? This will be permanent once you save."
+    },
+    "productScanner": {
+      "errors": {
+        "cameraAccessDenied": "Could not access camera",
+        "dropImageOnly": "Please drop an image file.",
+        "aiIdentifyFailed": "AI Identification failed. Using image for manual entry.",
+        "cameraPermissionDenied": "Camera permission denied. Please allow camera access.",
+        "noCameraFound": "No camera found. Please connect a camera.",
+        "cameraUnavailable": "Camera not available. Try refreshing the page.",
+        "unknownScannerError": "Unknown error"
+      },
+      "productFoundMsg": "Product found!",
+      "productNotFoundMsg": "Product not found. Opening creation form..."
+    },
+    "productTemplates": {
+      "title": "Product Templates",
+      "createTemplate": "Create Template",
+      "noCategory": "No category",
+      "noDescription": "No description provided",
+      "brand": "Brand",
+      "manufacturer": "Manufacturer",
+      "notAvailable": "N/A",
+      "defaultPrice": "Default Price",
+      "customFields": "Custom Fields",
+      "required": "* required",
+      "createProduct": "Create Product",
+      "emptyState": {
+        "title": "No Product Templates Yet",
+        "description": "Create your first product template to standardize product creation across your catalog.",
+        "createFirst": "Create Your First Template"
+      },
+      "deleteDialog": {
+        "title": "Delete Template",
+        "message": "Are you sure you want to delete this template?"
+      }
+    },
+    "productVariants": {
+      "addVariant": "Add Variant",
+      "newVariant": "New Variant",
+      "removeVariantTooltip": "Remove variant",
+      "namePlaceholder": "e.g., Red - Large",
+      "skuPlaceholder": "Unique SKU for this variant",
+      "pricePlaceholder": "Override default price",
+      "stockQuantity": "Stock Quantity",
+      "stockQuantityPlaceholder": "Stock quantity",
+      "attributes": "Attributes",
+      "attributesPlaceholder": "JSON object of attributes (e.g., {'color': 'red', 'size': 'large'})",
+      "noVariants": "No variants defined yet. Add your first variant to get started."
+    },
+    "stockHistoryDialog": {
+      "currentStockLabel": "Current Stock:",
+      "noAdjustments": "No stock adjustments recorded yet.",
+      "receivedPo": "Received"
+    },
+    "clickToPreview": "Click to preview",
+    "loadingMore": "Loading more..."
   },
   "suppliers": {
     "title": "Suppliers",
@@ -915,7 +1113,6 @@
     "orders": "Orders",
     "noContact": "No contact",
     "noSupplierData": "No supplier data",
-    "supplierList": "Supplier List",
     "addSupplier": "Add Supplier",
     "editSupplier": "Edit Supplier",
     "deleteSupplier": "Delete Supplier",
@@ -966,6 +1163,40 @@
     },
     "dialogs": {
       "selectSupplierFor": "Select Supplier for {{productName}}"
+    },
+    "supplierList": {
+      "label": "Supplier List",
+      "emptyTitle": "Add your first supplier",
+      "emptyDescription": "Suppliers make PO imports, learned SKU mappings, lead times, and receiving history easier to trust.",
+      "purchaseOrdersButton": "Purchase orders"
+    },
+    "supplierDetail": {
+      "placeholders": {
+        "contactPerson": "John Doe",
+        "streetAddress": "123 Main St",
+        "taxId": "VAT/Tax ID",
+        "paymentTerms": "e.g. Net 30"
+      }
+    },
+    "supplierProductManager": {
+      "title": "Supplier Products",
+      "product": "Product",
+      "emptyTitle": "No supplier products mapped yet",
+      "emptyHint": "Receive a purchase order or confirm an imported supplier item to link this supplier's SKU/name to a Fulcrum product.",
+      "openPurchaseOrders": "Open purchase orders",
+      "unknownProduct": "Unknown Product",
+      "columns": {
+        "product": "Product",
+        "supplierSku": "Supplier SKU",
+        "learnedAliases": "Learned Aliases",
+        "leadTimeDays": "Lead Time (Days)",
+        "lastOrdered": "Last Ordered"
+      },
+      "aliasesAriaLabel": "Learned supplier aliases",
+      "removeMapping": "Remove learned mapping",
+      "aliasDefault": "Alias",
+      "aliasRemoved": "Supplier alias removed",
+      "aliasRemoveFailed": "Failed to remove supplier alias"
     }
   },
   "purchaseOrders": {
@@ -1195,11 +1426,168 @@
       "createProduct": "Create product",
       "learnAlias": "Learn alias",
       "approveCreatePo": "Approve & create PO"
+    },
+    "costAllocationDialog": {
+      "calculating": "Calculating cost allocation...",
+      "shippingFreight": "Shipping/Freight",
+      "taxesDuties": "Taxes/Duties",
+      "otherFees": "Other Fees",
+      "unit": "unit",
+      "include": "Include?",
+      "product": "Product",
+      "baseCost": "Base Cost",
+      "taxes": "Taxes",
+      "other": "Other",
+      "newUnitCost": "New Unit Cost",
+      "totalAdditionalCosts": "Total additional costs to distribute:",
+      "acrossUnits": "across {{count}} units",
+      "applyCosts": "Apply Costs"
+    },
+    "poIngestDialog": {
+      "errors": {
+        "unsupportedFileType": "Unsupported file type. Allowed: {{types}}",
+        "fileTooLarge": "File too large. Maximum 10MB.",
+        "noReviewBeforeProduct": "Please process or select an import review before creating products.",
+        "noSupplierBeforeProduct": "Please select a supplier before creating a product from this line.",
+        "noReviewBeforeAlias": "Please process or select an import review before learning aliases.",
+        "noSupplierBeforeAlias": "Please select a supplier before learning an alias.",
+        "noProductBeforeAlias": "Select a Fulcrum product before learning this alias.",
+        "noSupplierBeforePo": "Please select a supplier before creating the PO.",
+        "noMatchedItems": "No items have been matched to existing products. Please match items to products first.",
+        "noReviewBeforeApprove": "Please process or select an import review before approving."
+      },
+      "productCreatedMatched": "Product created and matched to this line",
+      "aliasLearned": "Supplier alias learned for this line",
+      "autoNotes": "Imported from {{file}}",
+      "autoNotesWithUnmatched": "Imported from {{file}} ({{count}} unmatched items excluded)",
+      "defaultDocumentName": "document",
+      "confidenceHigh": "High",
+      "confidenceMedium": "Medium",
+      "confidenceLow": "Low",
+      "defaultProductName": "Imported product",
+      "productFallback": "Product #{{id}}",
+      "itemFallback": "Item {{index}}"
+    },
+    "purchaseOrderEdit": {
+      "correctReceiving": "Correct Receiving",
+      "correctReceivingTooltip": "Reverse received quantity while keeping an inventory audit trail",
+      "hideVariants": "Hide variants",
+      "distributeVariants": "Distribute across variants",
+      "originalLabel": "Original:",
+      "mapToExisting": "Map to existing or create new:",
+      "variant": "Variant",
+      "noVariant": "No variant",
+      "targetQty": "Target Qty",
+      "alloc": "alloc.",
+      "variantDistribution": "Variant Distribution",
+      "assigned": "Assigned",
+      "totalLabel": "Total",
+      "extraCostsHint": "Enter any extra costs beyond the product prices. These can be distributed across your items.",
+      "shippingHint": "Delivery and transport fees",
+      "importDutiesHint": "Taxes on imported goods",
+      "otherCostsHint": "Insurance, handling, etc.",
+      "totalExtraCosts": "Total Extra Costs:",
+      "costPerUnit": "Cost per unit (if distributed evenly):",
+      "applyHintSaved": "This will add the per-unit cost to each line item's unit cost.",
+      "applyHintUnsaved": "Costs will be distributed evenly. Save order to preview detailed allocation.",
+      "customPayerName": "Custom Payer Name",
+      "customPayerPlaceholder": "e.g. External Partner",
+      "customPayerHint": "If paid by someone outside the system",
+      "filename": "Filename",
+      "fileTypes": "PDF, Images (JPG, PNG, AVIF), HTML",
+      "invoiceFallbackName": "Invoice",
+      "variantFallback": "Variant #{{id}}",
+      "messages": {
+        "correctionApplied": "Receiving correction applied",
+        "uploadSaveDraftMessage": "To upload an invoice, we need to save this order as a Draft first. Continue?",
+        "fileTooLarge": "File too large. Max 10MB.",
+        "invoiceUploaded": "Invoice uploaded successfully",
+        "uploadFailed": "Upload failed",
+        "deleteInvoiceTitle": "Delete Invoice",
+        "deleteInvoiceMessage": "Are you sure you want to delete this invoice?",
+        "invoiceDeleted": "Invoice deleted",
+        "autoCreatedSupplier": "Auto-created and selected new supplier: {{name}}",
+        "extractedItems": "Extracted {{count}} item(s) from document"
+      }
+    },
+    "purchaseOrderList": {
+      "importQueueEyebrow": "Supplier import queue",
+      "rejectCheckedTooltip": "Reject every checked import",
+      "rejectSelected": "Reject selected ({{count}})",
+      "clearSelection": "Clear selection",
+      "rejectStaleTooltip": "Reject pending imports older than {{days}} days",
+      "rejectStale": "Reject stale ({{count}})",
+      "addDocument": "Add document",
+      "filterByFileName": "Filter by file name",
+      "clearSearch": "Clear search",
+      "supplierLabel": "Supplier",
+      "allSuppliers": "All suppliers",
+      "clearFiltersTooltip": "Clear search + supplier filter",
+      "clearFilters": "Clear filters",
+      "reviewFiltersAriaLabel": "Supplier import review filters",
+      "filterPending": "Pending",
+      "filterHistory": "History",
+      "emptyHistory": "No approved or rejected supplier imports yet.",
+      "emptyPending": "No supplier imports waiting for review.",
+      "emptyAll": "No supplier imports have been uploaded yet.",
+      "selectAllPendingTooltip": "Check every visible pending row",
+      "selectAllPending": "Select all pending ({{count}})",
+      "selectReviewAriaLabel": "Select {{fileName}}",
+      "reviewItemCount": "{{count}} item(s)",
+      "reviewButton": "Review",
+      "rejectImportTooltip": "Reject import",
+      "openPoTooltip": "Open the PO this review created",
+      "openPo": "Open PO",
+      "emptyStateTitle": "Start your purchasing workflow",
+      "emptyStateDescription": "Create a PO manually or import a supplier PDF/image. Confirmed items can receive stock into internal inventory with an audit trail.",
+      "supplierIdTooltip": "Supplier ID: {{id}}",
+      "paginatorAriaLabel": "Select page of purchase orders",
+      "confirmBulkRejectSelected": "Reject {{count}} selected supplier import(s)? Approved or already-rejected reviews are skipped automatically.",
+      "confirmBulkRejectStale": "Reject all pending supplier imports older than {{days}} days? {{count}} review(s) will be marked rejected.",
+      "panelTitlePending": "{{count}} document(s) waiting for review",
+      "panelTitleHistory": "{{count}} processed import(s)",
+      "panelTitleAll": "{{count}} supplier import(s)",
+      "panelDescPending": "Approve product matches to create draft POs. Internal stock only changes later when those POs are received.",
+      "panelDescHistory": "Approved and rejected supplier documents stay searchable here without cluttering the active queue.",
+      "panelDescAll": "All supplier document imports across statuses.",
+      "reviewStatus": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "supplierFallback": "Supplier {{id}}",
+      "unknownSupplier": "Unknown supplier"
+    },
+    "quickProductDialog": {
+      "cameraCaptureComingSoon": "Camera capture coming soon! This will use AI to identify products."
+    },
+    "receivingDialog": {
+      "titleReceive": "Receive Items - PO #{{id}}",
+      "titleCorrect": "Correct Receiving - PO #{{id}}",
+      "correctTitle": "Reverse a receiving mistake",
+      "correctDescription": "This reduces the PO received quantity and writes a negative inventory adjustment so the audit trail stays intact.",
+      "correctionReason": "Correction reason",
+      "correctionReasonPlaceholder": "Example: counted damaged cartons twice",
+      "correctionDefaultReason": "Receiving correction",
+      "productImageAlt": "Product image",
+      "productFallback": "Product #{{id}}",
+      "skuLabel": "SKU:",
+      "statOrdered": "Ordered",
+      "statReceived": "Received",
+      "statRemaining": "Remaining",
+      "bonus": "Bonus",
+      "quantityLabelReceive": "Receive Now",
+      "quantityLabelReverse": "Reverse Received",
+      "submitReceive": "Receive",
+      "submitCorrect": "Apply Correction"
+    },
+    "supplierSelectionDialog": {
+      "intro": "This product is available from multiple suppliers. Which one would you like to use for this order?",
+      "supplierMeta": "Cost: {{cost}} | Lead Time: {{leadTime}} days | SKU: {{sku}}"
     }
   },
   "expenses": {
     "title": "Expenses",
-    "expenseList": "Expense List",
     "exportCsvTooltip": "Download the filtered expense list as a spreadsheet",
     "exportPdfTooltip": "Download the filtered expense list as a print-ready PDF",
     "addExpense": "Add Expense",
@@ -1231,7 +1619,8 @@
     "fields": {
       "referenceNumber": "Reference #",
       "customCategory": "Custom Category",
-      "payment": "Payment Method"
+      "payment": "Payment Method",
+      "paymentMethod": "Payment Method"
     },
     "categories": {
       "marketing": "Marketing",
@@ -1248,12 +1637,34 @@
     "dropReceiptAttach": "Drop receipt to attach",
     "dropReceiptAutofill": "Drop receipt to auto-fill",
     "analyzingReceipt": "Analyzing receipt…",
-    "descriptionRequired": "Description is required"
+    "descriptionRequired": "Description is required",
+    "expenseList": {
+      "label": "Expense List",
+      "refPrefix": "Ref",
+      "paginatorAriaLabel": "Select page of expenses",
+      "errorLoading": "Error loading expenses",
+      "createdUploadingReceipt": "Expense created, uploading receipt...",
+      "receiptAttached": "Receipt attached successfully",
+      "receiptUploadFailed": "Expense added but receipt upload failed",
+      "addedSuccess": "Expense added successfully",
+      "errorAdding": "Error adding expense",
+      "updatedSuccess": "Expense updated",
+      "errorUpdating": "Error updating expense",
+      "deleteTitle": "Delete Expense",
+      "deleteMessage": "Are you sure you want to delete this expense?",
+      "deletedSuccess": "Expense deleted",
+      "errorDeleting": "Error deleting expense"
+    },
+    "expenseDialog": {
+      "attachments": "Attachments"
+    },
+    "paymentMethod": {
+      "none": "None"
+    }
   },
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campaigns",
-    "campaignList": "Campaign List",
     "createCampaign": "Create Campaign",
     "editCampaign": "Edit Campaign",
     "campaignDetails": "Campaign Details",
@@ -1403,7 +1814,162 @@
       "requiredSuffix": "(Required)",
       "optionalSuffix": "(Optional)",
       "saveDraft": "Save draft",
-      "postNow": "Post now"
+      "postNow": "Post now",
+      "contentGenerated": "Content generated!",
+      "imageGenerated": "Image generated!",
+      "imageGenerationFailed": "Image generation failed. Please try again.",
+      "draftUpdated": "Draft updated",
+      "draftSaved": "Draft saved",
+      "draftSaveFailed": "Failed to save draft",
+      "postCreateFailed": "Failed to create post",
+      "postedSuccessfully": "Posted successfully!",
+      "overwriteContentTitle": "Overwrite Content?",
+      "overwriteContentMessage": "This will replace your existing text content. Continue?",
+      "overwriteImageTitle": "Overwrite Image?",
+      "overwriteImageMessage": "This will replace your existing image. Continue?",
+      "overwriteAllTitle": "Overwrite All?",
+      "overwriteAllMessage": "This will replace your existing text and image. Continue?",
+      "imagePromptDefault": "Create a photorealistic product image with natural lighting and clean composition."
+    },
+    "campaignList": {
+      "label": "Campaign List",
+      "notScheduled": "Not scheduled",
+      "events": "Events",
+      "paginatorCampaigns": "Select page of campaigns",
+      "paginatorQuickPosts": "Select page of quick posts",
+      "resultCount": "{{count}} result(s)",
+      "untitledPost": "Untitled Post",
+      "errorLoadCampaigns": "Failed to load campaigns",
+      "deleteQuickPostTitle": "Delete Quick Post",
+      "deleteQuickPostMessage": "Delete this quick post?",
+      "quickPostDeleted": "Quick post deleted",
+      "errorDeleteQuickPost": "Failed to delete",
+      "deleteCampaignTitle": "Delete Campaign",
+      "deleteCampaignMessage": "Delete campaign \"{{name}}\"?",
+      "campaignDeleted": "Campaign deleted",
+      "errorDeleteCampaign": "Failed to delete campaign"
+    },
+    "campaignCalendar": {
+      "errors": {
+        "loadFailed": "Failed to load calendar events",
+        "rescheduleFailed": "Failed to reschedule event"
+      },
+      "eventRescheduled": "Event rescheduled"
+    },
+    "campaignDetail": {
+      "overview": "Overview",
+      "noDescription": "No description provided.",
+      "events": "Events",
+      "linkedProducts": "Linked Products",
+      "noProductsLinked": "No products linked."
+    },
+    "campaignWizard": {
+      "stepCampaignDetails": "Campaign Details",
+      "namePlaceholder": "e.g., Summer Sale 2024",
+      "errors": {
+        "nameRequired": "Name is required"
+      },
+      "descriptionPlaceholder": "Describe the purpose and goals of this campaign",
+      "budgetOptional": "Budget (Optional)",
+      "stepLinkProducts": "Link Products",
+      "selectProducts": "Select Products",
+      "linkProductsHint": "Link products to this campaign to easily create content.",
+      "searchProducts": "Search Products",
+      "productSelection": "Product selection",
+      "removeProductAriaLabel": "remove {{name}}",
+      "searchProductsPlaceholder": "Search products...",
+      "stepChooseChannels": "Choose Channels",
+      "selectChannels": "Select Marketing Channels",
+      "chooseChannelsHint": "Choose the channels you want to use for this campaign",
+      "emailChannelDesc": "Send newsletters & promos",
+      "socialMedia": "Social Media",
+      "socialMediaDesc": "Post to Instagram, Facebook, etc.",
+      "paidAds": "Paid Ads",
+      "paidAdsDesc": "Google Ads, Meta Ads",
+      "connectedPlatforms": "Connected Platforms",
+      "noConnectors": "No connectors configured yet.",
+      "setupConnectors": "Set up connectors",
+      "stepScheduleEvents": "Schedule Events",
+      "campaignEvents": "Campaign Events",
+      "addEvent": "Add Event",
+      "untitledEvent": "Untitled Event",
+      "eventName": "Event Name",
+      "eventNamePlaceholder": "e.g., Launch Email",
+      "channel": "Channel",
+      "scheduledTime": "Scheduled Time",
+      "subjectLine": "Subject Line",
+      "content": "Content",
+      "imageUrl": "Image URL",
+      "noEvents": "No events yet. Add events to schedule your campaign activities.",
+      "messages": {
+        "loadError": "Error loading campaign",
+        "updated": "Campaign updated!",
+        "updateFailed": "Failed to update campaign",
+        "created": "Campaign created!",
+        "createFailed": "Failed to create campaign"
+      }
+    },
+    "connectorSettings": {
+      "pageTitle": "Marketing Connectors",
+      "pageSubtitle": "Connect your email, social, and ad platforms",
+      "emailMarketing": "Email Marketing",
+      "emailMarketingSubtitle": "Send newsletters and promotional emails",
+      "connected": "Connected",
+      "socialMediaSubtitle": "Post to Instagram, Facebook, TikTok, and more",
+      "paidAdvertising": "Paid Advertising",
+      "paidAdvertisingSubtitle": "Connect Google Ads, Meta Ads, and more",
+      "activeConnectors": "Active Connectors",
+      "setupEmailTitle": "Set Up Email Marketing",
+      "emailProvider": "Email Provider",
+      "connectionName": "Connection Name",
+      "connectionNamePlaceholderEmail": "e.g., My Gmail",
+      "appPassword": "App Password",
+      "appPasswordHint": "Use an app-specific password, not your regular password",
+      "smtpHost": "SMTP Host",
+      "port": "Port",
+      "connectButton": "Connect",
+      "setupSocialTitle": "Set Up {{provider}}",
+      "socialHelpText": "Enter your access token or API key to connect your account.",
+      "connectionNamePlaceholderSocial": "e.g., Brand Instagram",
+      "accessTokenLabel": "Access Token / API Key",
+      "defaultEmailName": "My Email Marketing",
+      "defaultSocialName": "My {{provider}}",
+      "messages": {
+        "connectorCreated": "Connector created!",
+        "connectorCreateFailed": "Failed to create connector",
+        "testSuccess": "Connection successful!",
+        "testFailed": "Connection failed. Check credentials.",
+        "testError": "Connection test failed",
+        "connectorDeleted": "Connector deleted",
+        "connectorDeleteFailed": "Failed to delete connector"
+      },
+      "deleteDialog": {
+        "title": "Delete Connector",
+        "message": "Delete \"{{name}}\"?"
+      }
+    },
+    "quickPostDetailDialog": {
+      "untitledPost": "Untitled Post",
+      "subject": "Subject",
+      "content": "Content",
+      "noContent": "No content",
+      "image": "Image",
+      "linkedProducts": "Linked Products",
+      "createdAt": "Created",
+      "publishedAt": "Published",
+      "viewOn": "View on {{channel}}",
+      "postName": "Post Name",
+      "postNamePlaceholder": "Give your post a name",
+      "subjectLine": "Subject Line",
+      "imageUrl": "Image URL",
+      "publishing": "Publishing...",
+      "publish": "Publish",
+      "saveChanges": "Save Changes",
+      "postUpdated": "Post updated",
+      "failedToUpdatePost": "Failed to update post",
+      "noConnectorConfigured": "No connector configured. Set up a connector first.",
+      "postPublishedSuccessfully": "Post published successfully!",
+      "view": "View"
     }
   },
   "auditLogs": {
@@ -1544,6 +2110,46 @@
       "empty": "No discrepancies — every received transfer matches its shipped quantity.",
       "delta": "Delta",
       "summary": "{{lines}} line(s) with a divergence. Net delta: {{net}}."
+    },
+    "receiveTransferDialog": {
+      "receiptRecorded": "Receipt recorded",
+      "productFallback": "Product #{{id}}"
+    },
+    "stockTransferCreateDialog": {
+      "transferCreated": "Transfer created"
+    },
+    "stockTransferDetail": {
+      "unknownProduct": "Product #{{id}}",
+      "syncEntryFailed": "failed",
+      "errors": {
+        "loadFailed": "Failed to load transfer"
+      },
+      "shipped": "Marked as shipped",
+      "shippedWithMarketplace": "Shipped and inbound shipment reserved",
+      "syncReauthRequired": "Reauthorize {{marketplace}} before syncing",
+      "syncListingsSynced": "{{ok}}/{{total}} listings synced",
+      "syncNeedListing": "{{count}} need a listing",
+      "syncNothingToSync": "Nothing to sync",
+      "reconcileSkippedMsg": "Reconcile skipped: {{reason}}",
+      "reconcileAppliedMsg": "{{items}} item(s) updated, {{total}} units received",
+      "reconcileNoChangeMsg": "Reconciled — no new receipts from the marketplace",
+      "cancelled": "Transfer cancelled",
+      "deleted": "Transfer deleted"
+    },
+    "stockTransferList": {
+      "errors": {
+        "loadFailed": "Failed to load stock transfers"
+      }
+    },
+    "stockTransferPlanner": {
+      "errors": {
+        "snapshotLoadFailed": "Failed to load inventory snapshot"
+      },
+      "draftsCreated": "{{count}} draft transfer(s) created"
+    },
+    "stockTransferReconciliation": {
+      "productFallback": "Product #{{id}}",
+      "loadFailed": "Failed to load reconciliation"
     }
   },
   "marketplaces": {
@@ -1606,11 +2212,19 @@
     "aiGenerateSuccess": "AI generated listing content successfully!",
     "copyKeywords": "Copy all keywords",
     "keywordsHint": "Use these keywords in your marketplace backend for better search visibility.",
-    "listingSaved": "Listing saved successfully!"
+    "listingSaved": "Listing saved successfully!",
+    "marketplaceDetail": {
+      "productFallback": "Product #{{id}}"
+    },
+    "marketplaceSettings": {
+      "reconnect": "Connect",
+      "errors": {
+        "disconnectFailed": "Failed to disconnect account."
+      }
+    }
   },
   "users": {
     "title": "Users",
-    "userList": "User List",
     "addUser": "Add User",
     "editUser": "Edit User",
     "deleteUser": "Delete User",
@@ -1658,7 +2272,6 @@
     "confirmPassword": "Confirm Password",
     "passwordStrength": "Password Strength",
     "superuser": "Superuser",
-    "forcePasswordChange": "Force Password Change",
     "errors": {
       "loadFailed": "Error loading user data",
       "weakPassword": "Password must be at least 8 characters with uppercase, lowercase, number and special character",
@@ -1676,7 +2289,57 @@
     },
     "dialogs": {
       "createUser": "Create New User"
-    }
+    },
+    "forcePasswordChange": {
+      "label": "Force Password Change",
+      "title": "Change Password Required",
+      "subtitle": "For security reasons, you must change your password before proceeding.",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmNewPassword": "Confirm New Password",
+      "hidePassword": "Hide password",
+      "errors": {
+        "currentPasswordRequired": "Current password is required",
+        "newPasswordRequired": "New password is required",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "confirmPasswordRequired": "Confirm password is required",
+        "passwordMismatch": "Passwords do not match"
+      },
+      "updating": "Updating...",
+      "updatePassword": "Update Password",
+      "passwordUpdated": "Password updated successfully"
+    },
+    "userList": {
+      "label": "User List",
+      "employeeIdTooltip": "Employee ID: {{id}}",
+      "customerNoEmployeeId": "Customer (no employee ID)",
+      "userTypeTooltip": "User Type: {{type}}",
+      "ariaEditUser": "Edit user",
+      "ariaResetPassword": "Reset user password",
+      "ariaDeactivateUser": "Deactivate user",
+      "ariaDeleteUser": "Permanently delete user"
+    },
+    "accountManagement": {
+      "title": "Account Management",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "saveChanges": "Save Changes",
+      "profileUpdated": "Profile updated successfully"
+    },
+    "auditLogList": {
+      "unknown": "Unknown",
+      "system": "System",
+      "systemDeleted": "System/Deleted",
+      "paginatorAriaLabel": "Select page of audit logs"
+    },
+    "userCreateModal": {
+      "emailError": "Email is required and must be valid",
+      "userType": "User Type",
+      "userTypeAdmin": "Admin",
+      "passwordStrengthLabel": "Password strength:",
+      "createUser": "Create User"
+    },
+    "email": "Email"
   },
   "settings": {
     "title": "Settings",
@@ -1765,7 +2428,6 @@
     "changes": "changes",
     "review": "Review Changes",
     "viewLog": "View Log",
-    "marketingTab": "Marketing",
     "emailConfiguration": "Email Configuration",
     "emailConfigDesc": "Configure SMTP for sending marketing campaigns and notifications.",
     "host": "Host",
@@ -1837,7 +2499,54 @@
       "hideOtherKeys": "Hide other provider keys",
       "configured": "✓ Configured",
       "notConfigured": "Not configured",
-      "enterToUpdate": "Enter to update"
+      "enterToUpdate": "Enter to update",
+      "savedSnackbar": "AI Settings saved",
+      "saveError": "Failed to save settings"
+    },
+    "marketingTab": {
+      "label": "Marketing",
+      "storeNamePlaceholder": "My Awesome Store",
+      "storeDomainPlaceholder": "https://mystore.com",
+      "storeSettingsSaved": "Store settings saved!",
+      "storeSettingsError": "Failed to save store settings",
+      "emailSettingsSaved": "Email settings saved!",
+      "emailSettingsError": "Failed to save email settings",
+      "smtpTestSuccess": "SMTP connection successful!",
+      "smtpTestConnectionFailed": "Connection failed",
+      "smtpTestError": "Connection test failed"
+    },
+    "changeLogDialog": {
+      "unknownEntity": "Unknown",
+      "systemUser": "System",
+      "selectPage": "Select page"
+    },
+    "customFieldDialog": {
+      "type": "Type",
+      "fieldTypes": {
+        "text": "text",
+        "number": "number",
+        "date": "date"
+      }
+    },
+    "customFieldList": {
+      "title": "Custom Fields",
+      "addCustomField": "Add Custom Field",
+      "type": "Type",
+      "deleteTitle": "Delete Custom Field",
+      "deleteMessage": "Are you sure you want to delete this custom field? This action cannot be undone."
+    },
+    "dataTab": {
+      "exportSuccess": "{{entity}} exported successfully!"
+    },
+    "integrationsTab": {
+      "keyNamePlaceholder": "e.g., Google Sheets",
+      "errors": {
+        "createFailed": "Failed to create API key",
+        "revokeFailed": "Failed to revoke API key"
+      },
+      "deleteRevokedTitle": "Delete Revoked Key",
+      "deleteRevokedMessage": "Permanently delete this revoked key from history?",
+      "keyRemovedFromList": "Key removed from list"
     }
   },
   "notifications": {
@@ -2342,7 +3051,45 @@
   },
   "errors": {
     "title": "Something went wrong",
-    "generic": "We couldn't load this. Please try again.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "generic": {
+      "message": "We couldn't load this. Please try again.",
+      "title": "Something went wrong",
+      "retry": "Retry"
+    }
+  },
+  "core": {
+    "sidenav": {
+      "userFallbackName": "User",
+      "roles": {
+        "admin": "Admin",
+        "employee": "Employee",
+        "customer": "Customer",
+        "user": "User"
+      }
+    }
+  },
+  "shared": {
+    "aiPromptPreview": {
+      "title": "Prompt Preview",
+      "collapseTooltip": "Collapse prompt preview",
+      "expandTooltip": "See what prompt is sent to AI",
+      "emptyTooltip": "Select options to see prompt",
+      "tokens": "tokens",
+      "tone": "Tone",
+      "channelGuidelines": "Channel Guidelines",
+      "customPrompt": "Your Custom Prompt"
+    },
+    "aiSearchBar": {
+      "placeholder": "Ask AI to find products...",
+      "voiceSearch": "Voice Search"
+    },
+    "imageDialog": {
+      "productImageAlt": "Product image",
+      "titlePlaceholder": "Enter image title",
+      "descriptionPlaceholder": "Enter image description",
+      "updateSuccess": "Image details updated successfully",
+      "updateError": "Failed to update image details"
+    }
   }
 }

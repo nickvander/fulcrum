@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import {
   ReconcileResult,
@@ -54,6 +54,7 @@ export class StockTransferDetailComponent implements OnInit {
     private service: StockTransferService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -73,7 +74,7 @@ export class StockTransferDetailComponent implements OnInit {
       error: err => {
         console.error('Load transfer failed', err);
         this.loading = false;
-        this.snackBar.open('Failed to load transfer', 'Close', { duration: 4000 });
+        this.snackBar.open(this.transloco.translate('stockTransfers.stockTransferDetail.errors.loadFailed'), this.transloco.translate('common.close'), { duration: 4000 });
       },
     });
   }
@@ -88,9 +89,9 @@ export class StockTransferDetailComponent implements OnInit {
         this.transfer = updated;
         this.acting = false;
         const message = pushToMarketplace
-          ? 'Shipped and inbound shipment reserved'
-          : 'Marked as shipped';
-        this.snackBar.open(message, 'Close', { duration: 3000 });
+          ? this.transloco.translate('stockTransfers.stockTransferDetail.shippedWithMarketplace')
+          : this.transloco.translate('stockTransfers.stockTransferDetail.shipped');
+        this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 3000 });
       },
       error: err => {
         this.acting = false;
@@ -110,8 +111,8 @@ export class StockTransferDetailComponent implements OnInit {
         this.lastSync = summary;
         if (summary.needs_reauthorization) {
           this.snackBar.open(
-            `Reauthorize ${summary.marketplace || 'marketplace'} before syncing`,
-            'Close',
+            this.transloco.translate('stockTransfers.stockTransferDetail.syncReauthRequired', { marketplace: summary.marketplace || 'marketplace' }),
+            this.transloco.translate('common.close'),
             { duration: 5000 },
           );
           return;
@@ -121,12 +122,12 @@ export class StockTransferDetailComponent implements OnInit {
         const missing = summary.missing_listings.length;
         const parts: string[] = [];
         if (total > 0) {
-          parts.push(`${okCount}/${total} listings synced`);
+          parts.push(this.transloco.translate('stockTransfers.stockTransferDetail.syncListingsSynced', { ok: okCount, total }));
         }
         if (missing > 0) {
-          parts.push(`${missing} need a listing`);
+          parts.push(this.transloco.translate('stockTransfers.stockTransferDetail.syncNeedListing', { count: missing }));
         }
-        this.snackBar.open(parts.join(' · ') || 'Nothing to sync', 'Close', {
+        this.snackBar.open(parts.join(' · ') || this.transloco.translate('stockTransfers.stockTransferDetail.syncNothingToSync'), this.transloco.translate('common.close'), {
           duration: 4000,
         });
       },
@@ -177,15 +178,13 @@ export class StockTransferDetailComponent implements OnInit {
 
         let message: string;
         if (result.skipped_reason) {
-          message = `Reconcile skipped: ${result.skipped_reason}`;
+          message = this.transloco.translate('stockTransfers.stockTransferDetail.reconcileSkippedMsg', { reason: result.skipped_reason });
         } else if (result.items_updated > 0) {
-          message =
-            `${result.items_updated} item(s) updated, ` +
-            `${result.total_received_added} units received`;
+          message = this.transloco.translate('stockTransfers.stockTransferDetail.reconcileAppliedMsg', { items: result.items_updated, total: result.total_received_added });
         } else {
-          message = 'Reconciled — no new receipts from the marketplace';
+          message = this.transloco.translate('stockTransfers.stockTransferDetail.reconcileNoChangeMsg');
         }
-        this.snackBar.open(message, 'Close', { duration: 4000 });
+        this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 4000 });
       },
       error: () => {
         this.acting = false;
@@ -228,7 +227,7 @@ export class StockTransferDetailComponent implements OnInit {
       next: updated => {
         this.transfer = updated;
         this.acting = false;
-        this.snackBar.open('Transfer cancelled', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('stockTransfers.stockTransferDetail.cancelled'), this.transloco.translate('common.close'), { duration: 3000 });
       },
       error: err => {
         this.acting = false;
@@ -246,7 +245,7 @@ export class StockTransferDetailComponent implements OnInit {
     this.service.delete(id).subscribe({
       next: () => {
         this.acting = false;
-        this.snackBar.open('Transfer deleted', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('stockTransfers.stockTransferDetail.deleted'), this.transloco.translate('common.close'), { duration: 3000 });
         this.router.navigate(['/marketplaces/transfers']);
       },
       error: err => {

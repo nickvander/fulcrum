@@ -131,7 +131,7 @@
                         <div class="description-cell">
                             <span class="description-text">{{expense.description}}</span>
                             @if (expense.reference_number) {
-                            <span class="reference-badge">Ref: {{expense.reference_number}}</span>
+                            <span class="reference-badge">{{ t('expenses.expenseList.refPrefix') }}: {{expense.reference_number}}</span>
                             }
                         </div>
                     </td>
@@ -190,7 +190,7 @@
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="expense-row"></tr>
             </table>
             <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
-                aria-label="Select page of expenses"></mat-paginator>
+                [attr.aria-label]="t('expenses.expenseList.paginatorAriaLabel')"></mat-paginator>
             }
         </mat-card>
     </div>

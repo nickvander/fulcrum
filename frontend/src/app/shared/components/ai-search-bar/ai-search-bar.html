@@ -1,15 +1,17 @@
+<ng-container *transloco="let t">
 <div class="ai-search-container">
   <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
     <mat-icon matPrefix class="search-icon">search_spark</mat-icon>
-    <input matInput [formControl]="searchControl" placeholder="Ask AI to find products...">
+    <input matInput [formControl]="searchControl" [placeholder]="t('shared.aiSearchBar.placeholder')">
     @if (searchControl.value) {
-    <button mat-icon-button matSuffix (click)="clearSearch()" type="button" aria-label="Clear">
+    <button mat-icon-button matSuffix (click)="clearSearch()" type="button" [attr.aria-label]="t('common.clear')">
       <mat-icon>close</mat-icon>
     </button>
     }
     <button mat-icon-button matSuffix (click)="startVoiceSearch()" type="button" class="voice-btn"
-      aria-label="Voice Search">
+      [attr.aria-label]="t('shared.aiSearchBar.voiceSearch')">
       <mat-icon>mic</mat-icon>
     </button>
   </mat-form-field>
 </div>
+</ng-container>

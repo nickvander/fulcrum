@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 
 /**
  * AiPromptPreviewComponent
@@ -27,7 +28,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         CommonModule,
         MatIconModule,
         MatButtonModule,
-        MatTooltipModule
+        MatTooltipModule,
+        TranslocoModule
     ],
     templateUrl: './ai-prompt-preview.html',
     styleUrls: ['./ai-prompt-preview.scss']

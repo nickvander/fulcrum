@@ -1,18 +1,19 @@
+<ng-container *transloco="let t">
 <div class="filter-sidebar">
   <div class="filter-header">
 
     <button mat-icon-button (click)="onClearFilters()" type="button" class="clear-button"
-      matTooltip="Clear all filters">
+      [matTooltip]="t('products.productFilters.clearFilters')">
       <mat-icon>clear</mat-icon>
     </button>
   </div>
 
   <div class="filter-section">
-    <h4>Category</h4>
+    <h4>{{ t('products.productFilters.category') }}</h4>
     <mat-form-field class="full-width">
-      <mat-label>Category</mat-label>
+      <mat-label>{{ t('products.productFilters.category') }}</mat-label>
       <mat-select [(value)]="category" (selectionChange)="onFiltersChange()">
-        <mat-option value="">All Categories</mat-option>
+        <mat-option value="">{{ t('products.productFilters.allCategories') }}</mat-option>
         @for (cat of categories; track cat) {
         <mat-option [value]="cat">{{ cat }}</mat-option>
         }
@@ -21,11 +22,11 @@
   </div>
 
   <div class="filter-section">
-    <h4>Brand</h4>
+    <h4>{{ t('products.productFilters.brand') }}</h4>
     <mat-form-field class="full-width">
-      <mat-label>Brand</mat-label>
+      <mat-label>{{ t('products.productFilters.brand') }}</mat-label>
       <mat-select [(value)]="brand" (selectionChange)="onFiltersChange()">
-        <mat-option value="">All Brands</mat-option>
+        <mat-option value="">{{ t('products.productFilters.allBrands') }}</mat-option>
         @for (brandOption of brands; track brandOption) {
         <mat-option [value]="brandOption">{{ brandOption }}</mat-option>
         }
@@ -34,60 +35,61 @@
   </div>
 
   <div class="filter-section">
-    <h4>Price Range</h4>
+    <h4>{{ t('products.productFilters.priceRange') }}</h4>
     <div class="price-range">
       <mat-form-field class="price-input">
-        <mat-label>Min</mat-label>
+        <mat-label>{{ t('common.min') }}</mat-label>
         <input matInput type="number" [(ngModel)]="minPrice" (input)="onFiltersChange()" placeholder="0">
       </mat-form-field>
-      <span class="range-separator">to</span>
+      <span class="range-separator">{{ t('products.productFilters.rangeTo') }}</span>
       <mat-form-field class="price-input">
-        <mat-label>Max</mat-label>
+        <mat-label>{{ t('products.productFilters.max') }}</mat-label>
         <input matInput type="number" [(ngModel)]="maxPrice" (input)="onFiltersChange()" placeholder="1000">
       </mat-form-field>
     </div>
   </div>
 
   <div class="filter-section">
-    <h4>Stock Level</h4>
+    <h4>{{ t('products.productFilters.stockLevel') }}</h4>
     <div class="stock-range">
       <mat-form-field class="stock-input">
-        <mat-label>Min</mat-label>
+        <mat-label>{{ t('common.min') }}</mat-label>
         <input matInput type="number" [(ngModel)]="minStock" (input)="onFiltersChange()" placeholder="0">
       </mat-form-field>
-      <span class="range-separator">to</span>
+      <span class="range-separator">{{ t('products.productFilters.rangeTo') }}</span>
       <mat-form-field class="stock-input">
-        <mat-label>Max</mat-label>
+        <mat-label>{{ t('products.productFilters.max') }}</mat-label>
         <input matInput type="number" [(ngModel)]="maxStock" (input)="onFiltersChange()" placeholder="1000">
       </mat-form-field>
     </div>
   </div>
 
   <div class="filter-section">
-    <h4>Product Type</h4>
+    <h4>{{ t('products.productFilters.productType') }}</h4>
     <mat-form-field class="full-width">
-      <mat-label>Type</mat-label>
+      <mat-label>{{ t('products.productFilters.typeLabel') }}</mat-label>
       <mat-select [(ngModel)]="productType" (selectionChange)="onFiltersChange()">
-        <mat-option value="all">All Types</mat-option>
-        <mat-option value="product">Products Only</mat-option>
-        <mat-option value="bundle">Bundles Only</mat-option>
+        <mat-option value="all">{{ t('products.productFilters.allTypes') }}</mat-option>
+        <mat-option value="product">{{ t('products.productFilters.productsOnly') }}</mat-option>
+        <mat-option value="bundle">{{ t('products.productFilters.bundlesOnly') }}</mat-option>
       </mat-select>
     </mat-form-field>
 
     <div class="filter-group" style="margin-top: 8px;">
       <mat-checkbox [(ngModel)]="inStockOnly" (change)="onFiltersChange()">
-        In Stock Only
+        {{ t('products.productFilters.inStockOnly') }}
       </mat-checkbox>
     </div>
   </div>
 
   <div class="filter-section">
-    <h4>Search</h4>
+    <h4>{{ t('products.productFilters.search') }}</h4>
     <mat-form-field class="full-width">
-      <mat-label>Search products...</mat-label>
+      <mat-label>{{ t('products.productFilters.searchLabel') }}</mat-label>
       <input matInput [(ngModel)]="searchQuery" (input)="onFiltersChange()"
-        placeholder="Search by name, SKU, or description">
+        [placeholder]="t('products.productFilters.searchInputPlaceholder')">
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
   </div>
 </div>
+</ng-container>

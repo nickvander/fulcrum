@@ -28,7 +28,7 @@ import { RefundsWidgetComponent } from '../../widgets/refunds-widget/refunds-wid
 import { ReturnsWidgetComponent } from '../../widgets/returns-widget/returns-widget.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { ConfirmationDialog, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog';
 
 /** Lightweight projection of the buyer-Q&A SLA endpoint for the hero card. */
@@ -88,6 +88,7 @@ export class DashboardComponent implements OnInit {
         private analyticsService: AnalyticsReportsService,
         private snackBar: MatSnackBar,
         private dialog: MatDialog,
+        private transloco: TranslocoService,
     ) { }
 
     ngOnInit(): void {
@@ -158,13 +159,13 @@ export class DashboardComponent implements OnInit {
             .pipe(finalize(() => this.creatingDemoWorkspace = false))
             .subscribe({
                 next: (result) => {
-                    this.snackBar.open(result.message, 'Close', { duration: 5000 });
+                    this.snackBar.open(result.message, this.transloco.translate('common.close'), { duration: 5000 });
                     this.refresh();
                 },
                 error: () => {
                     this.snackBar.open(
-                        'Demo workspace could not be created. Please try again.',
-                        'Close',
+                        this.transloco.translate('dashboard.dashboard.demoWorkspaceCreateError'),
+                        this.transloco.translate('common.close'),
                         { duration: 5000 }
                     );
                 }
@@ -177,8 +178,8 @@ export class DashboardComponent implements OnInit {
         const dialogRef = this.dialog.open(ConfirmationDialog, {
             width: '420px',
             data: {
-                title: 'Clean up demo data',
-                message: 'This removes only records that still match Fulcrum demo fingerprints. Cleanup is blocked automatically if customer activity is detected.'
+                title: this.transloco.translate('dashboard.dashboard.cleanupDemoTitle'),
+                message: this.transloco.translate('dashboard.dashboard.cleanupDemoMessage')
             } as ConfirmationDialogData
         });
 
@@ -190,7 +191,7 @@ export class DashboardComponent implements OnInit {
                 .pipe(finalize(() => this.cleaningDemoData = false))
                 .subscribe({
                     next: (result) => {
-                        this.snackBar.open(result.message, 'Close', { duration: 5000 });
+                        this.snackBar.open(result.message, this.transloco.translate('common.close'), { duration: 5000 });
                         this.refresh();
                     },
                     error: () => {

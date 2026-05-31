@@ -1,18 +1,19 @@
+<ng-container *transloco="let t">
 <div class="product-manager-container">
     <div class="header">
-        <h3>Supplier Products</h3>
+        <h3>{{ t('suppliers.supplierProductManager.title') }}</h3>
         <!-- <button mat-stroked-button color="primary" (click)="addProduct()">
-        <mat-icon>add</mat-icon> Add Product
+        <mat-icon>add</mat-icon> {{ t('common.add') }} {{ t('suppliers.supplierProductManager.product') }}
         </button> -->
     </div>
 
     <div class="supplier-products-empty" *ngIf="supplierProducts.length === 0; else productTable">
         <mat-icon>link</mat-icon>
-        <h4>No supplier products mapped yet</h4>
-        <p>Receive a purchase order or confirm an imported supplier item to link this supplier's SKU/name to a Fulcrum product.</p>
+        <h4>{{ t('suppliers.supplierProductManager.emptyTitle') }}</h4>
+        <p>{{ t('suppliers.supplierProductManager.emptyHint') }}</p>
         <button mat-stroked-button color="primary" [routerLink]="['/suppliers/po']">
             <mat-icon>receipt_long</mat-icon>
-            Open purchase orders
+            {{ t('suppliers.supplierProductManager.openPurchaseOrders') }}
         </button>
     </div>
 
@@ -20,30 +21,30 @@
     <table mat-table [dataSource]="supplierProducts" class="mat-elevation-z0">
         <!-- Product Name Column -->
         <ng-container matColumnDef="product_name">
-            <th mat-header-cell *matHeaderCellDef> Product </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('suppliers.supplierProductManager.columns.product') }} </th>
             <td mat-cell *matCellDef="let element">
                 <a [routerLink]="['/products/edit', element.product_id]" class="product-link">
-                    {{element.product_name || 'Unknown Product'}}
+                    {{element.product_name || t('suppliers.supplierProductManager.unknownProduct')}}
                 </a>
             </td>
         </ng-container>
 
         <!-- Supplier SKU Column -->
         <ng-container matColumnDef="supplier_sku">
-            <th mat-header-cell *matHeaderCellDef> Supplier SKU </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('suppliers.supplierProductManager.columns.supplierSku') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.supplier_sku || '-'}} </td>
         </ng-container>
 
         <!-- Learned Aliases Column -->
         <ng-container matColumnDef="aliases">
-            <th mat-header-cell *matHeaderCellDef> Learned Aliases </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('suppliers.supplierProductManager.columns.learnedAliases') }} </th>
             <td mat-cell *matCellDef="let element" (click)="$event.stopPropagation()">
-                <mat-chip-set *ngIf="element.aliases?.length; else noAliases" aria-label="Learned supplier aliases">
+                <mat-chip-set *ngIf="element.aliases?.length; else noAliases" [attr.aria-label]="t('suppliers.supplierProductManager.aliasesAriaLabel')">
                     <mat-chip *ngFor="let alias of element.aliases"
                         [matTooltip]="(alias.alias_name || alias.alias_sku || '') + (alias.variant_name ? ' -> ' + alias.variant_name : '')">
                         <span>{{ aliasLabel(alias) }}</span>
                         <button matChipRemove type="button" (click)="deleteAlias($event, element, alias)"
-                            [matTooltip]="'Remove learned mapping'">
+                            [matTooltip]="t('suppliers.supplierProductManager.removeMapping')">
                             <mat-icon>cancel</mat-icon>
                         </button>
                     </mat-chip>
@@ -54,19 +55,19 @@
 
         <!-- Cost Column -->
         <ng-container matColumnDef="cost_price">
-            <th mat-header-cell *matHeaderCellDef> Cost </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('common.cost') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.cost_price | currency}} </td>
         </ng-container>
 
         <!-- Lead Time Column -->
         <ng-container matColumnDef="lead_time_days">
-            <th mat-header-cell *matHeaderCellDef> Lead Time (Days) </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('suppliers.supplierProductManager.columns.leadTimeDays') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.lead_time_days || '-'}} </td>
         </ng-container>
 
         <!-- Last Ordered Column -->
         <ng-container matColumnDef="last_ordered_at">
-            <th mat-header-cell *matHeaderCellDef> Last Ordered </th>
+            <th mat-header-cell *matHeaderCellDef> {{ t('suppliers.supplierProductManager.columns.lastOrdered') }} </th>
             <td mat-cell *matCellDef="let element"> {{element.last_ordered_at | date:'mediumDate'}} </td>
         </ng-container>
 
@@ -77,3 +78,4 @@
     </table>
     </ng-template>
 </div>
+</ng-container>

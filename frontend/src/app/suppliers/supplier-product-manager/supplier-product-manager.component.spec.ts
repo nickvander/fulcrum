@@ -7,6 +7,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterTestingModule } from '@angular/router/testing';
+import { getTranslocoTestingModule } from '../../testing/transloco-testing';
 
 describe('SupplierProductManagerComponent', () => {
     let component: SupplierProductManagerComponent;
@@ -25,7 +26,8 @@ describe('SupplierProductManagerComponent', () => {
                 MatTableModule,
                 MatButtonModule,
                 MatIconModule,
-                RouterTestingModule
+                RouterTestingModule,
+                getTranslocoTestingModule()
             ],
             providers: [
                 { provide: SuppliersService, useValue: suppliersServiceMock }

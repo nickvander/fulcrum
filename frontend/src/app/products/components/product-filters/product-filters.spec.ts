@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProductFiltersComponent } from './product-filters';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ProductFiltersComponent', () => {
     let component: ProductFiltersComponent;
@@ -18,6 +19,7 @@ describe('ProductFiltersComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             imports: [
+                getTranslocoTestingModule(),
                 MatIconModule,
                 MatButtonModule,
                 MatInputModule,

@@ -23,9 +23,9 @@
                 </button>
                 <button mat-stroked-button color="warn" *ngIf="canCorrectReceiving()"
                     (click)="openReceivingCorrectionDialog()"
-                    matTooltip="Reverse received quantity while keeping an inventory audit trail">
+                    [matTooltip]="t('purchaseOrders.purchaseOrderEdit.correctReceivingTooltip')">
                     <mat-icon>history</mat-icon>
-                    Correct Receiving
+                    {{ t('purchaseOrders.purchaseOrderEdit.correctReceiving') }}
                 </button>
             </div>
         </div>
@@ -127,9 +127,9 @@
                                         [matTooltip]="t('products.addProduct')">
                                         <mat-icon>add_circle</mat-icon>
                                     </button>
-                                    <button mat-icon-button type="button" *ngIf="selectedProducts[i]?.variants?.length" 
+                                    <button mat-icon-button type="button" *ngIf="selectedProducts[i]?.variants?.length"
                                         (click)="toggleVariantDistribution(i)" [color]="item.get('show_variants')?.value ? 'primary' : ''"
-                                        [matTooltip]="item.get('show_variants')?.value ? 'Hide variants' : 'Distribute across variants'">
+                                        [matTooltip]="item.get('show_variants')?.value ? t('purchaseOrders.purchaseOrderEdit.hideVariants') : t('purchaseOrders.purchaseOrderEdit.distributeVariants')">
                                         <mat-icon>call_split</mat-icon>
                                     </button>
                                 </div>
@@ -138,14 +138,14 @@
                                 </mat-hint>
                                 <mat-hint *ngIf="item.get('supplier_product_name')?.value" class="extracted-name-hint" [style.color]="item.get('product_id')?.value ? 'var(--text-secondary)' : 'var(--warning-color, #f57c00)'">
                                     <mat-icon style="font-size: 14px; height: 14px; width: 14px; vertical-align: middle;" *ngIf="!item.get('product_id')?.value">info</mat-icon>
-                                    {{ item.get('product_id')?.value ? 'Original:' : 'Map to existing or create new:' }} "{{ item.get('supplier_product_name')?.value }}"
+                                    {{ item.get('product_id')?.value ? t('purchaseOrders.purchaseOrderEdit.originalLabel') : t('purchaseOrders.purchaseOrderEdit.mapToExisting') }} "{{ item.get('supplier_product_name')?.value }}"
                                 </mat-hint>
                             </mat-form-field>
 
                             <mat-form-field appearance="fill" class="variant-field" *ngIf="selectedProducts[i]?.variants?.length && !item.get('show_variants')?.value">
-                                <mat-label>Variant</mat-label>
+                                <mat-label>{{ t('purchaseOrders.purchaseOrderEdit.variant') }}</mat-label>
                                 <mat-select formControlName="variant_id">
-                                    <mat-option [value]="null">No variant</mat-option>
+                                    <mat-option [value]="null">{{ t('purchaseOrders.purchaseOrderEdit.noVariant') }}</mat-option>
                                     <mat-option *ngFor="let v of selectedProducts[i]?.variants" [value]="v.id">
                                         {{ v.name }} ({{ v.sku }})
                                     </mat-option>
@@ -155,7 +155,7 @@
 
                         <mat-form-field appearance="fill" class="qty-field">
                             <mat-label *ngIf="!item.get('show_variants')?.value">{{ t('common.quantity') }}</mat-label>
-                            <mat-label *ngIf="item.get('show_variants')?.value">Target Qty</mat-label>
+                            <mat-label *ngIf="item.get('show_variants')?.value">{{ t('purchaseOrders.purchaseOrderEdit.targetQty') }}</mat-label>
                             <!-- If distributing, tie the main input to target_quantity instead of quantity_ordered so we don't break simple binding, wait, let's keep quantity_ordered for both, but use it as target if distributing -->
                             <input matInput type="number" formControlName="quantity_ordered" min="1" autocomplete="off" (change)="item.get('target_quantity')?.setValue(item.get('quantity_ordered')?.value)">
                         </mat-form-field>
@@ -167,7 +167,7 @@
                                 autocomplete="off">
                             <!-- Projected Cost Hint -->
                             <mat-hint *ngIf="calculatePerUnitLandedCost() > 0" class="projected-cost-hint">
-                                + ${{ calculatePerUnitLandedCost() | number:'1.2-2' }} alloc.
+                                + ${{ calculatePerUnitLandedCost() | number:'1.2-2' }} {{ t('purchaseOrders.purchaseOrderEdit.alloc') }}
                                 = <strong>${{ getEstimatedAllocatedCost(item.get('unit_cost')?.value) | number:'1.2-2'
                                     }}</strong>
                             </mat-hint>
@@ -187,9 +187,9 @@
                         <!-- Nested Variant Distribution Section -->
                         <div class="variant-distribution-container" *ngIf="item.get('show_variants')?.value">
                             <div class="variant-header">
-                                <h4>Variant Distribution</h4>
+                                <h4>{{ t('purchaseOrders.purchaseOrderEdit.variantDistribution') }}</h4>
                                 <span class="distribution-status" [class.valid]="isDistributionValid(i)" [class.invalid]="!isDistributionValid(i)">
-                                    Assigned: {{ getVariantTotal(i) }} / Total: {{ item.get('target_quantity')?.value }}
+                                    {{ t('purchaseOrders.purchaseOrderEdit.assigned') }}: {{ getVariantTotal(i) }} / {{ t('purchaseOrders.purchaseOrderEdit.totalLabel') }}: {{ item.get('target_quantity')?.value }}
                                     <mat-icon *ngIf="isDistributionValid(i)">check_circle</mat-icon>
                                     <mat-icon *ngIf="!isDistributionValid(i)">error</mat-icon>
                                 </span>
@@ -201,7 +201,7 @@
                                         <span class="v-sku">{{ dist.get('sku').value }}</span>
                                     </div>
                                     <mat-form-field appearance="outline" class="v-qty">
-                                        <mat-label>Qty</mat-label>
+                                        <mat-label>{{ t('purchaseOrders.qty') }}</mat-label>
                                         <input matInput type="number" formControlName="quantity" min="0" autocomplete="off">
                                     </mat-form-field>
                                 </div>
@@ -214,15 +214,14 @@
             <!-- Additional Costs Section -->
             <mat-card class="form-section" *ngIf="isEditMode || items.length > 0">
                 <h3>{{ t('purchaseOrders.sections.shippingAndCosts') }}</h3>
-                <p class="section-hint">Enter any extra costs beyond the product prices. These can be distributed across
-                    your items.</p>
+                <p class="section-hint">{{ t('purchaseOrders.purchaseOrderEdit.extraCostsHint') }}</p>
                 <div class="row costs-row">
                     <mat-form-field appearance="fill">
                         <mat-label>{{ t('purchaseOrders.shippingCost') }}</mat-label>
                         <span matTextPrefix>$&nbsp;</span>
                         <input matInput type="number" formControlName="shipping_cost" min="0" step="0.01"
                             autocomplete="off">
-                        <mat-hint>Delivery and transport fees</mat-hint>
+                        <mat-hint>{{ t('purchaseOrders.purchaseOrderEdit.shippingHint') }}</mat-hint>
                     </mat-form-field>
 
                     <mat-form-field appearance="fill">
@@ -230,7 +229,7 @@
                         <span matTextPrefix>$&nbsp;</span>
                         <input matInput type="number" formControlName="import_cost" min="0" step="0.01"
                             autocomplete="off">
-                        <mat-hint>Taxes on imported goods</mat-hint>
+                        <mat-hint>{{ t('purchaseOrders.purchaseOrderEdit.importDutiesHint') }}</mat-hint>
                     </mat-form-field>
 
                     <mat-form-field appearance="fill">
@@ -238,27 +237,25 @@
                         <span matTextPrefix>$&nbsp;</span>
                         <input matInput type="number" formControlName="other_costs" min="0" step="0.01"
                             autocomplete="off">
-                        <mat-hint>Insurance, handling, etc.</mat-hint>
+                        <mat-hint>{{ t('purchaseOrders.purchaseOrderEdit.otherCostsHint') }}</mat-hint>
                     </mat-form-field>
                 </div>
 
                 <div class="cost-summary" *ngIf="calculateTotalAdditionalCosts() > 0">
                     <div class="summary-row">
-                        <span>Total Extra Costs:</span>
+                        <span>{{ t('purchaseOrders.purchaseOrderEdit.totalExtraCosts') }}</span>
                         <strong>${{ calculateTotalAdditionalCosts() | number:'1.2-2' }}</strong>
                     </div>
                     <div class="summary-row" *ngIf="items.length > 0">
-                        <span>Cost per unit (if distributed evenly):</span>
+                        <span>{{ t('purchaseOrders.purchaseOrderEdit.costPerUnit') }}</span>
                         <strong>${{ calculatePerUnitLandedCost() | number:'1.2-2' }}</strong>
                     </div>
                     <button mat-stroked-button type="button" color="primary" (click)="applyLandedCostToItems()"
                         [disabled]="isLocked">
                         <mat-icon>add_circle</mat-icon> {{ t('purchaseOrders.allocateCosts') }}
                     </button>
-                    <p class="apply-hint" *ngIf="poId">This will add the per-unit cost to each line item's unit cost.
-                    </p>
-                    <p class="apply-hint" *ngIf="!poId">Costs will be distributed evenly. Save order to preview detailed
-                        allocation.</p>
+                    <p class="apply-hint" *ngIf="poId">{{ t('purchaseOrders.purchaseOrderEdit.applyHintSaved') }}</p>
+                    <p class="apply-hint" *ngIf="!poId">{{ t('purchaseOrders.purchaseOrderEdit.applyHintUnsaved') }}</p>
                 </div>
             </mat-card>
 
@@ -299,9 +296,9 @@
                     </mat-form-field>
 
                     <mat-form-field appearance="fill">
-                        <mat-label>Custom Payer Name</mat-label>
-                        <input matInput formControlName="custom_payer_name" placeholder="e.g. External Partner">
-                        <mat-hint>If paid by someone outside the system</mat-hint>
+                        <mat-label>{{ t('purchaseOrders.purchaseOrderEdit.customPayerName') }}</mat-label>
+                        <input matInput formControlName="custom_payer_name" [placeholder]="t('purchaseOrders.purchaseOrderEdit.customPayerPlaceholder')">
+                        <mat-hint>{{ t('purchaseOrders.purchaseOrderEdit.customPayerHint') }}</mat-hint>
                     </mat-form-field>
                 </div>
             </mat-card>
@@ -327,7 +324,7 @@
                             <ng-container *ngIf="!poId">{{
                                 t('purchaseOrders.invoiceMatching.dropToExtract') }}</ng-container>
                         </span>
-                        <span class="file-types">PDF, Images (JPG, PNG, AVIF), HTML</span>
+                        <span class="file-types">{{ t('purchaseOrders.purchaseOrderEdit.fileTypes') }}</span>
                         <span class="ai-badge" *ngIf="aiEnabled">
                             <mat-icon>auto_awesome</mat-icon>
                             {{ t('products.aiPowered') }}
@@ -349,7 +346,7 @@
                     </ng-container>
 
                     <ng-container matColumnDef="name">
-                        <th mat-header-cell *matHeaderCellDef> Filename </th>
+                        <th mat-header-cell *matHeaderCellDef> {{ t('purchaseOrders.purchaseOrderEdit.filename') }} </th>
                         <td mat-cell *matCellDef="let invoice">
                             <a [href]="getInvoiceFileUrl(invoice.file_path)" target="_blank" class="invoice-link">
                                 {{ getInvoiceDisplayName(invoice) }}

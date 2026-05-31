@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 import { ProductService } from '../../../products/services/product';
 import { SettingsService } from '../../../core/services/settings.service';
@@ -90,10 +91,7 @@ describe('PoIngestDialogComponent', () => {
                 PoIngestDialogComponent,
                 MatDialogModule,
                 NoopAnimationsModule,
-                TranslocoTestingModule.forRoot({
-                    langs: { en: {}, 'es-MX': {} },
-                    translocoConfig: { availableLangs: ['en', 'es-MX'], defaultLang: 'en' }
-                })
+                getTranslocoTestingModule()
             ],
             providers: [
                 { provide: MAT_DIALOG_DATA, useValue: { review: baseReview } },

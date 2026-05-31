@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-user-create-modal',
@@ -36,7 +36,8 @@ export class UserCreateModal implements OnInit {
     public dialogRef: MatDialogRef<UserCreateModal>,
     private fb: FormBuilder,
     private userService: UserService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -86,7 +87,7 @@ export class UserCreateModal implements OnInit {
 
       this.userService.createUser(formValue).subscribe({
         next: (user: User) => {
-          this.snackBar.open('User created successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('users.messages.created'), this.transloco.translate('common.close'), { duration: 3000 });
           this.dialogRef.close(user);
         },
         error: () => {
@@ -94,7 +95,7 @@ export class UserCreateModal implements OnInit {
         }
       });
     } else {
-      this.snackBar.open('Please fill in all required fields correctly', 'Close', { duration: 3000 });
+      this.snackBar.open(this.transloco.translate('common.errors.fillRequired'), this.transloco.translate('common.close'), { duration: 3000 });
     }
   }
 
@@ -133,9 +134,9 @@ export class UserCreateModal implements OnInit {
     const password = this.form.get('password')?.value;
     const strength = this.getPasswordStrength(password);
 
-    if (strength <= 1) return 'Weak';
-    if (strength <= 2) return 'Medium';
-    if (strength >= 3) return 'Strong';
+    if (strength <= 1) return this.transloco.translate('common.strengthWeak');
+    if (strength <= 2) return this.transloco.translate('common.strengthMedium');
+    if (strength >= 3) return this.transloco.translate('common.strengthStrong');
     return '';
   }
 }

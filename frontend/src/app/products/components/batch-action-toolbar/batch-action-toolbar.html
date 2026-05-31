@@ -1,26 +1,27 @@
+<ng-container *transloco="let t">
 <div class="batch-action-toolbar">
   <div class="toolbar-content">
     <div class="selection-info">
       <mat-icon>select_all</mat-icon>
-      <span>{{ selectedCount }} selected</span>
+      <span>{{ t('products.batchActionToolbar.selectedCount', { count: selectedCount }) }}</span>
     </div>
     <div class="toolbar-actions">
       @if (selectedCount < 1) {
         <button mat-stroked-button (click)="onSelectAll()">
           <mat-icon>select_all</mat-icon>
-          Select All
+          {{ t('products.selectAll') }}
         </button>
       }
       @if (selectedCount >= 1) {
         <button mat-stroked-button (click)="onDeselectAll()">
           <mat-icon>clear</mat-icon>
-          Deselect All
+          {{ t('products.deselectAll') }}
         </button>
       }
       @if (selectedCount >= 1) {
         <button mat-raised-button (click)="onDeleteSelected()" color="warn">
           <mat-icon>delete</mat-icon>
-          Delete Selected
+          {{ t('products.deleteSelected') }}
         </button>
       }
 
@@ -31,22 +32,22 @@
           [matMenuTriggerFor]="advancedBatchMenu"
           class="advanced-menu-btn">
           <mat-icon>more_vert</mat-icon>
-          Advanced
+          {{ t('products.batchActionToolbar.advanced') }}
         </button>
       }
 
       <mat-menu #advancedBatchMenu="matMenu">
         <button mat-menu-item (click)="onBatchPriceUpdate()">
           <mat-icon>payments</mat-icon>
-          <span>Update Prices</span>
+          <span>{{ t('products.batchActionToolbar.updatePrices') }}</span>
         </button>
         <button mat-menu-item (click)="onBatchCategoryUpdate()">
           <mat-icon>category</mat-icon>
-          <span>Assign Category</span>
+          <span>{{ t('products.batchActionToolbar.assignCategory') }}</span>
         </button>
         <button mat-menu-item (click)="onBatchCustomFieldUpdate()">
           <mat-icon>edit_attributes</mat-icon>
-          <span>Update Custom Fields</span>
+          <span>{{ t('products.batchActionToolbar.updateCustomFields') }}</span>
         </button>
       </mat-menu>
 
@@ -56,3 +57,4 @@
     </div>
   </div>
 </div>
+</ng-container>

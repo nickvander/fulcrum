@@ -44,7 +44,7 @@
             <div class="new-key-form" *ngIf="!newKeyResult">
                 <mat-form-field appearance="outline" class="sleek-field">
                     <mat-label>{{ t('settings.keyName') }}</mat-label>
-                    <input matInput [(ngModel)]="newKeyName" placeholder="e.g., Google Sheets">
+                    <input matInput [(ngModel)]="newKeyName" [placeholder]="t('settings.integrationsTab.keyNamePlaceholder')">
                 </mat-form-field>
                 <button mat-stroked-button color="primary" (click)="createApiKey()"
                     [disabled]="!(newKeyName || '').trim() || creatingKey">

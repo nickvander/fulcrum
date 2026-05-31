@@ -287,7 +287,7 @@
                 <ul class="unmatched-list">
                     @for (poItem of matchDetails.unmatched_po_items; track $index) {
                         <li>
-                            <strong>{{ poItem.description || poItem.sku || ('item ' + $index) }}</strong>
+                            <strong>{{ poItem.description || poItem.sku || t('purchaseOrders.poIngestDialog.itemFallback', { index: $index + 1 }) }}</strong>
                             @if (poItem.quantity) {
                                 — {{ t('common.quantity') }}: {{ poItem.quantity }}
                             }
@@ -304,7 +304,7 @@
                 <ul class="unmatched-list">
                     @for (invItem of matchDetails.unmatched_invoice_items; track $index) {
                         <li>
-                            <strong>{{ invItem.description || invItem.sku || ('item ' + $index) }}</strong>
+                            <strong>{{ invItem.description || invItem.sku || t('purchaseOrders.poIngestDialog.itemFallback', { index: $index + 1 }) }}</strong>
                             @if (invItem.quantity) {
                                 — {{ t('common.quantity') }}: {{ invItem.quantity }}
                             }

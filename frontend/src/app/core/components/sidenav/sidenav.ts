@@ -171,11 +171,12 @@ export class Sidenav implements OnInit, OnDestroy {
   }
 
   getUserDisplayName(user: User | null): string {
-    if (!user) return 'User';
+    const fallback = this.translocoService.translate('core.sidenav.userFallbackName');
+    if (!user) return fallback;
     if (user.first_name && user.last_name) return `${user.first_name} ${user.last_name}`;
     if (user.first_name) return user.first_name;
     if (user.last_name) return user.last_name;
-    return user.email?.split('@')[0] || 'User';
+    return user.email?.split('@')[0] || fallback;
   }
 
   getUserInitials(user: User | null): string {
@@ -191,10 +192,10 @@ export class Sidenav implements OnInit, OnDestroy {
   getUserRole(user: User | null): string {
     if (!user) return '';
     switch (user.user_type) {
-      case 'admin': return 'Admin';
-      case 'employee': return 'Employee';
-      case 'customer': return 'Customer';
-      default: return user.user_type || 'User';
+      case 'admin': return this.translocoService.translate('core.sidenav.roles.admin');
+      case 'employee': return this.translocoService.translate('core.sidenav.roles.employee');
+      case 'customer': return this.translocoService.translate('core.sidenav.roles.customer');
+      default: return user.user_type || this.translocoService.translate('core.sidenav.roles.user');
     }
   }
 }

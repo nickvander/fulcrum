@@ -11,6 +11,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { vi } from 'vitest';
 import { CommonModule } from '@angular/common';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ReceivingDialogComponent', () => {
     let component: ReceivingDialogComponent;
@@ -44,7 +45,8 @@ describe('ReceivingDialogComponent', () => {
                 MatFormFieldModule,
                 MatInputModule,
                 MatButtonModule,
-                BrowserAnimationsModule
+                BrowserAnimationsModule,
+                getTranslocoTestingModule()
             ],
             providers: [
                 FormBuilder,

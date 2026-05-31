@@ -45,7 +45,7 @@
         <ng-container matColumnDef="product">
           <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.product') }}</th>
           <td mat-cell *matCellDef="let row">
-            {{ row.product_name || ('Product #' + row.product_id) }}
+            {{ row.product_name || t('stockTransfers.stockTransferReconciliation.productFallback', { id: row.product_id }) }}
           </td>
         </ng-container>
 

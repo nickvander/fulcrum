@@ -4,13 +4,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { AuthService } from '../../../core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
     selector: 'app-forgot-password',
     templateUrl: './forgot-password.component.html',
     styleUrls: ['./forgot-password.component.scss'],
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, RouterModule]
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, TranslocoModule]
 })
 export class ForgotPasswordComponent {
     forgotPasswordForm: FormGroup;
@@ -21,7 +22,8 @@ export class ForgotPasswordComponent {
 
     constructor(
         private formBuilder: FormBuilder,
-        private authService: AuthService
+        private authService: AuthService,
+        private transloco: TranslocoService
     ) {
         this.forgotPasswordForm = this.formBuilder.group({
             email: ['', [Validators.required, Validators.email]]
@@ -44,7 +46,7 @@ export class ForgotPasswordComponent {
             .subscribe({
                 next: (response) => {
                     this.isLoading = false;
-                    this.message = response.message || 'If the email exists, a reset link has been sent.';
+                    this.message = response.message || this.transloco.translate('auth.forgotPassword.successMessage');
                 },
                 error: (error) => {
                     this.isLoading = false;
@@ -52,7 +54,7 @@ export class ForgotPasswordComponent {
                     // but for now let's show a generic error or what the backend returns if safe.
                     // The backend returns "If the email exists..." even if not found, so this error block 
                     // would likely be for network issues or 500s.
-                    this.error = 'An error occurred. Please try again later.';
+                    this.error = this.transloco.translate('auth.forgotPassword.errorMessage');
                 }
             });
     }

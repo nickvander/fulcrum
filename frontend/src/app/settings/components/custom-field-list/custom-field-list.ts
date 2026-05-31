@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { CustomField } from '../../models/custom-field.model';
 import { CustomFieldService } from '../../services/custom-field.service';
 import { CustomFieldDialog } from '../custom-field-dialog/custom-field-dialog';
@@ -15,7 +16,7 @@ import { ConfirmationDialog } from '../../../shared/components/confirmation-dial
   templateUrl: './custom-field-list.html',
   styleUrls: ['./custom-field-list.scss'],
   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatIconModule],
+  imports: [MatTableModule, MatButtonModule, MatIconModule, TranslocoModule],
 })
 export class CustomFieldList implements OnInit, OnDestroy {
   displayedColumns: string[] = ['name', 'type', 'actions'];
@@ -24,7 +25,8 @@ export class CustomFieldList implements OnInit, OnDestroy {
 
   constructor(
     private customFieldService: CustomFieldService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private transloco: TranslocoService
   ) {}
 
   ngOnInit(): void {
@@ -60,8 +62,8 @@ export class CustomFieldList implements OnInit, OnDestroy {
   deleteCustomField(id: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Custom Field',
-        message: 'Are you sure you want to delete this custom field? This action cannot be undone.',
+        title: this.transloco.translate('settings.customFieldList.deleteTitle'),
+        message: this.transloco.translate('settings.customFieldList.deleteMessage'),
       },
     });
 

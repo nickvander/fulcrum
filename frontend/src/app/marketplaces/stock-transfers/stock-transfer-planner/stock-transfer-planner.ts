@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import {
   AllocationEntry,
@@ -72,6 +72,7 @@ export class StockTransferPlannerComponent implements OnInit {
     private service: StockTransferService,
     private snackBar: MatSnackBar,
     private router: Router,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -88,9 +89,11 @@ export class StockTransferPlannerComponent implements OnInit {
       error: err => {
         console.error('Snapshot load failed', err);
         this.loading = false;
-        this.snackBar.open('Failed to load inventory snapshot', 'Close', {
-          duration: 4000,
-        });
+        this.snackBar.open(
+          this.transloco.translate('stockTransfers.stockTransferPlanner.errors.snapshotLoadFailed'),
+          this.transloco.translate('common.close'),
+          { duration: 4000 },
+        );
       },
     });
   }
@@ -172,9 +175,11 @@ export class StockTransferPlannerComponent implements OnInit {
     this.service.planAllocations(allocations, this.notes).subscribe({
       next: drafts => {
         this.saving = false;
-        this.snackBar.open(`${drafts.length} draft transfer(s) created`, 'Close', {
-          duration: 3000,
-        });
+        this.snackBar.open(
+          this.transloco.translate('stockTransfers.stockTransferPlanner.draftsCreated', { count: drafts.length }),
+          this.transloco.translate('common.close'),
+          { duration: 3000 },
+        );
         this.router.navigate(['/marketplaces/transfers']);
       },
       error: err => {

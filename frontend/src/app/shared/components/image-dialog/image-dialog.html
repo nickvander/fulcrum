@@ -1,24 +1,26 @@
-<h2 mat-dialog-title>{{ 'common.dialogs.imageDetails' | transloco }}</h2>
+<ng-container *transloco="let t">
+<h2 mat-dialog-title>{{ t('common.dialogs.imageDetails') }}</h2>
 
 <mat-dialog-content>
   <div class="image-preview">
-    <img [src]="getImageUrl(currentImage.image_path)" [alt]="currentImage.title || 'Product image'">
+    <img [src]="getImageUrl(currentImage.image_path)" [alt]="currentImage.title || t('shared.imageDialog.productImageAlt')">
   </div>
-  
+
   <form [formGroup]="imageForm" class="image-details-form">
     <mat-form-field appearance="outline">
-      <mat-label>Title</mat-label>
-      <input matInput formControlName="title" placeholder="Enter image title">
+      <mat-label>{{ t('common.title') }}</mat-label>
+      <input matInput formControlName="title" [placeholder]="t('shared.imageDialog.titlePlaceholder')">
     </mat-form-field>
-    
+
     <mat-form-field appearance="outline">
-      <mat-label>Description</mat-label>
-      <textarea matInput formControlName="description" placeholder="Enter image description" rows="3"></textarea>
+      <mat-label>{{ t('common.description') }}</mat-label>
+      <textarea matInput formControlName="description" [placeholder]="t('shared.imageDialog.descriptionPlaceholder')" rows="3"></textarea>
     </mat-form-field>
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onNoClick()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!imageForm.valid">Save</button>
+  <button mat-button (click)="onNoClick()">{{ t('common.cancel') }}</button>
+  <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!imageForm.valid">{{ t('common.save') }}</button>
 </mat-dialog-actions>
+</ng-container>

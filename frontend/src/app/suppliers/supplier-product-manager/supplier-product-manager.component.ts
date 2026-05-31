@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { SuppliersService } from '../suppliers.service';
 import { SupplierProduct, SupplierProductAlias } from '../../shared/models/supplier-product.model';
 import { RouterModule, Router } from '@angular/router';
@@ -22,7 +23,8 @@ import { RouterModule, Router } from '@angular/router';
     MatChipsModule,
     MatTooltipModule,
     MatSnackBarModule,
-    RouterModule
+    RouterModule,
+    TranslocoModule
   ],
   templateUrl: './supplier-product-manager.component.html',
   styleUrls: ['./supplier-product-manager.component.scss'],
@@ -53,7 +55,8 @@ export class SupplierProductManagerComponent implements OnInit {
   constructor(
     private suppliersService: SuppliersService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -73,7 +76,7 @@ export class SupplierProductManagerComponent implements OnInit {
   }
 
   aliasLabel(alias: SupplierProductAlias): string {
-    return alias.alias_sku || alias.alias_name || 'Alias';
+    return alias.alias_sku || alias.alias_name || this.transloco.translate('suppliers.supplierProductManager.aliasDefault');
   }
 
   deleteAlias(event: MouseEvent, supplierProduct: SupplierProduct, alias: SupplierProductAlias): void {
@@ -81,10 +84,10 @@ export class SupplierProductManagerComponent implements OnInit {
     this.suppliersService.deleteSupplierProductAlias(alias.id).subscribe({
       next: () => {
         supplierProduct.aliases = (supplierProduct.aliases || []).filter(item => item.id !== alias.id);
-        this.snackBar.open('Supplier alias removed', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('suppliers.supplierProductManager.aliasRemoved'), this.transloco.translate('common.close'), { duration: 3000 });
       },
       error: () => {
-        this.snackBar.open('Failed to remove supplier alias', 'Close', { duration: 4000 });
+        this.snackBar.open(this.transloco.translate('suppliers.supplierProductManager.aliasRemoveFailed'), this.transloco.translate('common.close'), { duration: 4000 });
       }
     });
   }

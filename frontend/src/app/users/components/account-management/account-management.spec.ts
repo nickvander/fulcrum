@@ -7,6 +7,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { User } from '../../../shared/models/user.model';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('AccountManagement', () => {
     let component: AccountManagement;
@@ -42,7 +43,8 @@ describe('AccountManagement', () => {
             imports: [
                 AccountManagement,
                 ReactiveFormsModule,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                getTranslocoTestingModule(),
             ],
             providers: [
                 { provide: UserService, useValue: userServiceMock },

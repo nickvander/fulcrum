@@ -4,7 +4,7 @@
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>{{ t('users.email') }}</mat-label>
+        <mat-label>{{ t('common.email') }}</mat-label>
         <input matInput formControlName="email" type="email" autocomplete="off">
         @if (form.get('email')?.hasError('required')) {
         <mat-error>{{ t('common.errors.emailRequired') }}</mat-error>
@@ -93,7 +93,7 @@
         @if (isCurrentUserAdmin) {
         <mat-slide-toggle formControlName="is_superuser">{{ t('users.superuser') }}</mat-slide-toggle>
         }
-        <mat-slide-toggle formControlName="force_password_change">{{ t('users.forcePasswordChange')
+        <mat-slide-toggle formControlName="force_password_change">{{ t('users.forcePasswordChange.label')
           }}</mat-slide-toggle>
       </div>
 

@@ -170,7 +170,7 @@
                     <code>{{ entry.external_listing_id }}</code>
                     → {{ entry.qty }}
                     @if (!entry.ok) {
-                      <span class="error-text">({{ entry.error || 'failed' }})</span>
+                      <span class="error-text">({{ entry.error || t('stockTransfers.stockTransferDetail.syncEntryFailed') }})</span>
                     }
                   </li>
                 }
@@ -219,7 +219,7 @@
         <ng-container matColumnDef="product">
           <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.detail.col.product') }}</th>
           <td mat-cell *matCellDef="let item">
-            {{ item.product?.name || ('Product #' + item.product_id) }}
+            {{ item.product?.name || t('stockTransfers.stockTransferDetail.unknownProduct', { id: item.product_id }) }}
           </td>
         </ng-container>
 

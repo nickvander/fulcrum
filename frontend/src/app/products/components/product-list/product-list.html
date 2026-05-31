@@ -15,7 +15,7 @@
       <div class="header">
         <h1>{{ t('nav.products') }}
           <span class="product-count-badge" *ngIf="paginatedProducts?.totalItems">
-            {{ paginatedProducts?.totalItems }} {{ t('products.productList') }}
+            {{ paginatedProducts?.totalItems }} {{ t('products.productList.label') }}
           </span>
         </h1>
         <div class="header-actions">
@@ -126,7 +126,7 @@
       </div>
 
       <div class="quick-filters-bar">
-        <mat-chip-listbox aria-label="Quick Filters" multiple="true" class="quick-chips">
+        <mat-chip-listbox [attr.aria-label]="t('products.productList.quickFiltersLabel')" multiple="true" class="quick-chips">
           <mat-chip-option (click)="applyQuickFilter('in_stock', null)" [selected]="activeFilters.min_stock === 1"
             class="app-chip-success">{{ t('products.stockStatus.inStock') }}</mat-chip-option>
           <mat-chip-option (click)="applyQuickFilter('out_of_stock', null)" [selected]="activeFilters.max_stock === 0"
@@ -136,7 +136,7 @@
         </mat-chip-listbox>
 
         <div class="view-controls-container">
-          <mat-button-toggle-group [(ngModel)]="viewMode" aria-label="View Mode" class="compact-toggle tiny-toggle">
+          <mat-button-toggle-group [(ngModel)]="viewMode" [attr.aria-label]="t('products.productList.viewModeLabel')" class="compact-toggle tiny-toggle">
             <mat-button-toggle value="list"
               [matTooltip]="t('products.listView')"><mat-icon>view_list</mat-icon></mat-button-toggle>
             <mat-button-toggle value="grid"
@@ -440,7 +440,7 @@
         <!-- Standard Material Paginator -->
         <mat-paginator [length]="paginatedProducts.totalItems" [pageSize]="paginatedProducts.pageSize"
           [pageIndex]="paginatedProducts.currentPage - 1" [pageSizeOptions]="[10, 25, 50, 100]"
-          (page)="handlePageEvent($event)" showFirstLastButtons aria-label="Select page">
+          (page)="handlePageEvent($event)" showFirstLastButtons [attr.aria-label]="t('products.productList.selectPage')">
         </mat-paginator>
         }
       </div>

@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import {
   StockTransfer,
@@ -58,13 +58,14 @@ export class ReceiveTransferDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: { transfer: StockTransfer },
     private service: StockTransferService,
     private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {
     this.rows = this.data.transfer.items.map(item => {
       const remaining = Math.max(0, (item.qty_shipped || 0) - (item.qty_received || 0));
       return {
         transferItemId: item.id,
         productId: item.product_id,
-        productName: item.product?.name || `Product #${item.product_id}`,
+        productName: item.product?.name || this.transloco.translate('stockTransfers.receiveTransferDialog.productFallback', { id: item.product_id }),
         qtyShipped: item.qty_shipped || 0,
         qtyReceived: item.qty_received || 0,
         remaining,
@@ -106,7 +107,11 @@ export class ReceiveTransferDialogComponent {
     this.service.receive(this.data.transfer.id, lines).subscribe({
       next: updated => {
         this.saving = false;
-        this.snackBar.open('Receipt recorded', 'Close', { duration: 3000 });
+        this.snackBar.open(
+          this.transloco.translate('stockTransfers.receiveTransferDialog.receiptRecorded'),
+          this.transloco.translate('common.close'),
+          { duration: 3000 },
+        );
         this.dialogRef.close(updated);
       },
       error: err => {

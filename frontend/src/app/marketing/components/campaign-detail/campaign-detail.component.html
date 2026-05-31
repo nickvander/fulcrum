@@ -1,3 +1,4 @@
+<ng-container *transloco="let t">
 <div class="campaign-detail-container" *ngIf="campaign">
     <!-- Header -->
     <div class="header-actions">
@@ -9,7 +10,7 @@
             <span class="status-chip" [class]="campaign.status">{{ campaign.status | titlecase }}</span>
         </div>
         <div class="spacer"></div>
-        <button mat-stroked-button color="primary">Edit</button>
+        <button mat-stroked-button color="primary">{{ t('common.edit') }}</button>
     </div>
 
     <div class="content-grid">
@@ -17,22 +18,22 @@
         <div class="main-column">
             <mat-card class="mb-4">
                 <mat-card-header>
-                    <mat-card-title>Overview</mat-card-title>
+                    <mat-card-title>{{ t('marketing.campaignDetail.overview') }}</mat-card-title>
                 </mat-card-header>
                 <mat-card-content>
-                    <p class="description">{{ campaign.description || 'No description provided.' }}</p>
+                    <p class="description">{{ campaign.description || t('marketing.campaignDetail.noDescription') }}</p>
 
                     <div class="stats-grid">
                         <div class="stat-item">
-                            <span class="label">Budget</span>
+                            <span class="label">{{ t('marketing.budget') }}</span>
                             <span class="value">{{ campaign.budget | currency }}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="label">Spent</span>
+                            <span class="label">{{ t('marketing.spent') }}</span>
                             <span class="value">{{ campaign.spent | currency }}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="label">Events</span>
+                            <span class="label">{{ t('marketing.campaignDetail.events') }}</span>
                             <span class="value">{{ campaign.events.length }}</span>
                         </div>
                     </div>
@@ -40,7 +41,7 @@
             </mat-card>
 
             <!-- Events -->
-            <h3>Events</h3>
+            <h3>{{ t('marketing.campaignDetail.events') }}</h3>
             <mat-card *ngFor="let event of campaign.events" class="event-card mb-2">
                 <div class="event-row">
                     <mat-icon [class]="event.channel_type">{{ getChannelIcon(event.channel_type) }}</mat-icon>
@@ -62,7 +63,7 @@
             <!-- Products -->
             <mat-card class="mb-4">
                 <mat-card-header>
-                    <mat-card-title>Linked Products</mat-card-title>
+                    <mat-card-title>{{ t('marketing.campaignDetail.linkedProducts') }}</mat-card-title>
                 </mat-card-header>
                 <mat-card-content>
                     <div class="product-list" *ngIf="campaign.products && campaign.products.length; else noProducts">
@@ -77,7 +78,7 @@
                         </div>
                     </div>
                     <ng-template #noProducts>
-                        <p class="secondary-text">No products linked.</p>
+                        <p class="secondary-text">{{ t('marketing.campaignDetail.noProductsLinked') }}</p>
                     </ng-template>
                 </mat-card-content>
             </mat-card>
@@ -88,3 +89,4 @@
 <div class="loading-container" *ngIf="loading">
     <mat-spinner></mat-spinner>
 </div>
+</ng-container>

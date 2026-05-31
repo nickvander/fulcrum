@@ -89,7 +89,13 @@
     "dialogs": {
       "imageDetails": "Detalles de la imagen"
     },
-    "saving": "Guardando…"
+    "saving": "Guardando…",
+    "attachments": "Adjuntos",
+    "connect": "Conectar",
+    "products": "Productos",
+    "messages": {
+      "copied": "¡Copiado!"
+    }
   },
   "nav": {
     "menu": "Menú",
@@ -124,15 +130,42 @@
     "login": "Iniciar Sesión",
     "logout": "Cerrar Sesión",
     "password": "Contraseña",
-    "forgotPassword": "¿Olvidaste tu contraseña?",
-    "resetPassword": "Restablecer Contraseña",
     "newPassword": "Nueva Contraseña",
     "confirmPassword": "Confirmar Contraseña",
     "rememberMe": "Recordarme",
     "signIn": "Ingresar",
     "signUp": "Registrarse",
     "welcomeBack": "Bienvenido de nuevo",
-    "enterCredentials": "Ingresa tus credenciales para acceder a tu cuenta"
+    "enterCredentials": "Ingresa tus credenciales para acceder a tu cuenta",
+    "forgotPassword": {
+      "link": "¿Olvidaste tu contraseña?",
+      "title": "¿Olvidaste tu contraseña?",
+      "subtitle": "Ingresa tu correo electrónico para recibir un enlace para restablecer tu contraseña.",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "Ingresa tu correo electrónico",
+      "errors": {
+        "invalidEmail": "Ingresa una dirección de correo electrónico válida"
+      },
+      "sendResetLink": "Enviar enlace para restablecer",
+      "backToLogin": "Volver al inicio de sesión",
+      "successMessage": "Si el correo existe, se ha enviado un enlace para restablecer tu contraseña.",
+      "errorMessage": "Ocurrió un error. Inténtalo de nuevo más tarde."
+    },
+    "resetPassword": {
+      "label": "Restablecer Contraseña",
+      "subtitle": "Ingresa tu nueva contraseña a continuación.",
+      "placeholderNewPassword": "Ingresa tu nueva contraseña",
+      "errors": {
+        "minLength": "La contraseña debe tener al menos 8 caracteres",
+        "confirmRequired": "Debes confirmar tu contraseña",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "invalidToken": "El enlace para restablecer tu contraseña no es válido.",
+        "missingToken": "Falta el token de restablecimiento."
+      },
+      "placeholderConfirmPassword": "Confirma tu nueva contraseña",
+      "backToLogin": "Volver al inicio de sesión",
+      "successMessage": "Tu contraseña se restableció correctamente. Redirigiendo al inicio de sesión..."
+    }
   },
   "login": {
     "title": "Consola de control",
@@ -445,6 +478,11 @@
       "suggested": "Sugerido",
       "status": "Estado",
       "allClear": "No hay artículos críticos ni con stock bajo por ahora."
+    },
+    "dashboard": {
+      "demoWorkspaceCreateError": "No se pudo crear el espacio de prueba. Inténtalo de nuevo.",
+      "cleanupDemoTitle": "Limpiar datos de prueba",
+      "cleanupDemoMessage": "Esto elimina solo los registros que aún coinciden con las huellas de demostración de Fulcrum. La limpieza se bloquea automáticamente si se detecta actividad de clientes."
     }
   },
   "onboarding": {
@@ -621,7 +659,6 @@
   },
   "products": {
     "title": "Productos",
-    "productList": "Lista de Productos",
     "selected": "seleccionado(s)",
     "addProduct": "Agregar Producto",
     "addImageHint": "Abre el producto para agregar una imagen",
@@ -881,6 +918,24 @@
     "startingQuantityHint": "Cuántas unidades tienes a la mano ahora mismo.",
     "lowStockThresholdLabel": "Avísame cuando el stock baje de",
     "lowStockThresholdHint": "Marcaremos este producto como bajo cuando llegue a este número.",
+    "productForm": {
+      "replaceQrTitle": "¿Reemplazar código QR?",
+      "replaceQrMessage": "Esto reemplazará el código QR actual. ¿Continuar?",
+      "regenerateSkuTitle": "¿Regenerar SKU?",
+      "regenerateSkuMessage": "Esto actualizará tanto el SKU como el código de barras. ¿Continuar?",
+      "discardChangesTitle": "¿Descartar cambios?",
+      "discardChangesMessage": "Tienes cambios sin guardar. ¿Seguro que quieres descartarlos?",
+      "pleaseEnterSkuFirst": "Primero ingresa un SKU.",
+      "productUpdatedSuccess": "Producto actualizado con éxito",
+      "productCreatedSuccess": "Producto creado con éxito",
+      "pleaseEnterProductName": "Primero ingresa el nombre del producto.",
+      "aiDescriptionSuccess": "¡Descripción generada con IA con éxito!",
+      "aiDescriptionFailed": "No se pudo generar la descripción: {{error}}",
+      "imageOrderError": "Error al actualizar el orden de las imágenes",
+      "externalId": "ID externo",
+      "defaultDays": "Predeterminado: 30",
+      "defaultUnits": "Predeterminado: 10"
+    },
     "publishTitle": "Vende en MercadoLibre",
     "publishMlLabel": "MercadoLibre",
     "publishMlSub": "Tu canal de ventas principal en México.",
@@ -902,7 +957,150 @@
     "bucketMlFullDesc": "Unidades guardadas en la bodega de ML. Solo estas aparecen como disponibles en MercadoLibre.",
     "bucketAmazonFba": "Amazon FBA",
     "bucketAmazonFbaDesc": "Unidades guardadas en la bodega de Amazon, disponibles solo en Amazon.",
-    "bucketPoNote": "Recibir una orden de compra suma al stock a la mano, pero NO hace que las unidades estén disponibles en MercadoLibre. Envíalas primero a ML Full."
+    "bucketPoNote": "Recibir una orden de compra suma al stock a la mano, pero NO hace que las unidades estén disponibles en MercadoLibre. Envíalas primero a ML Full.",
+    "productList": {
+      "label": "Lista de Productos",
+      "quickFiltersLabel": "Filtros rápidos",
+      "viewModeLabel": "Modo de vista",
+      "selectPage": "Selecciona página",
+      "deleteProductTitle": "Eliminar producto",
+      "deleteProductMessage": "¿Seguro que quieres eliminar este producto? Esta acción no se puede deshacer.",
+      "stockAdjustedSuccess": "Existencias ajustadas con éxito",
+      "stockAdjustedError": "Error al ajustar las existencias",
+      "deleteSelectedTitle": "Eliminar productos seleccionados",
+      "deleteSelectedMessage": "¿Seguro que quieres eliminar {{count}} producto(s)? Esta acción no se puede deshacer.",
+      "batchUpdatedSuccess": "¡{{count}} productos actualizados con éxito!",
+      "customFieldsUpdateError": "Error al actualizar los campos personalizados",
+      "newBundleDefaultName": "Nuevo paquete",
+      "identifiedCategoryNote": "Categoría identificada: {{category}}"
+    },
+    "batchActionToolbar": {
+      "selectedCount": "{{count}} seleccionado(s)",
+      "advanced": "Avanzado",
+      "updatePrices": "Actualizar precios",
+      "assignCategory": "Asignar categoría",
+      "updateCustomFields": "Actualizar campos personalizados"
+    },
+    "enhancedImageManagement": {
+      "productImages": "Imágenes del producto",
+      "imageCount": "{{count}} imágenes",
+      "productImageAlt": "Imagen del producto",
+      "altTextLabel": "Texto alternativo:",
+      "altTextPlaceholder": "Texto alternativo para accesibilidad",
+      "dragToReorder": "Arrastra para reordenar",
+      "primaryImage": "Imagen principal",
+      "setAsPrimary": "Establecer como imagen principal",
+      "deleteImage": "Eliminar imagen"
+    },
+    "pagination": {
+      "showing": "Mostrando {{start}} - {{end}} de {{total}} elementos",
+      "pageLabel": "Página:"
+    },
+    "productDashboard": {
+      "statProducts": "Productos",
+      "statInventoryValue": "Valor del inventario",
+      "statLowStock": "Stock bajo",
+      "statStockHealth": "Salud del inventario",
+      "lowStockAlerts": "Alertas de stock bajo",
+      "categoryBreakdown": "Desglose por categoría",
+      "comingSoon": "Próximamente"
+    },
+    "productDetailsDialog": {
+      "imageAlt": "Imagen del producto",
+      "canAssemble": "Puedes armar {{count}} más",
+      "labelsAndCodes": "Etiquetas y códigos",
+      "qrCode": "Código QR",
+      "usesQuantity": "Usa {{count}}× este artículo",
+      "poNumber": "OC #{{id}}",
+      "listingPrepared": "¡Listado listo! La integración de publicación llega pronto.",
+      "bundleIncluding": "Kit que incluye {{name}}"
+    },
+    "productFilters": {
+      "clearFilters": "Limpiar todos los filtros",
+      "category": "Categoría",
+      "allCategories": "Todas las categorías",
+      "brand": "Marca",
+      "allBrands": "Todas las marcas",
+      "priceRange": "Rango de precio",
+      "rangeTo": "a",
+      "max": "Máx",
+      "stockLevel": "Nivel de existencias",
+      "productType": "Tipo de producto",
+      "typeLabel": "Tipo",
+      "allTypes": "Todos los tipos",
+      "productsOnly": "Solo productos",
+      "bundlesOnly": "Solo paquetes",
+      "inStockOnly": "Solo con existencias",
+      "search": "Buscar",
+      "searchLabel": "Buscar productos...",
+      "searchInputPlaceholder": "Busca por nombre, SKU o descripción"
+    },
+    "productFormImageGallery": {
+      "newImagesToUpload": "Imágenes nuevas (se subirán al guardar):",
+      "stagedImageAlt": "Vista previa de imagen pendiente",
+      "currentImages": "Imágenes actuales:",
+      "setAsPrimary": "Establecer como imagen principal",
+      "deleteImage": "Eliminar imagen",
+      "noImagesYet": "Todavía no hay imágenes para este producto.",
+      "noExistingImages": "No hay imágenes existentes. Las imágenes nuevas se subirán al guardar.",
+      "deleteImageTitle": "¿Eliminar imagen?",
+      "deleteImageConfirm": "¿Seguro que quieres eliminar esta imagen? El cambio será permanente cuando guardes."
+    },
+    "productScanner": {
+      "errors": {
+        "cameraAccessDenied": "No se pudo acceder a la cámara",
+        "dropImageOnly": "Por favor suelta un archivo de imagen.",
+        "aiIdentifyFailed": "La identificación por IA falló. Usando la imagen para captura manual.",
+        "cameraPermissionDenied": "Permiso de cámara denegado. Por favor permite el acceso a la cámara.",
+        "noCameraFound": "No se encontró ninguna cámara. Por favor conecta una.",
+        "cameraUnavailable": "Cámara no disponible. Intenta recargar la página.",
+        "unknownScannerError": "Error desconocido"
+      },
+      "productFoundMsg": "¡Producto encontrado!",
+      "productNotFoundMsg": "Producto no encontrado. Abriendo formulario de creación..."
+    },
+    "productTemplates": {
+      "title": "Plantillas de producto",
+      "createTemplate": "Crear plantilla",
+      "noCategory": "Sin categoría",
+      "noDescription": "Sin descripción",
+      "brand": "Marca",
+      "manufacturer": "Fabricante",
+      "notAvailable": "N/D",
+      "defaultPrice": "Precio base",
+      "customFields": "Campos personalizados",
+      "required": "* obligatorio",
+      "createProduct": "Crear producto",
+      "emptyState": {
+        "title": "Todavía no tienes plantillas de producto",
+        "description": "Crea tu primera plantilla de producto para estandarizar la carga de productos en tu catálogo.",
+        "createFirst": "Crea tu primera plantilla"
+      },
+      "deleteDialog": {
+        "title": "Eliminar plantilla",
+        "message": "¿Seguro que quieres eliminar esta plantilla?"
+      }
+    },
+    "productVariants": {
+      "addVariant": "Agregar variante",
+      "newVariant": "Nueva variante",
+      "removeVariantTooltip": "Quitar variante",
+      "namePlaceholder": "p. ej., Rojo - Grande",
+      "skuPlaceholder": "SKU único para esta variante",
+      "pricePlaceholder": "Sobrescribir precio predeterminado",
+      "stockQuantity": "Cantidad en existencia",
+      "stockQuantityPlaceholder": "Cantidad en existencia",
+      "attributes": "Atributos",
+      "attributesPlaceholder": "Objeto JSON de atributos (p. ej., {'color': 'rojo', 'talla': 'grande'})",
+      "noVariants": "Aún no hay variantes. Agrega tu primera variante para comenzar."
+    },
+    "stockHistoryDialog": {
+      "currentStockLabel": "Existencias actuales:",
+      "noAdjustments": "Aún no hay ajustes de inventario registrados.",
+      "receivedPo": "Recibido"
+    },
+    "clickToPreview": "Haz clic para previsualizar",
+    "loadingMore": "Cargando más..."
   },
   "suppliers": {
     "title": "Proveedores",
@@ -915,7 +1113,6 @@
     "orders": "Órdenes",
     "noContact": "Sin contacto",
     "noSupplierData": "Sin datos de proveedores",
-    "supplierList": "Lista de Proveedores",
     "addSupplier": "Agregar Proveedor",
     "editSupplier": "Editar Proveedor",
     "deleteSupplier": "Eliminar Proveedor",
@@ -966,6 +1163,40 @@
     },
     "dialogs": {
       "selectSupplierFor": "Selecciona un proveedor para {{productName}}"
+    },
+    "supplierList": {
+      "label": "Lista de Proveedores",
+      "emptyTitle": "Agrega tu primer proveedor",
+      "emptyDescription": "Con proveedores registrados, tus importaciones de OC, los mapeos de SKU aprendidos, los tiempos de entrega y el historial de recepciones son mucho más confiables.",
+      "purchaseOrdersButton": "Órdenes de compra"
+    },
+    "supplierDetail": {
+      "placeholders": {
+        "contactPerson": "Ej. Juan Pérez",
+        "streetAddress": "Ej. Av. Insurgentes 123",
+        "taxId": "RFC o ID fiscal",
+        "paymentTerms": "Ej. 30 días neto"
+      }
+    },
+    "supplierProductManager": {
+      "title": "Productos del proveedor",
+      "product": "Producto",
+      "emptyTitle": "Todavía no hay productos del proveedor vinculados",
+      "emptyHint": "Recibe una orden de compra o confirma un artículo importado del proveedor para vincular el SKU/nombre de este proveedor con un producto de Fulcrum.",
+      "openPurchaseOrders": "Ver órdenes de compra",
+      "unknownProduct": "Producto desconocido",
+      "columns": {
+        "product": "Producto",
+        "supplierSku": "SKU del proveedor",
+        "learnedAliases": "Alias aprendidos",
+        "leadTimeDays": "Tiempo de entrega (días)",
+        "lastOrdered": "Último pedido"
+      },
+      "aliasesAriaLabel": "Alias aprendidos del proveedor",
+      "removeMapping": "Eliminar mapeo aprendido",
+      "aliasDefault": "Alias",
+      "aliasRemoved": "Alias del proveedor eliminado",
+      "aliasRemoveFailed": "No se pudo eliminar el alias del proveedor"
     }
   },
   "purchaseOrders": {
@@ -1195,11 +1426,168 @@
       "createProduct": "Crear producto",
       "learnAlias": "Aprender alias",
       "approveCreatePo": "Aprobar y crear OC"
+    },
+    "costAllocationDialog": {
+      "calculating": "Calculando la distribución de costos...",
+      "shippingFreight": "Envío/Flete",
+      "taxesDuties": "Impuestos/Aranceles",
+      "otherFees": "Otros cargos",
+      "unit": "unidad",
+      "include": "¿Incluir?",
+      "product": "Producto",
+      "baseCost": "Costo base",
+      "taxes": "Impuestos",
+      "other": "Otros",
+      "newUnitCost": "Nuevo costo unitario",
+      "totalAdditionalCosts": "Total de costos adicionales a distribuir:",
+      "acrossUnits": "entre {{count}} unidades",
+      "applyCosts": "Aplicar costos"
+    },
+    "poIngestDialog": {
+      "errors": {
+        "unsupportedFileType": "Tipo de archivo no permitido. Formatos aceptados: {{types}}",
+        "fileTooLarge": "El archivo es demasiado grande. El máximo es 10 MB.",
+        "noReviewBeforeProduct": "Primero procesa o selecciona una revisión de importación antes de crear productos.",
+        "noSupplierBeforeProduct": "Selecciona un proveedor antes de crear un producto a partir de esta línea.",
+        "noReviewBeforeAlias": "Primero procesa o selecciona una revisión de importación antes de aprender alias.",
+        "noSupplierBeforeAlias": "Selecciona un proveedor antes de aprender un alias.",
+        "noProductBeforeAlias": "Selecciona un producto de Fulcrum antes de aprender este alias.",
+        "noSupplierBeforePo": "Selecciona un proveedor antes de crear la orden de compra.",
+        "noMatchedItems": "Ningún artículo está vinculado a productos existentes. Vincula los artículos antes de continuar.",
+        "noReviewBeforeApprove": "Primero procesa o selecciona una revisión de importación antes de aprobar."
+      },
+      "productCreatedMatched": "Producto creado y vinculado a esta línea",
+      "aliasLearned": "Alias del proveedor aprendido para esta línea",
+      "autoNotes": "Importado desde {{file}}",
+      "autoNotesWithUnmatched": "Importado desde {{file}} ({{count}} artículos sin vincular excluidos)",
+      "defaultDocumentName": "documento",
+      "confidenceHigh": "Alta",
+      "confidenceMedium": "Media",
+      "confidenceLow": "Baja",
+      "defaultProductName": "Producto importado",
+      "productFallback": "Producto #{{id}}",
+      "itemFallback": "Artículo {{index}}"
+    },
+    "purchaseOrderEdit": {
+      "correctReceiving": "Corregir recepción",
+      "correctReceivingTooltip": "Revierte la cantidad recibida manteniendo el historial de inventario",
+      "hideVariants": "Ocultar variantes",
+      "distributeVariants": "Distribuir entre variantes",
+      "originalLabel": "Original:",
+      "mapToExisting": "Vincula a uno existente o crea nuevo:",
+      "variant": "Variante",
+      "noVariant": "Sin variante",
+      "targetQty": "Cant. objetivo",
+      "alloc": "asig.",
+      "variantDistribution": "Distribución por variante",
+      "assigned": "Asignado",
+      "totalLabel": "Total",
+      "extraCostsHint": "Agrega cualquier costo extra además del precio de los productos. Se pueden distribuir entre tus artículos.",
+      "shippingHint": "Fletes y gastos de envío",
+      "importDutiesHint": "Impuestos sobre mercancía importada",
+      "otherCostsHint": "Seguro, maniobras, etc.",
+      "totalExtraCosts": "Total costos adicionales:",
+      "costPerUnit": "Costo por unidad (distribución uniforme):",
+      "applyHintSaved": "Esto sumará el costo por unidad al costo unitario de cada artículo.",
+      "applyHintUnsaved": "Los costos se distribuirán de forma uniforme. Guarda el pedido para ver el detalle de la asignación.",
+      "customPayerName": "Nombre del pagador externo",
+      "customPayerPlaceholder": "p. ej. Socio externo",
+      "customPayerHint": "Si pagó alguien que no está en el sistema",
+      "filename": "Archivo",
+      "fileTypes": "PDF, Imágenes (JPG, PNG, AVIF), HTML",
+      "invoiceFallbackName": "Factura",
+      "variantFallback": "Variante #{{id}}",
+      "messages": {
+        "correctionApplied": "Corrección de recepción aplicada",
+        "uploadSaveDraftMessage": "Para subir una factura, primero necesitamos guardar este pedido como borrador. ¿Continuar?",
+        "fileTooLarge": "Archivo demasiado grande. Máximo 10 MB.",
+        "invoiceUploaded": "Factura cargada correctamente",
+        "uploadFailed": "Error al cargar el archivo",
+        "deleteInvoiceTitle": "Eliminar factura",
+        "deleteInvoiceMessage": "¿Seguro que quieres eliminar esta factura?",
+        "invoiceDeleted": "Factura eliminada",
+        "autoCreatedSupplier": "Proveedor creado y seleccionado automáticamente: {{name}}",
+        "extractedItems": "Se extrajeron {{count}} artículo(s) del documento"
+      }
+    },
+    "purchaseOrderList": {
+      "importQueueEyebrow": "Cola de importaciones del proveedor",
+      "rejectCheckedTooltip": "Rechazar cada importación seleccionada",
+      "rejectSelected": "Rechazar seleccionados ({{count}})",
+      "clearSelection": "Limpiar selección",
+      "rejectStaleTooltip": "Rechazar importaciones pendientes con más de {{days}} días",
+      "rejectStale": "Rechazar vencidos ({{count}})",
+      "addDocument": "Agregar documento",
+      "filterByFileName": "Filtrar por nombre de archivo",
+      "clearSearch": "Limpiar búsqueda",
+      "supplierLabel": "Proveedor",
+      "allSuppliers": "Todos los proveedores",
+      "clearFiltersTooltip": "Limpiar búsqueda y filtro de proveedor",
+      "clearFilters": "Limpiar filtros",
+      "reviewFiltersAriaLabel": "Filtros de revisión de importaciones del proveedor",
+      "filterPending": "Pendientes",
+      "filterHistory": "Historial",
+      "emptyHistory": "Aún no hay importaciones de proveedor aprobadas o rechazadas.",
+      "emptyPending": "No hay importaciones de proveedor esperando revisión.",
+      "emptyAll": "Todavía no se ha subido ninguna importación de proveedor.",
+      "selectAllPendingTooltip": "Seleccionar todas las filas pendientes visibles",
+      "selectAllPending": "Seleccionar todos los pendientes ({{count}})",
+      "selectReviewAriaLabel": "Seleccionar {{fileName}}",
+      "reviewItemCount": "{{count}} artículo(s)",
+      "reviewButton": "Revisar",
+      "rejectImportTooltip": "Rechazar importación",
+      "openPoTooltip": "Abrir la OC que creó esta revisión",
+      "openPo": "Abrir OC",
+      "emptyStateTitle": "Empieza tu flujo de compras",
+      "emptyStateDescription": "Crea una OC manualmente o importa un PDF/imagen de tu proveedor. Los artículos confirmados se pueden recibir en el inventario interno con trazabilidad completa.",
+      "supplierIdTooltip": "ID del proveedor: {{id}}",
+      "paginatorAriaLabel": "Seleccionar página de órdenes de compra",
+      "confirmBulkRejectSelected": "¿Rechazar {{count}} importación(es) de proveedor seleccionada(s)? Las revisiones ya aprobadas o rechazadas se omitirán automáticamente.",
+      "confirmBulkRejectStale": "¿Rechazar todas las importaciones de proveedor pendientes con más de {{days}} días? {{count}} revisión(es) se marcarán como rechazadas.",
+      "panelTitlePending": "{{count}} documento(s) esperando revisión",
+      "panelTitleHistory": "{{count}} importación(es) procesada(s)",
+      "panelTitleAll": "{{count}} importación(es) de proveedor",
+      "panelDescPending": "Aprueba las coincidencias de productos para crear OCs en borrador. El inventario interno solo cambia cuando esas OCs se reciben.",
+      "panelDescHistory": "Los documentos de proveedor aprobados y rechazados se pueden buscar aquí sin saturar la cola activa.",
+      "panelDescAll": "Todas las importaciones de documentos de proveedor en todos los estados.",
+      "reviewStatus": {
+        "pending": "Pendiente",
+        "approved": "Aprobado",
+        "rejected": "Rechazado"
+      },
+      "supplierFallback": "Proveedor {{id}}",
+      "unknownSupplier": "Proveedor desconocido"
+    },
+    "quickProductDialog": {
+      "cameraCaptureComingSoon": "¡La captura con cámara llega pronto! Usará IA para identificar tus productos."
+    },
+    "receivingDialog": {
+      "titleReceive": "Recibir artículos - PO #{{id}}",
+      "titleCorrect": "Corregir recepción - PO #{{id}}",
+      "correctTitle": "Revertir un error de recepción",
+      "correctDescription": "Esto reduce la cantidad recibida de la OC y registra un ajuste negativo de inventario para que el historial de auditoría quede intacto.",
+      "correctionReason": "Motivo de corrección",
+      "correctionReasonPlaceholder": "Ejemplo: conté cajas dañadas dos veces",
+      "correctionDefaultReason": "Corrección de recepción",
+      "productImageAlt": "Imagen del producto",
+      "productFallback": "Producto #{{id}}",
+      "skuLabel": "SKU:",
+      "statOrdered": "Pedido",
+      "statReceived": "Recibido",
+      "statRemaining": "Restante",
+      "bonus": "Extra",
+      "quantityLabelReceive": "Recibir ahora",
+      "quantityLabelReverse": "Revertir recibido",
+      "submitReceive": "Recibir",
+      "submitCorrect": "Aplicar corrección"
+    },
+    "supplierSelectionDialog": {
+      "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",
+      "supplierMeta": "Costo: {{cost}} | Tiempo de entrega: {{leadTime}} días | SKU: {{sku}}"
     }
   },
   "expenses": {
     "title": "Gastos",
-    "expenseList": "Lista de Gastos",
     "exportCsvTooltip": "Descargar los gastos filtrados como hoja de cálculo",
     "exportPdfTooltip": "Descargar los gastos filtrados como PDF imprimible",
     "addExpense": "Agregar Gasto",
@@ -1231,7 +1619,8 @@
     "fields": {
       "referenceNumber": "Referencia #",
       "customCategory": "Categoría Personalizada",
-      "payment": "Método de Pago"
+      "payment": "Método de Pago",
+      "paymentMethod": "Método de pago"
     },
     "categories": {
       "marketing": "Marketing",
@@ -1248,12 +1637,34 @@
     "dropReceiptAttach": "Suelta el recibo para adjuntarlo",
     "dropReceiptAutofill": "Suelta el recibo para autocompletar",
     "analyzingReceipt": "Analizando recibo…",
-    "descriptionRequired": "La descripción es obligatoria"
+    "descriptionRequired": "La descripción es obligatoria",
+    "expenseList": {
+      "label": "Lista de Gastos",
+      "refPrefix": "Ref",
+      "paginatorAriaLabel": "Selecciona página de gastos",
+      "errorLoading": "Error al cargar los gastos",
+      "createdUploadingReceipt": "Gasto creado, subiendo comprobante...",
+      "receiptAttached": "Comprobante adjuntado correctamente",
+      "receiptUploadFailed": "Gasto guardado, pero no se pudo subir el comprobante",
+      "addedSuccess": "Gasto agregado correctamente",
+      "errorAdding": "Error al agregar el gasto",
+      "updatedSuccess": "Gasto actualizado",
+      "errorUpdating": "Error al actualizar el gasto",
+      "deleteTitle": "Eliminar gasto",
+      "deleteMessage": "¿Seguro que quieres eliminar este gasto?",
+      "deletedSuccess": "Gasto eliminado",
+      "errorDeleting": "Error al eliminar el gasto"
+    },
+    "expenseDialog": {
+      "attachments": "Archivos adjuntos"
+    },
+    "paymentMethod": {
+      "none": "Ninguno"
+    }
   },
   "marketing": {
     "title": "Marketing",
     "campaigns": "Campañas",
-    "campaignList": "Lista de Campañas",
     "createCampaign": "Crear Campaña",
     "editCampaign": "Editar Campaña",
     "campaignDetails": "Detalles de la Campaña",
@@ -1403,7 +1814,162 @@
       "requiredSuffix": "(Requerido)",
       "optionalSuffix": "(Opcional)",
       "saveDraft": "Guardar borrador",
-      "postNow": "Publicar ahora"
+      "postNow": "Publicar ahora",
+      "contentGenerated": "¡Contenido generado!",
+      "imageGenerated": "¡Imagen generada!",
+      "imageGenerationFailed": "No se pudo generar la imagen. Intenta de nuevo.",
+      "draftUpdated": "Borrador actualizado",
+      "draftSaved": "Borrador guardado",
+      "draftSaveFailed": "No se pudo guardar el borrador",
+      "postCreateFailed": "No se pudo crear la publicación",
+      "postedSuccessfully": "¡Publicación enviada!",
+      "overwriteContentTitle": "¿Reemplazar contenido?",
+      "overwriteContentMessage": "Esto reemplazará tu texto actual. ¿Continuar?",
+      "overwriteImageTitle": "¿Reemplazar imagen?",
+      "overwriteImageMessage": "Esto reemplazará tu imagen actual. ¿Continuar?",
+      "overwriteAllTitle": "¿Reemplazar todo?",
+      "overwriteAllMessage": "Esto reemplazará tu texto e imagen actuales. ¿Continuar?",
+      "imagePromptDefault": "Crea una imagen fotorrealista del producto con iluminación natural y composición limpia."
+    },
+    "campaignList": {
+      "label": "Lista de Campañas",
+      "notScheduled": "Sin programar",
+      "events": "Eventos",
+      "paginatorCampaigns": "Selecciona la página de campañas",
+      "paginatorQuickPosts": "Selecciona la página de publicaciones rápidas",
+      "resultCount": "{{count}} resultado(s)",
+      "untitledPost": "Publicación sin título",
+      "errorLoadCampaigns": "No se pudieron cargar las campañas",
+      "deleteQuickPostTitle": "Eliminar publicación rápida",
+      "deleteQuickPostMessage": "¿Eliminar esta publicación rápida?",
+      "quickPostDeleted": "Publicación rápida eliminada",
+      "errorDeleteQuickPost": "No se pudo eliminar",
+      "deleteCampaignTitle": "Eliminar campaña",
+      "deleteCampaignMessage": "¿Eliminar la campaña \"{{name}}\"?",
+      "campaignDeleted": "Campaña eliminada",
+      "errorDeleteCampaign": "No se pudo eliminar la campaña"
+    },
+    "campaignCalendar": {
+      "errors": {
+        "loadFailed": "No se pudieron cargar los eventos del calendario",
+        "rescheduleFailed": "No se pudo reprogramar el evento"
+      },
+      "eventRescheduled": "Evento reprogramado"
+    },
+    "campaignDetail": {
+      "overview": "Resumen",
+      "noDescription": "Sin descripción.",
+      "events": "Eventos",
+      "linkedProducts": "Productos vinculados",
+      "noProductsLinked": "Sin productos vinculados."
+    },
+    "campaignWizard": {
+      "stepCampaignDetails": "Detalles de la Campaña",
+      "namePlaceholder": "p. ej., Rebajas de Verano 2024",
+      "errors": {
+        "nameRequired": "El nombre es obligatorio"
+      },
+      "descriptionPlaceholder": "Describe el propósito y los objetivos de esta campaña",
+      "budgetOptional": "Presupuesto (Opcional)",
+      "stepLinkProducts": "Vincular Productos",
+      "selectProducts": "Selecciona Productos",
+      "linkProductsHint": "Vincula productos a esta campaña para crear contenido fácilmente.",
+      "searchProducts": "Buscar Productos",
+      "productSelection": "Selección de productos",
+      "removeProductAriaLabel": "quitar {{name}}",
+      "searchProductsPlaceholder": "Buscar productos...",
+      "stepChooseChannels": "Elegir Canales",
+      "selectChannels": "Selecciona los Canales de Marketing",
+      "chooseChannelsHint": "Elige los canales que quieres usar para esta campaña",
+      "emailChannelDesc": "Envía boletines y promociones",
+      "socialMedia": "Redes Sociales",
+      "socialMediaDesc": "Publica en Instagram, Facebook, etc.",
+      "paidAds": "Anuncios de Pago",
+      "paidAdsDesc": "Google Ads, Meta Ads",
+      "connectedPlatforms": "Plataformas Conectadas",
+      "noConnectors": "Aún no hay conectores configurados.",
+      "setupConnectors": "Configura los conectores",
+      "stepScheduleEvents": "Programar Eventos",
+      "campaignEvents": "Eventos de la Campaña",
+      "addEvent": "Agregar Evento",
+      "untitledEvent": "Evento sin Título",
+      "eventName": "Nombre del Evento",
+      "eventNamePlaceholder": "p. ej., Correo de Lanzamiento",
+      "channel": "Canal",
+      "scheduledTime": "Hora Programada",
+      "subjectLine": "Asunto",
+      "content": "Contenido",
+      "imageUrl": "URL de Imagen",
+      "noEvents": "Aún no hay eventos. Agrega eventos para programar las actividades de tu campaña.",
+      "messages": {
+        "loadError": "Error al cargar la campaña",
+        "updated": "¡Campaña actualizada!",
+        "updateFailed": "No se pudo actualizar la campaña",
+        "created": "¡Campaña creada!",
+        "createFailed": "No se pudo crear la campaña"
+      }
+    },
+    "connectorSettings": {
+      "pageTitle": "Conectores de marketing",
+      "pageSubtitle": "Conecta tus plataformas de correo, redes sociales y anuncios",
+      "emailMarketing": "Marketing por correo",
+      "emailMarketingSubtitle": "Envía newsletters y correos promocionales",
+      "connected": "Conectado",
+      "socialMediaSubtitle": "Publica en Instagram, Facebook, TikTok y más",
+      "paidAdvertising": "Publicidad de pago",
+      "paidAdvertisingSubtitle": "Conecta Google Ads, Meta Ads y más",
+      "activeConnectors": "Conectores activos",
+      "setupEmailTitle": "Configura tu correo de marketing",
+      "emailProvider": "Proveedor de correo",
+      "connectionName": "Nombre de la conexión",
+      "connectionNamePlaceholderEmail": "p. ej., Mi Gmail",
+      "appPassword": "Contraseña de aplicación",
+      "appPasswordHint": "Usa una contraseña específica de la app, no tu contraseña habitual",
+      "smtpHost": "Host SMTP",
+      "port": "Puerto",
+      "connectButton": "Conectar",
+      "setupSocialTitle": "Configura {{provider}}",
+      "socialHelpText": "Ingresa tu token de acceso o llave API para conectar tu cuenta.",
+      "connectionNamePlaceholderSocial": "p. ej., Instagram de tu marca",
+      "accessTokenLabel": "Token de acceso / Llave API",
+      "defaultEmailName": "Mi correo de marketing",
+      "defaultSocialName": "Mi {{provider}}",
+      "messages": {
+        "connectorCreated": "¡Conector creado!",
+        "connectorCreateFailed": "No se pudo crear el conector",
+        "testSuccess": "¡Conexión exitosa!",
+        "testFailed": "Falló la conexión. Revisa tus credenciales.",
+        "testError": "La prueba de conexión falló",
+        "connectorDeleted": "Conector eliminado",
+        "connectorDeleteFailed": "No se pudo eliminar el conector"
+      },
+      "deleteDialog": {
+        "title": "Eliminar conector",
+        "message": "¿Eliminar \"{{name}}\"?"
+      }
+    },
+    "quickPostDetailDialog": {
+      "untitledPost": "Sin título",
+      "subject": "Asunto",
+      "content": "Contenido",
+      "noContent": "Sin contenido",
+      "image": "Imagen",
+      "linkedProducts": "Productos vinculados",
+      "createdAt": "Creado",
+      "publishedAt": "Publicado",
+      "viewOn": "Ver en {{channel}}",
+      "postName": "Nombre de la publicación",
+      "postNamePlaceholder": "Dale un nombre a tu publicación",
+      "subjectLine": "Línea de asunto",
+      "imageUrl": "URL de imagen",
+      "publishing": "Publicando...",
+      "publish": "Publicar",
+      "saveChanges": "Guardar cambios",
+      "postUpdated": "Publicación actualizada",
+      "failedToUpdatePost": "No se pudo actualizar la publicación",
+      "noConnectorConfigured": "Sin conector configurado. Primero configura un conector.",
+      "postPublishedSuccessfully": "¡Publicación enviada con éxito!",
+      "view": "Ver"
     }
   },
   "auditLogs": {
@@ -1544,6 +2110,46 @@
       "empty": "Sin discrepancias — todo lo recibido coincide con lo enviado.",
       "delta": "Diferencia",
       "summary": "{{lines}} línea(s) con divergencia. Diferencia neta: {{net}}."
+    },
+    "receiveTransferDialog": {
+      "receiptRecorded": "Recepción registrada",
+      "productFallback": "Producto #{{id}}"
+    },
+    "stockTransferCreateDialog": {
+      "transferCreated": "Transferencia creada"
+    },
+    "stockTransferDetail": {
+      "unknownProduct": "Producto #{{id}}",
+      "syncEntryFailed": "falló",
+      "errors": {
+        "loadFailed": "No se pudo cargar el traslado"
+      },
+      "shipped": "Marcado como enviado",
+      "shippedWithMarketplace": "Enviado y envío entrante reservado",
+      "syncReauthRequired": "Vuelve a autorizar {{marketplace}} antes de sincronizar",
+      "syncListingsSynced": "{{ok}}/{{total}} publicaciones sincronizadas",
+      "syncNeedListing": "{{count}} sin publicación",
+      "syncNothingToSync": "Nada que sincronizar",
+      "reconcileSkippedMsg": "Conciliación omitida: {{reason}}",
+      "reconcileAppliedMsg": "{{items}} artículo(s) actualizado(s), {{total}} unidades recibidas",
+      "reconcileNoChangeMsg": "Conciliado — el marketplace no reportó nuevas recepciones",
+      "cancelled": "Traslado cancelado",
+      "deleted": "Traslado eliminado"
+    },
+    "stockTransferList": {
+      "errors": {
+        "loadFailed": "No se pudieron cargar los envíos de inventario"
+      }
+    },
+    "stockTransferPlanner": {
+      "errors": {
+        "snapshotLoadFailed": "No se pudo cargar el inventario"
+      },
+      "draftsCreated": "{{count}} borrador(es) de transferencia creados"
+    },
+    "stockTransferReconciliation": {
+      "productFallback": "Producto #{{id}}",
+      "loadFailed": "No se pudo cargar la conciliación"
     }
   },
   "marketplaces": {
@@ -1606,11 +2212,19 @@
     "aiGenerateSuccess": "¡Contenido generado con IA exitosamente!",
     "copyKeywords": "Copiar todas las palabras clave",
     "keywordsHint": "Usa estas palabras clave en tu panel de mercado para mejor visibilidad en búsquedas.",
-    "listingSaved": "¡Listado guardado exitosamente!"
+    "listingSaved": "¡Listado guardado exitosamente!",
+    "marketplaceDetail": {
+      "productFallback": "Producto #{{id}}"
+    },
+    "marketplaceSettings": {
+      "reconnect": "Conectar",
+      "errors": {
+        "disconnectFailed": "No se pudo desconectar la cuenta."
+      }
+    }
   },
   "users": {
     "title": "Usuarios",
-    "userList": "Lista de Usuarios",
     "addUser": "Agregar Usuario",
     "editUser": "Editar Usuario",
     "deleteUser": "Eliminar Usuario",
@@ -1658,7 +2272,6 @@
     "confirmPassword": "Confirmar Contraseña",
     "passwordStrength": "Fortaleza de la Contraseña",
     "superuser": "Superusuario",
-    "forcePasswordChange": "Forzar Cambio de Contraseña",
     "errors": {
       "loadFailed": "Error al cargar los datos del usuario",
       "weakPassword": "La contraseña debe tener al menos 8 caracteres con mayúsculas, minúsculas, números y un carácter especial",
@@ -1676,7 +2289,57 @@
     },
     "dialogs": {
       "createUser": "Crear nuevo usuario"
-    }
+    },
+    "forcePasswordChange": {
+      "label": "Forzar Cambio de Contraseña",
+      "title": "Cambio de contraseña requerido",
+      "subtitle": "Por seguridad, debes cambiar tu contraseña antes de continuar.",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmNewPassword": "Confirma la nueva contraseña",
+      "hidePassword": "Ocultar contraseña",
+      "errors": {
+        "currentPasswordRequired": "La contraseña actual es obligatoria",
+        "newPasswordRequired": "La nueva contraseña es obligatoria",
+        "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+        "confirmPasswordRequired": "La confirmación de contraseña es obligatoria",
+        "passwordMismatch": "Las contraseñas no coinciden"
+      },
+      "updating": "Actualizando...",
+      "updatePassword": "Actualizar contraseña",
+      "passwordUpdated": "Contraseña actualizada correctamente"
+    },
+    "userList": {
+      "label": "Lista de Usuarios",
+      "employeeIdTooltip": "ID de empleado: {{id}}",
+      "customerNoEmployeeId": "Cliente (sin ID de empleado)",
+      "userTypeTooltip": "Tipo de usuario: {{type}}",
+      "ariaEditUser": "Editar usuario",
+      "ariaResetPassword": "Restablecer contraseña del usuario",
+      "ariaDeactivateUser": "Desactivar usuario",
+      "ariaDeleteUser": "Eliminar usuario permanentemente"
+    },
+    "accountManagement": {
+      "title": "Mi cuenta",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "saveChanges": "Guardar cambios",
+      "profileUpdated": "Tu perfil se actualizó correctamente"
+    },
+    "auditLogList": {
+      "unknown": "Desconocido",
+      "system": "Sistema",
+      "systemDeleted": "Sistema/Eliminado",
+      "paginatorAriaLabel": "Seleccionar página del registro de auditoría"
+    },
+    "userCreateModal": {
+      "emailError": "El correo es obligatorio y debe ser válido",
+      "userType": "Tipo de usuario",
+      "userTypeAdmin": "Administrador",
+      "passwordStrengthLabel": "Seguridad de la contraseña:",
+      "createUser": "Crear usuario"
+    },
+    "email": "Correo electrónico"
   },
   "settings": {
     "title": "Configuración",
@@ -1765,7 +2428,6 @@
     "changes": "cambios",
     "review": "Revisar Cambios",
     "viewLog": "Ver Registro",
-    "marketingTab": "Marketing",
     "emailConfiguration": "Configuración de Correo",
     "emailConfigDesc": "Configura SMTP para enviar campañas de marketing y notificaciones.",
     "host": "Host",
@@ -1837,7 +2499,54 @@
       "hideOtherKeys": "Ocultar otras claves",
       "configured": "✓ Configurada",
       "notConfigured": "Sin configurar",
-      "enterToUpdate": "Escribe para actualizar"
+      "enterToUpdate": "Escribe para actualizar",
+      "savedSnackbar": "Configuración de IA guardada",
+      "saveError": "No se pudo guardar la configuración"
+    },
+    "marketingTab": {
+      "label": "Marketing",
+      "storeNamePlaceholder": "Mi Tienda Increíble",
+      "storeDomainPlaceholder": "https://mitienda.com",
+      "storeSettingsSaved": "¡Configuración de tienda guardada!",
+      "storeSettingsError": "No se pudo guardar la configuración de tienda",
+      "emailSettingsSaved": "¡Configuración de correo guardada!",
+      "emailSettingsError": "No se pudo guardar la configuración de correo",
+      "smtpTestSuccess": "¡Conexión SMTP exitosa!",
+      "smtpTestConnectionFailed": "Conexión fallida",
+      "smtpTestError": "La prueba de conexión falló"
+    },
+    "changeLogDialog": {
+      "unknownEntity": "Desconocido",
+      "systemUser": "Sistema",
+      "selectPage": "Selecciona página"
+    },
+    "customFieldDialog": {
+      "type": "Tipo",
+      "fieldTypes": {
+        "text": "Texto",
+        "number": "Número",
+        "date": "Fecha"
+      }
+    },
+    "customFieldList": {
+      "title": "Campos personalizados",
+      "addCustomField": "Agregar campo personalizado",
+      "type": "Tipo",
+      "deleteTitle": "Eliminar campo personalizado",
+      "deleteMessage": "¿Estás seguro de que quieres eliminar este campo personalizado? Esta acción no se puede deshacer."
+    },
+    "dataTab": {
+      "exportSuccess": "¡{{entity}} exportado con éxito!"
+    },
+    "integrationsTab": {
+      "keyNamePlaceholder": "p. ej., Google Sheets",
+      "errors": {
+        "createFailed": "No se pudo crear la clave API",
+        "revokeFailed": "No se pudo revocar la clave API"
+      },
+      "deleteRevokedTitle": "Eliminar clave revocada",
+      "deleteRevokedMessage": "¿Quieres eliminar permanentemente esta clave revocada del historial?",
+      "keyRemovedFromList": "Clave eliminada de la lista"
     }
   },
   "notifications": {
@@ -2342,7 +3051,45 @@
   },
   "errors": {
     "title": "Ocurrió un error",
-    "generic": "No pudimos cargar la información. Intenta de nuevo.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "generic": {
+      "message": "No pudimos cargar la información. Intenta de nuevo.",
+      "title": "Algo salió mal",
+      "retry": "Reintentar"
+    }
+  },
+  "core": {
+    "sidenav": {
+      "userFallbackName": "Usuario",
+      "roles": {
+        "admin": "Admin",
+        "employee": "Empleado",
+        "customer": "Cliente",
+        "user": "Usuario"
+      }
+    }
+  },
+  "shared": {
+    "aiPromptPreview": {
+      "title": "Vista previa del prompt",
+      "collapseTooltip": "Contraer vista previa del prompt",
+      "expandTooltip": "Ver el prompt que se envía a la IA",
+      "emptyTooltip": "Selecciona opciones para ver el prompt",
+      "tokens": "tokens",
+      "tone": "Tono",
+      "channelGuidelines": "Lineamientos del canal",
+      "customPrompt": "Tu prompt personalizado"
+    },
+    "aiSearchBar": {
+      "placeholder": "Pregúntale a la IA para encontrar productos...",
+      "voiceSearch": "Búsqueda por voz"
+    },
+    "imageDialog": {
+      "productImageAlt": "Imagen del producto",
+      "titlePlaceholder": "Escribe el título de la imagen",
+      "descriptionPlaceholder": "Escribe la descripción de la imagen",
+      "updateSuccess": "Los detalles de la imagen se actualizaron correctamente",
+      "updateError": "No se pudieron actualizar los detalles de la imagen"
+    }
   }
 }

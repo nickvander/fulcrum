@@ -14,7 +14,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { debounceTime, switchMap, startWith, map } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
@@ -67,7 +67,8 @@ export class QuickPostDialogComponent implements OnInit {
     private settingsService: SettingsService,
     private dialogRef: MatDialogRef<QuickPostDialogComponent>,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private transloco: TranslocoService
   ) {
     this.postForm = this.fb.group({
       connector_id: ['', Validators.required],
@@ -91,6 +92,7 @@ export class QuickPostDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.imagePromptCtrl.setValue(this.transloco.translate('marketing.quickPostDialog.imagePromptDefault'));
     this.loadConnectors();
     this.loadAiSettings();
 
@@ -191,7 +193,7 @@ export class QuickPostDialogComponent implements OnInit {
   tonePresets: TonePreset[] = [];
   selectedTone: TonePreset | null = null;
   customPromptCtrl = new FormControl('');
-  imagePromptCtrl = new FormControl('Create a photorealistic product image with natural lighting and clean composition.');
+  imagePromptCtrl = new FormControl('');
   aiImageCtrl = new FormControl(false); // Default OFF
   aiResult: any = null;
   draftEventId: number | null = null; // If AI generated, we have a draft event ID
@@ -277,7 +279,7 @@ export class QuickPostDialogComponent implements OnInit {
           });
         }
 
-        this.snackBar.open('Content generated!', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.contentGenerated'), this.transloco.translate('common.close'), { duration: 3000 });
       },
       error: (err) => {
         this.generating = false;
@@ -305,8 +307,8 @@ export class QuickPostDialogComponent implements OnInit {
     if (this.hasContent()) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Overwrite Content?',
-          message: 'This will replace your existing text content. Continue?'
+          title: this.transloco.translate('marketing.quickPostDialog.overwriteContentTitle'),
+          message: this.transloco.translate('marketing.quickPostDialog.overwriteContentMessage')
         }
       });
       dialogRef.afterClosed().subscribe(confirmed => {
@@ -326,8 +328,8 @@ export class QuickPostDialogComponent implements OnInit {
     if (this.hasImage()) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Overwrite Image?',
-          message: 'This will replace your existing image. Continue?'
+          title: this.transloco.translate('marketing.quickPostDialog.overwriteImageTitle'),
+          message: this.transloco.translate('marketing.quickPostDialog.overwriteImageMessage')
         }
       });
       dialogRef.afterClosed().subscribe(confirmed => {
@@ -347,8 +349,8 @@ export class QuickPostDialogComponent implements OnInit {
     if (this.hasBoth()) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Overwrite All?',
-          message: 'This will replace your existing text and image. Continue?'
+          title: this.transloco.translate('marketing.quickPostDialog.overwriteAllTitle'),
+          message: this.transloco.translate('marketing.quickPostDialog.overwriteAllMessage')
         }
       });
       dialogRef.afterClosed().subscribe(confirmed => {
@@ -392,9 +394,9 @@ export class QuickPostDialogComponent implements OnInit {
           this.postForm.patchValue({
             content_image_url: imgUrl
           });
-          this.snackBar.open('Image generated!', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.imageGenerated'), this.transloco.translate('common.close'), { duration: 3000 });
         } else {
-          this.snackBar.open('Image generation failed. Please try again.', 'Close', { duration: 5000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.imageGenerationFailed'), this.transloco.translate('common.close'), { duration: 5000 });
         }
       },
       error: (err) => {
@@ -433,13 +435,13 @@ export class QuickPostDialogComponent implements OnInit {
       }).subscribe({
         next: () => {
           this.submitting = false;
-          this.snackBar.open('Draft updated', 'Close', { duration: 2000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.draftUpdated'), this.transloco.translate('common.close'), { duration: 2000 });
           this.dialogRef.close(true);
         },
         error: (err) => {
           this.submitting = false;
           console.error(err);
-          this.snackBar.open('Failed to save draft', 'Close', { duration: 2000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.draftSaveFailed'), this.transloco.translate('common.close'), { duration: 2000 });
         }
       });
     } else {
@@ -447,13 +449,13 @@ export class QuickPostDialogComponent implements OnInit {
       this.marketingService.createQuickPost(payload).subscribe({
         next: (event) => {
           this.submitting = false;
-          this.snackBar.open('Draft saved', 'Close', { duration: 2000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.draftSaved'), this.transloco.translate('common.close'), { duration: 2000 });
           this.dialogRef.close(true);
         },
         error: (err) => {
           this.submitting = false;
           console.error(err);
-          this.snackBar.open('Failed to save draft', 'Close', { duration: 2000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.draftSaveFailed'), this.transloco.translate('common.close'), { duration: 2000 });
         }
       });
     }
@@ -490,7 +492,7 @@ export class QuickPostDialogComponent implements OnInit {
         },
         error: (err) => {
           this.submitting = false;
-          this.snackBar.open('Failed to create post', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.postCreateFailed'), this.transloco.translate('common.close'), { duration: 3000 });
           console.error(err);
         }
       });
@@ -501,7 +503,7 @@ export class QuickPostDialogComponent implements OnInit {
     this.marketingService.publishEvent(eventId).subscribe({
       next: (result) => {
         this.submitting = false;
-        this.snackBar.open('Posted successfully!', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.quickPostDialog.postedSuccessfully'), this.transloco.translate('common.close'), { duration: 3000 });
         this.dialogRef.close(true);
       },
       error: (err) => {

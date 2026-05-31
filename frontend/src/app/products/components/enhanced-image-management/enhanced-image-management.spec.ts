@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EnhancedImageManagementComponent, ProductImage } from './enhanced-image-management';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('EnhancedImageManagementComponent', () => {
     let component: EnhancedImageManagementComponent;
@@ -36,7 +37,8 @@ describe('EnhancedImageManagementComponent', () => {
                 MatIconModule,
                 MatButtonModule,
                 MatTooltipModule,
-                EnhancedImageManagementComponent
+                EnhancedImageManagementComponent,
+                getTranslocoTestingModule()
             ]
         })
             .compileComponents();

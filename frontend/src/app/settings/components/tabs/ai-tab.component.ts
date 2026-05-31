@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { SettingsService, StoreSettings } from '../../../core/services/settings.service';
 import { AiService } from '../../../core/services/ai.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -46,7 +46,8 @@ export class AiTabComponent implements OnInit {
         private fb: FormBuilder,
         private settingsService: SettingsService,
         private aiService: AiService,
-        private snackBar: MatSnackBar
+        private snackBar: MatSnackBar,
+        private transloco: TranslocoService
     ) {
         this.aiForm = this.fb.group({
             ai_enabled: [false],
@@ -133,7 +134,7 @@ export class AiTabComponent implements OnInit {
 
         this.settingsService.updateStoreSettings(updatePayload as StoreSettings).subscribe({
             next: () => {
-                this.snackBar.open('AI Settings saved', 'Close', { duration: 3000 });
+                this.snackBar.open(this.transloco.translate('settings.aiTab.savedSnackbar'), this.transloco.translate('common.close'), { duration: 3000 });
                 // Drop the AiService capability cache so AI buttons across the
                 // app reflect the new enabled/key state on next subscribe.
                 this.aiService.invalidateCapabilities();
@@ -149,7 +150,7 @@ export class AiTabComponent implements OnInit {
             },
             error: (err) => {
                 console.error('Error saving AI settings', err);
-                this.snackBar.open('Failed to save settings', 'Close', { duration: 3000 });
+                this.snackBar.open(this.transloco.translate('settings.aiTab.saveError'), this.transloco.translate('common.close'), { duration: 3000 });
                 this.isLoading = false;
             }
         });

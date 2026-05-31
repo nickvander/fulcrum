@@ -4,6 +4,7 @@ import { CdkDrag, CdkDragHandle, CdkDropList } from '@angular/cdk/drag-drop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslocoModule } from '@ngneat/transloco';
 
 export interface ProductImage {
   id: number;
@@ -22,7 +23,8 @@ export interface ProductImage {
     CdkDragHandle,
     MatButtonModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    TranslocoModule
   ],
   templateUrl: './enhanced-image-management.html',
   styleUrls: ['./enhanced-image-management.scss']

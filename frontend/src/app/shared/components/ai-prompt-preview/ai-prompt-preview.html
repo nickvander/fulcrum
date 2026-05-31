@@ -1,12 +1,13 @@
+<ng-container *transloco="let t">
 <div class="ai-prompt-preview" [class.expanded]="expanded" [class.has-content]="hasContent">
     <!-- Collapsed Header -->
     <button type="button" class="preview-header" (click)="toggleExpanded()" [disabled]="!hasContent"
-        [matTooltip]="hasContent ? (expanded ? 'Collapse prompt preview' : 'See what prompt is sent to AI') : 'Select options to see prompt'">
+        [matTooltip]="hasContent ? (expanded ? t('shared.aiPromptPreview.collapseTooltip') : t('shared.aiPromptPreview.expandTooltip')) : t('shared.aiPromptPreview.emptyTooltip')">
         <div class="header-left">
             <mat-icon class="ai-icon">psychology</mat-icon>
-            <span class="header-title">Prompt Preview</span>
+            <span class="header-title">{{ t('shared.aiPromptPreview.title') }}</span>
             <span class="token-badge" *ngIf="hasContent">
-                ~{{ getTokenEstimate() }} tokens
+                ~{{ getTokenEstimate() }} {{ t('shared.aiPromptPreview.tokens') }}
             </span>
         </div>
         <mat-icon class="expand-icon" *ngIf="hasContent">
@@ -20,7 +21,7 @@
         <div class="prompt-section" *ngIf="tonePrompt">
             <div class="section-header">
                 <mat-icon>mood</mat-icon>
-                <span>Tone</span>
+                <span>{{ t('shared.aiPromptPreview.tone') }}</span>
             </div>
             <div class="section-body">
                 <pre class="prompt-text">{{ tonePrompt }}</pre>
@@ -31,7 +32,7 @@
         <div class="prompt-section" *ngIf="channelGuidelines">
             <div class="section-header">
                 <mat-icon>campaign</mat-icon>
-                <span>Channel Guidelines</span>
+                <span>{{ t('shared.aiPromptPreview.channelGuidelines') }}</span>
             </div>
             <div class="section-body">
                 <pre class="prompt-text">{{ channelGuidelines }}</pre>
@@ -42,7 +43,7 @@
         <div class="prompt-section" *ngIf="customPrompt">
             <div class="section-header">
                 <mat-icon>edit_note</mat-icon>
-                <span>Your Custom Prompt</span>
+                <span>{{ t('shared.aiPromptPreview.customPrompt') }}</span>
             </div>
             <div class="section-body">
                 <pre class="prompt-text">{{ customPrompt }}</pre>
@@ -50,3 +51,4 @@
         </div>
     </div>
 </div>
+</ng-container>

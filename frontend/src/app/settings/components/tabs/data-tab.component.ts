@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { MaterialModule } from '../../../shared/material.module';
 import { IntegrationsService } from '../../services/integrations.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -15,7 +15,8 @@ import { NotificationService } from '../../../core/services/notification.service
 export class DataTabComponent {
     constructor(
         private integrationsService: IntegrationsService,
-        private notificationService: NotificationService
+        private notificationService: NotificationService,
+        private transloco: TranslocoService
     ) { }
 
     exportData(entity: string, format: 'csv' | 'json'): void {
@@ -23,11 +24,15 @@ export class DataTabComponent {
         this.integrationsService.exportEntity(entity, format).subscribe({
             next: (blob) => {
                 this.integrationsService.downloadBlob(blob, filename);
-                this.notificationService.showSuccess(`${entity.replace('-', ' ')} exported successfully!`);
+                this.notificationService.showSuccess(
+                    this.transloco.translate('settings.dataTab.exportSuccess', { entity: entity.replace('-', ' ') })
+                );
             },
             error: (err) => {
                 console.error('Export failed', err);
-                this.notificationService.showError('Export failed. Please try again.');
+                this.notificationService.showError(
+                    this.transloco.translate('notifications.exportFailed')
+                );
             }
         });
     }

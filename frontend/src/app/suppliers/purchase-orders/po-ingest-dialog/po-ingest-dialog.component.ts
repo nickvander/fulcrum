@@ -206,12 +206,12 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
         if (!allowedTypes.includes(ext)) {
-            this.uploadError = `Unsupported file type. Allowed: ${allowedTypes.join(', ')}`;
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.unsupportedFileType', { types: allowedTypes.join(', ') });
             return;
         }
 
         if (file.size > 10 * 1024 * 1024) {
-            this.uploadError = 'File too large. Maximum 10MB.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.fileTooLarge');
             return;
         }
 
@@ -334,11 +334,11 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
 
     createProductForItem(item: ExtractedLineItem, index: number): void {
         if (!this.importReviewId) {
-            this.uploadError = 'Please process or select an import review before creating products.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noReviewBeforeProduct');
             return;
         }
         if (!this.supplierId) {
-            this.uploadError = 'Please select a supplier before creating a product from this line.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noSupplierBeforeProduct');
             return;
         }
 
@@ -349,7 +349,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
             index,
             {
                 supplier_id: this.supplierId,
-                name: item.description || item.sku || 'Imported product',
+                name: item.description || item.sku || this.transloco.translate('purchaseOrders.poIngestDialog.defaultProductName'),
                 sku: item.sku,
                 default_resale_price: item.unit_cost || 0,
                 create_alias: true
@@ -360,7 +360,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
                     this.products = [...this.products, response.product];
                 }
                 this.applyAssistedReview(response.import_review);
-                this.snackBar.open('Product created and matched to this line', 'Close', { duration: 3000 });
+                this.snackBar.open(this.transloco.translate('purchaseOrders.poIngestDialog.productCreatedMatched'), this.transloco.translate('common.close'), { duration: 3000 });
                 this.assistingItemIndex = null;
             },
             error: (err) => {
@@ -372,15 +372,15 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
 
     learnAliasForItem(item: ExtractedLineItem, index: number): void {
         if (!this.importReviewId) {
-            this.uploadError = 'Please process or select an import review before learning aliases.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noReviewBeforeAlias');
             return;
         }
         if (!this.supplierId) {
-            this.uploadError = 'Please select a supplier before learning an alias.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noSupplierBeforeAlias');
             return;
         }
         if (!item.matched_product_id) {
-            this.uploadError = 'Select a Fulcrum product before learning this alias.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noProductBeforeAlias');
             return;
         }
 
@@ -399,7 +399,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         ).subscribe({
             next: (response) => {
                 this.applyAssistedReview(response.import_review);
-                this.snackBar.open('Supplier alias learned for this line', 'Close', { duration: 3000 });
+                this.snackBar.open(this.transloco.translate('purchaseOrders.poIngestDialog.aliasLearned'), this.transloco.translate('common.close'), { duration: 3000 });
                 this.assistingItemIndex = null;
             },
             error: (err) => {
@@ -412,7 +412,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     getProductLabel(productId: number | null | undefined): string {
         if (!productId) return '';
         const product = this.products.find(item => item.id === productId);
-        return product ? `${product.sku} - ${product.name}` : `Product #${productId}`;
+        return product ? `${product.sku} - ${product.name}` : this.transloco.translate('purchaseOrders.poIngestDialog.productFallback', { id: productId });
     }
 
     private applyAssistedReview(review: SupplierDocumentImportReview): void {
@@ -427,9 +427,9 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     getConfidenceLabel(): string {
         if (!this.extractedData) return '';
         const score = this.extractedData.confidence_score;
-        if (score >= 0.7) return 'High';
-        if (score >= 0.4) return 'Medium';
-        return 'Low';
+        if (score >= 0.7) return this.transloco.translate('purchaseOrders.poIngestDialog.confidenceHigh');
+        if (score >= 0.4) return this.transloco.translate('purchaseOrders.poIngestDialog.confidenceMedium');
+        return this.transloco.translate('purchaseOrders.poIngestDialog.confidenceLow');
     }
 
     getConfidenceColor(): string {
@@ -443,7 +443,7 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
     // --- Create PO ---
     createPurchaseOrder(): void {
         if (!this.supplierId) {
-            this.uploadError = 'Please select a supplier before creating the PO.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noSupplierBeforePo');
             return;
         }
 
@@ -455,14 +455,14 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         // Warn if some items won't be included
         const unmatchedCount = this.editableItems.length - matchedItems.length;
         if (matchedItems.length === 0) {
-            this.uploadError = 'No items have been matched to existing products. Please match items to products first.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noMatchedItems');
             return;
         }
 
         this.step = 'creating';
 
         if (!this.importReviewId) {
-            this.uploadError = 'Please process or select an import review before approving.';
+            this.uploadError = this.transloco.translate('purchaseOrders.poIngestDialog.errors.noReviewBeforeApprove');
             this.step = 'preview';
             return;
         }
@@ -470,7 +470,9 @@ export class PoIngestDialogComponent implements OnInit, OnDestroy {
         const approval = {
             supplier_id: this.supplierId,
             currency: this.currency,
-            notes: this.notes || `Imported from ${this.importedFileName || this.selectedFile?.name || 'document'}${unmatchedCount > 0 ? ` (${unmatchedCount} unmatched items excluded)` : ''}`,
+            notes: this.notes || (unmatchedCount > 0
+                ? this.transloco.translate('purchaseOrders.poIngestDialog.autoNotesWithUnmatched', { file: this.importedFileName || this.selectedFile?.name || this.transloco.translate('purchaseOrders.poIngestDialog.defaultDocumentName'), count: unmatchedCount })
+                : this.transloco.translate('purchaseOrders.poIngestDialog.autoNotes', { file: this.importedFileName || this.selectedFile?.name || this.transloco.translate('purchaseOrders.poIngestDialog.defaultDocumentName') })),
             shipping_cost: this.shippingCost,
             tax_amount: this.taxAmount,
             items: matchedItems

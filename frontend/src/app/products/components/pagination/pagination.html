@@ -1,11 +1,12 @@
+<ng-container *transloco="let t">
 @if (totalItems > 0) {
 <div class="pagination-container">
   <div class="pagination-info">
     <span class="pagination-text">
-      Showing {{ (currentPage - 1) * pageSize + 1 }} - {{ calculateEndItem() }} of {{ totalItems }} items
+      {{ t('products.pagination.showing', { start: (currentPage - 1) * pageSize + 1, end: calculateEndItem(), total: totalItems }) }}
     </span>
     <div class="page-size-selector">
-      <label for="page-size">Items per page: </label>
+      <label for="page-size">{{ t('common.pagination.itemsPerPage') }}</label>
       <select id="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()" class="page-size-dropdown">
         <option [value]="5">5</option>
         <option [value]="10">10</option>
@@ -29,7 +30,7 @@
       <mat-icon>navigate_next</mat-icon>
     </button>
     <div class="page-input">
-      <label for="current-page">Page:</label>
+      <label for="current-page">{{ t('products.pagination.pageLabel') }}</label>
       <input type="number" id="current-page" [(ngModel)]="displayedPage" (keyup.enter)="onDirectPageChange()"
         (blur)="onDirectPageChange()" min="1" [max]="totalPages" class="page-number-input">
       <span class="page-divider">/ {{ totalPages }}</span>
@@ -37,3 +38,4 @@
   </div>
 </div>
 }
+</ng-container>

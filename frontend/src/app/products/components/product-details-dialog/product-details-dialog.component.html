@@ -20,9 +20,9 @@
                 <!-- Hero Section: Image + Key Stats -->
                 <div class="hero-section">
                     <div class="product-image-container">
-                        <div class="product-image" (click)="openImagePreview()" [matTooltip]="t('products.clickToPreview') || 'Click to preview'">
+                        <div class="product-image" (click)="openImagePreview()" [matTooltip]="t('products.clickToPreview')">
                             @if (getActiveImage()) {
-                            <img [src]="getImageUrl(getActiveImage())" alt="Product" (error)="onImageError($event)">
+                            <img [src]="getImageUrl(getActiveImage())" [attr.alt]="t('products.productDetailsDialog.imageAlt')" (error)="onImageError($event)">
                             <div class="preview-overlay">
                                 <mat-icon>fullscreen</mat-icon>
                             </div>
@@ -87,7 +87,7 @@
                             <span class="value">
                                 {{ getAvailablePhysicalStock() }}
                                 @if (product.is_bundle && getPotentialStock() > 0) {
-                                <span class="potential" [matTooltip]="'Can assemble ' + getPotentialStock() + ' more'">
+                                <span class="potential" [matTooltip]="t('products.productDetailsDialog.canAssemble', { count: getPotentialStock() })">
                                     (+{{ getPotentialStock() }})
                                 </span>
                                 }
@@ -101,7 +101,7 @@
                         <div class="section-header clickable" (click)="showCodes = !showCodes">
                             <h3>
                                 <mat-icon>qr_code_2</mat-icon>
-                                Labels & Codes
+                                {{ t('products.productDetailsDialog.labelsAndCodes') }}
                             </h3>
                             <span class="count-badge">{{ (product.barcode_value ? 1 : 0) + (product.qrcode_value ? 1 :
                                 0) }}</span>
@@ -111,14 +111,14 @@
                         <div class="codes-stack">
                             @if (product.barcode_value) {
                             <div class="code-row">
-                                <span class="code-label">Barcode</span>
+                                <span class="code-label">{{ t('products.barcode') }}</span>
                                 <app-code-display [value]="product.barcode_value" type="barcode" [showActions]="true">
                                 </app-code-display>
                             </div>
                             }
                             @if (product.qrcode_value) {
                             <div class="code-row">
-                                <span class="code-label">QR Code</span>
+                                <span class="code-label">{{ t('products.productDetailsDialog.qrCode') }}</span>
                                 <app-code-display [value]="product.qrcode_value" type="qrcode" [showActions]="true">
                                 </app-code-display>
                             </div>
@@ -192,7 +192,7 @@
                             <img [src]="getImageUrl(b.bundle_image || '')" class="thumb" (error)="onImageError($event)">
                             <div class="item-info">
                                 <span class="name">{{ b.bundle_name }}</span>
-                                <span class="meta">Uses {{ b.quantity }}× this item</span>
+                                <span class="meta">{{ t('products.productDetailsDialog.usesQuantity', { count: b.quantity }) }}</span>
                             </div>
                             <mat-icon class="chevron">chevron_right</mat-icon>
                         </div>
@@ -225,7 +225,7 @@
                     } @else {
                     <div class="assembly-input">
                         <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
-                            <mat-label>Qty</mat-label>
+                            <mat-label>{{ t('common.quantity') }}</mat-label>
                             <input matInput type="number" [(ngModel)]="assembleQuantity" min="1">
                         </mat-form-field>
                         <button mat-icon-button color="primary"
@@ -291,7 +291,7 @@
                         }
                     </div>
                     <button mat-stroked-button color="primary" class="add-listing-btn" (click)="openListingDialog()">
-                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') || 'Create Listing' }}
+                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') }}
                     </button>
                     }
                 </div>
@@ -301,10 +301,9 @@
                     <div class="section-header">
                         <h3>{{ t('marketing.marketplaces') }}</h3>
                     </div>
-                    <p class="empty-note">{{ t('products.notListedYet') || 'This product is not listed on any
-                        marketplace yet.' }}</p>
+                    <p class="empty-note">{{ t('products.notListedYet') }}</p>
                     <button mat-stroked-button color="primary" class="add-listing-btn" (click)="openListingDialog()">
-                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') || 'Create Listing' }}
+                        <mat-icon>add</mat-icon> {{ t('marketplaces.createListing') }}
                     </button>
                 </div>
                 }
@@ -354,7 +353,7 @@
                         @for (h of purchaseHistory; track $index) {
                         <div class="history-row" (click)="onGoToPO(h.po_id)">
                             <span class="date">{{ h.date | date:'shortDate' }}</span>
-                            <span class="po">PO #{{ h.po_id }}</span>
+                            <span class="po">{{ t('products.productDetailsDialog.poNumber', { id: h.po_id }) }}</span>
                             <span class="qty">×{{ h.quantity }}</span>
                             <span class="cost">{{ h.unit_cost | currency }}</span>
                             <mat-icon class="chevron">chevron_right</mat-icon>

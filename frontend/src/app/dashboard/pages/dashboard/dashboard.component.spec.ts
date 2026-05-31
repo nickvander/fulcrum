@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { TranslocoTestingModule } from '@ngneat/transloco';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 import { DashboardComponent } from './dashboard.component';
 import { DashboardStatsService } from '../../services/dashboard-stats.service';
 import { LowStockService } from '../../services/low-stock.service';
@@ -160,10 +160,7 @@ describe('DashboardComponent', () => {
                 MatProgressSpinnerModule,
                 BrowserAnimationsModule,
                 RouterTestingModule,
-                TranslocoTestingModule.forRoot({
-                    langs: { en: {}, es: {} },
-                    translocoConfig: { availableLangs: ['en', 'es'], defaultLang: 'en' }
-                })
+                getTranslocoTestingModule()
             ],
             providers: [
                 { provide: DashboardStatsService, useValue: statsServiceMock },
@@ -253,9 +250,8 @@ describe('DashboardComponent', () => {
         await fixture.whenStable();
 
         const text = fixture.nativeElement.textContent;
-        // Transloco test config ships empty lang dicts so translation keys render as keys.
         // We just confirm the launch-readiness section + demo record content surface.
-        expect(text).toContain('launchReadiness.titleNeedsAttention');
+        expect(text).toContain('Review before go-live');
         expect(text).toContain('[Demo] Starter Widget');
         expect(text).toContain('DEMO-STARTER-WIDGET');
     });

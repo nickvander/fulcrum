@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { MaterialModule } from '../../../shared/material.module';
 import { IntegrationsService, ApiKeyInfo, ApiKeyCreateResponse } from '../../services/integrations.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -31,7 +31,8 @@ export class IntegrationsTabComponent implements OnInit {
     private integrationsService: IntegrationsService,
     private notificationService: NotificationService,
     private settingsService: SettingsService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -65,7 +66,7 @@ export class IntegrationsTabComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to create API key', err);
-        this.notificationService.showError('Failed to create API key');
+        this.notificationService.showError(this.transloco.translate('settings.integrationsTab.errors.createFailed'));
         this.creatingKey = false;
       }
     });
@@ -74,8 +75,8 @@ export class IntegrationsTabComponent implements OnInit {
   revokeKey(keyId: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Revoke API Key',
-        message: 'Are you sure you want to revoke this API key? This cannot be undone.'
+        title: this.transloco.translate('settings.revokeApiKey'),
+        message: this.transloco.translate('settings.revokeConfirm')
       } as ConfirmationDialogData
     });
 
@@ -83,11 +84,11 @@ export class IntegrationsTabComponent implements OnInit {
       if (!confirmed) return;
       this.integrationsService.revokeApiKey(keyId).subscribe({
         next: () => {
-          this.notificationService.showSuccess('API key revoked');
+          this.notificationService.showSuccess(this.transloco.translate('notifications.apiKeyRevoked'));
           this.loadApiKeys();
         },
         error: (err) => {
-          this.notificationService.showError('Failed to revoke API key');
+          this.notificationService.showError(this.transloco.translate('settings.integrationsTab.errors.revokeFailed'));
         }
       });
     });
@@ -96,15 +97,15 @@ export class IntegrationsTabComponent implements OnInit {
   deleteRevokedKey(keyId: number): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Revoked Key',
-        message: 'Permanently delete this revoked key from history?'
+        title: this.transloco.translate('settings.integrationsTab.deleteRevokedTitle'),
+        message: this.transloco.translate('settings.integrationsTab.deleteRevokedMessage')
       } as ConfirmationDialogData
     });
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.apiKeys = this.apiKeys.filter(k => k.id !== keyId);
-        this.notificationService.showSuccess('Key removed from list');
+        this.notificationService.showSuccess(this.transloco.translate('settings.integrationsTab.keyRemovedFromList'));
       }
     });
   }
@@ -113,7 +114,7 @@ export class IntegrationsTabComponent implements OnInit {
 
   copyToClipboard(text: string): void {
     navigator.clipboard.writeText(text).then(() => {
-      this.notificationService.showSuccess('Copied to clipboard!');
+      this.notificationService.showSuccess(this.transloco.translate('notifications.copiedToClipboard'));
     });
   }
 

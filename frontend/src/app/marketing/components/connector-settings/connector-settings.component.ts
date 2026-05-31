@@ -13,7 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import {
   MarketingService,
@@ -61,9 +61,11 @@ export class ConnectorSettingsComponent implements OnInit {
   emailForm: FormGroup;
   socialForm: FormGroup;
 
-  emailProviders = [
-    { key: 'email', name: 'Email Marketing', icon: 'mail' },
-  ];
+  get emailProviders() {
+    return [
+      { key: 'email', name: this.transloco.translate('marketing.connectorSettings.emailMarketing'), icon: 'mail' },
+    ];
+  }
 
   socialProviders = [
     { key: 'instagram', name: 'Instagram', icon: 'camera_alt' },
@@ -81,7 +83,8 @@ export class ConnectorSettingsComponent implements OnInit {
     private fb: FormBuilder,
     private marketingService: MarketingService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private transloco: TranslocoService
   ) {
     this.emailForm = this.fb.group({
       provider: ['gmail', Validators.required],
@@ -141,7 +144,7 @@ export class ConnectorSettingsComponent implements OnInit {
     // key is 'email' here usually
     this.emailForm.reset({
       provider: 'gmail',
-      name: 'My Email Marketing',
+      name: this.transloco.translate('marketing.connectorSettings.defaultEmailName'),
       port: 587,
     });
     this.onProviderChange('gmail');
@@ -169,7 +172,7 @@ export class ConnectorSettingsComponent implements OnInit {
   openSocialSetup(provider: string): void {
     this.selectedProviderKey = provider;
     this.socialForm.reset({
-      name: `My ${provider.charAt(0).toUpperCase() + provider.slice(1)}`
+      name: this.transloco.translate('marketing.connectorSettings.defaultSocialName', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) })
     });
     this.showSocialSetup = true;
   }
@@ -230,12 +233,12 @@ export class ConnectorSettingsComponent implements OnInit {
         this.saving = false;
         this.connectors.push(created);
         onSuccess();
-        this.snackBar.open('Connector created!', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.connectorCreated'), this.transloco.translate('common.close'), { duration: 3000 });
       },
       error: (err) => {
         this.saving = false;
         console.error('Failed to create connector', err);
-        this.snackBar.open('Failed to create connector', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.connectorCreateFailed'), this.transloco.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -255,14 +258,14 @@ export class ConnectorSettingsComponent implements OnInit {
       next: (result) => {
         this.testing = null;
         if (result.valid) {
-          this.snackBar.open('Connection successful!', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.testSuccess'), this.transloco.translate('common.close'), { duration: 3000 });
         } else {
-          this.snackBar.open('Connection failed. Check credentials.', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.testFailed'), this.transloco.translate('common.close'), { duration: 3000 });
         }
       },
       error: (err) => {
         this.testing = null;
-        this.snackBar.open('Connection test failed', 'Close', { duration: 3000 });
+        this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.testError'), this.transloco.translate('common.close'), { duration: 3000 });
       }
     });
   }
@@ -270,8 +273,8 @@ export class ConnectorSettingsComponent implements OnInit {
   deleteConnector(connector: MarketingConnector): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Connector',
-        message: `Delete "${connector.name}"?`
+        title: this.transloco.translate('marketing.connectorSettings.deleteDialog.title'),
+        message: this.transloco.translate('marketing.connectorSettings.deleteDialog.message', { name: connector.name })
       } as ConfirmationDialogData
     });
 
@@ -280,11 +283,11 @@ export class ConnectorSettingsComponent implements OnInit {
         this.marketingService.deleteConnector(connector.id).subscribe({
           next: () => {
             this.connectors = this.connectors.filter(c => c.id !== connector.id);
-            this.snackBar.open('Connector deleted', 'Close', { duration: 2000 });
+            this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.connectorDeleted'), this.transloco.translate('common.close'), { duration: 2000 });
           },
           error: (err) => {
             console.error('Failed to delete connector', err);
-            this.snackBar.open('Failed to delete connector', 'Close', { duration: 3000 });
+            this.snackBar.open(this.transloco.translate('marketing.connectorSettings.messages.connectorDeleteFailed'), this.transloco.translate('common.close'), { duration: 3000 });
           }
         });
       }

@@ -14,7 +14,7 @@ import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -52,7 +52,8 @@ export class AuditLogList implements OnInit {
 
   constructor(
     private auditLogService: AuditLogService,
-    private userService: UserService
+    private userService: UserService,
+    private transloco: TranslocoService
   ) { }
 
   ngOnInit(): void {
@@ -120,8 +121,8 @@ export class AuditLogList implements OnInit {
 
       // Update audit logs with user/actor emails
       auditLogs.forEach(log => {
-        log.user_email = log.user_id ? (userMap[log.user_id] || 'Unknown') : 'System/Deleted';
-        log.actor_email = log.action_performed_by ? (userMap[log.action_performed_by] || 'System') : 'System';
+        log.user_email = log.user_id ? (userMap[log.user_id] || this.transloco.translate('users.auditLogList.unknown')) : this.transloco.translate('users.auditLogList.systemDeleted');
+        log.actor_email = log.action_performed_by ? (userMap[log.action_performed_by] || this.transloco.translate('users.auditLogList.system')) : this.transloco.translate('users.auditLogList.system');
       });
 
       // Update the data source

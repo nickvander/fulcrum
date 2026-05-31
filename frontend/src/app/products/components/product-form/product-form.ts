@@ -273,7 +273,7 @@ export class ProductForm implements OnInit {
 
               return {
                 ...bc,
-                component_name: component?.name || bc.component_name || 'Loading...',
+                component_name: component?.name || bc.component_name || this.transloco.translate('common.loading'),
                 component_image: component?.primary_image?.image_path || bc.component_image,
                 component_stock: stock,
                 component_cost: component?.cost_price || (bc as any).component_cost || 0
@@ -372,7 +372,7 @@ export class ProductForm implements OnInit {
           }
           return {
             ...bc,
-            component_name: component?.name || bc.component_name || 'Loading...',
+            component_name: component?.name || bc.component_name || this.transloco.translate('common.loading'),
             component_image: component?.primary_image?.image_path || bc.component_image,
             component_stock: stock,
             component_cost: component?.cost_price || 0
@@ -531,8 +531,8 @@ export class ProductForm implements OnInit {
     if (existingQR && existingQR.trim() !== '' && existingQR !== qrValue) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Replace QR Code?',
-          message: 'This will replace the existing QR code. Continue?'
+          title: this.transloco.translate('products.productForm.replaceQrTitle'),
+          message: this.transloco.translate('products.productForm.replaceQrMessage')
         }
       });
       dialogRef.afterClosed().subscribe(result => {
@@ -586,8 +586,8 @@ export class ProductForm implements OnInit {
     if (currentSku && currentSku.trim() !== '') {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Regenerate SKU?',
-          message: 'This will update both SKU and Barcode. Continue?'
+          title: this.transloco.translate('products.productForm.regenerateSkuTitle'),
+          message: this.transloco.translate('products.productForm.regenerateSkuMessage')
         }
       });
       dialogRef.afterClosed().subscribe(result => {
@@ -613,7 +613,7 @@ export class ProductForm implements OnInit {
       this.productForm.patchValue({ barcode_value: barcode });
       this.productForm.markAsDirty();
     } else {
-      this.notificationService.showError('Please enter a SKU first.');
+      this.notificationService.showError(this.transloco.translate('products.productForm.pleaseEnterSkuFirst'));
     }
   }
 
@@ -701,7 +701,7 @@ export class ProductForm implements OnInit {
         })
       ).subscribe({
         next: () => {
-          this.notificationService.showSuccess('Product updated successfully');
+          this.notificationService.showSuccess(this.transloco.translate('products.productForm.productUpdatedSuccess'));
           // Emit event instead of navigating if in side panel mode
           if (this.product) {
             this.productSaved.emit();
@@ -754,7 +754,7 @@ export class ProductForm implements OnInit {
         })
       ).subscribe({
         next: () => {
-          this.notificationService.showSuccess('Product created successfully');
+          this.notificationService.showSuccess(this.transloco.translate('products.productForm.productCreatedSuccess'));
           // Emit event instead of navigating if in side panel mode
           if (this.product) {
             this.productSaved.emit();
@@ -774,8 +774,8 @@ export class ProductForm implements OnInit {
     if (this.isDirty) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Discard changes?',
-          message: 'You have unsaved changes. Are you sure you want to discard them?'
+          title: this.transloco.translate('products.productForm.discardChangesTitle'),
+          message: this.transloco.translate('products.productForm.discardChangesMessage')
         }
       });
       dialogRef.afterClosed().subscribe(result => {
@@ -868,7 +868,7 @@ export class ProductForm implements OnInit {
           },
           error: (error) => {
             console.error('Error updating image order:', error);
-            this.notificationService.showError('Error updating image order');
+            this.notificationService.showError(this.transloco.translate('products.productForm.imageOrderError'));
             // Revert to the previous order
             // (In a real implementation, you might want to handle this differently)
           }
@@ -948,7 +948,7 @@ export class ProductForm implements OnInit {
   generateAiDescription(): void {
     const productName = this.productForm.get('name')?.value;
     if (!productName) {
-      this.notificationService.showError('Please enter a product name first.');
+      this.notificationService.showError(this.transloco.translate('products.productForm.pleaseEnterProductName'));
       return;
     }
 
@@ -975,12 +975,12 @@ export class ProductForm implements OnInit {
         }
         if (response.description) {
           this.productForm.patchValue({ description: response.description });
-          this.notificationService.showSuccess('AI description generated successfully!');
+          this.notificationService.showSuccess(this.transloco.translate('products.productForm.aiDescriptionSuccess'));
         }
       },
       error: (err) => {
         this.isGeneratingDescription = false;
-        this.notificationService.showError('Failed to generate description: ' + (err.message || 'Unknown error'));
+        this.notificationService.showError(this.transloco.translate('products.productForm.aiDescriptionFailed', { error: err.message || this.transloco.translate('common.error') }));
       }
     });
   }

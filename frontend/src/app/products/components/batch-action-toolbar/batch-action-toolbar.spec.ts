@@ -3,6 +3,7 @@ import { BatchActionToolbarComponent } from './batch-action-toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('BatchActionToolbarComponent', () => {
     let component: BatchActionToolbarComponent;
@@ -10,7 +11,7 @@ describe('BatchActionToolbarComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [BatchActionToolbarComponent, MatButtonModule, MatIconModule, NoopAnimationsModule]
+            imports: [BatchActionToolbarComponent, MatButtonModule, MatIconModule, NoopAnimationsModule, getTranslocoTestingModule()]
         }).compileComponents();
 
         fixture = TestBed.createComponent(BatchActionToolbarComponent);

@@ -1,7 +1,7 @@
+<ng-container *transloco="let t">
 <h2 mat-dialog-title>{{ 'suppliers.dialogs.selectSupplierFor' | transloco: { productName: data.productName } }}</h2>
 <div mat-dialog-content>
-    <p style="margin-bottom: 16px;">This product is available from multiple suppliers. Which one would you like to use
-        for this order?</p>
+    <p style="margin-bottom: 16px;">{{ t('purchaseOrders.supplierSelectionDialog.intro') }}</p>
 
     <mat-list>
         <mat-list-item *ngFor="let sp of data.suppliers" (click)="select(sp)" class="supplier-option">
@@ -10,9 +10,7 @@
             </span>
             <div matListItemTitle>{{ sp.supplier_name }}</div>
             <div matListItemLine>
-                Cost: {{ sp.cost_price | currency }} |
-                Lead Time: {{ sp.lead_time_days || '?' }} days |
-                SKU: {{ sp.supplier_sku }}
+                {{ t('purchaseOrders.supplierSelectionDialog.supplierMeta', { cost: (sp.cost_price | currency), leadTime: (sp.lead_time_days || '?'), sku: sp.supplier_sku }) }}
             </div>
             <button mat-icon-button matListItemMeta>
                 <mat-icon>chevron_right</mat-icon>
@@ -21,5 +19,6 @@
     </mat-list>
 </div>
 <div mat-dialog-actions align="end">
-    <button mat-button (click)="cancel()">Cancel</button>
+    <button mat-button (click)="cancel()">{{ t('common.cancel') }}</button>
 </div>
+</ng-container>

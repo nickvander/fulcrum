@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AiPromptPreviewComponent } from './ai-prompt-preview';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('AiPromptPreviewComponent', () => {
     let component: AiPromptPreviewComponent;
@@ -10,7 +11,8 @@ describe('AiPromptPreviewComponent', () => {
         await TestBed.configureTestingModule({
             imports: [
                 AiPromptPreviewComponent,
-                NoopAnimationsModule
+                NoopAnimationsModule,
+                getTranslocoTestingModule()
             ]
         }).compileComponents();
 

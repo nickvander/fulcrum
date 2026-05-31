@@ -50,13 +50,13 @@
                 <ng-container *ngIf="dataSource.data.length === 0; else showTable">
                     <div class="empty-state">
                         <mat-icon class="empty-icon">business</mat-icon>
-                        <h3>Add your first supplier</h3>
-                        <p>Suppliers make PO imports, learned SKU mappings, lead times, and receiving history easier to trust.</p>
+                        <h3>{{ t('suppliers.supplierList.emptyTitle') }}</h3>
+                        <p>{{ t('suppliers.supplierList.emptyDescription') }}</p>
                         <button mat-raised-button color="primary" (click)="createSupplier()">
                             <mat-icon>add</mat-icon> {{ t('suppliers.addSupplier') }}
                         </button>
                         <button mat-stroked-button color="primary" routerLink="/suppliers/po">
-                            <mat-icon>receipt_long</mat-icon> Purchase orders
+                            <mat-icon>receipt_long</mat-icon> {{ t('suppliers.supplierList.purchaseOrdersButton') }}
                         </button>
                     </div>
                 </ng-container>
@@ -117,7 +117,7 @@
                             (click)="viewSupplier(row.id)"></tr>
                     </table>
                     <mat-paginator [pageSize]="25" [pageSizeOptions]="[10, 25, 50, 100]"
-                        [aria-label]="t('suppliers.supplierList')"></mat-paginator>
+                        [aria-label]="t('suppliers.supplierList.label')"></mat-paginator>
                 </ng-template>
             </ng-template>
         </mat-card>

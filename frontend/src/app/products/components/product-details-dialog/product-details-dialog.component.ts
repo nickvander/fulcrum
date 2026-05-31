@@ -342,7 +342,7 @@ export class ProductDetailsDialogComponent implements OnInit {
     onCreateParentBundle(): void {
         this.dialogRef.close();
         const newBundle: Partial<Product> = {
-            name: `Bundle including ${this.product.name}`,
+            name: this.transloco.translate('products.productDetailsDialog.bundleIncluding', { name: this.product.name }),
             is_bundle: true,
             cost_price: this.product.cost_price,
             bundle_components: [{
@@ -406,7 +406,7 @@ export class ProductDetailsDialogComponent implements OnInit {
             if (result) {
                 // TODO: Handle saving the listing (call backend API)
                 console.log('Listing data:', result);
-                this.notificationService.showSuccess('Listing prepared! Publishing integration coming soon.');
+                this.notificationService.showSuccess(this.transloco.translate('products.productDetailsDialog.listingPrepared'));
             }
         });
     }

@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from './pagination';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('PaginationComponent', () => {
     let component: PaginationComponent;
@@ -17,7 +18,8 @@ describe('PaginationComponent', () => {
                 MatButtonModule,
                 MatInputModule,
                 FormsModule,
-                PaginationComponent
+                PaginationComponent,
+                getTranslocoTestingModule()
             ]
         })
             .compileComponents();

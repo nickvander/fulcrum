@@ -9,7 +9,7 @@ import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/materia
 import { ProductImage } from '../../../products/models/product.model';
 import { ProductService } from '../../../products/services/product';
 import { NotificationService } from '../../../core/services/notification.service';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 @Component({
   selector: 'app-image-dialog',
@@ -34,7 +34,8 @@ export class ImageDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: { image: ProductImage, productId: number },
     private fb: FormBuilder,
     private productService: ProductService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private transloco: TranslocoService
   ) {
     this.currentImage = { ...data.image };
     this.imageForm = this.fb.group({
@@ -59,12 +60,12 @@ export class ImageDialogComponent implements OnInit {
       this.productService.updateProductImage(this.data.productId, this.currentImage.id, updatedData)
         .subscribe({
           next: (updatedImage) => {
-            this.notificationService.showSuccess('Image details updated successfully');
+            this.notificationService.showSuccess(this.transloco.translate('shared.imageDialog.updateSuccess'));
             // Return the updated image to the calling component
             this.dialogRef.close(updatedImage);
           },
           error: (error) => {
-            this.notificationService.showError('Failed to update image details');
+            this.notificationService.showError(this.transloco.translate('shared.imageDialog.updateError'));
             console.error('Error updating image:', error);
           }
         });

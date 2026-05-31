@@ -76,7 +76,7 @@
       <ng-container matColumnDef="employee_id">
         <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.employeeId') }}</mat-header-cell>
         <mat-cell *matCellDef="let row"
-          [matTooltip]="row.employee_id ? 'Employee ID: ' + row.employee_id : 'Customer (no employee ID)'">
+          [matTooltip]="row.employee_id ? t('users.userList.employeeIdTooltip', { id: row.employee_id }) : t('users.userList.customerNoEmployeeId')">
           {{row.employee_id || '—'}}
         </mat-cell>
       </ng-container>
@@ -104,7 +104,7 @@
       <!-- User Type Column -->
       <ng-container matColumnDef="user_type">
         <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('users.role') }}</mat-header-cell>
-        <mat-cell *matCellDef="let row" [matTooltip]="'User Type: ' + row.user_type">
+        <mat-cell *matCellDef="let row" [matTooltip]="t('users.userList.userTypeTooltip', { type: row.user_type })">
           <span class="badge" [ngClass]="row.user_type">{{row.user_type}}</span>
         </mat-cell>
       </ng-container>
@@ -143,26 +143,26 @@
           <!-- Desktop Actions -->
           <div class="desktop-actions">
             <button mat-icon-button [routerLink]="['edit', row.id]" [matTooltip]="t('common.edit')"
-              aria-label="Edit user">
+              [attr.aria-label]="t('users.userList.ariaEditUser')">
               <mat-icon>edit</mat-icon>
             </button>
             <button mat-icon-button (click)="resetUserPassword(row.id, row.email)"
-              [matTooltip]="t('users.resetPassword')" aria-label="Reset user password">
+              [matTooltip]="t('users.resetPassword')" [attr.aria-label]="t('users.userList.ariaResetPassword')">
               <mat-icon>lock_reset</mat-icon>
             </button>
             <button mat-icon-button (click)="deactivateUser(row.id)" [matTooltip]="t('users.deactivate')"
-              aria-label="Deactivate user">
+              [attr.aria-label]="t('users.userList.ariaDeactivateUser')">
               <mat-icon>block</mat-icon>
             </button>
             <button mat-icon-button (click)="deleteUser(row.id)" [matTooltip]="t('common.delete')" color="warn"
-              aria-label="Permanently delete user">
+              [attr.aria-label]="t('users.userList.ariaDeleteUser')">
               <mat-icon>delete_forever</mat-icon>
             </button>
           </div>
 
           <!-- Mobile Actions -->
           <div class="mobile-actions">
-            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
+            <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="t('common.actions')">
               <mat-icon>more_vert</mat-icon>
             </button>
             <mat-menu #menu="matMenu">

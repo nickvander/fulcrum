@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('ForcePasswordChangeComponent', () => {
     let component: ForcePasswordChangeComponent;
@@ -23,7 +24,7 @@ describe('ForcePasswordChangeComponent', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [ForcePasswordChangeComponent, NoopAnimationsModule],
+            imports: [ForcePasswordChangeComponent, NoopAnimationsModule, getTranslocoTestingModule()],
             providers: [
                 { provide: UserService, useValue: userServiceMock },
                 { provide: MatSnackBar, useValue: snackBarMock },

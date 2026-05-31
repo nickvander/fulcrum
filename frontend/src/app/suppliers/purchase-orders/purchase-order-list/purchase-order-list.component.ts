@@ -349,8 +349,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     if (this.selectedReviewIds.size === 0 || this.bulkRejectSelectedInFlight) return;
     const ids = Array.from(this.selectedReviewIds);
     const confirmed = window.confirm(
-      `Reject ${ids.length} selected supplier import${ids.length === 1 ? '' : 's'}? ` +
-      `Approved or already-rejected reviews are skipped automatically.`
+      this.translocoService.translate('purchaseOrders.purchaseOrderList.confirmBulkRejectSelected', { count: ids.length })
     );
     if (!confirmed) return;
 
@@ -371,8 +370,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   bulkRejectStale(): void {
     if (this.staleReviewCount === 0 || this.bulkRejectInFlight) return;
     const confirmed = window.confirm(
-      `Reject all pending supplier imports older than ${STALE_REVIEW_DAYS} days? ` +
-      `${this.staleReviewCount} review${this.staleReviewCount === 1 ? '' : 's'} will be marked rejected.`
+      this.translocoService.translate('purchaseOrders.purchaseOrderList.confirmBulkRejectStale', { days: STALE_REVIEW_DAYS, count: this.staleReviewCount })
     );
     if (!confirmed) return;
 
@@ -392,26 +390,26 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   reviewPanelTitle(): string {
     const count = this.importReviews.length;
     if (this.reviewFilter === 'pending') {
-      return `${count} document${count === 1 ? '' : 's'} waiting for review`;
+      return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelTitlePending', { count });
     }
     if (this.reviewFilter === 'history') {
-      return `${count} processed import${count === 1 ? '' : 's'}`;
+      return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelTitleHistory', { count });
     }
-    return `${count} supplier import${count === 1 ? '' : 's'}`;
+    return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelTitleAll', { count });
   }
 
   reviewPanelDescription(): string {
     if (this.reviewFilter === 'pending') {
-      return 'Approve product matches to create draft POs. Internal stock only changes later when those POs are received.';
+      return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelDescPending');
     }
     if (this.reviewFilter === 'history') {
-      return 'Approved and rejected supplier documents stay searchable here without cluttering the active queue.';
+      return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelDescHistory');
     }
-    return 'All supplier document imports across statuses.';
+    return this.translocoService.translate('purchaseOrders.purchaseOrderList.panelDescAll');
   }
 
   getReviewStatusLabel(review: SupplierDocumentImportReview): string {
-    return review.status.charAt(0).toUpperCase() + review.status.slice(1);
+    return this.translocoService.translate(`purchaseOrders.purchaseOrderList.reviewStatus.${review.status}`);
   }
 
   getReviewStatusColor(review: SupplierDocumentImportReview): string {
@@ -425,15 +423,15 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   updateSupplierName(): void {
     if (this.selectedSupplierId) {
       const supplier = this.supplierMap.get(this.selectedSupplierId);
-      this.selectedSupplierName = supplier ? supplier.name : `Supplier ${this.selectedSupplierId}`;
+      this.selectedSupplierName = supplier ? supplier.name : this.translocoService.translate('purchaseOrders.purchaseOrderList.supplierFallback', { id: this.selectedSupplierId });
     } else {
-      this.selectedSupplierName = 'All Suppliers';
+      this.selectedSupplierName = this.translocoService.translate('purchaseOrders.purchaseOrderList.allSuppliers');
     }
   }
 
   getSupplierName(supplierId: number): string {
     const supplier = this.supplierMap.get(supplierId);
-    return supplier?.name || `Supplier ${supplierId}`;
+    return supplier?.name || this.translocoService.translate('purchaseOrders.purchaseOrderList.supplierFallback', { id: supplierId });
   }
 
   applyFilters(): void {
@@ -589,7 +587,7 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
   }
 
   getReviewVendor(review: SupplierDocumentImportReview): string {
-    return review.extracted_data?.vendor_name || 'Unknown supplier';
+    return review.extracted_data?.vendor_name || this.translocoService.translate('purchaseOrders.purchaseOrderList.unknownSupplier');
   }
 
   getStatusColor(status: PurchaseOrderStatus): string {

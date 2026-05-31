@@ -6,7 +6,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslocoModule } from '@ngneat/transloco';
 import { ProductVariant } from '../../models/product.model';
 
 @Component({
@@ -21,8 +23,10 @@ import { ProductVariant } from '../../models/product.model';
     MatFormFieldModule,
     MatCardModule,
     MatExpansionModule,
+    MatTooltipModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TranslocoModule
   ],
   templateUrl: './product-variants.html',
   styleUrls: ['./product-variants.scss']

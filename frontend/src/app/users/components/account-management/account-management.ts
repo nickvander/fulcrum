@@ -4,6 +4,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { UserService } from '../../services/user.service';
 import { User } from '../../../shared/models/user.model';
@@ -19,7 +20,8 @@ import { Subject, takeUntil } from 'rxjs';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    TranslocoModule,
 ],
 })
 export class AccountManagement implements OnInit, OnDestroy {
@@ -30,7 +32,8 @@ export class AccountManagement implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private userService: UserService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -77,7 +80,7 @@ export class AccountManagement implements OnInit, OnDestroy {
         .subscribe({
           next: (updatedUser: User) => {
             this.user = updatedUser;
-            this.snackBar.open('Profile updated successfully', 'Close', { duration: 3000 });
+            this.snackBar.open(this.transloco.translate('users.accountManagement.profileUpdated'), this.transloco.translate('common.close'), { duration: 3000 });
           },
           error: (error: any) => {
             // Error handling is now in the HTTP interceptor, so the error message

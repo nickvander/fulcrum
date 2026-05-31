@@ -330,7 +330,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
                    quantity_ordered: item.quantity_ordered,
                    variant_distributions: [{
                       variant_id: item.variant_id,
-                      name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || `Variant #${item.variant_id}`,
+                      name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || this.translocoService.translate('purchaseOrders.purchaseOrderEdit.variantFallback', { id: item.variant_id }),
                       sku: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.sku || '',
                       quantity: item.quantity_ordered,
                       unit_cost: item.unit_cost
@@ -341,7 +341,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
                 parent.quantity_ordered += item.quantity_ordered;
                 parent.variant_distributions.push({
                    variant_id: item.variant_id,
-                   name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || `Variant #${item.variant_id}`,
+                   name: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.name || this.translocoService.translate('purchaseOrders.purchaseOrderEdit.variantFallback', { id: item.variant_id }),
                    sku: item.product?.variants?.find((v: any) => v.id === item.variant_id)?.sku || '',
                    quantity: item.quantity_ordered,
                    unit_cost: item.unit_cost
@@ -915,7 +915,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       dialogRef.afterClosed().subscribe(result => {
         if (result) {
           this.loadPurchaseOrder(this.poId!);
-          this.snackBar.open('Receiving correction applied', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.correctionApplied'), this.translocoService.translate('common.close'), { duration: 3000 });
         }
       });
     });
@@ -1036,8 +1036,8 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     if (!this.poId) {
       const dialogRef = this.dialog.open(ConfirmationDialog, {
         data: {
-          title: 'Save Draft Required',
-          message: 'To upload an invoice, we need to save this order as a Draft first. Continue?'
+          title: this.translocoService.translate('purchaseOrders.messages.saveDraftRequired.title'),
+          message: this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.uploadSaveDraftMessage')
         }
       });
 
@@ -1059,20 +1059,20 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
   private uploadFileInternal(file: File, showToast = true): void {
     if (file.size > 10 * 1024 * 1024) {
-      this.snackBar.open('File too large. Max 10MB.', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.fileTooLarge'), this.translocoService.translate('common.close'), { duration: 3000 });
       return;
     }
     this.suppliersService.uploadInvoice(this.poId!, file).subscribe({
       next: () => {
         if (showToast) {
-          this.snackBar.open('Invoice uploaded successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.invoiceUploaded'), this.translocoService.translate('common.close'), { duration: 3000 });
         }
         this.loadInvoices();
       },
       error: (err) => {
         console.error('Upload failed', err);
         if (showToast) {
-          this.snackBar.open('Upload failed', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.uploadFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
         }
       }
     });
@@ -1083,15 +1083,15 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {
-        title: 'Delete Invoice',
-        message: 'Are you sure you want to delete this invoice?'
+        title: this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.deleteInvoiceTitle'),
+        message: this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.deleteInvoiceMessage')
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.suppliersService.deleteInvoice(id).subscribe(() => {
-          this.snackBar.open('Invoice deleted', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.invoiceDeleted'), this.translocoService.translate('common.close'), { duration: 3000 });
           this.loadInvoices();
         });
       }
@@ -1109,10 +1109,10 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     }
 
     if (invoice.file_path) {
-      return invoice.file_path.split('/').pop() || 'Invoice';
+      return invoice.file_path.split('/').pop() || this.translocoService.translate('purchaseOrders.purchaseOrderEdit.invoiceFallbackName');
     }
 
-    return 'Invoice';
+    return this.translocoService.translate('purchaseOrders.purchaseOrderEdit.invoiceFallbackName');
   }
 
   onParseAndMatchSelected(event: any): void {
@@ -1335,7 +1335,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
           this.suppliers.push(newSupplier);
           this.poForm.patchValue({ supplier_id: newSupplier.id });
           this.snackBar.open(
-            `Auto-created and selected new supplier: ${newSupplier.name}`,
+            this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.autoCreatedSupplier', { name: newSupplier.name }),
             this.translocoService.translate('common.close'),
             { duration: 3000 }
           );
@@ -1399,7 +1399,7 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     if (changesApplied) {
       const itemCount = result.items?.length || 0;
       this.snackBar.open(
-        `Extracted ${itemCount} item(s) from document`,
+        this.translocoService.translate('purchaseOrders.purchaseOrderEdit.messages.extractedItems', { count: itemCount }),
         this.translocoService.translate('common.close'),
         { duration: 4000 }
       );

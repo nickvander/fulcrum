@@ -161,7 +161,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
         } catch (err) {
             console.error('Error accessing camera', err);
             this.cameraError = true;
-            this.snackBar.open('Could not access camera', 'Close', { duration: 3000 });
+            this.snackBar.open(this.translocoService.translate('products.productScanner.errors.cameraAccessDenied'), this.translocoService.translate('common.close'), { duration: 3000 });
         } finally {
             this.isInitializing = false;
         }
@@ -239,7 +239,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             if (file.type.match(/image\/*/)) {
                 this.processImage(file);
             } else {
-                this.snackBar.open('Please drop an image file.', 'Close', { duration: 3000 });
+                this.snackBar.open(this.translocoService.translate('products.productScanner.errors.dropImageOnly'), this.translocoService.translate('common.close'), { duration: 3000 });
             }
         }
     }
@@ -293,7 +293,7 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
             },
             error: (err) => {
                 console.error('AI Processing Error', err);
-                this.snackBar.open('AI Identification failed. Using image for manual entry.', 'Close', { duration: 3000 });
+                this.snackBar.open(this.translocoService.translate('products.productScanner.errors.aiIdentifyFailed'), this.translocoService.translate('common.close'), { duration: 3000 });
                 const result = { imageFile: file };
                 this.scanComplete.emit(result as any);
                 if (this.dialogRef) this.dialogRef.close(result);
@@ -493,17 +493,17 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
     }
 
     private handleScannerError(err: any) {
-        let message = 'Scanner Error: ';
+        let message: string;
         if (err?.message?.includes('NotAllowedError') || err?.name === 'NotAllowedError') {
-            message += 'Camera permission denied. Please allow camera access.';
+            message = this.translocoService.translate('products.productScanner.errors.cameraPermissionDenied');
         } else if (err?.message?.includes('NotFoundError') || err?.name === 'NotFoundError') {
-            message += 'No camera found. Please connect a camera.';
+            message = this.translocoService.translate('products.productScanner.errors.noCameraFound');
         } else if (err?.message?.includes('object can not be found')) {
-            message += 'Camera not available. Try refreshing the page.';
+            message = this.translocoService.translate('products.productScanner.errors.cameraUnavailable');
         } else {
-            message += err?.message || 'Unknown error';
+            message = err?.message || this.translocoService.translate('products.productScanner.errors.unknownScannerError');
         }
-        this.snackBar.open(message, 'Close', { duration: 5000 });
+        this.snackBar.open(message, this.translocoService.translate('common.close'), { duration: 5000 });
     }
 
     // Keep old method for backwards compatibility (now just calls native)
@@ -535,13 +535,13 @@ export class ProductScannerComponent implements OnDestroy, AfterViewInit {
                 const result = { foundProduct: product, barcode };
                 this.scanComplete.emit(result);
                 if (this.dialogRef) this.dialogRef.close(result);
-                this.snackBar.open('Product found!', 'Close', { duration: 2000 });
+                this.snackBar.open(this.translocoService.translate('products.productScanner.productFoundMsg'), this.translocoService.translate('common.close'), { duration: 2000 });
             },
             error: (err) => {
                 this.isProcessing = false;
                 if (err.status === 404) {
                     // Not found -> Prompt to create
-                    this.snackBar.open('Product not found. Opening creation form...', 'Close', { duration: 3000 });
+                    this.snackBar.open(this.translocoService.translate('products.productScanner.productNotFoundMsg'), this.translocoService.translate('common.close'), { duration: 3000 });
                     const result = { barcode, notFound: true };
                     this.scanComplete.emit(result);
                     if (this.dialogRef) this.dialogRef.close(result);

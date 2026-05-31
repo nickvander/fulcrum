@@ -18,6 +18,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Observable, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, startWith, map } from 'rxjs/operators';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { MarketingService, CampaignCreate, CampaignEventCreate, MarketingConnector } from '../../services/marketing.service';
 import { ProductService } from '../../../products/services/product';
@@ -44,6 +45,7 @@ import { Product } from '../../../products/models/product.model';
     MatSnackBarModule,
     MatProgressSpinnerModule,
     MatAutocompleteModule,
+    TranslocoModule,
   ],
   templateUrl: './campaign-wizard.component.html',
   styleUrls: ['./campaign-wizard.component.scss']
@@ -70,7 +72,8 @@ export class CampaignWizardComponent implements OnInit {
     private productService: ProductService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService
   ) {
     this.campaignForm = this.fb.group({
       name: ['', Validators.required],
@@ -127,7 +130,7 @@ export class CampaignWizardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load campaign', err);
-        this.snackBar.open('Error loading campaign', 'Close');
+        this.snackBar.open(this.transloco.translate('marketing.campaignWizard.messages.loadError'), this.transloco.translate('common.close'));
       }
     });
   }
@@ -218,14 +221,14 @@ export class CampaignWizardComponent implements OnInit {
       this.marketingService.updateCampaign(this.campaignId, payload).subscribe({
         next: () => {
           this.saving = false;
-          this.snackBar.open('Campaign updated!', 'View', { duration: 3000 })
+          this.snackBar.open(this.transloco.translate('marketing.campaignWizard.messages.updated'), this.transloco.translate('common.view'), { duration: 3000 })
             .onAction().subscribe(() => this.router.navigate(['/marketing', this.campaignId]));
           this.router.navigate(['/marketing']);
         },
         error: (err) => {
           this.saving = false;
           console.error('Failed to update campaign', err);
-          this.snackBar.open('Failed to update campaign', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.campaignWizard.messages.updateFailed'), this.transloco.translate('common.close'), { duration: 3000 });
         }
       });
     } else {
@@ -233,14 +236,14 @@ export class CampaignWizardComponent implements OnInit {
       this.marketingService.createCampaign(payload).subscribe({
         next: (created) => {
           this.saving = false;
-          this.snackBar.open('Campaign created!', 'View', { duration: 3000 })
+          this.snackBar.open(this.transloco.translate('marketing.campaignWizard.messages.created'), this.transloco.translate('common.view'), { duration: 3000 })
             .onAction().subscribe(() => this.router.navigate(['/marketing', created.id]));
           this.router.navigate(['/marketing']);
         },
         error: (err) => {
           this.saving = false;
           console.error('Failed to create campaign', err);
-          this.snackBar.open('Failed to create campaign', 'Close', { duration: 3000 });
+          this.snackBar.open(this.transloco.translate('marketing.campaignWizard.messages.createFailed'), this.transloco.translate('common.close'), { duration: 3000 });
         }
       });
     }

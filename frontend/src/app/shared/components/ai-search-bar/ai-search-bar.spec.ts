@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { AiSearchBar } from './ai-search-bar';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('AiSearchBar', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AiSearchBar],
+      imports: [AiSearchBar, getTranslocoTestingModule()],
     }).compileComponents();
   });
 

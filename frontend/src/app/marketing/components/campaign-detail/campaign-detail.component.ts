@@ -9,6 +9,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatListModule } from '@angular/material/list';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TranslocoModule } from '@ngneat/transloco';
 
 import { MarketingService, Campaign, CampaignProductSummary } from '../../services/marketing.service';
 import { ProductService } from '../../../products/services/product';
@@ -27,7 +28,8 @@ import { ProductDetailsDialogComponent } from '../../../products/components/prod
     MatTabsModule,
     MatProgressSpinnerModule,
     MatListModule,
-    MatDialogModule
+    MatDialogModule,
+    TranslocoModule
   ],
   templateUrl: './campaign-detail.component.html',
   styleUrls: ['./campaign-detail.component.scss']

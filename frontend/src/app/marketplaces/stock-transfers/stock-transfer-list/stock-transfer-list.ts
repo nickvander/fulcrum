@@ -10,7 +10,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { Router } from '@angular/router';
 
 import {
@@ -68,6 +68,7 @@ export class StockTransferListComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
@@ -89,7 +90,7 @@ export class StockTransferListComponent implements OnInit {
       error: err => {
         console.error('Stock transfer list failed', err);
         this.loading = false;
-        this.snackBar.open('Failed to load stock transfers', 'Close', { duration: 4000 });
+        this.snackBar.open(this.transloco.translate('stockTransfers.stockTransferList.errors.loadFailed'), this.transloco.translate('common.close'), { duration: 4000 });
       },
     });
   }

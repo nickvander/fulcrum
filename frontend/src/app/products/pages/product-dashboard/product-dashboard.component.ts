@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterModule } from '@angular/router';
 import { Observable, map } from 'rxjs';
+import { TranslocoModule } from '@ngneat/transloco';
 import { DashboardStatsService, DashboardStats } from '../../../dashboard/services/dashboard-stats.service';
 import { StatCardComponent } from '../../../dashboard/widgets/stat-card/stat-card.component';
 import { InventoryHealthWidgetComponent } from '../../../dashboard/widgets/inventory-health-widget/inventory-health-widget.component';
@@ -18,6 +19,7 @@ import { ScreenService } from '../../../core/services/screen.service';
         MatButtonModule,
         MatIconModule,
         RouterModule,
+        TranslocoModule,
         StatCardComponent,
         InventoryHealthWidgetComponent
     ],

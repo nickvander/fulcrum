@@ -44,7 +44,7 @@
                         {{ entry.changed_at | date:'short' }}
                     </span>
                     <span class="col-entity">
-                        <span class="entity-name">{{ entry.entity_name || 'Unknown' }}</span>
+                        <span class="entity-name">{{ entry.entity_name || t('settings.changeLogDialog.unknownEntity') }}</span>
                         <span class="entity-type">{{ entry.entity_type }}</span>
                     </span>
                     <span class="col-field">
@@ -62,14 +62,14 @@
                         </span>
                     </span>
                     <span class="col-user">
-                        {{ entry.changed_by_email || 'System' }}
+                        {{ entry.changed_by_email || t('settings.changeLogDialog.systemUser') }}
                     </span>
                 </div>
                 }
             </div>
 
             <mat-paginator [length]="total" [pageSize]="pageSize" [pageIndex]="pageIndex"
-                [pageSizeOptions]="[10, 25, 50, 100]" (page)="onPageChange($event)" aria-label="Select page">
+                [pageSizeOptions]="[10, 25, 50, 100]" (page)="onPageChange($event)" [attr.aria-label]="t('settings.changeLogDialog.selectPage')">
             </mat-paginator>
             }
         </mat-dialog-content>

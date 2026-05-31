@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { CustomFieldList } from './custom-field-list';
+import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
 
 describe('CustomFieldList', () => {
   let component: CustomFieldList;
@@ -11,7 +12,7 @@ describe('CustomFieldList', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CustomFieldList, HttpClientTestingModule, NoopAnimationsModule],
+      imports: [CustomFieldList, HttpClientTestingModule, NoopAnimationsModule, getTranslocoTestingModule()],
       providers: [
         { provide: MatDialog, useValue: {} },
       ],

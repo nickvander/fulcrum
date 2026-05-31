@@ -42,7 +42,7 @@
 
         <!-- Receipt List (Edit Mode) -->
         <div *ngIf="isEditMode && attachedReceipts.length" class="receipt-list">
-            <h4>{{ t('common.attachments') }}</h4>
+            <h4>{{ t('expenses.expenseDialog.attachments') }}</h4>
             <div *ngFor="let receipt of attachedReceipts" class="receipt-item">
                 <div class="receipt-info">
                     <mat-icon>receipt</mat-icon>
@@ -138,9 +138,9 @@
             <!-- Payment Method & Reference Row -->
             <div class="form-row">
                 <mat-form-field appearance="outline" class="flex-field">
-                    <mat-label>{{ t('expenses.fields.paymentMethod') }}</mat-label>
+                    <mat-label>{{ t('expenses.fields.payment') }}</mat-label>
                     <mat-select formControlName="payment_method">
-                        <mat-option [value]="null">{{ t('expenses.paymentMethod.none') }}</mat-option>
+                        <mat-option [value]="null">{{ t('purchaseOrders.paymentMethod.none') }}</mat-option>
                         @for (method of paymentMethods; track method.value) {
                         <mat-option [value]="method.value">
                             {{ t('purchaseOrders.paymentMethod.' + getPaymentMethodKey(method.value)) }}
