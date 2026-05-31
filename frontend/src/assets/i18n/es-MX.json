@@ -69,7 +69,7 @@
     },
     "errors": {
       "emailRequired": "El correo electrónico es obligatorio",
-      "invalidEmail": "Por favor, introduce un correo electrónico válido",
+      "invalidEmail": "Por favor, ingresa un correo electrónico válido",
       "firstNameRequired": "El nombre es obligatorio",
       "lastNameRequired": "El apellido es obligatorio",
       "roleRequired": "El tipo de usuario es obligatorio",
@@ -259,7 +259,7 @@
     },
     "returnsWidget": {
       "title": "Devoluciones recibidas",
-      "subtitle": "Devoluciones físicas registradas desde la página de detalle de cada pedido. Valor al costo actual.",
+      "subtitle": "Devoluciones físicas registradas desde la página de detalle de cada pedido. Valuadas al costo actual.",
       "refresh": "Actualizar",
       "empty": "Sin devoluciones físicas en la ventana.",
       "error": "No se pudo cargar el resumen de devoluciones.",
@@ -271,7 +271,7 @@
     "returnsPage": {
       "title": "Devoluciones físicas",
       "subtitle": "Detalle por evento del widget del dashboard. Una fila por devolución registrada.",
-      "backToDashboard": "Volver al dashboard",
+      "backToDashboard": "Volver al tablero",
       "windowLabel": "Ventana",
       "window30": "Últimos 30 días",
       "window60": "Últimos 60 días",
@@ -299,7 +299,7 @@
     "refundsPage": {
       "title": "Reembolsos y cancelaciones",
       "subtitle": "Detalle por evento del widget del dashboard. Incluye cancelaciones de órdenes completas y reembolsos parciales de Amazon.",
-      "backToDashboard": "Volver al dashboard",
+      "backToDashboard": "Volver al tablero",
       "windowLabel": "Ventana",
       "window30": "Últimos 30 días",
       "window60": "Últimos 60 días",
@@ -821,7 +821,7 @@
     "searchProductsToAdd": "Buscar productos para agregar",
     "removeFromBundle": "Eliminar del paquete",
     "noComponentsAdded": "Aún no se han agregado componentes a este paquete.",
-    "scanInstruction": "Escanea con escáner Bluetooth o escribe el código de barras:",
+    "scanInstruction": "Escanea con lector Bluetooth o escribe el código de barras:",
     "barcode": "Código de Barras",
     "scanPlaceholder": "Escanea o escribe el código aquí...",
     "lookupProduct": "Buscar Producto",
@@ -829,8 +829,8 @@
     "startCamera": "Iniciar Cámara",
     "stopCamera": "Detener Cámara",
     "manageMarketplaces": "Gestionar disponibilidad del producto en marketplaces",
-    "noActiveListings": "Sin listados activos",
-    "notListedYet": "Este producto aún no está listado en ningún marketplace.",
+    "noActiveListings": "Sin publicaciones activas",
+    "notListedYet": "Este producto aún no está publicado en ningún marketplace.",
     "availableMarketplaces": "Marketplaces Disponibles",
     "publishTo": "Publicar en",
     "avgCost": "Costo Promedio",
@@ -1014,7 +1014,7 @@
       "qrCode": "Código QR",
       "usesQuantity": "Usa {{count}}× este artículo",
       "poNumber": "OC #{{id}}",
-      "listingPrepared": "¡Listado listo! La integración de publicación llega pronto.",
+      "listingPrepared": "¡Publicación lista! La integración para publicar llega pronto.",
       "bundleIncluding": "Kit que incluye {{name}}"
     },
     "productFilters": {
@@ -1099,7 +1099,7 @@
     "stockHistoryDialog": {
       "currentStockLabel": "Existencias actuales:",
       "noAdjustments": "Aún no hay ajustes de inventario registrados.",
-      "receivedPo": "Recibido"
+      "receivedPo": "Recibido por OC"
     },
     "clickToPreview": "Haz clic para previsualizar",
     "loadingMore": "Cargando más..."
@@ -1238,10 +1238,10 @@
     "shippingCost": "Costo de Envío",
     "importDuties": "Aranceles de Importación",
     "otherCosts": "Otros Costos",
-    "grandTotal": "Total General",
+    "grandTotal": "Gran total",
     "receiveItems": "Recibir Artículos",
     "receivedQuantity": "Cantidad Recibida",
-    "landedCost": "Costo de Aterrizaje",
+    "landedCost": "Costo en destino",
     "allocateCosts": "Distribuir Costos",
     "totalOrders": "Total de Órdenes",
     "totalValue": "Valor Total",
@@ -1273,7 +1273,7 @@
       "receiveItems": "Recibir Artículos",
       "placeOrder": "Realizar Orden",
       "saveDraft": "Guardar Borrador",
-      "unlockOrder": "Desbloquear para Editar",
+      "unlockOrder": "Desbloquear para editar",
       "uploadInvoice": "Subir Factura",
       "clearDraft": "Borrar Borrador"
     },
@@ -1305,7 +1305,7 @@
       "receiveTooltip": "Agregar cantidades coincidentes de factura al inventario",
       "valuesApplied": "Se actualizaron {{count}} artículo(s) con valores de factura",
       "noChanges": "Sin cambios de precio que aplicar",
-      "unlockToApply": "Desbloquee esta orden antes de aplicar valores de factura",
+      "unlockToApply": "Desbloquea esta orden antes de aplicar los valores de la factura",
       "receivedItems": "Stock recibido para {{count}} artículo(s) coincidente(s)",
       "receiveFailed": "Error al recibir stock coincidente",
       "noReceivableItems": "Ningún artículo coincidente tiene cantidad pendiente por recibir",
@@ -1314,8 +1314,8 @@
       "goToPo": "Ir a OC",
       "scanAnother": "Probar Otra Factura",
       "noPoMatch": "No se encontró OC coincidente. Puede actualizar manualmente los valores si lo necesita.",
-      "dropOrClick": "Arrastra factura aquí o haz clic para buscar",
-      "dropToExtract": "Arrastra factura para extraer detalles de OC",
+      "dropOrClick": "Arrastra la factura aquí o haz clic para buscar el archivo",
+      "dropToExtract": "Arrastra la factura para extraer los datos de la OC",
       "parsing": "Analizando factura..."
     },
     "importPo": "Importar OC",
@@ -1345,13 +1345,13 @@
       "saveFirst": "Guarde la orden primero para habilitar la carga de facturas",
       "savedDraft": "Orden guardada como borrador",
       "saveDraftRequired": {
-        "title": "Guardar Borrador Requerido",
+        "title": "Es necesario guardar el borrador",
         "message": "Para usar la herramienta de asignación de costos, necesitamos guardar esta orden como borrador primero. ¿Continuar?"
       },
       "updated": "Orden actualizada exitosamente",
       "deleteConfirm": {
         "title": "Eliminar Orden de Compra",
-        "message": "¿Está seguro de que desea eliminar esta orden? Esta acción no se puede deshacer."
+        "message": "¿Seguro que quieres eliminar esta orden? Esta acción no se puede deshacer."
       },
       "deleteSuccess": "Orden de Compra eliminada exitosamente",
       "deleteFailed": "Error al eliminar la orden",
@@ -1513,7 +1513,7 @@
       }
     },
     "purchaseOrderList": {
-      "importQueueEyebrow": "Cola de importaciones del proveedor",
+      "importQueueEyebrow": "Importaciones del proveedor en espera",
       "rejectCheckedTooltip": "Rechazar cada importación seleccionada",
       "rejectSelected": "Rechazar seleccionados ({{count}})",
       "clearSelection": "Limpiar selección",
@@ -1564,8 +1564,8 @@
       "cameraCaptureComingSoon": "¡La captura con cámara llega pronto! Usará IA para identificar tus productos."
     },
     "receivingDialog": {
-      "titleReceive": "Recibir artículos - PO #{{id}}",
-      "titleCorrect": "Corregir recepción - PO #{{id}}",
+      "titleReceive": "Recibir artículos - OC #{{id}}",
+      "titleCorrect": "Corregir recepción - OC #{{id}}",
       "correctTitle": "Revertir un error de recepción",
       "correctDescription": "Esto reduce la cantidad recibida de la OC y registra un ajuste negativo de inventario para que el historial de auditoría quede intacto.",
       "correctionReason": "Motivo de corrección",
@@ -1722,9 +1722,9 @@
     "connectPromptPrimary": "MercadoLibre es tu canal principal. Conéctalo para sincronizar inventario de ML Full, pedidos y comisiones de liquidación.",
     "comingSoon": "Próximamente",
     "comingSoonDesc": "Canal planificado",
-    "connectEbay": "El soporte para eBay está en el roadmap",
+    "connectEbay": "El soporte para eBay está en la hoja de ruta",
     "connectSeller": "Conecta tu cuenta de vendedor de {{name}}",
-    "onTheRoadmap": "En el roadmap",
+    "onTheRoadmap": "En la hoja de ruta",
     "comingSoonBody": "La integración con eBay está planificada. Se conectará igual que MercadoLibre y Amazon cuando esté disponible.",
     "channelListings": "Publicaciones del Canal",
     "channelListingsDesc": "Revisa y administra el estado de cada producto para el Canal:",
@@ -1742,13 +1742,13 @@
     "noListingsEmpty": "No se encontraron publicaciones activas para este canal. Comienza agregando productos desde el administrador de inventario.",
     "feeConfig": {
       "title": "Configuración del motor de costos",
-      "subtitle": "Tarifas por defecto que usa el motor Phase-8 de margen neto. Actualizarlas NO toca los breakdowns existentes — haz clic en Recalcular después para refrescarlos.",
+      "subtitle": "Tarifas por defecto que usa el motor Phase-8 de margen neto. Actualizarlas NO toca los desgloses existentes — haz clic en Recalcular después para refrescarlos.",
       "feeRateLabel": "Tarifa por defecto",
       "shippingLabel": "Costo de envío por defecto",
       "save": "Guardar configuración",
       "saved": "Configuración guardada.",
-      "recompute": "Recalcular breakdowns",
-      "recomputeTooltip": "Refresca todos los cost breakdowns de las órdenes de este marketplace con la configuración actual.",
+      "recompute": "Recalcular desgloses",
+      "recomputeTooltip": "Refresca todos los desgloses de costos de las órdenes de este marketplace con la configuración actual.",
       "recomputeSummary": "Recalculados: {{updated}} actualizados, {{created}} creados, {{errors}} errores.",
       "recomputeFailed": "No se pudieron recalcular los breakdowns.",
       "errorNegative": "La tarifa y el costo de envío no pueden ser negativos."
@@ -1915,7 +1915,7 @@
       "pageTitle": "Conectores de marketing",
       "pageSubtitle": "Conecta tus plataformas de correo, redes sociales y anuncios",
       "emailMarketing": "Marketing por correo",
-      "emailMarketingSubtitle": "Envía newsletters y correos promocionales",
+      "emailMarketingSubtitle": "Envía boletines y correos promocionales",
       "connected": "Conectado",
       "socialMediaSubtitle": "Publica en Instagram, Facebook, TikTok y más",
       "paidAdvertising": "Publicidad de pago",
@@ -1985,7 +1985,7 @@
     "filterAction": "Filtrar Acción",
     "allUsers": "Todos los Usuarios",
     "apply": "Aplicar",
-    "reset": "Reiniciar"
+    "reset": "Restablecer"
   },
   "dateRanges": {
     "week": "Semana",
@@ -2061,11 +2061,11 @@
     },
     "actions": {
       "ship": "Marcar enviada",
-      "shipWithMarketplace": "Enviar + reservar inbound",
+      "shipWithMarketplace": "Enviar + reservar envío entrante",
       "receive": "Recibir productos",
       "cancel": "Cancelar borrador",
       "syncListings": "Enviar cantidad a listados",
-      "reconcileNow": "Reconciliar inbound ahora"
+      "reconcileNow": "Conciliar envío entrante ahora"
     },
     "detail": {
       "title": "Transferencia #{{id}}",
@@ -2073,7 +2073,7 @@
       "unitsReceived": "Unidades recibidas",
       "shippedAt": "Enviada",
       "receivedAt": "Recibida",
-      "externalInboundId": "ID inbound del marketplace",
+      "externalInboundId": "ID del envío entrante del marketplace",
       "lastReconciledAt": "Última reconciliación",
       "notFound": "Transferencia no encontrada.",
       "lastSync": "Última sincronización de cantidad",
@@ -2346,11 +2346,11 @@
   "settings": {
     "title": "Configuración",
     "changeLog": {
-      "title": "Log de Cambios de Entidad",
+      "title": "Registro de Cambios de Entidad",
       "source": "Fuente",
       "allSources": "Todas las Fuentes",
       "sources": {
-        "sheets_import": "Importación Hojas",
+        "sheets_import": "Importación de Hojas",
         "direct_edit": "Edición Directa",
         "api": "API"
       },
@@ -2615,7 +2615,7 @@
     },
     "list": {
       "title": "Sesiones de conteo físico",
-      "subtitle": "Cuenta SKUs en bulk en una bodega o estante, luego confirma los deltas como ajustes de reconteo.",
+      "subtitle": "Cuenta varios SKUs a la vez en una bodega o estante, luego confirma los deltas como ajustes de reconteo.",
       "viewAuditLink": "Ver historial",
       "startNew": "Iniciar nueva sesión",
       "location": "Ubicación",
@@ -2649,7 +2649,7 @@
       "skuNotFound": "No se encontró un producto con SKU {{sku}}.",
       "skuAlreadyAdded": "El SKU {{sku}} ya está en esta sesión.",
       "itemsTitle": "Ítems ({{n}})",
-      "itemsEmpty": "Aún no hay SKUs agregados. Usa el input de arriba para agregar uno.",
+      "itemsEmpty": "Aún no hay SKUs agregados. Usa el campo de arriba para agregar uno.",
       "removeRow": "Quitar de la sesión",
       "removeFailed": "No se pudo quitar esa fila.",
       "updateFailed": "No se pudo guardar el conteo.",
@@ -2713,13 +2713,13 @@
     },
     "empty": {
       "title": "Aún no hay reglas de alerta",
-      "subtitle": "Agrega una regla y Fulcrum te enviará un correo cuando se cumpla la condición. Las reglas se evalúan cada hora; los cooldowns por regla evitan spam."
+      "subtitle": "Agrega una regla y Fulcrum te enviará un correo cuando se cumpla la condición. Las reglas se evalúan cada hora; el tiempo de espera por regla evita el exceso de correos."
     },
     "table": {
       "type": "Tipo",
       "threshold": "Umbral",
       "window": "Ventana",
-      "cooldown": "Cooldown",
+      "cooldown": "Tiempo de espera",
       "email": "Correo",
       "enabled": "Activa",
       "lastTriggered": "Última activación",
@@ -2741,7 +2741,7 @@
       "thresholdHintStockoutRisk": "Se activa cuando hay al menos esta cantidad de productos agotados o inminentes.",
       "windowDays": "Ventana (días)",
       "windowHint": "Ventana de evaluación.",
-      "cooldownMinutes": "Cooldown (minutos)",
+      "cooldownMinutes": "Tiempo de espera (minutos)",
       "cooldownHint": "No se enviará otro correo de esta regla hasta que pasen estos minutos.",
       "notifyEmail": "Correo de aviso",
       "enabled": "Activa",
@@ -2833,7 +2833,7 @@
     "cols": {
       "marketplace": "Marketplace",
       "auth": "Autenticación",
-      "orderPoll": "Último polling de pedidos",
+      "orderPoll": "Última consulta de pedidos",
       "webhooks": "Webhooks (24h)",
       "inbound": "Transferencias inbound",
       "settlement": "Comisiones reales",
@@ -2859,11 +2859,11 @@
     "settlement": {
       "unsupported": "No disponible",
       "lastSyncedTooltip": "Las comisiones reales se sincronizaron hace {{when}}. El motor de costos las usa en lugar de la tasa estimada.",
-      "neverTooltip": "Aún no se han sincronizado comisiones reales para esta credencial. Pulsa 'Sincronizar comisiones' para obtener las comisiones reales por pedido desde el marketplace.",
+      "neverTooltip": "Aún no se han sincronizado comisiones reales para esta credencial. Haz clic en 'Sincronizar comisiones' para obtener las comisiones reales por pedido desde el marketplace.",
       "unsupportedTooltip": "La ingesta de comisiones reales solo está disponible para Amazon y MercadoLibre."
     },
     "actions": {
-      "pollNow": "Polling de pedidos",
+      "pollNow": "Consultar pedidos",
       "pollTooltip": "Ejecuta la ingesta de pedidos para esta credencial ahora",
       "reconcileNow": "Reconciliar inbound",
       "reconcileTooltip": "Ejecuta la reconciliación inbound para las transferencias abiertas de esta credencial",
