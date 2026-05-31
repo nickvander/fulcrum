@@ -18,7 +18,7 @@ import { SettingsService } from '../../services/settings.service';
  * auto-expand state + remembered manual toggles (replaces the old hardcoded
  * purchasingExpanded / marketplacesExpanded booleans).
  */
-type NavGroupId = 'purchasing' | 'marketplaces';
+type NavGroupId = 'purchasing' | 'marketplaces' | 'inventory';
 
 interface NavGroupDef {
   id: NavGroupId;
@@ -58,13 +58,15 @@ export class Sidenav implements OnInit, OnDestroy {
   expanded: Record<NavGroupId, boolean> = {
     purchasing: false,
     marketplaces: false,
+    inventory: false,
   };
 
   private readonly groups: NavGroupDef[] = [
-    { id: 'purchasing', routes: ['/suppliers', '/suppliers/po', '/expenses'] },
+    { id: 'inventory', routes: ['/products', '/products/audit', '/inventory/count'] },
+    { id: 'purchasing', routes: ['/suppliers', '/suppliers/po'] },
     {
       id: 'marketplaces',
-      routes: ['/marketplaces', '/marketplaces/transfers', '/marketplaces/health', '/reports/qa'],
+      routes: ['/marketplaces', '/marketplaces/health'],
     },
   ];
 

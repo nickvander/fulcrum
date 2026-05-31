@@ -69,9 +69,9 @@
 
   .margin-pill {
     font-weight: 600;
-    color: #2e7d32;
+    color: var(--success-color);
 
-    &.negative { color: #c62828; }
+    &.negative { color: var(--error-color); }
   }
 }
 
@@ -81,7 +81,7 @@
   height: 14px;
   border-radius: 3px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--bg-raised);
 }
 
 .segment {
@@ -97,8 +97,8 @@
 .seg-shipping { background: #b27ae0; }
 .seg-ads      { background: #ee85a2; }
 .seg-other    { background: #9ea7b5; }
-.seg-profit   { background: #2e7d32; }
-.seg-loss     { background: #c62828; }
+.seg-profit   { background: var(--success-color); }
+.seg-loss     { background: var(--error-color); }
 
 .legend {
   display: flex;

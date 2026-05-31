@@ -71,5 +71,5 @@
   }
 }
 
-.margin-negative { color: #c62828; font-weight: 600; }
-.margin-warn     { color: #ef6c00; }
+.margin-negative { color: var(--error-color); font-weight: 600; }
+.margin-warn     { color: var(--warning-color); }

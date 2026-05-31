@@ -141,20 +141,20 @@
     padding: 2px 8px;
     border-radius: 999px;
     font-weight: 600;
-    background: rgba(0, 0, 0, 0.05);
-    color: rgba(0, 0, 0, 0.7);
+    background: var(--bg-raised);
+    color: var(--text-secondary);
 
     &.critical {
-        background: rgba(198, 40, 40, 0.12);
-        color: #c62828;
+        background: var(--error-bg);
+        color: var(--error-color);
     }
     &.low {
-        background: rgba(239, 108, 0, 0.12);
-        color: #ef6c00;
+        background: var(--warning-bg);
+        color: var(--warning-color);
     }
     &.watch {
-        background: rgba(21, 101, 192, 0.12);
-        color: #1565c0;
+        background: var(--info-bg);
+        color: var(--info-color);
     }
 }
 
@@ -201,17 +201,17 @@
     }
     code {
         font-size: 0.65rem;
-        background: rgba(0, 0, 0, 0.04);
+        background: var(--bg-raised);
         padding: 1px 5px;
         border-radius: 3px;
         margin-left: 6px;
         color: var(--text-secondary);
     }
     tr.sev-critical td {
-        background: rgba(198, 40, 40, 0.04);
+        background: var(--error-bg);
     }
     tr.sev-low td {
-        background: rgba(239, 108, 0, 0.03);
+        background: var(--warning-bg);
     }
     a {
         color: inherit;

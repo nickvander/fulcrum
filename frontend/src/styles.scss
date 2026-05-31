@@ -21,6 +21,41 @@ body {
     height: 100vh;
 }
 
+// =============================================================================
+// Global themed scrollbars — token-driven so they read on both the dark
+// Obsidian and the light warm-paper surfaces (the OS default bar clashed with
+// the dark chrome). Thin track-less thumb; brightens on hover.
+// =============================================================================
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-hover) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-hover);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+
+    &:hover {
+        background: var(--text-hint);
+        background-clip: content-box;
+    }
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 // Global Heading Styles - display family + theme color
 h1,
 h2,

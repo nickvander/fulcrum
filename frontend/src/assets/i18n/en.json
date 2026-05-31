@@ -99,6 +99,8 @@
   },
   "nav": {
     "menu": "Menu",
+    "inventory": "Inventory",
+    "operations": "Operations",
     "dashboard": "Dashboard",
     "products": "Products",
     "inventoryAudit": "Stock audit log",

@@ -74,19 +74,19 @@
   flex-shrink: 0;
 
   &.velocity {
-    color: #1976d2;
+    color: var(--accent-color);
   }
   &.margin {
-    color: #2e7d32;
+    color: var(--success-color);
   }
   &.stockout {
-    color: #c62828;
+    color: var(--error-color);
   }
   &.refunds {
-    color: #8e24aa;
+    color: var(--accent-2);
   }
   &.reason-codes {
-    color: #ef6c00;
+    color: var(--warning-color);
   }
 }
 

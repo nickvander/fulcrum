@@ -58,8 +58,8 @@
   stroke-linecap: round;
 }
 
-.line-revenue { stroke: #1e88e5; }
-.line-cost    { stroke: #f57c00; }
+.line-revenue { stroke: var(--accent-color); }
+.line-cost    { stroke: var(--warning-color); }
 
 .x-axis {
   display: flex;
@@ -89,8 +89,8 @@
   border-radius: 2px;
 }
 
-.swatch-revenue { background: #1e88e5; }
-.swatch-cost    { background: #f57c00; }
+.swatch-revenue { background: var(--accent-color); }
+.swatch-cost    { background: var(--warning-color); }
 
 .totals {
   margin: 0;
@@ -120,6 +120,6 @@
     font-size: 0.9rem;
     font-weight: 600;
 
-    &.negative { color: #c62828; }
+    &.negative { color: var(--error-color); }
   }
 }

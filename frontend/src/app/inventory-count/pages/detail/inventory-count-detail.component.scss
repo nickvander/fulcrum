@@ -19,7 +19,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--text-secondary);
     text-decoration: none;
   }
 }
@@ -36,28 +36,28 @@
   }
 
   .meta {
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--text-secondary);
     font-size: 0.875rem;
     margin: 4px 0 0;
   }
 
   .notes {
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--text-secondary);
     font-style: italic;
     margin: 6px 0 0;
   }
 
   .chip-in_progress {
-    background-color: #fff4d6;
-    color: #b26500;
+    background-color: var(--warning-bg);
+    color: var(--warning-color);
   }
   .chip-committed {
-    background-color: #e6f4ea;
-    color: #1e7a3a;
+    background-color: var(--success-bg);
+    color: var(--success-color);
   }
   .chip-cancelled {
-    background-color: #fde7e7;
-    color: #b71c1c;
+    background-color: var(--error-bg);
+    color: var(--error-color);
   }
 }
 
@@ -125,7 +125,7 @@
   }
 
   .sku {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--bg-raised);
     border-radius: 4px;
     padding: 2px 6px;
     font-family: ui-monospace, monospace;
@@ -136,7 +136,7 @@
     width: 80px;
     text-align: right;
     padding: 6px 8px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.9rem;
     // Bigger tap target on touch devices — Material's default 6 px
@@ -155,9 +155,9 @@
     }
   }
 
-  .delta-positive { color: #1e7a3a; font-weight: 600; }
-  .delta-negative { color: #c62828; font-weight: 600; }
-  .delta-zero     { color: rgba(0, 0, 0, 0.4); }
+  .delta-positive { color: var(--success-color); font-weight: 600; }
+  .delta-negative { color: var(--error-color); font-weight: 600; }
+  .delta-zero     { color: var(--text-hint); }
 }
 
 // Stack commit/cancel side-by-side on desktop, full-width single-
@@ -181,7 +181,7 @@
 .empty {
   text-align: center;
   padding: 24px;
-  color: rgba(0, 0, 0, 0.55);
+  color: var(--text-secondary);
 }
 
 .loading-state {
@@ -197,7 +197,7 @@
   margin-top: 16px;
 
   .commit-badge {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.22);
     border-radius: 12px;
     padding: 2px 8px;
     margin-left: 6px;

@@ -46,29 +46,32 @@
 
       <!-- Main Navigation -->
       <div class="nav-group">
-        <h3 class="group-title" *ngIf="!collapsed">{{ t('nav.menu') }}</h3>
+        <h3 class="group-title" *ngIf="!collapsed">{{ t('nav.operations') }}</h3>
 
-        <a routerLink="/products" routerLinkActive="active" class="nav-item"
-          [routerLinkActiveOptions]="{ exact: true }"
-          [matTooltip]="collapsed ? t('nav.products') : ''" matTooltipPosition="right">
+        <!-- Inventory group: flattened, route-derived auto-expand -->
+        <button type="button" class="nav-item group-header" [class.has-active]="groupHasActiveChild('inventory')"
+          (click)="toggleGroup('inventory')" [attr.aria-expanded]="expanded.inventory"
+          [matTooltip]="collapsed ? t('nav.inventory') : ''" matTooltipPosition="right">
           <span class="active-wedge" aria-hidden="true"></span>
           <mat-icon>inventory_2</mat-icon>
-          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.products') }}</span>
-        </a>
-
-        <a routerLink="/products/audit" routerLinkActive="active" class="nav-item"
-          [matTooltip]="collapsed ? t('nav.inventoryAudit') : ''" matTooltipPosition="right">
-          <span class="active-wedge" aria-hidden="true"></span>
-          <mat-icon>history</mat-icon>
-          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.inventoryAudit') }}</span>
-        </a>
-
-        <a routerLink="/inventory/count" routerLinkActive="active" class="nav-item"
-          [matTooltip]="collapsed ? t('nav.inventoryCount') : ''" matTooltipPosition="right">
-          <span class="active-wedge" aria-hidden="true"></span>
-          <mat-icon>fact_check</mat-icon>
-          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.inventoryCount') }}</span>
-        </a>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.inventory') }}</span>
+          <mat-icon class="chevron" *ngIf="!collapsed">{{ expanded.inventory ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <div class="sub-nav" *ngIf="expanded.inventory && !collapsed">
+          <a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+            class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.products') }}</span>
+          </a>
+          <a routerLink="/products/audit" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.inventoryAudit') }}</span>
+          </a>
+          <a routerLink="/inventory/count" routerLinkActive="active" class="sub-nav-item">
+            <span class="active-wedge" aria-hidden="true"></span>
+            <span>{{ t('nav.inventoryCount') }}</span>
+          </a>
+        </div>
 
         <a routerLink="/orders" routerLinkActive="active" class="nav-item"
           [matTooltip]="collapsed ? t('nav.orders') : ''" matTooltipPosition="right">
@@ -110,10 +113,6 @@
             <span class="active-wedge" aria-hidden="true"></span>
             <span>{{ t('nav.suppliers') }}</span>
           </a>
-          <a routerLink="/expenses" routerLinkActive="active" class="sub-nav-item">
-            <span class="active-wedge" aria-hidden="true"></span>
-            <span>{{ t('nav.expenses') }}</span>
-          </a>
         </div>
 
         <!-- Marketplaces group: flattened, route-derived auto-expand -->
@@ -131,17 +130,9 @@
             <span class="active-wedge" aria-hidden="true"></span>
             <span>{{ t('nav.marketplaceChannels') }}</span>
           </a>
-          <a routerLink="/marketplaces/transfers" routerLinkActive="active" class="sub-nav-item">
-            <span class="active-wedge" aria-hidden="true"></span>
-            <span>{{ t('nav.stockTransfers') }}</span>
-          </a>
           <a routerLink="/marketplaces/health" routerLinkActive="active" class="sub-nav-item">
             <span class="active-wedge" aria-hidden="true"></span>
             <span>{{ t('nav.marketplaceHealth') }}</span>
-          </a>
-          <a routerLink="/reports/qa" routerLinkActive="active" class="sub-nav-item">
-            <span class="active-wedge" aria-hidden="true"></span>
-            <span>{{ t('nav.buyerQuestions') }}</span>
           </a>
         </div>
 

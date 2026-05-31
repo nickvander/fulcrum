@@ -19,7 +19,7 @@
 
   p {
     margin: 4px 0 0;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--text-secondary);
     font-size: 0.9rem;
   }
 
@@ -43,9 +43,9 @@
 }
 
 .table-card {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--border-color);
   overflow: hidden;
 }
 
@@ -57,7 +57,7 @@
   }
 
   .sku {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--bg-raised);
     border-radius: 4px;
     padding: 2px 6px;
     font-family: ui-monospace, monospace;
@@ -65,22 +65,22 @@
   }
 
   .delta-positive {
-    color: #1e7a3a;
+    color: var(--success-color);
     font-weight: 600;
   }
 
   .delta-negative {
-    color: #c62828;
+    color: var(--error-color);
     font-weight: 600;
   }
 
   .muted {
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--text-hint);
     font-style: italic;
   }
 
   .reason-chip {
-    background: rgba(0, 0, 0, 0.06);
+    background: var(--bg-raised);
     border-radius: 12px;
     padding: 2px 10px;
     font-size: 0.8em;
@@ -93,8 +93,8 @@
   }
 
   .reversed-badge {
-    background: rgba(198, 40, 40, 0.1);
-    color: #c62828;
+    background: var(--error-bg);
+    color: var(--error-color);
     border-radius: 12px;
     padding: 2px 10px;
     font-size: 0.72em;
@@ -113,5 +113,5 @@
 .empty-cell {
   text-align: center;
   padding: 24px;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--text-hint);
 }

@@ -8,8 +8,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: rgba(46, 125, 50, 0.08);
-    border: 1px solid rgba(46, 125, 50, 0.3);
+    background: var(--success-bg);
+    border: 1px solid var(--success-color);
     border-radius: 8px;
     padding: 10px 16px;
     flex-wrap: wrap;
@@ -20,7 +20,7 @@
         gap: 10px;
 
         .check-icon {
-            color: #2e7d32;
+            color: var(--success-color);
             font-size: 22px;
             width: 22px;
             height: 22px;
@@ -29,12 +29,12 @@
 
         strong {
             display: block;
-            color: #1b5e20;
+            color: var(--success-color);
             font-size: 0.9rem;
         }
 
         .banner-sub {
-            color: rgba(27, 94, 32, 0.75);
+            color: var(--success-color);
             font-size: 0.8rem;
         }
     }
@@ -43,10 +43,10 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        color: #2e7d32;
+        color: var(--success-color);
 
         button {
-            color: #2e7d32;
+            color: var(--success-color);
         }
     }
 }
@@ -129,8 +129,8 @@
     }
 
     &.complete {
-        border-color: #2e7d32;
-        background: rgba(46, 125, 50, 0.08);
+        border-color: var(--success-color);
+        background: var(--success-bg);
     }
 }
 
@@ -156,11 +156,11 @@
     background: var(--bg-app);
 
     &.done .state-icon {
-        color: #2e7d32;
+        color: var(--success-color);
     }
 
     &.warning .state-icon {
-        color: #c62828;
+        color: var(--error-color);
     }
 
     &.optional .state-icon {

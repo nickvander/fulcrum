@@ -36,7 +36,7 @@
   .reticle {
     width: 80%;
     height: 32%;
-    border: 2px solid #00bfa5;
+    border: 2px solid var(--accent-color);
     border-radius: 8px;
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.35);
   }
@@ -56,15 +56,15 @@
 }
 
 .scan-hint {
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--text-secondary);
   font-size: 0.85rem;
   margin: 0;
   text-align: center;
 }
 
 .camera-error {
-  color: #b26500;
-  background: #fff8e1;
+  color: var(--warning-color);
+  background: var(--warning-bg);
   padding: 12px;
   border-radius: 8px;
   margin: 0;
@@ -73,7 +73,7 @@
 
 .manual-divider {
   text-align: center;
-  color: rgba(0, 0, 0, 0.45);
+  color: var(--text-hint);
   font-size: 0.8rem;
   margin: 4px 0;
   text-transform: uppercase;

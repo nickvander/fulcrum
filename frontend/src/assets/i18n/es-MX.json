@@ -99,6 +99,8 @@
   },
   "nav": {
     "menu": "Menú",
+    "inventory": "Inventario",
+    "operations": "Operaciones",
     "dashboard": "Tablero",
     "products": "Productos",
     "inventoryAudit": "Historial de stock",

@@ -20,7 +20,7 @@
 
     small {
       display: block;
-      color: rgba(0, 0, 0, 0.55);
+      color: var(--text-secondary);
       font-size: 0.75rem;
       margin-top: 2px;
     }
@@ -29,7 +29,7 @@
       background: transparent;
       border: none;
       cursor: pointer;
-      color: rgba(0, 0, 0, 0.55);
+      color: var(--text-secondary);
       padding: 4px;
 
       &:disabled {
@@ -59,7 +59,7 @@
 
     .hero-label {
       font-size: 0.75rem;
-      color: rgba(0, 0, 0, 0.55);
+      color: var(--text-secondary);
       text-transform: uppercase;
       margin-top: 2px;
     }
@@ -67,31 +67,31 @@
 
   .rate-ok .hero-value,
   .rate-ok {
-    color: #2e7d32;
+    color: var(--success-color);
   }
 
   .rate-warn .hero-value,
   .rate-warn {
-    color: #ef6c00;
+    color: var(--warning-color);
   }
 
   .rate-high .hero-value,
   .rate-high {
-    color: #c62828;
+    color: var(--error-color);
   }
 
   .channels {
     list-style: none;
     padding: 0;
     margin: 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 1px solid var(--border-color);
 
     .channel-row {
       display: grid;
       grid-template-columns: 1.4fr 0.6fr 1fr 0.7fr;
       gap: 8px;
       padding: 8px 0;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid var(--border-color);
       font-size: 0.875rem;
 
       &:last-child {
@@ -109,21 +109,21 @@
 
       .channel-amount {
         text-align: right;
-        color: rgba(0, 0, 0, 0.7);
+        color: var(--text-secondary);
       }
     }
   }
 
   .empty,
   .error {
-    color: rgba(0, 0, 0, 0.55);
+    color: var(--text-secondary);
     text-align: center;
     margin: 16px 0;
     font-size: 0.875rem;
   }
 
   .error {
-    color: #c62828;
+    color: var(--error-color);
   }
 
   .loading-state {
@@ -135,7 +135,7 @@
   }
 
   .window-label {
-    color: rgba(0, 0, 0, 0.45);
+    color: var(--text-hint);
     font-size: 0.7rem;
   }
 

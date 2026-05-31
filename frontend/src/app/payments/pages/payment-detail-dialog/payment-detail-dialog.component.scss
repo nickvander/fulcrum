@@ -48,30 +48,30 @@
   align-self: flex-start;
 
   &.status-approved {
-    background: rgba(46, 125, 50, 0.12);
-    color: #2e7d32;
+    background: var(--success-bg);
+    color: var(--success-color);
   }
   &.status-pending {
-    background: rgba(245, 124, 0, 0.12);
-    color: #ef6c00;
+    background: var(--warning-bg);
+    color: var(--warning-color);
   }
   &.status-rejected {
-    background: rgba(198, 40, 40, 0.12);
-    color: #c62828;
+    background: var(--error-bg);
+    color: var(--error-color);
   }
   &.status-refunded {
-    background: rgba(2, 119, 189, 0.12);
-    color: #0277bd;
+    background: var(--info-bg);
+    color: var(--info-color);
   }
   &.status-cancelled {
-    background: rgba(97, 97, 97, 0.12);
-    color: #616161;
+    background: var(--bg-raised);
+    color: var(--text-secondary);
   }
 }
 
 .error-block {
-  background: rgba(198, 40, 40, 0.06);
-  border: 1px solid rgba(198, 40, 40, 0.2);
+  background: var(--error-bg);
+  border: 1px solid var(--error-color);
   border-radius: 6px;
   padding: 0.75rem 1rem;
 
@@ -81,7 +81,7 @@
     gap: 0.4rem;
     margin: 0 0 0.5rem;
     font-size: 0.95rem;
-    color: #c62828;
+    color: var(--error-color);
   }
 }
 
@@ -100,7 +100,7 @@
   }
 
   pre {
-    background: var(--surface-elevated, #f5f5f5);
+    background: var(--bg-raised);
     padding: 0.75rem;
     border-radius: 6px;
     overflow-x: auto;

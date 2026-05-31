@@ -74,8 +74,8 @@
     letter-spacing: 0.04em;
   }
 
-  &.profit-positive .hero-value { color: #2e7d32; }
-  &.profit-negative .hero-value { color: #c62828; }
+  &.profit-positive .hero-value { color: var(--success-color); }
+  &.profit-negative .hero-value { color: var(--error-color); }
   &.profit-zero .hero-value { color: var(--text-secondary); }
 }
 

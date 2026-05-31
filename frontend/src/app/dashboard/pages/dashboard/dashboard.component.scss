@@ -126,11 +126,11 @@
     margin: 24px 0 8px;
 
     &.ready {
-        border-color: rgba(76, 175, 80, 0.45);
+        border-color: var(--success-color);
     }
 
     &.blocked {
-        border-color: rgba(244, 67, 54, 0.45);
+        border-color: var(--error-color);
     }
 }
 
@@ -235,13 +235,13 @@
 
 .demo-guardrail {
     margin-top: 16px;
-    border: 1px solid rgba(180, 83, 9, 0.4);
+    border: 1px solid var(--warning-color);
     border-radius: 8px;
     background: var(--warning-bg);
     padding: 16px;
 
     &.blocked {
-        border-color: rgba(198, 40, 40, 0.45);
+        border-color: var(--error-color);
         background: var(--error-bg);
     }
 }
@@ -291,7 +291,7 @@
     grid-template-columns: auto 1fr auto;
     align-items: flex-start;
     gap: 10px;
-    border: 1px solid rgba(180, 83, 9, 0.24);
+    border: 1px solid var(--warning-color);
     border-radius: 8px;
     background: var(--bg-card);
     padding: 12px;
@@ -349,7 +349,7 @@
     grid-template-columns: auto 1fr;
     gap: 10px;
     margin-top: 12px;
-    border-top: 1px solid rgba(198, 40, 40, 0.18);
+    border-top: 1px solid var(--error-color);
     padding-top: 12px;
     color: var(--error-color);
 

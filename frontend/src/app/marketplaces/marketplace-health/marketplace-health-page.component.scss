@@ -96,27 +96,27 @@
   }
 
   &.badge-ok {
-    background: rgba(46, 125, 50, 0.12);
-    color: #2e7d32;
+    background: var(--success-bg);
+    color: var(--success-color);
   }
   &.badge-warn {
-    background: rgba(245, 124, 0, 0.12);
-    color: #ef6c00;
+    background: var(--warning-bg);
+    color: var(--warning-color);
   }
   &.badge-error {
-    background: rgba(198, 40, 40, 0.12);
-    color: #c62828;
+    background: var(--error-bg);
+    color: var(--error-color);
   }
   &.badge-info {
-    background: rgba(2, 119, 189, 0.12);
-    color: #0277bd;
+    background: var(--info-bg);
+    color: var(--info-color);
   }
 }
 
 .error-text {
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #c62828;
+  color: var(--error-color);
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;

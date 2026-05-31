@@ -67,5 +67,5 @@
 }
 
 .gradient-error {
-    background: linear-gradient(135deg, #EF5350 0%, #C62828 100%);
+    background: linear-gradient(135deg, var(--error-color) 0%, var(--error-color) 100%);
 }
