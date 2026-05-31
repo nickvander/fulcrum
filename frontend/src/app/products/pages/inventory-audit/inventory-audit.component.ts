@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -35,6 +37,8 @@ import {
     FormsModule,
     RouterModule,
     MatButtonModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
@@ -67,8 +71,8 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
 
   // Filters
   searchProductId: number | null = null;
-  startDate: string = '';  // YYYY-MM-DD
-  endDate: string = '';
+  startDate: Date | null = null;
+  endDate: Date | null = null;
   reasonCode: string = '';
 
   // Pagination
@@ -113,11 +117,11 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   private filters(): InventoryAuditFilters {
     return {
       productId: this.searchProductId ?? null,
-      // The backend accepts ISO datetimes; the date inputs give YYYY-MM-DD.
+      // The backend accepts ISO datetimes; the datepickers give Date objects.
       // Pad to start/end of day so a "from May 1 to May 17" filter is
       // inclusive on both ends.
-      after: this.startDate ? `${this.startDate}T00:00:00` : null,
-      before: this.endDate ? `${this.endDate}T23:59:59` : null,
+      after: this.startDate ? `${toIsoDate(this.startDate)}T00:00:00` : null,
+      before: this.endDate ? `${toIsoDate(this.endDate)}T23:59:59` : null,
       reasonCode: this.reasonCode || null,
     };
   }
@@ -157,8 +161,8 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   clearFilters(): void {
     if (this.searchProductId == null && !this.startDate && !this.endDate && !this.reasonCode) return;
     this.searchProductId = null;
-    this.startDate = '';
-    this.endDate = '';
+    this.startDate = null;
+    this.endDate = null;
     this.reasonCode = '';
     this.onFilterChange();
   }
@@ -242,4 +246,14 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
           });
       });
   }
+}
+
+/** Format a Date as a local-time YYYY-MM-DD string. We deliberately use the
+ *  local calendar date (not toISOString, which is UTC) so the value matches
+ *  what the operator picked and what the backend's date parser expects. */
+function toIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }

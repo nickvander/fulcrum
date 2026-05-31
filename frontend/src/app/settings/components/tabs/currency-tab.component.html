@@ -38,7 +38,10 @@
 
                     <mat-form-field appearance="outline" class="sleek-field">
                         <mat-label>{{ t('settings.currency.date') }}</mat-label>
-                        <input matInput type="date" formControlName="rate_date" data-testid="date-input">
+                        <input matInput [matDatepicker]="ratePicker" formControlName="rate_date"
+                               [max]="today" data-testid="date-input">
+                        <mat-datepicker-toggle matIconSuffix [for]="ratePicker"></mat-datepicker-toggle>
+                        <mat-datepicker #ratePicker></mat-datepicker>
                         <mat-hint>{{ t('settings.currency.dateHint') }}</mat-hint>
                     </mat-form-field>
                 </div>

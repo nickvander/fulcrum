@@ -40,6 +40,19 @@
   .filter-field {
     min-width: 160px;
   }
+
+  // The product-ID field is a lookup, not a quantity — the native number
+  // spinner arrows are noise, so suppress them.
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  }
 }
 
 .table-card {

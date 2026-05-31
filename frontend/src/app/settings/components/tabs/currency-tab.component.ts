@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { MaterialModule } from '../../../shared/material.module';
 import {
@@ -20,7 +22,14 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-currency-tab',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslocoModule, MaterialModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TranslocoModule,
+    MaterialModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+  ],
   templateUrl: './currency-tab.component.html',
   styleUrls: ['./currency-tab.component.scss'],
 })
@@ -30,6 +39,9 @@ export class CurrencyTabComponent implements OnInit {
   loading = false;
   saving = false;
   displayedColumns = ['pair', 'rate', 'date', 'source'];
+
+  /** Upper bound for the rate-date picker — an FX rate can't be future-dated. */
+  readonly today = new Date();
 
   /** Common currencies an MX operator sources/sells in. The pair fields
    *  are free-form too, but these cover the 99% case. */
