@@ -11,6 +11,7 @@ import { TranslocoModule } from '@ngneat/transloco';
 import { finalize } from 'rxjs';
 
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+import { HonestNumberDirective } from '../../../shared/directives/honest-number.directive';
 import {
   AnalyticsReportsService,
   ProfitPeriod,
@@ -47,6 +48,7 @@ import {
     RouterModule,
     TranslocoModule,
     MoneyPipe,
+    HonestNumberDirective,
   ],
   templateUrl: './profit-summary-widget.component.html',
   styleUrls: ['./profit-summary-widget.component.scss'],
@@ -116,5 +118,14 @@ export class ProfitSummaryWidgetComponent implements OnInit {
     if (v === 'won') return 'result-won';
     if (v === 'lost') return 'result-lost';
     return 'result-even';
+  }
+
+  /** Semantic tone for the shared `appHonestNumber` primitive (moment C):
+   *  won → profit (success), lost → loss (danger), even → neutral. Never red. */
+  get honestTone(): 'profit' | 'loss' | 'neutral' {
+    const v = this.summary?.verdict;
+    if (v === 'won') return 'profit';
+    if (v === 'lost') return 'loss';
+    return 'neutral';
   }
 }

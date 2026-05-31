@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { HonestNumberDirective } from '../../directives/honest-number.directive';
 
 /**
  * Metric / KPI card — Obsidian & Chile.
@@ -21,14 +22,23 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   selector: 'app-metric-card',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, HonestNumberDirective],
   template: `
     <div class="metric-card">
       <div class="metric-head">
         <span class="kpi-label">{{ label }}</span>
         <mat-icon *ngIf="icon" class="metric-icon">{{ icon }}</mat-icon>
       </div>
-      <div class="kpi-value">{{ value }}</div>
+      <!-- Money headline → the shared honest-number primitive (moment C):
+           muted unit + semantic tone. Other KPIs keep the plain kpi-value. -->
+      <div
+        *ngIf="honest; else plainValue"
+        class="kpi-value kpi-value--honest"
+        appHonestNumber
+        [tone]="tone">{{ value }}</div>
+      <ng-template #plainValue>
+        <div class="kpi-value">{{ value }}</div>
+      </ng-template>
       <div
         *ngIf="delta"
         class="metric-delta"
@@ -78,6 +88,11 @@ import { MatIconModule } from '@angular/material/icon';
       font-variant-numeric: tabular-nums lining-nums;
       font-feature-settings: "tnum" 1, "lnum" 1;
     }
+    /* Honest-number variant pins the shared primitive to the KPI headline size
+       (the .app-honest-number type rules come from styles/_honest-number.scss). */
+    .kpi-value--honest {
+      --honest-number-size: var(--font-display-size, 32px);
+    }
     .metric-delta {
       display: inline-flex;
       align-items: center;
@@ -102,4 +117,12 @@ export class MetricCardComponent {
   @Input() icon?: string;
   @Input() delta?: string;
   @Input() deltaTone: 'positive' | 'negative' | 'neutral' = 'neutral';
+
+  /** Opt the headline value into the shared "honest MXN number" primitive
+   *  (moment C): muted currency unit + semantic tone. Use for money headlines
+   *  only — not percentages/counts. */
+  @Input() honest = false;
+  /** Semantic tone for the honest number. Default neutral (a plain money
+   *  headline like inventory value). Never chile-red on money. */
+  @Input() tone: 'profit' | 'loss' | 'neutral' = 'neutral';
 }

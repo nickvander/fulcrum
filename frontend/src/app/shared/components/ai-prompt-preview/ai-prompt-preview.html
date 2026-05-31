@@ -4,9 +4,9 @@
     <button type="button" class="preview-header" (click)="toggleExpanded()" [disabled]="!hasContent"
         [matTooltip]="hasContent ? (expanded ? t('shared.aiPromptPreview.collapseTooltip') : t('shared.aiPromptPreview.expandTooltip')) : t('shared.aiPromptPreview.emptyTooltip')">
         <div class="header-left">
-            <mat-icon class="ai-icon">psychology</mat-icon>
+            <mat-icon class="ai-icon ai-accent">psychology</mat-icon>
             <span class="header-title">{{ t('shared.aiPromptPreview.title') }}</span>
-            <span class="token-badge" *ngIf="hasContent">
+            <span class="token-badge ai-accent__chip" *ngIf="hasContent">
                 ~{{ getTokenEstimate() }} {{ t('shared.aiPromptPreview.tokens') }}
             </span>
         </div>

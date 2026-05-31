@@ -117,9 +117,11 @@
                     <mat-icon>search_off</mat-icon>
                     <p data-testid="orders-no-results">{{ t('orders.noResults') }}</p>
                 </ng-container>
+                <!-- No-orders-yet → warm peer-voice first-run state (moment E). -->
                 <ng-template #emptyWindow>
-                    <mat-icon>inbox</mat-icon>
-                    <p data-testid="orders-empty">{{ t('orders.empty') }}</p>
+                    <app-empty-state tone="peer" data-testid="orders-empty"
+                        [title]="t('orders.emptyPeerTitle')"
+                        [description]="t('orders.emptyPeerDescription')"></app-empty-state>
                 </ng-template>
             </div>
 

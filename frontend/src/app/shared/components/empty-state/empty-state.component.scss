@@ -44,3 +44,33 @@
         }
     }
 }
+
+// =============================================================================
+// Peer-voice tone (signature moment E) — warm, first-run framing with the
+// chile-red pivot-wedge brand glyph. Reuses the header/rail clip-path motif so
+// "this is Fulcrum" shows up at the empty moment, in a peer voice (the es-MX tú
+// copy lives in the caller's i18n namespace). Default tone is untouched.
+// =============================================================================
+
+// The pivot-wedge mark (same polygon as core/header .logo-mark / sidenav).
+.empty-wedge {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+    background: var(--primary-color);
+    clip-path: polygon(0 0, 100% 50%, 0 100%, 28% 50%);
+}
+
+.empty-state--peer {
+    // A touch more breathing room + a slightly wider, warmer copy column.
+    padding: 56px 24px;
+
+    h3 {
+        font-size: 1.35rem;
+    }
+
+    p {
+        max-width: 44ch; // absorbs +20-25% Spanish length without reflow churn
+        color: var(--text-secondary);
+    }
+}

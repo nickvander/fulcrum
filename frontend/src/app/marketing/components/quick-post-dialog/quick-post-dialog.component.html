@@ -38,7 +38,7 @@
         <div class="ai-assistant-panel" *ngIf="aiEnabled">
             <div class="panel-header" (click)="toggleAiPanel()">
                 <div class="header-content">
-                    <mat-icon>auto_awesome</mat-icon>
+                    <mat-icon class="ai-accent">auto_awesome</mat-icon>
                     <span>{{ t('marketing.quickPostDialog.aiContentAssistant') }}</span>
                 </div>
                 <mat-icon>{{ showAiPanel ? 'expand_less' : 'expand_more' }}</mat-icon>

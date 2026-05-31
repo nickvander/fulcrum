@@ -58,10 +58,9 @@
         </button>
       </mat-card>
     } @else if (rows.length === 0) {
-      <mat-card class="empty-state" data-testid="qa-page-empty">
-        <mat-icon>sentiment_satisfied</mat-icon>
-        <p>{{ t('dashboard.qaPage.empty') }}</p>
-      </mat-card>
+      <app-empty-state tone="peer" data-testid="qa-page-empty"
+        [title]="t('dashboard.qaPage.emptyPeerTitle')"
+        [description]="t('dashboard.qaPage.emptyPeerDescription')"></app-empty-state>
     } @else {
       <mat-card class="table-card">
         <table mat-table [dataSource]="rows" class="qa-table" data-testid="qa-table">

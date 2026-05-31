@@ -23,6 +23,7 @@ import {
   QuestionRow,
   QuestionsListResponse,
 } from '../../services/analytics-reports.service';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 /**
  * Buyer Q&A drill-down page (`/reports/qa`).
@@ -52,6 +53,7 @@ import {
     MatTooltipModule,
     MatSnackBarModule,
     TranslocoModule,
+    EmptyStateComponent,
   ],
   templateUrl: './qa-page.component.html',
   styleUrls: ['./qa-page.component.scss'],

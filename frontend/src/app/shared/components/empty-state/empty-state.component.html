@@ -1,5 +1,8 @@
-<div class="empty-state">
-    <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+<div class="empty-state" [class.empty-state--peer]="tone === 'peer'">
+    <!-- Pivot-wedge brand glyph (moment E) for the warm peer tone, else the
+         Material icon. Reuses the header/rail clip-path motif. -->
+    <span *ngIf="showWedge" class="empty-wedge" aria-hidden="true"></span>
+    <mat-icon *ngIf="!showWedge && icon">{{ icon }}</mat-icon>
     <h3 *ngIf="title">{{ title }}</h3>
     <p *ngIf="description">{{ description }}</p>
     <ng-content></ng-content>

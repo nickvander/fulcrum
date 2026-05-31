@@ -30,6 +30,9 @@
   --accent-light:     #{map.get($c, accent-light)};
   --accent-dark:      #{map.get($c, accent-dark)};
   --accent-2:         #{map.get($c, accent-2)};
+  // AI gold as an RGB triplet → rgba(var(--accent-2-rgb), a) for the restrained
+  // hairline/tint/glow in the shared `.ai-accent` treatment (never a flood).
+  --accent-2-rgb:     #{color.channel(map.get($c, accent-2), "red", $space: rgb)}, #{color.channel(map.get($c, accent-2), "green", $space: rgb)}, #{color.channel(map.get($c, accent-2), "blue", $space: rgb)};
 
   --success-color:    #{map.get($c, success-color)};
   --success-bg:       #{map.get($c, success-bg)};

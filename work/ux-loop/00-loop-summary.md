@@ -94,6 +94,30 @@ learnable, performant, with an ownable brand identity._
 - Tests: backend 30 (docker), frontend 817 (full, +13), i18n + theme guards
   pass. Power-user re-validation: **✅ fixed & solid** (remaining items P2).
 
+## Iteration 4 — brand signature moments
+
+Design-lead scope (`brand-moments-scope.md`) deliberately bounded this to 3
+moments + deferred the risky global repaint:
+- **B — "The AI glows gold":** routed AI affordances (ai-prompt-preview,
+  ai-search-bar, quick-post AI) to `--accent-2` gold as icon/hairline/tint
+  only (never a flood, never red), via one reusable `.ai-accent*` treatment +
+  a reduced-motion-safe shimmer. Adds `--accent-2-rgb`.
+- **C — "Honest MXN number" primitive:** extracted the profit-summary
+  big-number treatment into a reusable `appHonestNumber` directive
+  (Space Grotesk, tabular, muted MXN suffix, semantic tone — never chile-red
+  on money) and applied it to the hero money KPIs (one source of truth).
+- **E — Peer-voice empty states:** `tone="peer"` + pivot-wedge glyph on the
+  shared empty-state, warm es-MX `tú` copy; converted products / Q&A / orders
+  empties.
+- **D (wedge motion):** skipped — no app-wide sync/success event to hook it to
+  (would need net-new global event plumbing); deferred.
+- **A (warm the neutrals):** deferred to its own audited round — it repaints
+  every surface in both themes and needs a full contrast matrix.
+- Design re-validation: ⚠️→✅ after 2 one-line fixes (darkened light gold
+  `#C8860A`→`#A87008` for ≥3:1 on cream; removed a dead `--accent-color`
+  self-alias). All AA recomputed; reduced-motion honored.
+- Tests: frontend full suite 832 green (+15); i18n + theme-contrast guards pass.
+
 ## Next-loop backlog (ranked, from PM + re-validation)
 
 1. **Profit / "¿gané o perdí?" summary** (M) — novice has no plain

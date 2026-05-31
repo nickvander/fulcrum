@@ -4,6 +4,7 @@
 // global stylesheets via angular.json `styles` (the @fontsource CSS files).
 @use 'theme/material';
 @use 'styles/forms';
+@use 'styles/honest-number';
 @use 'theme/variables';
 @use 'theme/mixins';
 
@@ -630,4 +631,80 @@ app-product-scanner {
             padding-bottom: var(--space-1, 4px);
         }
     }
+}
+
+
+// =============================================================================
+// Signature moment B — "the AI glows gold".
+//
+// AI affordances get ONE ownable, consistent treatment: the insight-gold token
+// (--accent-2, #FFC23D dark / #C8860A light) as an icon tint + thin gold
+// hairline + optional very-subtle glow. This is the single place "this is the
+// AI" is styled — apply `.ai-accent` (and `.ai-accent--region` on an AI output
+// block) rather than re-coloring each component.
+//
+// HARD RULES (brand lock):
+//   • Gold is icon / hairline / tinted-chip-text ONLY — NEVER a gold fill/flood
+//     behind text, never light text on a gold fill (fails AA).
+//   • Red (--primary) and affordance blue (--accent) NEVER appear on AI surfaces.
+//   • All color via var(--*) tokens; tints use rgba(var(--accent-2-rgb), a).
+// =============================================================================
+
+// Base: tint the AI glyph/icon gold. Works on a bare <mat-icon>, a wrapping
+// element, or alongside a label.
+.ai-accent {
+    color: var(--accent-2);
+
+    mat-icon,
+    .mat-icon,
+    .ai-accent__icon {
+        color: var(--accent-2);
+    }
+}
+
+// AI output region: a thin gold left hairline marks "this came from the AI",
+// with a barely-there gold wash so it reads as a distinct surface without a
+// flood. Text inside stays on the normal ink tokens for AA.
+.ai-accent--region {
+    border-left: 2px solid var(--accent-2);
+    background: linear-gradient(
+        90deg,
+        rgba(var(--accent-2-rgb), 0.06) 0%,
+        rgba(var(--accent-2-rgb), 0) 28%
+    );
+}
+
+// Gold tinted chip (e.g. the token estimate badge): a low-alpha gold tint
+// signals "AI", but the TEXT stays on --text-main so it clears the 4.5:1 AA
+// text floor in BOTH themes (gold text on a light tint fails AA in light mode —
+// gold is an icon/hairline color, not a small-text color; see brand lock §3).
+.ai-accent__chip {
+    background: rgba(var(--accent-2-rgb), 0.14);
+    color: var(--text-main);
+}
+
+// "Pensando…" / working state: a subtle gold shimmer sweep. Motion is gated on
+// prefers-reduced-motion (mirrors theme/mixins.scss + variables.scss): reduce →
+// no sweep, a static gold wash instead. Never hurts perceived speed.
+.ai-accent--thinking {
+    background-image: linear-gradient(
+        100deg,
+        rgba(var(--accent-2-rgb), 0) 30%,
+        rgba(var(--accent-2-rgb), 0.18) 50%,
+        rgba(var(--accent-2-rgb), 0) 70%
+    );
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    animation: ai-gold-shimmer 1.4s var(--ease-standard, ease) infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        background-image: none;
+        background-color: rgba(var(--accent-2-rgb), 0.1);
+    }
+}
+
+@keyframes ai-gold-shimmer {
+    from { background-position: 180% 0; }
+    to   { background-position: -80% 0; }
 }

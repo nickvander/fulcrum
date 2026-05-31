@@ -174,8 +174,8 @@
       }
 
       @if (products.length === 0 && !isLoading) {
-      <app-empty-state icon="inventory_2" [title]="t('products.emptyTitle')"
-        [description]="t('products.emptyDescription')">
+      <app-empty-state tone="peer" [title]="t('products.emptyPeerTitle')"
+        [description]="t('products.emptyPeerDescription')">
         <button mat-raised-button color="primary" type="button" (click)="onAddProduct()">
           <mat-icon>add</mat-icon>
           <span>{{ t('products.addProduct') }}</span>

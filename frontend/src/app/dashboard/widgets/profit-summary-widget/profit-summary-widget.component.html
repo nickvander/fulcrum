@@ -40,8 +40,13 @@
           <span class="verdict-text">{{ t(verdictKey) }}</span>
         </div>
 
-        <div class="hero-number" [ngClass]="verdictClass" data-testid="profit-hero">
-          {{ summary.bottom_line_amount | money:'MXN':{ showCode: true } }}
+        <!-- The big honest MXN number — shared `appHonestNumber` primitive
+             (moment C). Tone is semantic (profit/loss/neutral), NEVER chile-red.
+             verdictClass is kept for the existing tone hooks/contract. -->
+        <div class="hero-number" appHonestNumber [tone]="honestTone"
+             [ngClass]="verdictClass" data-testid="profit-hero">
+          {{ summary.bottom_line_amount | money:'MXN' }}<span
+            class="app-honest-number__unit">MXN</span>
         </div>
 
         <!-- Plain breakdown ladder. -->

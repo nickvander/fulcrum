@@ -1,0 +1,43 @@
+// =============================================================================
+// Signature moment C — the "honest MXN number" primitive.
+//
+// The big, confident money number is the product's signature. This is the ONE
+// place that treatment lives: Space Grotesk display face, tabular lining
+// figures (so digits never jitter), an oversized headline, and a muted MXN /
+// MX$ unit. Tone is SEMANTIC — profit = success, loss = danger — and NEVER the
+// chile-red brand action color on a money number (brand lock).
+//
+// Driven by the `appHonestNumber` directive (shared/directives), which sets the
+// `.app-honest-number` class hook + a tone modifier. Formatting still flows
+// through the single MoneyPipe / `money` formatter — this is presentation only,
+// it styles an already-formatted string and adds no number logic.
+// =============================================================================
+
+.app-honest-number {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.05;
+    // Tabular + lining figures: confident, non-jittering money.
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    color: var(--text-main);
+
+    // Default headline size; callers can override via --honest-number-size.
+    font-size: var(--honest-number-size, 2.75rem);
+
+    // Muted MXN / MX$ unit — present (honest) but not shouting. The directive
+    // wraps a trailing currency code/symbol in `.app-honest-number__unit`.
+    .app-honest-number__unit {
+        color: var(--text-secondary);
+        font-size: 0.42em;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        margin-left: 0.15em;
+        vertical-align: baseline;
+    }
+
+    // Semantic tone — never chile-red on money.
+    &.app-honest-number--profit { color: var(--success-color); }
+    &.app-honest-number--loss   { color: var(--error-color); }
+    &.app-honest-number--neutral { color: var(--text-main); }
+}

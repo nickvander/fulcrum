@@ -81,14 +81,13 @@
   }
 }
 
-// The big honest number — display face, oversized, tabular-lining.
+// The big honest number — now the shared `appHonestNumber` primitive (moment C)
+// owns the display face / tabular figures / tone (see styles/_honest-number.scss
+// + shared/directives/honest-number.directive). This block only sets the
+// widget-local rhythm (margin) and the headline size via the primitive's var.
 // Never animated. Loss = danger token (never chile-red), profit = success.
 .hero-number {
-  font-size: 2.75rem;
-  font-weight: 700;
-  line-height: 1.05;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum' 1;
+  --honest-number-size: 2.75rem;
   margin: 0.1rem 0 0.4rem;
 }
 
@@ -203,6 +202,6 @@
 // Compact dashboard face: smaller hero, no ladder emphasis.
 .profit-summary.compact {
   .hero-number {
-    font-size: 2.25rem;
+    --honest-number-size: 2.25rem;
   }
 }

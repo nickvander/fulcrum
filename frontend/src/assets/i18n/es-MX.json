@@ -473,7 +473,6 @@
       "answered": "Respondidas",
       "error": "No se pudieron cargar las preguntas.",
       "retry": "Reintentar",
-      "empty": "No hay preguntas en este periodo.",
       "cols": {
         "askedAt": "Preguntada",
         "source": "Canal",
@@ -499,7 +498,9 @@
       "reconnect": "Reconectar",
       "alreadyAnswered": "Esta pregunta ya fue respondida. Recarga para ver la respuesta.",
       "reload": "Recargar",
-      "yourAnswer": "Tu respuesta"
+      "yourAnswer": "Tu respuesta",
+      "emptyPeerTitle": "Estás al corriente",
+      "emptyPeerDescription": "No tienes preguntas de compradores en este periodo. Cuando llegue una, contéstala aquí en un toque —responder rápido te gana la venta."
     },
     "heroInventoryValue": "Valor de inventario",
     "heroSalesVsSpend": "Ventas (30 d)",
@@ -654,7 +655,6 @@
     "searchLabel": "Buscar pedido",
     "searchPlaceholder": "Número de pedido…",
     "noResults": "No hay pedidos que coincidan con tu búsqueda.",
-    "empty": "No hay pedidos en este periodo aún.",
     "orderNumber": "Pedido",
     "placed": "Recibido",
     "openOnChannel": "Abrir en el canal",
@@ -703,7 +703,9 @@
     },
     "timeline": {
       "title": "Historial de estado"
-    }
+    },
+    "emptyPeerTitle": "Aquí cae tu primera venta",
+    "emptyPeerDescription": "Cuando entre un pedido desde tus canales, lo vas a ver aquí mismo —con su margen ya calculado. Por ahora no tienes que hacer nada."
   },
   "products": {
     "title": "Productos",
@@ -936,8 +938,6 @@
     "regenerateBarcode": "Regenerar código de barras",
     "barcodeUpc": "Código de barras / UPC",
     "scanOrEnter": "Escanea o escribe el código",
-    "emptyTitle": "Arma tu catálogo de productos",
-    "emptyDescription": "Agrega tu primer producto a mano, luego conecta proveedores y órdenes de compra para que el stock tenga un origen confiable.",
     "importSupplierPo": "Importar OC del proveedor",
     "activeCampaignsCount": "{{count}} campañas activas",
     "includes": "Incluye:",
@@ -1148,7 +1148,9 @@
       "receivedPo": "Recibido por OC"
     },
     "clickToPreview": "Haz clic para previsualizar",
-    "loadingMore": "Cargando más..."
+    "loadingMore": "Cargando más...",
+    "emptyPeerTitle": "Vamos a dar de alta tu primer producto",
+    "emptyPeerDescription": "Agrega uno a mano para empezar y después jalamos proveedores y órdenes de compra para que tu stock siempre tenga un origen real. Tú puedes con esto."
   },
   "suppliers": {
     "title": "Proveedores",

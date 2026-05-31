@@ -133,10 +133,12 @@
                          Money is MXN via the shared `money` pipe (no USD bug). -->
                     <div class="dashboard-grid">
                         <app-metric-card [label]="t('dashboard.heroInventoryValue')"
-                            [value]="stats.totalInventoryValue | money" icon="savings"></app-metric-card>
+                            [value]="stats.totalInventoryValue | money" icon="savings"
+                            [honest]="true"></app-metric-card>
 
                         <app-metric-card [label]="t('dashboard.heroSalesVsSpend')"
-                            [value]="(salesSummary$ | async)?.total_revenue ?? 0 | money" icon="trending_up">
+                            [value]="(salesSummary$ | async)?.total_revenue ?? 0 | money" icon="trending_up"
+                            [honest]="true">
                         </app-metric-card>
 
                         <app-metric-card [label]="t('dashboard.heroInventoryHealth')"

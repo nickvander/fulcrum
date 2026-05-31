@@ -7,7 +7,6 @@
     --section-bg: var(--bg-card);
     --text-primary: var(--text-main);
     --text-secondary: var(--text-secondary);
-    --accent-color: var(--accent-color);
 
     border: 1px solid var(--preview-border);
     border-radius: 8px;
@@ -48,11 +47,12 @@
         gap: 8px;
     }
 
+    // AI gold (moment B) — the AI glyph signals "this is the AI", not blue.
     .ai-icon {
         font-size: 18px;
         width: 18px;
         height: 18px;
-        color: var(--accent-color);
+        color: var(--accent-2);
     }
 
     .header-title {
@@ -60,9 +60,13 @@
         color: var(--text-primary);
     }
 
+    // Inverted from the old white-on-blue fill: a low-alpha gold tint signals
+    // "AI" while the text stays on --text-main so it clears the AA text floor
+    // in both themes (see the shared .ai-accent__chip; gold = icon/hairline,
+    // never small text on a light tint). Never a flood.
     .token-badge {
-        background: var(--accent-color);
-        color: white;
+        background: rgba(var(--accent-2-rgb), 0.14);
+        color: var(--text-main);
         font-size: 11px;
         padding: 2px 8px;
         border-radius: 12px;
@@ -115,7 +119,7 @@
         border-bottom: 1px solid var(--preview-border);
         font-size: 12px;
         font-weight: 600;
-        color: var(--accent-color);
+        color: var(--accent-2); // AI gold (moment B) — was affordance blue
         text-transform: uppercase;
         letter-spacing: 0.5px;
 

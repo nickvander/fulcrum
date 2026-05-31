@@ -1,7 +1,7 @@
 <ng-container *transloco="let t">
 <div class="ai-search-container">
   <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
-    <mat-icon matPrefix class="search-icon">search_spark</mat-icon>
+    <mat-icon matPrefix class="search-icon ai-accent">search_spark</mat-icon>
     <input matInput [formControl]="searchControl" [placeholder]="t('shared.aiSearchBar.placeholder')">
     @if (searchControl.value) {
     <button mat-icon-button matSuffix (click)="clearSearch()" type="button" [attr.aria-label]="t('common.clear')">

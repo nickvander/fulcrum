@@ -22,6 +22,7 @@ import {
 } from '../../services/sales-orders.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-sales-order-list',
@@ -42,6 +43,7 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
     MatPaginatorModule,
     TranslocoModule,
     MoneyPipe,
+    EmptyStateComponent,
   ],
   templateUrl: './sales-order-list.html',
   styleUrl: './sales-order-list.scss',

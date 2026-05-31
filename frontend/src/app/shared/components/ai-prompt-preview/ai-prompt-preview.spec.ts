@@ -25,6 +25,23 @@ describe('AiPromptPreviewComponent', () => {
         expect(component).toBeTruthy();
     });
 
+    describe('AI gold treatment (signature moment B)', () => {
+        it('routes the AI glyph through the shared .ai-accent class (gold, not blue)', () => {
+            const icon: HTMLElement = fixture.nativeElement.querySelector('.ai-icon');
+            expect(icon).not.toBeNull();
+            expect(icon.classList.contains('ai-accent')).toBe(true);
+        });
+
+        it('renders the token badge as a gold tinted chip, never a white-on-blue fill', () => {
+            component.tonePrompt = 'Write professional content';
+            component.ngOnChanges({});
+            fixture.detectChanges();
+            const badge: HTMLElement = fixture.nativeElement.querySelector('.token-badge');
+            expect(badge).not.toBeNull();
+            expect(badge.classList.contains('ai-accent__chip')).toBe(true);
+        });
+    });
+
     describe('hasContent', () => {
         it('should be false when no inputs are set', () => {
             component.tonePrompt = '';

@@ -473,7 +473,6 @@
       "answered": "Answered",
       "error": "Couldn't load buyer questions.",
       "retry": "Retry",
-      "empty": "No buyer questions in this window.",
       "cols": {
         "askedAt": "Asked",
         "source": "Channel",
@@ -499,7 +498,9 @@
       "reconnect": "Reconnect",
       "alreadyAnswered": "This question has already been answered. Reload to see the reply.",
       "reload": "Reload",
-      "yourAnswer": "Your answer"
+      "yourAnswer": "Your answer",
+      "emptyPeerTitle": "You're all caught up",
+      "emptyPeerDescription": "No buyer questions waiting on you in this window. When one comes in, answer it here in a tap — fast replies win the sale."
     },
     "heroInventoryValue": "Inventory Value",
     "heroSalesVsSpend": "Sales (30d)",
@@ -654,7 +655,6 @@
     "searchLabel": "Search order",
     "searchPlaceholder": "Order number…",
     "noResults": "No orders match your search.",
-    "empty": "No orders in this window yet.",
     "orderNumber": "Order",
     "placed": "Placed",
     "openOnChannel": "Open on channel",
@@ -703,7 +703,9 @@
     },
     "timeline": {
       "title": "Status timeline"
-    }
+    },
+    "emptyPeerTitle": "Your first sale lands here",
+    "emptyPeerDescription": "When an order comes in from your channels, you'll see it right here — with its margin already worked out. Nothing to do yet."
   },
   "products": {
     "title": "Products",
@@ -936,8 +938,6 @@
     "regenerateBarcode": "Regenerate Barcode",
     "barcodeUpc": "Barcode / UPC",
     "scanOrEnter": "Scan or enter code",
-    "emptyTitle": "Build your product catalog",
-    "emptyDescription": "Add your first product manually, then connect suppliers and purchase orders so stock has a reliable source.",
     "importSupplierPo": "Import supplier PO",
     "activeCampaignsCount": "{{count}} active campaigns",
     "includes": "Includes:",
@@ -1148,7 +1148,9 @@
       "receivedPo": "Received"
     },
     "clickToPreview": "Click to preview",
-    "loadingMore": "Loading more..."
+    "loadingMore": "Loading more...",
+    "emptyPeerTitle": "Let's set up your first product",
+    "emptyPeerDescription": "Add one by hand to start, then we'll pull in suppliers and purchase orders so your stock always has a real source. You've got this."
   },
   "suppliers": {
     "title": "Suppliers",
