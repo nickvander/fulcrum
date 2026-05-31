@@ -1,0 +1,530 @@
+[
+ {
+  "id": "forgotPassword",
+  "prefix": "auth.forgotPassword",
+  "files": [
+   "frontend/src/app/auth/components/forgot-password/forgot-password.component.html",
+   "frontend/src/app/auth/components/forgot-password/forgot-password.component.ts"
+  ]
+ },
+ {
+  "id": "login",
+  "prefix": "auth.login",
+  "files": [
+   "frontend/src/app/auth/components/login/login.html",
+   "frontend/src/app/auth/components/login/login.ts"
+  ]
+ },
+ {
+  "id": "resetPassword",
+  "prefix": "auth.resetPassword",
+  "files": [
+   "frontend/src/app/auth/components/reset-password/reset-password.component.html",
+   "frontend/src/app/auth/components/reset-password/reset-password.component.ts"
+  ]
+ },
+ {
+  "id": "header",
+  "prefix": "core.header",
+  "files": [
+   "frontend/src/app/core/components/header/header.html",
+   "frontend/src/app/core/components/header/header.ts"
+  ]
+ },
+ {
+  "id": "sidenav",
+  "prefix": "core.sidenav",
+  "files": [
+   "frontend/src/app/core/components/sidenav/sidenav.html",
+   "frontend/src/app/core/components/sidenav/sidenav.ts"
+  ]
+ },
+ {
+  "id": "dashboard",
+  "prefix": "dashboard.dashboard",
+  "files": [
+   "frontend/src/app/dashboard/pages/dashboard/dashboard.component.html",
+   "frontend/src/app/dashboard/pages/dashboard/dashboard.component.ts"
+  ]
+ },
+ {
+  "id": "expenseDialog",
+  "prefix": "expenses.expenseDialog",
+  "files": [
+   "frontend/src/app/expenses/components/expense-dialog/expense-dialog.html",
+   "frontend/src/app/expenses/components/expense-dialog/expense-dialog.ts"
+  ]
+ },
+ {
+  "id": "expenseList",
+  "prefix": "expenses.expenseList",
+  "files": [
+   "frontend/src/app/expenses/components/expense-list/expense-list.html",
+   "frontend/src/app/expenses/components/expense-list/expense-list.ts"
+  ]
+ },
+ {
+  "id": "inventoryCountDetail",
+  "prefix": "inventoryCount.inventoryCountDetail",
+  "files": [
+   "frontend/src/app/inventory-count/pages/detail/inventory-count-detail.component.html",
+   "frontend/src/app/inventory-count/pages/detail/inventory-count-detail.component.ts"
+  ]
+ },
+ {
+  "id": "campaignCalendar",
+  "prefix": "marketing.campaignCalendar",
+  "files": [
+   "frontend/src/app/marketing/components/campaign-calendar/campaign-calendar.component.html",
+   "frontend/src/app/marketing/components/campaign-calendar/campaign-calendar.component.ts"
+  ]
+ },
+ {
+  "id": "campaignDetail",
+  "prefix": "marketing.campaignDetail",
+  "files": [
+   "frontend/src/app/marketing/components/campaign-detail/campaign-detail.component.html",
+   "frontend/src/app/marketing/components/campaign-detail/campaign-detail.component.ts"
+  ]
+ },
+ {
+  "id": "campaignList",
+  "prefix": "marketing.campaignList",
+  "files": [
+   "frontend/src/app/marketing/components/campaign-list/campaign-list.component.html",
+   "frontend/src/app/marketing/components/campaign-list/campaign-list.component.ts"
+  ]
+ },
+ {
+  "id": "campaignWizard",
+  "prefix": "marketing.campaignWizard",
+  "files": [
+   "frontend/src/app/marketing/components/campaign-wizard/campaign-wizard.component.html",
+   "frontend/src/app/marketing/components/campaign-wizard/campaign-wizard.component.ts"
+  ]
+ },
+ {
+  "id": "connectorSettings",
+  "prefix": "marketing.connectorSettings",
+  "files": [
+   "frontend/src/app/marketing/components/connector-settings/connector-settings.component.html",
+   "frontend/src/app/marketing/components/connector-settings/connector-settings.component.ts"
+  ]
+ },
+ {
+  "id": "quickPostDetailDialog",
+  "prefix": "marketing.quickPostDetailDialog",
+  "files": [
+   "frontend/src/app/marketing/components/quick-post-detail-dialog/quick-post-detail-dialog.component.html",
+   "frontend/src/app/marketing/components/quick-post-detail-dialog/quick-post-detail-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "quickPostDialog",
+  "prefix": "marketing.quickPostDialog",
+  "files": [
+   "frontend/src/app/marketing/components/quick-post-dialog/quick-post-dialog.component.html",
+   "frontend/src/app/marketing/components/quick-post-dialog/quick-post-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "marketplaceDetail",
+  "prefix": "marketplaces.marketplaceDetail",
+  "files": [
+   "frontend/src/app/marketplaces/pages/marketplace-detail/marketplace-detail.html",
+   "frontend/src/app/marketplaces/pages/marketplace-detail/marketplace-detail.ts"
+  ]
+ },
+ {
+  "id": "marketplaceSettings",
+  "prefix": "marketplaces.marketplaceSettings",
+  "files": [
+   "frontend/src/app/marketplaces/pages/marketplace-settings/marketplace-settings.html",
+   "frontend/src/app/marketplaces/pages/marketplace-settings/marketplace-settings.ts"
+  ]
+ },
+ {
+  "id": "salesOrderList",
+  "prefix": "orders.salesOrderList",
+  "files": [
+   "frontend/src/app/sales-orders/pages/sales-order-list/sales-order-list.html",
+   "frontend/src/app/sales-orders/pages/sales-order-list/sales-order-list.ts"
+  ]
+ },
+ {
+  "id": "batchActionToolbar",
+  "prefix": "products.batchActionToolbar",
+  "files": [
+   "frontend/src/app/products/components/batch-action-toolbar/batch-action-toolbar.html",
+   "frontend/src/app/products/components/batch-action-toolbar/batch-action-toolbar.ts"
+  ]
+ },
+ {
+  "id": "enhancedImageManagement",
+  "prefix": "products.enhancedImageManagement",
+  "files": [
+   "frontend/src/app/products/components/enhanced-image-management/enhanced-image-management.html",
+   "frontend/src/app/products/components/enhanced-image-management/enhanced-image-management.ts"
+  ]
+ },
+ {
+  "id": "pagination",
+  "prefix": "products.pagination",
+  "files": [
+   "frontend/src/app/products/components/pagination/pagination.html",
+   "frontend/src/app/products/components/pagination/pagination.ts"
+  ]
+ },
+ {
+  "id": "productDashboard",
+  "prefix": "products.productDashboard",
+  "files": [
+   "frontend/src/app/products/pages/product-dashboard/product-dashboard.component.html",
+   "frontend/src/app/products/pages/product-dashboard/product-dashboard.component.ts"
+  ]
+ },
+ {
+  "id": "productDetailsDialog",
+  "prefix": "products.productDetailsDialog",
+  "files": [
+   "frontend/src/app/products/components/product-details-dialog/product-details-dialog.component.html",
+   "frontend/src/app/products/components/product-details-dialog/product-details-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "productFilters",
+  "prefix": "products.productFilters",
+  "files": [
+   "frontend/src/app/products/components/product-filters/product-filters.html",
+   "frontend/src/app/products/components/product-filters/product-filters.ts"
+  ]
+ },
+ {
+  "id": "productForm",
+  "prefix": "products.productForm",
+  "files": [
+   "frontend/src/app/products/components/product-form/product-form.html",
+   "frontend/src/app/products/components/product-form/product-form.ts"
+  ]
+ },
+ {
+  "id": "productFormImageGallery",
+  "prefix": "products.productFormImageGallery",
+  "files": [
+   "frontend/src/app/products/components/product-form/product-form-image-gallery.component.html",
+   "frontend/src/app/products/components/product-form/product-form-image-gallery.component.ts"
+  ]
+ },
+ {
+  "id": "productList",
+  "prefix": "products.productList",
+  "files": [
+   "frontend/src/app/products/components/product-list/product-list.html",
+   "frontend/src/app/products/components/product-list/product-list.ts"
+  ]
+ },
+ {
+  "id": "productScanner",
+  "prefix": "products.productScanner",
+  "files": [
+   "frontend/src/app/products/components/product-scanner/product-scanner.component.html",
+   "frontend/src/app/products/components/product-scanner/product-scanner.component.ts"
+  ]
+ },
+ {
+  "id": "productTemplates",
+  "prefix": "products.productTemplates",
+  "files": [
+   "frontend/src/app/products/components/product-templates/product-templates.html",
+   "frontend/src/app/products/components/product-templates/product-templates.ts"
+  ]
+ },
+ {
+  "id": "productVariants",
+  "prefix": "products.productVariants",
+  "files": [
+   "frontend/src/app/products/components/product-variants/product-variants.html",
+   "frontend/src/app/products/components/product-variants/product-variants.ts"
+  ]
+ },
+ {
+  "id": "stockHistoryDialog",
+  "prefix": "products.stockHistoryDialog",
+  "files": [
+   "frontend/src/app/products/components/stock-history-dialog/stock-history-dialog.component.html",
+   "frontend/src/app/products/components/stock-history-dialog/stock-history-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "costAllocationDialog",
+  "prefix": "purchaseOrders.costAllocationDialog",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component.html",
+   "frontend/src/app/suppliers/purchase-orders/cost-allocation-dialog/cost-allocation-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "poIngestDialog",
+  "prefix": "purchaseOrders.poIngestDialog",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/po-ingest-dialog/po-ingest-dialog.component.html",
+   "frontend/src/app/suppliers/purchase-orders/po-ingest-dialog/po-ingest-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "purchaseOrderEdit",
+  "prefix": "purchaseOrders.purchaseOrderEdit",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.html",
+   "frontend/src/app/suppliers/purchase-orders/purchase-order-edit/purchase-order-edit.component.ts"
+  ]
+ },
+ {
+  "id": "purchaseOrderList",
+  "prefix": "purchaseOrders.purchaseOrderList",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.html",
+   "frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.ts"
+  ]
+ },
+ {
+  "id": "quickProductDialog",
+  "prefix": "purchaseOrders.quickProductDialog",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/quick-product-dialog/quick-product-dialog.component.html",
+   "frontend/src/app/suppliers/purchase-orders/quick-product-dialog/quick-product-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "receivingDialog",
+  "prefix": "purchaseOrders.receivingDialog",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/receiving-dialog/receiving-dialog.component.html",
+   "frontend/src/app/suppliers/purchase-orders/receiving-dialog/receiving-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "supplierSelectionDialog",
+  "prefix": "purchaseOrders.supplierSelectionDialog",
+  "files": [
+   "frontend/src/app/suppliers/purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component.html",
+   "frontend/src/app/suppliers/purchase-orders/supplier-selection-dialog/supplier-selection-dialog.component.ts"
+  ]
+ },
+ {
+  "id": "aiTab",
+  "prefix": "settings.aiTab",
+  "files": [
+   "frontend/src/app/settings/components/tabs/ai-tab.component.html",
+   "frontend/src/app/settings/components/tabs/ai-tab.component.ts"
+  ]
+ },
+ {
+  "id": "changeLogDialog",
+  "prefix": "settings.changeLogDialog",
+  "files": [
+   "frontend/src/app/settings/components/change-log-dialog/change-log-dialog.html",
+   "frontend/src/app/settings/components/change-log-dialog/change-log-dialog.ts"
+  ]
+ },
+ {
+  "id": "customFieldDialog",
+  "prefix": "settings.customFieldDialog",
+  "files": [
+   "frontend/src/app/settings/components/custom-field-dialog/custom-field-dialog.html",
+   "frontend/src/app/settings/components/custom-field-dialog/custom-field-dialog.ts"
+  ]
+ },
+ {
+  "id": "customFieldList",
+  "prefix": "settings.customFieldList",
+  "files": [
+   "frontend/src/app/settings/components/custom-field-list/custom-field-list.html",
+   "frontend/src/app/settings/components/custom-field-list/custom-field-list.ts"
+  ]
+ },
+ {
+  "id": "dataTab",
+  "prefix": "settings.dataTab",
+  "files": [
+   "frontend/src/app/settings/components/tabs/data-tab.component.html",
+   "frontend/src/app/settings/components/tabs/data-tab.component.ts"
+  ]
+ },
+ {
+  "id": "generalTab",
+  "prefix": "settings.generalTab",
+  "files": [
+   "frontend/src/app/settings/components/tabs/general-tab.component.html",
+   "frontend/src/app/settings/components/tabs/general-tab.component.ts"
+  ]
+ },
+ {
+  "id": "integrationsTab",
+  "prefix": "settings.integrationsTab",
+  "files": [
+   "frontend/src/app/settings/components/tabs/integrations-tab.component.html",
+   "frontend/src/app/settings/components/tabs/integrations-tab.component.ts"
+  ]
+ },
+ {
+  "id": "marketingTab",
+  "prefix": "settings.marketingTab",
+  "files": [
+   "frontend/src/app/settings/components/tabs/marketing-tab.component.html",
+   "frontend/src/app/settings/components/tabs/marketing-tab.component.ts"
+  ]
+ },
+ {
+  "id": "aiPromptPreview",
+  "prefix": "shared.aiPromptPreview",
+  "files": [
+   "frontend/src/app/shared/components/ai-prompt-preview/ai-prompt-preview.html",
+   "frontend/src/app/shared/components/ai-prompt-preview/ai-prompt-preview.ts"
+  ]
+ },
+ {
+  "id": "aiSearchBar",
+  "prefix": "shared.aiSearchBar",
+  "files": [
+   "frontend/src/app/shared/components/ai-search-bar/ai-search-bar.html",
+   "frontend/src/app/shared/components/ai-search-bar/ai-search-bar.ts"
+  ]
+ },
+ {
+  "id": "imageDialog",
+  "prefix": "shared.imageDialog",
+  "files": [
+   "frontend/src/app/shared/components/image-dialog/image-dialog.html",
+   "frontend/src/app/shared/components/image-dialog/image-dialog.ts"
+  ]
+ },
+ {
+  "id": "receiveTransferDialog",
+  "prefix": "stockTransfers.receiveTransferDialog",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/receive-transfer-dialog/receive-transfer-dialog.html",
+   "frontend/src/app/marketplaces/stock-transfers/receive-transfer-dialog/receive-transfer-dialog.ts"
+  ]
+ },
+ {
+  "id": "stockTransferCreateDialog",
+  "prefix": "stockTransfers.stockTransferCreateDialog",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-create-dialog/stock-transfer-create-dialog.html",
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-create-dialog/stock-transfer-create-dialog.ts"
+  ]
+ },
+ {
+  "id": "stockTransferDetail",
+  "prefix": "stockTransfers.stockTransferDetail",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-detail/stock-transfer-detail.html",
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-detail/stock-transfer-detail.ts"
+  ]
+ },
+ {
+  "id": "stockTransferList",
+  "prefix": "stockTransfers.stockTransferList",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-list/stock-transfer-list.html",
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-list/stock-transfer-list.ts"
+  ]
+ },
+ {
+  "id": "stockTransferPlanner",
+  "prefix": "stockTransfers.stockTransferPlanner",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-planner/stock-transfer-planner.html",
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-planner/stock-transfer-planner.ts"
+  ]
+ },
+ {
+  "id": "stockTransferReconciliation",
+  "prefix": "stockTransfers.stockTransferReconciliation",
+  "files": [
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-reconciliation/stock-transfer-reconciliation.html",
+   "frontend/src/app/marketplaces/stock-transfers/stock-transfer-reconciliation/stock-transfer-reconciliation.ts"
+  ]
+ },
+ {
+  "id": "supplierDetail",
+  "prefix": "suppliers.supplierDetail",
+  "files": [
+   "frontend/src/app/suppliers/supplier-detail/supplier-detail.component.html",
+   "frontend/src/app/suppliers/supplier-detail/supplier-detail.component.ts"
+  ]
+ },
+ {
+  "id": "supplierList",
+  "prefix": "suppliers.supplierList",
+  "files": [
+   "frontend/src/app/suppliers/supplier-list/supplier-list.component.html",
+   "frontend/src/app/suppliers/supplier-list/supplier-list.component.ts"
+  ]
+ },
+ {
+  "id": "supplierProductManager",
+  "prefix": "suppliers.supplierProductManager",
+  "files": [
+   "frontend/src/app/suppliers/supplier-product-manager/supplier-product-manager.component.html",
+   "frontend/src/app/suppliers/supplier-product-manager/supplier-product-manager.component.ts"
+  ]
+ },
+ {
+  "id": "accountManagement",
+  "prefix": "users.accountManagement",
+  "files": [
+   "frontend/src/app/users/components/account-management/account-management.html",
+   "frontend/src/app/users/components/account-management/account-management.ts"
+  ]
+ },
+ {
+  "id": "auditLogList",
+  "prefix": "users.auditLogList",
+  "files": [
+   "frontend/src/app/users/components/audit-log-list/audit-log-list.html",
+   "frontend/src/app/users/components/audit-log-list/audit-log-list.ts"
+  ]
+ },
+ {
+  "id": "forcePasswordChange",
+  "prefix": "users.forcePasswordChange",
+  "files": [
+   "frontend/src/app/users/components/force-password-change/force-password-change.component.html",
+   "frontend/src/app/users/components/force-password-change/force-password-change.component.ts"
+  ]
+ },
+ {
+  "id": "userBulkImportDialog",
+  "prefix": "users.userBulkImportDialog",
+  "files": [
+   "frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.html",
+   "frontend/src/app/users/components/user-bulk-import-dialog/user-bulk-import-dialog.ts"
+  ]
+ },
+ {
+  "id": "userCreateModal",
+  "prefix": "users.userCreateModal",
+  "files": [
+   "frontend/src/app/users/components/user-create-modal/user-create-modal.html",
+   "frontend/src/app/users/components/user-create-modal/user-create-modal.ts"
+  ]
+ },
+ {
+  "id": "userForm",
+  "prefix": "users.userForm",
+  "files": [
+   "frontend/src/app/users/components/user-form/user-form.html",
+   "frontend/src/app/users/components/user-form/user-form.ts"
+  ]
+ },
+ {
+  "id": "userList",
+  "prefix": "users.userList",
+  "files": [
+   "frontend/src/app/users/components/user-list/user-list.html",
+   "frontend/src/app/users/components/user-list/user-list.ts"
+  ]
+ }
+]

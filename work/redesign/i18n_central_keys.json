@@ -1,0 +1,13 @@
+[
+  { "key": "common.attachments", "en": "Attachments", "esMX": "Adjuntos" },
+  { "key": "common.connect", "en": "Connect", "esMX": "Conectar" },
+  { "key": "common.products", "en": "Products", "esMX": "Productos" },
+  { "key": "common.messages.copied", "en": "Copied!", "esMX": "¡Copiado!" },
+  { "key": "errors.generic.title", "en": "Something went wrong", "esMX": "Algo salió mal" },
+  { "key": "errors.generic.retry", "en": "Retry", "esMX": "Reintentar" },
+  { "key": "expenses.fields.paymentMethod", "en": "Payment Method", "esMX": "Método de pago" },
+  { "key": "expenses.paymentMethod.none", "en": "None", "esMX": "Ninguno" },
+  { "key": "products.clickToPreview", "en": "Click to preview", "esMX": "Haz clic para previsualizar" },
+  { "key": "products.loadingMore", "en": "Loading more...", "esMX": "Cargando más..." },
+  { "key": "users.email", "en": "Email", "esMX": "Correo electrónico" }
+]
