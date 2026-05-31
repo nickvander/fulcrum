@@ -39,6 +39,29 @@
     .filter-field {
         min-width: 180px;
     }
+
+    .search-field {
+        min-width: 240px;
+    }
+}
+
+// Margin column: right-aligned ledger with tabular numerals + the same
+// healthy/thin/loss bands as the order-detail page. Loss is the semantic
+// danger token, NOT the brand chile-red `--primary`.
+.margin-col {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.margin-val {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+    font-weight: 700;
+
+    &.margin-healthy { color: var(--success-color); }
+    &.margin-thin    { color: var(--warning-color); }
+    &.margin-loss    { color: var(--error-color); }
+    &.margin-unknown { color: var(--text-hint); font-weight: 400; }
 }
 
 .table-card {

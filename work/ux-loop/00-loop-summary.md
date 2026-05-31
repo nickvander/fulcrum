@@ -76,6 +76,24 @@ learnable, performant, with an ownable brand identity._
 - Tests: backend 33 (docker), frontend 804 (full), i18n + theme guards pass.
 - Novice re-validation: **✅ fixed & smooth** (P2 nits only).
 
+## Iteration 3 — orders list: pagination + search + margin column
+
+- PM scope (`pm-orders-scope.md`): the list endpoint returned a bare array
+  (no total → no real pagination), no search, and no per-row margin. Chose the
+  `{items,total,skip,limit}` envelope (matches existing `PaymentListResponse`),
+  search on `external_order_id` only (verified `SalesOrder` has no buyer
+  column), margin via `joinedload` (no N+1), null→em-dash.
+- `GET /api/v1/sales-orders/` now returns the envelope with a case-insensitive
+  `search` param (AND-composes with source/status/days; threaded into exports
+  for WYSIWYG) and `net_margin_percent` per row (`count()` before
+  offset/limit + joinedload). Frontend: server-side MatPaginator (size 25,
+  resets to page 0 on filter/search), 300ms debounced search with distinct
+  no-results vs empty-window states, and a banded **Margen** column reusing
+  order-detail's `marginClass()` (loss = semantic danger token + tabular,
+  never brand chile-red; em-dash when null).
+- Tests: backend 30 (docker), frontend 817 (full, +13), i18n + theme guards
+  pass. Power-user re-validation: **✅ fixed & solid** (remaining items P2).
+
 ## Next-loop backlog (ranked, from PM + re-validation)
 
 1. **Profit / "¿gané o perdí?" summary** (M) — novice has no plain

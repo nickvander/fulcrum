@@ -31,6 +31,7 @@ from src.schemas.sales_order import (
     SalesOrderChannelBreakdown,
     SalesOrderDetail,
     SalesOrderItem as SalesOrderItemSchema,
+    SalesOrderListResponse,
     SalesOrderReturnCreate,
     SalesOrderReturnRead,
     SalesOrderSummary,
@@ -50,6 +51,16 @@ router = APIRouter()
 
 
 def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
+    # Margin is read from the 1:1 cost breakdown. None when the order has
+    # no breakdown row, or when the breakdown's net_margin_percent is NULL
+    # (zero-revenue order). The list query eager-loads `cost_breakdown`
+    # (joinedload) and the detail endpoint already does too, so this never
+    # triggers an N+1.
+    margin = (
+        order.cost_breakdown.net_margin_percent
+        if order.cost_breakdown is not None
+        else None
+    )
     return SalesOrderSchema(
         id=order.id,
         status=order.status,
@@ -59,20 +70,31 @@ def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
         # `source` is a plain string column now (catalog-governed).
         source=order.source,
         external_order_id=order.external_order_id,
+        net_margin_percent=margin,
     )
 
 
-@router.get("/", response_model=List[SalesOrderSchema])
+@router.get("/", response_model=SalesOrderListResponse)
 def list_sales_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
     source: Optional[str] = Query(None, description="Filter by channel (order source, e.g. MERCADOLIBRE)"),
     status: Optional[str] = Query(None, description="Filter by status"),
     days: Optional[int] = Query(None, ge=1, le=365, description="Only orders from the last N days"),
+    search: Optional[str] = Query(
+        None,
+        description="Case-insensitive substring match on external_order_id",
+    ),
     skip: int = 0,
     limit: int = Query(100, le=500),
 ):
-    """List sales orders, optionally filtered by channel, status, or recency."""
+    """List sales orders as a paged envelope `{items, total, skip, limit}`.
+
+    Optionally filtered by channel, status, recency, and a case-insensitive
+    substring `search` on the external order id. All filters AND-compose.
+    `total` is the count of matching rows BEFORE skip/limit so the UI can
+    drive a server-side paginator.
+    """
     q = db.query(SalesOrder)
     if source is not None:
         q = q.filter(SalesOrder.source == source.strip().upper())
@@ -81,9 +103,28 @@ def list_sales_orders(
     if days is not None:
         cutoff = datetime.utcnow() - timedelta(days=days)
         q = q.filter(SalesOrder.created_at >= cutoff)
-    q = q.order_by(SalesOrder.created_at.desc().nullslast(), SalesOrder.id.desc())
-    rows = q.offset(skip).limit(limit).all()
-    return [_serialize_order(o) for o in rows]
+    if search is not None and search.strip():
+        term = f"%{search.strip().lower()}%"
+        q = q.filter(func.lower(SalesOrder.external_order_id).like(term))
+
+    # Count BEFORE offset/limit — and BEFORE the joinedload so the 1:1
+    # LEFT JOIN can't perturb the count (it can't fan out, but counting on
+    # the bare filtered query keeps the intent explicit).
+    total = q.count()
+
+    rows = (
+        q.options(joinedload(SalesOrder.cost_breakdown))
+        .order_by(SalesOrder.created_at.desc().nullslast(), SalesOrder.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return SalesOrderListResponse(
+        items=[_serialize_order(o) for o in rows],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
 
 
 @router.get("/summary", response_model=SalesOrderSummary)
@@ -214,6 +255,7 @@ def _build_sales_order_export_rows(
     source: Optional[str],
     status: Optional[str],
     days: Optional[int],
+    search: Optional[str],
     limit: int,
 ) -> list[dict]:
     q = db.query(SalesOrder)
@@ -224,6 +266,11 @@ def _build_sales_order_export_rows(
     if days is not None:
         cutoff = datetime.utcnow() - timedelta(days=days)
         q = q.filter(SalesOrder.created_at >= cutoff)
+    # Same external-id substring as the JSON list, so an export matches the
+    # on-screen search scope (WYSIWYG).
+    if search is not None and search.strip():
+        term = f"%{search.strip().lower()}%"
+        q = q.filter(func.lower(SalesOrder.external_order_id).like(term))
     q = q.order_by(SalesOrder.created_at.desc().nullslast(), SalesOrder.id.desc())
 
     rows: list[dict] = []
@@ -269,13 +316,14 @@ def export_sales_orders_csv(
     source: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     days: Optional[int] = Query(None, ge=1, le=365),
+    search: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=10000),
 ) -> StreamingResponse:
     """Stream the sales orders list as a CSV. Same filters as the JSON
     list endpoint; default limit 5000 (cap 10000) for the "give me
     everything in this quarter" use case."""
     rows = _build_sales_order_export_rows(
-        db, source=source, status=status, days=days, limit=limit,
+        db, source=source, status=status, days=days, search=search, limit=limit,
     )
     return stream_csv(_sales_order_export_table(rows))
 
@@ -287,10 +335,11 @@ def export_sales_orders_pdf(
     source: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     days: Optional[int] = Query(None, ge=1, le=365),
+    search: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=10000),
 ) -> StreamingResponse:
     rows = _build_sales_order_export_rows(
-        db, source=source, status=status, days=days, limit=limit,
+        db, source=source, status=status, days=days, search=search, limit=limit,
     )
     return stream_pdf(_sales_order_export_table(rows))
 

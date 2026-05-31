@@ -36,8 +36,27 @@ class SalesOrder(BaseModel):
     # serializes instead of failing schema validation.
     source: Optional[str] = None
     external_order_id: Optional[str] = None
+    # Net margin % from the order's OrderCostBreakdown (1:1). None means
+    # "no margin data" — either the order has no breakdown row, or revenue
+    # was zero (dividing by zero would lie). The UI renders None as an
+    # em-dash, never 0%.
+    net_margin_percent: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SalesOrderListResponse(BaseModel):
+    """Paginated envelope for GET /api/v1/sales-orders/.
+
+    `total` is the count of rows matching the filters+search BEFORE
+    skip/limit, so the operator UI can render `Showing N–M of Total` and
+    drive a server-side paginator. `skip`/`limit` are echoed back so the
+    client never has to assume its own request was honored.
+    """
+    items: List["SalesOrder"]
+    total: int
+    skip: int
+    limit: int
 
 
 class OrderCostBreakdownRead(BaseModel):

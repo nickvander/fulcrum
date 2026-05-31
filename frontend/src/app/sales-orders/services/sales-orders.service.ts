@@ -14,6 +14,20 @@ export interface SalesOrder {
   created_at?: string | null;
   source?: OrderSource | null;
   external_order_id?: string | null;
+  /** Net margin % from the order's cost breakdown. `null`/absent means
+   *  "no margin data" (no breakdown row, or zero-revenue order) — the UI
+   *  renders an em-dash, never 0%. */
+  net_margin_percent?: number | null;
+}
+
+/** Paginated envelope for `GET /sales-orders/`. `total` is the
+ *  filtered+searched count BEFORE skip/limit, for the server-side
+ *  paginator's `[length]`. */
+export interface SalesOrderListResponse {
+  items: SalesOrder[];
+  total: number;
+  skip: number;
+  limit: number;
 }
 
 export interface SalesOrderItem {
@@ -91,16 +105,18 @@ export class SalesOrdersService {
     source?: OrderSource;
     status?: string;
     days?: number;
+    search?: string;
     skip?: number;
     limit?: number;
-  } = {}): Observable<SalesOrder[]> {
+  } = {}): Observable<SalesOrderListResponse> {
     let params = new HttpParams();
     if (opts.source) params = params.set('source', opts.source);
     if (opts.status) params = params.set('status', opts.status);
     if (opts.days != null) params = params.set('days', String(opts.days));
+    if (opts.search) params = params.set('search', opts.search);
     if (opts.skip != null) params = params.set('skip', String(opts.skip));
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
-    return this.http.get<SalesOrder[]>(`${this.apiUrl}/`, { params });
+    return this.http.get<SalesOrderListResponse>(`${this.apiUrl}/`, { params });
   }
 
   summary(days = 30): Observable<SalesOrderSummary> {
@@ -112,20 +128,22 @@ export class SalesOrdersService {
   /** Download the full sales orders list as CSV. Accepts the same filters
    *  as the JSON list endpoint plus a higher limit for "give me the
    *  whole quarter" exports. */
-  exportListCsv(opts: { source?: string; status?: string; days?: number; limit?: number } = {}): Observable<Blob> {
+  exportListCsv(opts: { source?: string; status?: string; days?: number; search?: string; limit?: number } = {}): Observable<Blob> {
     let params = new HttpParams();
     if (opts.source) params = params.set('source', opts.source);
     if (opts.status) params = params.set('status', opts.status);
     if (opts.days != null) params = params.set('days', String(opts.days));
+    if (opts.search) params = params.set('search', opts.search);
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
     return this.http.get(`${this.apiUrl}/export`, { params, responseType: 'blob' });
   }
 
-  exportListPdf(opts: { source?: string; status?: string; days?: number; limit?: number } = {}): Observable<Blob> {
+  exportListPdf(opts: { source?: string; status?: string; days?: number; search?: string; limit?: number } = {}): Observable<Blob> {
     let params = new HttpParams();
     if (opts.source) params = params.set('source', opts.source);
     if (opts.status) params = params.set('status', opts.status);
     if (opts.days != null) params = params.set('days', String(opts.days));
+    if (opts.search) params = params.set('search', opts.search);
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
     return this.http.get(`${this.apiUrl}/export-pdf`, { params, responseType: 'blob' });
   }
