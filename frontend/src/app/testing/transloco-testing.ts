@@ -4,7 +4,7 @@ import esMX from '../../assets/i18n/es-MX.json';
 
 /**
  * Shared TranslocoTestingModule that loads the REAL translation files so that
- * `transloco.translate('some.key')` returns the actual English copy in specs
+ * a transloco.translate(key) call returns the actual English copy in specs
  * (default lang is 'en' here, even though the app default is 'es-MX'). This lets
  * component specs keep asserting on the English strings they were written against.
  */

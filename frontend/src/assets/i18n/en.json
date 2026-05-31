@@ -173,7 +173,7 @@
     "emailRequired": "Email is required",
     "emailInvalid": "Please enter a valid email",
     "passwordRequired": "Password is required",
-    "heroTitle": "Your control room for selling on MercadoLibre",
+    "heroTitle": "Your command center for selling online",
     "heroLede": "Fulcrum brings your inventory, your Full shipments, and your buyer questions into one place, so you decide fast and sell more.",
     "point1": "Inventory and margins in pesos, in real time",
     "point2": "MercadoLibre Full shipments without losing sight of stock",
@@ -467,7 +467,7 @@
     "gettingStarted": {
       "eyebrow": "Primeros pasos",
       "title": "Welcome to Fulcrum",
-      "subtitle": "Set up your catalog and your first MercadoLibre Full shipment. Once you have products, your full control room appears here."
+      "subtitle": "Set up your catalog and your first MercadoLibre Full shipment. Once you have products, your full command center appears here."
     },
     "needsAttention": {
       "title": "Needs attention",

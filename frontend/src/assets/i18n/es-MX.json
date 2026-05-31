@@ -173,7 +173,7 @@
     "emailRequired": "El correo es obligatorio",
     "emailInvalid": "Escribe un correo válido",
     "passwordRequired": "La contraseña es obligatoria",
-    "heroTitle": "Tu centro de control para vender en MercadoLibre",
+    "heroTitle": "Tu centro de mando para vender en línea",
     "heroLede": "Fulcrum reúne tu inventario, tus envíos a Full y tus preguntas en un solo lugar, para que decidas rápido y vendas más.",
     "point1": "Inventario y márgenes en pesos, en tiempo real",
     "point2": "Envíos a MercadoLibre Full sin perder de vista el stock",
@@ -467,7 +467,7 @@
     "gettingStarted": {
       "eyebrow": "Primeros pasos",
       "title": "Te damos la bienvenida a Fulcrum",
-      "subtitle": "Configura tu catálogo y tu primer envío a MercadoLibre Full. Cuando tengas productos, aquí aparece tu sala de control completa."
+      "subtitle": "Configura tu catálogo y tu primer envío a MercadoLibre Full. Cuando tengas productos, aquí aparece tu centro de mando completo."
     },
     "needsAttention": {
       "title": "Requiere atención",
