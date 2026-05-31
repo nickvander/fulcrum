@@ -15,6 +15,38 @@
   font-size: 0.9rem;
 }
 
+// Persistent inline Reconnect banner, shared by the ship → ML Full push
+// and the listing sync. Visually matches the sync-summary reauth banner.
+.reauth-banner.reauth-banner--standalone {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--warning-bg);
+  border-left: 4px solid var(--warning-color);
+  border-radius: 4px;
+
+  mat-icon {
+    color: var(--warning-color);
+    flex-shrink: 0;
+  }
+
+  .reauth-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .reauth-link {
+    margin-top: 4px;
+    color: var(--accent-color);
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
 .detail-header {
   display: flex;
   align-items: flex-start;

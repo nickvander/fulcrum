@@ -13,8 +13,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TranslocoModule } from '@ngneat/transloco';
+import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { finalize } from 'rxjs';
 
 import {
@@ -49,6 +50,7 @@ import {
     MatInputModule,
     MatTableModule,
     MatTooltipModule,
+    MatSnackBarModule,
     TranslocoModule,
   ],
   templateUrl: './qa-page.component.html',
@@ -91,6 +93,12 @@ export class QaPageComponent implements OnInit {
   answerErrorRowId: number | null = null;
   /** Id of the row whose submit needs marketplace reauthorization. */
   reauthRowId: number | null = null;
+  /**
+   * Id of the row whose submit hit a 409 `already_answered` (another tab
+   * or stale data). Shows a specific "reload to see the answer" prompt
+   * with a Recargar action, distinct from the generic error.
+   */
+  alreadyAnsweredRowId: number | null = null;
 
   readonly windowOptions: Array<{ value: 30 | 60 | 90 | 180; labelKey: string }> = [
     { value: 30, labelKey: 'dashboard.qaPage.window30' },
@@ -105,7 +113,11 @@ export class QaPageComponent implements OnInit {
     { value: 'answered', labelKey: 'dashboard.qaPage.statusAnswered' },
   ];
 
-  constructor(private analytics: AnalyticsReportsService) {}
+  constructor(
+    private analytics: AnalyticsReportsService,
+    private snackBar: MatSnackBar,
+    private transloco: TranslocoService,
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -175,6 +187,7 @@ export class QaPageComponent implements OnInit {
     this.answerText = '';
     this.answerErrorRowId = null;
     this.reauthRowId = null;
+    this.alreadyAnsweredRowId = null;
   }
 
   /** Close the composer without sending. */
@@ -189,10 +202,25 @@ export class QaPageComponent implements OnInit {
   }
 
   /**
+   * Ctrl/Cmd+Enter in the textarea submits the reply (only when the
+   * submit button would be enabled). Plain Enter is left to the textarea
+   * so newlines still work.
+   */
+  onComposerKeydown(event: KeyboardEvent, row: QuestionRow): void {
+    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      if (this.submitDisabled) return;
+      event.preventDefault();
+      this.submitAnswer(row);
+    }
+  }
+
+  /**
    * Send the typed reply for `row`. On success patches the row in place
    * (answer text + answered/SLA flags) and the headline counters without
-   * a full reload. A 409 `needs_reauthorization` flips the row into a
-   * Reconnect state; any other failure shows an inline error.
+   * a full reload, and confirms with a brief snackbar. A 409
+   * `needs_reauthorization` flips the row into a Reconnect state; a 409
+   * `already_answered` shows a specific reload prompt; any other failure
+   * shows the generic inline error.
    */
   submitAnswer(row: QuestionRow): void {
     const text = this.answerText.trim();
@@ -200,6 +228,7 @@ export class QaPageComponent implements OnInit {
     this.submitting = true;
     this.answerErrorRowId = null;
     this.reauthRowId = null;
+    this.alreadyAnsweredRowId = null;
 
     this.analytics
       .answerQuestion(row.id, text)
@@ -209,10 +238,18 @@ export class QaPageComponent implements OnInit {
           this.applyAnsweredRow(row, updated);
           this.composerRowId = null;
           this.answerText = '';
+          this.snackBar.open(
+            this.transloco.translate('dashboard.qaPage.answerSuccess'),
+            undefined,
+            { duration: 2500 },
+          );
         },
         error: (err: HttpErrorResponse) => {
-          if (err?.status === 409 && err.error?.code === 'needs_reauthorization') {
+          const code = err?.error?.code;
+          if (err?.status === 409 && code === 'needs_reauthorization') {
             this.reauthRowId = row.id;
+          } else if (err?.status === 409 && code === 'apiErrors.question.alreadyAnswered') {
+            this.alreadyAnsweredRowId = row.id;
           } else {
             this.answerErrorRowId = row.id;
           }
@@ -220,7 +257,25 @@ export class QaPageComponent implements OnInit {
       });
   }
 
-  /** Patch the answered row + counters in place from the API response. */
+  /**
+   * Reload the questions list after an `already_answered` conflict so the
+   * operator sees the answer that already landed. Closes the composer.
+   */
+  reloadAfterConflict(): void {
+    this.alreadyAnsweredRowId = null;
+    this.composerRowId = null;
+    this.answerText = '';
+    this.load();
+  }
+
+  /**
+   * Patch the answered row + counters in place from the API response.
+   * When the active filter is the "unanswered" view, the just-answered
+   * row no longer belongs in the list, so it is removed from `rows` (and
+   * `totalRows` decremented) to keep the displayed list consistent with
+   * its filter. In the "all"/"answered" views the row stays and flips to
+   * answered. Counters stay correct in every filter mode.
+   */
   private applyAnsweredRow(row: QuestionRow, updated: QuestionRow): void {
     const wasBreached = row.sla_status === 'breached';
     const wasAnswered = row.answered;
@@ -237,6 +292,10 @@ export class QaPageComponent implements OnInit {
       this.answeredCount += 1;
       if (wasBreached) {
         this.breachedCount = Math.max(0, this.breachedCount - 1);
+      }
+      if (this.statusFilter === 'unanswered') {
+        this.rows = this.rows.filter((r) => r.id !== row.id);
+        this.totalRows = Math.max(0, this.totalRows - 1);
       }
     }
   }

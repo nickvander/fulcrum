@@ -166,6 +166,72 @@ def test_api_ship_and_receive_flow(client: TestClient, db, admin_headers):
     assert _stock_at(db, product.id, LOCATION_INTERNAL) == 15
 
 
+def test_api_ship_push_with_reauth_credential_returns_409_but_ships(
+    client: TestClient, db, admin_headers, test_admin_user,
+):
+    """
+    ship(push_to_marketplace=True) with an ML credential flagged
+    needs_reauthorization: the transfer must STILL be SHIPPED in the DB,
+    external_inbound_id stays NULL, and the endpoint returns HTTP 409 with
+    code=needs_reauthorization + the marketplace/transfer_id params so the
+    UI can render an inline Reconnect prompt.
+    """
+    product = _make_product(db, "API-SHIP-REAUTH")
+    _seed_internal_stock(db, product.id, 40)
+
+    mp = db.query(Marketplace).filter(Marketplace.name == "MercadoLibre").first()
+    if mp is None:
+        mp = Marketplace(name="MercadoLibre", api_base_url="https://api.mercadolibre.com")
+        db.add(mp)
+        db.commit()
+        db.refresh(mp)
+    cred = MarketplaceCredential(
+        user_id=test_admin_user.id,
+        marketplace_id=mp.id,
+        access_token="stale",
+        refresh_token="dead",
+        needs_reauthorization=True,
+        last_refresh_error="refresh denied: invalid_grant",
+    )
+    db.add(cred)
+    db.commit()
+
+    create_resp = client.post(
+        "/api/v1/stock-transfers/",
+        headers=admin_headers,
+        json={
+            "dest_location": LOCATION_ML_FULL,
+            "items": [{"product_id": product.id, "qty_planned": 10}],
+        },
+    )
+    transfer_id = create_resp.json()["id"]
+
+    with patch(
+        "src.services.marketplaces.mercadolibre.MercadoLibreConnector.create_inbound_shipment",
+        new=AsyncMock(return_value=InboundShipmentResult(external_inbound_id="SHOULD-NOT")),
+    ) as mocked:
+        ship_resp = client.post(
+            f"/api/v1/stock-transfers/{transfer_id}/ship",
+            headers=admin_headers,
+            params={"push_to_marketplace": True},
+        )
+
+    mocked.assert_not_called()
+    assert ship_resp.status_code == 409, ship_resp.text
+    body = ship_resp.json()
+    assert body["code"] == "needs_reauthorization"
+    assert body["params"]["marketplace"] == "MercadoLibre"
+    assert body["params"]["transfer_id"] == transfer_id
+
+    # Despite the 409, the inventory move + SHIPPED status are committed.
+    assert _stock_at(db, product.id, LOCATION_INTERNAL) == 30
+    get_resp = client.get(
+        f"/api/v1/stock-transfers/{transfer_id}", headers=admin_headers
+    )
+    assert get_resp.json()["status"] == "shipped"
+    assert get_resp.json()["external_inbound_id"] is None
+
+
 def test_api_cannot_ship_with_insufficient_stock(client: TestClient, db, admin_headers):
     product = _make_product(db, "API-INSUF")
     _seed_internal_stock(db, product.id, 3)

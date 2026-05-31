@@ -171,9 +171,24 @@ class StockTransferService:
         transfer.status = StockTransferStatus.SHIPPED.value
         transfer.shipped_at = datetime.now(timezone.utc)
 
+        # Commit the inventory move + SHIPPED status FIRST. The physical
+        # stock has left the source location regardless of whether the
+        # marketplace push can complete, so the ship must always persist —
+        # a downstream marketplace failure (e.g. an expired ML token) must
+        # never roll it back.
+        db.add(transfer)
+        db.commit()
+        db.refresh(transfer)
+
         if push_to_marketplace:
             marketplace_name = _LOCATION_TO_MARKETPLACE.get(transfer.dest_location)
             if marketplace_name:
+                # Attempt the marketplace push on the already-committed
+                # transfer. _create_marketplace_inbound raises
+                # ReauthorizationRequiredError when the credential needs
+                # reconnecting — we let that propagate to the caller so it
+                # can surface an inline reauth prompt, while the transfer
+                # stays SHIPPED in the DB.
                 inbound_id = self._create_marketplace_inbound(
                     db,
                     transfer=transfer,
@@ -182,10 +197,10 @@ class StockTransferService:
                 )
                 if inbound_id:
                     transfer.external_inbound_id = inbound_id
+                    db.add(transfer)
+                    db.commit()
+                    db.refresh(transfer)
 
-        db.add(transfer)
-        db.commit()
-        db.refresh(transfer)
         return transfer
 
     def _create_marketplace_inbound(
@@ -199,13 +214,23 @@ class StockTransferService:
         """
         Call the marketplace connector to create an inbound shipment.
         Returns the external inbound id, or None when the marketplace is not
-        configured / no credentials are available (so callers can fall back
-        to the manual workflow).
+        configured / no credentials are available / the connector can't be
+        loaded (so callers can fall back to the manual workflow).
+
+        Raises:
+            ReauthorizationRequiredError: when a marketplace credential
+                exists for this user but cannot be used because it needs
+                re-authorization (expired/revoked token). This is raised —
+                not swallowed — so the caller can surface an inline reauth
+                prompt instead of silently no-op'ing the push.
         """
         import asyncio
 
         from src.crud.crud_marketplace_credential import marketplace_credential as crud_cred
-        from src.services.marketplace_service import marketplace_service
+        from src.services.marketplace_service import (
+            ReauthorizationRequiredError,
+            marketplace_service,
+        )
         from src.services.marketplaces.base import InboundShipmentItem
 
         marketplace = (
@@ -221,10 +246,26 @@ class StockTransferService:
                 db, user_id=user_id, marketplace_id=marketplace.id
             )
             if cred:
+                # Short-circuit a credential already flagged for reauth so we
+                # don't even attempt a refresh, and surface the typed error.
+                if cred.needs_reauthorization:
+                    raise ReauthorizationRequiredError(
+                        credential_id=cred.id,
+                        marketplace_name=marketplace.name,
+                        reason=(
+                            cred.last_refresh_error
+                            or "credential previously marked for re-authorization"
+                        ),
+                    )
+                # A live refresh failure raises ReauthorizationRequiredError;
+                # let it propagate. Other token errors keep the graceful
+                # manual-fallback path (token stays None).
                 try:
                     token = asyncio.run(
                         marketplace_service.get_valid_access_token(db, cred.id)
                     )
+                except ReauthorizationRequiredError:
+                    raise
                 except Exception:
                     token = None
 

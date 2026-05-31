@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -46,6 +47,13 @@ export class StockTransferDetailComponent implements OnInit {
   acting = false;
   lastSync: SyncListingsResult | null = null;
   lastReconcile: ReconcileResult | null = null;
+  /**
+   * Persistent inline Reconnect banner, shared by the marketplace push
+   * (ship → ML Full) and the listing sync. Set when the marketplace
+   * credential needs re-authorization; cleared on the next successful
+   * action. `title` is the already-translated headline string.
+   */
+  reauthBanner: { title: string } | null = null;
   readonly columns = ['product', 'qty_planned', 'qty_shipped', 'qty_received'];
 
   constructor(
@@ -84,7 +92,9 @@ export class StockTransferDetailComponent implements OnInit {
       return;
     }
     this.acting = true;
-    this.service.ship(this.transfer.id, pushToMarketplace).subscribe({
+    this.reauthBanner = null;
+    const transferId = this.transfer.id;
+    this.service.ship(transferId, pushToMarketplace).subscribe({
       next: updated => {
         this.transfer = updated;
         this.acting = false;
@@ -93,8 +103,27 @@ export class StockTransferDetailComponent implements OnInit {
           : this.transloco.translate('stockTransfers.stockTransferDetail.shipped');
         this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 3000 });
       },
-      error: err => {
+      error: (err: HttpErrorResponse) => {
         this.acting = false;
+        // A 409 needs_reauthorization means the inventory move + SHIPPED
+        // status already committed on the backend, but the ML Full push
+        // couldn't complete because the credential needs reconnecting.
+        // Surface a persistent inline Reconnect banner and reload the
+        // (now SHIPPED) transfer instead of leaving the operator with no
+        // signal.
+        if (err?.status === 409 && err?.error?.code === 'needs_reauthorization') {
+          const marketplace = err?.error?.params?.marketplace
+            || this.transfer?.dest_location
+            || 'MercadoLibre';
+          this.reauthBanner = {
+            title: this.transloco.translate(
+              'stockTransfers.stockTransferDetail.shipReauthTitle',
+              { marketplace },
+            ),
+          };
+          this.load(transferId);
+          return;
+        }
         // HttpErrorInterceptor surfaces the localized backend message.
       },
     });
@@ -105,16 +134,20 @@ export class StockTransferDetailComponent implements OnInit {
       return;
     }
     this.acting = true;
+    this.reauthBanner = null;
     this.service.syncListings(this.transfer.id).subscribe({
       next: summary => {
         this.acting = false;
         this.lastSync = summary;
         if (summary.needs_reauthorization) {
-          this.snackBar.open(
-            this.transloco.translate('stockTransfers.stockTransferDetail.syncReauthRequired', { marketplace: summary.marketplace || 'marketplace' }),
-            this.transloco.translate('common.close'),
-            { duration: 5000 },
-          );
+          // Use the same persistent inline Reconnect banner as the ship
+          // push, rather than a transient snackbar that scrolls away.
+          this.reauthBanner = {
+            title: this.transloco.translate(
+              'stockTransfers.stockTransferDetail.syncReauthTitle',
+              { marketplace: summary.marketplace || 'MercadoLibre' },
+            ),
+          };
           return;
         }
         const okCount = summary.updated.filter(u => u.ok).length;

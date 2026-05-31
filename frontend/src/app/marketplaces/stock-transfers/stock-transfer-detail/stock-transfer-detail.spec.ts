@@ -6,7 +6,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslocoTestingModule } from '@ngneat/transloco';
-import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
 
 import { StockTransferDetailComponent } from './stock-transfer-detail';
 import { StockTransfer, StockTransferService } from '../stock-transfer.service';
@@ -126,6 +127,44 @@ describe('StockTransferDetailComponent', () => {
     expect(service.ship).toHaveBeenCalledWith(42, true);
   });
 
+  it('shows the persistent reauth banner and reloads when ship-push returns 409 needs_reauthorization', () => {
+    // The backend commits the inventory move + SHIPPED status before the
+    // marketplace push, so a 409 here means "shipped, but ML push needs
+    // reconnect". The component must surface the banner and re-load the
+    // (now SHIPPED) transfer.
+    service.ship.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: {
+              code: 'needs_reauthorization',
+              params: { marketplace: 'MercadoLibre', transfer_id: 42 },
+            },
+          }),
+      ),
+    );
+    service.get.mockReturnValue(of(transfer({ status: 'shipped' })));
+
+    component.ship(true);
+
+    expect(service.ship).toHaveBeenCalledWith(42, true);
+    expect(component.reauthBanner).not.toBeNull();
+    expect(component.reauthBanner?.title).toBeTruthy();
+    // Reloaded the now-SHIPPED transfer.
+    expect(service.get).toHaveBeenCalledWith(42);
+    expect(component.transfer?.status).toBe('shipped');
+    expect(component.acting).toBe(false);
+  });
+
+  it('does not show the reauth banner for a non-409 ship error', () => {
+    service.ship.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 400, error: { detail: 'boom' } })),
+    );
+    component.ship(true);
+    expect(component.reauthBanner).toBeNull();
+  });
+
   it('only shows the sync action for marketplace destinations in received state', () => {
     component.transfer = transfer({ status: 'received' });
     expect(component.canSyncListings()).toBe(true);
@@ -166,6 +205,10 @@ describe('StockTransferDetailComponent', () => {
     component.syncListings();
     expect(component.lastSync?.needs_reauthorization).toBe(true);
     expect(component.lastSync?.marketplace).toBe('MercadoLibre');
+    // Same persistent inline Reconnect banner as the ship push (not a
+    // transient snackbar).
+    expect(component.reauthBanner).not.toBeNull();
+    expect(component.reauthBanner?.title).toBeTruthy();
   });
 
   // -- Inbound reconciliation -------------------------------------------

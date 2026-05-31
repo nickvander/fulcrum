@@ -91,6 +91,118 @@ def test_ship_pushes_to_marketplace_when_flag_set(db):
     assert shipped.external_inbound_id == "ML-FULL-STUB-EXT-42"
 
 
+def test_ship_push_with_reauth_credential_ships_but_raises_reauth(db, test_admin_user):
+    """
+    When push_to_marketplace=True but the user's ML credential is flagged
+    needs_reauthorization, the inventory move + SHIPPED status must STILL
+    persist (the ship is legitimate), the connector must NOT be called, and
+    the service must raise ReauthorizationRequiredError so the endpoint can
+    surface an inline Reconnect prompt. external_inbound_id stays NULL.
+    """
+    from src.crud.crud_marketplace_credential import (
+        marketplace_credential as crud_cred,
+    )
+    from src.schemas.marketplace_credential import MarketplaceCredentialCreate
+    from src.services.marketplace_service import ReauthorizationRequiredError
+
+    product = _make_product(db, "MP-SHIP-REAUTH")
+    _seed_internal_stock(db, product.id, 50)
+    mp = _ensure_marketplace(db)
+
+    cred = crud_cred.create_with_owner(
+        db,
+        obj_in=MarketplaceCredentialCreate(
+            marketplace_id=mp.id,
+            access_token="stale",
+            refresh_token="dead",
+        ),
+        user_id=test_admin_user.id,
+    )
+    cred.needs_reauthorization = True
+    cred.last_refresh_error = "refresh denied: invalid_grant"
+    db.commit()
+
+    transfer = stock_transfer_service.create_draft(
+        db=db,
+        transfer_in=StockTransferCreate(
+            dest_location=LOCATION_ML_FULL,
+            items=[StockTransferItemCreate(product_id=product.id, qty_planned=10)],
+        ),
+        user=test_admin_user,
+    )
+
+    with patch(
+        "src.services.marketplaces.mercadolibre.MercadoLibreConnector.create_inbound_shipment",
+        new=AsyncMock(return_value=InboundShipmentResult(external_inbound_id="SHOULD-NOT")),
+    ) as mocked:
+        with pytest.raises(ReauthorizationRequiredError):
+            stock_transfer_service.ship(
+                db=db,
+                transfer_id=transfer.id,
+                user=test_admin_user,
+                push_to_marketplace=True,
+            )
+
+    # The connector was never invoked because the credential is dead.
+    mocked.assert_not_called()
+
+    # Critical: the ship still persisted even though the push raised.
+    db.expire_all()
+    refreshed = stock_transfer_service._get_or_404(db, transfer.id)
+    assert refreshed.status == StockTransferStatus.SHIPPED.value
+    assert refreshed.external_inbound_id is None
+    assert refreshed.shipped_at is not None
+    # And the inventory actually left the source location.
+    from src.models.inventory import InventoryItem
+    from src.models.stock_transfer import LOCATION_INTERNAL as _INTERNAL
+    from sqlalchemy.sql import func
+    remaining = (
+        db.query(func.coalesce(func.sum(InventoryItem.quantity), 0))
+        .filter(
+            InventoryItem.product_id == product.id,
+            InventoryItem.location == _INTERNAL,
+        )
+        .scalar()
+    )
+    assert remaining == 40
+
+
+def test_ship_push_with_no_credential_is_graceful(db, test_admin_user):
+    """
+    push_to_marketplace=True with NO credential configured must remain the
+    graceful manual-fallback path: the transfer ships, no reauth is raised,
+    and external_inbound_id is left NULL (operator does the inbound by hand).
+    """
+    product = _make_product(db, "MP-SHIP-NOCRED")
+    _seed_internal_stock(db, product.id, 50)
+    _ensure_marketplace(db)
+
+    transfer = stock_transfer_service.create_draft(
+        db=db,
+        transfer_in=StockTransferCreate(
+            dest_location=LOCATION_ML_FULL,
+            items=[StockTransferItemCreate(product_id=product.id, qty_planned=10)],
+        ),
+        user=test_admin_user,
+    )
+
+    with patch(
+        "src.services.marketplaces.mercadolibre.MercadoLibreConnector.create_inbound_shipment",
+        new=AsyncMock(return_value=InboundShipmentResult(external_inbound_id="STUB")),
+    ) as mocked:
+        shipped = stock_transfer_service.ship(
+            db=db,
+            transfer_id=transfer.id,
+            user=test_admin_user,
+            push_to_marketplace=True,
+        )
+
+    # With no credential, token is None and the connector is still called
+    # (the manual/stub connector path), but no reauth error is raised.
+    assert shipped.status == StockTransferStatus.SHIPPED.value
+    mocked.assert_awaited_once()
+
+
 def test_ship_without_flag_does_not_call_marketplace(db):
     product = _make_product(db, "MP-SHIP-2")
     _seed_internal_stock(db, product.id, 50)

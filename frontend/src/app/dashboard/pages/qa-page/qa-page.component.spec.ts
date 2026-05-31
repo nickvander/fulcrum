@@ -5,6 +5,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
 import { of, throwError } from 'rxjs';
 
+import type { MatSnackBar } from '@angular/material/snack-bar';
+
 import { QaPageComponent } from './qa-page.component';
 import {
   AnalyticsReportsService,
@@ -188,5 +190,137 @@ describe('QaPageComponent', () => {
     component.submitAnswer(row);
     expect(component.reauthRowId).toBe(5);
     expect(component.answerErrorRowId).toBeNull();
+  });
+
+  it('Ctrl+Enter in the composer submits when the button is enabled', () => {
+    const row = makeRow({ id: 8 });
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({
+      id: 8, answered: true, answer_text: 'Sí', sla_status: 'answered',
+    })));
+    component.openComposer(row);
+    component.answerText = 'Sí';
+
+    const event = new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true });
+    const prevent = vi.spyOn(event, 'preventDefault');
+    component.onComposerKeydown(event, row);
+
+    expect(prevent).toHaveBeenCalled();
+    expect(analyticsStub.answerQuestion).toHaveBeenCalledWith(8, 'Sí');
+  });
+
+  it('Cmd+Enter also submits the composer', () => {
+    const row = makeRow({ id: 9 });
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({ id: 9, answered: true })));
+    component.openComposer(row);
+    component.answerText = 'Listo';
+    component.onComposerKeydown(
+      new KeyboardEvent('keydown', { key: 'Enter', metaKey: true }), row,
+    );
+    expect(analyticsStub.answerQuestion).toHaveBeenCalledWith(9, 'Listo');
+  });
+
+  it('Ctrl+Enter does NOT submit when the answer is empty/whitespace', () => {
+    const row = makeRow({ id: 10 });
+    component.openComposer(row);
+    component.answerText = '   ';
+    component.onComposerKeydown(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true }), row,
+    );
+    expect(analyticsStub.answerQuestion).not.toHaveBeenCalled();
+  });
+
+  it('plain Enter does not submit (newline preserved)', () => {
+    const row = makeRow({ id: 11 });
+    component.openComposer(row);
+    component.answerText = 'Hola';
+    const event = new KeyboardEvent('keydown', { key: 'Enter' });
+    const prevent = vi.spyOn(event, 'preventDefault');
+    component.onComposerKeydown(event, row);
+    expect(prevent).not.toHaveBeenCalled();
+    expect(analyticsStub.answerQuestion).not.toHaveBeenCalled();
+  });
+
+  it('removes the answered row from the list when the filter is "unanswered"', () => {
+    const r1 = makeRow({ id: 20, answered: false });
+    const r2 = makeRow({ id: 21, answered: false });
+    component.statusFilter = 'unanswered';
+    setResponse([r1, r2], {
+      unanswered_count: 2, breached_count: 0, answered_count: 0, total: 2,
+    });
+    component.load();
+    expect(component.rows.length).toBe(2);
+
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({
+      id: 20, answered: true, answer_text: 'Sí', sla_status: 'answered',
+    })));
+    component.openComposer(r1);
+    component.answerText = 'Sí';
+    component.submitAnswer(r1);
+
+    // The just-answered row leaves the unanswered-only list.
+    expect(component.rows.map(r => r.id)).toEqual([21]);
+    expect(component.totalRows).toBe(1);
+    expect(component.unansweredCount).toBe(1);
+    expect(component.answeredCount).toBe(1);
+  });
+
+  it('keeps the answered row in the list when the filter is "all"', () => {
+    const r1 = makeRow({ id: 30, answered: false });
+    component.statusFilter = '';
+    setResponse([r1], {
+      unanswered_count: 1, breached_count: 0, answered_count: 0, total: 1,
+    });
+    component.load();
+
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({
+      id: 30, answered: true, answer_text: 'Sí', sla_status: 'answered',
+    })));
+    component.openComposer(r1);
+    component.answerText = 'Sí';
+    component.submitAnswer(r1);
+
+    expect(component.rows.map(r => r.id)).toEqual([30]);
+    expect(component.rows[0].answered).toBe(true);
+    expect(component.totalRows).toBe(1);
+  });
+
+  it('shows the already_answered reload path on a 409 alreadyAnswered code', () => {
+    const row = makeRow({ id: 40 });
+    analyticsStub.answerQuestion.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 409, error: { code: 'apiErrors.question.alreadyAnswered' },
+    })));
+    component.openComposer(row);
+    component.answerText = 'Hola';
+    component.submitAnswer(row);
+
+    expect(component.alreadyAnsweredRowId).toBe(40);
+    expect(component.answerErrorRowId).toBeNull();
+    expect(component.reauthRowId).toBeNull();
+  });
+
+  it('reloadAfterConflict clears the conflict state and refetches', () => {
+    component.alreadyAnsweredRowId = 40;
+    component.composerRowId = 40;
+    analyticsStub.questionsList.mockClear();
+    component.reloadAfterConflict();
+    expect(component.alreadyAnsweredRowId).toBeNull();
+    expect(component.composerRowId).toBeNull();
+    expect(analyticsStub.questionsList).toHaveBeenCalledTimes(1);
+  });
+
+  it('fires the success snackbar on a successful answer', () => {
+    const snackBar = (component as unknown as { snackBar: MatSnackBar }).snackBar;
+    const openSpy = vi.spyOn(snackBar, 'open');
+    const row = makeRow({ id: 50, answered: false });
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({
+      id: 50, answered: true, answer_text: 'Sí', sla_status: 'answered',
+    })));
+    component.openComposer(row);
+    component.answerText = 'Sí';
+    component.submitAnswer(row);
+
+    expect(openSpy).toHaveBeenCalledWith(
+      'dashboard.qaPage.answerSuccess', undefined, { duration: 2500 },
+    );
   });
 });

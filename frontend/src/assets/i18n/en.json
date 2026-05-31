@@ -468,6 +468,8 @@
       "answerError": "Couldn't send your answer. Please try again.",
       "reauthNeeded": "Reconnect your MercadoLibre account to answer.",
       "reconnect": "Reconnect",
+      "alreadyAnswered": "This question has already been answered. Reload to see the reply.",
+      "reload": "Reload",
       "yourAnswer": "Your answer"
     },
     "heroInventoryValue": "Inventory Value",
@@ -2139,6 +2141,9 @@
       },
       "shipped": "Marked as shipped",
       "shippedWithMarketplace": "Shipped and inbound shipment reserved",
+      "shipReauthTitle": "Inventory shipped. Reconnect {{marketplace}} to complete the push to Full.",
+      "syncReauthTitle": "Reconnect {{marketplace}} to sync the listings.",
+      "reauthReconnect": "Reconnect",
       "syncReauthRequired": "Reauthorize {{marketplace}} before syncing",
       "syncListingsSynced": "{{ok}}/{{total}} listings synced",
       "syncNeedListing": "{{count}} need a listing",

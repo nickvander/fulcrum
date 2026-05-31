@@ -468,6 +468,8 @@
       "answerError": "No se pudo enviar tu respuesta. Inténtalo de nuevo.",
       "reauthNeeded": "Reconecta tu cuenta de MercadoLibre para responder.",
       "reconnect": "Reconectar",
+      "alreadyAnswered": "Esta pregunta ya fue respondida. Recarga para ver la respuesta.",
+      "reload": "Recargar",
       "yourAnswer": "Tu respuesta"
     },
     "heroInventoryValue": "Valor de inventario",
@@ -2139,6 +2141,9 @@
       },
       "shipped": "Marcado como enviado",
       "shippedWithMarketplace": "Enviado y envío entrante reservado",
+      "shipReauthTitle": "Inventario enviado. Reconecta {{marketplace}} para completar el envío a Full.",
+      "syncReauthTitle": "Reconecta {{marketplace}} para sincronizar las publicaciones.",
+      "reauthReconnect": "Reconectar",
       "syncReauthRequired": "Vuelve a autorizar {{marketplace}} antes de sincronizar",
       "syncListingsSynced": "{{ok}}/{{total}} publicaciones sincronizadas",
       "syncNeedListing": "{{count}} sin publicación",

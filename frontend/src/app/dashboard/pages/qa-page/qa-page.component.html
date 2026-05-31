@@ -140,9 +140,22 @@
                     </div>
                   }
 
+                  @if (alreadyAnsweredRowId === row.id) {
+                    <div class="conflict-banner" [attr.data-testid]="'qa-already-answered-' + row.id">
+                      <mat-icon>info_outline</mat-icon>
+                      <span>{{ t('dashboard.qaPage.alreadyAnswered') }}</span>
+                      <button mat-button type="button" class="conflict-action"
+                              (click)="reloadAfterConflict()"
+                              [attr.data-testid]="'qa-reload-' + row.id">
+                        {{ t('dashboard.qaPage.reload') }}
+                      </button>
+                    </div>
+                  }
+
                   <mat-form-field appearance="outline" class="composer-field" subscriptSizing="dynamic">
                     <textarea matInput rows="3"
                               [(ngModel)]="answerText"
+                              (keydown)="onComposerKeydown($event, row)"
                               [placeholder]="t('dashboard.qaPage.answerPlaceholder')"
                               [attr.data-testid]="'qa-answer-input-' + row.id"></textarea>
                   </mat-form-field>

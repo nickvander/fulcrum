@@ -233,6 +233,33 @@
           &:hover { text-decoration: underline; }
         }
       }
+
+      .conflict-banner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        background: var(--info-bg);
+        border-left: 4px solid var(--accent-color);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+
+        mat-icon {
+          color: var(--accent-color);
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        .conflict-action {
+          margin-left: auto;
+          font-weight: 700;
+          color: var(--accent-light);
+          --mdc-text-button-label-text-color: var(--accent-light);
+        }
+      }
     }
   }
 }

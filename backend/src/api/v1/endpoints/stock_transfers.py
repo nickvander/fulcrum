@@ -138,12 +138,34 @@ def ship_stock_transfer(
     ),
     current_user: User = Depends(get_current_active_user),
 ) -> Any:
-    return stock_transfer_service.ship(
-        db=db,
-        transfer_id=transfer_id,
-        user=current_user,
-        push_to_marketplace=push_to_marketplace,
-    )
+    from src.services.marketplace_service import ReauthorizationRequiredError
+
+    try:
+        return stock_transfer_service.ship(
+            db=db,
+            transfer_id=transfer_id,
+            user=current_user,
+            push_to_marketplace=push_to_marketplace,
+        )
+    except ReauthorizationRequiredError as exc:
+        # The inventory move + SHIPPED status are already committed inside
+        # ship(); only the marketplace (ML Full) push couldn't complete
+        # because the credential needs reconnecting. Surface that distinctly
+        # (HTTP 409) so the UI can show an inline Reconnect prompt — the
+        # transfer is genuinely SHIPPED, with external_inbound_id still NULL.
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="needs_reauthorization",
+            params={
+                "marketplace": exc.marketplace_name,
+                "transfer_id": transfer_id,
+                "reason": exc.reason,
+            },
+            detail=(
+                f"Stock shipped, but the {exc.marketplace_name} push needs "
+                f"re-authorization: {exc.reason}"
+            ),
+        )
 
 
 @router.post("/{transfer_id}/sync-listings")
