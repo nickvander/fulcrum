@@ -959,7 +959,7 @@
     "bucketAmazonFbaDesc": "Unidades guardadas en la bodega de Amazon, disponibles solo en Amazon.",
     "bucketPoNote": "Recibir una orden de compra suma al stock a la mano, pero NO hace que las unidades estén disponibles en MercadoLibre. Envíalas primero a ML Full.",
     "productList": {
-      "label": "Lista de Productos",
+      "countBadge": "{{count}} productos",
       "quickFiltersLabel": "Filtros rápidos",
       "viewModeLabel": "Modo de vista",
       "selectPage": "Selecciona página",

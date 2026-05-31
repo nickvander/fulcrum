@@ -15,7 +15,7 @@
       <div class="header">
         <h1>{{ t('nav.products') }}
           <span class="product-count-badge" *ngIf="paginatedProducts?.totalItems">
-            {{ paginatedProducts?.totalItems }} {{ t('products.productList.label') }}
+            {{ t('products.productList.countBadge', { count: paginatedProducts?.totalItems }) }}
           </span>
         </h1>
         <div class="header-actions">

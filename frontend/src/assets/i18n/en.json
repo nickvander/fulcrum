@@ -959,7 +959,7 @@
     "bucketAmazonFbaDesc": "Units stored in Amazon's warehouse, available only on Amazon.",
     "bucketPoNote": "Receiving a purchase order adds to on-hand stock — it does NOT automatically make units available on MercadoLibre. Send them to ML Full first.",
     "productList": {
-      "label": "Product List",
+      "countBadge": "{{count}} products",
       "quickFiltersLabel": "Quick Filters",
       "viewModeLabel": "View Mode",
       "selectPage": "Select page",
