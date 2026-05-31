@@ -1,0 +1,95 @@
+<ng-container *transloco="let t">
+  <mat-card class="profit-summary" [class.compact]="compact"
+            data-testid="profit-summary-widget">
+    <div class="widget-header">
+      <h3>{{ t('dashboard.profitSummary.title') }}</h3>
+
+      <!-- Period selector: Este mes / 7 días / 30 días. Full face only;
+           the compact dashboard card stays pinned to "Este mes". -->
+      @if (!compact) {
+        <mat-button-toggle-group class="period-toggle" [value]="period"
+                                 data-testid="profit-period-toggle"
+                                 [attr.aria-label]="t('dashboard.profitSummary.periodLabel')">
+          @for (p of periods; track p) {
+            <mat-button-toggle [value]="p" (click)="selectPeriod(p)"
+                               [attr.data-testid]="'profit-period-' + p">
+              {{ t('dashboard.profitSummary.period.' + p) }}
+            </mat-button-toggle>
+          }
+        </mat-button-toggle-group>
+      }
+    </div>
+
+    @if (loading && !summary) {
+      <div class="loading-state">
+        <mat-spinner diameter="28"></mat-spinner>
+      </div>
+    } @else if (errored && !summary) {
+      <p class="error" data-testid="profit-error">{{ t('dashboard.profitSummary.error') }}</p>
+    } @else if (summary) {
+      @if (!hasData) {
+        <!-- Empty state: no realized orders → warm peer line, NOT a $0. -->
+        <div class="empty-state" data-testid="profit-empty">
+          <mat-icon>insights</mat-icon>
+          <p>{{ t('dashboard.profitSummary.empty') }}</p>
+        </div>
+      } @else {
+        <!-- Verdict headline (plain tú voice) + big honest number. -->
+        <div class="verdict" [ngClass]="verdictClass" data-testid="profit-verdict">
+          <mat-icon class="verdict-icon" data-testid="profit-verdict-icon">{{ verdictIcon }}</mat-icon>
+          <span class="verdict-text">{{ t(verdictKey) }}</span>
+        </div>
+
+        <div class="hero-number" [ngClass]="verdictClass" data-testid="profit-hero">
+          {{ summary.bottom_line_amount | money:'MXN':{ showCode: true } }}
+        </div>
+
+        <!-- Plain breakdown ladder. -->
+        <dl class="ladder" data-testid="profit-ladder">
+          <div class="ladder-row">
+            <dt>{{ t('dashboard.profitSummary.ladder.revenue') }}</dt>
+            <dd class="num">{{ summary.revenue_amount_mxn | money:'MXN' }}</dd>
+          </div>
+          <div class="ladder-row subtract">
+            <dt>
+              {{ t('dashboard.profitSummary.ladder.salesCosts') }}
+              <mat-icon class="hint-icon"
+                        [matTooltip]="t('dashboard.profitSummary.ladder.salesCostsHint')"
+                        matTooltipPosition="above">help_outline</mat-icon>
+            </dt>
+            <dd class="num">− {{ summary.sales_costs_amount | money:'MXN' }}</dd>
+          </div>
+          <div class="ladder-row subtotal">
+            <dt>{{ t('dashboard.profitSummary.ladder.contribution') }}</dt>
+            <dd class="num">{{ summary.contribution_profit_amount | money:'MXN' }}</dd>
+          </div>
+          <div class="ladder-row subtract">
+            <dt>{{ t('dashboard.profitSummary.ladder.operatingExpenses') }}</dt>
+            <dd class="num">− {{ summary.operating_expenses_amount | money:'MXN' }}</dd>
+          </div>
+          <div class="ladder-row total" [ngClass]="verdictClass">
+            <dt>{{ t('dashboard.profitSummary.ladder.netResult') }}</dt>
+            <dd class="num">{{ summary.bottom_line_amount | money:'MXN' }}</dd>
+          </div>
+        </dl>
+
+        <!-- Double-count caveat footnote (muted helper text). -->
+        @if (summary.double_count_warning) {
+          <p class="footnote" data-testid="profit-footnote">
+            {{ t('dashboard.profitSummary.doubleCountNote') }}
+          </p>
+        }
+      }
+    }
+
+    <!-- "Ver detalle" affordance: the single primary action → chile-red is
+         appropriate here (action/identity), never on the number. -->
+    @if (compact) {
+      <a class="detail-link" mat-button color="primary" routerLink="/reports/profit"
+         data-testid="profit-detail-link">
+        {{ t('dashboard.profitSummary.seeDetail') }}
+        <mat-icon>chevron_right</mat-icon>
+      </a>
+    }
+  </mat-card>
+</ng-container>

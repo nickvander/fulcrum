@@ -19,6 +19,7 @@ import {
   SalesOrdersService,
 } from '../../services/sales-orders.service';
 import { ReportDownloadService } from '../../../core/services/report-download.service';
+import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 
 @Component({
   selector: 'app-sales-order-list',
@@ -36,6 +37,7 @@ import { ReportDownloadService } from '../../../core/services/report-download.se
     MatSelectModule,
     MatFormFieldModule,
     TranslocoModule,
+    MoneyPipe,
   ],
   templateUrl: './sales-order-list.html',
   styleUrl: './sales-order-list.scss',

@@ -36,6 +36,43 @@ DEFAULT_CATEGORIES = [
     "Legal", "Gas/Transportation", "Utilities", "Packing Materials", "Other"
 ]
 
+def _expense_date_filters(
+    start_date: Optional[date], end_date: Optional[date]
+) -> list:
+    """Build the inclusive date-window filter list shared by the expense
+    summary endpoint and any other surface (e.g. the profit-summary
+    report) that needs the operating-expense total over a calendar span.
+    Centralizing this keeps the `total_amount` semantics identical
+    everywhere — no duplicated `>= / <=` logic that could drift."""
+    filters = []
+    if start_date:
+        filters.append(ExpenseModel.date >= start_date)
+    if end_date:
+        filters.append(ExpenseModel.date <= end_date)
+    return filters
+
+
+def expense_total_over_window(
+    db: Session,
+    *,
+    start_date: Optional[date],
+    end_date: Optional[date],
+    exclude_categories: Optional[set[str]] = None,
+) -> float:
+    """Sum `Expense.amount` over an inclusive calendar window, reusing the
+    same query path as the summary endpoint's `total_amount`. Optionally
+    excludes given categories — the profit-summary endpoint uses this to
+    drop categories already represented in the order cost breakdown
+    (defaults OFF; see the profit-summary docstring on double-counting)."""
+    filters = _expense_date_filters(start_date, end_date)
+    if exclude_categories:
+        filters.append(ExpenseModel.category.notin_(exclude_categories))
+    query = db.query(func.coalesce(func.sum(ExpenseModel.amount), 0.0))
+    if filters:
+        query = query.filter(*filters)
+    return float(query.scalar() or 0.0)
+
+
 @router.get("/summary", response_model=expense_schema.ExpenseSummary)
 def get_expense_summary(
     db: Session = Depends(get_db),
@@ -45,12 +82,7 @@ def get_expense_summary(
     """
     Get expense summary for a time period.
     """
-    filters = []
-    
-    if start_date:
-        filters.append(ExpenseModel.date >= start_date)
-    if end_date:
-        filters.append(ExpenseModel.date <= end_date)
+    filters = _expense_date_filters(start_date, end_date)
 
     summary_query = db.query(
         func.coalesce(func.sum(ExpenseModel.amount), 0.0).label("total_amount"),

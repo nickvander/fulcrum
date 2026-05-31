@@ -1,0 +1,208 @@
+.profit-summary {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.period-toggle {
+  // Material handles the surface; keep it compact.
+  font-size: 0.8rem;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.error {
+  margin: 0.25rem 0;
+  color: var(--error-color);
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0.5rem;
+  color: var(--text-secondary);
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: var(--text-hint);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+    max-width: 28ch;
+  }
+}
+
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+
+  .verdict-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .verdict-text {
+    letter-spacing: 0.01em;
+  }
+}
+
+// The big honest number — display face, oversized, tabular-lining.
+// Never animated. Loss = danger token (never chile-red), profit = success.
+.hero-number {
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  margin: 0.1rem 0 0.4rem;
+}
+
+// Semantic tone tokens shared by verdict line, number, and net-result row.
+.result-won {
+  color: var(--success-color);
+}
+.result-lost {
+  color: var(--error-color);
+}
+.result-even {
+  color: var(--text-secondary);
+}
+
+.ladder {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .ladder-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border-color);
+
+    dt {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    dd.num {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .hint-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+      color: var(--text-hint);
+      cursor: help;
+    }
+
+    &.subtotal dt,
+    &.subtotal dd.num {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    &.total {
+      border-bottom: none;
+      border-top: 2px solid var(--border-color);
+      margin-top: 0.25rem;
+      padding-top: 0.5rem;
+
+      dt {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-main);
+      }
+
+      dd.num {
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      // Net-result tone follows the verdict.
+      &.result-won dd.num {
+        color: var(--success-color);
+      }
+      &.result-lost dd.num {
+        color: var(--error-color);
+      }
+      &.result-even dd.num {
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+.footnote {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-hint);
+}
+
+.detail-link {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Compact dashboard face: smaller hero, no ladder emphasis.
+.profit-summary.compact {
+  .hero-number {
+    font-size: 2.25rem;
+  }
+}

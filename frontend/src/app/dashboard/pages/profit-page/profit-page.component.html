@@ -1,0 +1,16 @@
+<ng-container *transloco="let t">
+  <div class="profit-page">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('dashboard.profitSummary.pageTitle') }}</h1>
+        <p>{{ t('dashboard.profitSummary.pageSubtitle') }}</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard" data-testid="profit-page-back">
+        <mat-icon>arrow_back</mat-icon>
+        {{ t('dashboard.profitSummary.backToDashboard') }}
+      </a>
+    </div>
+
+    <app-profit-summary-widget [compact]="false"></app-profit-summary-widget>
+  </div>
+</ng-container>

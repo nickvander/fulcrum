@@ -38,6 +38,11 @@
                      POPULATED ACCOUNT — full cockpit, no widget removed.
                      ============================================================ -->
                 <ng-template #cockpit>
+                    <!-- "¿Gané o perdí?" — lead signature number, populated
+                         cockpit only (this template is the !isEmptyAccount branch). -->
+                    <app-profit-summary-widget [compact]="true"
+                        class="profit-summary-lead"></app-profit-summary-widget>
+
                     <app-onboarding-checklist *ngIf="!onboardingStatus.complete" [status]="onboardingStatus"
                         [creatingDemo]="creatingDemoWorkspace" (createDemoWorkspace)="createDemoWorkspace()"
                         class="onboarding-widget"></app-onboarding-checklist>

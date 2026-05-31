@@ -195,6 +195,35 @@
       "empty": "Sin pedidos realizados en las últimas 24h.",
       "error": "No se pudo cargar la ganancia de hoy."
     },
+    "profitSummary": {
+      "title": "¿Ganaste o perdiste?",
+      "pageTitle": "¿Ganaste o perdiste?",
+      "pageSubtitle": "Tu resultado del periodo: lo que ganaste con tus ventas menos los gastos de tu operación.",
+      "backToDashboard": "Volver al panel",
+      "periodLabel": "Periodo",
+      "period": {
+        "this_month": "Este mes",
+        "last_7d": "7 días",
+        "last_30d": "30 días"
+      },
+      "verdict": {
+        "won": "Ganaste este periodo",
+        "lost": "Perdiste este periodo",
+        "even": "Quedaste a mano"
+      },
+      "ladder": {
+        "revenue": "Lo que vendiste (ingresos)",
+        "salesCosts": "Costos de tus ventas",
+        "salesCostsHint": "Producto, comisiones de MercadoLibre, envío y publicidad de cada venta.",
+        "contribution": "Ganancia de tus ventas",
+        "operatingExpenses": "Gastos de tu operación (renta, sueldos, etc.)",
+        "netResult": "Resultado neto"
+      },
+      "doubleCountNote": "Si registras publicidad o envíos como gasto y también en el costo de cada venta, podrían contarse dos veces.",
+      "seeDetail": "Ver detalle",
+      "empty": "Cuando hagas tu primera venta, aquí verás si ganas o pierdes.",
+      "error": "No se pudo cargar tu resultado."
+    },
     "marginByChannel": {
       "title": "Margen por canal",
       "window": "Últimos {{days}}d",

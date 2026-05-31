@@ -24,6 +24,33 @@ export interface CostRollup {
   net_margin_percent: number | null;
 }
 
+/**
+ * "¿Gané o perdí?" profit-summary shape. The business bottom line for a
+ * period — order-contribution profit MINUS operating expenses — computed
+ * server-side so the subtraction and window alignment live in one place.
+ */
+export type ProfitPeriod = 'this_month' | 'last_7d' | 'last_30d';
+export type ProfitVerdict = 'won' | 'lost' | 'even';
+
+export interface ProfitSummary {
+  period: ProfitPeriod;
+  start: string; // ISO date
+  end: string;   // ISO date
+  window_days: number;
+  revenue_amount_mxn: number;
+  sales_costs_amount: number;
+  contribution_profit_amount: number;
+  operating_expenses_amount: number;
+  bottom_line_amount: number;
+  net_margin_percent: number | null;
+  orders: number;
+  has_realized_orders: boolean;
+  /** null when there are no realized orders → UI shows the empty state. */
+  verdict: ProfitVerdict | null;
+  double_count_warning: boolean;
+  excluded_categories: string[];
+}
+
 export interface CostRollupByChannelRow extends CostRollup {
   source: string;
 }
@@ -314,6 +341,17 @@ export class AnalyticsReportsService {
     let params = new HttpParams().set('window_days', String(windowDays));
     if (source) params = params.set('source', source);
     return this.http.get<CostRollup>(`${this.apiUrl}/cost-rollup`, { params });
+  }
+
+  /**
+   * "¿Gané o perdí?" profit summary for a period. Contribution profit
+   * minus operating expenses, resolved over one aligned window
+   * server-side. Powers the profit-summary widget + the /reports/profit
+   * page.
+   */
+  profitSummary(period: ProfitPeriod = 'this_month'): Observable<ProfitSummary> {
+    const params = new HttpParams().set('period', period);
+    return this.http.get<ProfitSummary>(`${this.apiUrl}/profit-summary`, { params });
   }
 
   /**

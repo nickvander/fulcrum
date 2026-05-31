@@ -20,6 +20,7 @@ import { OnboardingChecklistComponent } from '../../widgets/onboarding-checklist
 import { SalesByChannelWidgetComponent } from '../../widgets/sales-by-channel-widget/sales-by-channel-widget.component';
 import { AnalyticsReportsWidgetComponent } from '../../widgets/analytics-reports-widget/analytics-reports-widget.component';
 import { TodayProfitWidgetComponent } from '../../widgets/today-profit-widget/today-profit-widget.component';
+import { ProfitSummaryWidgetComponent } from '../../widgets/profit-summary-widget/profit-summary-widget.component';
 import { SalesVsSpendWidgetComponent } from '../../widgets/sales-vs-spend-widget/sales-vs-spend-widget.component';
 import { MarginByChannelWidgetComponent } from '../../widgets/margin-by-channel-widget/margin-by-channel-widget.component';
 import { TopMoversWidgetComponent } from '../../widgets/top-movers-widget/top-movers-widget.component';
@@ -59,6 +60,7 @@ interface QaSlaSummary {
         SalesByChannelWidgetComponent,
         AnalyticsReportsWidgetComponent,
         TodayProfitWidgetComponent,
+        ProfitSummaryWidgetComponent,
         SalesVsSpendWidgetComponent,
         MarginByChannelWidgetComponent,
         TopMoversWidgetComponent,

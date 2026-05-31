@@ -3,6 +3,7 @@ Operational reports surface. Exposes the low-stock report used by the
 dashboard widget plus reusable export endpoints (CSV + PDF) that all share
 the same `report_export` helpers — see `src/services/report_export.py`.
 """
+import math
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from typing import Dict, List, Optional
@@ -1570,6 +1571,198 @@ def cost_rollup_report(
         window_days=window_days,
         source=parsed_source if parsed_source else None,
         **rollup,
+    )
+
+
+# ---- Profit summary ("¿Gané o perdí?") ------------------------------------
+#
+# The owner's real bottom-line question: "did I make or lose money this
+# period?" — order-contribution profit MINUS operating expenses, in one
+# plain MXN number. This is the ONLY surface that performs the subtraction;
+# every other consumer (a future export / email digest) should call this so
+# the accounting semantics stay in one place.
+#
+# Period contract: ONE `period` enum. The endpoint resolves it ONCE into a
+# [start, end] span, derives a matching rolling `window_days` for the cost
+# rollup, and sums operating expenses over the SAME span — eliminating the
+# window-vs-calendar mismatch that composing the two endpoints client-side
+# would risk.
+
+
+# Categories whose spend is (or will be) already represented in the order
+# cost breakdown. Built so per-order ad attribution can switch this on later
+# without an endpoint change. Defaults OFF (empty) so v1 behavior is
+# predictable and auditable: we subtract the FULL expense total and surface a
+# footnote instead. See the double-count note below.
+_DOUBLE_COUNTED_CATEGORIES: set[str] = set()
+
+# Verdict boundary: |bottom_line| at or under this (MXN) reads as "even"
+# rather than a misleading centavo-level win/loss.
+_EVEN_EPSILON = 0.005
+
+_PROFIT_PERIODS = {"this_month", "last_7d", "last_30d"}
+
+
+def _resolve_profit_window(period: str) -> _DateWindow:
+    """Map the profit `period` enum to a `_DateWindow` ending at "now".
+
+    All three periods end at the current instant, so the cost rollup's
+    rolling `[now - window_days, now]` window and the expense sum over
+    `[start.date(), end.date()]` cover the same span (asserted in tests).
+    """
+    now = datetime.now(timezone.utc)
+    if period == "this_month":
+        start_dt = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+        label = "este mes"
+    elif period == "last_7d":
+        start_dt = now - timedelta(days=7)
+        label = "7 días"
+    elif period == "last_30d":
+        start_dt = now - timedelta(days=30)
+        label = "30 días"
+    else:  # pragma: no cover - guarded by the Query enum
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.reports.invalidPeriod",
+            params={"period": period},
+            detail=f"Unknown period '{period}'",
+        )
+    return _DateWindow(start_dt=start_dt, end_dt=now, label=label)
+
+
+class ProfitSummaryResponse(BaseModel):
+    """The business bottom line for a period — contribution profit minus
+    operating expenses — in one flat DTO the UI renders directly."""
+    period: str
+    start: str  # ISO date (UTC) of the resolved window start
+    end: str    # ISO date (UTC) of the resolved window end
+    window_days: int
+
+    revenue_amount_mxn: float
+    # cogs + marketplace_fees + shipping + ad_spend + other, collapsed into
+    # one "costs of your sales" line for the non-accountant ladder.
+    sales_costs_amount: float
+    # = revenue - sales_costs (the existing cost-rollup net_profit_amount).
+    contribution_profit_amount: float
+    operating_expenses_amount: float
+    # = contribution_profit - operating_expenses. The big honest number.
+    bottom_line_amount: float
+    net_margin_percent: Optional[float] = None
+
+    orders: int
+    has_realized_orders: bool
+    # 'won' | 'lost' | 'even' — null when there are no realized orders, so
+    # the UI shows the empty state instead of a fake "$0 / quedaste a mano".
+    verdict: Optional[str] = None
+    # True while the v1 rule subtracts the full expense total: ad/shipping
+    # logged BOTH as an expense and inside per-order cost could double-count.
+    double_count_warning: bool
+    # The category-exclusion plumbing the rule asks for, surfaced for
+    # auditability. Empty in v1.
+    excluded_categories: List[str]
+
+
+@router.get("/profit-summary", response_model=ProfitSummaryResponse)
+def profit_summary_report(
+    *,
+    db: Session = Depends(get_db),
+    period: str = Query(
+        "this_month",
+        description="Period enum: this_month | last_7d | last_30d.",
+    ),
+    current_user: User = Depends(get_current_active_user),
+) -> ProfitSummaryResponse:
+    """"¿Gané o perdí?" — the business bottom line for the period.
+
+    Fans out to two existing surfaces over ONE resolved window:
+      - `aggregate_rollup` (order cost breakdown) → contribution profit,
+        i.e. revenue − cogs − marketplace_fees − shipping − ad_spend − other.
+      - the expense-summary query path → operating expenses over the same
+        calendar span.
+
+    bottom_line = contribution_profit − operating_expenses.
+
+    Double-counting rule (v1): order-level `ad_spend` defaults to 0 today
+    and real ad/shipping spend is logged as an *expense*, so the practical
+    overlap is near-zero. We therefore subtract the FULL expense total and
+    set `double_count_warning=True` (UI shows a footnote). The
+    `_DOUBLE_COUNTED_CATEGORIES` exclusion set is wired but defaults OFF so
+    behavior stays predictable; flip it on when per-order ad attribution
+    ships. `excluded_categories` echoes the active set for auditability.
+
+    Empty state: with zero realized orders in the period we still 200 with
+    zeros, but `has_realized_orders=False` and `verdict=None` so the UI
+    renders an empty state rather than a misleading "$0 — quedaste a mano".
+    """
+    from src.services.order_cost_engine import aggregate_rollup
+    from src.api.v1.endpoints.expenses import expense_total_over_window
+
+    if period not in _PROFIT_PERIODS:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.reports.invalidPeriod",
+            params={"period": period},
+            detail=f"Unknown period '{period}'",
+        )
+
+    window = _resolve_profit_window(period)
+    # Rolling window_days for the cost rollup. Ceil so a partial final day
+    # is still covered; floored at 1 so an early-in-the-month "this_month"
+    # never asks for a zero-day window.
+    span_seconds = (window.end_dt - window.start_dt).total_seconds()
+    window_days = max(1, math.ceil(span_seconds / 86400.0))
+
+    rollup = aggregate_rollup(db, window_days=window_days)
+
+    sales_costs = round(
+        float(rollup["cogs_amount"])
+        + float(rollup["marketplace_fees_amount"])
+        + float(rollup["shipping_cost_amount"])
+        + float(rollup["ad_spend_amount"])
+        + float(rollup["other_cost_amount"]),
+        4,
+    )
+    contribution = float(rollup["net_profit_amount"])
+
+    operating_expenses = round(
+        expense_total_over_window(
+            db,
+            start_date=window.start_dt.date(),
+            end_date=window.end_dt.date(),
+            exclude_categories=_DOUBLE_COUNTED_CATEGORIES or None,
+        ),
+        4,
+    )
+
+    bottom_line = round(contribution - operating_expenses, 4)
+    orders = int(rollup["orders"])
+    has_realized_orders = orders > 0
+
+    verdict: Optional[str] = None
+    if has_realized_orders:
+        if bottom_line > _EVEN_EPSILON:
+            verdict = "won"
+        elif bottom_line < -_EVEN_EPSILON:
+            verdict = "lost"
+        else:
+            verdict = "even"
+
+    return ProfitSummaryResponse(
+        period=period,
+        start=window.start_dt.date().isoformat(),
+        end=window.end_dt.date().isoformat(),
+        window_days=window_days,
+        revenue_amount_mxn=float(rollup["revenue_amount_mxn"]),
+        sales_costs_amount=sales_costs,
+        contribution_profit_amount=round(contribution, 4),
+        operating_expenses_amount=operating_expenses,
+        bottom_line_amount=bottom_line,
+        net_margin_percent=rollup.get("net_margin_percent"),
+        orders=orders,
+        has_realized_orders=has_realized_orders,
+        verdict=verdict,
+        double_count_warning=not _DOUBLE_COUNTED_CATEGORIES,
+        excluded_categories=sorted(_DOUBLE_COUNTED_CATEGORIES),
     )
 
 

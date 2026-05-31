@@ -46,6 +46,36 @@ learnable, performant, with an ownable brand identity._
 - **Tests:** backend 12 (docker stack), frontend +7 (full suite 781 green),
   i18n + theme-contrast guards pass.
 
+## Iteration 2 — small wins + profit summary
+
+**Small wins (committed `acc22de`):**
+- Q&A composer polish: Ctrl/Cmd+Enter submit; answered row leaves the
+  "unanswered" filter (no list/counter drift); `already_answered` → specific
+  "ya respondida — Recargar" banner; wired the orphaned success toast.
+- Stock-transfer → ML Full push: fixed a **silent failure** — `ship(push=True)`
+  with an expired ML token used to report success while the push no-op'd.
+  `ship()` now commits the inventory move + SHIPPED first, then the push
+  raises `ReauthorizationRequiredError` → endpoint 409
+  `{code:"needs_reauthorization"}`; detail page shows a persistent inline
+  Reconnect banner (syncListings upgraded to the same banner).
+
+**Profit summary "¿Gané o perdí?" (this iteration):**
+- PM scoped the real gap (`pm-profit-scope.md`): order-contribution profit
+  already exists (`/cost-rollup`, `today-profit-widget`) but **never subtracts
+  operating expenses** — so no view answered the owner's true bottom line.
+- New `GET /api/v1/reports/profit-summary?period=this_month|last_7d|last_30d`:
+  one resolved window, fans out to `aggregate_rollup` + `expense_total_over_window`,
+  returns `bottom_line = contribution_profit − operating_expenses`, a
+  `verdict`, and a `double_count_warning` (ad-spend overlap; exclusion set
+  plumbed but defaulted off). Real empty state (no fake `$0`).
+- New `profit-summary-widget` (top of populated cockpit) + `/reports/profit`
+  page: plain `tú` verdict ("Ganaste/Perdiste"), big honest MXN signature
+  number (loss = danger token + ↓, never brand chile-red), period selector,
+  jargon-free breakdown ladder. Orders-list bare `$` → shared MoneyPipe
+  (margin column deferred — needs a list-endpoint contract change).
+- Tests: backend 33 (docker), frontend 804 (full), i18n + theme guards pass.
+- Novice re-validation: **✅ fixed & smooth** (P2 nits only).
+
 ## Next-loop backlog (ranked, from PM + re-validation)
 
 1. **Profit / "¿gané o perdí?" summary** (M) — novice has no plain

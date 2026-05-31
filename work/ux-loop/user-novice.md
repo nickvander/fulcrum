@@ -93,3 +93,39 @@ Net: the es-MX localization is **real, thorough, and high quality** (idiomatic M
 - **Carry-over (cosmetic):** "SKU"/"Canal" elsewhere on the page unchanged — out of scope for this P0.
 
 **Bottom line:** P0 #1 is genuinely resolved. A non-technical seller can now find, write, and send a reply in plain es-MX, see it confirmed without a confusing reload, and recover from an expired connection. Ship it; clean up the orphaned `answerSuccess` key.
+
+---
+
+## Re-validation (post-fix) — Diego: profit summary
+
+**Evaluated:** 2026-05-31 against real source — backend `backend/src/api/v1/endpoints/reports.py:1606-1766` + `expenses.py:55-73`; frontend `dashboard/widgets/profit-summary-widget/*`, `dashboard/pages/profit-page/*`, route `app-routing.module.ts:89`, mount `dashboard/pages/dashboard/dashboard.component.html:43`, service `analytics-reports.service.ts:32-52,352-354`; i18n `es-MX.json:198-226` / `en.json:200-228`.
+
+**Prior flag:** Fulcrum had NO plain "¿gané o perdí?" view — profit/margins were buried. This re-walk judges the shipped fix.
+
+**Verdict: ✅ fixed & smooth.** This is the real bottom line, in plain MX Spanish, on the first screen.
+
+### Journey (as Diego)
+
+1. **Log in → see the answer without digging? YES.** The compact widget is the **lead signature tile** at the very top of the populated cockpit (`dashboard.component.html:43`, `[compact]="true"`, above even the onboarding checklist). Verdict headline + big number are immediate: "Ganaste este periodo" / "Perdiste este periodo" (`es-MX.json:210-211`) with a 2.75rem hero number (`scss:86-93`). Plain `tú`, no jargon. ✅
+
+2. **Breakdown ladder understandable WITHOUT accounting? YES.** The ladder relabels every accounting term into plain language (`es-MX.json:214-221`): ingresos → "Lo que vendiste (ingresos)", "Costos de tus ventas" (with a `help_outline` tooltip spelling out producto/comisiones/envío/publicidad, `html:56-58`), "Ganancia de tus ventas", "Gastos de tu operación (renta, sueldos, etc.)", "Resultado neto". The one technical-ish word, "neto", is anchored by the verbose labels above it. No bare "COGS / margen / contribución" leaks into this surface. ✅
+
+3. **Switch periods? YES, and it makes sense.** Full-page toggle "Este mes / 7 días / 30 días" (`html:9-20`, `es-MX.json:205-207`); refetches server-side over one aligned window (`component.ts:72-76`; backend `_resolve_profit_window` 1606-1630). Compact dashboard tile stays pinned to "Este mes" (no toggle) — correct, keeps the cockpit calm.
+
+4. **Empty state if nothing sold? YES — no fake $0.** Backend returns `verdict=null` + `has_realized_orders=false` with zero orders (1741-1748), and the widget gates on `hasData` (`component.ts:92-94`) to render a warm peer line: "Cuando hagas tu primera venta, aquí verás si ganas o pierdes." (`es-MX.json:224`, `html:30-35`) — NOT "$0 / quedaste a mano". The "quedaste a mano" copy is reserved strictly for a real break-even with realized orders. Exactly the fix I asked for. ✅
+
+5. **MXN clear? Loss visually clear & NOT chile-red? English leakage? YES / YES / NONE.**
+   - **MXN:** hero uses `money:'MXN':{showCode:true}` → "MX$1,234.50 MXN" (`html:44`, pipe `money.pipe.ts:56-57`); ladder rows render "MX$…". Unambiguous.
+   - **Loss color:** loss maps to `.result-lost` → `var(--error-color)` = **#FF6B61** (`_tokens.scss:53`), which carries an explicit comment "stays distinct from brand #FF4D2E". Brand chile-red is reserved for the "Ver detalle" action only (`html:88`). So loss = danger-semantic red + ↓ `arrow_downward` (`component.ts:108`), profit = success + ↑. Brand rule honored, and there's a spec test asserting the hero never carries the won/primary class on a loss (`spec.ts:100-108`). ✅
+   - **English leakage:** none in the profit block; key parity es-MX↔en is exact (21/21, verified). `tú` voice throughout.
+
+6. **Ad-spend caveat footnote — understandable or scary?** ⚠️ borderline. "Si registras publicidad o envíos como gasto y también en el costo de cada venta, podrían contarse dos veces." (`es-MX.json:222`) It's honest and grammatically plain, but it's a **conditional accounting nuance** ("double counting") that a true first-timer may not parse, and a faint worry ("¿mi número está mal?") can linger. Muted styling (`--text-hint`, 0.75rem, `scss:185-190`) keeps it from dominating. Not blocking.
+
+### Residual nits
+
+- **P2 (new, minor) — footnote register.** The double-count caveat is the only line on this surface that assumes the reader understands cost attribution. Softer framing would land better, e.g. "Para que tu resultado sea exacto, registra publicidad y envíos en un solo lugar (como gasto **o** dentro del costo de cada venta), no en los dos." Optional; the footnote is correctly de-emphasized.
+- **P2 (note, not a defect) — verdict says "este periodo", not "este mes".** The brief expected "Ganaste/Perdiste **este mes**", but since the period is switchable (7 días / 30 días), "este periodo" is the *correct* generalization — "este mes" would be wrong while viewing a 7-day window. Smart deviation; leave as is.
+- **P2 — empty-account branch never mounts the widget.** The lead tile lives only in the `#cockpit` (populated) branch (`dashboard.component.html:21,40`); a brand-new zero-everything account sees the onboarding flow instead, so the widget's own friendly empty state only shows once there's *some* activity but no realized orders in the window. Acceptable by design, just noting the empty-state copy is slightly less reachable than it looks.
+- **Carry-over (good):** comprehensive spec coverage exists for empty-state-not-$0, loss-not-chile-red, MXN+code, ladder values, period switch, footnote, error state (`spec.ts:85-171`).
+
+**Bottom line:** The buried-profit P0 is genuinely resolved. Diego now sees, on the very first screen, a plain-Spanish "Ganaste/Perdiste este periodo" + an honest MXN bottom line that truly subtracts operating expenses from sales profit, with a non-accountant ladder, a safe empty state, correct danger-red (not brand) loss treatment, and working period switching. Ship it; the only follow-up is softening the double-count footnote (P2).

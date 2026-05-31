@@ -78,7 +78,7 @@
                 <ng-container matColumnDef="total">
                     <mat-header-cell *matHeaderCellDef>{{ t('orders.total') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
-                        {{ order.total_price | currency:'MXN':'symbol-narrow' }}
+                        {{ order.total_price | money:order.currency }}
                     </mat-cell>
                 </ng-container>
 

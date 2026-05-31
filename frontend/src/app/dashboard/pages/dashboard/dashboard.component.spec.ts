@@ -128,7 +128,25 @@ describe('DashboardComponent', () => {
                 unanswered_count: 0,
                 breached_count: 0,
                 answered_count: 0,
-            }))
+            })),
+            // The cockpit now mounts the profit-summary widget at the top.
+            profitSummary: vi.fn().mockReturnValue(of({
+                period: 'this_month',
+                start: '2026-05-01',
+                end: '2026-05-31',
+                window_days: 31,
+                revenue_amount_mxn: 0,
+                sales_costs_amount: 0,
+                contribution_profit_amount: 0,
+                operating_expenses_amount: 0,
+                bottom_line_amount: 0,
+                net_margin_percent: null,
+                orders: 0,
+                has_realized_orders: false,
+                verdict: null,
+                double_count_warning: true,
+                excluded_categories: [],
+            })),
         };
         dialogMock = {
             open: vi.fn().mockReturnValue({
