@@ -428,7 +428,7 @@
     },
     "qaPage": {
       "title": "Preguntas de compradores",
-      "subtitle": "Preguntas sin responder y SLA de tiempo de respuesta. Responder rápido protege tu reputación en MercadoLibre.",
+      "subtitle": "Preguntas sin responder y tiempo de respuesta. Responder rápido protege tu reputación en MercadoLibre.",
       "backToDashboard": "Volver al panel",
       "windowLabel": "Periodo",
       "window30": "Últimos 30 días",
@@ -440,7 +440,7 @@
       "statusUnanswered": "Sin responder",
       "statusAnswered": "Respondidas",
       "unanswered": "Sin responder",
-      "breached": "Más de {{hours}}h SLA",
+      "breached": "Más de {{hours}}h sin responder",
       "answered": "Respondidas",
       "error": "No se pudieron cargar las preguntas.",
       "retry": "Reintentar",
@@ -450,14 +450,25 @@
         "source": "Canal",
         "item": "Artículo",
         "question": "Pregunta",
-        "sla": "SLA",
-        "open": "Abierta"
+        "sla": "Tiempo de respuesta",
+        "open": "Abierta",
+        "actions": "Acciones"
       },
       "sla": {
         "answered": "Respondida",
         "pending": "Pendiente",
-        "breached": "Vencida"
-      }
+        "breached": "Tarde"
+      },
+      "answer": "Responder",
+      "answerComposerTitle": "Responde al comprador",
+      "answerPlaceholder": "Escribe tu respuesta al comprador…",
+      "sendAnswer": "Enviar respuesta",
+      "cancel": "Cancelar",
+      "answerSuccess": "Respuesta enviada",
+      "answerError": "No se pudo enviar tu respuesta. Inténtalo de nuevo.",
+      "reauthNeeded": "Reconecta tu cuenta de MercadoLibre para responder.",
+      "reconnect": "Reconectar",
+      "yourAnswer": "Tu respuesta"
     },
     "heroInventoryValue": "Valor de inventario",
     "heroSalesVsSpend": "Ventas (30 d)",

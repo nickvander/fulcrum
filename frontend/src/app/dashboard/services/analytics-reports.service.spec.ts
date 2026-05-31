@@ -215,4 +215,35 @@ describe('AnalyticsReportsService', () => {
     expect(req.request.params.get('end_date')).toBe('2026-02-28');
     req.flush({ window_label: 'window 60d', totals: {}, by_channel: [] });
   });
+
+  // ---- Buyer Q&A -----------------------------------------------------------
+
+  it('questionsList() GETs /reports/questions with pagination defaults', () => {
+    service.questionsList().subscribe();
+    const req = httpMock.expectOne(r => r.url === `${environment.apiUrl}/reports/questions`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.get('window_days')).toBe('30');
+    expect(req.request.params.get('skip')).toBe('0');
+    expect(req.request.params.get('limit')).toBe('50');
+    expect(req.request.params.get('status')).toBeNull();
+    req.flush({
+      rows: [], total: 0, sla_hours: 24,
+      unanswered_count: 0, breached_count: 0, answered_count: 0,
+    });
+  });
+
+  it('answerQuestion() POSTs the reply text to the answer endpoint', () => {
+    service.answerQuestion(42, 'Sí, envío gratis.').subscribe();
+    const req = httpMock.expectOne(
+      r => r.url === `${environment.apiUrl}/reports/questions/42/answer`,
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ text: 'Sí, envío gratis.' });
+    req.flush({
+      id: 42, external_question_id: 'Q42', source: 'MERCADOLIBRE',
+      item_id: null, buyer_id: null, question_text: 'q', answer_text: 'Sí, envío gratis.',
+      status: 'ANSWERED', asked_at: null, answered_at: '2026-05-31T00:00:00Z',
+      answered: true, hours_open: 1, sla_status: 'answered',
+    });
+  });
 });

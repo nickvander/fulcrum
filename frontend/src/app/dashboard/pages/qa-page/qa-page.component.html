@@ -101,9 +101,91 @@
             <td mat-cell *matCellDef="let row" class="num-col">{{ hoursLabel(row.hours_open) }}</td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="actions-col">{{ t('dashboard.qaPage.cols.actions') }}</th>
+            <td mat-cell *matCellDef="let row" class="actions-col">
+              @if (!row.answered) {
+                <button mat-stroked-button type="button"
+                        (click)="openComposer(row)"
+                        [attr.data-testid]="'qa-answer-btn-' + row.id">
+                  <mat-icon>reply</mat-icon>
+                  {{ t('dashboard.qaPage.answer') }}
+                </button>
+              } @else {
+                <span class="answered-tag">
+                  <mat-icon>check_circle</mat-icon>
+                  {{ t('dashboard.qaPage.sla.answered') }}
+                </span>
+              }
+            </td>
+          </ng-container>
+
+          <!-- Inline composer / answer detail row -->
+          <ng-container matColumnDef="composer">
+            <td mat-cell *matCellDef="let row" [attr.colspan]="displayedColumns.length"
+                class="composer-cell">
+              @if (composerRowId === row.id) {
+                <div class="answer-composer" [attr.data-testid]="'qa-composer-' + row.id">
+                  <p class="composer-title">{{ t('dashboard.qaPage.answerComposerTitle') }}</p>
+                  <p class="composer-question">{{ row.question_text }}</p>
+
+                  @if (reauthRowId === row.id) {
+                    <div class="reauth-banner" [attr.data-testid]="'qa-reauth-' + row.id">
+                      <mat-icon>error_outline</mat-icon>
+                      <span>{{ t('dashboard.qaPage.reauthNeeded') }}</span>
+                      <a routerLink="/marketplaces" class="reauth-link"
+                         [attr.data-testid]="'qa-reconnect-' + row.id">
+                        {{ t('dashboard.qaPage.reconnect') }}
+                      </a>
+                    </div>
+                  }
+
+                  <mat-form-field appearance="outline" class="composer-field" subscriptSizing="dynamic">
+                    <textarea matInput rows="3"
+                              [(ngModel)]="answerText"
+                              [placeholder]="t('dashboard.qaPage.answerPlaceholder')"
+                              [attr.data-testid]="'qa-answer-input-' + row.id"></textarea>
+                  </mat-form-field>
+
+                  @if (answerErrorRowId === row.id) {
+                    <p class="composer-error" [attr.data-testid]="'qa-answer-error-' + row.id">
+                      {{ t('dashboard.qaPage.answerError') }}
+                    </p>
+                  }
+
+                  <div class="composer-actions">
+                    <button mat-button type="button" (click)="cancelComposer()"
+                            [disabled]="submitting"
+                            [attr.data-testid]="'qa-cancel-' + row.id">
+                      {{ t('dashboard.qaPage.cancel') }}
+                    </button>
+                    <button mat-flat-button color="primary" type="button"
+                            (click)="submitAnswer(row)"
+                            [disabled]="submitDisabled"
+                            [attr.data-testid]="'qa-send-' + row.id">
+                      @if (submitting) {
+                        <mat-spinner diameter="18"></mat-spinner>
+                      } @else {
+                        {{ t('dashboard.qaPage.sendAnswer') }}
+                      }
+                    </button>
+                  </div>
+                </div>
+              } @else if (row.answered && row.answer_text) {
+                <div class="answer-readonly" [attr.data-testid]="'qa-answer-text-' + row.id">
+                  <span class="answer-label">{{ t('dashboard.qaPage.yourAnswer') }}:</span>
+                  <span class="answer-body">{{ row.answer_text }}</span>
+                </div>
+              }
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"
               [attr.data-testid]="'qa-row-' + row.id"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['composer'];"
+              class="composer-row"
+              [class.composer-row--hidden]="composerRowId !== row.id && !(row.answered && row.answer_text)"></tr>
         </table>
 
         <mat-paginator

@@ -123,5 +123,116 @@
       &.sla-pending  { background: var(--bg-hover); color: var(--text-secondary); }
       &.sla-breached { background: var(--error-bg); color: var(--error-color); }
     }
+
+    .actions-col {
+      white-space: nowrap;
+
+      .answered-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--success-color);
+        font-size: 0.8rem;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    // The composer / answer-detail row sits beneath its question row.
+    // When neither a composer is open nor an answer exists, collapse it
+    // so the table reads as a single row per question.
+    .composer-row--hidden {
+      display: none;
+    }
+
+    .composer-cell {
+      padding: 0;
+      border-bottom-width: 0;
+    }
+
+    .answer-readonly {
+      padding: 8px 16px 14px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+
+      .answer-label {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-right: 6px;
+      }
+    }
+
+    .answer-composer {
+      padding: 12px 16px 16px;
+      background: var(--bg-raised);
+      border-top: 1px solid var(--border-color);
+
+      .composer-title {
+        margin: 0 0 4px;
+        font-weight: 700;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      }
+
+      .composer-question {
+        margin: 0 0 10px;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+      }
+
+      .composer-field {
+        width: 100%;
+        max-width: 640px;
+        display: block;
+      }
+
+      .composer-error {
+        margin: 4px 0 0;
+        color: var(--error-color);
+        font-size: 0.8rem;
+      }
+
+      .composer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+
+        mat-spinner { margin: 0 8px; }
+      }
+
+      .reauth-banner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        background: var(--warning-bg);
+        border-left: 4px solid var(--warning-color);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+
+        mat-icon {
+          color: var(--warning-color);
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+
+        .reauth-link {
+          margin-left: auto;
+          font-weight: 700;
+          color: var(--accent-color);
+          text-decoration: none;
+
+          &:hover { text-decoration: underline; }
+        }
+      }
+    }
   }
 }

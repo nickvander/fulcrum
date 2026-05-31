@@ -2966,3 +2966,104 @@ def questions_list_report(
         breached_count=breached_count,
         answered_count=answered_count,
     )
+
+
+class AnswerQuestionRequest(BaseModel):
+    text: str
+
+
+def _question_row(q, source_name: Optional[str]) -> "QuestionRow":
+    """Build a `QuestionRow` from a `MarketplaceQuestion`, recomputing the
+    response-time SLA fields exactly like the list endpoint does."""
+    now = datetime.now(timezone.utc)
+    breach_cutoff = now - timedelta(hours=QA_SLA_HOURS)
+    answered = q.answered_at is not None
+    hours_open: Optional[float] = None
+    if q.asked_at is not None:
+        end = q.answered_at if answered else now
+        hours_open = round((end - q.asked_at).total_seconds() / 3600.0, 1)
+    if answered:
+        sla = "answered"
+    elif q.asked_at is not None and q.asked_at < breach_cutoff:
+        sla = "breached"
+    else:
+        sla = "pending"
+    return QuestionRow(
+        id=q.id,
+        external_question_id=q.external_question_id,
+        source=source_name or "MERCADOLIBRE",
+        item_id=q.item_id,
+        buyer_id=q.buyer_id,
+        question_text=q.question_text,
+        answer_text=q.answer_text,
+        status=q.status,
+        asked_at=q.asked_at,
+        answered_at=q.answered_at,
+        answered=answered,
+        hours_open=hours_open,
+        sla_status=sla,
+    )
+
+
+@router.post("/questions/{question_id}/answer", response_model=QuestionRow)
+def answer_question_endpoint(
+    *,
+    db: Session = Depends(get_db),
+    question_id: int,
+    payload: AnswerQuestionRequest,
+    current_user: User = Depends(get_current_active_user),
+) -> "QuestionRow":
+    """Post a seller reply to a buyer question (MercadoLibre) and return the
+    updated row. An expired ML token surfaces a 409 with a machine-readable
+    `code` so the UI can show an inline Reconnect affordance."""
+    from src.models.marketplace import Marketplace
+    from src.services import questions_service
+
+    result = questions_service.answer_question(db, question_id, payload.text)
+    err = result.get("error")
+    if err == "empty":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.question.emptyAnswer",
+            detail="Answer text must not be empty.",
+        )
+    if err == "not_found":
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.question.notFound",
+            params={"id": question_id},
+            detail=f"Question {question_id} not found.",
+        )
+    if err == "already_answered":
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.question.alreadyAnswered",
+            params={"id": question_id},
+            detail=f"Question {question_id} is already answered.",
+        )
+    if err == "needs_reauthorization":
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="needs_reauthorization",
+            detail="MercadoLibre authorization expired; reconnect to answer.",
+        )
+    if err in ("unsupported", "connector_unavailable"):
+        raise LocalizedHTTPException(
+            status_code=502,
+            code="apiErrors.question.unsupported",
+            detail="Answering is not supported for this marketplace.",
+        )
+    if err:
+        raise LocalizedHTTPException(
+            status_code=500,
+            code="apiErrors.question.answerFailed",
+            detail="Failed to post the answer to the marketplace.",
+        )
+
+    q = result["question"]
+    source_name = (
+        db.query(Marketplace.name)
+        .filter(Marketplace.id == q.marketplace_id)
+        .scalar()
+    )
+    return _question_row(q, source_name)

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.orm import Session
@@ -133,6 +133,84 @@ def refresh_for_credential(db: Session, credential_id: int) -> Dict[str, Any]:
         logger.exception("Questions refresh failed for credential %d", credential_id)
         return {"error": "exception"}
     return summary
+
+
+def answer_question(db: Session, question_id: int, text: str) -> Dict[str, Any]:
+    """Post a seller reply to a buyer question and persist it locally.
+
+    Resolves the local `MarketplaceQuestion` by PK, sends the answer to
+    MercadoLibre via the connector, then sets `answer_text`/`answered_at`/
+    `status` and commits. Defensive + idempotent:
+
+      - empty/whitespace text          → {"error": "empty"}
+      - unknown question id            → {"error": "not_found"}
+      - already answered               → {"error": "already_answered"}
+      - non-ML / connector unavailable → {"error": "unsupported"}
+      - credential needs reauth        → {"error": "needs_reauthorization"}
+      - any other failure              → rollback + {"error": "exception"}
+
+    On success returns the refreshed `MarketplaceQuestion` under
+    `{"question": <model>}`.
+    """
+    clean = (text or "").strip()
+    if not clean:
+        return {"error": "empty"}
+
+    question = (
+        db.query(MarketplaceQuestion)
+        .filter(MarketplaceQuestion.id == question_id)
+        .first()
+    )
+    if question is None:
+        return {"error": "not_found"}
+    if question.answered_at is not None:
+        return {"error": "already_answered"}
+
+    credential = (
+        db.query(MarketplaceCredential)
+        .filter(MarketplaceCredential.id == question.credential_id)
+        .first()
+    )
+    if credential is None:
+        return {"error": "not_found"}
+
+    marketplace = (
+        db.query(Marketplace).filter(Marketplace.id == credential.marketplace_id).first()
+    )
+    name = (marketplace.name if marketplace else "").lower()
+    if name != "mercadolibre":
+        return {"error": "unsupported"}
+    if credential.needs_reauthorization:
+        return {"error": "needs_reauthorization"}
+
+    from src.services.marketplace_service import (
+        ReauthorizationRequiredError,
+        marketplace_service,
+    )
+    from src.services.marketplaces.mercadolibre import MercadoLibreConnector
+
+    connector = marketplace_service.get_connector("MercadoLibre")
+    if not isinstance(connector, MercadoLibreConnector):
+        return {"error": "connector_unavailable"}
+
+    try:
+        token = asyncio.run(marketplace_service.get_valid_access_token(db, credential.id))
+        asyncio.run(
+            connector.post_answer(question.external_question_id, clean, token)
+        )
+        question.answer_text = clean
+        question.answered_at = datetime.now(timezone.utc)
+        question.status = "ANSWERED"
+        db.commit()
+        db.refresh(question)
+    except ReauthorizationRequiredError:
+        db.rollback()
+        return {"error": "needs_reauthorization"}
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        logger.exception("Answering question %d failed", question_id)
+        return {"error": "exception"}
+    return {"question": question}
 
 
 def poll_all_credentials_for_questions(db: Session) -> Dict[int, Dict[str, Any]]:

@@ -177,6 +177,99 @@ def test_questions_report_sla_buckets(client: TestClient, db, test_admin_user, a
     assert by_ext["C"]["hours_open"] == pytest.approx(1.0, abs=0.2)
 
 
+# --------------------------------------------------------------------------- #
+# answering — connector + service + endpoint
+# --------------------------------------------------------------------------- #
+
+
+@pytest.mark.asyncio
+async def test_post_answer_stub_token_short_circuits():
+    connector = MercadoLibreConnector()
+    # No live HTTP — a stub token returns a deterministic payload.
+    out = await connector.post_answer("1001", "Hola", "STUB-A")
+    assert out["stub"] is True
+    assert out["question_id"] == "1001"
+    assert out["answer"]["text"] == "Hola"
+
+
+def _unanswered_question(db, cred, ext="2001"):
+    now = datetime.now(timezone.utc)
+    q = MarketplaceQuestion(
+        credential_id=cred.id, marketplace_id=cred.marketplace_id,
+        external_question_id=ext, item_id="MLM9", status="UNANSWERED",
+        question_text="¿Tienen envío gratis?", asked_at=now - timedelta(hours=3),
+    )
+    db.add(q)
+    db.commit()
+    db.refresh(q)
+    return q
+
+
+def test_answer_question_success(client: TestClient, db, test_admin_user, admin_headers):
+    cred = _ml_credential(db, test_admin_user)
+    q = _unanswered_question(db, cred)
+
+    async def _token(_db, _cid):
+        return "STUB-TOKEN"
+
+    with patch(
+        "src.services.marketplace_service.marketplace_service.get_valid_access_token",
+        side_effect=_token,
+    ):
+        resp = client.post(
+            f"/api/v1/reports/questions/{q.id}/answer",
+            json={"text": "Sí, envío gratis a todo México."},
+            headers=admin_headers,
+        )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["answered"] is True
+    assert body["sla_status"] == "answered"
+    assert body["answer_text"] == "Sí, envío gratis a todo México."
+
+    db.refresh(q)
+    assert q.answered_at is not None
+    assert q.status == "ANSWERED"
+    assert q.answer_text == "Sí, envío gratis a todo México."
+
+
+def test_answer_question_empty_text_400(client: TestClient, db, test_admin_user, admin_headers):
+    cred = _ml_credential(db, test_admin_user)
+    q = _unanswered_question(db, cred, ext="2002")
+    resp = client.post(
+        f"/api/v1/reports/questions/{q.id}/answer",
+        json={"text": "   "},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 400
+
+
+def test_answer_question_not_found_404(client: TestClient, db, test_admin_user, admin_headers):
+    resp = client.post(
+        "/api/v1/reports/questions/999999/answer",
+        json={"text": "Hola"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 404
+
+
+def test_answer_question_needs_reauthorization_409(
+    client: TestClient, db, test_admin_user, admin_headers,
+):
+    cred = _ml_credential(db, test_admin_user)
+    cred.needs_reauthorization = True
+    db.commit()
+    q = _unanswered_question(db, cred, ext="2003")
+
+    resp = client.post(
+        f"/api/v1/reports/questions/{q.id}/answer",
+        json={"text": "Hola"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 409
+    assert resp.json()["code"] == "needs_reauthorization"
+
+
 def test_questions_report_status_filter(client: TestClient, db, test_admin_user, admin_headers):
     cred = _ml_credential(db, test_admin_user)
     now = datetime.now(timezone.utc)

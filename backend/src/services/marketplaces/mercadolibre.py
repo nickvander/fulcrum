@@ -669,6 +669,33 @@ class MercadoLibreConnector(BaseMarketplaceConnector):
             response.raise_for_status()
             return response.json()
 
+    async def post_answer(
+        self, question_id: str, text: str, access_token: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Answer a buyer question via `POST /answers` with
+        `{"question_id": <id>, "text": <reply>}` and a Bearer token.
+
+        Without a token (or with a stub token) returns a deterministic stub
+        payload so dev/test paths can exercise the answer workflow without
+        hitting the live ML API — mirrors `publish_listing`. Returns the raw
+        ML answer payload (the answered question shape)."""
+        if not access_token or access_token.startswith("STUB"):
+            return {
+                "stub": True,
+                "question_id": question_id,
+                "status": "ANSWERED",
+                "answer": {"text": text, "status": "ACTIVE"},
+            }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{self.API_URL}/answers",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={"question_id": question_id, "text": text},
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def fetch_questions(
         self,
         access_token: str,

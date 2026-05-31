@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
 import { TranslocoTestingModule } from '@ngneat/transloco';
@@ -24,7 +25,10 @@ function makeRow(over: Partial<QuestionRow> = {}): QuestionRow {
 describe('QaPageComponent', () => {
   let fixture: ComponentFixture<QaPageComponent>;
   let component: QaPageComponent;
-  let analyticsStub: { questionsList: ReturnType<typeof vi.fn> };
+  let analyticsStub: {
+    questionsList: ReturnType<typeof vi.fn>;
+    answerQuestion: ReturnType<typeof vi.fn>;
+  };
 
   function setResponse(rows: QuestionRow[], over: Partial<QuestionsListResponse> = {}): void {
     analyticsStub.questionsList.mockReturnValue(of({
@@ -42,6 +46,7 @@ describe('QaPageComponent', () => {
         rows: [], total: 0, sla_hours: 24,
         unanswered_count: 0, breached_count: 0, answered_count: 0,
       } as QuestionsListResponse)),
+      answerQuestion: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -111,5 +116,77 @@ describe('QaPageComponent', () => {
     component.load();
     expect(component.errored).toBe(true);
     expect(component.rows).toEqual([]);
+  });
+
+  // ---- inline answer composer --------------------------------------------
+
+  it('openComposer reveals the composer for one row and resets state', () => {
+    const row = makeRow({ id: 7 });
+    component.answerErrorRowId = 7;
+    component.reauthRowId = 7;
+    component.openComposer(row);
+    expect(component.composerRowId).toBe(7);
+    expect(component.answerText).toBe('');
+    expect(component.answerErrorRowId).toBeNull();
+    expect(component.reauthRowId).toBeNull();
+  });
+
+  it('disables submit when the answer text is empty or whitespace', () => {
+    component.openComposer(makeRow({ id: 1 }));
+    component.answerText = '   ';
+    expect(component.submitDisabled).toBe(true);
+    component.answerText = 'Hola';
+    expect(component.submitDisabled).toBe(false);
+  });
+
+  it('submitAnswer calls the service and patches the row + counters in place', () => {
+    const row = makeRow({ id: 3, sla_status: 'breached', answered: false });
+    setResponse([row], { unanswered_count: 1, breached_count: 1, answered_count: 0, total: 1 });
+    component.load();
+
+    analyticsStub.answerQuestion.mockReturnValue(of(makeRow({
+      id: 3, answered: true, answer_text: 'Sí', answered_at: '2026-03-02T00:00:00Z',
+      status: 'ANSWERED', sla_status: 'answered', hours_open: 2,
+    })));
+
+    component.openComposer(row);
+    component.answerText = 'Sí';
+    component.submitAnswer(row);
+
+    expect(analyticsStub.answerQuestion).toHaveBeenCalledWith(3, 'Sí');
+    expect(row.answered).toBe(true);
+    expect(row.answer_text).toBe('Sí');
+    expect(row.sla_status).toBe('answered');
+    // Counters update without a full reload (load called once on init only).
+    expect(component.unansweredCount).toBe(0);
+    expect(component.answeredCount).toBe(1);
+    expect(component.breachedCount).toBe(0);
+    expect(component.composerRowId).toBeNull();
+    expect(analyticsStub.questionsList).toHaveBeenCalledTimes(2); // init + the load() above
+  });
+
+  it('shows an inline error when the answer submission fails', () => {
+    const row = makeRow({ id: 4 });
+    analyticsStub.answerQuestion.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 500 })),
+    );
+    component.openComposer(row);
+    component.answerText = 'Hola';
+    component.submitAnswer(row);
+    expect(component.answerErrorRowId).toBe(4);
+    expect(component.reauthRowId).toBeNull();
+    expect(row.answered).toBe(false);
+  });
+
+  it('flips into the Reconnect state on a 409 needs_reauthorization', () => {
+    const row = makeRow({ id: 5 });
+    analyticsStub.answerQuestion.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 409, error: { code: 'needs_reauthorization' },
+    })));
+    component.openComposer(row);
+    component.answerText = 'Hola';
+    component.submitAnswer(row);
+    expect(component.reauthRowId).toBe(5);
+    expect(component.answerErrorRowId).toBeNull();
   });
 });

@@ -468,6 +468,17 @@ export class AnalyticsReportsService {
       `${this.apiUrl}/questions`, { params },
     );
   }
+
+  /**
+   * Post a seller reply to a buyer question and return the updated row.
+   * A 409 with `code: 'needs_reauthorization'` signals the caller should
+   * surface an inline Reconnect affordance instead of a generic error.
+   */
+  answerQuestion(questionId: number, text: string): Observable<QuestionRow> {
+    return this.http.post<QuestionRow>(
+      `${this.apiUrl}/questions/${questionId}/answer`, { text },
+    );
+  }
 }
 
 export interface QuestionRow {

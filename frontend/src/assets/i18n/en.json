@@ -450,14 +450,25 @@
         "source": "Channel",
         "item": "Item",
         "question": "Question",
-        "sla": "SLA",
-        "open": "Open"
+        "sla": "Response time",
+        "open": "Open",
+        "actions": "Actions"
       },
       "sla": {
         "answered": "Answered",
         "pending": "Pending",
-        "breached": "Breached"
-      }
+        "breached": "Late"
+      },
+      "answer": "Answer",
+      "answerComposerTitle": "Reply to the buyer",
+      "answerPlaceholder": "Write your reply to the buyer…",
+      "sendAnswer": "Send answer",
+      "cancel": "Cancel",
+      "answerSuccess": "Answer sent",
+      "answerError": "Couldn't send your answer. Please try again.",
+      "reauthNeeded": "Reconnect your MercadoLibre account to answer.",
+      "reconnect": "Reconnect",
+      "yourAnswer": "Your answer"
     },
     "heroInventoryValue": "Inventory Value",
     "heroSalesVsSpend": "Sales (30d)",
