@@ -34,7 +34,7 @@
             content: '';
             width: 4px;
             height: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             border-radius: 2px;
         }
     }

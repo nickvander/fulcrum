@@ -8,16 +8,16 @@
   align-items: center;
   margin-bottom: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #eee;
-  
+  border-bottom: 1px solid var(--border-color);
+
   h3 {
     margin: 0;
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-main);
   }
-  
+
   .image-count {
-    color: #757575;
+    color: var(--text-secondary);
     font-size: 0.9rem;
   }
 }
@@ -33,14 +33,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--bg-card);
   transition: all 0.2s ease;
-  
+
   &.primary {
-    border: 2px solid #1976d2;
-    background-color: #f0f7ff;
+    border: 2px solid var(--accent-color);
+    background-color: var(--info-bg);
   }
   
   &:hover {
@@ -58,7 +58,7 @@
       object-fit: cover;
       border-radius: 4px;
       margin-right: 12px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-color);
     }
     
     .image-details {
@@ -71,28 +71,28 @@
       
       .image-description {
         font-size: 0.85rem;
-        color: #666;
+        color: var(--text-secondary);
         margin-bottom: 8px;
       }
-      
+
       .alt-text-input {
         label {
           font-size: 0.8rem;
-          color: #555;
+          color: var(--text-secondary);
           display: block;
           margin-bottom: 4px;
         }
-        
+
         input {
           width: 100%;
           padding: 6px 8px;
-          border: 1px solid #ccc;
+          border: 1px solid var(--border-color);
           border-radius: 4px;
           font-size: 0.9rem;
-          
+
           &:focus {
             outline: none;
-            border-color: #1976d2;
+            border-color: var(--accent-color);
           }
         }
       }

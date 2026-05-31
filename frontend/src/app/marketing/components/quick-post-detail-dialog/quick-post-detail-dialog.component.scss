@@ -63,23 +63,23 @@
     }
 
     .status-draft {
-        background: #e3f2fd !important;
-        color: #1565c0 !important;
+        background: var(--info-bg) !important;
+        color: var(--info-color) !important;
     }
 
     .status-published {
-        background: #e8f5e9 !important;
-        color: #2e7d32 !important;
+        background: var(--success-bg) !important;
+        color: var(--success-color) !important;
     }
 
     .status-failed {
-        background: #ffebee !important;
-        color: #c62828 !important;
+        background: var(--error-bg) !important;
+        color: var(--error-color) !important;
     }
 
     .status-scheduled {
-        background: #fff3e0 !important;
-        color: #e65100 !important;
+        background: var(--warning-bg) !important;
+        color: var(--warning-color) !important;
     }
 
     .post-title {
@@ -95,7 +95,7 @@
     .field-group label {
         display: block;
         font-size: 12px;
-        color: #666;
+        color: var(--text-secondary);
         margin-bottom: 4px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -130,14 +130,14 @@
         align-items: center;
         gap: 8px;
         padding: 4px 12px 4px 4px;
-        background: #f5f5f5;
+        background: var(--bg-raised);
         border-radius: 20px;
         cursor: pointer;
         transition: background 0.2s;
     }
 
     .product-chip:hover {
-        background: #e0e0e0;
+        background: var(--bg-hover);
     }
 
     .product-chip img {
@@ -166,7 +166,7 @@
         align-items: center;
         gap: 8px;
         font-size: 13px;
-        color: #666;
+        color: var(--text-secondary);
     }
 
     .meta-item mat-icon {
@@ -176,11 +176,11 @@
     }
 
     .meta-item.error {
-        color: #c62828;
+        color: var(--error-color);
     }
 
     .meta-item a {
-        color: #1976d2;
+        color: var(--accent-color);
     }
 
     .full-width {

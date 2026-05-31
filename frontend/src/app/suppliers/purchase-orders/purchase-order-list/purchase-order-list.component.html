@@ -38,16 +38,16 @@
         <!-- KPI Cards Row -->
         <div class="kpi-row">
             <app-stat-card [title]="t('purchaseOrders.totalOrders')" [value]="summary.total_orders" icon="receipt_long"
-                color="#3f51b5" link="/suppliers/po" [tooltip]="t('purchaseOrders.totalOrders')">
+                colorType="primary" link="/suppliers/po" [tooltip]="t('purchaseOrders.totalOrders')">
             </app-stat-card>
             <app-stat-card [title]="t('purchaseOrders.pending')" [value]="summary.pending_count" icon="pending_actions"
-                color="#ff9800" link="/suppliers/po" [tooltip]="t('purchaseOrders.pending')">
+                colorType="warn" link="/suppliers/po" [tooltip]="t('purchaseOrders.pending')">
             </app-stat-card>
             <app-stat-card [title]="t('purchaseOrders.totalValue')" [value]="'$' + getTotalValueFormatted()"
-                icon="attach_money" color="#009688" link="/suppliers/po" [tooltip]="t('purchaseOrders.totalValue')">
+                icon="attach_money" colorType="accent" link="/suppliers/po" [tooltip]="t('purchaseOrders.totalValue')">
             </app-stat-card>
             <app-stat-card [title]="t('purchaseOrders.received')" [value]="'$' + getReceivedValueFormatted()"
-                icon="check_circle" color="#4caf50" link="/suppliers/po" [tooltip]="t('purchaseOrders.received')">
+                icon="check_circle" colorType="success" link="/suppliers/po" [tooltip]="t('purchaseOrders.received')">
             </app-stat-card>
         </div>
 

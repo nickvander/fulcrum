@@ -23,13 +23,13 @@
     display: flex;
     gap: 12px;
     align-items: flex-start;
-    border: 1px solid rgba(245, 124, 0, 0.35);
-    background: rgba(245, 124, 0, 0.08);
+    border: 1px solid var(--warning-color);
+    background: var(--warning-bg);
     border-radius: 8px;
     padding: 12px;
 
     mat-icon {
-        color: var(--warning-color, #f57c00);
+        color: var(--warning-color);
     }
 
     strong {
@@ -127,8 +127,8 @@
                 margin-top: 6px;
                 padding: 2px 8px;
                 border-radius: 999px;
-                background: rgba(63, 81, 181, 0.1);
-                color: var(--primary-color, #3f51b5);
+                background: var(--info-bg);
+                color: var(--primary-color);
                 font-size: 12px;
                 font-weight: 600;
             }

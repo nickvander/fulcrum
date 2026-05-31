@@ -143,12 +143,12 @@
 
   &.admin {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
   }
 
   &.employee {
     background-color: var(--accent-color);
-    color: white;
+    color: var(--text-on-primary);
   }
 
   &.customer {

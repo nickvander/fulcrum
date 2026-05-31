@@ -51,17 +51,17 @@
 
 .badge.admin {
   background-color: var(--error-color);
-  color: white;
+  color: var(--text-on-primary);
 }
 
 .badge.employee {
   background-color: var(--info-color);
-  color: white;
+  color: var(--text-on-primary);
 }
 
 .badge.customer {
   background-color: var(--success-color);
-  color: white;
+  color: var(--text-on-primary);
 }
 
 .password-strength-container {

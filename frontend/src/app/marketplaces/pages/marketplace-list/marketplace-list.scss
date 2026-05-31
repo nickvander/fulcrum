@@ -305,7 +305,7 @@ mat-card-actions {
 .dialog-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5); // theme-ok: modal backdrop scrim
     display: flex;
     align-items: center;
     justify-content: center;

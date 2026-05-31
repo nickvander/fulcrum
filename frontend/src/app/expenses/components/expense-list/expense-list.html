@@ -35,16 +35,16 @@
         <!-- KPI Cards Row -->
         <div class="kpi-row">
             <app-stat-card [title]="t('expenses.totalExpenses')" [value]="getTotalExpenses() | money"
-                icon="account_balance_wallet" color="#e91e63" link="/expenses" [tooltip]="t('expenses.totalExpenses')">
+                icon="account_balance_wallet" colorType="primary" link="/expenses" [tooltip]="t('expenses.totalExpenses')">
             </app-stat-card>
             <app-stat-card [title]="t('expenses.recurring')" [value]="getRecurringTotal() | money" icon="repeat"
-                color="#9c27b0" link="/expenses" [tooltip]="t('expenses.recurring')">
+                colorType="accent" link="/expenses" [tooltip]="t('expenses.recurring')">
             </app-stat-card>
             <app-stat-card [title]="t('expenses.oneTime')" [value]="getOneTimeTotal() | money" icon="event"
-                color="#3f51b5" link="/expenses" [tooltip]="t('expenses.oneTime')">
+                colorType="warn" link="/expenses" [tooltip]="t('expenses.oneTime')">
             </app-stat-card>
             <app-stat-card [title]="t('expenses.entries')" [value]="summary?.count || 0" icon="receipt_long"
-                color="#009688" link="/expenses" [tooltip]="t('expenses.entries')">
+                colorType="success" link="/expenses" [tooltip]="t('expenses.entries')">
             </app-stat-card>
         </div>
 

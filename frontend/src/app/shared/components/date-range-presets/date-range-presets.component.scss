@@ -19,10 +19,8 @@ mat-button-toggle {
     border-radius: 8px !important;
     /* Soft rect/pill */
     border: none;
-    background-color: #f5f5f5;
-    /* Light gray default */
-    color: #424242;
-    /* Dark gray text */
+    background-color: var(--bg-raised);
+    color: var(--text-secondary);
     transition: all 0.2s ease;
     line-height: 32px;
     padding: 0 12px;
@@ -34,15 +32,14 @@ mat-button-toggle {
     }
 
     &.mat-button-toggle-checked {
-        background-color: #263238 !important;
-        /* Dark Blue-Grey (Sleek) */
-        color: white !important;
+        background-color: var(--primary-color) !important;
+        color: var(--text-on-primary) !important;
         font-weight: 500;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     &:hover:not(.mat-button-toggle-checked) {
-        background-color: #e0e0e0;
+        background-color: var(--bg-hover);
     }
 }
 
@@ -64,12 +61,12 @@ mat-button-toggle {
 
 /* Override date field wrapper to be cleaner if needed */
 ::ng-deep .custom-range .mat-mdc-text-field-wrapper {
-    background-color: white;
+    background-color: var(--bg-card);
     border-radius: 8px;
 }
 
 .range-separator {
-    color: #757575;
+    color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 500;
 }

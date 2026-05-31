@@ -191,8 +191,9 @@
     }
 
     &.recurring {
-        background-color: #f3e5f5;
-        color: #7b1fa2;
+        // deliberate purple "recurring" identity, tuned to read on both themes
+        background-color: rgba(156, 39, 176, 0.14); // theme-ok
+        color: #ba68c8; // theme-ok
     }
 }
 
@@ -200,7 +201,7 @@
 .amount-cell {
     font-weight: 600;
     font-size: 1rem;
-    color: #d32f2f;
+    color: var(--error-color);
 }
 
 // Empty State
@@ -216,19 +217,19 @@
         font-size: 64px;
         width: 64px;
         height: 64px;
-        color: #ccc;
+        color: var(--text-hint);
         margin-bottom: 16px;
     }
 
     h3 {
         margin: 0 0 8px;
         font-size: 1.25rem;
-        color: #555;
+        color: var(--text-secondary);
     }
 
     p {
         margin: 0 0 20px;
-        color: #888;
+        color: var(--text-hint);
     }
 }
 
@@ -245,13 +246,13 @@
     }
 
     p {
-        color: #666;
+        color: var(--text-secondary);
     }
 }
 
 // Action Menu
 .delete-action {
-    color: #d32f2f;
+    color: var(--error-color);
 
     mat-icon {
         color: inherit;

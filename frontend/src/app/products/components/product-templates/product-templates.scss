@@ -16,7 +16,7 @@
 .templates-header h1 {
   margin: 0;
   font-size: 1.5rem;
-  color: #333;
+  color: var(--text-main);
 }
 
 .create-template-btn {
@@ -42,51 +42,51 @@
   }
   
   .mat-mdc-card-header {
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-color);
     padding-bottom: 16px !important;
   }
-  
+
   .mat-mdc-card-content {
     padding-top: 16px !important;
-    
+
     .template-description {
-      color: #666;
+      color: var(--text-secondary);
       margin: 12px 0;
       line-height: 1.5;
     }
-    
+
     .template-info {
       margin: 16px 0;
-      
+
       .info-item {
         margin: 8px 0;
         font-size: 0.9rem;
-        color: #555;
+        color: var(--text-secondary);
       }
     }
-    
+
     .custom-fields {
       margin-top: 16px;
       padding-top: 16px;
-      border-top: 1px solid #eee;
-      
+      border-top: 1px solid var(--border-color);
+
       h4 {
         margin: 0 0 8px 0;
         font-size: 0.9rem;
-        color: #333;
+        color: var(--text-main);
       }
-      
+
       ul {
         margin: 0;
         padding-left: 20px;
-        
+
         li {
           font-size: 0.85rem;
-          color: #666;
+          color: var(--text-secondary);
           margin-bottom: 4px;
-          
+
           .required {
-            color: #f44336;
+            color: var(--error-color);
             font-weight: normal;
           }
         }
@@ -104,18 +104,18 @@
 .no-templates {
   text-align: center;
   padding: 60px 20px;
-  color: #757575;
-  
+  color: var(--text-secondary);
+
   .no-templates-icon {
     font-size: 4rem;
     height: 4rem !important;
     width: 4rem !important;
-    color: #bdbdbd;
+    color: var(--text-hint);
     margin-bottom: 16px;
   }
-  
+
   h3 {
-    color: #616161;
+    color: var(--text-secondary);
     margin: 16px 0;
   }
   

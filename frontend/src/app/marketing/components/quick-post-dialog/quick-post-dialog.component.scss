@@ -116,7 +116,7 @@
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        background: rgba(0, 0, 0, 0.03);
+        background: var(--bg-raised);
 
         .header-content {
             display: flex;
@@ -169,7 +169,7 @@
 .generated-info {
     margin-top: 8px;
     padding: 8px;
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--bg-raised);
     border-radius: 4px;
     border: 1px solid var(--border-color, #eee);
 
@@ -193,7 +193,7 @@
 .image-preview-section {
     margin: 8px 0 12px 0;
     text-align: center;
-    background: rgba(0, 0, 0, 0.02);
+    background: var(--bg-raised);
     border-radius: 8px;
     padding: 8px;
     border: 1px solid var(--border-color, #eee);

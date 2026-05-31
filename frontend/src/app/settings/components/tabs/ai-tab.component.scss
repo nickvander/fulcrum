@@ -18,7 +18,7 @@
 }
 
 .global-settings {
-    background: var(--surface-card);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 20px;
@@ -71,8 +71,8 @@
         border-radius: 6px;
         margin-bottom: 16px;
         font-size: 0.9rem;
-        background: rgba(244, 67, 54, 0.1);
-        color: var(--warn-color, #f44336);
+        background: var(--error-bg);
+        color: var(--error-color);
 
         mat-icon {
             font-size: 18px;
@@ -81,8 +81,8 @@
         }
 
         &.configured {
-            background: rgba(76, 175, 80, 0.1);
-            color: var(--success-color, #4caf50);
+            background: var(--success-bg);
+            color: var(--success-color);
         }
     }
 }
@@ -128,7 +128,7 @@
             color: var(--text-secondary);
 
             &.configured {
-                color: var(--success-color, #4caf50);
+                color: var(--success-color);
             }
         }
     }

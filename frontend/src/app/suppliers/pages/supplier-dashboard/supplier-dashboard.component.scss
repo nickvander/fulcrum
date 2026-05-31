@@ -75,8 +75,8 @@
 }
 
 .icon-badge.accent {
-    background: #f3e8ff;
-    color: #7c3aed;
+    background: var(--info-bg);
+    color: var(--accent-color);
 }
 
 .icon-badge mat-icon {

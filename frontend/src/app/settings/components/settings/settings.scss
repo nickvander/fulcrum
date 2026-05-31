@@ -224,7 +224,7 @@
 
     &.active {
       background: var(--success-bg);
-      color: #2E7D32;
+      color: var(--success-color);
     }
 
     &.revoked {
@@ -437,8 +437,8 @@
     height: 24px;
     padding: 0 8px;
     border-radius: 12px;
-    background: #ff5252;
-    color: white;
+    background: var(--error-color);
+    color: var(--text-on-primary);
     font-size: 12px;
     font-weight: 600;
   }

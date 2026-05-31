@@ -73,5 +73,20 @@ else
     echo "⚠️ Python3 not found, skipping i18n validation check."
 fi
 
+# Run theme-contrast guard (hardcoded colors / undefined tokens in SCSS)
+echo "Running theme-contrast check..."
+if command -v python3 &> /dev/null; then
+    python3 check_theme_contrast.py &> /dev/null
+    theme_result=$?
+    if [ $theme_result -ne 0 ]; then
+        echo "❌ Theme-contrast check failed. Run 'python3 check_theme_contrast.py' for details. Commit blocked."
+        exit 1
+    else
+        echo "✅ Theme-contrast check passed."
+    fi
+else
+    echo "⚠️ Python3 not found, skipping theme-contrast check."
+fi
+
 echo "✅ All pre-commit checks passed. Proceeding with commit..."
 exit 0

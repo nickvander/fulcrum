@@ -5,7 +5,7 @@
   padding: 8px 0; // Reduced padding
   flex-wrap: wrap;
   gap: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border-color);
   margin-top: 12px;
 }
 
@@ -17,7 +17,7 @@
 }
 
 .pagination-text {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.8rem; // Smaller font
 }
 
@@ -30,9 +30,9 @@
 
 .page-size-dropdown {
   padding: 4px 6px; // Reduced padding
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--bg-raised);
   font-size: 0.8rem;
 }
 
@@ -65,14 +65,14 @@
   line-height: 28px; // Center text vertically
 
   &.active {
-    background-color: #1976d2;
+    background-color: var(--accent-color);
     color: white;
     font-weight: 600;
   }
 
   &:not(.active):not(:disabled) {
     &:hover {
-      background-color: #f5f5f5;
+      background-color: var(--bg-hover);
     }
   }
 }
@@ -88,14 +88,14 @@
 .page-number-input {
   width: 48px; // Smaller input
   padding: 4px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   text-align: center;
   font-size: 0.8rem;
 }
 
 .page-divider {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.8rem;
 }
 

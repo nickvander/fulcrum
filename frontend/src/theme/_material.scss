@@ -76,6 +76,10 @@ body.dark-theme {
   --mat-sys-surface-bright: var(--bg-raised);
   --mat-sys-surface-dim: var(--bg-app);
   --mat-sys-background: var(--bg-app);
+  // surface-variant is what FILLED text fields use for their container color.
+  // Left unmapped it falls back to a tone derived from the red primary palette
+  // (a muddy brown in dark mode), so bind it to our neutral raised surface.
+  --mat-sys-surface-variant: var(--bg-raised);
 
   // Ink
   --mat-sys-on-surface: var(--text-main);

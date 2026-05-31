@@ -65,7 +65,7 @@
 .import-review-panel {
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--card-bg, #fff);
+    background: var(--bg-card);
     padding: 18px;
 }
 
@@ -122,7 +122,7 @@
     }
 
     &.selected {
-        background: rgba(63, 81, 181, 0.08);
+        background: var(--info-bg);
         border-color: var(--primary-color);
     }
 }
@@ -162,7 +162,7 @@
     width: 40px;
     height: 40px;
     border-radius: 8px;
-    background: rgba(63, 81, 181, 0.1);
+    background: var(--info-bg);
     color: var(--primary-color);
 }
 
@@ -187,8 +187,8 @@
 .review-warning {
     display: inline-block;
     margin-top: 8px;
-    color: #92400e;
-    background: rgba(245, 158, 11, 0.12);
+    color: var(--warning-color);
+    background: var(--warning-bg);
     border-radius: 6px;
     padding: 4px 8px;
     font-size: 12px;
@@ -236,7 +236,7 @@
     }
 
     &.active {
-        background: var(--card-bg, #fff);
+        background: var(--bg-card);
         color: var(--primary-color);
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
@@ -288,7 +288,7 @@
     opacity: 0.92;
 
     &:hover {
-        background: var(--card-bg, #fff);
+        background: var(--bg-card);
         border-color: var(--border-color);
     }
 }
@@ -394,19 +394,19 @@
         font-size: 64px;
         width: 64px;
         height: 64px;
-        color: #ccc;
+        color: var(--text-hint);
         margin-bottom: 16px;
     }
 
     h3 {
         margin: 0 0 8px;
         font-size: 1.25rem;
-        color: #555;
+        color: var(--text-secondary);
     }
 
     p {
         margin: 0 0 20px;
-        color: #888;
+        color: var(--text-hint);
         max-width: 520px;
     }
 
@@ -428,7 +428,7 @@
     }
 
     p {
-        color: #666;
+        color: var(--text-secondary);
     }
 }
 

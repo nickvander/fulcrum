@@ -100,7 +100,7 @@
 
     .email {
         font-size: 0.85rem;
-        color: #666;
+        color: var(--text-secondary);
     }
 }
 
@@ -120,19 +120,19 @@
         font-size: 64px;
         width: 64px;
         height: 64px;
-        color: #ccc;
+        color: var(--text-hint);
         margin-bottom: 16px;
     }
 
     h3 {
         margin: 0 0 8px;
         font-size: 1.25rem;
-        color: #555;
+        color: var(--text-secondary);
     }
 
     p {
         margin: 0 0 20px;
-        color: #888;
+        color: var(--text-hint);
         max-width: 460px;
     }
 
@@ -153,6 +153,6 @@
     }
 
     p {
-        color: #666;
+        color: var(--text-secondary);
     }
 }

@@ -13,6 +13,7 @@
 
 @use 'sass:map';
 @use 'sass:list';
+@use 'sass:color';
 @use 'tokens';
 
 // Emit the per-mode color contract for one palette map.
@@ -21,6 +22,9 @@
   --primary-hover:    #{map.get($c, primary-hover)};
   --primary-light:    #{map.get($c, primary-light)};
   --primary-dark:     #{map.get($c, primary-dark)};
+  // RGB triplets for rgba(var(--*-rgb), alpha) tints (e.g. scanner glows).
+  --primary-rgb:      #{color.channel(map.get($c, primary), "red", $space: rgb)}, #{color.channel(map.get($c, primary), "green", $space: rgb)}, #{color.channel(map.get($c, primary), "blue", $space: rgb)};
+  --bg-card-rgb:      #{color.channel(map.get($c, bg-card), "red", $space: rgb)}, #{color.channel(map.get($c, bg-card), "green", $space: rgb)}, #{color.channel(map.get($c, bg-card), "blue", $space: rgb)};
 
   --accent-color:     #{map.get($c, accent)};
   --accent-light:     #{map.get($c, accent-light)};
