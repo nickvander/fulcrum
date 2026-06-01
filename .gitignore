@@ -46,3 +46,6 @@ backend/celerybeat-schedule.db
 work/redesign/shots/
 work/redesign/*.js
 work/redesign/*.mjs
+
+# local virtualenv (never commit)
+.venv
