@@ -3005,6 +3005,11 @@
       "cannotDeleteSelf": "You cannot permanently delete your own account.",
       "deleteFailed": "User {{id}} could not be permanently deleted."
     },
+    "customer": {
+      "emailExists": "An account with email {{email}} already exists.",
+      "magicLinkInvalid": "This sign-in link is invalid or has expired. Request a new one.",
+      "addressNotFound": "Address {{id}} not found."
+    },
     "onboarding": {
       "cleanupNotConfirmed": "Demo data cleanup must be confirmed.",
       "cleanupBlocked": "Demo cleanup was blocked to protect customer records. Review the blocked records first."

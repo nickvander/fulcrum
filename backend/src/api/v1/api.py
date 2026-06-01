@@ -10,6 +10,7 @@ from src.api.v1.endpoints import (
     custom_fields,
     product_templates,
     addresses,
+    customers,
     audit_logs,
     bulk_users,
     purchase_orders,
@@ -39,6 +40,7 @@ api_router.include_router(products.router, prefix="/products", tags=["products"]
 api_router.include_router(suppliers.router, prefix="/suppliers", tags=["suppliers"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(addresses.router, prefix="/addresses", tags=["addresses"])
+api_router.include_router(customers.router, prefix="/customers", tags=["customers"])
 api_router.include_router(audit_logs.router, prefix="/audit-logs", tags=["audit-logs"])
 api_router.include_router(bulk_users.router, prefix="/bulk-users", tags=["bulk-users"])
 api_router.include_router(marketplace.router, prefix="/marketplace", tags=["marketplace"])

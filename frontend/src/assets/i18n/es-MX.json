@@ -3005,6 +3005,11 @@
       "cannotDeleteSelf": "No puedes eliminar permanentemente tu propia cuenta.",
       "deleteFailed": "No se pudo eliminar permanentemente el usuario {{id}}."
     },
+    "customer": {
+      "emailExists": "Ya existe una cuenta con el correo {{email}}.",
+      "magicLinkInvalid": "Este enlace de inicio de sesión no es válido o ha expirado. Solicita uno nuevo.",
+      "addressNotFound": "Dirección {{id}} no encontrada."
+    },
     "onboarding": {
       "cleanupNotConfirmed": "La limpieza de datos de demostración debe ser confirmada.",
       "cleanupBlocked": "La limpieza de demo se bloqueó para proteger registros de clientes. Revisa primero los registros bloqueados."
