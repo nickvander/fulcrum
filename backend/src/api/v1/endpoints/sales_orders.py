@@ -34,6 +34,7 @@ from src.schemas.sales_order import (
     OrderStatusEventRead,
     SalesOrder as SalesOrderSchema,
     SalesOrderChannelBreakdown,
+    SalesOrderCreate,
     SalesOrderDetail,
     SalesOrderItem as SalesOrderItemSchema,
     SalesOrderListResponse,
@@ -41,6 +42,8 @@ from src.schemas.sales_order import (
     SalesOrderReturnRead,
     SalesOrderSummary,
 )
+from src.services.inventory_service import InsufficientStockError
+from src.services.order_creation import create_onsite_order
 from src.services.report_export import (
     ReportColumn,
     ReportTable,
@@ -94,6 +97,95 @@ def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
         external_order_id=order.external_order_id,
         net_margin_percent=margin,
     )
+
+
+def _serialize_order_detail(order: SalesOrder) -> SalesOrderDetail:
+    """Build the full `SalesOrderDetail` for a single order. Shared by the
+    GET detail endpoint and the POST create endpoint so both return the
+    identical shape. `order.items` must be loaded; cost breakdown / status
+    timeline / refund events are surfaced when present (a freshly-created
+    on-site order has items but no breakdown/timeline/refunds yet)."""
+    items: List[SalesOrderItemSchema] = []
+    for item in order.items:
+        product: Optional[Product] = item.product
+        items.append(
+            SalesOrderItemSchema(
+                id=item.id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price_per_unit=item.price_per_unit,
+                cost_per_unit=item.cost_per_unit,
+                product_name=product.name if product else None,
+                product_sku=product.sku if product else None,
+            )
+        )
+
+    breakdown: Optional[OrderCostBreakdownRead] = (
+        OrderCostBreakdownRead.model_validate(order.cost_breakdown)
+        if order.cost_breakdown is not None
+        else None
+    )
+    timeline = [
+        OrderStatusEventRead.model_validate(ev) for ev in order.status_events
+    ]
+
+    base = _serialize_order(order)
+    return SalesOrderDetail(
+        **base.model_dump(),
+        items=items,
+        cost_breakdown=breakdown,
+        status_timeline=timeline,
+        refund_events=[],
+    )
+
+
+@router.post("/", status_code=201, response_model=SalesOrderDetail)
+def create_sales_order(
+    *,
+    db: Session = Depends(dependencies.get_db),
+    payload: SalesOrderCreate,
+    current_user: User = Depends(dependencies.get_current_active_user),
+):
+    """Create an on-site (point-of-sale) sales order.
+
+    Authenticated. The server prices each line authoritatively from the
+    product/variant (the request carries no prices), decrements stock
+    atomically per line, and persists the order all-or-nothing: if any
+    line lacks stock NO order is created and no stock moves.
+
+    Idempotent on `idempotency_key` — a retry with the same key returns
+    the already-created order (still 201) without decrementing stock
+    again.
+
+    Uses the request-scoped committing `get_db` (`dependencies.get_db`):
+    it commits on success and rolls back on any exception, so a
+    propagated `InsufficientStockError` reverts the whole request.
+    """
+    try:
+        order, _created = create_onsite_order(
+            db, payload, user_id=current_user.id
+        )
+    except InsufficientStockError as exc:
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.inventory.insufficientStock",
+            params={"key": payload.idempotency_key},
+            detail=str(exc),
+        )
+
+    # Re-fetch with relationships eager-loaded so the response serializer
+    # sees the items (and any product names) without lazy N+1 loads.
+    order = (
+        db.query(SalesOrder)
+        .options(
+            joinedload(SalesOrder.items).joinedload(SalesOrderItem.product),
+            joinedload(SalesOrder.cost_breakdown),
+            joinedload(SalesOrder.status_events),
+        )
+        .filter(SalesOrder.id == order.id)
+        .one()
+    )
+    return _serialize_order_detail(order)
 
 
 @router.get("/", response_model=SalesOrderListResponse)

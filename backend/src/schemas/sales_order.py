@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -108,6 +108,36 @@ class SalesOrderDetail(SalesOrder):
     cost_breakdown: Optional[OrderCostBreakdownRead] = None
     status_timeline: List[OrderStatusEventRead] = []
     refund_events: List[OrderRefundEventRead] = []
+
+
+# --- On-site order create (FP-04) ------------------------------------------
+
+
+class SalesOrderItemCreate(BaseModel):
+    """One requested line on an on-site order.
+
+    Carries NO price — the server prices each line authoritatively from
+    the product (or the variant, when `variant_id` is set) so a client
+    can never dictate what it pays. `quantity` must be a positive int.
+    """
+    product_id: int
+    variant_id: Optional[int] = None
+    quantity: int = Field(..., gt=0)
+
+
+class SalesOrderCreate(BaseModel):
+    """Payload for `POST /sales-orders/`.
+
+    `idempotency_key` is required and stored as the order's
+    `external_order_id` (with `source=FULCRUM`); a retry with the same
+    key returns the already-created order instead of decrementing stock
+    a second time. `items` must be non-empty. Prices are NEVER part of
+    the request — the server is the pricing authority.
+    """
+    idempotency_key: str = Field(..., min_length=1)
+    items: List[SalesOrderItemCreate] = Field(..., min_length=1)
+    currency: str = "MXN"
+    location: str = "default"
 
 
 class SalesOrderChannelBreakdown(BaseModel):

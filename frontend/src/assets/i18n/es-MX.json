@@ -3063,8 +3063,12 @@
       "invalidEncoding": "Codificación de archivo no válida. Sube un CSV con codificación UTF-8.",
       "missingRequiredColumns": "El CSV debe contener las siguientes columnas: {{columns}}"
     },
+    "inventory": {
+      "insufficientStock": "No hay suficiente inventario para completar este pedido."
+    },
     "salesOrder": {
-      "notFound": "Pedido de venta no encontrado."
+      "notFound": "Pedido de venta no encontrado.",
+      "emptyItems": "Un pedido de venta debe contener al menos una línea."
     },
     "stockTransfer": {
       "notFound": "Transferencia de inventario no encontrada.",
