@@ -11,7 +11,7 @@ from unittest.mock import patch
 from src.config import settings
 
 @pytest.mark.db
-def test_create_product(client: TestClient):
+def test_create_product(client: TestClient, admin_headers: dict):
     """
     Test creating a product successfully and that the embedding task is called.
     """
@@ -25,6 +25,7 @@ def test_create_product(client: TestClient):
                 "default_resale_price": 19.99,
                 "cost_price": 10.0,
             },
+            headers=admin_headers,
         )
         assert response.status_code == 200
         data = response.json()
@@ -34,7 +35,7 @@ def test_create_product(client: TestClient):
         mock_delay.assert_called_once_with(data["id"])
 
 @pytest.mark.db
-def test_create_product_duplicate_sku(client: TestClient, test_product: Product):
+def test_create_product_duplicate_sku(client: TestClient, test_product: Product, admin_headers: dict):
     """
     Test creating a product with a duplicate SKU fails.
     """
@@ -45,6 +46,7 @@ def test_create_product_duplicate_sku(client: TestClient, test_product: Product)
             "description": "A product with a duplicate SKU",
             "sku": test_product.sku, # Use the same SKU as the fixture
         },
+        headers=admin_headers,
     )
     assert response.status_code == 409
     assert response.status_code == 409
@@ -311,7 +313,7 @@ def test_update_product(client: TestClient, test_product: Product, admin_headers
 
 
 @pytest.mark.db
-def test_upload_product_image(client: TestClient, test_product: Product):
+def test_upload_product_image(client: TestClient, test_product: Product, admin_headers: dict):
     """
     Test uploading an image for a product.
     """
@@ -319,6 +321,7 @@ def test_upload_product_image(client: TestClient, test_product: Product):
     response = client.post(
         f"/api/v1/products/{test_product.id}/images",
         files={"file": ("test_image.jpg", io.BytesIO(image_content), "image/jpeg")},
+        headers=admin_headers,
     )
     assert response.status_code == 200
     data = response.json()
@@ -335,7 +338,7 @@ def test_upload_product_image(client: TestClient, test_product: Product):
         assert f.read() == image_content
 
 @pytest.mark.db
-def test_delete_product_image(client: TestClient, db: Session, test_product_with_image: ProductImage):
+def test_delete_product_image(client: TestClient, db: Session, test_product_with_image: ProductImage, admin_headers: dict):
     """
     Test deleting a product image.
     """
@@ -343,7 +346,7 @@ def test_delete_product_image(client: TestClient, db: Session, test_product_with
     image_id = test_product_with_image.id
     product_id = test_product_with_image.product_id
 
-    response = client.delete(f"/api/v1/products/{product_id}/images/{image_id}")
+    response = client.delete(f"/api/v1/products/{product_id}/images/{image_id}", headers=admin_headers)
     assert response.status_code == 204
 
     # Verify the file was deleted
@@ -354,7 +357,7 @@ def test_delete_product_image(client: TestClient, db: Session, test_product_with
     assert db_image is None
 
 @pytest.mark.db
-def test_set_primary_product_image(client: TestClient, db: Session, test_product: Product):
+def test_set_primary_product_image(client: TestClient, db: Session, test_product: Product, admin_headers: dict):
     """
     Test setting a primary image for a product.
     """
@@ -362,16 +365,18 @@ def test_set_primary_product_image(client: TestClient, db: Session, test_product
     image1_resp = client.post(
         f"/api/v1/products/{test_product.id}/images",
         files={"file": ("image1.jpg", io.BytesIO(b"img1"), "image/jpeg")},
+        headers=admin_headers,
     )
     image2_resp = client.post(
         f"/api/v1/products/{test_product.id}/images",
         files={"file": ("image2.jpg", io.BytesIO(b"img2"), "image/jpeg")},
+        headers=admin_headers,
     )
     image1_id = image1_resp.json()["id"]
     image2_id = image2_resp.json()["id"]
 
     # Set image 2 as primary
-    response = client.post(f"/api/v1/products/{test_product.id}/images/{image2_id}/set-primary")
+    response = client.post(f"/api/v1/products/{test_product.id}/images/{image2_id}/set-primary", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == image2_id
@@ -385,24 +390,24 @@ def test_set_primary_product_image(client: TestClient, db: Session, test_product
     assert image2_db.is_primary == 1
 
 @pytest.mark.db
-def test_delete_nonexistent_product_image(client: TestClient, test_product: Product):
+def test_delete_nonexistent_product_image(client: TestClient, test_product: Product, admin_headers: dict):
     """
     Test that deleting a product image that does not exist returns a 404.
     """
-    response = client.delete(f"/api/v1/products/{test_product.id}/images/9999")
+    response = client.delete(f"/api/v1/products/{test_product.id}/images/9999", headers=admin_headers)
     assert response.status_code == 404
 
 @pytest.mark.db
-def test_set_primary_nonexistent_product_image(client: TestClient, test_product: Product):
+def test_set_primary_nonexistent_product_image(client: TestClient, test_product: Product, admin_headers: dict):
     """
     Test that setting a primary image that does not exist returns a 404.
     """
-    response = client.post(f"/api/v1/products/{test_product.id}/images/9999/set-primary")
+    response = client.post(f"/api/v1/products/{test_product.id}/images/9999/set-primary", headers=admin_headers)
     assert response.status_code == 404
 
 
 @pytest.mark.db
-def test_delete_product(client: TestClient, test_product: Product, db: Session):
+def test_delete_product(client: TestClient, test_product: Product, db: Session, admin_headers: dict):
     """
     Test deleting a product successfully.
     """
@@ -413,7 +418,7 @@ def test_delete_product(client: TestClient, test_product: Product, db: Session):
     assert data["id"] == test_product.id
 
     # Delete the product
-    response = client.delete(f"/api/v1/products/{test_product.id}")
+    response = client.delete(f"/api/v1/products/{test_product.id}", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == test_product.id
@@ -557,7 +562,7 @@ def test_adjust_stock_rejects_unknown_reason_code(
 
 
 @pytest.mark.db
-def test_delete_multiple_products(client: TestClient, test_product: Product, db: Session):
+def test_delete_multiple_products(client: TestClient, test_product: Product, db: Session, admin_headers: dict):
     """
     Test deleting multiple products successfully.
     """
@@ -571,13 +576,14 @@ def test_delete_multiple_products(client: TestClient, test_product: Product, db:
             "default_resale_price": 29.99,
             "cost_price": 15.0,
         },
+        headers=admin_headers,
     )
     assert response.status_code == 200
     product2_data = response.json()
 
     delete_ids = [test_product.id, product2_data["id"]]
     # Use request method for delete with body
-    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids)
+    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids, headers=admin_headers)
     
     assert response.status_code == 200
     data = response.json()
@@ -593,13 +599,39 @@ def test_delete_multiple_products(client: TestClient, test_product: Product, db:
 
 
 @pytest.mark.db
-def test_delete_multiple_products_with_nonexistent(client: TestClient, test_product: Product, db: Session):
+def test_delete_multiple_products_with_nonexistent(client: TestClient, test_product: Product, db: Session, admin_headers: dict):
     """
     Test deleting multiple products where one does not exist returns 404.
     """
     delete_ids = [test_product.id, 99999]  # Second ID doesn't exist
     # Use request method for delete with body
-    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids)
+    response = client.request("DELETE", f"{settings.API_V1_STR}/products/", json=delete_ids, headers=admin_headers)
     
     assert response.status_code == 404
     assert "Product with id 99999 not found" in response.text
+
+
+@pytest.mark.db
+def test_product_write_endpoints_require_auth(client: TestClient, test_product: Product):
+    """Security regression (FP-01): catalog-mutating endpoints must reject
+    unauthenticated requests. Previously create/delete product, bulk-delete,
+    and all image-write endpoints were completely open. `get_current_user`
+    (auto_error=False) returns 403 on a missing/invalid token."""
+    pid = test_product.id
+    img = ("x.jpg", io.BytesIO(b"x"), "image/jpeg")
+    unauth_calls = [
+        client.post("/api/v1/products/", json={"name": "x", "sku": "UNAUTHSKU"}),
+        client.delete(f"/api/v1/products/{pid}"),
+        client.request("DELETE", f"{settings.API_V1_STR}/products/", json=[pid]),
+        client.post(f"/api/v1/products/{pid}/images", files={"file": img}),
+        client.delete(f"/api/v1/products/{pid}/images/1"),
+        client.put(f"/api/v1/products/{pid}/images/1", json={"title": "x"}),
+        client.post(f"/api/v1/products/{pid}/images/1/set-primary"),
+    ]
+    for resp in unauth_calls:
+        assert resp.status_code in (401, 403), (
+            f"unauthenticated {resp.request.method} {resp.request.url} "
+            f"should be rejected, got {resp.status_code}"
+        )
+    # The product must still exist — no unauthenticated delete slipped through.
+    assert client.get(f"/api/v1/products/{pid}").status_code == 200

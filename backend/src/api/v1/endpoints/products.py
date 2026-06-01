@@ -262,6 +262,7 @@ def create_product(
     *,
     db: Session = Depends(get_db),
     product_in: product_schema.ProductCreate,
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Create new product.
@@ -404,7 +405,12 @@ def read_product(*, db: Session = Depends(get_db), product_id: int):
 
 
 @router.delete("/{product_id}", response_model=product_schema.Product)
-def delete_product(*, db: Session = Depends(get_db), product_id: int):
+def delete_product(
+    *,
+    db: Session = Depends(get_db),
+    product_id: int,
+    current_user: User = Depends(dependencies.get_current_user),
+):
     """
     Delete a product.
     """
@@ -425,6 +431,7 @@ def delete_multiple_products(
     *,
     db: Session = Depends(get_db),
     product_ids: List[int],
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Delete multiple products.
@@ -453,6 +460,7 @@ def upload_product_image(
     product_id: int,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Upload a product image.
@@ -488,6 +496,7 @@ def delete_product_image(
     product_id: int,
     image_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Delete a product image.
@@ -514,6 +523,7 @@ def update_product_image(
     image_id: int,
     image_update: product_schema.ProductImageUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Update a product image's details (title, description).
@@ -541,6 +551,7 @@ def set_primary_image(
     product_id: int,
     image_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_user),
 ):
     """
     Set a product image as the primary image.
