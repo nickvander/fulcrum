@@ -16,6 +16,16 @@ Integration (CI) pipeline to enforce these standards.
   the database-dependent test suite runs against a dedicated PostgreSQL database
   managed by Docker, configured in `docker-compose.test.yml`.
 
+> **Note — isolated from the dev stack.** `docker-compose.test.yml` declares its
+> own Compose project (`name: fulcrum-test`), so its containers
+> (`fulcrum-test-backend-1`, `fulcrum-test-db-test-1`, …) never share names with
+> the dev stack (`docker-compose.yml`, project `fulcrum`). This means you can run
+> `npm run test:backend` while `docker compose up` is running your dev backend on
+> `:8200` — and the test stack's `... down` will **not** tear your dev backend
+> down. The test stack also binds distinct host ports (DB `5434`, Redis `6380`,
+> API `8300`), overridable via `FULCRUM_TEST_DB_PORT` / `FULCRUM_TEST_REDIS_PORT`
+> / `FULCRUM_TEST_BACKEND_PORT` if those are already taken.
+
 ### Running Tests Locally
 
 A suite of `npm` scripts in the root `package.json` are available to standardize

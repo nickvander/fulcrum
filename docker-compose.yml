@@ -1,3 +1,8 @@
+# Explicit project name (matches the default dir-based name) so the dev stack's
+# identity is stable and never collides with the test stack, which runs under
+# its own `fulcrum-test` project (see docker-compose.test.yml).
+name: fulcrum
+
 services:
   backend:
     build:

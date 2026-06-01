@@ -1,3 +1,12 @@
+# Isolated Compose project so the test stack NEVER shares container names with
+# the dev stack (docker-compose.yml, project "fulcrum"). Both define a service
+# named `backend`; without this, both resolve to `fulcrum-backend-1`, so
+# tearing the test stack down (`... down`) would also remove the running dev
+# backend on :8200. The distinct project name keeps them fully separate
+# (`fulcrum-test-*` vs `fulcrum-*`). All `docker compose -f docker-compose.test.yml`
+# commands (CI + `npm run test:backend`) pick this up automatically.
+name: fulcrum-test
+
 services:
   db-test:
     image: pgvector/pgvector:pg15
