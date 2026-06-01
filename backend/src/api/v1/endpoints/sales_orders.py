@@ -144,7 +144,10 @@ def create_sales_order(
     *,
     db: Session = Depends(dependencies.get_db),
     payload: SalesOrderCreate,
-    current_user: User = Depends(dependencies.get_current_active_user),
+    # Accept EITHER a JWT (admin/POS UI) OR an X-API-Key (the storefront BFF,
+    # server-to-server). `get_current_user_with_api_key` resolves both and
+    # prefers the API key when present.
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """Create an on-site (point-of-sale) sales order.
 

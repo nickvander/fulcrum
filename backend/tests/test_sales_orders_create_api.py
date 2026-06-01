@@ -114,6 +114,41 @@ def test_create_single_line_success(client: TestClient, db, test_product, admin_
     assert rows[0].adjustment == -3
 
 
+def test_create_with_api_key_auth(client: TestClient, db, test_product, test_admin_user):
+    """The storefront BFF authenticates server-to-server with an X-API-Key
+    (no JWT). FP-04 accepts it via `get_current_user_with_api_key`, so the
+    same endpoint serves both the admin/POS UI (JWT) and the BFF (API key)."""
+    import hashlib
+
+    from src.models.api_key import ApiKey
+
+    raw_key = "bffsvc-" + "a" * 57  # long, deterministic; prefix = raw_key[:8]
+    db.add(
+        ApiKey(
+            user_id=test_admin_user.id,
+            name="BFF service key",
+            key_prefix=raw_key[:8],
+            key_hash=hashlib.sha256(raw_key.encode()).hexdigest(),
+            is_active=True,
+        )
+    )
+    db.flush()
+    _stock(db, test_product, 5)
+
+    resp = client.post(
+        _BASE,
+        headers={"X-API-Key": raw_key},  # no Authorization/JWT
+        json={
+            "idempotency_key": "os-key-apikey",
+            "items": [{"product_id": test_product.id, "quantity": 2}],
+        },
+    )
+
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["source"] == OrderSource.FULCRUM.value
+    assert _qty_on_hand(db, test_product) == 3  # decremented via the API-key call
+
+
 def test_create_multi_line_success(client: TestClient, db, admin_headers):
     p1 = _product(db, price=100.0)
     p2 = _product(db, price=50.0)
