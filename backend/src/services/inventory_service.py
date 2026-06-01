@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
-from sqlalchemy import func
+from sqlalchemy import func, update
 from sqlalchemy.orm import Session
 
 from src.models.inventory import (
@@ -16,6 +16,17 @@ class AdjustmentReversalError(Exception):
     """Raised when an inventory adjustment can't be reversed. `code`
     is a stable machine-readable reason the API layer maps to an HTTP
     status + localized message."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+class InsufficientStockError(Exception):
+    """Raised when an atomic stock decrement can't be satisfied because
+    the on-hand quantity is below the requested amount (or the location
+    has no inventory row). `code` is a stable machine-readable reason the
+    API layer maps to an HTTP status + localized message."""
 
     def __init__(self, code: str, message: str):
         super().__init__(message)
@@ -121,6 +132,109 @@ class InventoryService:
             location=location,
             user_id=user_id,
         )
+        return item
+
+    def decrement_stock_atomic(
+        self,
+        db: Session,
+        product_id: int,
+        quantity: int,
+        variant_id: Optional[int] = None,
+        location: str = "default",
+        reason: Optional[str] = None,
+        reason_code: InventoryAdjustmentReasonCode = InventoryAdjustmentReasonCode.SALE,
+        user_id: Optional[str] = "system",
+    ) -> InventoryItem:
+        """Atomically remove ``quantity`` units of on-hand stock at
+        ``location``, REJECTING the operation when fewer than ``quantity``
+        units exist.
+
+        Why this exists: :meth:`record_adjustment` is a read-then-write
+        (read current qty, compute ``current + adjustment``, write it back)
+        with no row lock and no floor guard. Two concurrent sales of the
+        last unit can both read ``1`` and both write ``0`` — overselling,
+        and nothing stops the value going negative. This method instead
+        issues a single conditional statement::
+
+            UPDATE inventory_items
+               SET quantity = quantity - :n
+             WHERE product_id = :p AND variant_id = :v
+               AND location = :loc AND quantity >= :n
+
+        The database evaluates the ``quantity >= :n`` predicate and applies
+        the decrement atomically; under concurrency at most one caller can
+        claim the last unit, the loser gets ``rowcount == 0`` and is
+        rejected. Stock can never go negative. The matching
+        ``InventoryAdjustment`` audit row (``-quantity``) is written in the
+        SAME transaction. Use this for sales/checkout (online + POS).
+
+        NOTE: request-level idempotency (don't double-decrement when an
+        order-create is retried) is layered by the order-create caller
+        (FP-04), keyed on the order/line. This primitive guarantees only
+        the no-oversell / no-negative invariant.
+
+        Raises :class:`InsufficientStockError`
+        (code ``apiErrors.inventory.insufficientStock``) on insufficient
+        stock or a missing inventory row, and ``ValueError`` if
+        ``quantity`` is not a positive integer.
+        """
+        if quantity <= 0:
+            raise ValueError("decrement quantity must be a positive integer")
+
+        # Atomic, guarded decrement — the WHERE floor is what prevents the
+        # read-then-write oversell race. synchronize_session=False because
+        # we refresh the returned item from the DB below.
+        result = db.execute(
+            update(InventoryItem)
+            .where(
+                InventoryItem.product_id == product_id,
+                InventoryItem.variant_id == variant_id,
+                InventoryItem.location == location,
+                InventoryItem.quantity >= quantity,
+            )
+            .values(quantity=InventoryItem.quantity - quantity)
+            .execution_options(synchronize_session=False)
+        )
+
+        if result.rowcount == 0:
+            raise InsufficientStockError(
+                code="apiErrors.inventory.insufficientStock",
+                message=(
+                    f"Insufficient stock for product {product_id}"
+                    + (f" variant {variant_id}" if variant_id is not None else "")
+                    + f" at '{location}': cannot remove {quantity}."
+                ),
+            )
+
+        # Audit row, in the same transaction as the decrement.
+        inventory_adjustment = InventoryAdjustment(
+            product_id=product_id,
+            variant_id=variant_id,
+            adjustment=-quantity,
+            reason=reason,
+            reason_code=(
+                reason_code.value
+                if isinstance(reason_code, InventoryAdjustmentReasonCode)
+                else reason_code
+            ),
+            location=location,
+            timestamp=datetime.utcnow(),
+            created_by=str(user_id),
+        )
+        db.add(inventory_adjustment)
+
+        item = (
+            db.query(InventoryItem)
+            .filter(
+                InventoryItem.product_id == product_id,
+                InventoryItem.variant_id == variant_id,
+                InventoryItem.location == location,
+            )
+            .one()
+        )
+        # The Core UPDATE bypassed the identity map; refresh to reflect the
+        # decremented quantity on the returned ORM object.
+        db.refresh(item)
         return item
 
     def reverse_adjustment(
