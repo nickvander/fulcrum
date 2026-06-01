@@ -23,6 +23,7 @@ class CustomerProfile(BaseModel):
     email: EmailStr
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    phone: Optional[str] = None
     user_type: Optional[str] = None
     is_active: bool = True
     created_at: Optional[str] = None

@@ -12,6 +12,7 @@ class User(Base):
     employee_id = Column(String, unique=True, index=True)  # Auto-generated employee ID
     first_name = Column(String)
     last_name = Column(String)
+    phone = Column(String, nullable=True)  # customer contact phone
     user_type = Column(String)  # admin, employee, customer
     is_active = Column(Boolean, default=True)  # Track if user account is active
     is_superuser = Column(Boolean, default=False)

@@ -180,8 +180,11 @@ def test_profile_get_and_update(client: TestClient, db: Session):
     assert updated.status_code == 200
     body = updated.json()
     assert body["first_name"] == "Janet"
-    # phone is accepted but not persisted (no User.phone column).
-    assert "phone" not in body
+    # phone now persists (users.phone column, migration a3f9c1d27b6e)...
+    assert body["phone"] == "555-1234"
+    # ...and round-trips on a fresh GET.
+    refetched = client.get("/api/v1/customers/me", headers=headers)
+    assert refetched.json()["phone"] == "555-1234"
 
 
 @pytest.mark.db

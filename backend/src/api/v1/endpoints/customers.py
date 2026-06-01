@@ -165,13 +165,14 @@ def update_me(
 ) -> customer_schema.CustomerProfile:
     """Update the authenticated customer's own profile.
 
-    Only ``first_name`` / ``last_name`` are persisted: the ``User`` model has no
-    ``phone`` column, so ``phone`` is accepted (per the FP-05 contract) but
-    ignored rather than requiring a new migration.
+    Persists ``first_name`` / ``last_name`` / ``phone`` (the ``users.phone``
+    column was added in migration ``a3f9c1d27b6e``).
     """
     update_data = customer_in.model_dump(exclude_unset=True)
     persistable = {
-        k: v for k, v in update_data.items() if k in {"first_name", "last_name"}
+        k: v
+        for k, v in update_data.items()
+        if k in {"first_name", "last_name", "phone"}
     }
     for field, value in persistable.items():
         setattr(current_user, field, value)
