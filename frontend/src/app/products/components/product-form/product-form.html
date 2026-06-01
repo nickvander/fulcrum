@@ -81,15 +81,15 @@
                         rows="4"></textarea>
                     </mat-form-field>
                     @if (aiReady) {
-                    <button type="button" mat-stroked-button color="accent" (click)="generateAiDescription()"
+                    <button type="button" mat-stroked-button class="ai-accent ai-generate-btn" (click)="generateAiDescription()"
                       [disabled]="isGeneratingDescription || !productForm.get('name')?.value"
                       style="height: 56px; margin-top: 4px;" [matTooltip]="t('products.aiGenerate')">
                       @if (isGeneratingDescription) {
-                      <mat-icon class="spin">sync</mat-icon>
+                      <mat-icon class="spin ai-accent__icon">sync</mat-icon>
                       } @else {
-                      <mat-icon>auto_awesome</mat-icon>
+                      <mat-icon class="ai-accent__icon">auto_awesome</mat-icon>
                       }
-                      AI
+                      {{ t('products.aiBadge') }}
                     </button>
                     }
                   </div>

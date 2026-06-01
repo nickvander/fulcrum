@@ -29,6 +29,12 @@
   &--ready {
     background: var(--success-bg);
     color: var(--success-color);
+
+    // The AI glyph signals in gold (brand lock: AI = gold), even though the
+    // banner's "ready/available" text rides the success token.
+    .ai-accent__icon {
+      color: var(--accent-2);
+    }
   }
 
   &--disabled {

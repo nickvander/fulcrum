@@ -10,8 +10,8 @@
         <form [formGroup]="productForm">
             <!-- AI Capture Option -->
             <div class="ai-capture-section" *ngIf="aiEnabled">
-                <button mat-stroked-button type="button" class="ai-capture-btn" (click)="openCameraCapture()">
-                    <mat-icon>photo_camera</mat-icon>
+                <button mat-stroked-button type="button" class="ai-capture-btn ai-accent" (click)="openCameraCapture()">
+                    <mat-icon class="ai-accent__icon">photo_camera</mat-icon>
                     {{ t('products.scanWithCamera') }}
                 </button>
                 <span class="helper-text">{{ t('products.aiIdentifyHint') }}</span>

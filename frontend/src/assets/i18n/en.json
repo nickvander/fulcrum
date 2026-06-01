@@ -722,6 +722,7 @@
     "scanWithCamera": "Scan Product with Camera",
     "quickAddTitle": "Quick Add Product",
     "aiPowered": "AI-Powered",
+    "aiBadge": "AI",
     "identifyProduct": "Identify Product",
     "barcodeScanner": "Barcode Scanner",
     "identifyShort": "Identify",
@@ -1684,6 +1685,7 @@
       "packingMaterials": "Packing Materials",
       "other": "Other"
     },
+    "aiBadge": "AI",
     "dropReceiptAttach": "Drop receipt to attach",
     "dropReceiptAutofill": "Drop receipt to auto-fill",
     "analyzingReceipt": "Analyzing receipt…",
@@ -1835,7 +1837,8 @@
     "quickPostDialog": {
       "title": "Create quick post",
       "intro": "Publish a one-off update to your social channels.",
-      "linkProducts": "Link products (required for AI)",
+      "linkProducts": "Link products",
+      "linkProductsAiHint": "Required for AI · link a product to enable AI generation",
       "productSelection": "Product selection",
       "searchProducts": "Search products…",
       "aiContentAssistant": "AI content assistant",

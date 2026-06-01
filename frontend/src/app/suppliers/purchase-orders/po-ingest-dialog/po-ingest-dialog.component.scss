@@ -298,25 +298,27 @@ h2[mat-dialog-title] {
   margin: -24px -24px 20px -24px;
   background: var(--bg-card);
 
+  // AI badge → gold AI signal (brand lock: AI = gold). Low-alpha gold tint +
+  // gold icon; text on --text-main so it clears AA in both themes (gold text on
+  // tint fails AA in light; gold is an icon/hairline color, not small-text).
   .ai-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
+    background: rgba(var(--accent-2-rgb), 0.14);
+    color: var(--text-main);
     border-radius: 20px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
 
     mat-icon {
       font-size: 14px;
       width: 14px;
       height: 14px;
-      color: white;
+      color: var(--accent-2);
     }
   }
 }

@@ -19,22 +19,24 @@
     }
 }
 
+// AI badge → gold AI signal (brand lock: AI = gold). Gold tint + gold icon,
+// text on --text-main for AA in both themes.
 .ai-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     padding: 4px 12px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
+    background: rgba(var(--accent-2-rgb), 0.14);
+    color: var(--text-main);
     font-size: 0.75rem;
     font-weight: 500;
     border-radius: 16px;
-    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
 
     mat-icon {
         font-size: 14px;
         width: 14px;
         height: 14px;
+        color: var(--accent-2);
     }
 }
 
@@ -52,8 +54,9 @@
         align-items: center;
         gap: 8px;
 
+        // AI capture (camera → AI product identify) signals in gold, not blue.
         mat-icon {
-            color: var(--accent-color);
+            color: var(--accent-2);
         }
     }
 

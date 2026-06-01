@@ -607,6 +607,27 @@ mat-card-content {
   display: none; // Minimize extra whitespace below fields if not showing hints/errors
 }
 
+// AI "generate description" button: the AI affordance signals in gold (gold
+// icon + thin gold hairline + low-alpha gold tint), NOT affordance-blue and NOT
+// chile-red (reserved for save/publish commits). Text on --text-main for AA.
+.ai-generate-btn.ai-accent {
+  background: rgba(var(--accent-2-rgb), 0.14);
+  color: var(--text-main);
+  border: 1px solid var(--accent-2);
+
+  .ai-accent__icon {
+    color: var(--accent-2);
+  }
+
+  &:not(:disabled):hover {
+    background: rgba(var(--accent-2-rgb), 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
 // AI Generate button spin animation
 .spin {
   animation: spin 1s linear infinite;

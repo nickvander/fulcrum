@@ -34,6 +34,13 @@
             </mat-autocomplete>
         </mat-form-field>
 
+        <!-- Gold AI hint: signals the AI-ness in GOLD regardless of Material's
+             focused-outline color (which inherits --primary/red). -->
+        <p class="ai-accent ai-field-hint" *ngIf="aiEnabled">
+            <mat-icon class="ai-accent__icon">auto_awesome</mat-icon>
+            <span>{{ t('marketing.quickPostDialog.linkProductsAiHint') }}</span>
+        </p>
+
         <!-- AI Assistant Panel (only if AI enabled) -->
         <div class="ai-assistant-panel" *ngIf="aiEnabled">
             <div class="panel-header" (click)="toggleAiPanel()">
@@ -99,10 +106,10 @@
                         </button>
                     </div>
 
-                    <button mat-flat-button color="accent" type="button" class="action-btn full-width"
+                    <button mat-flat-button type="button" class="action-btn full-width ai-generate-btn ai-accent"
                         (click)="generateBoth()" [disabled]="generating || selectedProducts.length === 0">
                         <mat-spinner diameter="16" *ngIf="generating"></mat-spinner>
-                        <mat-icon *ngIf="!generating">auto_awesome</mat-icon>
+                        <mat-icon class="ai-accent__icon" *ngIf="!generating">auto_awesome</mat-icon>
                         <span *ngIf="!generating">{{ hasBoth() ? t('marketing.quickPostDialog.regenerateBoth') : t('marketing.quickPostDialog.generateAll') }}</span>
                     </button>
                 </div>

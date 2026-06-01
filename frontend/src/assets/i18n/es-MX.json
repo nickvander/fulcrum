@@ -722,6 +722,7 @@
     "scanWithCamera": "Escanear Producto con Cámara",
     "quickAddTitle": "Agregar Producto Rápido",
     "aiPowered": "IA Activada",
+    "aiBadge": "IA",
     "identifyProduct": "Identificar Producto",
     "barcodeScanner": "Escáner de Código de Barras",
     "identifyShort": "Iden.",
@@ -1684,6 +1685,7 @@
       "packingMaterials": "Materiales de Empaque",
       "other": "Otro"
     },
+    "aiBadge": "IA",
     "dropReceiptAttach": "Suelta el recibo para adjuntarlo",
     "dropReceiptAutofill": "Suelta el recibo para autocompletar",
     "analyzingReceipt": "Analizando recibo…",
@@ -1835,7 +1837,8 @@
     "quickPostDialog": {
       "title": "Crear publicación rápida",
       "intro": "Publica una actualización puntual en tus redes sociales.",
-      "linkProducts": "Vincular productos (requerido para IA)",
+      "linkProducts": "Vincular productos",
+      "linkProductsAiHint": "Requerido para IA · vincula un producto para activar la generación con IA",
       "productSelection": "Selección de productos",
       "searchProducts": "Buscar productos…",
       "aiContentAssistant": "Asistente de contenido IA",

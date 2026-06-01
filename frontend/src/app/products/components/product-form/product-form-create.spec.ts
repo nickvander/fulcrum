@@ -219,6 +219,19 @@ describe('ProductForm: Create Mode', () => {
             await fixture.whenStable();
             expect(component.productForm.value.name).toBe('AI Product');
         });
+
+        // Brand lock: the "generate description with AI" button signals in GOLD
+        // (.ai-accent), not affordance-blue (color="accent") nor chile-red.
+        it('AI description button carries .ai-accent and is NOT color="accent"/"primary"', () => {
+            component.aiReady = true;
+            fixture.detectChanges();
+            const btn: HTMLElement = fixture.nativeElement.querySelector('.ai-generate-btn');
+            expect(btn).toBeTruthy();
+            expect(btn.classList.contains('ai-accent')).toBe(true);
+            expect(btn.className).not.toMatch(/mat-accent|mat-primary/);
+            expect(btn.getAttribute('color')).toBeNull();
+            expect(btn.querySelector('.ai-accent__icon')).toBeTruthy();
+        });
     });
 
     it('should navigate to /products on cancel', () => {

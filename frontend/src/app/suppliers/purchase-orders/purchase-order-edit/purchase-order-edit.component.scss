@@ -481,13 +481,15 @@
         pointer-events: none;
     }
 
+    // AI badge → gold AI signal (brand lock: AI = gold). Gold tint + gold icon,
+    // text on --text-main for AA in both themes.
     .ai-badge {
         display: flex;
         align-items: center;
         gap: 4px;
         padding: 4px 10px;
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        color: white;
+        background: rgba(var(--accent-2-rgb), 0.14);
+        color: var(--text-main);
         border-radius: 12px;
         font-size: 0.75em;
         font-weight: 500;
@@ -496,6 +498,7 @@
             font-size: 14px;
             width: 14px;
             height: 14px;
+            color: var(--accent-2);
         }
     }
 }

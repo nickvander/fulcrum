@@ -31,9 +31,9 @@
 
             <!-- AI Generate Button (only shown when AI is enabled) -->
             <div class="ai-actions" *ngIf="aiEnabled">
-                <button mat-flat-button color="primary" type="button" (click)="generateWithAI()"
+                <button mat-flat-button type="button" class="ai-generate-btn ai-accent" (click)="generateWithAI()"
                     [disabled]="isGenerating || isSaving">
-                    <mat-icon *ngIf="!isGenerating">auto_awesome</mat-icon>
+                    <mat-icon class="ai-accent__icon" *ngIf="!isGenerating">auto_awesome</mat-icon>
                     <mat-spinner *ngIf="isGenerating" diameter="20"></mat-spinner>
                     <span>{{ t('marketplaces.generateWithAI') || 'Generate with AI' }}</span>
                 </button>

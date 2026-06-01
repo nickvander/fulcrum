@@ -28,6 +28,27 @@
     mat-spinner {
         display: inline-block;
     }
+
+    // The AI generate button signals in gold (brand lock: AI = gold), NOT
+    // chile-red (--primary, reserved for the Save commit below). Gold tint +
+    // gold icon + thin gold hairline; text on --text-main for AA.
+    .ai-generate-btn.ai-accent {
+        background: rgba(var(--accent-2-rgb), 0.14);
+        color: var(--text-main);
+        border: 1px solid var(--accent-2);
+
+        .ai-accent__icon {
+            color: var(--accent-2);
+        }
+
+        &:not(:disabled):hover {
+            background: rgba(var(--accent-2-rgb), 0.2);
+        }
+
+        &:disabled {
+            opacity: 0.6;
+        }
+    }
 }
 
 .keywords-section {

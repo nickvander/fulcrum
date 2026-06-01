@@ -149,6 +149,46 @@
     }
 }
 
+// Gold AI hint under the product-link field — the AI signal in GOLD, so red
+// focus-outline isn't the only AI cue. Icon is gold (.ai-accent), text stays on
+// the readable ink token for AA.
+.ai-field-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: -6px 0 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+}
+
+// The gold AI "generate all" action: this is the AI affordance, so it signals
+// in gold (gold icon + thin gold hairline + low-alpha gold tint), NOT a gold
+// flood and NOT chile-red (that's reserved for the save/publish commit buttons
+// below). Text rides --text-main so it clears AA on the tint in both themes.
+.ai-generate-btn.ai-accent {
+    background: rgba(var(--accent-2-rgb), 0.14);
+    color: var(--text-main);
+    border: 1px solid var(--accent-2);
+
+    .ai-accent__icon {
+        color: var(--accent-2);
+    }
+
+    &:not(:disabled):hover {
+        background: rgba(var(--accent-2-rgb), 0.2);
+    }
+
+    &:disabled {
+        opacity: 0.6;
+    }
+}
+
 // Error message styling
 .error-msg {
     color: var(--warning-color, orange);

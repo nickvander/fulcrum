@@ -162,4 +162,35 @@ describe('QuickPostDialogComponent', () => {
             expect(result).toBe('');
         });
     });
+
+    // Brand lock: AI affordances signal in GOLD via the shared .ai-accent
+    // treatment, never affordance-blue (color="accent") or chile-red.
+    describe('AI gold affordance (brand lock)', () => {
+        beforeEach(() => {
+            component.aiEnabled = true;
+            component.showAiPanel = true;
+            fixture.detectChanges();
+        });
+
+        it('product-link field carries a gold AI hint via .ai-accent', () => {
+            const hint = fixture.nativeElement.querySelector('.ai-field-hint.ai-accent');
+            expect(hint).toBeTruthy();
+            expect(hint.querySelector('mat-icon')?.textContent?.trim()).toBe('auto_awesome');
+        });
+
+        it('panel-header AI icon carries .ai-accent', () => {
+            const headerIcon = fixture.nativeElement.querySelector('.panel-header .ai-accent');
+            expect(headerIcon).toBeTruthy();
+        });
+
+        it('generate button carries .ai-accent and is NOT color="accent" (blue) or color="primary" (red)', () => {
+            const btn: HTMLElement = fixture.nativeElement.querySelector('.ai-generate-btn');
+            expect(btn).toBeTruthy();
+            expect(btn.classList.contains('ai-accent')).toBe(true);
+            // Material reflects color="accent"/"primary" onto a mat-* class.
+            expect(btn.className).not.toMatch(/mat-accent|mat-primary/);
+            expect(btn.getAttribute('color')).toBeNull();
+            expect(btn.querySelector('.ai-accent__icon')).toBeTruthy();
+        });
+    });
 });

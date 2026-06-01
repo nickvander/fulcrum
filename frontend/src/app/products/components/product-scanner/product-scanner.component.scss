@@ -599,6 +599,13 @@
                     color: #fff;
                     font-family: 'Roboto Mono', monospace;
                     font-size: 0.85rem;
+
+                    // The "AI is thinking" glyph signals in gold (brand lock:
+                    // AI = gold), while the status text stays white on the dark
+                    // scan overlay.
+                    .ai-accent__icon {
+                        color: var(--accent-2);
+                    }
                 }
             }
         }
