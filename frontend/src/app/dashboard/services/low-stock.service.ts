@@ -11,6 +11,11 @@ export interface LowStockRow {
   product_sku?: string | null;
   supplier_id?: number | null;
   on_hand: number;
+  /** On-hand split by location. `internal_on_hand` is your own warehouse
+   *  ("default") stock — if > 0 you can *transfer* it to Full instead of
+   *  reordering. `ml_full_on_hand` is what's already at MercadoLibre Full. */
+  internal_on_hand?: number;
+  ml_full_on_hand?: number;
   threshold: number;
   reorder_point?: number | null;
   reorder_quantity?: number | null;

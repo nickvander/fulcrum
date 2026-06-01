@@ -117,16 +117,46 @@
                 <td class="num">{{ daysLeftLabel(row) }}</td>
                 <td class="num suggested">{{ row.suggested_reorder_qty }}</td>
                 <td class="actions">
-                  <a
-                    mat-stroked-button
-                    color="primary"
-                    [routerLink]="['/suppliers/po/create']"
-                    [queryParams]="{ product_id: row.product_id }"
-                    [attr.data-testid]="'create-po-' + row.product_id"
-                  >
-                    <mat-icon>add_shopping_cart</mat-icon>
-                    {{ t('dashboard.lowStock.createPo') }}
-                  </a>
+                  @if (canTransferToFull(row)) {
+                    <!-- Has own warehouse stock → primary remedy is to MOVE it
+                         to ML Full (a transfer), not buy more. Reorder stays
+                         available as a secondary link. -->
+                    <a
+                      mat-flat-button
+                      color="primary"
+                      routerLink="/marketplaces/transfers/planner"
+                      [queryParams]="transferQueryParams(row)"
+                      [matTooltip]="t('dashboard.lowStock.sendToFullTooltip')"
+                      [attr.data-testid]="'send-to-full-' + row.product_id"
+                    >
+                      <mat-icon>local_shipping</mat-icon>
+                      {{ t('dashboard.lowStock.sendToFull') }}
+                    </a>
+                    <a
+                      mat-button
+                      class="secondary-action"
+                      [routerLink]="['/suppliers/po/create']"
+                      [queryParams]="{ product_id: row.product_id }"
+                      [matTooltip]="t('dashboard.lowStock.createPoTooltip')"
+                      [attr.data-testid]="'create-po-' + row.product_id"
+                    >
+                      {{ t('dashboard.lowStock.createPo') }}
+                    </a>
+                  } @else {
+                    <!-- Out in the warehouse too → the only remedy is to
+                         reorder from the supplier (a purchase order). -->
+                    <a
+                      mat-stroked-button
+                      color="primary"
+                      [routerLink]="['/suppliers/po/create']"
+                      [queryParams]="{ product_id: row.product_id }"
+                      [matTooltip]="t('dashboard.lowStock.createPoTooltip')"
+                      [attr.data-testid]="'create-po-' + row.product_id"
+                    >
+                      <mat-icon>add_shopping_cart</mat-icon>
+                      {{ t('dashboard.lowStock.createPo') }}
+                    </a>
+                  }
                 </td>
               </tr>
             }

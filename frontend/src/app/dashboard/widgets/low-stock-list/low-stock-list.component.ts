@@ -75,6 +75,27 @@ export class LowStockListWidgetComponent {
   }
 
   // ------------------------------------------------------------------
+  // Remedy disambiguation: "transfer existing stock to ML Full" vs
+  // "reorder from the supplier". A product that still has stock in your
+  // own warehouse (internal_on_hand > 0) can be *moved* to Full instead
+  // of buying more. If you're out in the warehouse too, the only remedy
+  // is a purchase order (reorder).
+  // ------------------------------------------------------------------
+
+  /** True when the seller still owns warehouse stock they could send to
+   *  ML Full, so "Enviar a ML Full" is the primary remedy for this row. */
+  canTransferToFull(row: LowStockRow): boolean {
+    return (row.internal_on_hand ?? 0) > 0;
+  }
+
+  /** Query params for the transfer planner, pre-filtered to this product
+   *  (by SKU when available, else by name) so the seller lands on the
+   *  right row of the planner. */
+  transferQueryParams(row: LowStockRow): { q: string } {
+    return { q: row.product_sku || row.product_name };
+  }
+
+  // ------------------------------------------------------------------
   // Bulk-reorder selection helpers
   // ------------------------------------------------------------------
 

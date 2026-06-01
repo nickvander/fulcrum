@@ -173,6 +173,34 @@ def test_low_stock_report_summary_counts(client, db, admin_headers):
     assert body["total_watch"] >= 1
 
 
+def test_low_stock_report_splits_on_hand_by_location(client, db, admin_headers):
+    """on_hand totals all locations, but internal_on_hand / ml_full_on_hand
+    expose where the stock is so the UI can choose transfer-vs-reorder."""
+    p = _make_product(db, "REP-SPLIT", reorder_point=20)
+    _seed_stock(db, p.id, 6, location="default")   # warehouse / internal
+    _seed_stock(db, p.id, 3, location="ml-full")    # already at Full
+
+    response = client.get("/api/v1/reports/low-stock", headers=admin_headers)
+    rows = response.json()["rows"]
+    row = next(r for r in rows if r["product_id"] == p.id)
+    assert row["on_hand"] == 9
+    assert row["internal_on_hand"] == 6
+    assert row["ml_full_on_hand"] == 3
+
+
+def test_low_stock_report_zero_internal_when_out_in_warehouse(client, db, admin_headers):
+    """A product with no warehouse stock reports internal_on_hand == 0, so
+    the UI surfaces 'Crear OC' (reorder) rather than 'Enviar a ML Full'."""
+    p = _make_product(db, "REP-NOINT", reorder_point=20)
+    _seed_stock(db, p.id, 0, location="default")
+
+    response = client.get("/api/v1/reports/low-stock", headers=admin_headers)
+    rows = response.json()["rows"]
+    row = next(r for r in rows if r["product_id"] == p.id)
+    assert row["internal_on_hand"] == 0
+    assert row["ml_full_on_hand"] == 0
+
+
 def test_low_stock_report_orders_by_severity_then_days_left(client, db, admin_headers):
     pa = _make_product(db, "REP-ORDER-A", reorder_point=10)
     _seed_stock(db, pa.id, 0)  # critical

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -72,10 +72,19 @@ export class StockTransferPlannerComponent implements OnInit {
     private service: StockTransferService,
     private snackBar: MatSnackBar,
     private router: Router,
+    private route: ActivatedRoute,
     private transloco: TranslocoService,
   ) {}
 
   ngOnInit(): void {
+    // Pre-target a product when navigated here from another surface (e.g.
+    // the low-stock widget's "Enviar a ML Full" action passes ?q=<sku>),
+    // so the seller lands on the planner already filtered to the row they
+    // were looking at.
+    const prefill = this.route.snapshot.queryParamMap.get('q');
+    if (prefill) {
+      this.search = prefill;
+    }
     this.reload();
   }
 

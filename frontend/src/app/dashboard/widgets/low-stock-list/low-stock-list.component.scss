@@ -181,14 +181,25 @@
         font-variant-numeric: tabular-nums;
     }
     .actions {
-        text-align: right;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: flex-end;
         white-space: nowrap;
     }
-    .actions a[mat-stroked-button] {
+    .actions a[mat-stroked-button],
+    .actions a[mat-flat-button],
+    .actions a[mat-button] {
         line-height: 24px;
         min-height: 28px;
         padding: 0 10px;
         font-size: 0.72rem;
+    }
+    // The "other" remedy reads as a quieter link beside the primary CTA so
+    // both stay discoverable without competing for attention.
+    .actions a.secondary-action {
+        color: var(--text-secondary);
+        font-weight: 500;
     }
     .actions mat-icon {
         font-size: 16px;

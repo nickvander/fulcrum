@@ -25,6 +25,7 @@ from src.models.product import Product
 from src.models.product_inventory_settings import ProductInventorySettings
 from src.models.purchase_order import PurchaseOrder, PurchaseOrderStatus
 from src.models.purchase_order_item import PurchaseOrderItem
+from src.models.stock_transfer import LOCATION_INTERNAL, LOCATION_ML_FULL
 from src.services import marketplace_catalog
 from src.models.supplier_product import SupplierProduct
 from src.models.user import User
@@ -51,6 +52,16 @@ class LowStockRow(BaseModel):
     product_sku: Optional[str] = None
     supplier_id: Optional[int] = None
     on_hand: int
+    # Per-location split of `on_hand` so the UI can pick the right remedy:
+    #   internal_on_hand > 0  → there is warehouse stock to *transfer* to Full
+    #                           ("Enviar a ML Full")
+    #   internal_on_hand == 0 → out of own stock → must *reorder* from the
+    #                           supplier ("Crear OC").
+    # `internal_on_hand` is the well-known "default" warehouse location and
+    # `ml_full_on_hand` is the "ml-full" fulfillment-centre location. Any
+    # other locations still roll up into `on_hand` but are not split out.
+    internal_on_hand: int = 0
+    ml_full_on_hand: int = 0
     threshold: int
     reorder_point: Optional[int] = None
     reorder_quantity: Optional[int] = None
@@ -101,15 +112,28 @@ def low_stock_report(
         else 10
     )
 
+    # Group by (product, location) so we can both total on-hand *and* split
+    # out the warehouse vs ML-Full buckets that the UI uses to choose the
+    # right remedy (transfer existing stock vs reorder from supplier).
     on_hand_rows = (
         db.query(
             InventoryItem.product_id,
+            InventoryItem.location,
             func.coalesce(func.sum(InventoryItem.quantity), 0).label("on_hand"),
         )
-        .group_by(InventoryItem.product_id)
+        .group_by(InventoryItem.product_id, InventoryItem.location)
         .all()
     )
-    on_hand_by_product = {pid: int(qty or 0) for pid, qty in on_hand_rows}
+    on_hand_by_product: Dict[int, int] = {}
+    internal_by_product: Dict[int, int] = {}
+    ml_full_by_product: Dict[int, int] = {}
+    for pid, location, qty in on_hand_rows:
+        qty = int(qty or 0)
+        on_hand_by_product[pid] = on_hand_by_product.get(pid, 0) + qty
+        if location == LOCATION_INTERNAL:
+            internal_by_product[pid] = internal_by_product.get(pid, 0) + qty
+        elif location == LOCATION_ML_FULL:
+            ml_full_by_product[pid] = ml_full_by_product.get(pid, 0) + qty
 
     pis_rows = db.query(ProductInventorySettings).all()
     pis_by_product = {row.product_id: row for row in pis_rows}
@@ -164,6 +188,8 @@ def low_stock_report(
                 product_sku=product.sku,
                 supplier_id=product.supplier_id,
                 on_hand=on_hand,
+                internal_on_hand=internal_by_product.get(product.id, 0),
+                ml_full_on_hand=ml_full_by_product.get(product.id, 0),
                 threshold=threshold,
                 reorder_point=product.reorder_point,
                 reorder_quantity=product.reorder_quantity,
