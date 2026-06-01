@@ -106,6 +106,8 @@ export class SalesOrdersService {
     status?: string;
     days?: number;
     search?: string;
+    sort_by?: string;
+    sort_dir?: 'asc' | 'desc';
     skip?: number;
     limit?: number;
   } = {}): Observable<SalesOrderListResponse> {
@@ -114,6 +116,8 @@ export class SalesOrdersService {
     if (opts.status) params = params.set('status', opts.status);
     if (opts.days != null) params = params.set('days', String(opts.days));
     if (opts.search) params = params.set('search', opts.search);
+    if (opts.sort_by) params = params.set('sort_by', opts.sort_by);
+    if (opts.sort_dir) params = params.set('sort_dir', opts.sort_dir);
     if (opts.skip != null) params = params.set('skip', String(opts.skip));
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
     return this.http.get<SalesOrderListResponse>(`${this.apiUrl}/`, { params });

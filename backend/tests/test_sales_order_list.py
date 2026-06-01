@@ -222,3 +222,108 @@ def test_margin_null_when_no_breakdown(client: TestClient, db, admin_headers):
     ).json()["items"]
     row = next(r for r in items if r["id"] == o.id)
     assert row["net_margin_percent"] is None
+
+
+# --------------------------------------------------------------------------- #
+# Sorting (sort_by / sort_dir)
+# --------------------------------------------------------------------------- #
+
+
+def test_sort_by_total_price_asc_and_desc(client: TestClient, db, admin_headers):
+    # Three FULCRUM orders with distinct totals, isolated by source.
+    low = _order(db, source=OrderSource.FULCRUM, price=10.0, qty=1, with_breakdown=False)
+    mid = _order(db, source=OrderSource.FULCRUM, price=50.0, qty=1, with_breakdown=False)
+    high = _order(db, source=OrderSource.FULCRUM, price=90.0, qty=1, with_breakdown=False)
+
+    asc = client.get(
+        LIST_URL,
+        params={"source": "FULCRUM", "sort_by": "total_price", "sort_dir": "asc"},
+        headers=admin_headers,
+    ).json()["items"]
+    asc_ids = [r["id"] for r in asc]
+    assert asc_ids.index(low.id) < asc_ids.index(mid.id) < asc_ids.index(high.id)
+
+    desc = client.get(
+        LIST_URL,
+        params={"source": "FULCRUM", "sort_by": "total_price", "sort_dir": "desc"},
+        headers=admin_headers,
+    ).json()["items"]
+    desc_ids = [r["id"] for r in desc]
+    assert desc_ids.index(high.id) < desc_ids.index(mid.id) < desc_ids.index(low.id)
+
+
+def test_sort_by_status_asc(client: TestClient, db, admin_headers):
+    a = _order(db, source=OrderSource.AMAZON, status="AAA", with_breakdown=False)
+    z = _order(db, source=OrderSource.AMAZON, status="ZZZ", with_breakdown=False)
+
+    items = client.get(
+        LIST_URL,
+        params={"source": "AMAZON", "sort_by": "status", "sort_dir": "asc"},
+        headers=admin_headers,
+    ).json()["items"]
+    ids = [r["id"] for r in items]
+    assert ids.index(a.id) < ids.index(z.id)
+
+
+def test_sort_by_margin_nulls_last_both_directions(client: TestClient, db, admin_headers):
+    # Two orders WITH a margin + one WITHOUT (NULL margin). NULLs must sort
+    # last regardless of direction.
+    with_margin_a = _order(db, source=OrderSource.FULCRUM, with_breakdown=True)
+    with_margin_b = _order(db, source=OrderSource.FULCRUM, with_breakdown=True)
+    no_margin = _order(db, source=OrderSource.FULCRUM, with_breakdown=False)
+
+    for direction in ("asc", "desc"):
+        items = client.get(
+            LIST_URL,
+            params={
+                "source": "FULCRUM",
+                "sort_by": "net_margin_percent",
+                "sort_dir": direction,
+            },
+            headers=admin_headers,
+        ).json()["items"]
+        ids = [r["id"] for r in items]
+        # The NULL-margin order is last among our three.
+        last_pos = max(ids.index(with_margin_a.id), ids.index(with_margin_b.id))
+        assert ids.index(no_margin.id) > last_pos
+
+
+def test_invalid_sort_by_falls_back_to_default(client: TestClient, db, admin_headers):
+    base = datetime(2026, 2, 1, 12, 0, 0)
+    older = _order(db, source=OrderSource.AMAZON, when=base, with_breakdown=False)
+    newer = _order(
+        db, source=OrderSource.AMAZON, when=base + timedelta(days=1),
+        with_breakdown=False,
+    )
+
+    # Garbage sort_by → safe fallback to created_at desc (no 400).
+    resp = client.get(
+        LIST_URL,
+        params={"source": "AMAZON", "sort_by": "id; DROP TABLE", "sort_dir": "sideways"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    ids = [r["id"] for r in resp.json()["items"]]
+    assert ids.index(newer.id) < ids.index(older.id)
+
+
+def test_sort_has_stable_id_tiebreaker(client: TestClient, db, admin_headers):
+    # Same timestamp + same total → ties must resolve by id desc, stably.
+    when = datetime(2026, 3, 1, 9, 0, 0)
+    a = _order(
+        db, source=OrderSource.FULCRUM, when=when, price=25.0, qty=1,
+        with_breakdown=False,
+    )
+    b = _order(
+        db, source=OrderSource.FULCRUM, when=when, price=25.0, qty=1,
+        with_breakdown=False,
+    )
+
+    items = client.get(
+        LIST_URL,
+        params={"source": "FULCRUM", "sort_by": "total_price", "sort_dir": "asc"},
+        headers=admin_headers,
+    ).json()["items"]
+    ids = [r["id"] for r in items if r["id"] in (a.id, b.id)]
+    # Higher id first (id desc tiebreaker), deterministic.
+    assert ids == sorted([a.id, b.id], reverse=True)

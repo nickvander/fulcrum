@@ -652,6 +652,18 @@
     "status": "Status",
     "total": "Total",
     "margin": "Margin",
+    "statusFilter": "Status",
+    "allStatuses": "All statuses",
+    "statuses": {
+      "PAID": "Paid",
+      "CONFIRMED": "Confirmed",
+      "COMPLETED": "Completed",
+      "SHIPPED": "Shipped",
+      "PENDING": "Pending",
+      "PROCESSING": "Processing",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
     "searchLabel": "Search order",
     "searchPlaceholder": "Order number…",
     "noResults": "No orders match your search.",

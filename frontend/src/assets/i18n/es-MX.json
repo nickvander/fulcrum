@@ -652,6 +652,18 @@
     "status": "Estado",
     "total": "Total",
     "margin": "Margen",
+    "statusFilter": "Estado",
+    "allStatuses": "Todos los estados",
+    "statuses": {
+      "PAID": "Pagado",
+      "CONFIRMED": "Confirmado",
+      "COMPLETED": "Completado",
+      "SHIPPED": "Enviado",
+      "PENDING": "Pendiente",
+      "PROCESSING": "En proceso",
+      "CANCELLED": "Cancelado",
+      "REFUNDED": "Reembolsado"
+    },
     "searchLabel": "Buscar pedido",
     "searchPlaceholder": "Número de pedido…",
     "noResults": "No hay pedidos que coincidan con tu búsqueda.",

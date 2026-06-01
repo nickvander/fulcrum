@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RouterTestingModule } from '@angular/router/testing';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { SalesOrderListComponent } from './sales-order-list';
@@ -37,14 +38,18 @@ describe('SalesOrderListComponent', () => {
   let component: SalesOrderListComponent;
   let salesStub: { list: ReturnType<typeof vi.fn> };
   let reportStub: { download: ReturnType<typeof vi.fn> };
+  let routerStub: { navigate: ReturnType<typeof vi.fn> };
+  let queryParams: Record<string, string>;
 
-  beforeEach(async () => {
+  async function setup(initialParams: Record<string, string> = {}): Promise<void> {
+    queryParams = initialParams;
     salesStub = {
       list: vi.fn().mockReturnValue(of(envelope([]))),
       exportListCsv: vi.fn().mockReturnValue(of(new Blob())),
       exportListPdf: vi.fn().mockReturnValue(of(new Blob())),
     } as any;
     reportStub = { download: vi.fn() };
+    routerStub = { navigate: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [
@@ -56,12 +61,18 @@ describe('SalesOrderListComponent', () => {
       providers: [
         { provide: SalesOrdersService, useValue: salesStub },
         { provide: ReportDownloadService, useValue: reportStub },
+        { provide: Router, useValue: routerStub },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParams } } },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SalesOrderListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  }
+
+  beforeEach(async () => {
+    await setup();
   });
 
   it('fetches on init with page 0 (skip 0, limit 25) + the 30d default', () => {
@@ -193,5 +204,113 @@ describe('SalesOrderListComponent', () => {
     component.load();
     expect(component.rows).toEqual([]);
     expect(component.total).toBe(0);
+  });
+
+  // --- Sorting -------------------------------------------------------------
+
+  it('matSortChange maps the column → backend sort_by/sort_dir, resets page, refetches', () => {
+    component.pageIndex = 3;
+    salesStub.list.mockClear();
+
+    // UI column id "total" maps to backend "total_price".
+    component.onSortChange({ active: 'total', direction: 'asc' } as any);
+
+    expect(component.pageIndex).toBe(0);
+    expect(salesStub.list).toHaveBeenCalledWith({
+      sort_by: 'total_price', sort_dir: 'asc', days: 30, skip: 0, limit: 25,
+    });
+  });
+
+  it('matSortChange maps margin → net_margin_percent', () => {
+    salesStub.list.mockClear();
+    component.onSortChange({ active: 'margin', direction: 'asc' } as any);
+    expect(salesStub.list).toHaveBeenCalledWith({
+      sort_by: 'net_margin_percent', sort_dir: 'asc', days: 30, skip: 0, limit: 25,
+    });
+  });
+
+  it('clearing the sort (empty direction) falls back to the created_at desc default', () => {
+    component.onSortChange({ active: 'total', direction: 'asc' } as any);
+    salesStub.list.mockClear();
+    component.onSortChange({ active: 'total', direction: '' } as any);
+    // Default sort is omitted from the params.
+    expect(salesStub.list).toHaveBeenCalledWith({ days: 30, skip: 0, limit: 25 });
+  });
+
+  // --- Status filter -------------------------------------------------------
+
+  it('status filter refetches with the status param and resets page', () => {
+    component.pageIndex = 2;
+    salesStub.list.mockClear();
+    component.status = 'SHIPPED';
+    component.onFilterChange();
+    expect(component.pageIndex).toBe(0);
+    expect(salesStub.list).toHaveBeenCalledWith({
+      status: 'SHIPPED', days: 30, skip: 0, limit: 25,
+    });
+  });
+
+  it('the ALL status sends no status param', () => {
+    salesStub.list.mockClear();
+    component.status = 'ALL';
+    component.onFilterChange();
+    expect(salesStub.list).toHaveBeenCalledWith({ days: 30, skip: 0, limit: 25 });
+  });
+
+  // --- URL persistence -----------------------------------------------------
+
+  it('writes the view to the URL on a filter change (defaults nulled out)', () => {
+    routerStub.navigate.mockClear();
+    component.source = 'AMAZON';
+    component.status = 'PAID';
+    component.onFilterChange();
+
+    expect(routerStub.navigate).toHaveBeenCalled();
+    const [, extras] = routerStub.navigate.mock.calls.at(-1)!;
+    expect(extras.queryParamsHandling).toBe('merge');
+    expect(extras.queryParams.source).toBe('AMAZON');
+    expect(extras.queryParams.status).toBe('PAID');
+    // Untouched defaults are nulled so they drop out of the URL.
+    expect(extras.queryParams.days).toBeNull();
+    expect(extras.queryParams.page).toBeNull();
+    expect(extras.queryParams.sort_by).toBeNull();
+  });
+
+  it('persists sort + page in the URL', () => {
+    routerStub.navigate.mockClear();
+    component.onSortChange({ active: 'total', direction: 'asc' } as any);
+    const [, extras] = routerStub.navigate.mock.calls.at(-1)!;
+    expect(extras.queryParams.sort_by).toBe('total_price');
+    expect(extras.queryParams.sort_dir).toBe('asc');
+  });
+
+  it('restores the full view from query params on init', async () => {
+    TestBed.resetTestingModule();
+    await setup({
+      source: 'AMAZON',
+      status: 'SHIPPED',
+      days: '90',
+      search: 'ML-42',
+      sort_by: 'total_price',
+      sort_dir: 'asc',
+      page: '2',
+      size: '50',
+    });
+
+    expect(component.source).toBe('AMAZON');
+    expect(component.status).toBe('SHIPPED');
+    expect(component.days).toBe(90);
+    expect(component.search).toBe('ML-42');
+    expect(component.sortActive).toBe('total');
+    expect(component.sortDirection).toBe('asc');
+    expect(component.pageIndex).toBe(2);
+    expect(component.pageSize).toBe(50);
+
+    // The first fetch reflects the restored view.
+    expect(salesStub.list).toHaveBeenCalledWith({
+      source: 'AMAZON', status: 'SHIPPED', search: 'ML-42',
+      sort_by: 'total_price', sort_dir: 'asc',
+      days: 90, skip: 100, limit: 50,
+    });
   });
 });

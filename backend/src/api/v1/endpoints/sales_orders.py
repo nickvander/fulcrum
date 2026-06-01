@@ -14,12 +14,17 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from src.api import dependencies
 from src.core.errors import LocalizedHTTPException
 from src.database import get_db
-from src.models.order import AmazonOrderRefund, SalesOrder, SalesOrderItem
+from src.models.order import (
+    AmazonOrderRefund,
+    OrderCostBreakdown,
+    SalesOrder,
+    SalesOrderItem,
+)
 from src.models.product import Product
 from src.models.user import User
 from src.services import marketplace_catalog
@@ -48,6 +53,23 @@ from src.services.report_export import (
 )
 
 router = APIRouter()
+
+
+# Allowlisted sortable columns for the list endpoint. Maps the public
+# `sort_by` token → the SQLAlchemy column to order on. `net_margin_percent`
+# lives on the 1:1 OrderCostBreakdown (joined below), so margin sorting is
+# N+1-safe and NULL margins (no breakdown / zero-revenue) sort last in both
+# directions via `.nullslast()`.
+_SORT_COLUMNS = {
+    "created_at": SalesOrder.created_at,
+    "total_price": SalesOrder.total_price,
+    "status": SalesOrder.status,
+    "source": SalesOrder.source,
+    "external_order_id": SalesOrder.external_order_id,
+    "net_margin_percent": OrderCostBreakdown.net_margin_percent,
+}
+_DEFAULT_SORT_BY = "created_at"
+_DEFAULT_SORT_DIR = "desc"
 
 
 def _serialize_order(order: SalesOrder) -> SalesOrderSchema:
@@ -85,6 +107,18 @@ def list_sales_orders(
         None,
         description="Case-insensitive substring match on external_order_id",
     ),
+    sort_by: str = Query(
+        _DEFAULT_SORT_BY,
+        description=(
+            "Column to sort by. One of: created_at, total_price, status, "
+            "source, external_order_id, net_margin_percent. Unknown values "
+            "fall back to created_at."
+        ),
+    ),
+    sort_dir: str = Query(
+        _DEFAULT_SORT_DIR,
+        description="Sort direction: 'asc' or 'desc'. Unknown falls back to desc.",
+    ),
     skip: int = 0,
     limit: int = Query(100, le=500),
 ):
@@ -94,7 +128,16 @@ def list_sales_orders(
     substring `search` on the external order id. All filters AND-compose.
     `total` is the count of matching rows BEFORE skip/limit so the UI can
     drive a server-side paginator.
+
+    Sortable via `sort_by` (allowlisted) + `sort_dir` (asc/desc); invalid
+    input safely falls back to the `created_at desc` default. `SalesOrder.id`
+    is always appended as a stable tiebreaker and NULLs sort last.
     """
+    # Validate against the allowlist; invalid values fall back to the safe
+    # default rather than 400, matching the lenient string filters above.
+    sort_col = _SORT_COLUMNS.get(sort_by, _SORT_COLUMNS[_DEFAULT_SORT_BY])
+    direction = sort_dir.lower() if sort_dir.lower() in {"asc", "desc"} else _DEFAULT_SORT_DIR
+
     q = db.query(SalesOrder)
     if source is not None:
         q = q.filter(SalesOrder.source == source.strip().upper())
@@ -112,13 +155,28 @@ def list_sales_orders(
     # the bare filtered query keeps the intent explicit).
     total = q.count()
 
-    rows = (
-        q.options(joinedload(SalesOrder.cost_breakdown))
-        .order_by(SalesOrder.created_at.desc().nullslast(), SalesOrder.id.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    # When sorting on the margin (cost_breakdown) column, the joinedload's
+    # implicit LEFT JOIN isn't usable in ORDER BY, so add an explicit
+    # outerjoin to the same relationship. `contains_eager` reuses that join
+    # to hydrate `cost_breakdown` without a second query (still N+1-safe).
+    primary = sort_col.asc() if direction == "asc" else sort_col.desc()
+    if sort_by == "net_margin_percent":
+        rows = (
+            q.outerjoin(OrderCostBreakdown, SalesOrder.cost_breakdown)
+            .options(contains_eager(SalesOrder.cost_breakdown))
+            .order_by(primary.nullslast(), SalesOrder.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    else:
+        rows = (
+            q.options(joinedload(SalesOrder.cost_breakdown))
+            .order_by(primary.nullslast(), SalesOrder.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     return SalesOrderListResponse(
         items=[_serialize_order(o) for o in rows],
         total=total,

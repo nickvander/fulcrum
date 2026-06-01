@@ -27,6 +27,17 @@
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+                    <mat-label>{{ t('orders.statusFilter') }}</mat-label>
+                    <mat-select [(ngModel)]="status" (selectionChange)="onFilterChange()"
+                        data-testid="orders-status-filter">
+                        <mat-option value="ALL">{{ t('orders.allStatuses') }}</mat-option>
+                        <mat-option *ngFor="let s of statusOptions" [value]="s">
+                            {{ t('orders.statuses.' + s) }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
                     <mat-label>{{ t('orders.window') }}</mat-label>
                     <mat-select [(ngModel)]="days" (selectionChange)="onFilterChange()">
                         <mat-option [value]="7">{{ t('orders.last7') }}</mat-option>
@@ -56,44 +67,46 @@
         <div class="table-card mat-elevation-z2">
             <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
 
-            <mat-table [dataSource]="rows">
+            <mat-table [dataSource]="rows" matSort
+                [matSortActive]="sortActive" [matSortDirection]="sortDirection"
+                (matSortChange)="onSortChange($event)" data-testid="orders-table">
                 <ng-container matColumnDef="created_at">
-                    <mat-header-cell *matHeaderCellDef>{{ t('orders.date') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('orders.date') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
                         {{ order.created_at | date:'short' }}
                     </mat-cell>
                 </ng-container>
 
                 <ng-container matColumnDef="source">
-                    <mat-header-cell *matHeaderCellDef>{{ t('orders.channel') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('orders.channel') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
                         <mat-chip [class]="sourceChipClass(order.source)">{{ order.source || '—' }}</mat-chip>
                     </mat-cell>
                 </ng-container>
 
                 <ng-container matColumnDef="external">
-                    <mat-header-cell *matHeaderCellDef>{{ t('orders.externalRef') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('orders.externalRef') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
                         <span class="external-id">{{ order.external_order_id || '—' }}</span>
                     </mat-cell>
                 </ng-container>
 
                 <ng-container matColumnDef="status">
-                    <mat-header-cell *matHeaderCellDef>{{ t('orders.status') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('orders.status') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
                         <mat-chip [class]="statusChipClass(order.status)">{{ order.status || '—' }}</mat-chip>
                     </mat-cell>
                 </ng-container>
 
                 <ng-container matColumnDef="total">
-                    <mat-header-cell *matHeaderCellDef>{{ t('orders.total') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('orders.total') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order">
                         {{ order.total_price | money:order.currency }}
                     </mat-cell>
                 </ng-container>
 
                 <ng-container matColumnDef="margin">
-                    <mat-header-cell *matHeaderCellDef class="margin-col">{{ t('orders.margin') }}</mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef mat-sort-header class="margin-col">{{ t('orders.margin') }}</mat-header-cell>
                     <mat-cell *matCellDef="let order" class="margin-col">
                         <span *ngIf="order.net_margin_percent != null; else noMargin"
                             class="margin-val" [ngClass]="marginClass(order.net_margin_percent)"
