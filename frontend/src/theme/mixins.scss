@@ -134,6 +134,66 @@ $desktop-min: 1024px;
     }
 }
 
+// Brand pivot-wedge sync-pulse — a restrained "tilt/settle" the chile-red
+// wedge mark plays when a REAL "synced to MercadoLibre" success happens
+// (header + sidenav share this so the motion is identical in both).
+//
+// The wedge clip-path pivots on its inner notch (28% 50%), so we anchor the
+// tilt there and let it rotate a few degrees, then ease-out settle back —
+// "rebalancing on its fulcrum". A brief AI-gold (--accent-2) glow signals
+// "automation did something". Transform/opacity only → no layout shift.
+//
+// Reduced-motion: NO rotation/movement — only a brief gold-glow opacity fade.
+@mixin brand-wedge-pulse {
+    // Pivot at the wedge's inner notch so the tilt reads as "balancing".
+    transform-origin: 28% 50%;
+    will-change: transform, filter;
+
+    &--syncing {
+        animation: brand-wedge-tilt 760ms var(--ease-standard, cubic-bezier(0.2, 0, 0, 1)) both;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        &--syncing {
+            // Non-motion cue only: a brief gold glow that fades, no tilt.
+            animation: brand-wedge-glow 760ms ease-out both;
+        }
+    }
+}
+
+// Emit the keyframes once at the root of an including stylesheet.
+@mixin brand-wedge-pulse-keyframes {
+    @keyframes brand-wedge-tilt {
+        0% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 0 rgba(var(--accent-2-rgb), 0));
+        }
+        28% {
+            transform: rotate(-7deg);
+            filter: drop-shadow(0 0 4px rgba(var(--accent-2-rgb), 0.55));
+        }
+        60% {
+            transform: rotate(3deg);
+        }
+        100% {
+            transform: rotate(0deg);
+            filter: drop-shadow(0 0 0 rgba(var(--accent-2-rgb), 0));
+        }
+    }
+
+    @keyframes brand-wedge-glow {
+        0% {
+            filter: drop-shadow(0 0 0 rgba(var(--accent-2-rgb), 0));
+        }
+        40% {
+            filter: drop-shadow(0 0 5px rgba(var(--accent-2-rgb), 0.6));
+        }
+        100% {
+            filter: drop-shadow(0 0 0 rgba(var(--accent-2-rgb), 0));
+        }
+    }
+}
+
 // Sleek Scrollbar — token-driven so the thumb stays visible in BOTH themes
 // (was hardcoded rgba(0,0,0,...) which vanished on the dark Obsidian surfaces).
 @mixin sleek-scrollbar {

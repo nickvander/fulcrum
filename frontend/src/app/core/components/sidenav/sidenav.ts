@@ -12,6 +12,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { SettingsService } from '../../services/settings.service';
+import { BrandPulseService } from '../../services/brand-pulse.service';
 
 /**
  * Stable ids for the collapsible nav groups. Used to key the route-derived
@@ -49,6 +50,12 @@ export class Sidenav implements OnInit, OnDestroy {
   /** Desktop rail collapsed (icon-only, 76px) vs full (248px). */
   @Input() collapsed = false;
 
+  /** True for the brief sync-pulse animation window on the brand wedge. */
+  syncing = false;
+
+  /** Animation duration (ms) — must match the brand-wedge-pulse keyframe. */
+  readonly SYNC_PULSE_MS = 760;
+
   isAdmin$!: Observable<boolean>;
   currentUser$!: Observable<User | null>;
   currentTheme: 'light' | 'dark' = SettingsService.DEFAULT_SETTINGS.theme;
@@ -72,12 +79,15 @@ export class Sidenav implements OnInit, OnDestroy {
 
   private manual: Partial<Record<NavGroupId, boolean>> = {};
   private routerSub?: Subscription;
+  private pulseSub?: Subscription;
+  private syncTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private authService: AuthService,
     private settingsService: SettingsService,
     private translocoService: TranslocoService,
     private router: Router,
+    private brandPulse: BrandPulseService,
   ) {}
 
   ngOnInit(): void {
@@ -104,10 +114,32 @@ export class Sidenav implements OnInit, OnDestroy {
     this.routerSub = this.router.events
       .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe(e => this.syncFromRoute(e.urlAfterRedirects));
+
+    this.pulseSub = this.brandPulse.pulse$.subscribe(() => this.playSyncPulse());
   }
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
+    this.pulseSub?.unsubscribe();
+    if (this.syncTimer) {
+      clearTimeout(this.syncTimer);
+    }
+  }
+
+  /**
+   * Toggle the `syncing` class for the animation window, then clear it so a
+   * later pulse can re-trigger the keyframe. Restart cleanly if a pulse
+   * arrives mid-animation.
+   */
+  private playSyncPulse(): void {
+    if (this.syncTimer) {
+      clearTimeout(this.syncTimer);
+    }
+    this.syncing = true;
+    this.syncTimer = setTimeout(() => {
+      this.syncing = false;
+      this.syncTimer = undefined;
+    }, this.SYNC_PULSE_MS);
   }
 
   private syncFromRoute(url: string): void {

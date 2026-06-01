@@ -55,7 +55,9 @@
   flex: 0 0 auto;
   background: var(--primary-color);
   clip-path: polygon(0 0, 100% 50%, 0 100%, 28% 50%);
+  @include m.brand-wedge-pulse;
 }
+@include m.brand-wedge-pulse-keyframes;
 
 .logo-text {
   font-family: var(--font-display, 'Space Grotesk'), sans-serif;

@@ -11,6 +11,7 @@ import { of, throwError } from 'rxjs';
 
 import { StockTransferDetailComponent } from './stock-transfer-detail';
 import { StockTransfer, StockTransferService } from '../stock-transfer.service';
+import { BrandPulseService } from '../../../core/services/brand-pulse.service';
 
 function transfer(overrides: Partial<StockTransfer> = {}): StockTransfer {
   return {
@@ -44,8 +45,10 @@ describe('StockTransferDetailComponent', () => {
   let fixture: ComponentFixture<StockTransferDetailComponent>;
   let component: StockTransferDetailComponent;
   let service: MockedObject<StockTransferService>;
+  let pulse: { pulse: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    pulse = { pulse: vi.fn() };
     const stub = {
       get: vi.fn().mockReturnValue(of(transfer())),
       ship: vi.fn().mockReturnValue(of(transfer({ status: 'shipped' }))),
@@ -85,6 +88,7 @@ describe('StockTransferDetailComponent', () => {
       ],
       providers: [
         { provide: StockTransferService, useValue: stub },
+        { provide: BrandPulseService, useValue: pulse },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { paramMap: { get: () => '42' } } },
@@ -125,6 +129,59 @@ describe('StockTransferDetailComponent', () => {
   it('passes push_to_marketplace=true when ship(true) is called', () => {
     component.ship(true);
     expect(service.ship).toHaveBeenCalledWith(42, true);
+  });
+
+  it('fires the brand sync-pulse when an ML Full push succeeds', () => {
+    component.ship(true);
+    expect(pulse.pulse).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT fire the brand sync-pulse on a plain (non-marketplace) ship', () => {
+    component.ship(false);
+    expect(pulse.pulse).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fire the brand sync-pulse when the ship-push needs reauthorization (409)', () => {
+    service.ship.mockReturnValue(
+      throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 409,
+            error: { code: 'needs_reauthorization', params: { marketplace: 'MercadoLibre' } },
+          }),
+      ),
+    );
+    service.get.mockReturnValue(of(transfer({ status: 'shipped' })));
+    component.ship(true);
+    expect(pulse.pulse).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fire the brand sync-pulse on a ship error', () => {
+    service.ship.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 400, error: { detail: 'boom' } })),
+    );
+    component.ship(true);
+    expect(pulse.pulse).not.toHaveBeenCalled();
+  });
+
+  it('fires the brand sync-pulse on a real listing sync (no reauth needed)', () => {
+    component.transfer = transfer({ status: 'received' });
+    component.syncListings();
+    expect(pulse.pulse).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT fire the brand sync-pulse when the listing sync needs reauthorization', () => {
+    service.syncListings.mockReturnValue(
+      of({
+        updated: [],
+        missing_listings: [],
+        needs_reauthorization: true,
+        marketplace: 'MercadoLibre',
+      }),
+    );
+    component.transfer = transfer({ status: 'received' });
+    component.syncListings();
+    expect(pulse.pulse).not.toHaveBeenCalled();
   });
 
   it('shows the persistent reauth banner and reloads when ship-push returns 409 needs_reauthorization', () => {

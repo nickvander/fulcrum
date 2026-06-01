@@ -21,6 +21,7 @@ import {
   SyncListingsResult,
 } from '../stock-transfer.service';
 import { ReceiveTransferDialogComponent } from '../receive-transfer-dialog/receive-transfer-dialog';
+import { BrandPulseService } from '../../../core/services/brand-pulse.service';
 
 @Component({
   selector: 'app-stock-transfer-detail',
@@ -63,6 +64,7 @@ export class StockTransferDetailComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private transloco: TranslocoService,
+    private brandPulse: BrandPulseService,
   ) {}
 
   ngOnInit(): void {
@@ -102,6 +104,10 @@ export class StockTransferDetailComponent implements OnInit {
           ? this.transloco.translate('stockTransfers.stockTransferDetail.shippedWithMarketplace')
           : this.transloco.translate('stockTransfers.stockTransferDetail.shipped');
         this.snackBar.open(message, this.transloco.translate('common.close'), { duration: 3000 });
+        // Real ML Full push succeeded → fire the brand-wedge sync-pulse.
+        if (pushToMarketplace) {
+          this.brandPulse.pulse();
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.acting = false;
@@ -150,6 +156,8 @@ export class StockTransferDetailComponent implements OnInit {
           };
           return;
         }
+        // Real listing sync (no reauth needed) → fire the brand-wedge pulse.
+        this.brandPulse.pulse();
         const okCount = summary.updated.filter(u => u.ok).length;
         const total = summary.updated.length;
         const missing = summary.missing_listings.length;

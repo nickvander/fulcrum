@@ -2,7 +2,7 @@
   <div class="sidenav-wrapper" [class.collapsed]="collapsed">
     <div class="sidenav-header">
       <div class="logo-container" [matTooltip]="collapsed ? 'Fulcrum' : ''" matTooltipPosition="right">
-        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-mark" [class.logo-mark--syncing]="syncing" aria-hidden="true"></span>
         <span class="logo-text" *ngIf="!collapsed">Fulcrum</span>
       </div>
     </div>

@@ -5,8 +5,11 @@ import { MatListModule } from '@angular/material/list';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { getTranslocoTestingModule } from '../../../testing/transloco-testing';
+import { BrandPulseService } from '../../services/brand-pulse.service';
 
 describe('Sidenav', () => {
+  let pulse: BrandPulseService;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
@@ -18,6 +21,42 @@ describe('Sidenav', () => {
         getTranslocoTestingModule(),
       ],
     }).compileComponents();
+
+    pulse = TestBed.inject(BrandPulseService);
+  });
+
+  it('toggles the syncing class on a brand pulse and clears it after the window', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(Sidenav);
+      const app = fixture.componentInstance;
+      fixture.detectChanges(); // ngOnInit → subscribe to pulse$
+
+      expect(app.syncing).toBe(false);
+
+      pulse.pulse();
+      expect(app.syncing).toBe(true);
+
+      vi.advanceTimersByTime(app.SYNC_PULSE_MS);
+      expect(app.syncing).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stops reacting to pulses after destroy', () => {
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(Sidenav);
+      const app = fixture.componentInstance;
+      fixture.detectChanges();
+      fixture.destroy();
+
+      pulse.pulse();
+      expect(app.syncing).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('should create the component', () => {
