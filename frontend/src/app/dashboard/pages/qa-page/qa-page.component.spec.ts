@@ -113,6 +113,42 @@ describe('QaPageComponent', () => {
     expect(component.hoursLabel(48)).toBe('2d');
   });
 
+  // ---- item column: product name vs raw id -------------------------------
+
+  function itemCellText(): string {
+    const cells = fixture.nativeElement.querySelectorAll(
+      'td.mat-column-item, td.cdk-column-item',
+    );
+    return (cells[0]?.textContent ?? '').trim();
+  }
+
+  it('renders the human product name in the item column when present', () => {
+    setResponse([makeRow({ id: 1, item_id: 'MLM123', item_name: 'Taladro Inalámbrico 20V' })]);
+    component.load();
+    fixture.detectChanges();
+    const cell = fixture.nativeElement.querySelector('td.cdk-column-item, td.mat-column-item');
+    expect(cell.textContent).toContain('Taladro Inalámbrico 20V');
+    // The product name reads as normal text, not the monospaced id chip.
+    expect(cell.querySelector('.item-name')).toBeTruthy();
+    expect(cell.querySelector('code.sku')).toBeNull();
+  });
+
+  it('falls back to the raw item_id when no product name resolved', () => {
+    setResponse([makeRow({ id: 1, item_id: 'MLM999', item_name: null })]);
+    component.load();
+    fixture.detectChanges();
+    const cell = fixture.nativeElement.querySelector('td.cdk-column-item, td.mat-column-item');
+    expect(cell.querySelector('code.sku')).toBeTruthy();
+    expect(itemCellText()).toBe('MLM999');
+  });
+
+  it('falls back to an em-dash when both name and id are null', () => {
+    setResponse([makeRow({ id: 1, item_id: null, item_name: null })]);
+    component.load();
+    fixture.detectChanges();
+    expect(itemCellText()).toBe('—');
+  });
+
   it('sets errored on failure without throwing', () => {
     analyticsStub.questionsList.mockReturnValue(throwError(() => new Error('boom')));
     component.load();

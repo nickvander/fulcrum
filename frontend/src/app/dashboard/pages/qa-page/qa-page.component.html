@@ -63,7 +63,8 @@
         [description]="t('dashboard.qaPage.emptyPeerDescription')"></app-empty-state>
     } @else {
       <mat-card class="table-card">
-        <table mat-table [dataSource]="rows" class="qa-table" data-testid="qa-table">
+        <table mat-table [dataSource]="rows" class="qa-table" data-testid="qa-table"
+               multiTemplateDataRows>
           <ng-container matColumnDef="asked_at">
             <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.askedAt') }}</th>
             <td mat-cell *matCellDef="let row">{{ row.asked_at ? (row.asked_at | date:'short') : '—' }}</td>
@@ -76,7 +77,16 @@
 
           <ng-container matColumnDef="item">
             <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.qaPage.cols.item') }}</th>
-            <td mat-cell *matCellDef="let row"><code class="sku">{{ row.item_id || '—' }}</code></td>
+            <td mat-cell *matCellDef="let row">
+              @if (row.item_name) {
+                <span class="item-name"
+                      [matTooltip]="row.item_id ? t('dashboard.qaPage.itemIdTooltip', { id: row.item_id }) : ''">
+                  {{ row.item_name }}
+                </span>
+              } @else {
+                <code class="sku">{{ row.item_id || '—' }}</code>
+              }
+            </td>
           </ng-container>
 
           <ng-container matColumnDef="question">

@@ -482,6 +482,7 @@
         "open": "Abierta",
         "actions": "Acciones"
       },
+      "itemIdTooltip": "ID de MercadoLibre: {{id}}",
       "sla": {
         "answered": "Respondida",
         "pending": "Pendiente",

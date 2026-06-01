@@ -524,6 +524,8 @@ export interface QuestionRow {
   external_question_id: string;
   source: string;
   item_id: string | null;
+  /** Human product/listing title resolved from item_id; null when unresolved. */
+  item_name?: string | null;
   buyer_id: string | null;
   question_text: string | null;
   answer_text: string | null;

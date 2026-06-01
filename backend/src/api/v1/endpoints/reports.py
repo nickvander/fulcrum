@@ -3043,6 +3043,9 @@ class QuestionRow(BaseModel):
     external_question_id: str
     source: str
     item_id: Optional[str] = None
+    # Human product/listing title resolved from the listing's product via
+    # the raw ML `item_id`. NULL when the item_id has no matching listing.
+    item_name: Optional[str] = None
     buyer_id: Optional[str] = None
     question_text: Optional[str] = None
     answer_text: Optional[str] = None
@@ -3083,15 +3086,51 @@ def questions_list_report(
     `marketplace_questions` entry asked in the window, newest first.
     `sla_status` is 'answered', 'pending' (open, within SLA), or
     'breached' (open longer than `sla_hours`)."""
-    from src.models.marketplace import Marketplace, MarketplaceQuestion
+    from sqlalchemy import func as _sqlfunc
+    from src.models.marketplace import (
+        Marketplace,
+        MarketplaceListing,
+        MarketplaceQuestion,
+    )
+    from src.models.product import Product
 
     window = _resolve_date_window(window_days, start_date, end_date)
     now = datetime.now(timezone.utc)
     breach_cutoff = now - timedelta(hours=QA_SLA_HOURS)
 
+    # Resolve the raw ML `item_id` → a human product title. A single
+    # (marketplace_id, external_listing_id) can in principle map to more
+    # than one listing row, so collapse to one product name per key via a
+    # grouped subquery — that keeps the LEFT JOIN strictly 1:1 with the
+    # question rows (no duplication, no effect on total/pagination).
+    item_name_sq = (
+        db.query(
+            MarketplaceListing.marketplace_id.label("marketplace_id"),
+            MarketplaceListing.external_listing_id.label("external_listing_id"),
+            _sqlfunc.min(Product.name).label("item_name"),
+        )
+        .join(Product, Product.id == MarketplaceListing.product_id)
+        .filter(MarketplaceListing.external_listing_id.isnot(None))
+        .filter(Product.name.isnot(None))
+        .group_by(
+            MarketplaceListing.marketplace_id,
+            MarketplaceListing.external_listing_id,
+        )
+        .subquery()
+    )
+
     base = (
-        db.query(MarketplaceQuestion, Marketplace.name.label("source"))
+        db.query(
+            MarketplaceQuestion,
+            Marketplace.name.label("source"),
+            item_name_sq.c.item_name.label("item_name"),
+        )
         .outerjoin(Marketplace, Marketplace.id == MarketplaceQuestion.marketplace_id)
+        .outerjoin(
+            item_name_sq,
+            (item_name_sq.c.external_listing_id == MarketplaceQuestion.item_id)
+            & (item_name_sq.c.marketplace_id == MarketplaceQuestion.marketplace_id),
+        )
         .filter(MarketplaceQuestion.asked_at >= window.start_dt)
         .filter(MarketplaceQuestion.asked_at <= window.end_dt)
     )
@@ -3125,7 +3164,7 @@ def questions_list_report(
         return round((b - a).total_seconds() / 3600.0, 1)
 
     rows: List[QuestionRow] = []
-    for q, source_name in page:
+    for q, source_name, item_name in page:
         answered = q.answered_at is not None
         hours_open: Optional[float] = None
         if q.asked_at is not None:
@@ -3141,6 +3180,7 @@ def questions_list_report(
             external_question_id=q.external_question_id,
             source=source_name or "MERCADOLIBRE",
             item_id=q.item_id,
+            item_name=item_name,
             buyer_id=q.buyer_id,
             question_text=q.question_text,
             answer_text=q.answer_text,
@@ -3165,9 +3205,15 @@ class AnswerQuestionRequest(BaseModel):
     text: str
 
 
-def _question_row(q, source_name: Optional[str]) -> "QuestionRow":
+def _question_row(
+    q, source_name: Optional[str], item_name: Optional[str] = None,
+) -> "QuestionRow":
     """Build a `QuestionRow` from a `MarketplaceQuestion`, recomputing the
-    response-time SLA fields exactly like the list endpoint does."""
+    response-time SLA fields exactly like the list endpoint does.
+
+    `item_name` is the resolved human product title (NULL when the
+    item_id has no matching listing); callers resolve it via
+    `_resolve_question_item_name`."""
     now = datetime.now(timezone.utc)
     breach_cutoff = now - timedelta(hours=QA_SLA_HOURS)
     answered = q.answered_at is not None
@@ -3186,6 +3232,7 @@ def _question_row(q, source_name: Optional[str]) -> "QuestionRow":
         external_question_id=q.external_question_id,
         source=source_name or "MERCADOLIBRE",
         item_id=q.item_id,
+        item_name=item_name,
         buyer_id=q.buyer_id,
         question_text=q.question_text,
         answer_text=q.answer_text,
@@ -3195,6 +3242,27 @@ def _question_row(q, source_name: Optional[str]) -> "QuestionRow":
         answered=answered,
         hours_open=hours_open,
         sla_status=sla,
+    )
+
+
+def _resolve_question_item_name(db: Session, q) -> Optional[str]:
+    """Resolve a single question's raw `item_id` → human product title via
+    its marketplace listing's product, mirroring the list endpoint's join.
+    Returns NULL when there's no item_id or no matching listing/product."""
+    if not q.item_id:
+        return None
+    from src.models.marketplace import MarketplaceListing
+    from src.models.product import Product
+
+    return (
+        db.query(Product.name)
+        .join(MarketplaceListing, MarketplaceListing.product_id == Product.id)
+        .filter(MarketplaceListing.external_listing_id == q.item_id)
+        .filter(MarketplaceListing.marketplace_id == q.marketplace_id)
+        .filter(Product.name.isnot(None))
+        .order_by(Product.name.asc())
+        .limit(1)
+        .scalar()
     )
 
 
@@ -3259,4 +3327,5 @@ def answer_question_endpoint(
         .filter(Marketplace.id == q.marketplace_id)
         .scalar()
     )
-    return _question_row(q, source_name)
+    item_name = _resolve_question_item_name(db, q)
+    return _question_row(q, source_name, item_name)

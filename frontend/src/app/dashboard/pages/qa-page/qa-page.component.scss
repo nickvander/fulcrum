@@ -102,6 +102,16 @@
       font-size: 0.75em;
     }
 
+    .item-name {
+      display: inline-block;
+      max-width: 240px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
     .q-text {
       display: inline-block;
       max-width: 360px;

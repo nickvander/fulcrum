@@ -482,6 +482,7 @@
         "open": "Open",
         "actions": "Actions"
       },
+      "itemIdTooltip": "MercadoLibre ID: {{id}}",
       "sla": {
         "answered": "Answered",
         "pending": "Pending",
