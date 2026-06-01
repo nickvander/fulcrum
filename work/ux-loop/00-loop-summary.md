@@ -142,6 +142,25 @@ semantics and the (already-warm) light map untouched. Verified live in dark
 visible, chile-red still pops. 836 green; guards pass. Warming kept
 deliberately subtle (low saturation) to avoid a muddy "brown SaaS" look.
 
+## Iteration 6 — backlog cleanup (4 items)
+
+- **Orders sorting + status filter + URL persistence (`01a0183`):** MatSort on
+  all columns (backend `sort_by`/`sort_dir` allowlist, margin sort nulls-last
+  N+1-safe), a status dropdown, and full filter/sort/page persistence via URL
+  query params (survives refresh/back). 844 FE / 15 BE.
+- **Q&A product name instead of raw item_id (`d949d85`):** resolve item_id →
+  product name via a grouped dedup subquery (1:1, no row inflation), id as
+  tooltip fallback; also fixed a latent CDK multi-row table error. 847 FE / 15 BE.
+- **Low-stock "Enviar a ML Full" vs "Crear OC" (`5477869`):** made data-driven —
+  the low-stock report now splits on-hand by location, so each row offers the
+  *correct* primary action (transfer to Full when you have warehouse stock,
+  reorder OC when out everywhere) with plain-es-MX tooltips. 849 FE / 12 BE.
+- **Wedge sync-pulse (`7bfdb62`):** a shared BrandPulseService; the chile-red
+  pivot-wedge tilts/settles (760ms, reduced-motion → gold-glow only) on real ML
+  sync successes (stock push / listing sync, never on reauth). 863 FE.
+  Verified by tests + code (fires only on a real ML credential sync, so not
+  pixel-captured).
+
 ## Next-loop backlog (ranked, from PM + re-validation)
 
 1. **Profit / "¿gané o perdí?" summary** (M) — novice has no plain
