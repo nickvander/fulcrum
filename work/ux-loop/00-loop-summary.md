@@ -118,6 +118,30 @@ moments + deferred the risky global repaint:
   self-alias). All AA recomputed; reduced-motion honored.
 - Tests: frontend full suite 832 green (+15); i18n + theme-contrast guards pass.
 
+## Iteration 5 — AI-gold consistency + warm the dark neutrals
+
+**AI-gold propagation (`3835c9b`):** the prior loop's "AI = gold" only reached
+~3 surfaces. Enumerated 13 AI touchpoints and routed them all to the gold
+token via `.ai-accent` — including several "AI" badges that were painted in
+chile-**red** (PO-ingest, quick-product, purchase-order-edit, expense-dialog),
+a brand-rule violation now fixed. Also dropped the red "(requerido para IA)"
+from the quick-post product field (Material renders a focused label in
+`--primary`, so red was carrying the AI meaning) → neutral label + gold hint.
+Left deterministic generators / commit buttons / data-links as-is. 836 green.
+
+**Warm the dark neutrals (this iteration):** the deferred high-risk repaint.
+Design-systems pass (`warm-neutrals-scope.md`) shifted the 10 dark neutral
+tokens from cool blue-black (~225°) to warm obsidian/clay (~12–30°) at matched
+luminance, so contrast is preserved. NOTE: `check_theme_contrast.py` validates
+token discipline only — NOT WCAG ratios — so the contrast matrix is the
+safeguard. I independently recomputed every text-on-surface pair: all ≥4.5:1
+(tightest `text-hint` on `bg-raised`/`bg-hover` 4.78→**4.84**, improved), all
+semantics ≥3:1. Only the `$obsidian` map values changed; reds/blue/gold/
+semantics and the (already-warm) light map untouched. Verified live in dark
+(dashboard, orders, products) — warmer surfaces, text still crisp, dividers
+visible, chile-red still pops. 836 green; guards pass. Warming kept
+deliberately subtle (low saturation) to avoid a muddy "brown SaaS" look.
+
 ## Next-loop backlog (ranked, from PM + re-validation)
 
 1. **Profit / "¿gané o perdí?" summary** (M) — novice has no plain

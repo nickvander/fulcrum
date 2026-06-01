@@ -28,22 +28,24 @@ $obsidian: (
   // AI / insight gold — sparingly, AI moments only
   accent-2:          #FFC23D,
 
-  // Surfaces
-  bg-app:            #0E0F13,
-  bg-card:           #1A1C22,
-  bg-raised:         #22252E,
-  bg-hover:          #22252E,
-  bg-header:         #141519,
+  // Surfaces — warm obsidian/clay (hue shifted to ~12–30°, luminance held;
+  // see work/ux-loop/warm-neutrals-scope.md for the WCAG matrix). The guard
+  // checks token discipline only, NOT contrast — that doc is the safeguard.
+  bg-app:            #11100F,
+  bg-card:           #201C1B,
+  bg-raised:         #292420,
+  bg-hover:          #292420,
+  bg-header:         #171513,
 
-  // Ink
-  text-main:         #F5F4F2,
-  text-secondary:    #A8ABB4,
-  text-hint:         #8B909B, // WCAG AA: ~5.1:1 on card / 4.7:1 on hover (was #6E727C @3.5:1)
+  // Ink — same warm cast at very low saturation (text stays neutral-reading)
+  text-main:         #F6F3EF,
+  text-secondary:    #B0ABA3,
+  text-hint:         #94908A, // WCAG AA: 5.32:1 on card / 4.84:1 on raised+hover (tightest in theme)
   text-on-primary:   #FFFFFF,
 
   // Hairlines
-  border-color:      #2A2D36,
-  border-hover:      #3A3E49,
+  border-color:      #302B27,
+  border-hover:      #433D38,
 
   // Semantics
   success-color:     #1FB872,
