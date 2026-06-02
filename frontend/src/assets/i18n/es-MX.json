@@ -126,6 +126,8 @@
     "sendToMlFull": "Enviar a ML Full",
     "replenishment": "Plan de reabasto a Full",
     "replenishmentShort": "Reabasto",
+    "repricing": "Asistente de precios",
+    "repricingShort": "Precios",
     "buyerQuestionsShort": "Preguntas",
     "expensesShort": "Gastos",
     "more": "Más"
@@ -298,6 +300,42 @@
       "unitsReturned": "Unidades",
       "valueAtCost": "Valor (costo)",
       "drillDown": "Ver cada devolución"
+    },
+    "repricingPage": {
+      "title": "Asistente de precios (margen mínimo)",
+      "subtitle": "Listings que se venden por debajo del margen objetivo, según el costo real (COGS + comisiones reales). Aplica el precio sugerido y se publica en el canal.",
+      "backToDashboard": "Volver al tablero",
+      "floorLabel": "Margen mínimo",
+      "floor5": "5%",
+      "floor10": "10%",
+      "floor15": "15%",
+      "floor20": "20%",
+      "lossCount": "{{count}} con pérdida",
+      "belowCount": "{{count}} bajo el mínimo",
+      "empty": "Ningún listing está por debajo del margen mínimo.",
+      "error": "No se pudo cargar el asistente de precios.",
+      "retry": "Reintentar",
+      "apply": "Aplicar precio",
+      "applySuccess": "Precio publicado en el canal.",
+      "applyError": "No se pudo aplicar.",
+      "reconnect": "Reconectar",
+      "rateSettled": "Comisiones reales",
+      "rateEstimated": "Comisiones estimadas",
+      "rateTooltip": "Comisión efectiva {{fee}}% · Envío {{shipping}}/u",
+      "infeasibleHint": "La comisión + el margen objetivo superan el 100%: el margen no es alcanzable a ningún precio. Revisa el costo o el margen objetivo.",
+      "reviewCost": "Revisar costo",
+      "status": {
+        "loss": "Pérdida",
+        "below_floor": "Bajo mínimo",
+        "infeasible": "Inviable"
+      },
+      "cols": {
+        "product": "Producto",
+        "marketplace": "Canal",
+        "status": "Estado",
+        "current": "Precio actual",
+        "suggested": "Sugerido"
+      }
     },
     "replenishmentPage": {
       "title": "Plan de reabasto a Full",

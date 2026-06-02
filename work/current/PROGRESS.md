@@ -1,5 +1,20 @@
 # Progress Log
 
+**Status (2026-06-01):** B6 — margin-floor repricing assistant. Surfaces
+listings selling below a target net margin and pushes an approved price to
+the channel. `services/repricing_service.build_repricing_report` computes the
+floor price from COGS + the SKU's *effective* fee/shipping rate — derived from
+settled, non-reversed `OrderCostBreakdown` rows per source (ad + other folded
+in), falling back to the marketplace default fee config when there's no
+settled history. Flags `loss` / `below_floor` / `infeasible`. `apply_price`
+pushes via `call_with_401_retry(connector.sync_price)` and persists, mirroring
+`questions_service.answer_question` (sync `asyncio.run` bridge + error-dict +
+reauth→409). `GET /reports/repricing` + `POST /reports/repricing/apply`; a
+`/reports/repricing` page in the "Daily actions" sidenav with per-row Apply +
+inline Reconnect on reauth. es-MX + en. 10 backend + 8 frontend tests; guards
+green. **Deferred:** competitor/buy-box signal, per-listing fee overrides,
+bulk-apply. Remaining ML-seller backlog: B7 CFDI, B8 stock-locations.
+
 **Status (2026-06-01):** B4 — lead-time-aware replenishment-to-Full planner.
 Adds the *when* the low-stock report lacks. New
 `services/replenishment_service.build_replenishment_plan` computes, per

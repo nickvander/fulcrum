@@ -94,6 +94,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/repricing',
+    loadComponent: () =>
+      import('./dashboard/pages/repricing-page/repricing-page.component').then(
+        (m) => m.RepricingPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'reports/profit',
     loadComponent: () =>
       import('./dashboard/pages/profit-page/profit-page.component').then(

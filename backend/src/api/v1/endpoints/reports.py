@@ -30,7 +30,12 @@ from src.services import marketplace_catalog
 from src.models.supplier_product import SupplierProduct
 from src.models.user import User
 from src.schemas.replenishment import ReplenishmentReport
-from src.services import replenishment_service
+from src.schemas.repricing import (
+    ApplyPriceRequest,
+    ApplyPriceResponse,
+    RepricingReport,
+)
+from src.services import replenishment_service, repricing_service
 from src.services.inventory_service import inventory_service
 from src.services.report_export import (
     ReportColumn,
@@ -419,6 +424,98 @@ def export_replenishment_pdf(
         limit=limit,
     )
     return stream_pdf(_replenishment_table(report))
+
+
+# ---------------------------------------------------------------------------
+# Repricing assistant (B6) — margin-floor guard. Flags listings priced below
+# a target net margin (using real settled fees + COGS) and pushes an approved
+# price via the existing connector `sync_price`. Computation lives in
+# `services/repricing_service.py`.
+# ---------------------------------------------------------------------------
+
+
+@router.get("/repricing", response_model=RepricingReport)
+def repricing_report(
+    *,
+    db: Session = Depends(get_db),
+    margin_floor_percent: float = Query(10.0, ge=0.0, le=95.0),
+    limit: int = Query(200, ge=1, le=1000),
+    current_user: User = Depends(get_current_active_user),
+) -> RepricingReport:
+    """Listings priced below a target net-margin floor.
+
+    For each marketplace listing, computes the price needed to hit
+    `margin_floor_percent` using the SKU's COGS plus its effective fee +
+    shipping rate (from settled marketplace finance data when available,
+    else the marketplace's default fee config). Returns only at-risk
+    listings — selling at a loss, under the floor, or infeasible at the
+    current fee rate.
+    """
+    return repricing_service.build_repricing_report(
+        db,
+        margin_floor_percent=margin_floor_percent / 100.0,
+        limit=limit,
+    )
+
+
+@router.post("/repricing/apply", response_model=ApplyPriceResponse)
+def apply_repricing(
+    *,
+    db: Session = Depends(get_db),
+    payload: ApplyPriceRequest,
+    current_user: User = Depends(get_current_active_user),
+) -> ApplyPriceResponse:
+    """Push an approved price to the marketplace and persist it on the
+    listing. An expired token surfaces a 409 with a machine-readable `code`
+    so the UI can show an inline Reconnect affordance (mirrors the Q&A
+    answer endpoint)."""
+    result = repricing_service.apply_price(
+        db, listing_id=payload.listing_id, price=payload.price, user_id=current_user.id,
+    )
+    err = result.get("error")
+    if err == "invalid_price":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.repricing.invalidPrice",
+            detail="Price must be greater than zero.",
+        )
+    if err == "not_found":
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.repricing.listingNotFound",
+            params={"id": payload.listing_id},
+            detail=f"Listing {payload.listing_id} not found or has no marketplace id.",
+        )
+    if err == "no_credentials":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.repricing.noCredentials",
+            detail="No marketplace credentials found to push the price.",
+        )
+    if err == "needs_reauthorization":
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="needs_reauthorization",
+            detail="Marketplace authorization expired; reconnect to push prices.",
+        )
+    if err == "unsupported":
+        raise LocalizedHTTPException(
+            status_code=502,
+            code="apiErrors.repricing.unsupported",
+            detail="Price sync was rejected by the marketplace.",
+        )
+    if err:
+        raise LocalizedHTTPException(
+            status_code=500,
+            code="apiErrors.repricing.applyFailed",
+            detail="Failed to push the price to the marketplace.",
+        )
+
+    listing = result["listing"]
+    return ApplyPriceResponse(
+        listing_id=listing.id,
+        marketplace_price=float(listing.marketplace_price or 0.0),
+    )
 
 
 # ---------------------------------------------------------------------------

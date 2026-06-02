@@ -101,11 +101,30 @@ counters, surfaced under the Marketplaces sidenav group. Remaining
 `{question_id, text}`, ≤2000 chars, `write` scope — see `95`) +
 post-sale messages.
 
-### B6 — Pricing / repricing assistant (margin-floor guard) · MED · M
+### B6 — Pricing / repricing assistant (margin-floor guard) · MED · M — ✅ SHIPPED 2026-06-01
 Suggest price changes from a margin floor (real settled fees + COGS) and a
 competitor/buy-box signal; push via the existing `sync_price`. Now that
 real fees are known, prevents selling below cost. v1 = margin-floor only
 (competitor signal is the uncertain part).
+
+Shipped: `services/repricing_service.build_repricing_report` computes, per
+`MarketplaceListing`, the price needed to hit a target net margin from COGS +
+the SKU's *effective* fee/shipping rate — derived from settled, non-reversed
+`OrderCostBreakdown` rows per source (folds in ad + other spend), falling back
+to `Marketplace.default_fee_rate`/`default_shipping_cost` when there's no
+settled history. `p_floor = (cost + shipping) / (1 - fee_rate - floor)`;
+flags `loss` / `below_floor` / `infeasible` (fee+floor ≥ 100%). `apply_price`
+pushes an approved price via `call_with_401_retry(connector.sync_price)` and
+persists it (sync `asyncio.run` bridge + error-dict + reauth, mirroring
+`questions_service.answer_question`). Surfaced as `GET /reports/repricing`
+(`margin_floor_percent`, `limit`) + `POST /reports/repricing/apply`
+(409 `needs_reauthorization`). Frontend `/reports/repricing` page in the
+"Daily actions" sidenav group — per-row Apply with inline Reconnect on reauth.
+es-MX + en localized. Tests: `test_repricing_assistant.py` (10) +
+`repricing-page.component.spec.ts` (8).
+
+**Open (deferred):** competitor / buy-box signal (the uncertain part);
+per-listing fee overrides; bulk-apply.
 
 ### B7 — SAT/CFDI factura hooks (Mexico tax) · MED (niche) · L
 Export sales/expense data in a CFDI-ready shape, then optionally integrate

@@ -126,6 +126,8 @@
     "sendToMlFull": "Send to ML Full",
     "replenishment": "Replenishment-to-Full plan",
     "replenishmentShort": "Replenishment",
+    "repricing": "Pricing assistant",
+    "repricingShort": "Pricing",
     "buyerQuestionsShort": "Questions",
     "expensesShort": "Expenses",
     "more": "More"
@@ -300,6 +302,42 @@
       "unitsReturned": "Units back",
       "valueAtCost": "Value (cost)",
       "drillDown": "See every return"
+    },
+    "repricingPage": {
+      "title": "Pricing assistant (margin floor)",
+      "subtitle": "Listings selling below your target margin, based on real cost (COGS + real settled fees). Apply the suggested price and it's pushed to the channel.",
+      "backToDashboard": "Back to dashboard",
+      "floorLabel": "Margin floor",
+      "floor5": "5%",
+      "floor10": "10%",
+      "floor15": "15%",
+      "floor20": "20%",
+      "lossCount": "{{count}} at a loss",
+      "belowCount": "{{count}} below floor",
+      "empty": "No listings are below the margin floor.",
+      "error": "Could not load the pricing assistant.",
+      "retry": "Retry",
+      "apply": "Apply price",
+      "applySuccess": "Price pushed to the channel.",
+      "applyError": "Could not apply.",
+      "reconnect": "Reconnect",
+      "rateSettled": "Real fees",
+      "rateEstimated": "Estimated fees",
+      "rateTooltip": "Effective fee {{fee}}% · Shipping {{shipping}}/unit",
+      "infeasibleHint": "Fee + target margin exceed 100%: the floor is unreachable at any price. Review the cost or the target margin.",
+      "reviewCost": "Review cost",
+      "status": {
+        "loss": "Loss",
+        "below_floor": "Below floor",
+        "infeasible": "Infeasible"
+      },
+      "cols": {
+        "product": "Product",
+        "marketplace": "Channel",
+        "status": "Status",
+        "current": "Current price",
+        "suggested": "Suggested"
+      }
     },
     "replenishmentPage": {
       "title": "Replenishment-to-Full plan",

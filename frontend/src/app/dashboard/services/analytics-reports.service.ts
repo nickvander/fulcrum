@@ -269,6 +269,43 @@ export interface ReplenishmentReport {
   total_reorder_now: number;
 }
 
+/**
+ * One marketplace listing's margin-floor analysis (B6). Rates are the
+ * effective fee (fraction of price) + shipping (per unit) used for the
+ * floor; `rate_source` says whether they came from settled data.
+ */
+export interface RepricingRow {
+  listing_id: number;
+  product_id: number | null;
+  product_name: string | null;
+  product_sku: string | null;
+  marketplace_id: number;
+  marketplace_name: string;
+  external_listing_id: string | null;
+  cost_price: number;
+  current_price: number;
+  effective_fee_rate: number;
+  shipping_per_unit: number;
+  rate_source: string; // 'settled' | 'estimated'
+  current_margin_percent: number | null;
+  margin_floor_percent: number;
+  suggested_price: number | null;
+  suggested_margin_percent: number | null;
+  status: string; // 'loss' | 'below_floor' | 'infeasible'
+}
+
+export interface RepricingReport {
+  rows: RepricingRow[];
+  margin_floor_percent: number;
+  total_loss: number;
+  total_below_floor: number;
+}
+
+export interface ApplyPriceResponse {
+  listing_id: number;
+  marketplace_price: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsReportsService {
   private apiUrl = `${environment.apiUrl}/reports`;
@@ -598,6 +635,29 @@ export class AnalyticsReportsService {
       full_transfer_lead_days: fullTransferLeadDays,
       target_cover_days: targetCoverDays,
     });
+  }
+
+  // -- B6: margin-floor repricing assistant -------------------------
+
+  /**
+   * Listings priced below a target net-margin floor. Powers the
+   * `/reports/repricing` page. `marginFloorPercent` is a whole-number
+   * percent (e.g. 10 for 10%).
+   */
+  repricing(marginFloorPercent = 10): Observable<RepricingReport> {
+    const params = new HttpParams().set('margin_floor_percent', String(marginFloorPercent));
+    return this.http.get<RepricingReport>(`${this.apiUrl}/repricing`, { params });
+  }
+
+  /**
+   * Push an approved price to the marketplace. A 409 with
+   * `code: 'needs_reauthorization'` signals the caller should surface an
+   * inline Reconnect affordance.
+   */
+  applyPrice(listingId: number, price: number): Observable<ApplyPriceResponse> {
+    return this.http.post<ApplyPriceResponse>(
+      `${this.apiUrl}/repricing/apply`, { listing_id: listingId, price },
+    );
   }
 }
 

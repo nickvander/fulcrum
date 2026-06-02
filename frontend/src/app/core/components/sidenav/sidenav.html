@@ -36,6 +36,13 @@
           <span class="nav-label" *ngIf="!collapsed">{{ t('nav.replenishmentShort') }}</span>
         </a>
 
+        <a routerLink="/reports/repricing" routerLinkActive="active" class="nav-item"
+          [matTooltip]="collapsed ? t('nav.repricing') : ''" matTooltipPosition="right">
+          <span class="active-wedge" aria-hidden="true"></span>
+          <mat-icon>price_change</mat-icon>
+          <span class="nav-label" *ngIf="!collapsed">{{ t('nav.repricingShort') }}</span>
+        </a>
+
         <a routerLink="/reports/qa" routerLinkActive="active" class="nav-item"
           [matTooltip]="collapsed ? t('nav.buyerQuestions') : ''" matTooltipPosition="right">
           <span class="active-wedge" aria-hidden="true"></span>
