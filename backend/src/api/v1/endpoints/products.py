@@ -214,6 +214,8 @@ def read_products(
     max_stock: int = None,
     min_price: float = None,
     max_price: float = None,
+    sort_by: str = None,
+    sort_order: str = None,
 ):
     """
     Retrieve products.
@@ -252,7 +254,9 @@ def read_products(
     if max_price is not None:
         filters['max_price'] = max_price
         
-    products = crud_product.product.get_multi_paginated(db, skip=skip, limit=limit, filters=filters)
+    products = crud_product.product.get_multi_paginated(
+        db, skip=skip, limit=limit, filters=filters, sort_by=sort_by, sort_order=sort_order
+    )
     _hydrate_product_list_metrics(db, products["data"])
     return products
 

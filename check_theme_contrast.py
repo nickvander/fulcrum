@@ -55,7 +55,6 @@ ALLOWLIST = {
     "quick-post-detail-dialog",
     "marketplace-status",              # channel badges w/ explicit .dark-theme overrides
     "login",                           # deliberately-dark Obsidian brand hero
-    "product-list",                    # selection bar dual-palette + :host-context(.dark-theme)
     "product-form",                    # gallery overlays + gold primary markers
     "product-form-image-gallery",
     "loading-spinner",                 # overlay scrim only

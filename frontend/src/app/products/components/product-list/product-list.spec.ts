@@ -291,16 +291,16 @@ describe('ProductList', () => {
         expect(component).toBeTruthy();
     });
 
-    it('should call getProducts on init and subscribe to products$', () => {
+    it('should call getProducts on init and populate the row view-models', () => {
         productServiceMock.getProducts.mockReturnValue(of(mockPaginatedProducts));
 
-        fixture.detectChanges(); // ngOnInit
+        fixture.detectChanges(); // ngOnInit -> loadProducts
 
         expect(productServiceMock.getProducts).toHaveBeenCalled();
 
-        // The subscription to products$ will update the data
-        productsSubject.next(mockProducts);
-        expect(component.products).toEqual(mockProducts);
+        // Rows are built from the paginated response (one ProductRowVM per product).
+        expect(component.rows().length).toBe(mockPaginatedProducts.data.length);
+        expect(component.rows().map((r) => r.product)).toEqual(mockPaginatedProducts.data);
     });
 
     describe('deleteProduct', () => {
@@ -396,7 +396,7 @@ describe('ProductList', () => {
             expect(component.getCurrentStock(product)).toBe(0);
         });
 
-        it('should display stock count in product card', () => {
+        it('exposes the computed stock on the row view-model', () => {
             const productWithStock = {
                 ...mockProducts[0],
                 inventory_items: [{ id: 1, product_id: 1, location: 'default', quantity: 42 }],
@@ -406,15 +406,13 @@ describe('ProductList', () => {
             const paginatedWithStock = { ...mockPaginatedProducts, data: [productWithStock] };
             productServiceMock.getProducts.mockReturnValue(of(paginatedWithStock));
 
-            component.viewMode = 'grid'; // Switch to grid view to render cards
+            component.viewMode.set('grid'); // Switch to grid view
             component.loadProducts();
             fixture.detectChanges();
 
-            const compiled = fixture.nativeElement;
-            const stockElement = compiled.querySelector('.stock');
-            // Expect "42 " because "inStock" key isn't translated in mock config, or returns key
-            // The template is "{{ product.stock_quantity }} {{ t('products.stockStatus.inStock') }}"
-            expect(stockElement.textContent).toContain('42');
+            // The view-model is the single source of truth for stock in both views.
+            expect(component.rows()[0].currentStock).toBe(42);
+            expect(component.rows()[0].stockHealth).toBe('healthy');
         });
     });
 
@@ -434,7 +432,7 @@ describe('ProductList', () => {
             component.loadProducts(1, 10);
 
             expect(productServiceMock.getProducts).toHaveBeenCalledWith(1, 10, {});
-            expect(component.products).toEqual(mockProducts);
+            expect(component.rows().map((r) => r.product)).toEqual(mockProducts);
         });
     });
 

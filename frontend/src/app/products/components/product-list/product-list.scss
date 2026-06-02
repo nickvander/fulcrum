@@ -1,1492 +1,686 @@
-@use '../../../../theme/mixins' as m;
 @use '../../../../theme/variables' as v;
 @use '../../../../styles/forms' as forms;
+
+// =============================================================================
+// Product list — Obsidian & Chile redesign. Token-only (passes theme guard).
+// One status vocabulary (.pill), one view-model, dense table + visual grid.
+// =============================================================================
 
 :host {
   display: block;
   height: 100%;
-  padding: 24px;
 }
 
-.container {
+.product-list-wrapper {
   display: flex;
   flex-direction: column;
   height: 100%;
   max-width: 1600px;
   margin: 0 auto;
+  padding: var(--space-6, 24px);
+  gap: var(--space-3, 12px);
+  position: relative;
+  overflow: hidden;
+
+  // Density → row metrics (consumed by the table).
+  --row-thumb: 40px;
+  --cell-pad-y: var(--space-2, 8px);
+
+  &.density-compact { --row-thumb: 32px; --cell-pad-y: var(--space-1, 4px); }
+  &.density-comfortable { --row-thumb: 48px; --cell-pad-y: var(--space-3, 12px); }
 }
 
-.header {
+// ------------------------------------------------------------------ toolbar
+.pl-toolbar {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  flex: 0 0 auto;
+}
+
+.toolbar-main {
+  display: flex;
   align-items: center;
-  margin-bottom: 24px;
+  gap: var(--space-4, 16px);
   flex-wrap: wrap;
-  gap: 16px;
+}
 
-  h1 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    font-size: 24px;
-    font-weight: 600;
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  font: var(--font-h3, 600 20px/1.3 sans-serif);
+  font-family: var(--font-display, sans-serif);
+  color: var(--text-main);
+  white-space: nowrap;
+
+  .count-badge {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-raised);
+    padding: 2px 10px;
+    border-radius: var(--radius-pill, 999px);
+    border: 1px solid var(--border-color);
+  }
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex: 1 1 280px;
+  min-width: 180px;
+  max-width: 460px;
+  height: 40px;
+  padding: 0 var(--space-3, 12px);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 10px);
+  transition: border-color var(--dur-fast, 150ms) var(--ease-standard, ease);
+
+  &:focus-within { border-color: var(--accent-color); }
+
+  > mat-icon { color: var(--text-hint); font-size: 20px; width: 20px; height: 20px; }
+
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
     color: var(--text-main);
+    font-size: 14px;
+    min-width: 0;
 
-    .product-count-badge {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      background: var(--bg-card);
-      padding: 4px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      letter-spacing: 0.3px;
+    &::placeholder { color: var(--text-hint); }
+  }
+
+  .clear-search {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    color: var(--text-hint);
+    padding: 0;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    &:hover { color: var(--text-main); }
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-left: auto;
+
+  .toolbar-btn {
+    color: var(--text-secondary);
+    &.active-btn { color: var(--accent-color); }
+  }
+}
+
+.view-toggle {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  height: 36px;
+
+  ::ng-deep .mat-button-toggle { background: var(--bg-card); }
+  ::ng-deep .mat-button-toggle-appearance-standard { color: var(--text-secondary); }
+  ::ng-deep .mat-button-toggle-checked { background: var(--bg-hover); color: var(--accent-color); }
+  ::ng-deep .mat-button-toggle-button { display: flex; align-items: center; }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+// Primary split button (the only brand-red moment in the toolbar)
+.add-split {
+  display: inline-flex;
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+
+  .add-main, .add-caret {
+    background: var(--primary-color);
+    color: var(--text-on-primary);
+    border-radius: 0;
+    min-width: auto;
+    height: 40px;
+    mat-icon { color: var(--text-on-primary); }
+    &:hover { background: var(--primary-hover); }
+  }
+  .add-main { padding: 0 var(--space-4, 16px); }
+  .add-caret { padding: 0 2px; border-left: 1px solid rgba(var(--primary-rgb), 0.4); }
+}
+
+::ng-deep .active-item { color: var(--accent-color); }
+::ng-deep .danger-item { color: var(--error-color); mat-icon { color: var(--error-color); } }
+
+// Quick-view chips
+.quick-views {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+  overflow-x: auto;
+
+  .qv-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 var(--space-3, 12px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill, 999px);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--dur-fast, 150ms) var(--ease-standard, ease);
+
+    mat-icon { font-size: 15px; width: 15px; height: 15px; }
+    .qv-count { color: var(--text-hint); font-size: 12px; }
+
+    &:hover { border-color: var(--border-hover); color: var(--text-main); }
+    &.selected {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      background: var(--bg-raised);
+      .qv-count { color: var(--accent-color); }
     }
   }
 }
 
-
-.header-actions {
+.active-filters {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 48px;
+  gap: var(--space-2, 8px);
+  font-size: 13px;
+  color: var(--text-secondary);
 
-  // Force white icons inside colored FAB buttons (overrides mat-icon-no-color)
-  ::ng-deep .mat-mdc-mini-fab.mat-primary mat-icon,
-  ::ng-deep .mat-mdc-mini-fab.mat-accent mat-icon,
-  ::ng-deep .mat-mdc-mini-fab.mat-warn mat-icon,
-  ::ng-deep button.mat-primary .mat-icon,
-  ::ng-deep button.mat-accent .mat-icon,
-  ::ng-deep button[color="primary"] .mat-icon,
-  ::ng-deep button[color="accent"] .mat-icon {
-    color: white !important;
-  }
-
-  // Dashboard toggle: Basic (inactive) state - use secondary text color
-  ::ng-deep .mat-mdc-mini-fab.mat-basic mat-icon,
-  ::ng-deep .mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) mat-icon,
-  ::ng-deep button.dashboard-toggle-btn:not(.mat-primary) .mat-icon {
-    color: var(--text-secondary) !important;
-  }
-
-  // Icon buttons (hamburger menu, filter) - should use secondary text color
-  .mat-mdc-icon-button .mat-icon,
-  button[mat-icon-button] mat-icon {
-    color: var(--text-secondary) !important;
-  }
-
-  // Dark mode: ensure icon buttons are visible (Slate 300)
-  :host-context(.dark-theme) & {
-
-    .mat-mdc-icon-button .mat-icon,
-    button[mat-icon-button] mat-icon {
-      color: #cbd5e1 !important; // Slate 300
-    }
-
-    // Ensure mini-fabs with basic color have visible icons
-    .mat-mdc-mini-fab.mat-basic mat-icon,
-    .mat-mdc-mini-fab:not(.mat-primary):not(.mat-accent):not(.mat-warn) mat-icon {
-      color: #cbd5e1 !important;
-    }
+  .af-clear {
+    border: none;
+    background: transparent;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
   }
 }
 
-// Desktop-only action buttons
-.desktop-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.reloading-progress { flex: 0 0 auto; }
 
-  @media (max-width: 768px) {
-    display: none; // Hide on mobile/tablet
-  }
+// Dashboard + advanced filter + stock explainer panels
+.dashboard-panel,
+.advanced-filter-panel {
+  flex: 0 0 auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+.advanced-filter-panel { padding: var(--space-4, 16px); }
+
+.filter-row { display: flex; flex-wrap: wrap; gap: var(--space-3, 12px); }
+.filter-field { min-width: 150px; flex: 1; }
+.filter-actions { display: flex; justify-content: flex-end; margin-top: var(--space-2, 8px); }
+
+// ------------------------------------------------------------------ results
+.results-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-// Mobile/Tablet action buttons
-.mobile-actions {
-  display: none; // Hidden on desktop
+// Skeleton
+.skeleton-wrap { display: flex; flex-direction: column; gap: var(--space-2, 8px); padding: var(--space-2, 8px) 0; }
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 120px 80px;
+  gap: var(--space-3, 12px);
   align-items: center;
-  gap: 8px;
-
-  @media (max-width: 768px) {
-    display: flex; // Show on mobile/tablet
-  }
+  height: 52px;
+  padding: 0 var(--space-3, 12px);
 }
+.sk {
+  background: linear-gradient(90deg, var(--bg-raised) 0%, var(--bg-hover) 50%, var(--bg-raised) 100%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.3s ease-in-out infinite;
+  border-radius: var(--radius-sm, 8px);
+}
+.sk-img { width: 40px; height: 40px; }
+.sk-line { height: 14px; }
+.sk-pill { height: 22px; border-radius: var(--radius-pill, 999px); }
+.sk-num { height: 14px; }
+@keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-.search-filter-group {
-  display: flex;
+// =============================================================== STATUS PILLS
+// Outline-only (token reality: no --*-rgb triplets for semantics). Always
+// icon + word/number + color → non-color-redundant (WCAG 1.4.11).
+.pill {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  height: 22px;
+  padding: 0 var(--space-2, 8px);
+  border-radius: var(--radius-pill, 999px);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text-secondary);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  .pill-num { font-variant-numeric: tabular-nums; }
+
+  // stock health
+  &.stock-healthy { color: var(--success-color); border-color: var(--success-color); }
+  &.stock-low { color: var(--warning-color); border-color: var(--warning-color); }
+  &.stock-out { color: var(--error-color); border-color: var(--error-color); }
+
+  // ML listing
+  &.ml-active { color: var(--success-color); border-color: var(--border-color); }
+  &.ml-paused { color: var(--warning-color); border-color: var(--warning-color); }
+  &.ml-unlisted { color: var(--warning-color); border-color: var(--warning-color); }
+  &.ml-closed { color: var(--error-color); border-color: var(--error-color); }
+
+  &.pill-kit { color: var(--accent-color); border-color: var(--accent-color); }
+  &.pill-reorder { color: var(--warning-color); border-color: var(--warning-color); }
+}
+
+.muted { color: var(--text-hint); }
+.mono { font-family: var(--font-mono, monospace); }
+
+// =============================================================== GRID VIEW
+.grid-viewport {
   height: 100%;
-
-  // .search-field-compact styles are now imported from _forms.scss
+  width: 100%;
 }
-
-// Quick Chips & View Toggle Bar
-// Moved toggle here, so ensure this bar has enough spacing below it
-// Quick Chips & View Toggle Bar
-.quick-filters-bar {
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between; // Split chips and toggle
-  flex-wrap: wrap; // Allow wrapping on small screens
-  gap: 12px;
-  position: relative;
-  z-index: 50;
-  min-height: 48px;
-}
-
-.quick-chips {
-  flex: 1; // Take up space
-
-  // Global chip styles (.app-chip-*) handle colors now.
-  // Just ensuring spacing here.
-  mat-chip-option {
-    transition: all 0.2s;
-  }
-}
-
-// View Toggle & Actions
-.view-controls-container {
-  display: flex;
-  align-items: center;
-  z-index: 60;
-
-  @media (max-width: 600px) {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: -8px; // Pull up slightly if wrapped
-  }
-}
-
-.compact-toggle {
-  display: inline-flex;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--bg-card);
-  overflow: visible;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); // Nicer shadow
-
-  &.tiny-toggle {
-    mat-button-toggle {
-      min-width: 36px;
-      height: 32px; // Fixed height
-
-      // Target the internal Material button element aggressively
-      ::ng-deep .mat-button-toggle-button {
-        height: 100% !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 !important;
-
-        // Fix for the pseudo-checkbox taking up layout space
-        .mat-button-toggle-checkbox-wrapper {
-          display: none !important;
-        }
-      }
-
-      button {
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
-        height: 100% !important;
-        line-height: 0 !important;
-        background: transparent;
-
-        .mat-button-toggle-label-content {
-          line-height: 0 !important;
-          padding: 0 !important;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-      }
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        line-height: 1;
-        margin: 0;
-        display: block;
-        color: var(--text-secondary);
-      }
-    }
-  }
-
-  mat-button-toggle {
-    // General styles
-    background: var(--bg-card);
-
-    &.mat-button-toggle-checked {
-      background-color: var(--bg-hover);
-      color: var(--primary-color) !important;
-      border-left: 1px solid var(--border-color);
-      z-index: 1; // Ensure border is visible
-
-      mat-icon {
-        color: var(--primary-color);
-      }
-    }
-  }
-}
-
-.settings-btn {
-  color: var(--text-secondary);
-}
-
-.quick-chips {
-
-  // Global chip styles (.app-chip-*) handle colors now.
-  // Just ensuring spacing here.
-  mat-chip-option {
-    transition: all 0.2s;
-  }
-}
-
-
-
-// Search & Filters
-.search-container {
-  margin-bottom: 16px;
-}
-
-.filters-toolbar {
-  @include m.filter-toolbar;
-  margin-top: 16px;
-  // Standard style (white background, shadow) provided by mixin
-}
-
-// Filter Sidenav Styles (Legacy support)
-.filter-sidenav {
-  width: 320px;
-  border-left: 1px solid var(--border-color);
-}
-
-// Data Handling (Table & Grid)
-.product-table-container {
-  @include m.card-style;
-  overflow: auto; // Allow scrolling if table overflows
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  margin-top: 4px; // Tiny buffer
-
-  // High density table styles
-  table {
-    width: 100%;
-
-    th.mat-header-cell {
-      padding: 0 16px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      height: 48px;
-      background: var(--bg-app);
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    td.mat-cell {
-      padding: 0 16px;
-      font-size: 14px;
-      color: var(--text-main);
-      height: 64px; // Consistent row height
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    tr.mat-mdc-row {
-      cursor: pointer;
-      position: relative;
-      z-index: 10;
-      pointer-events: auto !important;
-
-      &:hover {
-        background-color: var(--bg-hover) !important;
-      }
-    }
-  }
-}
-
-// Column Specifics
-.mat-column-select {
-  width: 48px;
-  padding-right: 0 !important;
-}
-
-.mat-column-image {
-  width: 72px;
-  padding-right: 16px !important;
-}
-
-.table-thumbnail {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid var(--border-color);
-  background: var(--bg-app);
-  transition: transform 0.15s ease;
-}
-
-tr:hover .table-thumbnail {
-  transform: scale(1.08);
-}
-
-.table-thumbnail-empty {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  border: 1px dashed var(--border-color);
-  background: var(--bg-app);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  mat-icon {
-    color: var(--text-hint);
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
-  }
-}
-
-.product-name-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  .product-name {
-    font-weight: 500;
-    color: var(--text-main);
-  }
-
-  .product-brand {
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-}
-
-.table-bundle-badge {
-  display: inline-block;
-  font-size: 10px;
-  padding: 2px 6px;
-  background: var(--primary-color);
-  color: white;
-  border-radius: 4px;
-  margin-left: 8px;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.mat-column-stock {
-  width: 120px;
-
-  .stock-value {
-    font-weight: 500;
-
-    &.stock-healthy {
-      color: var(--success-color);
-    }
-
-    &.stock-low {
-      color: var(--warning-color);
-    }
-
-    &.stock-out {
-      color: var(--error-color);
-    }
-  }
-
-  // List View Dark Mode Overrides
-  :host-context(.dark-theme) {
-    .stock-value {
-      &.stock-healthy {
-        color: #69f0ae !important;
-      }
-
-      &.stock-low {
-        color: #ffd740 !important;
-      }
-
-      &.stock-out {
-        color: #ff5252 !important;
-      }
-    }
-  }
-}
-
-.days-of-inventory {
-  font-size: 11px;
-  color: var(--text-secondary);
-  margin-top: 4px;
-
-  &.days-warning {
-    color: var(--error-color);
-  }
-}
-
-// Grid View Styles (for Mobile preference)
-// Grid View Styles
-.product-grid {
+.card-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
-  padding-bottom: 24px;
+  gap: var(--space-4, 16px);
+  height: 316px;          // CARD_HEIGHT (300) + GRID_GAP (16)
+  padding-bottom: var(--space-4, 16px);
+  align-items: start;
 }
 
 .product-card {
-  @include m.card-style;
-  height: 100%;
+  height: 300px;
   display: flex;
   flex-direction: column;
-  position: relative;
-  transition: transform 0.2s, box-shadow 0.2s;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 10px);
   overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--dur-fast, 150ms) var(--ease-standard, ease),
+    transform var(--dur-fast, 150ms) var(--ease-standard, ease);
+  contain: layout paint style;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  &:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+  &.selected { border-color: var(--accent-color); box-shadow: inset 0 0 0 1px var(--accent-color); }
 
-    .product-checkbox,
-    .action-menu {
-      opacity: 1;
-    }
+  .card-media {
+    position: relative;
+    height: 150px;
+    background: var(--bg-app);
+    border-bottom: 1px solid var(--border-color);
+    flex: 0 0 auto;
+
+    // Product photos: show the WHOLE product (contain), never crop (cover).
+    img { width: 100%; height: 100%; object-fit: contain; display: block; padding: var(--space-3, 12px); }
   }
 
-  // Hover Actions (Checkbox & Menu)
-  .product-checkbox {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 10;
-    opacity: 0.7; // Slightly visible by default for better discoverability
-    transition: opacity 0.2s;
-    background: rgba(255, 255, 255, 0.9); // Semi-transparent white
-    border-radius: 6px;
-    padding: 2px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); // Subtle shadow for visibility
-
-    &:hover {
-      opacity: 1;
-    }
-
-    // Dark mode: remove shadow, use subtle dark background
-    :host-context(.dark-theme) & {
-      background: rgba(30, 41, 59, 0.85); // Slate 800 semi-transparent
-      box-shadow: none; // No shadow in dark mode
-    }
-
-    &.mat-mdc-checkbox-checked {
-      opacity: 1;
-
-      // Override internal Material styles for better contrast
-      // Using ::ng-deep to penetrate ViewEncapsulation for this specific component instance
-      ::ng-deep .mdc-checkbox__background {
-        background-color: var(--primary-color) !important;
-        border-color: var(--primary-color) !important;
-      }
-
-      ::ng-deep .mdc-checkbox__checkmark {
-        color: white !important; // Ensure checkmark is white
-      }
-    }
-  }
-
-  .action-menu {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 10;
-    opacity: 0; // Hidden by default on desktop
-    background: rgba(255, 255, 255, 0.95); // Light background for contrast
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
+  .img-failed {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s, background 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15); // Subtle shadow for visibility
-
-    mat-icon {
-      font-size: 20px;
-      height: 20px;
-      width: 20px;
-      color: #546E7A; // Slate grey for light mode
-    }
-
-    &:hover {
-      background: #f1f5f9; // Slate 100
-    }
-
-    // Dark mode styling
-    :host-context(.dark-theme) & {
-      background: rgba(30, 41, 59, 0.95); // Slate 800
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-
-      mat-icon {
-        color: #cbd5e1 !important; // Slate 300
-      }
-
-      &:hover {
-        background: #475569; // Slate 600
-      }
-    }
+    background: var(--bg-raised);
+    color: var(--text-hint);
+    mat-icon { font-size: 32px; width: 32px; height: 32px; }
   }
 
-  // Touch devices: Always show action menu (can't hover on touch)
-  @media (hover: none),
-  (max-width: 1024px) {
-    .action-menu {
-      opacity: 0.8 !important; // Always visible on touch
-    }
-
-    &:hover .action-menu {
-      opacity: 1 !important;
-    }
+  .card-overlay {
+    position: absolute;
+    display: flex;
+    gap: 4px;
+    &.tl { top: var(--space-2, 8px); left: var(--space-2, 8px); }
+    &.tr { top: var(--space-2, 8px); right: var(--space-2, 8px); }
+    &.bl { bottom: var(--space-2, 8px); left: var(--space-2, 8px); }
   }
 
-  .product-image {
-    height: 200px;
-    width: 100%;
-    object-fit: contain;
-    padding: 24px;
-    background: var(--bg-app); // Theme-aware background for images
-    border-bottom: 1px solid var(--border-color);
+  .card-select {
+    position: absolute;
+    bottom: var(--space-1, 4px);
+    right: var(--space-1, 4px);
   }
 
-  .no-image-placeholder {
-    height: 200px;
-    width: 100%;
+  .card-body {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-app);
-    color: var(--text-hint);
-    border-bottom: 1px solid var(--border-color);
-
-    mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 8px;
-      opacity: 0.5;
-    }
+    gap: var(--space-1, 4px);
+    padding: var(--space-3, 12px);
+    flex: 1;
   }
 
-  // Bundle Badge - Reduced Size
-  .bundle-badge {
-    position: absolute;
-    top: 170px; // Just above content
-    left: 12px;
-    background: var(--accent-color);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
+  .card-headline { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2, 8px); }
+
+  .card-name {
+    margin: 0;
+    font: var(--font-body, 600 14px/1.35 sans-serif);
+    font-family: var(--font-display, sans-serif);
+    font-weight: 600;
+    color: var(--text-main);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-kebab { color: var(--text-hint); flex: 0 0 auto; }
+
+  .card-sub { font-size: 12px; color: var(--text-hint); }
+
+  .card-foot {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2, 8px);
+    &.sub { margin-top: 0; min-height: 22px; }
+
+    .price { font-weight: 700; font-size: 16px; color: var(--text-main); font-variant-numeric: tabular-nums; }
+  }
+}
+
+.margin {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  &.margin-healthy { color: var(--text-main); }
+  &.margin-thin { color: var(--warning-color); }
+  &.margin-negative { color: var(--error-color); }
+}
+
+// =============================================================== TABLE VIEW
+// Outer wrapper scrolls horizontally on narrow viewports (tablet portrait,
+// small laptops) so the dense fixed-width grid never clips its columns.
+.ptable-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+}
+
+.ptable {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 950px;      // sum of fixed columns + flex min + gaps
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+}
+
+.ptable-header {
+  display: grid;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  height: 44px;
+  padding: 0 var(--space-3, 12px);
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-color);
+  flex: 0 0 auto;
+
+  .th {
+    font-size: 11px;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 2px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-
-    mat-icon {
-      font-size: 12px; // Smaller icon
-      width: 12px;
-      height: 12px;
-    }
-  }
-
-  mat-card-header {
-    padding: 12px 16px 4px;
-
-    mat-card-title {
-      font-size: 15px; // Reduced slightly for density
-      font-weight: 600;
-      line-height: 1.3;
-      margin-bottom: 2px;
-    }
-
-    mat-card-subtitle {
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-  }
-
-  .product-description {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 0 16px 12px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2; // Limit to 2 lines
-    -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 36px; // Fixed height for alignment
-  }
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
-  mat-card-content {
-    padding: 0 16px 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    justify-content: space-between;
-
-    // Bundle Items List
-    .bundle-items-preview {
-      margin-top: 8px;
-      background: var(--bg-app);
-      border-radius: 6px;
-      padding: 8px;
-      border: 1px solid var(--border-color);
-
-      .bundle-header {
-        font-size: 11px;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-
-      .bundle-item-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: var(--text-main);
-        margin-bottom: 2px;
-
-        span:last-child {
-          font-family: monospace;
-          color: var(--text-secondary);
-        }
-      }
-    }
-
-    // Grid View Stock Styling (Correctly Scoped)
-    .stock {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 500;
-
-      &.stock-healthy {
-        color: var(--success-color);
-      }
-
-      &.stock-low,
-      &.low-stock {
-        color: var(--warning-color);
-      }
-
-      &.stock-out {
-        color: var(--error-color);
-      }
-    }
-
-    .more-items {
-      font-size: 11px;
-      color: var(--primary-color);
-      margin-top: 2px;
-      font-style: italic;
-    }
-  }
-
-  // Marketplaces Row
-  .marketplace-icons {
-    display: flex;
-    gap: 8px; // Increased spacing
-    margin-top: 8px;
-
-    .no-marketplaces {
-      font-size: 11px;
-      color: var(--text-hint);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-
-      mat-icon {
-        font-size: 14px;
-        width: 14px;
-        height: 14px;
-      }
-    }
-
-    img {
-      width: 16px;
-      height: 16px;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
+    &.th-right { justify-content: flex-end; }
+    &.th-center { justify-content: center; }
+    &.sortable { cursor: pointer; &:hover { color: var(--text-main); } }
+    .sort-ic { font-size: 14px; width: 14px; height: 14px; color: var(--text-hint); }
   }
 }
 
-.header-actions {
-  display: flex;
+.ptable-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ptable-row {
+  display: grid;
   align-items: center;
-  gap: 12px;
-  height: 48px;
-}
-
-.desktop-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-
-  @media (max-width: 1023px) {
-    display: none;
-  }
-}
-
-.mobile-actions {
-  display: none;
-  align-items: center;
-  gap: 4px;
-
-  @media (max-width: 1023px) {
-    display: flex;
-  }
-}
-
-// Responsive Design
-@media (max-width: 1100px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 16px;
-  }
-
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-    padding-bottom: 4px;
-    gap: 8px;
-  }
-
-  // Hide non-critical columns on tablet
-  .mat-column-sku,
-  .mat-column-cost_price,
-  .mat-column-marketplaces {
-    display: none !important;
-  }
-
-  // Ensure search doesn't push buttons out
-  .search-filter-group {
-    flex: 1;
-    min-width: 0;
-
-    .search-field-compact {
-      width: 100% !important;
-      max-width: 400px;
-    }
-  }
-
-  // Hide divider to save space
-  mat-divider[vertical] {
-    display: none;
-  }
-}
-
-@media (max-width: 768px) {
-  :host {
-    padding: 16px; // Reduced padding
-  }
-
-  .header-actions {
-    gap: 4px;
-  }
-
-  // Mobile Chip Tweaks - Prevent blue outline/harsh borders
-  ::ng-deep {
-    .mat-mdc-chip {
-      --mdc-chip-outline-color: transparent !important;
-      --mdc-chip-focus-outline-color: transparent !important;
-
-      .mdc-evolution-chip__action {
-        outline: none !important;
-      }
-    }
-  }
-
-  // Hide even more on phone
-  .mat-column-image,
-  .mat-column-price {
-    display: none !important;
-  }
-
-  .product-table-container {
-    border-radius: 0;
-    margin: 0 -16px; // Exactly offset the 16px padding of :host
-    width: calc(100% + 32px);
-    border-left: none;
-    border-right: none;
-    box-shadow: none;
-    overflow-x: auto; // Allow horizontal scroll if content still exceeds width
-  }
-
-  table {
-    width: 100% !important;
-    min-width: 0 !important; // Allow shrinking
-  }
-
-  .mat-mdc-cell,
-  .mat-mdc-header-cell {
-    padding: 0 8px !important;
-  }
-
-  // Further reduce search width for small phones
-  .search-filter-group {
-    .search-field-compact {
-      max-width: 200px; // Very compact on mobile
-    }
-  }
-}
-
-// Loading & Empty States
-.loading-state {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  flex-direction: column;
-  gap: 16px;
-  color: var(--text-secondary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 64px 24px;
-
-  mat-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    color: var(--text-hint);
-    margin-bottom: 16px;
-  }
-
-  h2 {
-    color: var(--text-main);
-    font-weight: 500;
-  }
-
-  p {
-    color: var(--text-secondary);
-    margin-bottom: 24px;
-  }
-}
-
-// FIXES FOR GRID VIEW
-mat-card-header {
-  padding: 12px 16px 4px !important;
-}
-
-.product-description {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0 16px 12px;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; // Limit to 2 lines
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  height: 36px; // Fixed height for alignment
-}
-
-.marketplace-icons {
-  margin-top: auto;
-  margin-bottom: 4px;
-  display: flex;
-  gap: 8px;
-  position: relative;
-  z-index: 20; // Ensure they are clickable and visible above any absolutely positioned elements
-}
-
-// Marketing Badge
-.marketing-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #FF9800, #F57C00); // Orange for marketing
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-  }
-
-  &:hover {
-    transform: scale(1.1);
-  }
-}
-
-// Floating Infinite Scroll FAB Toggle
-.infinite-scroll-fab {
-  position: fixed;
-  bottom: 24px;
-
-  @media (max-width: 600px) {
-    bottom: 70px !important; // Clear paginator on mobile
-  }
-
-  right: 24px;
-  z-index: 1000;
-  background: var(--bg-card) !important;
-  color: var(--text-secondary);
-  border: 2px solid var(--border-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-
-  // Ensure icon is visible in light mode
-  mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    color: var(--text-secondary) !important;
-  }
-
-  // Ensure visible by default (reverting fade logic due to unreliability)
-  opacity: 1;
-  pointer-events: all;
-  transform: scale(0.8);
-
-  &.visible {
-    opacity: 1;
-    pointer-events: all;
-    transform: scale(1);
-  }
-
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-  }
-
-  &.active {
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color)) !important;
-    color: white;
-    border-color: transparent;
-
-    mat-icon {
-      color: white !important;
-    }
-  }
-
-  // Phone view: Move button higher ONLY when shifted up (selection bar active)
-  &.shifted-up {
-    @media (max-width: 600px) {
-      bottom: 115px !important; // Raised to 115px (74px bar + gap)
-    }
-  }
-}
-
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-
-// Pagination Area with Infinite Scroll Toggle
-.pagination-area {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 16px;
-  padding: 12px 16px;
+  gap: var(--space-2, 8px);
+  padding: 0 var(--space-3, 12px);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
   background: var(--bg-card);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  contain: layout paint style;
+  transition: background var(--dur-fast, 150ms) var(--ease-standard, ease);
 
-  mat-paginator {
-    background: transparent;
-  }
-}
+  &:hover { background: var(--bg-hover); }
+  &.selected { background: var(--bg-raised); box-shadow: inset 2px 0 0 0 var(--accent-color); }
 
-// Infinite Scroll Status Bar
-.infinite-scroll-status {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 16px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
-  border-radius: 24px;
-  border: 1px solid var(--border-color);
+  &:hover .expander,
+  &:hover .row-kebab { opacity: 1; }
 
-  .status-text {
+  .td {
     font-size: 14px;
     color: var(--text-main);
-    font-weight: 500;
-  }
-
-  .hint-text {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-style: italic;
-    animation: fade-pulse 2s ease-in-out infinite;
-  }
-}
-
-@keyframes fade-pulse {
-
-  0%,
-  100% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
-}
-
-// Infinite scroll trigger element
-.infinite-scroll-trigger {
-  height: 1px;
-  width: 100%;
-}
-
-// ============================================
-// Selection Action Bar - Modern Floating Design
-// ============================================
-.selection-action-bar {
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  max-width: calc(100vw - 32px); // Prevent overflow
-
-  .selection-bar-content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 16px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+
+    &.td-right { justify-content: flex-end; }
+    &.td-center { justify-content: center; }
+    &.num { font-variant-numeric: tabular-nums; }
   }
 
-  .selection-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding-right: 12px;
-    border-right: 1px solid #e2e8f0;
-    flex-shrink: 0;
+  .td-name {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1px;
+    overflow: hidden;
 
-    mat-icon {
-      color: #00BFA5; // Accent teal
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .selection-count {
-      font-weight: 600;
-      font-size: 14px;
-      color: #2C3E50;
-      white-space: nowrap;
+    .name-line { font-weight: 500; color: var(--text-main); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .sku-line { font-size: 12px; color: var(--text-hint); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .tag-kit {
+      margin-left: 6px;
+      color: var(--accent-color);
+      border: 1px solid var(--accent-color);
+      border-radius: var(--radius-xs, 4px);
+      padding: 0 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
     }
   }
 
-  .selection-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-
-    .action-btn {
-      // Use Material's pink accent color
-      background-color: #E91E63 !important; // Pink 500
-      color: white !important;
-
-      mat-icon {
-        color: white !important;
-      }
-
-      &:hover {
-        background-color: #D81B60 !important; // Pink 600
-      }
-    }
-
-    .clear-btn {
-      color: #546E7A;
-      border-color: #e2e8f0;
-
-      mat-icon {
-        color: #546E7A !important;
-      }
-    }
+  .row-thumb {
+    width: var(--row-thumb);
+    height: var(--row-thumb);
+    border-radius: var(--radius-sm, 8px);
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    background: var(--bg-app);
+    &.img-failed { display: inline-flex; align-items: center; justify-content: center; color: var(--text-hint);
+      mat-icon { font-size: 18px; width: 18px; height: 18px; } }
   }
 
-  // ===== DARK MODE =====
-  :host-context(.dark-theme) & {
-    .selection-bar-content {
-      background: #1e293b; // Slate 800
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    }
-
-    .selection-info {
-      border-right-color: #475569; // Slate 600
-
-      mat-icon {
-        color: #00DBBD; // Brighter teal for dark mode
-      }
-
-      .selection-count {
-        color: #f1f5f9; // Slate 100
-      }
-    }
-
-    .selection-actions {
-      .clear-btn {
-        color: #cbd5e1; // Slate 300
-        border-color: #475569;
-
-        mat-icon {
-          color: #cbd5e1 !important;
-        }
-      }
-    }
-  }
-
-  // ===== TABLET VIEW (601px to 1024px) =====
-  @media (min-width: 601px) and (max-width: 1024px) {
-    position: fixed !important;
-    bottom: 16px !important;
-    left: 50% !important;
-    right: auto !important;
-    top: auto !important;
-    transform: translateX(-50%) !important; // Center like desktop
-    max-width: calc(100vw - 32px) !important;
-
-    // No overrides needed for .selection-bar-content - inherit desktop styles
-
-    .selection-actions {
-      .action-label {
-        display: inline; // Show labels on tablet
-      }
-    }
-  }
-
-  // Phone view - Ultra compact layout to prevent overflow
-  @media (max-width: 600px) {
-    position: fixed !important;
-    // Raised to 74px to sit ABOVE the mobile paginator (approx 50px high)
-    bottom: 74px !important;
-    bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
-    left: 50% !important;
-    right: auto !important;
-    top: auto !important;
-    transform: translateX(-50%) !important;
-    max-width: 96vw !important;
-    width: fit-content !important;
-
-    .selection-bar-content {
-      width: 100%;
-      justify-content: center;
-      gap: 1px; // Minimal gap to fix overflow
-      padding: 4px 1px; // Minimal side padding
-      flex-wrap: nowrap;
-    }
-
-    .selection-info {
-      flex: 0 0 auto;
-      gap: 2px; // Tighter gap
-      padding-right: 4px; // Reduced from 6px
-      border-right: 1px solid #e2e8f0;
-
-      mat-icon {
-        font-size: 12px;
-        width: 12px;
-        height: 12px;
-      }
-
-      .selection-count {
-        font-size: 10px;
-        white-space: nowrap;
-      }
-    }
-
-    .selection-actions {
-      flex: 0 0 auto;
-      gap: 2px; // Reduced from 3px
-
-      .action-btn {
-        font-size: 9px;
-        padding: 4px 8px 4px 6px; // Increase left padding slightly for cleaner look
-        white-space: nowrap;
-        min-width: unset;
-
-        .action-label {
-          display: inline; // SHOW LABEL (Reverted)
-        }
-
-        mat-icon {
-          font-size: 11px;
-          width: 11px;
-          height: 11px;
-          margin-right: 4px; // Increased spacing
-        }
-      }
-
-      .clear-btn {
-        min-width: 24px;
-        padding: 4px 5px;
-
-        .action-label {
-          display: none;
-        }
-
-        mat-icon {
-          font-size: 12px;
-          width: 12px;
-          height: 12px;
-          margin: 0;
-        }
-      }
-    }
-  }
-}
-
-@keyframes slideUp {
-  from {
+  .expander, .row-kebab {
     opacity: 0;
-    transform: translateX(-50%) translateY(20px);
+    color: var(--text-hint);
+    transition: opacity var(--dur-fast, 150ms) var(--ease-standard, ease);
+    width: 32px; height: 32px; line-height: 32px;
   }
 
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  .why-zero {
+    margin-left: 6px;
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent-color);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
   }
-}
 
-// Phone-specific slideUp animation
-@media (max-width: 1024px) {
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
+  .days { font-size: 12px; color: var(--text-hint); font-variant-numeric: tabular-nums; &.days-warn { color: var(--warning-color); } }
+  .campaign-ic { color: var(--accent-2); font-size: 18px; width: 18px; height: 18px; }
 
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
-
-// Dark Mode Overrides (Global for Component)
-:host-context(.dark-theme) {
-  // Mobile Paginator Fixes (Dark Mode specific if needed, but general overrides below)
-}
-
-:host {
-  display: block;
-  height: 100%;
-}
-
-// Container padding to prevent floating bar overlap
-.container.has-selection {
-  padding-bottom: 80px !important; // Make space for the fixed selection bar
-}
-
-:host-context(.dark-theme) {
-
-  // Grid View Stock
-  .stock {
-    &.stock-healthy {
-      color: #69f0ae !important;
-    }
-
-    &.stock-low {
-      color: #ffd740 !important;
-    }
-
-    &.stock-out {
-      color: #ff5252 !important;
-    }
+  .inline-price {
+    width: 90px;
+    text-align: right;
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-xs, 4px);
+    background: var(--bg-raised);
+    color: var(--text-main);
+    font-size: 14px;
+    padding: 2px 6px;
+    outline: none;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-// Mobile Paginator Optimization (Updated for MDC & Single Line)
-@media (max-width: 768px) {
-
-  ::ng-deep .mat-paginator-container,
-  ::ng-deep .mat-mdc-paginator-container {
-    flex-wrap: nowrap !important;
-    padding: 0 2px !important;
-    min-height: 40px !important; // Smaller height
-    font-size: 9px !important; // Requested smaller
-    justify-content: space-between !important;
-    align-items: center !important;
-  }
-
-  // Hide Labels
-  ::ng-deep .mat-paginator-page-size-label,
-  ::ng-deep .mat-mdc-paginator-page-size-label {
-    display: none !important;
-  }
-
-  // Range Label
-  ::ng-deep .mat-paginator-range-label,
-  ::ng-deep .mat-mdc-paginator-range-label {
-    margin: 0 4px !important;
-    white-space: nowrap !important;
-  }
-
-  // Navigation Buttons
-  ::ng-deep .mat-paginator-navigation-next,
-  ::ng-deep .mat-paginator-navigation-previous,
-  ::ng-deep .mat-paginator-navigation-first,
-  ::ng-deep .mat-paginator-navigation-last,
-  ::ng-deep .mat-mdc-paginator-navigation-next,
-  ::ng-deep .mat-mdc-paginator-navigation-previous,
-  ::ng-deep .mat-mdc-paginator-navigation-first,
-  ::ng-deep .mat-mdc-paginator-navigation-last,
-  ::ng-deep .mat-mdc-icon-button {
-    width: 24px !important; // Smaller
-    height: 24px !important;
-    line-height: 24px !important;
-    padding: 0 !important;
-
-    // Icons (SVG/Font)
-    mat-icon,
-    .mat-icon,
-    svg {
-      font-size: 16px !important;
-      width: 16px !important;
-      height: 16px !important;
-      line-height: 16px !important;
-      padding: 0 !important;
-    }
-  }
-
-  // Page Size Select
-  ::ng-deep .mat-mdc-paginator-page-size {
-    align-items: center !important;
-    margin-right: 4px !important;
-  }
-
-  ::ng-deep .mat-mdc-select-trigger {
-    height: 24px !important;
-    min-height: 24px !important;
-    align-items: center !important;
-  }
-
-  ::ng-deep .mat-mdc-select-value {
-    font-size: 9px !important;
-  }
+// Touch / coarse pointers: reveal hover-only affordances.
+@media (hover: none) {
+  .ptable-row { .expander, .row-kebab { opacity: 1; } }
 }
-// --- S6 redesign additions: stock explainer + zero-stock entry point ---
+
+// peek menu bucket breakdown inside row menu
+::ng-deep .peek-buckets {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  min-width: 200px;
+
+  .peek-title { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
+  .peek-bucket { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-main); padding: 2px 0; }
+}
+
+// ------------------------------------------------------------------ pagination
+.pagination-area {
+  flex: 0 0 auto;
+  margin-top: var(--space-3, 12px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 10px);
+  mat-paginator { background: transparent; }
+}
+
+// ------------------------------------------------------------------ stock explainer
 .stock-explainer {
+  flex: 0 0 auto;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-left: 3px solid var(--primary-color);
-  border-radius: var(--border-radius);
-  padding: 16px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-md, 10px);
+  padding: var(--space-4, 16px);
 
-  .stock-explainer-head {
+  .stock-explainer-head { display: flex; justify-content: space-between; align-items: center;
+    h3 { font-family: var(--font-display, sans-serif); font-size: 16px; margin: 0; color: var(--text-main); } }
+  .stock-explainer-intro { color: var(--text-secondary); font-size: 13px; margin: 8px 0 12px; }
+  .stock-buckets { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2, 8px);
+    li { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: var(--bg-hover); border-radius: var(--radius-sm, 8px); }
+    .bucket-name { font-weight: 600; color: var(--text-main); font-size: 13px; }
+    .bucket-desc { color: var(--text-secondary); font-size: 12px; } }
+  .stock-explainer-note { margin: 12px 0 0; font-size: 12px; color: var(--text-hint); }
+}
+
+// ------------------------------------------------------------------ selection bar
+.selection-bar {
+  position: fixed;
+  bottom: var(--space-6, 24px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  max-width: calc(100vw - 32px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill, 999px);
+  box-shadow: var(--shadow-lg);
+  animation: sel-up var(--dur-base, 220ms) var(--ease-standard, ease);
+
+  .sel-info {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-
-    h3 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 16px;
-      margin: 0;
-      color: var(--text-main);
-    }
+    gap: var(--space-2, 8px);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-main);
+    white-space: nowrap;
+    mat-icon { color: var(--accent-color); font-size: 18px; width: 18px; height: 18px; }
+    .sel-all-pages { border: none; background: transparent; color: var(--accent-color); cursor: pointer; font-weight: 600; font-size: 13px; }
   }
 
-  .stock-explainer-intro {
-    color: var(--text-secondary);
-    font-size: 13px;
-    margin: 8px 0 12px;
+  .sel-actions, .bulk-price { display: flex; align-items: center; gap: var(--space-2, 8px); }
+
+  .sel-action {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    mat-icon { color: var(--accent-color); }
   }
-
-  .stock-buckets {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 8px;
-
-    li {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 10px 12px;
-      background: var(--bg-hover);
-      border-radius: var(--border-radius);
-    }
-
-    .bucket-name {
-      font-weight: 600;
-      color: var(--text-main);
-      font-size: 13px;
-    }
-
-    .bucket-desc {
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
+  .sel-delete {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    mat-icon { color: var(--primary-color); }
   }
+  .sel-clear { color: var(--text-secondary); }
 
-  .stock-explainer-note {
-    margin: 12px 0 0;
-    font-size: 12px;
-    color: var(--text-hint);
+  .bulk-price input {
+    width: 120px;
+    height: 32px;
+    border: 1px solid var(--accent-color);
+    border-radius: var(--radius-sm, 8px);
+    background: var(--bg-raised);
+    color: var(--text-main);
+    padding: 0 var(--space-2, 8px);
+    outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .bulk-price .sel-action { background: var(--accent-color); color: var(--text-on-primary); border: none; mat-icon { color: var(--text-on-primary); } }
+
+  @media (max-width: 700px) {
+    .sel-action .lbl, .sel-delete .lbl { display: none; }
+    gap: var(--space-2, 8px);
+    padding: var(--space-1, 4px) var(--space-2, 8px);
   }
 }
 
-.why-zero {
-  display: block;
-  margin-top: 2px;
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--primary-color);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
+@keyframes sel-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(16px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-// Right-aligned tabular money cells in the dense table.
-table .num {
-  text-align: right;
-  font-variant-numeric: tabular-nums lining-nums;
+// ------------------------------------------------------------------ responsive
+@media (max-width: 900px) {
+  .product-list-wrapper { padding: var(--space-4, 16px); }
+  .toolbar-main { gap: var(--space-2, 8px); }
+  .toolbar-actions { width: 100%; justify-content: space-between; margin-left: 0; }
+  .add-split .add-main span { display: none; }
+  .add-split .add-main { padding: 0 var(--space-3, 12px); }
 }

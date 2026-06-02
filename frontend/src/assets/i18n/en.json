@@ -1294,7 +1294,45 @@
     "clickToPreview": "Click to preview",
     "loadingMore": "Loading more...",
     "emptyPeerTitle": "Let's set up your first product",
-    "emptyPeerDescription": "Add one by hand to start, then we'll pull in suppliers and purchase orders so your stock always has a real source. You've got this."
+    "emptyPeerDescription": "Add one by hand to start, then we'll pull in suppliers and purchase orders so your stock always has a real source. You've got this.",
+    "add": "Add",
+    "density": "Density",
+    "normalDensity": "Default",
+    "margin": "Margin",
+    "restock": "Restock",
+    "velocity": "Velocity",
+    "campaigns": "Campaigns",
+    "columnsTitle": "Columns",
+    "resetColumns": "Reset",
+    "clearFilters": "Clear filters",
+    "noResultsTitle": "No results",
+    "noResultsDesc": "Try different filters or search terms.",
+    "bulkEditPrice": "Edit price",
+    "bulkApply": "Apply",
+    "bulkPricePlaceholder": "New price",
+    "selectAllPages": "Select all {{total}}",
+    "kit": "Kit",
+    "reorder": "Reorder",
+    "mlStatus": {
+      "active": "Active",
+      "paused": "Paused",
+      "unlisted": "Unlisted",
+      "closed": "Closed"
+    },
+    "quickViews": {
+      "all": "All",
+      "unlisted": "Unlisted",
+      "low": "Low",
+      "outOfStock": "Out of stock",
+      "reorder": "Reorder",
+      "bundles": "Bundles"
+    },
+    "bulk": {
+      "selectedCount": "{{n}} selected"
+    },
+    "label": {
+      "daysShort": "d"
+    }
   },
   "suppliers": {
     "title": "Suppliers",

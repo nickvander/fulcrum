@@ -89,8 +89,13 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
             .all()
         )
     
+    # Columns the list endpoint is allowed to sort on server-side. Computed
+    # values (stock, margin) are aggregates and are NOT sortable here.
+    SORTABLE_FIELDS = {"name", "sku", "default_resale_price", "cost_price", "created_at", "id"}
+
     def get_multi_paginated(
-        self, db: Session, *, skip: int = 0, limit: int = 10, filters: dict = {}
+        self, db: Session, *, skip: int = 0, limit: int = 10, filters: dict = {},
+        sort_by: str = None, sort_order: str = None,
     ) -> dict:
         query = db.query(self.model).options(*self._list_loader_options())
         
@@ -151,6 +156,14 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
                 elif hasattr(self.model, field):
                     query = query.filter(getattr(self.model, field) == value)
         
+        # Server-side ordering (whitelisted columns only). Default: stable id asc.
+        order_col = None
+        if sort_by and sort_by in self.SORTABLE_FIELDS and hasattr(self.model, sort_by):
+            order_col = getattr(self.model, sort_by)
+        if order_col is None:
+            order_col = self.model.id
+        query = query.order_by(order_col.desc() if (sort_order or '').lower() == 'desc' else order_col.asc())
+
         total_items = query.count()
         data = query.offset(skip).limit(limit).all()
         

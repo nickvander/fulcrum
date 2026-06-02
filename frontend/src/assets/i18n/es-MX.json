@@ -1294,7 +1294,45 @@
     "clickToPreview": "Haz clic para previsualizar",
     "loadingMore": "Cargando más...",
     "emptyPeerTitle": "Vamos a dar de alta tu primer producto",
-    "emptyPeerDescription": "Agrega uno a mano para empezar y después jalamos proveedores y órdenes de compra para que tu stock siempre tenga un origen real. Tú puedes con esto."
+    "emptyPeerDescription": "Agrega uno a mano para empezar y después jalamos proveedores y órdenes de compra para que tu stock siempre tenga un origen real. Tú puedes con esto.",
+    "add": "Agregar",
+    "density": "Densidad",
+    "normalDensity": "Normal",
+    "margin": "Margen",
+    "restock": "Reabasto",
+    "velocity": "Velocidad",
+    "campaigns": "Campañas",
+    "columnsTitle": "Columnas",
+    "resetColumns": "Restablecer",
+    "clearFilters": "Limpiar filtros",
+    "noResultsTitle": "Sin resultados",
+    "noResultsDesc": "Prueba con otros filtros o términos de búsqueda.",
+    "bulkEditPrice": "Editar precio",
+    "bulkApply": "Aplicar",
+    "bulkPricePlaceholder": "Nuevo precio",
+    "selectAllPages": "Seleccionar los {{total}} en total",
+    "kit": "Kit",
+    "reorder": "Reordenar",
+    "mlStatus": {
+      "active": "Activa",
+      "paused": "Pausada",
+      "unlisted": "Sin publicar",
+      "closed": "Cerrada"
+    },
+    "quickViews": {
+      "all": "Todos",
+      "unlisted": "Sin publicar",
+      "low": "Bajo",
+      "outOfStock": "Sin stock",
+      "reorder": "Reordenar",
+      "bundles": "Paquetes"
+    },
+    "bulk": {
+      "selectedCount": "{{n}} seleccionados"
+    },
+    "label": {
+      "daysShort": "d"
+    }
   },
   "suppliers": {
     "title": "Proveedores",
