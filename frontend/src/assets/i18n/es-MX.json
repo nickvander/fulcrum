@@ -124,6 +124,8 @@
     "buyerQuestions": "Preguntas",
     "dailyActions": "Acciones diarias",
     "sendToMlFull": "Enviar a ML Full",
+    "replenishment": "Plan de reabasto a Full",
+    "replenishmentShort": "Reabasto",
     "buyerQuestionsShort": "Preguntas",
     "expensesShort": "Gastos",
     "more": "Más"
@@ -296,6 +298,45 @@
       "unitsReturned": "Unidades",
       "valueAtCost": "Valor (costo)",
       "drillDown": "Ver cada devolución"
+    },
+    "replenishmentPage": {
+      "title": "Plan de reabasto a Full",
+      "subtitle": "Para cada SKU que vende en MercadoLibre: cuándo enviar stock a ML Full y cuándo reordenar con el proveedor, según la velocidad de venta y los tiempos de entrega.",
+      "backToDashboard": "Volver al tablero",
+      "windowLabel": "Ventana de velocidad",
+      "window14": "Últimos 14 días",
+      "window30": "Últimos 30 días",
+      "window60": "Últimos 60 días",
+      "window90": "Últimos 90 días",
+      "fullLeadLabel": "Tiempo a Full",
+      "coverLabel": "Cobertura objetivo",
+      "daysValue": "{{count}} días",
+      "sendNow": "{{count}} por enviar hoy",
+      "reorderNow": "{{count}} por reordenar hoy",
+      "exportCsv": "Exportar CSV",
+      "exportPdf": "Exportar PDF",
+      "empty": "Ningún SKU necesita reabasto por ahora.",
+      "error": "No se pudo cargar el plan de reabasto.",
+      "retry": "Reintentar",
+      "fullAvail": "{{count}} en Full",
+      "coverDays": "{{days}} d de cobertura",
+      "stockTooltip": "Interno: {{internal}} · Full: {{full}} · En tránsito a Full: {{transit}}",
+      "sendUnits": "Enviar {{count}}",
+      "reorderUnits": "Reordenar {{count}}",
+      "severity": {
+        "critical": "Sin Full",
+        "soon": "Hoy",
+        "watch": "Esta semana",
+        "ok": "OK"
+      },
+      "cols": {
+        "product": "Producto",
+        "severity": "Urgencia",
+        "velocity": "Velocidad ML",
+        "stock": "Full disp.",
+        "send": "Enviar a Full",
+        "reorder": "Reordenar"
+      }
     },
     "returnsPage": {
       "title": "Devoluciones físicas",

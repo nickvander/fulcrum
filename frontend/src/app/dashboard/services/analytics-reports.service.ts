@@ -232,6 +232,43 @@ export interface DateRange {
   endDate?: string | null;
 }
 
+/**
+ * One SKU's replenishment plan (B4). Two dated actions across the
+ * supplier -> internal -> ML Full chain. Velocity is ML-channel-scoped.
+ */
+export interface ReplenishmentRow {
+  product_id: number;
+  product_name: string;
+  product_sku: string | null;
+  supplier_id: number | null;
+  daily_velocity: number;
+  internal_on_hand: number;
+  full_on_hand: number;
+  in_transit_to_full: number;
+  full_available: number;
+  days_cover_full: number;
+  days_cover_pipeline: number;
+  /** Suggested units to ship internal -> Full (capped at internal on-hand). */
+  send_to_full_qty: number;
+  /** ISO date, or null when no transfer is due. */
+  send_to_full_by: string | null;
+  supplier_lead_time_days: number | null;
+  reorder_qty: number;
+  /** ISO date, or null when no reorder is due. */
+  reorder_by: string | null;
+  /** 'critical' | 'soon' | 'watch' | 'ok'. */
+  severity: string;
+}
+
+export interface ReplenishmentReport {
+  rows: ReplenishmentRow[];
+  velocity_window_days: number;
+  full_transfer_lead_days: number;
+  target_cover_days: number;
+  total_send_now: number;
+  total_reorder_now: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AnalyticsReportsService {
   private apiUrl = `${environment.apiUrl}/reports`;
@@ -516,6 +553,51 @@ export class AnalyticsReportsService {
     return this.http.post<QuestionRow>(
       `${this.apiUrl}/questions/${questionId}/answer`, { text },
     );
+  }
+
+  // -- B4: replenishment-to-Full planner ----------------------------
+
+  /**
+   * Per-SKU "reorder by / send to Full by" plan. Powers the
+   * `/reports/replenishment` page. Server filters to ML-selling SKUs
+   * that need an action.
+   */
+  replenishment(
+    velocityWindowDays = 30,
+    fullTransferLeadDays = 14,
+    targetCoverDays = 30,
+  ): Observable<ReplenishmentReport> {
+    const params = new HttpParams()
+      .set('velocity_window_days', String(velocityWindowDays))
+      .set('full_transfer_lead_days', String(fullTransferLeadDays))
+      .set('target_cover_days', String(targetCoverDays));
+    return this.http.get<ReplenishmentReport>(
+      `${this.apiUrl}/replenishment`, { params },
+    );
+  }
+
+  exportReplenishmentCsv(
+    velocityWindowDays = 30,
+    fullTransferLeadDays = 14,
+    targetCoverDays = 30,
+  ): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/replenishment/export`, {
+      velocity_window_days: velocityWindowDays,
+      full_transfer_lead_days: fullTransferLeadDays,
+      target_cover_days: targetCoverDays,
+    });
+  }
+
+  exportReplenishmentPdf(
+    velocityWindowDays = 30,
+    fullTransferLeadDays = 14,
+    targetCoverDays = 30,
+  ): Observable<Blob> {
+    return this.blobGet(`${this.apiUrl}/replenishment/export-pdf`, {
+      velocity_window_days: velocityWindowDays,
+      full_transfer_lead_days: fullTransferLeadDays,
+      target_cover_days: targetCoverDays,
+    });
   }
 }
 

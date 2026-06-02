@@ -65,13 +65,29 @@ This is the prioritized backlog of net-new features. Items move to
 
 ## Backlog (not yet scheduled)
 
-### B4 — Lead-time-aware replenishment-to-Full planner · HIGH · M
+### B4 — Lead-time-aware replenishment-to-Full planner · HIGH · M — ✅ SHIPPED 2026-06-01
 "Reorder by date X / send N units to Full by date Y" from velocity +
 `SupplierProduct.lead_time_days` + Full transfer time. Closes the
 two-stage Mexico supply chain (supplier → internal → Full) the allocation
-planner only half-covers. New `/reports/replenishment` that pre-fills the
-existing allocation planner. All inputs already exist (`reorder_point`,
-`reorder_quantity`, `lead_time_days`, velocity aggregator) — no schema.
+planner only half-covers. All inputs already existed (`reorder_quantity`,
+`lead_time_days`, ML-scoped velocity) — no schema migration.
+
+Shipped: `services/replenishment_service.build_replenishment_plan` (ML-scoped
+velocity + Full on-hand + in-transit, mirroring the `ml_full_stockout_risk`
+evaluator) → `GET /reports/replenishment` (+ CSV/PDF export), params
+`velocity_window_days` / `full_transfer_lead_days` (14, matches the alert
+horizon) / `target_cover_days` / `limit`. Per-SKU severity
+(critical/soon/watch) + dated "send to Full by" (capped at internal on-hand)
+and "reorder by" actions. Frontend `/reports/replenishment` page under the
+"Daily actions" sidenav group; Send → transfer planner, Reorder → supplier
+PO (deep-linked with `product`/`qty` query params). es-MX + en localized.
+Tests: `backend/tests/test_replenishment_planner.py` (8),
+`replenishment-page.component.spec.ts` (6).
+
+**Open (deferred):** the transfer planner / PO flow don't yet *consume* the
+`product`/`qty` query params — today the links navigate but the operator
+re-enters the quantity. Wiring the prefill is a small follow-up on those two
+pages.
 
 ### B5 — Buyer Q&A / messaging SLA tracking · MED · M–L — ✅ SHIPPED 2026-05-30
 `marketplace_questions` table + `MercadoLibreConnector.fetch_questions`

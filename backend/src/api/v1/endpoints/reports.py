@@ -29,6 +29,8 @@ from src.models.stock_transfer import LOCATION_INTERNAL, LOCATION_ML_FULL
 from src.services import marketplace_catalog
 from src.models.supplier_product import SupplierProduct
 from src.models.user import User
+from src.schemas.replenishment import ReplenishmentReport
+from src.services import replenishment_service
 from src.services.inventory_service import inventory_service
 from src.services.report_export import (
     ReportColumn,
@@ -297,6 +299,126 @@ def export_low_stock_pdf(
         current_user=current_user,
     )
     return stream_pdf(_low_stock_table(report))
+
+
+# ---------------------------------------------------------------------------
+# Replenishment-to-Full planner (B4) — adds the "when" the low-stock report
+# lacks: dated "reorder by" / "send to Full by" actions across the two-stage
+# Mexico supply chain (supplier -> internal -> ML Full). Computation lives in
+# `services/replenishment_service.py`; this surface is the API + exports.
+# ---------------------------------------------------------------------------
+
+
+@router.get("/replenishment", response_model=ReplenishmentReport)
+def replenishment_report(
+    *,
+    db: Session = Depends(get_db),
+    velocity_window_days: int = Query(30, ge=1, le=365),
+    full_transfer_lead_days: int = Query(14, ge=0, le=180),
+    target_cover_days: int = Query(30, ge=1, le=365),
+    limit: int = Query(200, ge=1, le=1000),
+    current_user: User = Depends(get_current_active_user),
+) -> ReplenishmentReport:
+    """Per-SKU replenishment plan for MercadoLibre-Full sellers.
+
+    For each SKU selling on ML, returns the two dated actions needed to keep
+    Full stocked: when to **send internal stock to Full** and when to
+    **reorder from the supplier** (using `SupplierProduct.lead_time_days`).
+    Velocity is ML-channel-scoped, matching the `ml_full_stockout_risk`
+    alert. SKUs with no ML velocity, or with comfortable cover on both
+    stages, are omitted.
+    """
+    return replenishment_service.build_replenishment_plan(
+        db,
+        velocity_window_days=velocity_window_days,
+        full_transfer_lead_days=full_transfer_lead_days,
+        target_cover_days=target_cover_days,
+        limit=limit,
+    )
+
+
+_REPLENISHMENT_SEVERITY_BG = {
+    "critical": "#fde7e7",  # light red — out of Full now
+    "soon":     "#fff4d6",  # light amber — action due today
+    "watch":    "#f0f4ff",  # light blue — action due within a week
+}
+
+
+def _replenishment_table(report: ReplenishmentReport) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return ReportTable(
+        title="Fulcrum — Replenishment-to-Full Plan",
+        subtitle=(
+            f"Generated {date_stamp} · {report.total_send_now} to send now · "
+            f"{report.total_reorder_now} to reorder now · "
+            f"{report.full_transfer_lead_days}d Full lead · "
+            f"{report.target_cover_days}d target cover"
+        ),
+        filename_stem="fulcrum-replenishment",
+        empty_message="No SKUs need replenishment action.",
+        columns=[
+            ReportColumn("product_id",          "Product ID"),
+            ReportColumn("product_sku",         "SKU"),
+            ReportColumn("product_name",        "Product"),
+            ReportColumn("severity",            "Severity"),
+            ReportColumn("daily_velocity",      "ML velocity",   align="right", formatter=fmt_float(2)),
+            ReportColumn("internal_on_hand",    "Internal",      align="right", formatter=fmt_int),
+            ReportColumn("full_available",      "Full avail.",   align="right", formatter=fmt_int),
+            ReportColumn("days_cover_full",     "Full cover (d)", align="right", formatter=fmt_float(1)),
+            ReportColumn("send_to_full_qty",    "Send to Full",  align="right", formatter=fmt_int),
+            ReportColumn("send_to_full_by",     "Send by",       align="right", formatter=fmt_date),
+            ReportColumn("reorder_qty",         "Reorder qty",   align="right", formatter=fmt_int),
+            ReportColumn("reorder_by",          "Reorder by",    align="right", formatter=fmt_date),
+        ],
+        rows=report.rows,
+        row_style=lambda row: (
+            {"background": _REPLENISHMENT_SEVERITY_BG[row.severity]}
+            if row.severity in _REPLENISHMENT_SEVERITY_BG
+            else None
+        ),
+    )
+
+
+@router.get("/replenishment/export")
+def export_replenishment_csv(
+    *,
+    db: Session = Depends(get_db),
+    velocity_window_days: int = Query(30, ge=1, le=365),
+    full_transfer_lead_days: int = Query(14, ge=0, le=180),
+    target_cover_days: int = Query(30, ge=1, le=365),
+    limit: int = Query(1000, ge=1, le=5000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream the replenishment plan as a CSV download."""
+    report = replenishment_service.build_replenishment_plan(
+        db,
+        velocity_window_days=velocity_window_days,
+        full_transfer_lead_days=full_transfer_lead_days,
+        target_cover_days=target_cover_days,
+        limit=limit,
+    )
+    return stream_csv(_replenishment_table(report))
+
+
+@router.get("/replenishment/export-pdf")
+def export_replenishment_pdf(
+    *,
+    db: Session = Depends(get_db),
+    velocity_window_days: int = Query(30, ge=1, le=365),
+    full_transfer_lead_days: int = Query(14, ge=0, le=180),
+    target_cover_days: int = Query(30, ge=1, le=365),
+    limit: int = Query(1000, ge=1, le=5000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Render the replenishment plan as a printable, severity-colored PDF."""
+    report = replenishment_service.build_replenishment_plan(
+        db,
+        velocity_window_days=velocity_window_days,
+        full_transfer_lead_days=full_transfer_lead_days,
+        target_cover_days=target_cover_days,
+        limit=limit,
+    )
+    return stream_pdf(_replenishment_table(report))
 
 
 # ---------------------------------------------------------------------------

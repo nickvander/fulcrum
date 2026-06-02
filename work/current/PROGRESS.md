@@ -1,5 +1,21 @@
 # Progress Log
 
+**Status (2026-06-01):** B4 — lead-time-aware replenishment-to-Full planner.
+Adds the *when* the low-stock report lacks. New
+`services/replenishment_service.build_replenishment_plan` computes, per
+ML-selling SKU, two dated actions across the supplier → internal → ML-Full
+chain: **send to Full by** (qty capped at internal on-hand) and **reorder
+from supplier by** (using `SupplierProduct.lead_time_days`). Velocity is
+ML-channel-scoped, reusing the `ml_full_stockout_risk` evaluator's queries so
+the alert and the plan agree. Surfaced as `GET /reports/replenishment`
+(+ CSV/PDF export; params `velocity_window_days` / `full_transfer_lead_days`
+=14 / `target_cover_days` / `limit`) and a `/reports/replenishment` page in
+the "Daily actions" sidenav group — Send → transfer planner, Reorder →
+supplier PO (deep-linked). es-MX + en localized. 8 backend + 6 frontend
+tests; theme-contrast + i18n guards green. Remaining ML-seller backlog: B6
+repricing, B7 CFDI, B8 stock-locations (`work/future/93`). **Deferred:** the
+transfer/PO pages don't yet consume the `product`/`qty` prefill params.
+
 **Status (2026-05-30):** Order economics + ML-Full risk + a docs/roadmap sweep.
 Building on the catalog + multi-currency arcs below:
 

@@ -86,6 +86,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/replenishment',
+    loadComponent: () =>
+      import('./dashboard/pages/replenishment-page/replenishment-page.component').then(
+        (m) => m.ReplenishmentPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'reports/profit',
     loadComponent: () =>
       import('./dashboard/pages/profit-page/profit-page.component').then(

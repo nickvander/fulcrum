@@ -124,6 +124,8 @@
     "buyerQuestions": "Buyer Q&A",
     "dailyActions": "Daily actions",
     "sendToMlFull": "Send to ML Full",
+    "replenishment": "Replenishment-to-Full plan",
+    "replenishmentShort": "Replenishment",
     "buyerQuestionsShort": "Questions",
     "expensesShort": "Expenses",
     "more": "More"
@@ -298,6 +300,45 @@
       "unitsReturned": "Units back",
       "valueAtCost": "Value (cost)",
       "drillDown": "See every return"
+    },
+    "replenishmentPage": {
+      "title": "Replenishment-to-Full plan",
+      "subtitle": "For each SKU selling on MercadoLibre: when to send stock to ML Full and when to reorder from the supplier, based on sales velocity and lead times.",
+      "backToDashboard": "Back to dashboard",
+      "windowLabel": "Velocity window",
+      "window14": "Last 14 days",
+      "window30": "Last 30 days",
+      "window60": "Last 60 days",
+      "window90": "Last 90 days",
+      "fullLeadLabel": "Full lead time",
+      "coverLabel": "Target cover",
+      "daysValue": "{{count}} days",
+      "sendNow": "{{count}} to send now",
+      "reorderNow": "{{count}} to reorder now",
+      "exportCsv": "Export CSV",
+      "exportPdf": "Export PDF",
+      "empty": "No SKUs need replenishment right now.",
+      "error": "Could not load the replenishment plan.",
+      "retry": "Retry",
+      "fullAvail": "{{count}} in Full",
+      "coverDays": "{{days}}d cover",
+      "stockTooltip": "Internal: {{internal}} · Full: {{full}} · In transit to Full: {{transit}}",
+      "sendUnits": "Send {{count}}",
+      "reorderUnits": "Reorder {{count}}",
+      "severity": {
+        "critical": "Out of Full",
+        "soon": "Today",
+        "watch": "This week",
+        "ok": "OK"
+      },
+      "cols": {
+        "product": "Product",
+        "severity": "Urgency",
+        "velocity": "ML velocity",
+        "stock": "Full avail.",
+        "send": "Send to Full",
+        "reorder": "Reorder"
+      }
     },
     "returnsPage": {
       "title": "Physical returns",
