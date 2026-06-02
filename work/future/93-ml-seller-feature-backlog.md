@@ -17,17 +17,24 @@ This is the prioritized backlog of net-new features. Items move to
 > Product Ads API, `/seller-promotions`, Amazon fee-type split +
 > `ProductAdsPaymentEvent` + `GET_V2_SELLER_PERFORMANCE_REPORT`).
 
-## Build order (committed)
+## Status (2026-06-01)
 
-1. **B3 — ML Full stockout / lost-buy-box risk alert** — ✅ **SHIPPED**
-   2026-05-30 (commit `da5a9fe`). New `ml_full_stockout_risk` AlertType;
-   per-SKU risk = Full on-hand (`location='ml-full'`) + in-transit
-   transfers vs ML-channel velocity over a 14-day Full replenishment
-   horizon. See `alert_evaluation_service._evaluate_ml_full_stockout_risk`.
-2. **B1 — ML reputation / claims / cancellation-rate monitor** — *active,
-   see `work/current/`.*
-3. **B2 — MELI promotions / Product-Ads cost capture** — *active, see
-   `work/current/`.*
+**The ML-seller backlog is essentially complete.** Shipped: B1, B2, B3, B4,
+B5 (+ answer-from-Fulcrum write path), B6, B7 (export-only) — see each
+section below + `work/current/PROGRESS.md`. **FP-06** (CFDI live timbrado,
+the follow-up to B7) shipped P1 (mock-tested) — see
+`work/future/96-fp06-cfdi-timbrado.md`.
+
+**Remaining:**
+- **B8** — multi-warehouse / real stock-locations table (LOW–MED, deferred
+  until a second internal warehouse exists).
+- **FP-06 P2+** — Facturama live-sandbox verification + CSD upload,
+  cancellations / nota de crédito / factura-global job (`96`).
+- Off-backlog ideas still open: AI multimodal listings, advanced analytics
+  (`80`); plus the deferred follow-ups noted per section (B4 planner→PO/transfer
+  prefill, B6 competitor/buy-box signal, B7 per-buyer specific-RFC capture).
+
+Detailed per-feature notes (value / scope / what shipped) follow.
 
 ---
 

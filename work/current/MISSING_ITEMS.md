@@ -4,6 +4,19 @@ _All onboarding / launch-readiness items are now shipped. This file
 tracks the next round of polish + greenfield work. Add new items here
 when you find them so the next session has a place to start._
 
+> **Where things stand (2026-06-01):** the ML-seller backlog (B1–B7) is
+> shipped and **FP-06 P1** (CFDI live timbrado) is in (mock-tested). Open
+> threads for the next feature push:
+> - **FP-06 P2+** — Facturama live-sandbox verification + CSD upload, then
+>   cancellations / nota de crédito / factura-global job
+>   (`work/future/96-fp06-cfdi-timbrado.md`).
+> - **B8** — multi-warehouse stock-locations (deferred).
+> - **Off-backlog**: AI multimodal listings (`work/future/ai-content-generation.md`),
+>   advanced analytics (`work/future/80-advanced-analytics.md`).
+> - **Small deferred follow-ups**: B4 planner→PO/transfer prefill, B6
+>   competitor/buy-box signal, B7 per-buyer specific-RFC capture.
+> Storefront/checkout lives in the separate **vendio** project, not here.
+
 ## High Priority
 
 _(none active)_
