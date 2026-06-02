@@ -126,11 +126,29 @@ es-MX + en localized. Tests: `test_repricing_assistant.py` (10) +
 **Open (deferred):** competitor / buy-box signal (the uncertain part);
 per-listing fee overrides; bulk-apply.
 
-### B7 — SAT/CFDI factura hooks (Mexico tax) · MED (niche) · L
+### B7 — SAT/CFDI factura hooks (Mexico tax) · MED (niche) · L — ✅ SHIPPED (export-only v1) 2026-06-01
 Export sales/expense data in a CFDI-ready shape, then optionally integrate
 a PAC (Facturama/SW Sapien) to emit facturas. Uniquely Mexican; ML buyers
 frequently request a factura. Full CFDI 4.0 timbrado is regulatory-heavy —
-start **export-only**, defer timbrado. No CFDI/RFC primitives exist today.
+start **export-only**, defer timbrado.
+
+Shipped (export-only): `services/cfdi_service` — issuer (emisor) config
+stored in `StoreSettings.settings['cfdi']` JSON (no migration; mirrors SMTP)
+via `GET`/`POST /settings/cfdi`, and `build_cfdi_report` emitting realized
+sales in a CFDI 4.0-ready shape. Every order issued to the RFC genérico
+(`XAXX010101000`, "PÚBLICO EN GENERAL") — the factura-global treatment for
+consumer marketplace sales. MX prices are IVA-inclusive so IVA is backed out
+(`base = amount/(1+iva_rate)`). `GET /reports/cfdi` (JSON) + `/reports/cfdi/export`
+(CSV). Frontend `/reports/cfdi` page (date window, totals, issuer-missing
+warning → Settings, CSV export) + a Settings → CFDI tab (issuer RFC / razón
+social / régimen / CP / default SAT keys / IVA). es-MX + en. Tests:
+`test_cfdi_export.py` (9) + `cfdi-page` (7) + `cfdi-tab` (4).
+
+**Open (deferred):** per-buyer **specific-RFC capture** (needs SalesOrder
+receiver columns + a capture UI on order detail) — v1 is público-general
+only; **PAC timbrado** (Facturama/SW Sapien) to emit signed CFDI XML;
+expense-side CFDI (recibidos). No product-level SAT key overrides yet (single
+default ClaveProdServ/ClaveUnidad from issuer config).
 
 ### B8 — Multi-warehouse / real stock-locations table · LOW–MED · M
 Promote `inventory_items.location` from free-string to a real

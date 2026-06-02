@@ -102,6 +102,14 @@ const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reports/cfdi',
+    loadComponent: () =>
+      import('./dashboard/pages/cfdi-page/cfdi-page.component').then(
+        (m) => m.CfdiPageComponent,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'reports/profit',
     loadComponent: () =>
       import('./dashboard/pages/profit-page/profit-page.component').then(

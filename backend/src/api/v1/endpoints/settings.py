@@ -11,8 +11,32 @@ from src.api.dependencies import get_db
 from src.core.errors import LocalizedHTTPException
 from src.models.user import User
 from src.schemas.store_settings import SMTPConfigCreate
+from src.schemas.cfdi import CfdiIssuerConfig, CfdiIssuerConfigUpdate
 
 router = APIRouter()
+
+
+@router.get("/cfdi", response_model=CfdiIssuerConfig)
+def get_cfdi_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+) -> CfdiIssuerConfig:
+    """Read the CFDI issuer (emisor) tax identity used by the factura export."""
+    from src.services import cfdi_service
+
+    return cfdi_service.read_issuer_config(db)
+
+
+@router.post("/cfdi", response_model=CfdiIssuerConfig)
+def save_cfdi_settings(
+    data: CfdiIssuerConfigUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(dependencies.get_current_active_user),
+) -> CfdiIssuerConfig:
+    """Save the CFDI issuer config (stored in StoreSettings JSON)."""
+    from src.services import cfdi_service
+
+    return cfdi_service.save_issuer_config(db, data)
 
 
 class MarketplaceSettingsInput(BaseModel):

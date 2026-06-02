@@ -11,6 +11,7 @@ import { InventoryTabComponent } from '../tabs/inventory-tab.component';
 import { DataTabComponent } from '../tabs/data-tab.component';
 import { AiTabComponent } from '../tabs/ai-tab.component';
 import { CurrencyTabComponent } from '../tabs/currency-tab.component';
+import { CfdiTabComponent } from '../tabs/cfdi-tab.component';
 
 @Component({
   selector: 'app-settings',
@@ -25,7 +26,8 @@ import { CurrencyTabComponent } from '../tabs/currency-tab.component';
     InventoryTabComponent,
     DataTabComponent,
     AiTabComponent,
-    CurrencyTabComponent
+    CurrencyTabComponent,
+    CfdiTabComponent
   ],
 })
 

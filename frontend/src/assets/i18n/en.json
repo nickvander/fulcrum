@@ -128,6 +128,8 @@
     "replenishmentShort": "Replenishment",
     "repricing": "Pricing assistant",
     "repricingShort": "Pricing",
+    "cfdi": "CFDI export (invoices)",
+    "cfdiShort": "CFDI",
     "buyerQuestionsShort": "Questions",
     "expensesShort": "Expenses",
     "more": "More"
@@ -302,6 +304,34 @@
       "unitsReturned": "Units back",
       "valueAtCost": "Value (cost)",
       "drillDown": "See every return"
+    },
+    "cfdiPage": {
+      "title": "CFDI export (invoices)",
+      "subtitle": "Realized sales in a CFDI 4.0-ready shape for your accountant or PAC to stamp (factura global to público en general). v1 is export-only; no stamping.",
+      "backToDashboard": "Back to dashboard",
+      "windowLabel": "Window",
+      "window30": "Last 30 days",
+      "window60": "Last 60 days",
+      "window90": "Last 90 days",
+      "issuerMissing": "Set up your issuer RFC so the export is ready to stamp.",
+      "configureIssuer": "Configure issuer",
+      "orders": "{{count}} sales",
+      "subtotal": "Subtotal",
+      "iva": "IVA",
+      "total": "Total",
+      "exportCsv": "Export CSV",
+      "cfdiUse": "CFDI use",
+      "empty": "No realized sales in the selected range.",
+      "error": "Could not load the CFDI export.",
+      "retry": "Retry",
+      "cols": {
+        "issuedAt": "Date",
+        "order": "Order",
+        "receiver": "Receiver",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
     },
     "repricingPage": {
       "title": "Pricing assistant (margin floor)",
@@ -2631,6 +2661,24 @@
       "samePairError": "Pick two different currencies.",
       "loadError": "Couldn't load exchange rates.",
       "saveError": "Couldn't save the exchange rate."
+    },
+    "cfdi": {
+      "tab": "CFDI",
+      "title": "Issuer details (CFDI)",
+      "hint": "Your business's tax identity for the invoice export. Without these, the export isn't ready to stamp. No stamping happens here.",
+      "statusReady": "Ready to export",
+      "statusIncomplete": "Incomplete",
+      "rfc": "RFC",
+      "name": "Legal name",
+      "taxRegime": "Tax regime (SAT key)",
+      "postalCode": "Postal code (place of issue)",
+      "defaultProductKey": "Default ProductServ key",
+      "defaultUnitKey": "Default Unit key",
+      "cfdiUse": "Default CFDI use",
+      "ivaRate": "IVA rate",
+      "save": "Save",
+      "saved": "Issuer details saved.",
+      "saveError": "Couldn't save the issuer details."
     },
     "aiTab": {
       "description": "Connect an AI provider to enable product identification from photos. Only the active provider needs an API key configured.",

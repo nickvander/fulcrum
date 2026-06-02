@@ -1,0 +1,49 @@
+.cfdi-tab {
+  padding: 16px 8px;
+  max-width: 640px;
+
+  h2 {
+    margin: 0 0 4px;
+    font-size: 1.2rem;
+  }
+
+  .hint {
+    margin: 0 0 12px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    background: var(--warning-bg);
+    color: var(--warning-color);
+
+    &.ok {
+      background: var(--success-bg);
+      color: var(--success-color);
+    }
+  }
+
+  .cfdi-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .cfdi-form {
+      grid-template-columns: 1fr;
+    }
+  }
+}

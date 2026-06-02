@@ -128,6 +128,8 @@
     "replenishmentShort": "Reabasto",
     "repricing": "Asistente de precios",
     "repricingShort": "Precios",
+    "cfdi": "Exportar CFDI (facturas)",
+    "cfdiShort": "CFDI",
     "buyerQuestionsShort": "Preguntas",
     "expensesShort": "Gastos",
     "more": "Más"
@@ -300,6 +302,34 @@
       "unitsReturned": "Unidades",
       "valueAtCost": "Valor (costo)",
       "drillDown": "Ver cada devolución"
+    },
+    "cfdiPage": {
+      "title": "Exportar CFDI (facturas)",
+      "subtitle": "Ventas realizadas en formato listo para CFDI 4.0, para que tu contador o PAC las timbre (factura global de público en general). v1: solo exportación; sin timbrado.",
+      "backToDashboard": "Volver al tablero",
+      "windowLabel": "Ventana",
+      "window30": "Últimos 30 días",
+      "window60": "Últimos 60 días",
+      "window90": "Últimos 90 días",
+      "issuerMissing": "Falta configurar el RFC emisor para que la exportación esté lista.",
+      "configureIssuer": "Configurar emisor",
+      "orders": "{{count}} ventas",
+      "subtotal": "Subtotal",
+      "iva": "IVA",
+      "total": "Total",
+      "exportCsv": "Exportar CSV",
+      "cfdiUse": "Uso CFDI",
+      "empty": "Sin ventas realizadas en el rango seleccionado.",
+      "error": "No se pudo cargar la exportación CFDI.",
+      "retry": "Reintentar",
+      "cols": {
+        "issuedAt": "Fecha",
+        "order": "Orden",
+        "receiver": "Receptor",
+        "subtotal": "Subtotal",
+        "iva": "IVA",
+        "total": "Total"
+      }
     },
     "repricingPage": {
       "title": "Asistente de precios (margen mínimo)",
@@ -2631,6 +2661,24 @@
       "samePairError": "Elige dos monedas distintas.",
       "loadError": "No se pudieron cargar los tipos de cambio.",
       "saveError": "No se pudo guardar el tipo de cambio."
+    },
+    "cfdi": {
+      "tab": "CFDI",
+      "title": "Datos del emisor (CFDI)",
+      "hint": "Identidad fiscal de tu negocio para la exportación de facturas. Sin estos datos, la exportación no está lista para timbrar. No se timbra aquí.",
+      "statusReady": "Listo para exportar",
+      "statusIncomplete": "Datos incompletos",
+      "rfc": "RFC",
+      "name": "Razón social",
+      "taxRegime": "Régimen fiscal (clave SAT)",
+      "postalCode": "Código postal (lugar de expedición)",
+      "defaultProductKey": "ClaveProdServ por defecto",
+      "defaultUnitKey": "ClaveUnidad por defecto",
+      "cfdiUse": "Uso CFDI por defecto",
+      "ivaRate": "Tasa de IVA",
+      "save": "Guardar",
+      "saved": "Datos del emisor guardados.",
+      "saveError": "No se pudieron guardar los datos del emisor."
     },
     "aiTab": {
       "description": "Conecta un proveedor de IA para identificar productos desde fotos. Solo el proveedor activo necesita una clave API configurada.",

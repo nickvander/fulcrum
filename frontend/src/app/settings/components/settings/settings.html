@@ -54,7 +54,16 @@
         <app-currency-tab></app-currency-tab>
       </mat-tab>
 
-      <!-- TAB 6: Data Management -->
+      <!-- TAB 6: CFDI / Facturación -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>receipt_long</mat-icon>
+          <span>{{ t('settings.cfdi.tab') }}</span>
+        </ng-template>
+        <app-cfdi-tab></app-cfdi-tab>
+      </mat-tab>
+
+      <!-- TAB 7: Data Management -->
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>storage</mat-icon>

@@ -35,7 +35,8 @@ from src.schemas.repricing import (
     ApplyPriceResponse,
     RepricingReport,
 )
-from src.services import replenishment_service, repricing_service
+from src.schemas.cfdi import CfdiReport
+from src.services import cfdi_service, replenishment_service, repricing_service
 from src.services.inventory_service import inventory_service
 from src.services.report_export import (
     ReportColumn,
@@ -516,6 +517,121 @@ def apply_repricing(
         listing_id=listing.id,
         marketplace_price=float(listing.marketplace_price or 0.0),
     )
+
+
+# ---------------------------------------------------------------------------
+# SAT/CFDI factura export (B7) — export-only. Emits realized sales in a
+# CFDI 4.0-ready shape (público-general) for an accountant / PAC to timbrar.
+# Computation lives in `services/cfdi_service.py`.
+# ---------------------------------------------------------------------------
+
+
+def _cfdi_date_range(
+    start_date: Optional[str], end_date: Optional[str]
+) -> tuple[Optional[date], Optional[date]]:
+    """Parse ISO date strings; default to the last 30 days when neither is
+    given so the export doesn't dump the entire order history by accident."""
+    def _parse(value: Optional[str]) -> Optional[date]:
+        if not value:
+            return None
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            raise LocalizedHTTPException(
+                status_code=400,
+                code="apiErrors.report.invalidDate",
+                params={"value": value},
+                detail=f"Invalid date: {value}",
+            )
+
+    start = _parse(start_date)
+    end = _parse(end_date)
+    if start is None and end is None:
+        end = datetime.now(timezone.utc).date()
+        start = end - timedelta(days=30)
+    return start, end
+
+
+@router.get("/cfdi", response_model=CfdiReport)
+def cfdi_report(
+    *,
+    db: Session = Depends(get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    limit: int = Query(1000, ge=1, le=5000),
+    current_user: User = Depends(get_current_active_user),
+) -> CfdiReport:
+    """Realized sales in a CFDI 4.0-ready shape (export-only).
+
+    Defaults to the last 30 days when no date range is given. Every order
+    is issued to the RFC genérico ("PÚBLICO EN GENERAL") — the standard
+    treatment for consumer marketplace sales. `issuer.is_configured` is
+    false until the emisor RFC/name/régimen are set under Settings → CFDI.
+    """
+    start, end = _cfdi_date_range(start_date, end_date)
+    return cfdi_service.build_cfdi_report(db, start_date=start, end_date=end, limit=limit)
+
+
+def _cfdi_table(report: CfdiReport) -> ReportTable:
+    date_stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    issuer_rfc = report.issuer.rfc or "—"
+    rows = [
+        {
+            "order_id": r.order_id,
+            "external_order_id": r.external_order_id or "",
+            "issued_at": r.issued_at,
+            "source": r.source or "",
+            "currency": r.currency,
+            "issuer_rfc": issuer_rfc,
+            "receiver_rfc": r.receiver_rfc,
+            "receiver_name": r.receiver_name,
+            "cfdi_use": r.cfdi_use,
+            "subtotal": r.subtotal,
+            "iva_amount": r.iva_amount,
+            "total": r.total,
+        }
+        for r in report.rows
+    ]
+    return ReportTable(
+        title="Fulcrum — CFDI Export (público en general)",
+        subtitle=(
+            f"Generated {date_stamp} · {report.order_count} orders · "
+            f"subtotal {report.subtotal:.2f} · IVA {report.iva_amount:.2f} · "
+            f"total {report.total:.2f}"
+        ),
+        filename_stem="fulcrum-cfdi",
+        empty_message="No realized sales in the selected range.",
+        columns=[
+            ReportColumn("order_id",          "Order ID"),
+            ReportColumn("external_order_id", "External #"),
+            ReportColumn("issued_at",         "Issued",        formatter=fmt_date),
+            ReportColumn("source",            "Channel"),
+            ReportColumn("currency",          "Currency"),
+            ReportColumn("issuer_rfc",        "Issuer RFC"),
+            ReportColumn("receiver_rfc",      "Receiver RFC"),
+            ReportColumn("receiver_name",     "Receiver"),
+            ReportColumn("cfdi_use",          "CFDI use"),
+            ReportColumn("subtotal",          "Subtotal",  align="right", formatter=fmt_float(2)),
+            ReportColumn("iva_amount",        "IVA",       align="right", formatter=fmt_float(2)),
+            ReportColumn("total",             "Total",     align="right", formatter=fmt_float(2)),
+        ],
+        rows=rows,
+    )
+
+
+@router.get("/cfdi/export")
+def export_cfdi_csv(
+    *,
+    db: Session = Depends(get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+    limit: int = Query(5000, ge=1, le=20000),
+    current_user: User = Depends(get_current_active_user),
+) -> StreamingResponse:
+    """Stream the CFDI-ready export as a CSV download (one row per order)."""
+    start, end = _cfdi_date_range(start_date, end_date)
+    report = cfdi_service.build_cfdi_report(db, start_date=start, end_date=end, limit=limit)
+    return stream_csv(_cfdi_table(report))
 
 
 # ---------------------------------------------------------------------------

@@ -1,0 +1,128 @@
+<ng-container *transloco="let t">
+  <div class="cfdi-page">
+    <div class="page-header">
+      <div class="header-text">
+        <h1>{{ t('dashboard.cfdiPage.title') }}</h1>
+        <p>{{ t('dashboard.cfdiPage.subtitle') }}</p>
+      </div>
+      <a mat-stroked-button routerLink="/dashboard" data-testid="cfdi-page-back">
+        <mat-icon>arrow_back</mat-icon>
+        {{ t('dashboard.cfdiPage.backToDashboard') }}
+      </a>
+    </div>
+
+    <mat-card class="issuer-warning" *ngIf="!loading && !issuerConfigured"
+              data-testid="cfdi-issuer-warning">
+      <mat-icon>warning</mat-icon>
+      <span>{{ t('dashboard.cfdiPage.issuerMissing') }}</span>
+      <a mat-stroked-button routerLink="/settings">
+        {{ t('dashboard.cfdiPage.configureIssuer') }}
+      </a>
+    </mat-card>
+
+    <mat-card class="filters">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ t('dashboard.cfdiPage.windowLabel') }}</mat-label>
+        <mat-select
+          [(value)]="windowDays"
+          (selectionChange)="onFilterChange()"
+          data-testid="cfdi-window-select"
+        >
+          <mat-option *ngFor="let opt of windowOptions" [value]="opt.value">
+            {{ t(opt.labelKey) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="totals" *ngIf="!loading && !errored">
+        <span class="total-chip">
+          {{ t('dashboard.cfdiPage.orders', { count: orderCount }) }}
+        </span>
+        <span class="total-chip">
+          {{ t('dashboard.cfdiPage.subtotal') }}: {{ formatCurrency(subtotal) }}
+        </span>
+        <span class="total-chip">
+          {{ t('dashboard.cfdiPage.iva') }}: {{ formatCurrency(ivaAmount) }}
+        </span>
+        <span class="total-chip total-strong">
+          {{ t('dashboard.cfdiPage.total') }}: {{ formatCurrency(total) }}
+        </span>
+      </div>
+
+      <button mat-flat-button color="primary" class="export-btn"
+              (click)="exportCsv()"
+              [disabled]="rows.length === 0"
+              data-testid="cfdi-export-csv">
+        <mat-icon>download</mat-icon>
+        {{ t('dashboard.cfdiPage.exportCsv') }}
+      </button>
+    </mat-card>
+
+    @if (loading && rows.length === 0) {
+      <div class="loading-state">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else if (errored && rows.length === 0) {
+      <mat-card class="error-card" data-testid="cfdi-page-error">
+        <p>{{ t('dashboard.cfdiPage.error') }}</p>
+        <button mat-flat-button color="primary" (click)="load()">
+          {{ t('dashboard.cfdiPage.retry') }}
+        </button>
+      </mat-card>
+    } @else if (rows.length === 0) {
+      <mat-card class="empty-state" data-testid="cfdi-page-empty">
+        <mat-icon>receipt_long</mat-icon>
+        <p>{{ t('dashboard.cfdiPage.empty') }}</p>
+      </mat-card>
+    } @else {
+      <mat-card class="table-card">
+        <table mat-table [dataSource]="rows" class="cfdi-table" data-testid="cfdi-table">
+          <ng-container matColumnDef="issued_at">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.cfdiPage.cols.issuedAt') }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.issued_at | date:'mediumDate' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="external_order_id">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.cfdiPage.cols.order') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="external-id">{{ row.external_order_id || ('#' + row.order_id) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="receiver">
+            <th mat-header-cell *matHeaderCellDef>{{ t('dashboard.cfdiPage.cols.receiver') }}</th>
+            <td mat-cell *matCellDef="let row">
+              <div class="receiver-cell"
+                   [matTooltip]="t('dashboard.cfdiPage.cfdiUse') + ': ' + row.cfdi_use">
+                <span>{{ row.receiver_name }}</span>
+                <code class="rfc">{{ row.receiver_rfc }}</code>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="subtotal">
+            <th mat-header-cell *matHeaderCellDef class="num-col">{{ t('dashboard.cfdiPage.cols.subtotal') }}</th>
+            <td mat-cell *matCellDef="let row" class="num-col">{{ formatCurrency(row.subtotal) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="iva">
+            <th mat-header-cell *matHeaderCellDef class="num-col">{{ t('dashboard.cfdiPage.cols.iva') }}</th>
+            <td mat-cell *matCellDef="let row" class="num-col">{{ formatCurrency(row.iva_amount) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef class="num-col">{{ t('dashboard.cfdiPage.cols.total') }}</th>
+            <td mat-cell *matCellDef="let row" class="num-col">
+              <strong>{{ formatCurrency(row.total) }}</strong>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              [attr.data-testid]="'cfdi-row-' + row.order_id">
+          </tr>
+        </table>
+      </mat-card>
+    }
+  </div>
+</ng-container>

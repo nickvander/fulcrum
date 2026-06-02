@@ -1,5 +1,18 @@
 # Progress Log
 
+**Status (2026-06-01):** B7 — SAT/CFDI factura export (export-only v1).
+`services/cfdi_service` stores the issuer (emisor) tax identity in
+`StoreSettings.settings['cfdi']` JSON (no migration; mirrors SMTP) and
+`build_cfdi_report` emits realized sales in a CFDI 4.0-ready shape — every
+order to the RFC genérico ("PÚBLICO EN GENERAL"), the factura-global treatment
+for consumer marketplace sales, with IVA backed out of tax-inclusive prices.
+`GET`/`POST /settings/cfdi`, `GET /reports/cfdi` (JSON) + `/reports/cfdi/export`
+(CSV). Frontend `/reports/cfdi` page (window, totals, issuer-missing warning,
+CSV) + a Settings → CFDI tab for the issuer config. es-MX + en. 9 backend + 11
+frontend tests; guards green. **Deferred:** per-buyer specific-RFC capture
+(needs SalesOrder columns + UI), PAC timbrado, expense-side CFDI. ML-seller
+backlog now: only B8 (multi-warehouse, deferred) remains.
+
 **Status (2026-06-01):** B6 — margin-floor repricing assistant. Surfaces
 listings selling below a target net margin and pushes an approved price to
 the channel. `services/repricing_service.build_repricing_report` computes the
