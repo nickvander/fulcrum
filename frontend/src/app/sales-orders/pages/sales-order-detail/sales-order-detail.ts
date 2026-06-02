@@ -22,6 +22,7 @@ import {
   RecordReturnDialogData,
 } from '../../components/record-return-dialog/record-return-dialog.component';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+import { CfdiOrderCardComponent } from '../../components/cfdi-order-card/cfdi-order-card.component';
 
 @Component({
   selector: 'app-sales-order-detail',
@@ -39,6 +40,7 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
     MatTooltipModule,
     TranslocoModule,
     MoneyPipe,
+    CfdiOrderCardComponent,
   ],
   templateUrl: './sales-order-detail.html',
   styleUrl: './sales-order-detail.scss',

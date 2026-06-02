@@ -132,9 +132,14 @@ status). No PAC SDK or CSD in vendio.
    endpoints `POST /reports/cfdi/{order_id}/stamp` (409 on marketplace_handled),
    `POST .../link-external`, `GET .../document`; CFDI config extended with
    `invoicing_policy` + encrypted PAC key. 11 tests via the mock PAC.
+   Frontend: a per-order **CFDI card on the order detail page**
+   (`components/cfdi-order-card`) — shows the stamped/linked document, a
+   **Stamp** button (self channels), and a **Link external UUID** form
+   (shown automatically on a 409 marketplace_handled, e.g. ML). Works
+   against the mock today.
    **Open:** verify `FacturamaInvoicingProvider` against a live **sandbox**
    (field names in `_payload` are unconfirmed) once credentials exist; CSD
-   upload; a frontend per-order Stamp/Link action on the order detail page.
+   upload.
 2. **P2 — cancellations + nota de crédito + factura global job.**
 3. **P3 — channel-aware policy + ML `link-external` import path + auto-stamp
    trigger + the vendio forwarding contract.**

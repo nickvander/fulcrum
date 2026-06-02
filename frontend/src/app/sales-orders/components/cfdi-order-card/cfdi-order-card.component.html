@@ -1,0 +1,81 @@
+<ng-container *transloco="let t">
+  <section class="cfdi-card" data-testid="cfdi-order-card">
+    <header class="cfdi-header">
+      <h2>{{ t('orders.cfdi.title') }}</h2>
+      @if (doc) {
+        <span class="cfdi-badge"
+              [class.linked]="doc.invoicing_source === 'marketplace_handled'">
+          {{ doc.invoicing_source === 'marketplace_handled'
+              ? t('orders.cfdi.linked') : t('orders.cfdi.stamped') }}
+        </span>
+      }
+    </header>
+
+    @if (loading) {
+      <div class="cfdi-loading"><mat-spinner diameter="22"></mat-spinner></div>
+    } @else if (doc) {
+      <!-- Issued / linked document -->
+      <dl class="cfdi-doc" data-testid="cfdi-doc">
+        <div><dt>UUID</dt><dd><code>{{ doc.uuid || '—' }}</code></dd></div>
+        <div>
+          <dt>{{ t('orders.cfdi.receiver') }}</dt>
+          <dd>{{ doc.receiver_name || '—' }} <code *ngIf="doc.receiver_rfc">{{ doc.receiver_rfc }}</code></dd>
+        </div>
+        <div>
+          <dt>{{ t('orders.cfdi.total') }}</dt>
+          <dd>{{ (doc.total_cents / 100) | currency:doc.currency:'symbol-narrow':'1.2-2' }}</dd>
+        </div>
+        <div *ngIf="doc.pac_vendor">
+          <dt>{{ t('orders.cfdi.pac') }}</dt><dd>{{ doc.pac_vendor }}</dd>
+        </div>
+      </dl>
+    } @else {
+      <!-- No document yet -->
+      @if (issuerMissing) {
+        <p class="cfdi-warn" data-testid="cfdi-issuer-missing">
+          {{ t('orders.cfdi.issuerMissing') }}
+          <a routerLink="/settings">{{ t('orders.cfdi.goToSettings') }}</a>
+        </p>
+      }
+      @if (marketplaceHandled) {
+        <p class="cfdi-hint" data-testid="cfdi-marketplace-hint">
+          {{ t('orders.cfdi.marketplaceHandled') }}
+        </p>
+      }
+      @if (errorKey) {
+        <p class="cfdi-error">{{ t(errorKey) }}</p>
+      }
+
+      <div class="cfdi-actions">
+        <button mat-flat-button color="primary"
+                (click)="stamp()" [disabled]="working"
+                data-testid="cfdi-stamp-btn">
+          <mat-icon>receipt_long</mat-icon>
+          {{ t('orders.cfdi.stamp') }}
+        </button>
+        <button mat-stroked-button (click)="toggleLink()" [disabled]="working"
+                data-testid="cfdi-link-toggle">
+          {{ t('orders.cfdi.linkExternal') }}
+        </button>
+      </div>
+
+      @if (showLink) {
+        <div class="cfdi-link-form" data-testid="cfdi-link-form">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ t('orders.cfdi.uuidLabel') }}</mat-label>
+            <input matInput [(ngModel)]="linkUuid" data-testid="cfdi-link-uuid" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic">
+            <mat-label>{{ t('orders.cfdi.rfcLabel') }}</mat-label>
+            <input matInput [(ngModel)]="linkRfc" />
+          </mat-form-field>
+          <button mat-flat-button color="primary"
+                  (click)="link()" [disabled]="working || !linkUuid.trim()"
+                  data-testid="cfdi-link-submit">
+            {{ t('orders.cfdi.linkSave') }}
+          </button>
+        </div>
+      }
+    }
+  </section>
+</ng-container>

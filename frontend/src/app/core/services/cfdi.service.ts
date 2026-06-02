@@ -68,6 +68,24 @@ export interface CfdiDateRange {
   endDate?: string | null;
 }
 
+/** A stamped or linked fiscal document for an order (FP-06). */
+export interface CfdiDocument {
+  id: number;
+  order_id: number | null;
+  kind: string;
+  status: string;            // 'stamped' | 'cancelled' | 'pending' | 'error'
+  invoicing_source: string;  // 'self' | 'marketplace_handled'
+  uuid: string | null;
+  receiver_rfc: string | null;
+  receiver_name: string | null;
+  cfdi_use: string | null;
+  currency: string;
+  subtotal_cents: number;
+  iva_cents: number;
+  total_cents: number;
+  pac_vendor: string | null;
+}
+
 /**
  * Talks to the CFDI export API (`/reports/cfdi`) and the issuer config
  * (`/settings/cfdi`). Export-only: emits realized sales in a CFDI-ready
@@ -107,5 +125,32 @@ export class CfdiService {
     if (range?.startDate) params = params.set('start_date', range.startDate);
     if (range?.endDate) params = params.set('end_date', range.endDate);
     return params;
+  }
+
+  // --- FP-06: per-order stamping / linking -------------------------
+
+  /** The latest CFDI document for an order (404 -> none yet). */
+  getOrderDocument(orderId: number): Observable<CfdiDocument> {
+    return this.http.get<CfdiDocument>(`${this.reportsUrl}/cfdi/${orderId}/document`);
+  }
+
+  /** Stamp the order's CFDI via the PAC. 409 => the channel issues its own
+   *  CFDI (link it instead); 400 => issuer not configured. */
+  stampOrder(orderId: number): Observable<CfdiDocument> {
+    return this.http.post<CfdiDocument>(`${this.reportsUrl}/cfdi/${orderId}/stamp`, {});
+  }
+
+  /** Record a CFDI issued elsewhere (e.g. MercadoLibre) against the order. */
+  linkExternal(
+    orderId: number,
+    uuid: string,
+    receiverRfc?: string,
+    receiverName?: string,
+  ): Observable<CfdiDocument> {
+    return this.http.post<CfdiDocument>(`${this.reportsUrl}/cfdi/${orderId}/link-external`, {
+      uuid,
+      receiver_rfc: receiverRfc || null,
+      receiver_name: receiverName || null,
+    });
   }
 }

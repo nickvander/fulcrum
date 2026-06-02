@@ -1,0 +1,101 @@
+.cfdi-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  background: var(--bg-raised);
+
+  .cfdi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .cfdi-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--success-bg);
+      color: var(--success-color);
+
+      &.linked {
+        background: var(--warning-bg);
+        color: var(--warning-color);
+      }
+    }
+  }
+
+  .cfdi-loading {
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .cfdi-doc {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    dt {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      margin: 0;
+    }
+
+    dd {
+      margin: 0;
+      text-align: right;
+    }
+
+    code {
+      font-family: ui-monospace, monospace;
+      font-size: 0.78rem;
+      background: var(--bg-card);
+      border-radius: 4px;
+      padding: 1px 6px;
+    }
+  }
+
+  .cfdi-warn,
+  .cfdi-hint,
+  .cfdi-error {
+    font-size: 0.85rem;
+    margin: 0 0 12px;
+  }
+
+  .cfdi-warn { color: var(--warning-color); }
+  .cfdi-hint { color: var(--text-secondary); }
+  .cfdi-error { color: var(--error-color); }
+
+  .cfdi-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .cfdi-link-form {
+    margin-top: 12px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+
+    mat-form-field {
+      min-width: 220px;
+    }
+  }
+}

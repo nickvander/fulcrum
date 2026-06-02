@@ -10,7 +10,11 @@ storefront/Amazon → `self` = Fulcrum stamps), idempotent `stamp_order`,
 `link_external`, per-order stamp-request built by reusing B7's IVA back-out.
 Endpoints `POST /reports/cfdi/{order}/stamp` (409 on marketplace_handled),
 `/link-external`, `GET /document`. CFDI config gained `invoicing_policy` + an
-encrypted PAC key. 11 tests via the mock PAC; ruff clean; single alembic head.
+encrypted PAC key. **Frontend:** a per-order CFDI card on the order detail page
+(`sales-orders/components/cfdi-order-card`) — shows the stamped/linked doc, a
+Stamp button (self channels), and a Link-external-UUID form (auto-shown on a
+409, e.g. ML). 11 backend tests via the mock PAC + 7 frontend; ruff clean;
+single alembic head.
 Scoped in `work/future/96`. **Open:** live Facturama **sandbox** verification
 (payload field names unconfirmed), CSD upload, P2 (cancel / nota de crédito /
 factura global), and a frontend Stamp/Link action. Vendio forwards to these
