@@ -25,6 +25,7 @@ from .supplier_product_alias import SupplierProductAlias
 from .expense import Expense
 from .expense_receipt import ExpenseReceipt
 from .store_settings import StoreSettings
+from .cfdi_document import CfdiDocument  # noqa: F401  (registered for metadata)
 from .product_inventory_settings import ProductInventorySettings
 from .api_key import ApiKey
 from .pending_sync import SyncBatch, PendingSyncChange, EntityChangeLog

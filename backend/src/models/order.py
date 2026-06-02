@@ -74,6 +74,14 @@ class SalesOrder(Base):
     # cancelled state.
     stock_recredited_at = Column(DateTime(timezone=True), nullable=True)
 
+    # CFDI receiver (buyer) fiscal data captured at checkout for FP-06.
+    # NULL => issue to público en general (RFC genérico). See cfdi_service.
+    cfdi_receiver_rfc = Column(String(13), nullable=True)
+    cfdi_receiver_name = Column(String(255), nullable=True)
+    cfdi_receiver_postal_code = Column(String(5), nullable=True)
+    cfdi_receiver_regime = Column(String(8), nullable=True)
+    cfdi_use = Column(String(8), nullable=True)
+
     items = relationship("SalesOrderItem", back_populates="order")
     cost_breakdown = relationship(
         "OrderCostBreakdown",

@@ -1,5 +1,22 @@
 # Progress Log
 
+**Status (2026-06-01):** FP-06 P1 — CFDI live stamping foundation (mock-tested).
+Builds on B7. Migration `b7e1c0d4f206` adds `cfdi_documents` + per-order CFDI
+receiver columns. New `services/invoicing/` (`InvoicingProvider` interface +
+`FacturamaInvoicingProvider` httpx adapter + deterministic
+`MockInvoicingProvider`) and `cfdi_stamp_service`: per-channel **invoicing
+policy** (ML → `marketplace_handled` = link ML's UUID, never double-stamp;
+storefront/Amazon → `self` = Fulcrum stamps), idempotent `stamp_order`,
+`link_external`, per-order stamp-request built by reusing B7's IVA back-out.
+Endpoints `POST /reports/cfdi/{order}/stamp` (409 on marketplace_handled),
+`/link-external`, `GET /document`. CFDI config gained `invoicing_policy` + an
+encrypted PAC key. 11 tests via the mock PAC; ruff clean; single alembic head.
+Scoped in `work/future/96`. **Open:** live Facturama **sandbox** verification
+(payload field names unconfirmed), CSD upload, P2 (cancel / nota de crédito /
+factura global), and a frontend Stamp/Link action. Vendio forwards to these
+endpoints (its `InvoicingProvider` must NOT call the PAC directly — CSD lives
+only in Fulcrum).
+
 **Status (2026-06-01):** B7 — SAT/CFDI factura export (export-only v1).
 `services/cfdi_service` stores the issuer (emisor) tax identity in
 `StoreSettings.settings['cfdi']` JSON (no migration; mirrors SMTP) and

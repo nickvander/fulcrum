@@ -35,8 +35,17 @@ from src.schemas.repricing import (
     ApplyPriceResponse,
     RepricingReport,
 )
-from src.schemas.cfdi import CfdiReport
-from src.services import cfdi_service, replenishment_service, repricing_service
+from src.schemas.cfdi import (
+    CfdiDocumentOut,
+    CfdiReport,
+    LinkExternalCfdiRequest,
+)
+from src.services import (
+    cfdi_service,
+    cfdi_stamp_service,
+    replenishment_service,
+    repricing_service,
+)
 from src.services.inventory_service import inventory_service
 from src.services.report_export import (
     ReportColumn,
@@ -635,6 +644,116 @@ def export_cfdi_csv(
     start, end = _cfdi_date_range(start_date, end_date)
     report = cfdi_service.build_cfdi_report(db, start_date=start, end_date=end, limit=limit)
     return stream_csv(_cfdi_table(report))
+
+
+# --- FP-06: live stamping (P1) ---------------------------------------------
+
+
+@router.post("/cfdi/{order_id}/stamp", response_model=CfdiDocumentOut)
+def stamp_order_cfdi(
+    *,
+    db: Session = Depends(get_db),
+    order_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> CfdiDocumentOut:
+    """Stamp one order's CFDI via the configured PAC (FP-06).
+
+    Refuses orders whose channel issues its own factura (e.g. ML's
+    automatic facturación) with a 409 — those are recorded via
+    `link-external` instead, so a sale is never invoiced twice. Idempotent:
+    an already-stamped order returns its existing document.
+    """
+    result = cfdi_stamp_service.stamp_order(db, order_id)
+    err = result.get("error")
+    if err == "not_found":
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.orderNotFound",
+            params={"id": order_id},
+            detail=f"Order {order_id} not found.",
+        )
+    if err == "marketplace_handled":
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.cfdi.marketplaceHandled",
+            detail="This channel issues its own CFDI; link the external UUID instead.",
+        )
+    if err == "issuer_not_configured":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.cfdi.issuerNotConfigured",
+            detail="Configure the CFDI issuer (RFC / régimen) under Settings → CFDI.",
+        )
+    if err == "empty_order":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.cfdi.emptyOrder",
+            detail="Order has no invoiceable amount.",
+        )
+    if err == "stamp_failed":
+        raise LocalizedHTTPException(
+            status_code=502,
+            code="apiErrors.cfdi.stampFailed",
+            detail=result.get("detail") or "The PAC rejected the CFDI.",
+        )
+    if err:
+        raise LocalizedHTTPException(
+            status_code=500, code="apiErrors.cfdi.stampError", detail="Failed to stamp CFDI.",
+        )
+    return CfdiDocumentOut.model_validate(result["document"])
+
+
+@router.post("/cfdi/{order_id}/link-external", response_model=CfdiDocumentOut)
+def link_external_cfdi(
+    *,
+    db: Session = Depends(get_db),
+    order_id: int,
+    payload: LinkExternalCfdiRequest,
+    current_user: User = Depends(get_current_active_user),
+) -> CfdiDocumentOut:
+    """Record a CFDI issued elsewhere (e.g. MercadoLibre) against an order,
+    so the books are complete without Fulcrum double-issuing. Idempotent on
+    the UUID."""
+    result = cfdi_stamp_service.link_external(
+        db, order_id, payload.uuid,
+        receiver_rfc=payload.receiver_rfc, receiver_name=payload.receiver_name,
+    )
+    err = result.get("error")
+    if err == "not_found":
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.orderNotFound",
+            params={"id": order_id},
+            detail=f"Order {order_id} not found.",
+        )
+    if err == "missing_uuid":
+        raise LocalizedHTTPException(
+            status_code=400, code="apiErrors.cfdi.missingUuid", detail="A UUID is required.",
+        )
+    if err:
+        raise LocalizedHTTPException(
+            status_code=500, code="apiErrors.cfdi.linkError", detail="Failed to link CFDI.",
+        )
+    return CfdiDocumentOut.model_validate(result["document"])
+
+
+@router.get("/cfdi/{order_id}/document", response_model=CfdiDocumentOut)
+def get_order_cfdi_document(
+    *,
+    db: Session = Depends(get_db),
+    order_id: int,
+    current_user: User = Depends(get_current_active_user),
+) -> CfdiDocumentOut:
+    """The most recent CFDI document for an order (stamped or linked)."""
+    doc = cfdi_stamp_service.latest_document(db, order_id)
+    if doc is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.noDocument",
+            params={"id": order_id},
+            detail=f"No CFDI document for order {order_id}.",
+        )
+    return CfdiDocumentOut.model_validate(doc)
 
 
 # ---------------------------------------------------------------------------

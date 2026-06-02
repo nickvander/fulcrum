@@ -13,7 +13,7 @@ is deferred — v1 issues every order to the RFC genérico
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -29,6 +29,14 @@ class CfdiIssuerConfig(BaseModel):
     cfdi_use: str = "S01"                  # uso CFDI (S01 = sin efectos fiscales)
     iva_rate: float = 0.16
     is_configured: bool = False
+    # FP-06: per-channel "who issues the CFDI" policy. Keys are SalesOrder
+    # source values (MERCADOLIBRE / AMAZON / FULCRUM); values are
+    # 'self' (Fulcrum stamps via PAC) or 'marketplace_handled' (linked).
+    invoicing_policy: Dict[str, str] = {}
+    # PAC (stamping provider) status — the API key itself is never returned.
+    pac_vendor: Optional[str] = None      # 'facturama' | 'finkok'
+    pac_sandbox: bool = True
+    pac_configured: bool = False
 
 
 class CfdiIssuerConfigUpdate(BaseModel):
@@ -40,6 +48,35 @@ class CfdiIssuerConfigUpdate(BaseModel):
     default_unit_key: Optional[str] = None
     cfdi_use: Optional[str] = None
     iva_rate: Optional[float] = None
+    invoicing_policy: Optional[Dict[str, str]] = None
+    pac_vendor: Optional[str] = None
+    pac_sandbox: Optional[bool] = None
+    pac_api_key: Optional[str] = None  # write-only; encrypted at rest
+
+
+class CfdiDocumentOut(BaseModel):
+    id: int
+    order_id: Optional[int] = None
+    kind: str
+    status: str
+    invoicing_source: str
+    uuid: Optional[str] = None
+    receiver_rfc: Optional[str] = None
+    receiver_name: Optional[str] = None
+    cfdi_use: Optional[str] = None
+    currency: str
+    subtotal_cents: int
+    iva_cents: int
+    total_cents: int
+    pac_vendor: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class LinkExternalCfdiRequest(BaseModel):
+    uuid: str
+    receiver_rfc: Optional[str] = None
+    receiver_name: Optional[str] = None
 
 
 class CfdiConcept(BaseModel):

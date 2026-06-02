@@ -50,11 +50,24 @@ _DEFAULTS = {
     "iva_rate": 0.16,
 }
 
+# FP-06: default per-channel invoicing policy. ML defaults to
+# marketplace_handled (ML's "facturación automática" stamps those orders;
+# Fulcrum only links the UUID). Storefront + Amazon default to self-stamp.
+DEFAULT_INVOICING_POLICY = {
+    "MERCADOLIBRE": "marketplace_handled",
+    "AMAZON": "self",
+    "FULCRUM": "self",
+}
+
 
 def read_issuer_config(db: Session) -> CfdiIssuerConfig:
     settings = crud_store_settings.get_settings(db)
     raw = (settings.settings or {}).get("cfdi", {}) if settings else {}
     rfc = raw.get("rfc")
+    policy = {
+        **DEFAULT_INVOICING_POLICY,
+        **{k.upper(): v for k, v in (raw.get("invoicing_policy") or {}).items()},
+    }
     return CfdiIssuerConfig(
         rfc=rfc,
         name=raw.get("name"),
@@ -66,19 +79,43 @@ def read_issuer_config(db: Session) -> CfdiIssuerConfig:
         iva_rate=float(raw.get("iva_rate", _DEFAULTS["iva_rate"])),
         # "configured" means the legally-required emisor fields are present.
         is_configured=bool(rfc and raw.get("name") and raw.get("tax_regime")),
+        invoicing_policy=policy,
+        pac_vendor=raw.get("pac_vendor"),
+        pac_sandbox=bool(raw.get("pac_sandbox", True)),
+        pac_configured=bool(raw.get("pac_api_key_encrypted")),
     )
 
 
 def save_issuer_config(db: Session, update: CfdiIssuerConfigUpdate) -> CfdiIssuerConfig:
+    from src.core.encryption import encryption_service
+
     settings = crud_store_settings.get_settings(db)
     existing = dict((settings.settings or {}).get("cfdi", {}))
     patch = update.model_dump(exclude_unset=True)
+    # The PAC API key is a secret — encrypt it and never store/return raw.
+    pac_key = patch.pop("pac_api_key", None)
+    if pac_key:
+        existing["pac_api_key_encrypted"] = encryption_service.encrypt(pac_key)
     existing.update({k: v for k, v in patch.items() if v is not None})
     # Reassign a NEW dict so SQLAlchemy flags the JSON column dirty.
     settings.settings = {**(settings.settings or {}), "cfdi": existing}
     db.commit()
     db.refresh(settings)
     return read_issuer_config(db)
+
+
+def resolve_pac_api_key(db: Session) -> Optional[str]:
+    """Decrypted PAC API key, or None when not configured."""
+    from src.core.encryption import encryption_service
+
+    settings = crud_store_settings.get_settings(db)
+    enc = (settings.settings or {}).get("cfdi", {}).get("pac_api_key_encrypted")
+    if not enc:
+        return None
+    try:
+        return encryption_service.decrypt(enc)
+    except Exception:  # noqa: BLE001 — a corrupt/rotated key shouldn't 500 the caller
+        return None
 
 
 def _backout_iva(amount: float, iva_rate: float) -> tuple[float, float]:
