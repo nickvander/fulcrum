@@ -111,6 +111,19 @@ def test_only_realized_orders_in_range(db):
     assert len(ids) == 1
 
 
+def test_per_document_subtotal_plus_iva_equals_total(db):
+    # Multiple concepts whose IVA back-out rounds — the document must stay
+    # internally consistent (CFDI requires Total = SubTotal + taxes).
+    order = _order(db, sku="RND", qty=3, unit_price=33.33)
+
+    report = cfdi_service.build_cfdi_report(db)
+
+    row = next(r for r in report.rows if r.order_id == order.id)
+    assert round(row.subtotal + row.iva_amount, 2) == row.total
+    # Grand totals stay consistent too.
+    assert round(report.subtotal + report.iva_amount, 2) == report.total
+
+
 def test_report_totals_sum_rows(db):
     _order(db, sku="T1", qty=1, unit_price=116.0)
     _order(db, sku="T2", qty=1, unit_price=232.0)

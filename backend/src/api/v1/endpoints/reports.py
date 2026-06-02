@@ -546,8 +546,11 @@ def _cfdi_date_range(
 
     start = _parse(start_date)
     end = _parse(end_date)
-    if start is None and end is None:
+    # Fill each bound independently so passing only one side never leaves
+    # the other unbounded (which would dump the whole order history).
+    if end is None:
         end = datetime.now(timezone.utc).date()
+    if start is None:
         start = end - timedelta(days=30)
     return start, end
 

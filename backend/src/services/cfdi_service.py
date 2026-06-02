@@ -127,7 +127,7 @@ def build_cfdi_report(
     grand_subtotal = grand_iva = grand_total = 0.0
     for order in orders:
         concepts: list[CfdiConcept] = []
-        sub = iva = tot = 0.0
+        sub = iva = 0.0
         for item, product_name in items_by_order.get(order.id, []):
             qty = int(item.quantity or 0)
             unit_inc = float(item.price_per_unit or 0.0)
@@ -147,7 +147,14 @@ def build_cfdi_report(
             )
             sub += base
             iva += line_iva
-            tot += line_inc
+
+        # A CFDI must satisfy Total = SubTotal + taxes, so derive the
+        # total from the rounded components instead of independently
+        # summing the tax-inclusive line amounts (which can drift by a
+        # cent across multiple concepts and make the document invalid).
+        row_subtotal = round(sub, 2)
+        row_iva = round(iva, 2)
+        row_total = round(row_subtotal + row_iva, 2)
 
         rows.append(
             CfdiOrderRow(
@@ -160,14 +167,16 @@ def build_cfdi_report(
                 receiver_name=RECEIVER_PUBLICO_GENERAL,
                 cfdi_use=issuer.cfdi_use,
                 concepts=concepts,
-                subtotal=round(sub, 2),
-                iva_amount=round(iva, 2),
-                total=round(tot, 2),
+                subtotal=row_subtotal,
+                iva_amount=row_iva,
+                total=row_total,
             )
         )
-        grand_subtotal += sub
-        grand_iva += iva
-        grand_total += tot
+        # Accumulate the rounded per-row figures so the grand totals stay
+        # internally consistent too (subtotal + iva == total).
+        grand_subtotal = round(grand_subtotal + row_subtotal, 2)
+        grand_iva = round(grand_iva + row_iva, 2)
+        grand_total = round(grand_total + row_total, 2)
 
     return CfdiReport(
         rows=rows,
@@ -175,7 +184,7 @@ def build_cfdi_report(
         start_date=start_date.isoformat() if start_date else None,
         end_date=end_date.isoformat() if end_date else None,
         order_count=len(rows),
-        subtotal=round(grand_subtotal, 2),
-        iva_amount=round(grand_iva, 2),
-        total=round(grand_total, 2),
+        subtotal=grand_subtotal,
+        iva_amount=grand_iva,
+        total=grand_total,
     )

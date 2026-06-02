@@ -89,9 +89,20 @@ export class CfdiPageComponent implements OnInit {
     const start = new Date();
     start.setDate(start.getDate() - this.windowDays);
     return {
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
+      startDate: this.localIsoDate(start),
+      endDate: this.localIsoDate(end),
     };
+  }
+
+  /**
+   * Local-timezone YYYY-MM-DD. `toISOString()` is UTC, which would shift
+   * the export window by a day near midnight for a UTC-6 (Mexico) seller.
+   */
+  private localIsoDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
   load(): void {
