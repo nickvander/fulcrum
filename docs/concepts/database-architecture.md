@@ -313,9 +313,23 @@ erDiagram
         int id PK
         string status
         float total_price
+        string currency
         timestamp created_at
-        enum source
+        string source
         string external_order_id
+        string shipping_rate_id
+        string shipping_provider
+        string shipping_carrier
+        string shipping_service
+        float shipping_cost
+        string shipping_currency
+        int shipping_estimated_days
+        string shipping_charge_idempotency_key
+        string shipping_shipment_id
+        string shipping_tracking_number
+        string shipping_label_url
+        string shipping_tracking_url
+        string shipping_label_idempotency_key
     }
 
     sales_order_items {

@@ -12,6 +12,7 @@ import enum
 
 from .base import Base
 
+
 class OrderSource(str, enum.Enum):
     """Named constants for the core order sources.
 
@@ -27,9 +28,11 @@ class OrderSource(str, enum.Enum):
     interchangeable with the raw strings the DB column stores — in
     comparisons, dict keys, and SQL binds alike.
     """
+
     FULCRUM = "FULCRUM"
     MERCADOLIBRE = "MERCADOLIBRE"
     AMAZON = "AMAZON"
+
 
 class SalesOrder(Base):
     __tablename__ = "sales_orders"
@@ -50,6 +53,19 @@ class SalesOrder(Base):
     # values are governed by `marketplace_catalog.order_sources()`.
     source = Column(String, index=True)
     external_order_id = Column(String)
+    shipping_rate_id = Column(String(128), nullable=True)
+    shipping_provider = Column(String(64), nullable=True)
+    shipping_carrier = Column(String(128), nullable=True)
+    shipping_service = Column(String(128), nullable=True)
+    shipping_cost = Column(Float, nullable=True)
+    shipping_currency = Column(String(8), nullable=True)
+    shipping_estimated_days = Column(Integer, nullable=True)
+    shipping_charge_idempotency_key = Column(String(128), nullable=True)
+    shipping_shipment_id = Column(String(128), nullable=True)
+    shipping_tracking_number = Column(String(128), nullable=True)
+    shipping_label_url = Column(String, nullable=True)
+    shipping_tracking_url = Column(String, nullable=True)
+    shipping_label_idempotency_key = Column(String(128), nullable=True)
     # Set by `services/order_lifecycle.py` when an order's stock is
     # credited back to inventory after a cancel-before-ship transition.
     # Non-NULL means "already re-credited, skip on subsequent polls" —
@@ -71,6 +87,7 @@ class SalesOrder(Base):
         cascade="all, delete-orphan",
         order_by="SalesOrderStatusEvent.changed_at",
     )
+
 
 class SalesOrderItem(Base):
     __tablename__ = "sales_order_items"
@@ -111,12 +128,15 @@ class OrderCostBreakdown(Base):
         is MXN today — but the field is wired for future Amazon US
         / international ML expansion.
     """
+
     __tablename__ = "order_cost_breakdowns"
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(
-        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
-        nullable=False, unique=True,
+        Integer,
+        ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
     )
     currency = Column(String(8), nullable=False, default="MXN")
     exchange_rate_to_mxn = Column(Float, nullable=False, default=1.0)
@@ -142,7 +162,11 @@ class OrderCostBreakdown(Base):
     # subsequent recompute (a stale operator-changed fee rate must not
     # silently revert real settled data).
     fees_source = Column(
-        String(16), nullable=False, default="estimated", server_default="estimated", index=True,
+        String(16),
+        nullable=False,
+        default="estimated",
+        server_default="estimated",
+        index=True,
     )
     fees_synced_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -174,12 +198,15 @@ class AmazonOrderRefund(Base):
     idempotency — the settlement worker re-polls the same financial-
     events payload every hour and must not double-count.
     """
+
     __tablename__ = "amazon_order_refunds"
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(
-        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Integer,
+        ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     amazon_refund_id = Column(String(128), nullable=False)
     posted_at = Column(DateTime(timezone=True), nullable=True, index=True)
@@ -215,25 +242,31 @@ class SalesOrderReturn(Base):
     us, which is unaffected by whether the customer kept the product
     or not.
     """
+
     __tablename__ = "sales_order_returns"
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(
-        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Integer,
+        ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     order_item_id = Column(
-        Integer, ForeignKey("sales_order_items.id", ondelete="SET NULL"),
+        Integer,
+        ForeignKey("sales_order_items.id", ondelete="SET NULL"),
         nullable=True,
     )
     product_id = Column(
-        Integer, ForeignKey("products.id", ondelete="SET NULL"),
+        Integer,
+        ForeignKey("products.id", ondelete="SET NULL"),
         nullable=True,
     )
     quantity = Column(Integer, nullable=False)
     received_at = Column(DateTime(timezone=True), nullable=False, index=True)
     recorded_by_user_id = Column(
-        Integer, ForeignKey("users.id", ondelete="SET NULL"),
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     reason = Column(String(500), nullable=True)
@@ -262,12 +295,15 @@ class SalesOrderStatusEvent(Base):
     Insertion is gated on `old != new` — pollers that re-observe the
     same status don't generate noise rows.
     """
+
     __tablename__ = "sales_order_status_events"
 
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(
-        Integer, ForeignKey("sales_orders.id", ondelete="CASCADE"),
-        nullable=False, index=True,
+        Integer,
+        ForeignKey("sales_orders.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     from_status = Column(String(32), nullable=True)
     to_status = Column(String(32), nullable=False, index=True)

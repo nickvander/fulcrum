@@ -53,6 +53,7 @@ class SalesOrderListResponse(BaseModel):
     drive a server-side paginator. `skip`/`limit` are echoed back so the
     client never has to assume its own request was honored.
     """
+
     items: List["SalesOrder"]
     total: int
     skip: int
@@ -62,6 +63,7 @@ class SalesOrderListResponse(BaseModel):
 class OrderCostBreakdownRead(BaseModel):
     """The Phase-8 cost engine's per-order economics. `*_mxn` fields
     are the MXN-normalized equivalents at the order-date FX rate."""
+
     currency: str
     exchange_rate_to_mxn: float
     revenue_amount: float
@@ -85,6 +87,7 @@ class OrderCostBreakdownRead(BaseModel):
 
 class OrderStatusEventRead(BaseModel):
     """One row of the order's status timeline."""
+
     from_status: Optional[str] = None
     to_status: str
     changed_at: datetime
@@ -95,6 +98,7 @@ class OrderStatusEventRead(BaseModel):
 
 class OrderRefundEventRead(BaseModel):
     """An Amazon partial-refund event recorded against the order."""
+
     refund_id: str
     posted_at: Optional[datetime] = None
     refund_amount: float
@@ -120,6 +124,7 @@ class SalesOrderItemCreate(BaseModel):
     the product (or the variant, when `variant_id` is set) so a client
     can never dictate what it pays. `quantity` must be a positive int.
     """
+
     product_id: int
     variant_id: Optional[int] = None
     quantity: int = Field(..., gt=0)
@@ -134,10 +139,57 @@ class SalesOrderCreate(BaseModel):
     a second time. `items` must be non-empty. Prices are NEVER part of
     the request — the server is the pricing authority.
     """
+
     idempotency_key: str = Field(..., min_length=1)
     items: List[SalesOrderItemCreate] = Field(..., min_length=1)
     currency: str = "MXN"
     location: str = "default"
+
+
+class SalesOrderShippingChargeUpdate(BaseModel):
+    """Persist the shipping charge selected by the storefront BFF.
+
+    Vendio sends money in centavos. Fulcrum stores monetary values as
+    Float, so the API endpoint converts `amount_cents` at the boundary.
+    """
+
+    idempotency_key: str = Field(..., min_length=1)
+    rate_id: Optional[str] = None
+    provider: str = Field(..., min_length=1)
+    carrier: str = Field(..., min_length=1)
+    service: str = Field(..., min_length=1)
+    amount_cents: int = Field(..., ge=0)
+    currency: str = "MXN"
+    estimated_days: Optional[int] = Field(default=None, ge=0)
+
+
+class SalesOrderShippingLabelUpdate(BaseModel):
+    """Persist a purchased shipping label against the Fulcrum order."""
+
+    idempotency_key: str = Field(..., min_length=1)
+    shipment_id: Optional[str] = None
+    provider: str = Field(..., min_length=1)
+    carrier: str = Field(..., min_length=1)
+    tracking_number: Optional[str] = None
+    label_url: Optional[str] = None
+    tracking_url: Optional[str] = None
+
+
+class SalesOrderFulfillmentRead(BaseModel):
+    order_id: int
+    shipping_rate_id: Optional[str] = None
+    shipping_provider: Optional[str] = None
+    shipping_carrier: Optional[str] = None
+    shipping_service: Optional[str] = None
+    shipping_cost: Optional[float] = None
+    shipping_currency: Optional[str] = None
+    shipping_estimated_days: Optional[int] = None
+    shipping_charge_idempotency_key: Optional[str] = None
+    shipping_shipment_id: Optional[str] = None
+    shipping_tracking_number: Optional[str] = None
+    shipping_label_url: Optional[str] = None
+    shipping_tracking_url: Optional[str] = None
+    shipping_label_idempotency_key: Optional[str] = None
 
 
 class SalesOrderChannelBreakdown(BaseModel):
@@ -161,6 +213,7 @@ class SalesOrderReturnLineInput(BaseModel):
     """One return line from the operator. At least one of
     `order_item_id` or `product_id` is required; the service falls
     back to the item's product_id when only `order_item_id` is set."""
+
     order_item_id: Optional[int] = None
     product_id: Optional[int] = None
     quantity: int
@@ -170,6 +223,7 @@ class SalesOrderReturnCreate(BaseModel):
     """Payload for `POST /sales-orders/{order_id}/returns`. One call
     can record multiple lines — multi-line orders often come back in
     pieces (e.g. buyer returned 2 of 3 SKUs)."""
+
     lines: List[SalesOrderReturnLineInput]
     reason: Optional[str] = None
     notes: Optional[str] = None
@@ -179,6 +233,7 @@ class SalesOrderReturnRead(BaseModel):
     """One persisted return row. Read-only — operators can't edit a
     recorded return; mistakes are corrected with a manual stock
     adjustment + a new return row with notes explaining the fix."""
+
     id: int
     order_id: int
     order_item_id: Optional[int] = None

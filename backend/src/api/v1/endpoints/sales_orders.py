@@ -8,6 +8,7 @@ Sales orders are created by:
 This module exposes read-only listing, detail, and channel summary endpoints
 used by the dashboard and the Orders module.
 """
+
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -36,10 +37,13 @@ from src.schemas.sales_order import (
     SalesOrderChannelBreakdown,
     SalesOrderCreate,
     SalesOrderDetail,
+    SalesOrderFulfillmentRead,
     SalesOrderItem as SalesOrderItemSchema,
     SalesOrderListResponse,
     SalesOrderReturnCreate,
     SalesOrderReturnRead,
+    SalesOrderShippingChargeUpdate,
+    SalesOrderShippingLabelUpdate,
     SalesOrderSummary,
 )
 from src.services.inventory_service import InsufficientStockError
@@ -125,9 +129,7 @@ def _serialize_order_detail(order: SalesOrder) -> SalesOrderDetail:
         if order.cost_breakdown is not None
         else None
     )
-    timeline = [
-        OrderStatusEventRead.model_validate(ev) for ev in order.status_events
-    ]
+    timeline = [OrderStatusEventRead.model_validate(ev) for ev in order.status_events]
 
     base = _serialize_order(order)
     return SalesOrderDetail(
@@ -137,6 +139,37 @@ def _serialize_order_detail(order: SalesOrder) -> SalesOrderDetail:
         status_timeline=timeline,
         refund_events=[],
     )
+
+
+def _serialize_fulfillment(order: SalesOrder) -> SalesOrderFulfillmentRead:
+    return SalesOrderFulfillmentRead(
+        order_id=order.id,
+        shipping_rate_id=order.shipping_rate_id,
+        shipping_provider=order.shipping_provider,
+        shipping_carrier=order.shipping_carrier,
+        shipping_service=order.shipping_service,
+        shipping_cost=order.shipping_cost,
+        shipping_currency=order.shipping_currency,
+        shipping_estimated_days=order.shipping_estimated_days,
+        shipping_charge_idempotency_key=order.shipping_charge_idempotency_key,
+        shipping_shipment_id=order.shipping_shipment_id,
+        shipping_tracking_number=order.shipping_tracking_number,
+        shipping_label_url=order.shipping_label_url,
+        shipping_tracking_url=order.shipping_tracking_url,
+        shipping_label_idempotency_key=order.shipping_label_idempotency_key,
+    )
+
+
+def _get_order_or_404(db: Session, order_id: int) -> SalesOrder:
+    order = db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
+    if not order:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.salesOrder.notFound",
+            params={"id": order_id},
+            detail="Sales order not found",
+        )
+    return order
 
 
 @router.post("/", status_code=201, response_model=SalesOrderDetail)
@@ -165,9 +198,7 @@ def create_sales_order(
     propagated `InsufficientStockError` reverts the whole request.
     """
     try:
-        order, _created = create_onsite_order(
-            db, payload, user_id=current_user.id
-        )
+        order, _created = create_onsite_order(db, payload, user_id=current_user.id)
     except InsufficientStockError as exc:
         raise LocalizedHTTPException(
             status_code=409,
@@ -191,13 +222,97 @@ def create_sales_order(
     return _serialize_order_detail(order)
 
 
+@router.put("/{order_id}/shipping-charge", response_model=SalesOrderFulfillmentRead)
+def update_sales_order_shipping_charge(
+    *,
+    order_id: int,
+    payload: SalesOrderShippingChargeUpdate,
+    db: Session = Depends(dependencies.get_db),
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+):
+    """Persist the selected storefront shipping charge on the order.
+
+    Authenticated via the same JWT-or-API-key dependency as on-site order
+    creation. Retries with the same idempotency key return the persisted
+    fulfillment snapshot without reapplying anything. A new quote can replace
+    a previous one until a label has been attached.
+    """
+    order = _get_order_or_404(db, order_id)
+
+    if order.shipping_charge_idempotency_key == payload.idempotency_key:
+        return _serialize_fulfillment(order)
+
+    if order.shipping_label_idempotency_key:
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.salesOrder.shippingLabelAlreadyCreated",
+            params={"id": order_id},
+            detail="Cannot change shipping charge after a label is attached",
+        )
+
+    order.shipping_rate_id = payload.rate_id
+    order.shipping_provider = payload.provider
+    order.shipping_carrier = payload.carrier
+    order.shipping_service = payload.service
+    order.shipping_cost = payload.amount_cents / 100.0
+    order.shipping_currency = payload.currency.upper()
+    order.shipping_estimated_days = payload.estimated_days
+    order.shipping_charge_idempotency_key = payload.idempotency_key
+
+    db.flush()
+    return _serialize_fulfillment(order)
+
+
+@router.put("/{order_id}/shipping-label", response_model=SalesOrderFulfillmentRead)
+def update_sales_order_shipping_label(
+    *,
+    order_id: int,
+    payload: SalesOrderShippingLabelUpdate,
+    db: Session = Depends(dependencies.get_db),
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+):
+    """Attach purchased shipping-label metadata to the Fulcrum order.
+
+    Label creation is treated as one-way for idempotency: the same key is a
+    safe retry, while a different key after a stored label is rejected so a
+    second purchased label cannot overwrite the first one accidentally.
+    """
+    order = _get_order_or_404(db, order_id)
+
+    if order.shipping_label_idempotency_key == payload.idempotency_key:
+        return _serialize_fulfillment(order)
+
+    if order.shipping_label_idempotency_key:
+        raise LocalizedHTTPException(
+            status_code=409,
+            code="apiErrors.salesOrder.shippingLabelAlreadyCreated",
+            params={"id": order_id},
+            detail="Shipping label already attached to this order",
+        )
+
+    order.shipping_provider = payload.provider
+    order.shipping_carrier = payload.carrier
+    order.shipping_shipment_id = payload.shipment_id
+    order.shipping_tracking_number = payload.tracking_number
+    order.shipping_label_url = payload.label_url
+    order.shipping_tracking_url = payload.tracking_url
+    order.shipping_label_idempotency_key = payload.idempotency_key
+
+    db.flush()
+    return _serialize_fulfillment(order)
+
+
 @router.get("/", response_model=SalesOrderListResponse)
 def list_sales_orders(
     db: Session = Depends(get_db),
     current_user: User = Depends(dependencies.get_current_active_user),
-    source: Optional[str] = Query(None, description="Filter by channel (order source, e.g. MERCADOLIBRE)"),
+    source: Optional[str] = Query(
+        None, description="Filter by channel (order source, e.g. MERCADOLIBRE)"
+    ),
     status: Optional[str] = Query(None, description="Filter by status"),
-    days: Optional[int] = Query(None, ge=1, le=365, description="Only orders from the last N days"),
+    days: Optional[int] = Query(
+        None, ge=1, le=365, description="Only orders from the last N days"
+    ),
     search: Optional[str] = Query(
         None,
         description="Case-insensitive substring match on external_order_id",
@@ -231,7 +346,9 @@ def list_sales_orders(
     # Validate against the allowlist; invalid values fall back to the safe
     # default rather than 400, matching the lenient string filters above.
     sort_col = _SORT_COLUMNS.get(sort_by, _SORT_COLUMNS[_DEFAULT_SORT_BY])
-    direction = sort_dir.lower() if sort_dir.lower() in {"asc", "desc"} else _DEFAULT_SORT_DIR
+    direction = (
+        sort_dir.lower() if sort_dir.lower() in {"asc", "desc"} else _DEFAULT_SORT_DIR
+    )
 
     q = db.query(SalesOrder)
     if source is not None:
@@ -326,7 +443,9 @@ def sales_order_summary(
     seen = {row.source for row in by_channel}
     for channel in marketplace_catalog.order_sources():
         if channel not in seen:
-            by_channel.append(SalesOrderChannelBreakdown(source=channel, count=0, revenue=0.0))
+            by_channel.append(
+                SalesOrderChannelBreakdown(source=channel, count=0, revenue=0.0)
+            )
 
     open_statuses = ["PENDING", "PROCESSING", "CONFIRMED", "PAID"]
     open_orders = (
@@ -355,8 +474,8 @@ def sales_order_summary(
 # shared with the dashboard widget (kept in sync manually for now).
 _CHANNEL_LABELS = {
     "MERCADOLIBRE": "MercadoLibre",
-    "AMAZON":       "Amazon",
-    "FULCRUM":      "Fulcrum",
+    "AMAZON": "Amazon",
+    "FULCRUM": "Fulcrum",
 }
 
 
@@ -368,12 +487,14 @@ def _channel_summary_rows(summary: SalesOrderSummary) -> list[dict]:
     rows: list[dict] = []
     for row in summary.by_channel:
         share = (row.revenue / total * 100.0) if total > 0 else 0.0
-        rows.append({
-            "channel": _CHANNEL_LABELS.get(row.source, row.source),
-            "orders": row.count,
-            "revenue": row.revenue,
-            "share": share,
-        })
+        rows.append(
+            {
+                "channel": _CHANNEL_LABELS.get(row.source, row.source),
+                "orders": row.count,
+                "revenue": row.revenue,
+                "share": share,
+            }
+        )
     # Stable ordering: highest revenue first, then alphabetical.
     rows.sort(key=lambda r: (-r["revenue"], r["channel"]))
     return rows
@@ -391,9 +512,9 @@ def _channel_summary_table(summary: SalesOrderSummary) -> ReportTable:
         empty_message="No sales recorded in this window.",
         columns=[
             ReportColumn("channel", "Channel"),
-            ReportColumn("orders",  "Orders",  align="right", formatter=fmt_int),
+            ReportColumn("orders", "Orders", align="right", formatter=fmt_int),
             ReportColumn("revenue", "Revenue", align="right", formatter=fmt_currency),
-            ReportColumn("share",   "Share",   align="right", formatter=fmt_percent),
+            ReportColumn("share", "Share", align="right", formatter=fmt_percent),
         ],
         rows=_channel_summary_rows(summary),
     )
@@ -428,14 +549,16 @@ def _build_sales_order_export_rows(
 
     rows: list[dict] = []
     for o in q.limit(limit).all():
-        rows.append({
-            "order_id":          o.id,
-            "channel":           _CHANNEL_LABELS.get(o.source, o.source) if o.source else "",
-            "external_order_id": o.external_order_id or "",
-            "status":            o.status or "",
-            "total_price":       float(o.total_price or 0.0),
-            "created_at":        o.created_at,
-        })
+        rows.append(
+            {
+                "order_id": o.id,
+                "channel": _CHANNEL_LABELS.get(o.source, o.source) if o.source else "",
+                "external_order_id": o.external_order_id or "",
+                "status": o.status or "",
+                "total_price": float(o.total_price or 0.0),
+                "created_at": o.created_at,
+            }
+        )
     return rows
 
 
@@ -445,18 +568,17 @@ def _sales_order_export_table(rows: list[dict]) -> ReportTable:
     return ReportTable(
         title="Fulcrum — Sales Orders",
         subtitle=(
-            f"Generated {date_stamp} · {len(rows)} orders · "
-            f"total value ${total:,.2f}"
+            f"Generated {date_stamp} · {len(rows)} orders · total value ${total:,.2f}"
         ),
         filename_stem="fulcrum-sales-orders",
         empty_message="No sales orders match the filters.",
         columns=[
-            ReportColumn("order_id",          "Order ID",     align="right", formatter=fmt_int),
-            ReportColumn("channel",           "Channel"),
+            ReportColumn("order_id", "Order ID", align="right", formatter=fmt_int),
+            ReportColumn("channel", "Channel"),
             ReportColumn("external_order_id", "External ID"),
-            ReportColumn("status",            "Status"),
-            ReportColumn("total_price",       "Total",        align="right", formatter=fmt_currency),
-            ReportColumn("created_at",        "Created",      formatter=fmt_date),
+            ReportColumn("status", "Status"),
+            ReportColumn("total_price", "Total", align="right", formatter=fmt_currency),
+            ReportColumn("created_at", "Created", formatter=fmt_date),
         ],
         rows=rows,
     )
@@ -476,7 +598,12 @@ def export_sales_orders_csv(
     list endpoint; default limit 5000 (cap 10000) for the "give me
     everything in this quarter" use case."""
     rows = _build_sales_order_export_rows(
-        db, source=source, status=status, days=days, search=search, limit=limit,
+        db,
+        source=source,
+        status=status,
+        days=days,
+        search=search,
+        limit=limit,
     )
     return stream_csv(_sales_order_export_table(rows))
 
@@ -492,7 +619,12 @@ def export_sales_orders_pdf(
     limit: int = Query(5000, ge=1, le=10000),
 ) -> StreamingResponse:
     rows = _build_sales_order_export_rows(
-        db, source=source, status=status, days=days, search=search, limit=limit,
+        db,
+        source=source,
+        status=status,
+        days=days,
+        search=search,
+        limit=limit,
     )
     return stream_pdf(_sales_order_export_table(rows))
 
@@ -574,9 +706,7 @@ def get_sales_order(
     )
 
     # Status timeline, oldest → newest (relationship is order_by changed_at).
-    timeline = [
-        OrderStatusEventRead.model_validate(ev) for ev in order.status_events
-    ]
+    timeline = [OrderStatusEventRead.model_validate(ev) for ev in order.status_events]
 
     # Amazon partial-refund events for this order, newest first.
     refunds = (

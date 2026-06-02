@@ -16,8 +16,8 @@ to open its detail page.
 
 The header shows the order's channel (its `source`), order number, the date it
 was placed, a status chip, and the order **total** rendered in the order's own
-currency. When the order came from a marketplace, an **external reference**
-card links out to the order on that channel.
+currency. When the order came from a marketplace, an **external reference** card
+links out to the order on that channel.
 
 ### Economics (cost breakdown & net margin)
 
@@ -50,15 +50,31 @@ so pesos and dollars are never ambiguous.
 
 ### Line Items
 
-A table lists each line item with the product (name + SKU, or an
-**unmatched** marker when the marketplace SKU couldn't be matched to a local
-product), quantity, unit price, subtotal, and per-line margin.
+A table lists each line item with the product (name + SKU, or an **unmatched**
+marker when the marketplace SKU couldn't be matched to a local product),
+quantity, unit price, subtotal, and per-line margin.
 
 ### Returns
 
 The **Returns** section lists returns recorded against the order (when, by whom,
 which product, how many units back, and an optional reason). Use **Record
 return** to log a physical return; recording a return re-credits stock.
+
+### Storefront Shipping
+
+Orders created by the Vendio storefront can carry a selected shipping charge and
+a purchased shipping label. Vendio sends these updates server-to-server with a
+Fulcrum API key:
+
+- `PUT /api/v1/sales-orders/{id}/shipping-charge` stores the selected provider,
+  carrier, service, rate id, currency, estimated days, and charge amount.
+- `PUT /api/v1/sales-orders/{id}/shipping-label` stores the purchased shipment
+  id, tracking number, label URL, and tracking URL.
+
+Both endpoints are idempotent on `idempotency_key`. Replaying the same request
+returns the already-stored fulfillment snapshot. Once a label is attached,
+Fulcrum rejects attempts to replace it with a different idempotency key so a
+second label purchase cannot silently overwrite the first one.
 
 ### Refund Events
 
@@ -67,12 +83,12 @@ listed with their date, refund id, and amount.
 
 ### Status Timeline
 
-The **Status timeline** shows every status transition the order has been
-through — each entry shows the `from → to` status, when it changed, and the
-signal that triggered it (e.g. `ml_webhook`, `ml_poll`, `amazon_poll`, or
-`manual`). A reversed cost breakdown (e.g. after a cancellation or refund) is
-flagged on the Economics card so the order drops out of current-period revenue
-totals while staying queryable.
+The **Status timeline** shows every status transition the order has been through
+— each entry shows the `from → to` status, when it changed, and the signal that
+triggered it (e.g. `ml_webhook`, `ml_poll`, `amazon_poll`, or `manual`). A
+reversed cost breakdown (e.g. after a cancellation or refund) is flagged on the
+Economics card so the order drops out of current-period revenue totals while
+staying queryable.
 
 ---
 
