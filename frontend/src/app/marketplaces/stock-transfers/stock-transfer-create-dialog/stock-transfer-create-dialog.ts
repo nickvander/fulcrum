@@ -12,6 +12,7 @@ import { MatTableModule } from '@angular/material/table';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 
 import { ProductService } from '../../../products/services/product';
+import { QuantityStepperComponent } from '../../../shared/components/quantity-stepper/quantity-stepper.component';
 import {
   STOCK_LOCATION_AMAZON_FBA,
   STOCK_LOCATION_INTERNAL,
@@ -51,6 +52,7 @@ interface ProductOption {
     MatSnackBarModule,
     MatTableModule,
     TranslocoModule,
+    QuantityStepperComponent,
   ],
   templateUrl: './stock-transfer-create-dialog.html',
   styleUrl: './stock-transfer-create-dialog.scss',

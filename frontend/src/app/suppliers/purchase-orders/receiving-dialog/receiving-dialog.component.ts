@@ -11,6 +11,7 @@ import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { PurchaseOrder, PurchaseOrderItem } from '../../../shared/models/purchase-order.model';
 import { SuppliersService } from '../../suppliers.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { QuantityStepperComponent } from '../../../shared/components/quantity-stepper/quantity-stepper.component';
 
 @Component({
     selector: 'app-receiving-dialog',
@@ -26,7 +27,8 @@ import { NotificationService } from '../../../core/services/notification.service
         MatInputModule,
         MatIconModule,
         MatDividerModule,
-        TranslocoModule
+        TranslocoModule,
+        QuantityStepperComponent
     ]
 })
 export class ReceivingDialogComponent implements OnInit {

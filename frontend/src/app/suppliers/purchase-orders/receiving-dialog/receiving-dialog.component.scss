@@ -207,6 +207,18 @@
 
     .card-action {
         margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+
+        .qty-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
 
         .receive-input {
             width: 100%;

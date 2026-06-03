@@ -70,17 +70,12 @@
         <ng-container matColumnDef="qty">
           <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.createDialog.col.qty') }}</th>
           <td mat-cell *matCellDef="let row">
-            <mat-form-field appearance="outline" class="qty-field" subscriptSizing="dynamic">
-              <input
-                matInput
-                type="number"
-                min="1"
-                [max]="row.onHand"
-                [ngModel]="row.qtyPlanned"
-                (ngModelChange)="updateQty(row, $event)"
-                [attr.data-testid]="'qty-input-' + row.productId"
-              />
-            </mat-form-field>
+            <app-quantity-stepper
+              [value]="row.qtyPlanned"
+              [min]="1"
+              [max]="row.onHand"
+              (valueChange)="updateQty(row, $event)"
+              [ariaLabel]="row.productName"></app-quantity-stepper>
             <span class="qty-cap" [class.at-cap]="isAtCap(row)">
               {{ t('stockTransfers.onHandShort', { n: row.onHand }) }}
             </span>

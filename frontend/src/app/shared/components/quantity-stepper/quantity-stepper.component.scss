@@ -1,0 +1,36 @@
+.qstepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--bg-raised);
+  overflow: hidden;
+
+  .step {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    border-radius: 0;
+    color: var(--accent-color);
+
+    &[disabled] { color: var(--text-hint); }
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  }
+
+  .qval {
+    width: 56px;
+    height: 40px;
+    border: none;
+    outline: none;
+    background: transparent;
+    text-align: center;
+    color: var(--text-main);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+
+    &:focus { background: var(--bg-hover); }
+  }
+}

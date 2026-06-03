@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
+import { QuantityStepperComponent } from '../../../shared/components/quantity-stepper/quantity-stepper.component';
 
 export interface StockAdjustmentData {
   productName: string;
@@ -48,6 +49,7 @@ const REASON_CODES = [
     MatButtonModule,
     MatIconModule,
     TranslocoModule,
+    QuantityStepperComponent,
   ],
 })
 export class StockAdjustmentDialog {

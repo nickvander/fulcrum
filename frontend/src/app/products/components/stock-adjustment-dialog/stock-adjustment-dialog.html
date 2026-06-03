@@ -8,13 +8,13 @@
         <span class="loc-chip"><mat-icon>inventory_2</mat-icon>{{ t(locationLabelKey) }}</span>
       </p>
 
-      <mat-form-field class="full-width">
-        <mat-label>{{ t('products.adjustmentAmount') }}</mat-label>
-        <input matInput type="number" [ngModel]="adjustment()"
-          (ngModelChange)="adjustment.set($event); onAdjustmentChange()"
-          [placeholder]="t('products.adjustmentAmount')">
-        <mat-hint>{{ t('products.adjustmentHint') }}</mat-hint>
-      </mat-form-field>
+      <div class="adjust-field">
+        <span class="field-label">{{ t('products.adjustmentAmount') }}</span>
+        <app-quantity-stepper [value]="adjustment()"
+          (valueChange)="adjustment.set($event); onAdjustmentChange()"
+          [ariaLabel]="t('products.adjustmentAmount')"></app-quantity-stepper>
+        <span class="field-hint">{{ t('products.adjustmentHint') }}</span>
+      </div>
 
       <mat-form-field class="full-width">
         <mat-label>{{ t('products.reason') }}</mat-label>

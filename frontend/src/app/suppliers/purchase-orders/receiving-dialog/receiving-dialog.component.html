@@ -85,11 +85,13 @@
 
                 <!-- Action Input -->
                 <div class="card-action">
-                    <mat-form-field appearance="outline" class="receive-input">
-                        <mat-label>{{ quantityLabel() }}</mat-label>
-                        <input matInput type="number" formControlName="quantity_to_receive" min="0">
-                        <span matSuffix>{{ t('common.units') }}</span>
-                    </mat-form-field>
+                    <span class="qty-label">{{ quantityLabel() }}</span>
+                    <app-quantity-stepper
+                        [value]="itemControl.get('quantity_to_receive')?.value || 0"
+                        [min]="0"
+                        [ariaLabel]="quantityLabel()"
+                        (valueChange)="itemControl.get('quantity_to_receive')?.setValue($event)">
+                    </app-quantity-stepper>
                 </div>
             </div>
         </div>
