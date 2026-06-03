@@ -1842,6 +1842,9 @@
     "partial": "Partial",
     "detail": {
       "receivedProgress": "Received {{received}}/{{ordered}} · {{pending}} SKU pending"
+    },
+    "list": {
+      "awaitingReceipt": "Awaiting receipt"
     }
   },
   "expenses": {

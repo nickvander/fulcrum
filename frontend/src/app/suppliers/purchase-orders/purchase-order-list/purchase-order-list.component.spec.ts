@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { PurchaseOrderListComponent } from './purchase-order-list.component';
+import { PurchaseOrderStatus } from '../../../shared/models/purchase-order.model';
 import { SuppliersService, SupplierDocumentImportReview } from '../../suppliers.service';
 import { DateRangeService } from '../../../shared/services/date-range.service';
 import { of } from 'rxjs';
@@ -201,5 +202,36 @@ describe('PurchaseOrderListComponent', () => {
     expect(component.reviewSupplierFilterId).toBeNull();
     expect(component.hasActiveReviewFilters()).toBe(false);
     expect(spy).toHaveBeenCalled();
+  });
+
+  // --- "Por recibir" worklist filter --------------------------------------
+
+  const orders = () => ([
+    { id: 1, status: PurchaseOrderStatus.DRAFT },
+    { id: 2, status: PurchaseOrderStatus.ORDERED },
+    { id: 3, status: PurchaseOrderStatus.PARTIALLY_RECEIVED },
+    { id: 4, status: PurchaseOrderStatus.COMPLETED },
+    { id: 5, status: PurchaseOrderStatus.ORDERED },
+  ] as any[]);
+
+  it('awaitingReceiptCount counts only ordered + partially-received POs', () => {
+    component.purchaseOrders = orders();
+    expect(component.awaitingReceiptCount()).toBe(3); // ids 2, 3, 5
+  });
+
+  it('toggleAwaitingReceipt filters the table to ordered + partially-received POs', () => {
+    component.purchaseOrders = orders();
+    component.startDate = null; // ignore the default global date range for this test
+    component.endDate = null;
+    component.applyFilters();
+    expect(component.filteredOrders.length).toBe(5);
+
+    component.toggleAwaitingReceipt();
+    expect(component.awaitingReceiptOnly).toBe(true);
+    expect(component.filteredOrders.map(po => po.id).sort()).toEqual([2, 3, 5]);
+
+    component.toggleAwaitingReceipt();
+    expect(component.awaitingReceiptOnly).toBe(false);
+    expect(component.filteredOrders.length).toBe(5);
   });
 });

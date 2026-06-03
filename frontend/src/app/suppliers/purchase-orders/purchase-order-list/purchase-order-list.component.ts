@@ -439,8 +439,30 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     return supplier?.name || this.translocoService.translate('purchaseOrders.purchaseOrderList.supplierFallback', { id: supplierId });
   }
 
+  /** "Por recibir" worklist: only orders that are placed but not fully received. */
+  awaitingReceiptOnly = false;
+
+  private isAwaitingReceipt(po: PurchaseOrder): boolean {
+    return po.status === PurchaseOrderStatus.ORDERED || po.status === PurchaseOrderStatus.PARTIALLY_RECEIVED;
+  }
+
+  /** Count of orders awaiting receipt across the (unfiltered) order set, for the chip badge. */
+  awaitingReceiptCount(): number {
+    return this.purchaseOrders.filter(po => this.isAwaitingReceipt(po)).length;
+  }
+
+  toggleAwaitingReceipt(): void {
+    this.awaitingReceiptOnly = !this.awaitingReceiptOnly;
+    this.applyFilters();
+  }
+
   applyFilters(): void {
     let filtered = [...this.purchaseOrders];
+
+    // "Por recibir" worklist filter (ordered, not yet fully received).
+    if (this.awaitingReceiptOnly) {
+      filtered = filtered.filter(po => this.isAwaitingReceipt(po));
+    }
 
     // Status filter
     if (this.selectedStatus) {

@@ -14,7 +14,6 @@ import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { ProductService } from '../../../products/services/product';
 import { QuantityStepperComponent } from '../../../shared/components/quantity-stepper/quantity-stepper.component';
 import {
-  STOCK_LOCATION_AMAZON_FBA,
   STOCK_LOCATION_INTERNAL,
   STOCK_LOCATION_ML_FULL,
   StockTransferCreateInput,
@@ -63,9 +62,9 @@ export class StockTransferCreateDialogComponent implements OnInit {
   notes = '';
   search = '';
 
+  // Amazon FBA is hidden for now (ML-Full is the only active fulfillment channel).
   readonly destChoices = [
     { value: STOCK_LOCATION_ML_FULL, labelKey: 'stockTransfers.locations.mlFull' },
-    { value: STOCK_LOCATION_AMAZON_FBA, labelKey: 'stockTransfers.locations.amazonFba' },
   ];
 
   products: ProductOption[] = [];

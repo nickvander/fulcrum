@@ -72,6 +72,9 @@ export interface ProductRowVM {
 /** Inventory locations we recognise as MercadoLibre Full. */
 const ML_FULL_LOCATIONS = new Set(['ml-full', 'ml_full', 'mercadolibre-full', 'mercadolibre', 'full']);
 
+/** Amazon FBA is hidden for now (ML-Full is the only active fulfillment channel). */
+const HIDDEN_LOCATIONS = new Set(['amazon-fba', 'amazon_fba', 'fba']);
+
 const BUCKET_LABEL_KEYS: Record<string, string> = {
   default: 'products.bucketDefault',
   'ml-full': 'products.bucketMlFull',
@@ -136,6 +139,7 @@ export function toRowVM(product: Product): ProductRowVM {
   const buckets: StockBucket[] = [];
   let hasMlFullBucket = false;
   for (const [location, quantity] of byLocation) {
+    if (HIDDEN_LOCATIONS.has(location)) continue; // Amazon FBA hidden for now
     if (ML_FULL_LOCATIONS.has(location)) hasMlFullBucket = true;
     if (quantity !== 0) {
       buckets.push({

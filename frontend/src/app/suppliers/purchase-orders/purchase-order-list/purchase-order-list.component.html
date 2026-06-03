@@ -237,6 +237,16 @@
         <mat-card class="filter-card">
             <mat-card-content>
                 <div class="filters-row">
+                    <!-- "Por recibir" worklist toggle -->
+                    <button type="button" class="worklist-chip" [class.active]="awaitingReceiptOnly"
+                        (click)="toggleAwaitingReceipt()" data-testid="awaiting-receipt-filter">
+                        <mat-icon>inventory_2</mat-icon>
+                        {{ t('purchaseOrders.list.awaitingReceipt') }}
+                        <span class="wc-count" *ngIf="awaitingReceiptCount() > 0">{{ awaitingReceiptCount() }}</span>
+                    </button>
+
+                    <div class="filter-divider"></div>
+
                     <!-- Date Range Presets -->
                     <app-date-range-presets [useGlobalService]="true" (rangeChange)="onDateRangeChange($event)">
                     </app-date-range-presets>
