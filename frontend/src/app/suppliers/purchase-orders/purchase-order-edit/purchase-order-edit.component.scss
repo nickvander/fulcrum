@@ -838,3 +838,43 @@
         }
     }
 }
+
+// Receiving progress meter in the PO header.
+.receive-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+
+    .rp-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 1px 8px;
+        border-radius: var(--radius-pill, 999px);
+        background: var(--bg-raised);
+        border: 1px solid var(--warning-color);
+        color: var(--warning-color);
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .rp-text { font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+    .rp-bar {
+        position: relative;
+        width: 120px;
+        height: 6px;
+        border-radius: var(--radius-pill, 999px);
+        background: var(--bg-hover);
+        overflow: hidden;
+
+        .rp-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            background: var(--success-color);
+            border-radius: var(--radius-pill, 999px);
+            transition: width var(--dur-base, 220ms) var(--ease-standard, ease);
+        }
+    }
+}

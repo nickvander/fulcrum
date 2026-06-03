@@ -1838,6 +1838,10 @@
     "supplierSelectionDialog": {
       "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",
       "supplierMeta": "Costo: {{cost}} | Tiempo de entrega: {{leadTime}} días | SKU: {{sku}}"
+    },
+    "partial": "Parcial",
+    "detail": {
+      "receivedProgress": "Recibido {{received}}/{{ordered}} · {{pending}} SKU pendientes"
     }
   },
   "expenses": {

@@ -380,6 +380,30 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
     return `purchaseOrders.${camelCaseStatus}`;
   }
 
+  /**
+   * Receiving progress across all line items, so "what's still coming" is
+   * obvious at a glance on a non-draft PO.
+   */
+  receivedProgress(): { received: number; ordered: number; pendingSkus: number; partial: boolean } {
+    let received = 0;
+    let ordered = 0;
+    let pendingSkus = 0;
+    for (const c of this.items.controls) {
+      const o = Number(c.get('quantity_ordered')?.value) || 0;
+      const r = Number(c.get('quantity_received')?.value) || 0;
+      ordered += o;
+      received += r;
+      if (r < o) pendingSkus += 1;
+    }
+    return { received, ordered, pendingSkus, partial: received > 0 && received < ordered };
+  }
+
+  /** Show the receiving progress only once an order has actually been placed. */
+  showReceivedProgress(): boolean {
+    const status = this.poForm.get('status')?.value;
+    return !!status && status !== 'draft' && this.items.length > 0;
+  }
+
   unlockOrder(): void {
     const dialogRef = this.dialog.open(ConfirmationDialog, {
       data: {

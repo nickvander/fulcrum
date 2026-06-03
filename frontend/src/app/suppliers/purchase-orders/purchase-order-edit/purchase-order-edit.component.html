@@ -14,6 +14,16 @@
                 <span class="status-badge" [class]="poForm.get('status')?.value" *ngIf="poForm.get('status')?.value">
                     {{ t(getStatusTranslationKey(poForm.get('status')?.value)) }}
                 </span>
+                <!-- Receiving progress: what's in vs. what's still coming -->
+                <div class="receive-progress" *ngIf="showReceivedProgress()">
+                    <span class="rp-pill" *ngIf="receivedProgress().partial">{{ t('purchaseOrders.partial') }}</span>
+                    <span class="rp-text">{{ t('purchaseOrders.detail.receivedProgress', {
+                        received: receivedProgress().received,
+                        ordered: receivedProgress().ordered,
+                        pending: receivedProgress().pendingSkus }) }}</span>
+                    <span class="rp-bar"><span class="rp-fill"
+                        [style.width.%]="receivedProgress().ordered ? (receivedProgress().received / receivedProgress().ordered * 100) : 0"></span></span>
+                </div>
             </div>
             <div class="header-actions">
                 <button mat-raised-button color="accent" *ngIf="isEditMode && poForm.get('status')?.value !== 'draft'"
