@@ -1833,7 +1833,10 @@
       "exceedReason": "Motivo del excedente",
       "exceedReasonPlaceholder": "¿Por qué llegó de más?",
       "exceedsPill": "Excede +{{n}}",
-      "exceedReasonRequired": "Indica el motivo del excedente antes de recibir."
+      "exceedReasonRequired": "Indica el motivo del excedente antes de recibir.",
+      "scan": "Escanear",
+      "scanAdded": "Sumaste 1 a {{name}}",
+      "scanNoMatch": "No encontramos «{{code}}» en esta orden."
     },
     "supplierSelectionDialog": {
       "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",

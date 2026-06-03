@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -43,6 +43,7 @@ export class ReceivingDialogComponent implements OnInit {
         private suppliersService: SuppliersService,
         private transloco: TranslocoService,
         private notification: NotificationService,
+        private dialog: MatDialog,
         public dialogRef: MatDialogRef<ReceivingDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { po: PurchaseOrder, mode?: 'receive' | 'correct' }
     ) {
@@ -141,6 +142,53 @@ export class ReceivingDialogComponent implements OnInit {
 
     onCancel(): void {
         this.dialogRef.close();
+    }
+
+    /** Open the camera/keyboard scanner and apply the scanned code to a line. */
+    openScanner(): void {
+        import('../../../inventory-count/components/scan-sku-dialog/scan-sku-dialog.component').then(
+            ({ ScanSkuDialogComponent }) => {
+                const ref = this.dialog.open(ScanSkuDialogComponent, { width: '420px' });
+                ref.afterClosed().subscribe((code: string | undefined) => {
+                    if (code) this.applyScannedCode(code);
+                });
+            },
+        );
+    }
+
+    /**
+     * Match a scanned SKU/barcode to a PO line and bump its receive qty by one.
+     * Returns true when a line matched. Pure enough to unit-test directly.
+     */
+    applyScannedCode(code: string): boolean {
+        const norm = (code || '').trim().toLowerCase();
+        if (!norm) return false;
+        for (let i = 0; i < this.items.length; i++) {
+            const p = this.po.items[i]?.product as any;
+            const ctrl = this.items.at(i);
+            const candidates = [
+                p?.sku,
+                p?.barcode_value,
+                p?.qrcode_value,
+                ctrl.get('variant_sku')?.value,
+            ]
+                .filter((s): s is string => !!s)
+                .map(s => s.toLowerCase());
+            if (candidates.includes(norm)) {
+                const cur = Number(ctrl.get('quantity_to_receive')?.value) || 0;
+                ctrl.get('quantity_to_receive')?.setValue(cur + 1);
+                this.notification.showSuccess(
+                    this.transloco.translate('purchaseOrders.receivingDialog.scanAdded', {
+                        name: ctrl.get('product_name')?.value,
+                    }),
+                );
+                return true;
+            }
+        }
+        this.notification.showError(
+            this.transloco.translate('purchaseOrders.receivingDialog.scanNoMatch', { code }),
+        );
+        return false;
     }
 
     /** i18n key for the destination warehouse stock lands in (the local Bodega). */

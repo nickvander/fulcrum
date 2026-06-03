@@ -32,6 +32,13 @@
 
     mat-icon { color: var(--accent-color); font-size: 20px; width: 20px; height: 20px; }
     strong { color: var(--text-main); }
+
+    .scan-btn {
+        margin-left: auto;
+        color: var(--accent-color);
+        border-color: var(--accent-color);
+        mat-icon { color: var(--accent-color); }
+    }
 }
 
 .correction-note {

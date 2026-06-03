@@ -8,6 +8,10 @@
             <mat-icon>warehouse</mat-icon>
             <span>{{ t('purchaseOrders.receivingDialog.destinationLabel') }}:
                 <strong>{{ t(destinationLabelKey()) }}</strong></span>
+            <button mat-stroked-button class="scan-btn" (click)="openScanner()">
+                <mat-icon>qr_code_scanner</mat-icon>
+                {{ t('purchaseOrders.receivingDialog.scan') }}
+            </button>
         </div>
 
         <div class="correction-note" *ngIf="mode === 'correct'">

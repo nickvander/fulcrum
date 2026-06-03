@@ -83,6 +83,28 @@ describe('ReceivingDialogComponent', () => {
         expect(dialogRefMock.close).toHaveBeenCalled();
     });
 
+    it('applyScannedCode matches a line by SKU and bumps its receive qty', () => {
+        (component.po.items[0] as any).product = { sku: 'ABC-1', barcode_value: '7501234567890' };
+        const before = component.items.at(0).get('quantity_to_receive')?.value;
+
+        const matched = component.applyScannedCode('abc-1'); // case-insensitive
+
+        expect(matched).toBe(true);
+        expect(component.items.at(0).get('quantity_to_receive')?.value).toBe(before + 1);
+    });
+
+    it('applyScannedCode matches by barcode too', () => {
+        (component.po.items[0] as any).product = { sku: 'ABC-1', barcode_value: '7501234567890' };
+        expect(component.applyScannedCode('7501234567890')).toBe(true);
+    });
+
+    it('applyScannedCode returns false when nothing matches', () => {
+        (component.po.items[0] as any).product = { sku: 'ABC-1' };
+        const before = component.items.at(0).get('quantity_to_receive')?.value;
+        expect(component.applyScannedCode('ZZZ-999')).toBe(false);
+        expect(component.items.at(0).get('quantity_to_receive')?.value).toBe(before);
+    });
+
     it('should submit receiving corrections in correction mode', () => {
         component.mode = 'correct';
         component.receivingForm.patchValue({ reason: 'Counted twice' });

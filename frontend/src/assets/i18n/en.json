@@ -1833,7 +1833,10 @@
       "exceedReason": "Reason for over-receipt",
       "exceedReasonPlaceholder": "Why did more arrive?",
       "exceedsPill": "Exceeds +{{n}}",
-      "exceedReasonRequired": "Add a reason for the over-receipt before receiving."
+      "exceedReasonRequired": "Add a reason for the over-receipt before receiving.",
+      "scan": "Scan",
+      "scanAdded": "Added 1 to {{name}}",
+      "scanNoMatch": "Couldn’t find “{{code}}” on this order."
     },
     "supplierSelectionDialog": {
       "intro": "This product is available from multiple suppliers. Which one would you like to use for this order?",
