@@ -131,4 +131,13 @@ describe('InventoryAuditComponent', () => {
     expect(snackStub.open).toHaveBeenCalled();
     expect(component.reversingId).toBeNull();
   });
+
+  it('reasonCodeLabel localizes known codes and falls back to a capitalized form', async () => {
+    await setup([]);
+    // Empty test translations → translate() returns the key, so known + unknown
+    // codes both exercise the capitalized fallback (no hardcoded English).
+    expect(component.reasonCodeLabel('')).toBe('');
+    expect(component.reasonCodeLabel('damaged')).toBe('Damaged');
+    expect(component.reasonCodeLabel('weird_code')).toBe('Weird_code');
+  });
 });

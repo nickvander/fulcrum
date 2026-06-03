@@ -2888,6 +2888,16 @@
       "reversed": "Revertido",
       "reversedTooltip": "Revertido por la corrección #{{id}}",
       "reversalOf": "Reversión de #{{id}}"
+    },
+    "reasonLabel": {
+      "damaged": "Dañado",
+      "recount": "Reconteo",
+      "received": "Recepción",
+      "return": "Devolución",
+      "sale": "Venta",
+      "correction": "Corrección",
+      "theft": "Robo o merma",
+      "count": "Conteo"
     }
   },
   "inventoryCount": {

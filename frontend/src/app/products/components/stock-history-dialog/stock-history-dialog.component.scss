@@ -69,7 +69,7 @@
         font-size: 1em;
         text-align: center;
         border: 1px solid;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: var(--shadow-sm);
     }
 
     .positive {

@@ -171,13 +171,19 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
     return this.searchProductId != null || !!this.startDate || !!this.endDate || !!this.reasonCode;
   }
 
-  /** Human-readable label for a reason code. The codes are
-   *  lowercase enum values; we capitalize for display without
-   *  routing through a full per-code i18n key. */
+  /**
+   * Human-readable, localized label for a reason code. Known codes resolve to
+   * `inventoryAudit.reason.<code>`; unknown (backend-defined) codes fall back to
+   * a capitalized form so nothing breaks if the taxonomy grows.
+   */
   reasonCodeLabel(code: string): string {
     if (!code) return '';
-    if (code === 'none') return 'Uncategorized';
-    return code.charAt(0).toUpperCase() + code.slice(1);
+    if (code === 'none') return this.transloco.translate('inventoryAudit.reasonCodeUncategorized');
+    const key = `inventoryAudit.reasonLabel.${code}`;
+    const translated = this.transloco.translate(key);
+    return translated && translated !== key
+      ? translated
+      : code.charAt(0).toUpperCase() + code.slice(1);
   }
 
   exportCsv(): void {
