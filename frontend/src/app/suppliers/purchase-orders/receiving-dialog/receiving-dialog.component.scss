@@ -19,6 +19,21 @@
     }
 }
 
+.destination-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-raised);
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text-secondary);
+    font-size: 14px;
+
+    mat-icon { color: var(--accent-color); font-size: 20px; width: 20px; height: 20px; }
+    strong { color: var(--text-main); }
+}
+
 .correction-note {
     display: flex;
     gap: 12px;

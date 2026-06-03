@@ -48,27 +48,47 @@ describe('StockAdjustmentDialog', () => {
 
     it('should initialize with data', () => {
         expect(component.data).toEqual(mockData);
-        expect(component.adjustment).toBe(0);
-        expect(component.showConfirmation).toBe(false);
+        expect(component.adjustment()).toBe(0);
+        expect(component.showConfirmation()).toBe(false);
     });
 
-    it('should show confirmation on confirmAdjustment if adjustment is valid', () => {
-        component.adjustment = 5;
+    it('should show confirmation on confirmAdjustment when adjustment + reason are valid', () => {
+        component.adjustment.set(5);
+        component.reasonCode.set('received');
         component.confirmAdjustment();
-        expect(component.showConfirmation).toBe(true);
+        expect(component.showConfirmation()).toBe(true);
     });
 
-    it('should not show confirmation if adjustment is 0', () => {
-        component.adjustment = 0;
+    it('should NOT show confirmation when no reason code is selected', () => {
+        component.adjustment.set(5);
         component.confirmAdjustment();
-        expect(component.showConfirmation).toBe(false);
+        expect(component.showConfirmation()).toBe(false);
     });
 
-    it('should close with result on confirmAndClose', () => {
-        component.adjustment = 5;
-        component.reason = 'Restock';
+    it('should NOT show confirmation if adjustment is 0', () => {
+        component.adjustment.set(0);
+        component.reasonCode.set('received');
+        component.confirmAdjustment();
+        expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('should NOT allow a confirmation that drives stock negative', () => {
+        component.adjustment.set(-50); // current is 10
+        component.reasonCode.set('damaged');
+        component.confirmAdjustment();
+        expect(component.showConfirmation()).toBe(false);
+    });
+
+    it('should close with a composed reason on confirmAndClose', () => {
+        component.adjustment.set(5);
+        component.reasonCode.set('count');
+        component.note = 'Recount';
         component.confirmAndClose();
-        expect(dialogRefMock.close).toHaveBeenCalledWith({ adjustment: 5, reason: 'Restock' });
+        // Transloco testing returns the key for the reason label.
+        expect(dialogRefMock.close).toHaveBeenCalledWith({
+            adjustment: 5,
+            reason: 'products.adjustReason.count — Recount',
+        });
     });
 
     it('should close without result on onCancel', () => {
@@ -77,14 +97,14 @@ describe('StockAdjustmentDialog', () => {
     });
 
     it('should reset confirmation on goBack', () => {
-        component.showConfirmation = true;
+        component.showConfirmation.set(true);
         component.goBack();
-        expect(component.showConfirmation).toBe(false);
+        expect(component.showConfirmation()).toBe(false);
     });
 
     it('should reset confirmation on onAdjustmentChange', () => {
-        component.showConfirmation = true;
+        component.showConfirmation.set(true);
         component.onAdjustmentChange();
-        expect(component.showConfirmation).toBe(false);
+        expect(component.showConfirmation()).toBe(false);
     });
 });

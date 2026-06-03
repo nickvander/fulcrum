@@ -29,8 +29,8 @@ describe('StockTransferCreateDialogComponent', () => {
       getProducts: () =>
         of({
           data: [
-            { id: 1, name: 'Tea', sku: 'TEA' },
-            { id: 2, name: 'Coffee', sku: 'COF' },
+            { id: 1, name: 'Tea', sku: 'TEA', inventory_items: [{ location: 'default', quantity: 50 }] },
+            { id: 2, name: 'Coffee', sku: 'COF', inventory_items: [{ location: 'default', quantity: 50 }] },
           ],
         }),
     };

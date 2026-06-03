@@ -29,7 +29,7 @@
           <p class="notes" *ngIf="session.notes">{{ session.notes }}</p>
         </div>
         <div class="header-side">
-          <mat-chip [ngClass]="'chip-' + session.status">{{ session.status }}</mat-chip>
+          <mat-chip [ngClass]="'chip-' + session.status">{{ t(statusLabelKey(session.status)) }}</mat-chip>
         </div>
       </header>
 

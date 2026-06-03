@@ -3,6 +3,13 @@
 
 <mat-dialog-content class="receiving-content">
     <div [formGroup]="receivingForm" class="receiving-grid">
+        <!-- P0: always name where received stock lands -->
+        <div class="destination-banner" *ngIf="mode !== 'correct'">
+            <mat-icon>warehouse</mat-icon>
+            <span>{{ t('purchaseOrders.receivingDialog.destinationLabel') }}:
+                <strong>{{ t(destinationLabelKey()) }}</strong></span>
+        </div>
+
         <div class="correction-note" *ngIf="mode === 'correct'">
             <mat-icon>history</mat-icon>
             <div>
@@ -83,6 +90,14 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
     <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="receivingForm.invalid">{{ submitLabel() }}</button>
+    <!-- P0-2: one-tap receive-everything for the 90% case (whole shipment arrived) -->
+    <button *ngIf="mode !== 'correct'" mat-stroked-button (click)="onSubmit()"
+        [disabled]="receivingForm.invalid || submitting">{{ submitLabel() }}</button>
+    <button *ngIf="mode === 'correct'" mat-raised-button color="primary" (click)="onSubmit()"
+        [disabled]="receivingForm.invalid || submitting">{{ submitLabel() }}</button>
+    <button *ngIf="mode !== 'correct'" mat-raised-button color="primary" (click)="receiveAll()"
+        [disabled]="!hasRemaining() || submitting">
+        {{ t('purchaseOrders.receivingDialog.receiveAll') }}
+    </button>
 </mat-dialog-actions>
 </ng-container>

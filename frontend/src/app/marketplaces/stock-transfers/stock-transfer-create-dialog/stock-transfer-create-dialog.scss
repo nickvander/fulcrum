@@ -54,6 +54,27 @@
     padding: 1px 6px;
     border-radius: 3px;
   }
+
+  .on-hand {
+    font-size: 0.75rem;
+    color: var(--text-hint);
+    white-space: nowrap;
+    &.zero { color: var(--error-color); }
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    &:hover { background: transparent; }
+  }
+}
+
+.qty-cap {
+  font-size: 0.72rem;
+  color: var(--text-hint);
+  margin-left: 8px;
+  white-space: nowrap;
+  &.at-cap { color: var(--warning-color); }
 }
 
 .empty-text {

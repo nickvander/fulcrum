@@ -1,44 +1,66 @@
 <ng-container *transloco="let t">
   <h2 mat-dialog-title>{{ t('products.adjustStockTitle') }} {{ data.productName }}</h2>
   <mat-dialog-content>
-    @if (!showConfirmation) {
+    @if (!showConfirmation()) {
     <div>
-      <p class="current-stock">{{ t('products.currentStockLabel') }}: <strong>{{ data.currentQuantity }}</strong></p>
+      <p class="current-stock">
+        {{ t('products.currentStockLabel') }}: <strong>{{ data.currentQuantity }}</strong>
+        <span class="loc-chip"><mat-icon>inventory_2</mat-icon>{{ t(locationLabelKey) }}</span>
+      </p>
+
       <mat-form-field class="full-width">
         <mat-label>{{ t('products.adjustmentAmount') }}</mat-label>
-        <input matInput type="number" [(ngModel)]="adjustment" [placeholder]="t('products.adjustmentAmount')"
-          (input)="onAdjustmentChange()">
+        <input matInput type="number" [ngModel]="adjustment()"
+          (ngModelChange)="adjustment.set($event); onAdjustmentChange()"
+          [placeholder]="t('products.adjustmentAmount')">
         <mat-hint>{{ t('products.adjustmentHint') }}</mat-hint>
       </mat-form-field>
+
       <mat-form-field class="full-width">
-        <mat-label>{{ t('products.reason') }} ({{ t('common.optional') }})</mat-label>
-        <input matInput [(ngModel)]="reason" [placeholder]="t('products.reason')">
+        <mat-label>{{ t('products.reason') }}</mat-label>
+        <mat-select [ngModel]="reasonCode()" (ngModelChange)="reasonCode.set($event)" required>
+          @for (rc of reasonCodes; track rc.value) {
+          <mat-option [value]="rc.value">{{ t(rc.labelKey) }}</mat-option>
+          }
+        </mat-select>
+        @if (!reasonCode()) {<mat-hint>{{ t('products.adjustReasonRequired') }}</mat-hint>}
       </mat-form-field>
+
+      <mat-form-field class="full-width">
+        <mat-label>{{ t('products.adjustNote') }}</mat-label>
+        <input matInput [(ngModel)]="note" [placeholder]="t('products.adjustNote')">
+      </mat-form-field>
+
+      @if (wouldGoNegative()) {
+      <p class="adjust-warning error"><mat-icon>error</mat-icon>{{ t('products.adjustNegativeBlocked') }}</p>
+      } @else if (isLargeDelta()) {
+      <p class="adjust-warning warn"><mat-icon>warning</mat-icon>{{ t('products.adjustLargeDelta', { n: resultingStock() }) }}</p>
+      }
+
+      @if (data.isWarehouse !== false) {
+      <p class="ml-full-note">{{ t('products.adjustMlFullNote') }}</p>
+      }
     </div>
     } @else {
     <p class="confirmation-title">{{ t('products.confirmStockAdjustment') }}</p>
     <div class="confirmation-details">
       <p><strong>{{ t('nav.products') }}:</strong> {{ data.productName }}</p>
+      <p><strong>{{ t('products.adjustLocationLabel') }}:</strong> {{ t(locationLabelKey) }}</p>
       <p><strong>{{ t('products.currentStockLabel') }}:</strong> {{ data.currentQuantity }}</p>
-      <p><strong>{{ t('products.adjustment') }}:</strong> {{ adjustment > 0 ? '+' : '' }}{{ adjustment }}</p>
-      <p><strong>{{ t('products.newStock') }}:</strong> {{ data.currentQuantity + adjustment }}</p>
-      @if (reason) {
-      <p><strong>{{ t('products.reason') }}:</strong> {{ reason }}</p>
-      }
+      <p><strong>{{ t('products.adjustment') }}:</strong> {{ adjustment() > 0 ? '+' : '' }}{{ adjustment() }}</p>
+      <p><strong>{{ t('products.newStock') }}:</strong> {{ resultingStock() }}</p>
+      <p><strong>{{ t('products.reason') }}:</strong> {{ t('products.adjustReason.' + reasonCode()) }}@if (note) { — {{ note }}}</p>
     </div>
     }
-
   </mat-dialog-content>
   <mat-dialog-actions>
     <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
-    @if (!showConfirmation) {
+    @if (!showConfirmation()) {
     <button mat-button (click)="confirmAdjustment()" cdkFocusInitial color="primary"
-      [disabled]="adjustment === 0 || !adjustment">{{ t('common.preview') }}</button>
+      [disabled]="!canPreview()">{{ t('common.preview') }}</button>
     }
-    @if (showConfirmation) {
+    @if (showConfirmation()) {
     <button mat-button (click)="confirmAndClose()" color="primary">{{ t('products.confirmAdjustment') }}</button>
-    }
-    @if (showConfirmation) {
     <button mat-button (click)="goBack()" color="accent">{{ t('common.edit') }}</button>
     }
   </mat-dialog-actions>

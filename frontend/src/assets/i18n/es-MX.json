@@ -1332,7 +1332,21 @@
     },
     "label": {
       "daysShort": "d"
-    }
+    },
+    "adjustReason": {
+      "received": "Recepción",
+      "count": "Conteo",
+      "damaged": "Dañado",
+      "theft": "Robo o merma",
+      "return": "Devolución",
+      "dataEntry": "Error de captura"
+    },
+    "adjustReasonRequired": "Selecciona un motivo",
+    "adjustNote": "Nota (opcional)",
+    "adjustNegativeBlocked": "El ajuste dejaría el stock en negativo.",
+    "adjustLargeDelta": "Ajuste grande: el stock quedará en {{n}}.",
+    "adjustMlFullNote": "Ajustar la Bodega no cambia tu stock en MercadoLibre Full.",
+    "adjustLocationLabel": "Ubicación"
   },
   "suppliers": {
     "title": "Proveedores",
@@ -1811,7 +1825,11 @@
       "quantityLabelReceive": "Recibir ahora",
       "quantityLabelReverse": "Revertir recibido",
       "submitReceive": "Recibir",
-      "submitCorrect": "Aplicar corrección"
+      "submitCorrect": "Aplicar corrección",
+      "receiveAll": "Recibir todo lo pendiente",
+      "destinationLabel": "Recibir en",
+      "successAdded": "Agregaste {{n}} unidades a {{location}}",
+      "errorReceiving": "No se pudieron recibir los artículos. Inténtalo de nuevo."
     },
     "supplierSelectionDialog": {
       "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",
@@ -2387,7 +2405,9 @@
     "stockTransferReconciliation": {
       "productFallback": "Producto #{{id}}",
       "loadFailed": "No se pudo cargar la conciliación"
-    }
+    },
+    "onHand": "A la mano: {{n}}",
+    "onHandShort": "Máx {{n}}"
   },
   "marketplaces": {
     "title": "Mercados",
@@ -2826,7 +2846,7 @@
   },
   "inventoryAudit": {
     "title": "Historial de ajustes de inventario",
-    "subtitle": "Cada cambio de cantidad en el espacio, del más reciente al más antiguo. Usa los filtros para acotar por producto, fecha o motivo; luego exporta para un registro sellado.",
+    "subtitle": "Cada cambio de cantidad en tu inventario, del más reciente al más antiguo. Usa los filtros para acotar por producto, fecha o motivo; luego exporta para un registro sellado.",
     "productIdFilter": "ID de producto",
     "from": "Desde",
     "to": "Hasta",

@@ -36,6 +36,7 @@
             type="button"
             class="product-row"
             (click)="add(product)"
+            [disabled]="onHandFor(product) <= 0"
             [attr.data-testid]="'product-pick-' + product.id"
           >
             <mat-icon>add</mat-icon>
@@ -43,6 +44,9 @@
             @if (product.sku) {
               <code>{{ product.sku }}</code>
             }
+            <span class="on-hand" [class.zero]="onHandFor(product) <= 0">
+              {{ t('stockTransfers.onHand', { n: onHandFor(product) }) }}
+            </span>
           </button>
         }
       }
@@ -71,11 +75,15 @@
                 matInput
                 type="number"
                 min="1"
+                [max]="row.onHand"
                 [ngModel]="row.qtyPlanned"
                 (ngModelChange)="updateQty(row, $event)"
                 [attr.data-testid]="'qty-input-' + row.productId"
               />
             </mat-form-field>
+            <span class="qty-cap" [class.at-cap]="isAtCap(row)">
+              {{ t('stockTransfers.onHandShort', { n: row.onHand }) }}
+            </span>
           </td>
         </ng-container>
 

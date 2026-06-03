@@ -18,6 +18,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { DateRangePresetsComponent } from '../../../shared/components/date-range-presets/date-range-presets.component';
@@ -56,6 +58,8 @@ type ImportReviewFilter = 'pending' | 'history' | 'all';
     MatCardModule,
     MatCheckboxModule,
     MatTooltipModule,
+    MatMenuModule,
+    MatDividerModule,
     MatProgressBarModule,
     MatDialogModule,
     DateRangePresetsComponent,

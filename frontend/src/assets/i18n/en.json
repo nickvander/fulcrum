@@ -1332,7 +1332,21 @@
     },
     "label": {
       "daysShort": "d"
-    }
+    },
+    "adjustReason": {
+      "received": "Received",
+      "count": "Count",
+      "damaged": "Damaged",
+      "theft": "Theft or shrinkage",
+      "return": "Return",
+      "dataEntry": "Data-entry error"
+    },
+    "adjustReasonRequired": "Select a reason",
+    "adjustNote": "Note (optional)",
+    "adjustNegativeBlocked": "This adjustment would make stock negative.",
+    "adjustLargeDelta": "Large adjustment: stock will become {{n}}.",
+    "adjustMlFullNote": "Adjusting the warehouse doesn't change your MercadoLibre Full stock.",
+    "adjustLocationLabel": "Location"
   },
   "suppliers": {
     "title": "Suppliers",
@@ -1811,7 +1825,11 @@
       "quantityLabelReceive": "Receive Now",
       "quantityLabelReverse": "Reverse Received",
       "submitReceive": "Receive",
-      "submitCorrect": "Apply Correction"
+      "submitCorrect": "Apply Correction",
+      "receiveAll": "Receive all remaining",
+      "destinationLabel": "Receive into",
+      "successAdded": "Added {{n}} units to {{location}}",
+      "errorReceiving": "Could not receive the items. Please try again."
     },
     "supplierSelectionDialog": {
       "intro": "This product is available from multiple suppliers. Which one would you like to use for this order?",
@@ -2387,7 +2405,9 @@
     "stockTransferReconciliation": {
       "productFallback": "Product #{{id}}",
       "loadFailed": "Failed to load reconciliation"
-    }
+    },
+    "onHand": "On hand: {{n}}",
+    "onHandShort": "Max {{n}}"
   },
   "marketplaces": {
     "title": "Marketplaces",

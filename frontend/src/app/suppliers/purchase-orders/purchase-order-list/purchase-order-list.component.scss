@@ -44,7 +44,29 @@
 
 .actions {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 8px;
+
+    .overflow-btn { color: var(--text-secondary); }
+
+    // Primary split button (the single brand-red moment), matching product-list.
+    .add-split {
+        display: inline-flex;
+        border-radius: var(--radius-sm, 8px);
+        overflow: hidden;
+
+        .add-main, .add-caret {
+            background: var(--primary-color);
+            color: var(--text-on-primary);
+            border-radius: 0;
+            height: 40px;
+            min-width: auto;
+            mat-icon { color: var(--text-on-primary); }
+            &:hover { background: var(--primary-hover); }
+        }
+        .add-main { padding: 0 var(--space-4, 16px); }
+        .add-caret { padding: 0 2px; border-left: 1px solid rgba(var(--primary-rgb), 0.4); }
+    }
 }
 
 // KPI Row

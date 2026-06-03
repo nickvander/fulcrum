@@ -68,6 +68,14 @@ import {
   styleUrl: './inventory-count-detail.component.scss',
 })
 export class InventoryCountDetailComponent implements OnInit, OnDestroy {
+  /** i18n key for a session status (avoids rendering the raw enum). */
+  statusLabelKey(status: string): string {
+    if (status === 'in_progress') return 'inventoryCount.list.statusInProgress';
+    if (status === 'committed') return 'inventoryCount.list.statusCommitted';
+    if (status === 'cancelled') return 'inventoryCount.list.statusCancelled';
+    return 'inventoryCount.list.statusAll';
+  }
+
   session: InventoryCountSessionDetail | null = null;
   loading = false;
   errored = false;

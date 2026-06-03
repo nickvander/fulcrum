@@ -10,28 +10,42 @@
                 </span>
             </div>
             <div class="actions">
-                <button mat-mini-fab color="accent" (click)="openIngestDialog()"
-                    [matTooltip]="t('purchaseOrders.importPo')">
-                    <mat-icon>upload_file</mat-icon>
+                <!-- Overflow: import / supplier / exports -->
+                <button mat-icon-button class="overflow-btn" [matMenuTriggerFor]="poMenu"
+                    [matTooltip]="t('products.moreOptions')">
+                    <mat-icon>tune</mat-icon>
                 </button>
-                <button mat-mini-fab color="primary" (click)="createPurchaseOrder()"
-                    [matTooltip]="t('purchaseOrders.createPO')">
-                    <mat-icon>add</mat-icon>
-                </button>
-                <button mat-mini-fab color="accent" (click)="createSupplier()"
-                    [matTooltip]="t('suppliers.addSupplier')">
-                    <mat-icon>business</mat-icon>
-                </button>
-                <button mat-mini-fab color="basic" (click)="exportCsv()"
-                    [matTooltip]="t('purchaseOrders.exportCsvTooltip')"
-                    data-testid="po-export-csv">
-                    <mat-icon>download</mat-icon>
-                </button>
-                <button mat-mini-fab color="basic" (click)="exportPdf()"
-                    [matTooltip]="t('purchaseOrders.exportPdfTooltip')"
-                    data-testid="po-export-pdf">
-                    <mat-icon>picture_as_pdf</mat-icon>
-                </button>
+                <mat-menu #poMenu="matMenu">
+                    <button mat-menu-item (click)="openIngestDialog()">
+                        <mat-icon>upload_file</mat-icon><span>{{ t('purchaseOrders.importPo') }}</span>
+                    </button>
+                    <button mat-menu-item (click)="createSupplier()">
+                        <mat-icon>business</mat-icon><span>{{ t('suppliers.addSupplier') }}</span>
+                    </button>
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item (click)="exportCsv()" data-testid="po-export-csv">
+                        <mat-icon>download</mat-icon><span>{{ t('purchaseOrders.exportCsvTooltip') }}</span>
+                    </button>
+                    <button mat-menu-item (click)="exportPdf()" data-testid="po-export-pdf">
+                        <mat-icon>picture_as_pdf</mat-icon><span>{{ t('purchaseOrders.exportPdfTooltip') }}</span>
+                    </button>
+                </mat-menu>
+
+                <!-- Primary split button: New PO + caret (import) -->
+                <div class="add-split">
+                    <button mat-flat-button class="add-main" (click)="createPurchaseOrder()">
+                        <mat-icon>add</mat-icon><span>{{ t('purchaseOrders.createPO') }}</span>
+                    </button>
+                    <button mat-flat-button class="add-caret" [matMenuTriggerFor]="addMenu"
+                        [attr.aria-label]="t('purchaseOrders.createPO')">
+                        <mat-icon>arrow_drop_down</mat-icon>
+                    </button>
+                    <mat-menu #addMenu="matMenu">
+                        <button mat-menu-item (click)="openIngestDialog()">
+                            <mat-icon>upload_file</mat-icon><span>{{ t('purchaseOrders.importPo') }}</span>
+                        </button>
+                    </mat-menu>
+                </div>
             </div>
         </div>
 

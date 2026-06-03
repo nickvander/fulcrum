@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { TranslocoModule, TranslocoService } from '@ngneat/transloco';
 import { PurchaseOrder, PurchaseOrderItem } from '../../../shared/models/purchase-order.model';
 import { SuppliersService } from '../../suppliers.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
     selector: 'app-receiving-dialog',
@@ -33,10 +34,13 @@ export class ReceivingDialogComponent implements OnInit {
     po: PurchaseOrder;
     mode: 'receive' | 'correct';
 
+    submitting = false;
+
     constructor(
         private fb: FormBuilder,
         private suppliersService: SuppliersService,
         private transloco: TranslocoService,
+        private notification: NotificationService,
         public dialogRef: MatDialogRef<ReceivingDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { po: PurchaseOrder, mode?: 'receive' | 'correct' }
     ) {
@@ -137,38 +141,87 @@ export class ReceivingDialogComponent implements OnInit {
         this.dialogRef.close();
     }
 
+    /** i18n key for the destination warehouse stock lands in (the local Bodega). */
+    destinationLabelKey(): string {
+        return 'products.bucketDefault';
+    }
+
+    /** Total units about to be received across all lines. */
+    totalToReceive(): number {
+        return this.items.controls.reduce(
+            (sum, c) => sum + (Number(c.get('quantity_to_receive')?.value) || 0),
+            0,
+        );
+    }
+
+    /** True when at least one line still has remaining (un-received) quantity. */
+    hasRemaining(): boolean {
+        return this.items.controls.some((c) => {
+            const ordered = Number(c.get('quantity_ordered')?.value) || 0;
+            const soFar = Number(c.get('quantity_received_so_far')?.value) || 0;
+            return ordered - soFar > 0;
+        });
+    }
+
+    /** P0-2: one-tap "receive everything still outstanding", then submit. */
+    receiveAll(): void {
+        this.items.controls.forEach((c) => {
+            const ordered = Number(c.get('quantity_ordered')?.value) || 0;
+            const soFar = Number(c.get('quantity_received_so_far')?.value) || 0;
+            c.get('quantity_to_receive')?.setValue(Math.max(0, ordered - soFar));
+        });
+        this.onSubmit();
+    }
+
     onSubmit(): void {
-        if (this.receivingForm.valid) {
-            const formValue = this.receivingForm.value;
-            const itemsToSubmit = formValue.items
-                .filter((item: any) => item.quantity_to_receive > 0)
-                .map((item: any) => ({
-                    po_item_id: item.po_item_id,
-                    product_id: item.product_id,
-                    variant_id: item.variant_id,
-                    quantity: item.quantity_to_receive,
-                    reason: this.mode === 'correct' ? formValue.reason : undefined
-                }));
+        if (!this.receivingForm.valid || this.submitting) return;
 
-            if (itemsToSubmit.length === 0) {
-                this.dialogRef.close();
-                return;
-            }
+        const formValue = this.receivingForm.value;
+        const itemsToSubmit = formValue.items
+            .filter((item: any) => item.quantity_to_receive > 0)
+            .map((item: any) => ({
+                po_item_id: item.po_item_id,
+                product_id: item.product_id,
+                variant_id: item.variant_id,
+                quantity: item.quantity_to_receive,
+                reason: this.mode === 'correct' ? formValue.reason : undefined
+            }));
 
-            const request$ = this.mode === 'correct'
-                ? this.suppliersService.correctReceivedPurchaseOrderItems(this.po.id, itemsToSubmit)
-                : this.suppliersService.receivePurchaseOrderItems(this.po.id, itemsToSubmit);
-
-            request$
-                .subscribe({
-                    next: (updatedPo) => {
-                        this.dialogRef.close(updatedPo);
-                    },
-                    error: (err) => {
-                        console.error('Error receiving items:', err);
-                        // Handle error (show message)
-                    }
-                });
+        if (itemsToSubmit.length === 0) {
+            this.dialogRef.close();
+            return;
         }
+
+        const total = itemsToSubmit.reduce((sum: number, i: any) => sum + i.quantity, 0);
+        this.submitting = true;
+
+        const request$ = this.mode === 'correct'
+            ? this.suppliersService.correctReceivedPurchaseOrderItems(this.po.id, itemsToSubmit)
+            : this.suppliersService.receivePurchaseOrderItems(this.po.id, itemsToSubmit);
+
+        request$.subscribe({
+            next: (updatedPo) => {
+                this.submitting = false;
+                // P0-1: explicit success toast that NAMES the destination warehouse.
+                if (this.mode !== 'correct') {
+                    this.notification.showSuccess(
+                        this.transloco.translate('purchaseOrders.receivingDialog.successAdded', {
+                            n: total,
+                            location: this.transloco.translate(this.destinationLabelKey()),
+                        }),
+                    );
+                }
+                this.dialogRef.close(updatedPo);
+            },
+            error: (err) => {
+                console.error('Error receiving items:', err);
+                this.submitting = false;
+                // P0-1: surface a real error toast and KEEP the dialog open so nothing
+                // is silently lost — the operator can retry.
+                this.notification.showError(
+                    this.transloco.translate('purchaseOrders.receivingDialog.errorReceiving'),
+                );
+            }
+        });
     }
 }

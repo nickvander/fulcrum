@@ -26,6 +26,14 @@ interface SelectedRow {
   productName: string;
   sku?: string | null;
   qtyPlanned: number;
+  onHand: number;
+}
+
+interface ProductOption {
+  id: number;
+  name: string;
+  sku?: string | null;
+  inventoryItems: { location?: string; quantity: number }[];
 }
 
 @Component({
@@ -58,7 +66,7 @@ export class StockTransferCreateDialogComponent implements OnInit {
     { value: STOCK_LOCATION_AMAZON_FBA, labelKey: 'stockTransfers.locations.amazonFba' },
   ];
 
-  products: { id: number; name: string; sku?: string | null }[] = [];
+  products: ProductOption[] = [];
   selected: SelectedRow[] = [];
   saving = false;
 
@@ -79,13 +87,25 @@ export class StockTransferCreateDialogComponent implements OnInit {
           id: p.id,
           name: p.name,
           sku: p.sku,
+          inventoryItems: p.inventory_items || [],
         }));
       },
       error: err => console.error('Failed to load products', err),
     });
   }
 
-  get filteredProducts(): { id: number; name: string; sku?: string | null }[] {
+  /**
+   * Quantity physically on hand at the current source location (the Bodega we
+   * transfer FROM). Computed on demand so it always reflects the live
+   * sourceLocation — you can't ship more to Full than you hold.
+   */
+  onHandFor(product: ProductOption): number {
+    return (product.inventoryItems || [])
+      .filter(i => (i.location || STOCK_LOCATION_INTERNAL) === this.sourceLocation)
+      .reduce((sum, i) => sum + (i.quantity || 0), 0);
+  }
+
+  get filteredProducts(): ProductOption[] {
     const term = this.search.trim().toLowerCase();
     const selectedIds = new Set(this.selected.map(s => s.productId));
     const remaining = this.products.filter(p => !selectedIds.has(p.id));
@@ -101,14 +121,16 @@ export class StockTransferCreateDialogComponent implements OnInit {
       .slice(0, 25);
   }
 
-  add(product: { id: number; name: string; sku?: string | null }): void {
+  add(product: ProductOption): void {
+    const onHand = this.onHandFor(product);
     this.selected = [
       ...this.selected,
       {
         productId: product.id,
         productName: product.name,
         sku: product.sku,
-        qtyPlanned: 1,
+        qtyPlanned: Math.min(1, onHand),
+        onHand,
       },
     ];
   }
@@ -119,7 +141,15 @@ export class StockTransferCreateDialogComponent implements OnInit {
 
   updateQty(row: SelectedRow, value: string | number): void {
     const next = Number(value);
-    row.qtyPlanned = Number.isFinite(next) && next > 0 ? Math.floor(next) : 0;
+    const floored = Number.isFinite(next) && next > 0 ? Math.floor(next) : 0;
+    // Never let the planned qty exceed what's physically on hand — you can't
+    // ship more to Full than you hold in the Bodega.
+    row.qtyPlanned = Math.min(floored, row.onHand);
+  }
+
+  /** True when a row's planned qty matches its on-hand cap (used to surface a hint). */
+  isAtCap(row: SelectedRow): boolean {
+    return row.qtyPlanned >= row.onHand;
   }
 
   canSave(): boolean {
@@ -128,7 +158,7 @@ export class StockTransferCreateDialogComponent implements OnInit {
       !!this.destLocation &&
       this.destLocation !== this.sourceLocation &&
       this.selected.length > 0 &&
-      this.selected.every(s => s.qtyPlanned > 0)
+      this.selected.every(s => s.qtyPlanned > 0 && s.qtyPlanned <= s.onHand)
     );
   }
 
