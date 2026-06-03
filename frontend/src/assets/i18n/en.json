@@ -103,7 +103,7 @@
     "operations": "Operations",
     "dashboard": "Dashboard",
     "products": "Products",
-    "inventoryAudit": "Stock audit log",
+    "inventoryAudit": "Adjustment history",
     "inventoryCount": "Physical count",
     "orders": "Orders",
     "alerts": "Alerts",

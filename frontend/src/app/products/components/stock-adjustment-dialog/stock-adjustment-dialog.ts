@@ -1,4 +1,4 @@
-import { Component, Inject, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Inject, computed, signal } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { FormsModule } from '@angular/forms';
@@ -40,6 +40,7 @@ const REASON_CODES = [
   templateUrl: './stock-adjustment-dialog.html',
   styleUrls: ['./stock-adjustment-dialog.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
     MatDialogModule,
