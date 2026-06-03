@@ -204,3 +204,20 @@
     font-size: 0.85em;
   }
 }
+
+// Out-of-tolerance "Revisar" flag on a counted line.
+.review-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--bg-raised);
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
+  font-size: 11px;
+  font-weight: 700;
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}

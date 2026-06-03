@@ -2956,7 +2956,9 @@
       "commitConfirmTitle": "Commit this physical count?",
       "commitConfirmBody": "{{n}} stock adjustment(s) will be written with reason 'recount'. Rows you did not count are skipped.",
       "commitSnackbar": "Committed — {{n}} adjustment(s) written.",
-      "commitFailed": "Could not commit the session."
+      "commitFailed": "Could not commit the session.",
+      "review": "Review",
+      "commitReviewWarning": "{{n}} with out-of-tolerance variance — review before committing."
     }
   },
   "catalogImportTemplates": {

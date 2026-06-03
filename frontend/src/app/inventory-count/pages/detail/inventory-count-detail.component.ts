@@ -238,6 +238,27 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
     return d > 0 ? 'delta-positive' : 'delta-negative';
   }
 
+  /**
+   * A counted line is "out of tolerance" (worth a recount) when its variance is
+   * large in absolute units OR as a share of expected. Surfaced as a "Revisar"
+   * flag so a mis-count doesn't quietly post a big adjustment.
+   */
+  private static readonly VARIANCE_ABS = 10;
+  private static readonly VARIANCE_PCT = 0.05;
+
+  isOutOfTolerance(item: InventoryCountItem): boolean {
+    const d = this.delta(item);
+    if (d === null || d === 0) return false;
+    const abs = Math.abs(d);
+    const pct = item.expected_quantity > 0 ? abs / item.expected_quantity : 1;
+    return abs > InventoryCountDetailComponent.VARIANCE_ABS || pct > InventoryCountDetailComponent.VARIANCE_PCT;
+  }
+
+  outOfToleranceCount(): number {
+    if (!this.session) return 0;
+    return this.session.items.filter(i => this.isOutOfTolerance(i)).length;
+  }
+
   /** Operator preview: how many adjustments will the commit fire?
    *  Mirrors the service's gate. */
   pendingAdjustmentCount(): number {
@@ -251,13 +272,17 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
   commit(): void {
     if (!this.session || this.committing) return;
     const willFire = this.pendingAdjustmentCount();
+    const review = this.outOfToleranceCount();
+
+    let message = this.transloco.translate('inventoryCount.detail.commitConfirmBody', { n: willFire });
+    if (review > 0) {
+      message += ' ' + this.transloco.translate('inventoryCount.detail.commitReviewWarning', { n: review });
+    }
 
     const ref = this.dialog.open(ConfirmationDialog, {
       data: {
         title: this.transloco.translate('inventoryCount.detail.commitConfirmTitle'),
-        message: this.transloco.translate(
-          'inventoryCount.detail.commitConfirmBody', { n: willFire },
-        ),
+        message,
       } as ConfirmationDialogData,
     });
 

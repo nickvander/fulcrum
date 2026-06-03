@@ -2956,7 +2956,9 @@
       "commitConfirmTitle": "¿Confirmar este conteo físico?",
       "commitConfirmBody": "Se escribirán {{n}} ajuste(s) de stock con motivo 'reconteo'. Las filas sin conteo se omiten.",
       "commitSnackbar": "Confirmado — {{n}} ajuste(s) escritos.",
-      "commitFailed": "No se pudo confirmar la sesión."
+      "commitFailed": "No se pudo confirmar la sesión.",
+      "review": "Revisar",
+      "commitReviewWarning": "{{n}} con diferencia fuera de tolerancia — revísalos antes de confirmar."
     }
   },
   "catalogImportTemplates": {

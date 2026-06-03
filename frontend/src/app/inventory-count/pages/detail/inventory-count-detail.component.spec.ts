@@ -256,4 +256,32 @@ describe('InventoryCountDetailComponent', () => {
     expect(component.errored).toBe(true);
     expect(component.session).toBeNull();
   });
+
+  // --- Variance tolerance (P2) --------------------------------------------
+
+  it('isOutOfTolerance: uncounted or exact counts are within tolerance', () => {
+    expect(component.isOutOfTolerance(makeItem({ expected_quantity: 100, counted_quantity: null }))).toBe(false);
+    expect(component.isOutOfTolerance(makeItem({ expected_quantity: 100, counted_quantity: 100 }))).toBe(false);
+  });
+
+  it('isOutOfTolerance: small absolute + small percent variance stays within tolerance', () => {
+    // delta 3 on 100 = 3 units (≤10) and 3% (≤5%) → within tolerance
+    expect(component.isOutOfTolerance(makeItem({ expected_quantity: 100, counted_quantity: 103 }))).toBe(false);
+  });
+
+  it('isOutOfTolerance: flags large absolute OR large percent variance', () => {
+    // delta 12 > 10 units → out of tolerance
+    expect(component.isOutOfTolerance(makeItem({ expected_quantity: 100, counted_quantity: 112 }))).toBe(true);
+    // delta 6 on 100 = 6% > 5% → out of tolerance
+    expect(component.isOutOfTolerance(makeItem({ expected_quantity: 100, counted_quantity: 106 }))).toBe(true);
+  });
+
+  it('outOfToleranceCount tallies flagged items in the session', () => {
+    component.session!.items = [
+      makeItem({ id: 1, expected_quantity: 100, counted_quantity: 100 }), // ok
+      makeItem({ id: 2, expected_quantity: 100, counted_quantity: 120 }), // flagged
+      makeItem({ id: 3, expected_quantity: 100, counted_quantity: 80 }),  // flagged
+    ];
+    expect(component.outOfToleranceCount()).toBe(2);
+  });
 });

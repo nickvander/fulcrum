@@ -124,6 +124,9 @@
                 <span [class]="deltaClass(row)">
                   {{ delta(row) === null ? '—' : (delta(row)! > 0 ? '+' + delta(row) : delta(row)) }}
                 </span>
+                @if (isOutOfTolerance(row)) {
+                  <span class="review-flag"><mat-icon>warning</mat-icon>{{ t('inventoryCount.detail.review') }}</span>
+                }
               </td>
             </ng-container>
 
