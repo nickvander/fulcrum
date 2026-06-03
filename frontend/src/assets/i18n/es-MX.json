@@ -1836,7 +1836,10 @@
       "exceedReasonRequired": "Indica el motivo del excedente antes de recibir.",
       "scan": "Escanear",
       "scanAdded": "Sumaste 1 a {{name}}",
-      "scanNoMatch": "No encontramos «{{code}}» en esta orden."
+      "scanNoMatch": "No encontramos «{{code}}» en esta orden.",
+      "undo": "Deshacer",
+      "undone": "Recepción deshecha",
+      "undoReason": "Recepción deshecha"
     },
     "supplierSelectionDialog": {
       "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",

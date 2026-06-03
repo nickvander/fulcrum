@@ -277,16 +277,18 @@ export class ReceivingDialogComponent implements OnInit {
         request$.subscribe({
             next: (updatedPo) => {
                 this.submitting = false;
-                // P0-1: explicit success toast that NAMES the destination warehouse.
                 if (this.mode !== 'correct') {
-                    this.notification.showSuccess(
-                        this.transloco.translate('purchaseOrders.receivingDialog.successAdded', {
-                            n: total,
-                            location: this.transloco.translate(this.destinationLabelKey()),
-                        }),
-                    );
+                    // Hand the receipt to the opener, which owns the success +
+                    // Undo snackbar (so Undo can reverse AND refresh the PO).
+                    this.dialogRef.close({
+                        po: updatedPo,
+                        receivedItems: itemsToSubmit,
+                        total,
+                        destinationKey: this.destinationLabelKey(),
+                    });
+                } else {
+                    this.dialogRef.close(updatedPo);
                 }
-                this.dialogRef.close(updatedPo);
             },
             error: (err) => {
                 console.error('Error receiving items:', err);

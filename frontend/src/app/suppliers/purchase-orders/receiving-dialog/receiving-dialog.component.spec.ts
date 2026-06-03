@@ -80,7 +80,12 @@ describe('ReceivingDialogComponent', () => {
         expect(suppliersServiceMock.receivePurchaseOrderItems).toHaveBeenCalledWith(1, [
             { po_item_id: 11, product_id: 101, variant_id: null, quantity: 2 }
         ]);
-        expect(dialogRefMock.close).toHaveBeenCalled();
+        // Closes with a rich payload so the opener can show success + Undo.
+        const payload = dialogRefMock.close.mock.calls[0][0];
+        expect(payload.po).toBeDefined();
+        expect(payload.total).toBe(2);
+        expect(payload.receivedItems).toHaveLength(1);
+        expect(payload.destinationKey).toBe('products.bucketDefault');
     });
 
     it('applyScannedCode matches a line by SKU and bumps its receive qty', () => {

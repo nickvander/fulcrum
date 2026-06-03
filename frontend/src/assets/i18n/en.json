@@ -1836,7 +1836,10 @@
       "exceedReasonRequired": "Add a reason for the over-receipt before receiving.",
       "scan": "Scan",
       "scanAdded": "Added 1 to {{name}}",
-      "scanNoMatch": "Couldn’t find “{{code}}” on this order."
+      "scanNoMatch": "Couldn’t find “{{code}}” on this order.",
+      "undo": "Undo",
+      "undone": "Receipt undone",
+      "undoReason": "Undo receive"
     },
     "supplierSelectionDialog": {
       "intro": "This product is available from multiple suppliers. Which one would you like to use for this order?",

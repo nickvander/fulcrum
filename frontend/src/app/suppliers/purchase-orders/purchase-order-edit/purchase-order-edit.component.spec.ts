@@ -27,7 +27,7 @@ import { TranslocoTestingModule } from '@ngneat/transloco';
 describe('PurchaseOrderEditComponent', () => {
   let component: PurchaseOrderEditComponent;
   let fixture: ComponentFixture<PurchaseOrderEditComponent>;
-  let suppliersServiceSpy: { getSupplier: any, getSuppliers: any, getSuppliersForProduct: any };
+  let suppliersServiceSpy: { getSupplier: any, getSuppliers: any, getSuppliersForProduct: any, correctReceivedPurchaseOrderItems: any };
   let productServiceSpy: { getProductById: any };
   let userServiceSpy: { getUsers: any };
 
@@ -35,7 +35,8 @@ describe('PurchaseOrderEditComponent', () => {
     suppliersServiceSpy = {
       getSupplier: vi.fn(),
       getSuppliers: vi.fn(),
-      getSuppliersForProduct: vi.fn()
+      getSuppliersForProduct: vi.fn(),
+      correctReceivedPurchaseOrderItems: vi.fn()
     };
     productServiceSpy = {
       getProductById: vi.fn()
@@ -148,5 +149,32 @@ describe('PurchaseOrderEditComponent', () => {
     expect(addLineItemSpy).toHaveBeenCalledTimes(2);
     expect(addLineItemSpy).toHaveBeenCalledWith(expect.objectContaining({ product_id: 101 })); // Component 1
     expect(addLineItemSpy).toHaveBeenCalledWith(expect.objectContaining({ product_id: 102 })); // Component 2
+  });
+
+  it('undoReceive reverses the just-received items via the correction endpoint', () => {
+    component.poId = 1;
+    vi.spyOn(component, 'loadPurchaseOrder').mockImplementation(() => {});
+    suppliersServiceSpy.correctReceivedPurchaseOrderItems.mockReturnValue(of({} as any));
+
+    const received = [
+      { po_item_id: 11, product_id: 101, variant_id: null, quantity: 3 },
+      { po_item_id: 12, product_id: 102, variant_id: null, quantity: 2 },
+    ];
+    component.undoReceive(received);
+
+    expect(suppliersServiceSpy.correctReceivedPurchaseOrderItems).toHaveBeenCalledTimes(1);
+    const [poId, reversal] = suppliersServiceSpy.correctReceivedPurchaseOrderItems.mock.calls[0];
+    expect(poId).toBe(1);
+    expect(reversal).toHaveLength(2);
+    expect(reversal[0]).toEqual(expect.objectContaining({ po_item_id: 11, product_id: 101, quantity: 3 }));
+    expect(reversal[0].reason).toBeTruthy(); // reversal carries an "undo" reason
+    expect(component.loadPurchaseOrder).toHaveBeenCalledWith(1);
+  });
+
+  it('undoReceive is a no-op without items', () => {
+    component.poId = 1;
+    suppliersServiceSpy.correctReceivedPurchaseOrderItems.mockReturnValue(of({} as any));
+    component.undoReceive([]);
+    expect(suppliersServiceSpy.correctReceivedPurchaseOrderItems).not.toHaveBeenCalled();
   });
 });

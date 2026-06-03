@@ -913,10 +913,49 @@ export class PurchaseOrderEditComponent implements OnInit, OnDestroy {
       });
 
       dialogRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.loadPurchaseOrder(this.poId!);
+        if (!result) return;
+        this.loadPurchaseOrder(this.poId!);
+        // P2-1: optimistic receive — offer an Undo that reverses the receipt.
+        if (result.receivedItems?.length) {
+          this.offerReceiveUndo(result);
         }
       });
+    });
+  }
+
+  /** Success snackbar (names the destination) with an Undo that reverses the receipt. */
+  private offerReceiveUndo(result: { receivedItems: any[]; total: number; destinationKey: string }): void {
+    const message = this.translocoService.translate('purchaseOrders.receivingDialog.successAdded', {
+      n: result.total,
+      location: this.translocoService.translate(result.destinationKey),
+    });
+    const ref = this.snackBar.open(
+      message,
+      this.translocoService.translate('purchaseOrders.receivingDialog.undo'),
+      { duration: 7000 },
+    );
+    ref.onAction().subscribe(() => this.undoReceive(result.receivedItems));
+  }
+
+  /** Reverse a just-applied receipt via the receive-correction endpoint, then refresh. */
+  undoReceive(receivedItems: any[]): void {
+    if (!this.poId || !receivedItems?.length) return;
+    const reversal = receivedItems.map(i => ({
+      po_item_id: i.po_item_id,
+      product_id: i.product_id,
+      variant_id: i.variant_id,
+      quantity: i.quantity,
+      reason: this.translocoService.translate('purchaseOrders.receivingDialog.undoReason'),
+    }));
+    this.suppliersService.correctReceivedPurchaseOrderItems(this.poId, reversal).subscribe({
+      next: () => {
+        this.loadPurchaseOrder(this.poId!);
+        this.snackBar.open(
+          this.translocoService.translate('purchaseOrders.receivingDialog.undone'),
+          this.translocoService.translate('common.close'),
+          { duration: 3000 },
+        );
+      },
     });
   }
 
