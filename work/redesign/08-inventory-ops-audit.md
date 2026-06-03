@@ -227,3 +227,31 @@ Specific offenders found (all should converge on the shipped pattern: consolidat
 6. **"Audit" rename + route move.** Approve renaming code identifiers/labels (count = "Conteo físico", ledger = "Historial de ajustes") and moving the ledger from `/products/audit` to `/inventory/history`? (Touches deep links / muscle memory.)
 7. **Landed cost in receiving.** Surface per-unit landed cost (freight/duty) at receive confirmation now, or defer? Mexico import duty makes downstream margin math depend on it.
 8. **Amazon FBA.** Memory says ML-Full is primary and FBM/storefront future-only — should the 3rd bucket (amazon-fba) be hidden everywhere for now to simplify, or kept visible?
+
+---
+
+## 7. Progress log (shipped + pushed to main)
+
+Implemented in verified tranches; every tranche passed theme guard + i18n parity
++ `ng build` + the full frontend suite (now **914 tests**), with new unit tests
+for all new logic.
+
+| Commit | Tranche | Items |
+|---|---|---|
+| `50965bc` | P0 | receive success/error toasts (kill silent-failure), "Recibir todo", create-transfer on-hand guard, adjustment reason-codes+location+block-negative, count status localized, PO toolbar→split button |
+| `ed121cf` | P1a | PO-list hex→token status pills, transfers outline pills + friendly bucket labels + `let t` shadow fix, over-receipt "Excede +N" pill+reason |
+| `e5c83c7` | P1b | shared `QuantityStepperComponent` → receive/adjust/transfer |
+| `84e9d73` | P1c | ledger nav → "Historial de ajustes"; adjustment OnPush |
+| `531a652` | P1d | PO receiving progress meter ("Recibido X/Y") |
+| `fe090a8` | P1-4 / FBA | "Por recibir" worklist chip; hide Amazon FBA; first `product-row.vm.spec.ts` |
+| `90cd33a` | P1-3 | scan-to-receive (`applyScannedCode` matches PO line by SKU/barcode/QR/variant) |
+| `88cec08` | P2-2 | count variance tolerance flag (>10u or >5% → "Revisar" + commit warning) |
+| `598c8e8` | P2-9 | localized adjustment reason codes + stock-history shadow→token |
+| `e3864af` | P2-11 | receiving dialog responsive (single-col <640px, sticky submit) |
+| `73b946d` | P2-1 | optimistic receive + Undo (reverses via receive-correction, then refreshes) |
+
+### Still open (recommended as dedicated sessions)
+- **Needs backend:** P1-9 `isPoReason` structured field · P2-8 unified InventoryAdjustment history · P2-4 in-transit "+N en camino" → product list (transfer↔product join).
+- **Large refactors:** P2-12 split the 1,444-line `purchase-order-edit` · P2-10 ledger virtual-scroll + standalone-routes migration · P2-6 planner-as-primary · P2-5 reconciliation variance grammar · P2-3 count error rollback + skeletons.
+- **Mechanical (needs per-component visual check):** P1-10 OnPush rollout (~12 components).
+- **Founder decision pending:** blind-count default.
