@@ -1,9 +1,17 @@
 .receiving-content {
     min-width: 600px;
+    max-width: 92vw;
     max-height: 70vh;
     padding: 20px 24px;
     background: var(--bg-card);
     color: var(--text-main);
+
+    // Stockroom phones/tablets: fill the dialog, don't force a 600px floor.
+    @media (max-width: 640px) {
+        min-width: 0;
+        width: 100%;
+        padding: 16px;
+    }
 }
 
 .receiving-grid {
@@ -16,7 +24,22 @@
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 24px;
         padding: 4px;
+
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr; // single column on small screens
+            gap: 12px;
+        }
     }
+}
+
+// Keep the submit bar reachable while scrolling a long receive list.
+mat-dialog-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .destination-banner {
