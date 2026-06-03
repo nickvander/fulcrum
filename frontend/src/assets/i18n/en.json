@@ -1829,7 +1829,11 @@
       "receiveAll": "Receive all remaining",
       "destinationLabel": "Receive into",
       "successAdded": "Added {{n}} units to {{location}}",
-      "errorReceiving": "Could not receive the items. Please try again."
+      "errorReceiving": "Could not receive the items. Please try again.",
+      "exceedReason": "Reason for over-receipt",
+      "exceedReasonPlaceholder": "Why did more arrive?",
+      "exceedsPill": "Exceeds +{{n}}",
+      "exceedReasonRequired": "Add a reason for the over-receipt before receiving."
     },
     "supplierSelectionDialog": {
       "intro": "This product is available from multiple suppliers. Which one would you like to use for this order?",

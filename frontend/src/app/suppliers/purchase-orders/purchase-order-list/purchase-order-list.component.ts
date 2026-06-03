@@ -416,11 +416,12 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     return this.translocoService.translate(`purchaseOrders.purchaseOrderList.reviewStatus.${review.status}`);
   }
 
-  getReviewStatusColor(review: SupplierDocumentImportReview): string {
+  /** Token-driven status class (replaces hardcoded hex inline styles). */
+  getReviewStatusClass(review: SupplierDocumentImportReview): string {
     switch (review.status) {
-      case 'approved': return '#4caf50';
-      case 'rejected': return '#c62828';
-      default: return '#ff9800';
+      case 'approved': return 'st-success';
+      case 'rejected': return 'st-error';
+      default: return 'st-warning';
     }
   }
 
@@ -594,15 +595,16 @@ export class PurchaseOrderListComponent implements OnInit, OnDestroy, AfterViewI
     return review.extracted_data?.vendor_name || this.translocoService.translate('purchaseOrders.purchaseOrderList.unknownSupplier');
   }
 
-  getStatusColor(status: PurchaseOrderStatus): string {
-    const colors: { [key: string]: string } = {
-      [PurchaseOrderStatus.DRAFT]: '#9e9e9e',
-      [PurchaseOrderStatus.ORDERED]: '#ff9800',
-      [PurchaseOrderStatus.PARTIALLY_RECEIVED]: '#2196f3',
-      [PurchaseOrderStatus.COMPLETED]: '#4caf50',
-      [PurchaseOrderStatus.CLOSED]: '#607d8b'
+  /** Token-driven status class (replaces hardcoded hex inline styles). */
+  getStatusClass(status: PurchaseOrderStatus): string {
+    const classes: { [key: string]: string } = {
+      [PurchaseOrderStatus.DRAFT]: 'st-neutral',
+      [PurchaseOrderStatus.ORDERED]: 'st-warning',
+      [PurchaseOrderStatus.PARTIALLY_RECEIVED]: 'st-info',
+      [PurchaseOrderStatus.COMPLETED]: 'st-success',
+      [PurchaseOrderStatus.CLOSED]: 'st-neutral'
     };
-    return colors[status] || '#9e9e9e';
+    return classes[status] || 'st-neutral';
   }
 
   getTotalValueFormatted(): string {

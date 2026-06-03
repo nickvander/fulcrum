@@ -1829,7 +1829,11 @@
       "receiveAll": "Recibir todo lo pendiente",
       "destinationLabel": "Recibir en",
       "successAdded": "Agregaste {{n}} unidades a {{location}}",
-      "errorReceiving": "No se pudieron recibir los artículos. Inténtalo de nuevo."
+      "errorReceiving": "No se pudieron recibir los artículos. Inténtalo de nuevo.",
+      "exceedReason": "Motivo del excedente",
+      "exceedReasonPlaceholder": "¿Por qué llegó de más?",
+      "exceedsPill": "Excede +{{n}}",
+      "exceedReasonRequired": "Indica el motivo del excedente antes de recibir."
     },
     "supplierSelectionDialog": {
       "intro": "Este producto está disponible con varios proveedores. ¿Cuál quieres usar para este pedido?",

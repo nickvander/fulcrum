@@ -83,3 +83,33 @@ code {
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+// Token-driven outline status pills + friendly location labels.
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+
+  &.st-success { color: var(--success-color); border-color: var(--success-color); }
+  &.st-warning { color: var(--warning-color); border-color: var(--warning-color); }
+  &.st-error { color: var(--error-color); border-color: var(--error-color); }
+  &.st-info { color: var(--accent-color); border-color: var(--accent-color); }
+  &.st-neutral { color: var(--text-hint); border-color: var(--border-color); }
+}
+
+.loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--text-main);
+
+  &.ml-full .bolt { color: var(--ml-yellow); font-size: 15px; width: 15px; height: 15px; }
+}

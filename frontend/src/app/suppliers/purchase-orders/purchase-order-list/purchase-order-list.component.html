@@ -201,10 +201,9 @@
                     <div class="review-main">
                         <h3>
                             {{ review.file_name }}
-                            <span class="review-status-pill"
+                            <span class="review-status-pill status-pill"
                                 *ngIf="review.status !== 'pending'"
-                                [style.background-color]="getReviewStatusColor(review) + '22'"
-                                [style.color]="getReviewStatusColor(review)">
+                                [ngClass]="getReviewStatusClass(review)">
                                 {{ getReviewStatusLabel(review) }}
                             </span>
                         </h3>
@@ -327,8 +326,7 @@
                         <ng-container matColumnDef="status">
                             <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ t('common.status') }}</th>
                             <td mat-cell *matCellDef="let po">
-                                <span class="status-badge" [style.background-color]="getStatusColor(po.status) + '20'"
-                                    [style.color]="getStatusColor(po.status)">
+                                <span class="status-badge status-pill" [ngClass]="getStatusClass(po.status)">
                                     {{ t(getStatusTranslationKey(po.status)) }}
                                 </span>
                             </td>

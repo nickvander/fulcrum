@@ -23,6 +23,12 @@
             <input matInput formControlName="reason" [placeholder]="t('purchaseOrders.receivingDialog.correctionReasonPlaceholder')">
         </mat-form-field>
 
+        <!-- P1: over-receipt requires a reason before commit -->
+        <mat-form-field appearance="outline" class="reason-field" *ngIf="mode !== 'correct' && hasOverReceipt()">
+            <mat-label>{{ t('purchaseOrders.receivingDialog.exceedReason') }}</mat-label>
+            <input matInput formControlName="reason" [placeholder]="t('purchaseOrders.receivingDialog.exceedReasonPlaceholder')">
+        </mat-form-field>
+
         <div formArrayName="items" class="items-container">
             <div *ngFor="let itemControl of items.controls; let i=index" [formGroupName]="i" class="product-card">
 
@@ -67,11 +73,12 @@
                             ((itemControl.get('quantity_received_so_far')?.value || 0) +
                             (itemControl.get('quantity_to_receive')?.value || 0)) }}
                         </span>
-                        <span class="value bonus-text"
+                        <span class="exceeds-pill"
                             *ngIf="((itemControl.get('quantity_received_so_far')?.value || 0) + (itemControl.get('quantity_to_receive')?.value || 0)) > (itemControl.get('quantity_ordered')?.value || 0)">
-                            +{{ ((itemControl.get('quantity_received_so_far')?.value || 0) +
+                            <mat-icon>warning</mat-icon>
+                            {{ t('purchaseOrders.receivingDialog.exceedsPill', { n: ((itemControl.get('quantity_received_so_far')?.value || 0) +
                             (itemControl.get('quantity_to_receive')?.value || 0)) -
-                            (itemControl.get('quantity_ordered')?.value || 0) }} {{ t('purchaseOrders.receivingDialog.bonus') }}
+                            (itemControl.get('quantity_ordered')?.value || 0) }) }}
                         </span>
                     </div>
                 </div>
@@ -92,11 +99,11 @@
     <button mat-button (click)="onCancel()">{{ t('common.cancel') }}</button>
     <!-- P0-2: one-tap receive-everything for the 90% case (whole shipment arrived) -->
     <button *ngIf="mode !== 'correct'" mat-stroked-button (click)="onSubmit()"
-        [disabled]="receivingForm.invalid || submitting">{{ submitLabel() }}</button>
+        [disabled]="receivingForm.invalid || submitting || blockedByExceedReason()">{{ submitLabel() }}</button>
     <button *ngIf="mode === 'correct'" mat-raised-button color="primary" (click)="onSubmit()"
         [disabled]="receivingForm.invalid || submitting">{{ submitLabel() }}</button>
     <button *ngIf="mode !== 'correct'" mat-raised-button color="primary" (click)="receiveAll()"
-        [disabled]="!hasRemaining() || submitting">
+        [disabled]="!hasRemaining() || submitting || blockedByExceedReason()">
         {{ t('purchaseOrders.receivingDialog.receiveAll') }}
     </button>
 </mat-dialog-actions>

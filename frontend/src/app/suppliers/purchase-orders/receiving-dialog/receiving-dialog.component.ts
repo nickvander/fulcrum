@@ -154,6 +154,21 @@ export class ReceivingDialogComponent implements OnInit {
         );
     }
 
+    /** True when any line will receive MORE than was ordered (needs a reason). */
+    hasOverReceipt(): boolean {
+        return this.items.controls.some((c) => {
+            const ordered = Number(c.get('quantity_ordered')?.value) || 0;
+            const soFar = Number(c.get('quantity_received_so_far')?.value) || 0;
+            const toReceive = Number(c.get('quantity_to_receive')?.value) || 0;
+            return soFar + toReceive > ordered;
+        });
+    }
+
+    /** Over-receipt is allowed, but only with a reason on record. */
+    blockedByExceedReason(): boolean {
+        return this.mode !== 'correct' && this.hasOverReceipt() && !this.receivingForm.get('reason')?.value?.trim();
+    }
+
     /** True when at least one line still has remaining (un-received) quantity. */
     hasRemaining(): boolean {
         return this.items.controls.some((c) => {
@@ -176,7 +191,17 @@ export class ReceivingDialogComponent implements OnInit {
     onSubmit(): void {
         if (!this.receivingForm.valid || this.submitting) return;
 
+        // P1: over-receipt must carry a reason.
+        if (this.blockedByExceedReason()) {
+            this.notification.showError(
+                this.transloco.translate('purchaseOrders.receivingDialog.exceedReasonRequired'),
+            );
+            return;
+        }
+
         const formValue = this.receivingForm.value;
+        // A reason is attached for corrections AND for over-receipt receives.
+        const attachReason = this.mode === 'correct' || this.hasOverReceipt();
         const itemsToSubmit = formValue.items
             .filter((item: any) => item.quantity_to_receive > 0)
             .map((item: any) => ({
@@ -184,7 +209,7 @@ export class ReceivingDialogComponent implements OnInit {
                 product_id: item.product_id,
                 variant_id: item.variant_id,
                 quantity: item.quantity_to_receive,
-                reason: this.mode === 'correct' ? formValue.reason : undefined
+                reason: attachReason ? formValue.reason : undefined
             }));
 
         if (itemsToSubmit.length === 0) {

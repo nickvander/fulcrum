@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -37,7 +36,6 @@ const STATUS_FILTERS: { key: string; status: StockTransferStatus | null }[] = [
     RouterModule,
     MatButtonModule,
     MatCardModule,
-    MatChipsModule,
     MatIconModule,
     MatTableModule,
     MatTabsModule,
@@ -103,20 +101,38 @@ export class StockTransferListComponent implements OnInit {
     return transfer.items.reduce((sum, item) => sum + (item.qty_received || 0), 0);
   }
 
-  statusColor(status: StockTransferStatus): string {
+  /** Token-driven outline-pill class (replaces M3-inert mat-chip [color]). */
+  statusClass(status: StockTransferStatus): string {
     switch (status) {
-      case 'draft':
-        return 'primary';
+      case 'received':
+        return 'st-success';
       case 'shipped':
       case 'partially_received':
-        return 'accent';
-      case 'received':
-        return 'primary';
+        return 'st-info';
       case 'cancelled':
-        return 'warn';
+        return 'st-error';
+      case 'draft':
       default:
-        return '';
+        return 'st-neutral';
     }
+  }
+
+  /** Friendly i18n key for an inventory location, reusing the product-list bucket vocabulary. */
+  locationLabelKey(loc: string): string {
+    switch (loc) {
+      case 'default':
+        return 'products.bucketDefault';
+      case 'ml-full':
+        return 'products.bucketMlFull';
+      case 'amazon-fba':
+        return 'products.bucketAmazonFba';
+      default:
+        return 'products.bucketDefault';
+    }
+  }
+
+  isMlFull(loc: string): boolean {
+    return loc === 'ml-full';
   }
 
   openCreate(): void {
