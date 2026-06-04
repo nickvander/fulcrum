@@ -149,7 +149,14 @@ class Product(ProductBase):
     # `inventory_adjustments` list, so the history dialog can fetch
     # the rows on demand without paying the cost on the list endpoint.
     inventory_adjustment_count: int = 0
-    
+    # Units currently in transit to MercadoLibre Full: the sum of
+    # (qty_planned - qty_received) over stock-transfers in a 'shipped' or
+    # 'partially_received' state whose destination is 'ml-full'. Populated
+    # by the list endpoint so the UI can answer "¿por qué 0 disponible?"
+    # with a "+N en camino" hint that closes the buy → receive → send-to-Full
+    # loop visibly in the product list.
+    in_transit_qty: int = 0
+
     # Marketing data
     active_campaigns: List[Dict[str, Any]] = []
     quick_posts: List[Dict[str, Any]] = []

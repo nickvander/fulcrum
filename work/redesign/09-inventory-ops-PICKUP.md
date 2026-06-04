@@ -30,6 +30,7 @@ all new logic.
 | `e3864af` | **P2-11** receiving dialog responsive (single-col <640px, sticky submit) |
 | `73b946d` | **P2-1** optimistic receive + Undo (reverses via receive-correction, then refreshes) |
 | `c427c45` | docs progress log appended to `08-...md` |
+| _(this session)_ | **P2-4** in-transit "+N en camino" on the product list (backend agg + row/card/peek hint) |
 
 **Status:** all of P0, all of P1, and the contained/testable slice of P2 are done.
 
@@ -40,17 +41,19 @@ all new logic.
 Grouped by why it wasn't done in the incremental tranches:
 
 ### Backend-dependent (need a backend change + frontend)
-- **P2-4 — in-transit "+N en camino" → product list (RECOMMENDED NEXT).** Connects
-  transfers back to the product view and answers the app's central
-  "¿Por qué 0 disponible?" for ML-Full sellers. Sketch:
-  - Backend: in `crud_product.get_multi_paginated` / the products list endpoint
-    (`backend/src/api/v1/endpoints/products.py`), surface a per-product
-    `in_transit_qty` = sum of `qty_planned - qty_received` over stock-transfers
-    with status `shipped`/`partially_received` whose `dest_location='ml-full'`.
-  - Frontend: add `inboundQty` to `ProductRowVM` (`product-row.vm.ts`) from that
-    field; render a `+N en camino` hint on the row/card and inside the
-    "¿0?" stock-explainer peek. Unit-test `toRowVM` maps it; backend test the agg.
-- **P1-9 — `isPoReason` structured field.** `stock-history-dialog.component.ts:52`
+- **P2-4 — in-transit "+N en camino" → product list. ✅ SHIPPED (this session).**
+  Backend: `_hydrate_product_list_metrics` in
+  `backend/src/api/v1/endpoints/products.py` now adds one batched aggregate —
+  `in_transit_qty` = sum of `qty_planned - qty_received` over stock-transfers
+  with status `shipped`/`partially_received` and `dest_location='ml-full'`,
+  clamped ≥0, exposed on the `Product` schema. Frontend: `ProductRowVM.inTransitQty`
+  (clamped) → a `.pill-in-transit` "+N en camino" hint in the table Available
+  column, the grid card-foot, and a dedicated row in the "¿0?" stock peek.
+  i18n `products.inTransit{Qty,Label,Tooltip}`. Tests: 1 backend (5 scenarios:
+  shipped+partial count, draft/received/other-dest ignored, over-receipt clamps)
+  + 3 VM specs. Query-count ceiling now ~18 (still <20).
+- **P1-9 — `isPoReason` structured field (RECOMMENDED NEXT).**
+  `stock-history-dialog.component.ts:52`
   string-matches the English `'Received PO #'` (i18n landmine). Needs the backend
   `InventoryAdjustment` to carry a structured source/po_id so the PO-linkify
   doesn't depend on a localized string.
@@ -143,6 +146,8 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-Implement **P2-4 (in-transit "+N en camino")** per the sketch in §2 — it's the
-highest cross-flow value, both halves are unit-testable, and it closes the
-buy → receive → send-to-Full loop visibly in the product list.
+P2-4 (in-transit "+N en camino") shipped this session. Next highest-value pick is
+**P1-9 (`isPoReason` structured field)** — kill the i18n landmine where the
+stock-history dialog string-matches the English `'Received PO #'` to linkify a PO.
+Give `InventoryAdjustment` a structured `source` + `po_id` so the linkify stops
+depending on a localized string. Both halves are unit-testable.

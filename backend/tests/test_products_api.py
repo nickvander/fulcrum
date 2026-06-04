@@ -237,6 +237,99 @@ def test_product_detail_still_returns_full_inventory_adjustments(
 
 
 @pytest.mark.db
+def test_product_list_in_transit_qty_reflects_open_full_transfers(
+    client: TestClient, db: Session, test_product: Product
+):
+    """`in_transit_qty` sums (qty_planned - qty_received) over transfers
+    that are SHIPPED / PARTIALLY_RECEIVED and destined for 'ml-full'.
+
+    It must ignore: drafts (not yet shipped), fully-received transfers
+    (already landed at Full), and transfers to other destinations. An
+    over-receipt must clamp to 0, never go negative.
+    """
+    from src.models.stock_transfer import (
+        StockTransfer,
+        StockTransferItem,
+        StockTransferStatus,
+        LOCATION_ML_FULL,
+        LOCATION_INTERNAL,
+    )
+
+    def _transfer(status: str, dest: str, planned: int, received: int):
+        transfer = StockTransfer(
+            source_location=LOCATION_INTERNAL,
+            dest_location=dest,
+            status=status,
+        )
+        db.add(transfer)
+        db.flush()
+        db.add(
+            StockTransferItem(
+                transfer_id=transfer.id,
+                product_id=test_product.id,
+                qty_planned=planned,
+                qty_shipped=planned,
+                qty_received=received,
+            )
+        )
+
+    # Counts toward in-transit: 8 planned, 3 already received → 5 outstanding.
+    _transfer(StockTransferStatus.SHIPPED.value, LOCATION_ML_FULL, 8, 3)
+    # Counts toward in-transit: partially received, 10 - 4 = 6 outstanding.
+    _transfer(StockTransferStatus.PARTIALLY_RECEIVED.value, LOCATION_ML_FULL, 10, 4)
+    # Ignored: still a draft (hasn't left the warehouse).
+    _transfer(StockTransferStatus.DRAFT.value, LOCATION_ML_FULL, 100, 0)
+    # Ignored: already fully received (landed at Full).
+    _transfer(StockTransferStatus.RECEIVED.value, LOCATION_ML_FULL, 7, 7)
+    # Ignored: shipped, but to a different destination (not Full).
+    _transfer(StockTransferStatus.SHIPPED.value, LOCATION_INTERNAL, 50, 0)
+    db.commit()
+
+    response = client.get("/api/v1/products/")
+    assert response.status_code == 200
+    listed = next(
+        item for item in response.json()["data"] if item["id"] == test_product.id
+    )
+    assert listed["in_transit_qty"] == 11  # 5 + 6
+
+    # A second product with no transfers reports 0, not null.
+    from src.schemas.product import ProductCreate
+    from src.crud import crud_product
+
+    clean = crud_product.product.create(
+        db=db,
+        obj_in=ProductCreate(
+            name="No-Transit Product",
+            sku="NO-TRANSIT-1",
+            default_resale_price=10.0,
+            cost_price=5.0,
+        ),
+    )
+    # Over-receipt on a shipped Full transfer must clamp to 0.
+    _transfer_over = StockTransfer(
+        source_location=LOCATION_INTERNAL,
+        dest_location=LOCATION_ML_FULL,
+        status=StockTransferStatus.PARTIALLY_RECEIVED.value,
+    )
+    db.add(_transfer_over)
+    db.flush()
+    db.add(
+        StockTransferItem(
+            transfer_id=_transfer_over.id,
+            product_id=clean.id,
+            qty_planned=4,
+            qty_shipped=4,
+            qty_received=6,  # over-receipt → -2 outstanding, must clamp to 0
+        )
+    )
+    db.commit()
+
+    response = client.get("/api/v1/products/")
+    items_by_id = {item["id"]: item for item in response.json()["data"]}
+    assert items_by_id[clean.id]["in_transit_qty"] == 0
+
+
+@pytest.mark.db
 def test_product_list_query_count_stays_bounded(
     client: TestClient, db: Session, test_product: Product
 ):
@@ -252,10 +345,10 @@ def test_product_list_query_count_stays_bounded(
         bundle_components / part_of_bundles)
       - 2 nested selectinloads (bundle.component.inventory_items +
         part_of_bundles.bundle.inventory_items)
-      - 6 aggregate metric queries (stock / sales / thresholds /
-        store_settings / campaigns / adjustment_count)
+      - 7 aggregate metric queries (stock / sales / thresholds /
+        store_settings / campaigns / adjustment_count / in_transit)
 
-    That's ~17 queries — well under the ceiling and independent of
+    That's ~18 queries — well under the ceiling and independent of
     page size.
     """
     from src.schemas.product import ProductCreate

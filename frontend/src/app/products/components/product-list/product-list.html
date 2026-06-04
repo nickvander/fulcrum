@@ -264,6 +264,7 @@
                 @if (row.reorderTriggered) {
                 <span class="pill pill-reorder"><mat-icon>inventory_2</mat-icon>{{ t('products.reorder') }}</span>
                 }
+                <ng-container *ngTemplateOutlet="inTransitHint; context: { row: row }"></ng-container>
               </div>
             </div>
           </article>
@@ -320,6 +321,7 @@
             <span class="td"><ng-container *ngTemplateOutlet="mlPill; context: { row: row }"></ng-container></span>
             <span class="td td-right">
               <ng-container *ngTemplateOutlet="stockPill; context: { row: row }"></ng-container>
+              <ng-container *ngTemplateOutlet="inTransitHint; context: { row: row }"></ng-container>
               @if (row.showWhyZero) {
               <button type="button" class="why-zero" (click)="$event.stopPropagation(); toggleStockExplainer()">{{ t('products.whyZero') }}</button>
               }
@@ -400,11 +402,14 @@
   <!-- Row action / peek menu (table + grid share this) -->
   <mat-menu #rowMenu="matMenu">
     <ng-template matMenuContent let-row="row">
-      @if (row.buckets.length > 0 || row.showWhyZero) {
+      @if (row.buckets.length > 0 || row.showWhyZero || row.inTransitQty > 0) {
       <div class="peek-buckets" (click)="$event.stopPropagation()">
         <div class="peek-title">{{ t('products.inventoryBreakdown') }}</div>
         @for (b of row.buckets; track b.location) {
         <div class="peek-bucket"><span>{{ t(b.labelKey) }}</span><span class="mono">{{ b.quantity }}</span></div>
+        }
+        @if (row.inTransitQty > 0) {
+        <div class="peek-bucket peek-bucket-transit"><span><mat-icon>local_shipping</mat-icon>{{ t('products.inTransitLabel') }}</span><span class="mono">+{{ row.inTransitQty }}</span></div>
         }
         @if (row.showWhyZero) {
         <button mat-menu-item (click)="toggleStockExplainer()"><mat-icon>help_outline</mat-icon><span>{{ t('products.whyZero') }}</span></button>
@@ -430,6 +435,16 @@
       @else if (row.stockHealth === 'low') { <span class="pill-label">{{ t('products.quickViews.low') }}</span><span class="pill-num">{{ row.currentStock }}</span> }
       @else { <span class="pill-num">{{ row.currentStock }}</span> }
     </span>
+  </ng-template>
+
+  <!-- In-transit-to-Full hint: stock that left the warehouse but hasn't been
+       credited at ml-full yet. Answers "¿por qué 0 disponible?" on the row. -->
+  <ng-template #inTransitHint let-row="row">
+    @if (row.inTransitQty > 0) {
+    <span class="pill pill-in-transit" [matTooltip]="t('products.inTransitTooltip')">
+      <mat-icon>local_shipping</mat-icon>{{ t('products.inTransitQty', { n: row.inTransitQty }) }}
+    </span>
+    }
   </ng-template>
 
   <!-- ML listing pill -->

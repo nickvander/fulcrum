@@ -86,4 +86,16 @@ describe('toRowVM', () => {
     }));
     expect(vm.reorderTriggered).toBe(true);
   });
+
+  it('maps in_transit_qty from the backend field', () => {
+    expect(toRowVM(product({ in_transit_qty: 12 })).inTransitQty).toBe(12);
+  });
+
+  it('defaults inTransitQty to 0 when the backend omits it', () => {
+    expect(toRowVM(product()).inTransitQty).toBe(0);
+  });
+
+  it('clamps a negative in_transit_qty to 0 (never renders a negative hint)', () => {
+    expect(toRowVM(product({ in_transit_qty: -3 })).inTransitQty).toBe(0);
+  });
 });

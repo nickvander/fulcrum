@@ -65,6 +65,9 @@ export interface ProductRowVM {
   activeCampaignCount: number;
   adjustmentCount: number;
 
+  /** Units shipped to ML Full but not yet credited there. 0 when none. */
+  inTransitQty: number;
+
   /** Original product, for dialogs / actions / deep links. */
   product: Product;
 }
@@ -222,6 +225,7 @@ export function toRowVM(product: Product): ProductRowVM {
     marketplaceListings: listings,
     activeCampaignCount: product.active_campaign_count ?? 0,
     adjustmentCount: product.inventory_adjustment_count ?? 0,
+    inTransitQty: Math.max(product.in_transit_qty ?? 0, 0),
 
     product,
   };

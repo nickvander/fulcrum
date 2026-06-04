@@ -115,6 +115,46 @@ def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 
         for row in adjustment_count_rows
     }
 
+    # Units in transit to ML Full: outstanding (planned - received) over
+    # transfers that have shipped but not fully landed at 'ml-full'. This is
+    # what answers "¿por qué 0 disponible?" on the row — the stock left the
+    # warehouse and is on its way to Full but hasn't been credited there yet.
+    from src.models.stock_transfer import (
+        StockTransfer,
+        StockTransferItem,
+        StockTransferStatus,
+        LOCATION_ML_FULL,
+    )
+
+    in_transit_rows = (
+        db.query(
+            StockTransferItem.product_id,
+            func.coalesce(
+                func.sum(StockTransferItem.qty_planned - StockTransferItem.qty_received),
+                0,
+            ).label("in_transit_qty"),
+        )
+        .join(StockTransfer, StockTransferItem.transfer_id == StockTransfer.id)
+        .filter(
+            StockTransferItem.product_id.in_(product_ids),
+            StockTransfer.dest_location == LOCATION_ML_FULL,
+            StockTransfer.status.in_(
+                [
+                    StockTransferStatus.SHIPPED.value,
+                    StockTransferStatus.PARTIALLY_RECEIVED.value,
+                ]
+            ),
+        )
+        .group_by(StockTransferItem.product_id)
+        .all()
+    )
+    in_transit_by_product = {
+        # Clamp at 0 so an over-receipt (qty_received > qty_planned) can't
+        # render a negative "+N en camino".
+        row.product_id: max(int(row.in_transit_qty or 0), 0)
+        for row in in_transit_rows
+    }
+
     for product in products:
         stock_quantity = stock_by_product.get(product.id, 0)
         quantity_sold = quantity_sold_by_product.get(product.id, 0.0)
@@ -138,6 +178,7 @@ def _hydrate_product_list_metrics(db: Session, products: List[Any], days: int = 
         product.stock_quantity = stock_quantity
         product.active_campaign_count = active_campaigns_by_product.get(product.id, 0)
         product.inventory_adjustment_count = adjustment_counts_by_product.get(product.id, 0)
+        product.in_transit_qty = in_transit_by_product.get(product.id, 0)
 
 
 @router.get("/{product_id}/purchase-history", response_model=List[product_schema.ProductPurchaseHistory])

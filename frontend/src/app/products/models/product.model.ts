@@ -113,6 +113,14 @@ export interface Product {
    * the full list, so the stock-history dialog fetches them on demand.
    */
   inventory_adjustment_count?: number;
+  /**
+   * Units currently in transit to MercadoLibre Full — the sum of
+   * (qty_planned - qty_received) over stock-transfers that are shipped
+   * but not yet fully received at 'ml-full'. Populated by the list
+   * endpoint; powers the "+N en camino" hint that explains why a SKU
+   * can read 0 disponible while stock is on its way to Full.
+   */
+  in_transit_qty?: number;
   active_campaigns?: Array<{
     id: number;
     name: string;

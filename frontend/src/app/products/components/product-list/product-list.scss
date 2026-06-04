@@ -290,6 +290,9 @@
 
   &.pill-kit { color: var(--accent-color); border-color: var(--accent-color); }
   &.pill-reorder { color: var(--warning-color); border-color: var(--warning-color); }
+  // In transit to ML Full — informational, uses the interactive accent so it
+  // reads as "coming, not a problem" (distinct from the warning-orange reorder).
+  &.pill-in-transit { color: var(--accent-color); border-color: var(--accent-color); }
 }
 
 .muted { color: var(--text-hint); }
@@ -576,6 +579,11 @@
 
   .peek-title { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
   .peek-bucket { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-main); padding: 2px 0; }
+  .peek-bucket-transit {
+    color: var(--accent-color);
+    span:first-child { display: inline-flex; align-items: center; gap: 4px; }
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  }
 }
 
 // ------------------------------------------------------------------ pagination
