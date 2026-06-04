@@ -32,6 +32,7 @@ all new logic.
 | `c427c45` | docs progress log appended to `08-...md` |
 | _(this session)_ | **P2-4** in-transit "+N en camino" on the product list (backend agg + row/card/peek hint) |
 | _(this session)_ | **P1-9** structured adjustment `source`/`source_id` → PO-linkify without string-matching (migration `d3f7a1c8e024`) |
+| _(this session)_ | **P2-5** `Discrepancia +N/−N` warning pill in stock-transfer-reconciliation (tolerance-gated, in-transit-aware) |
 
 **Status:** all of P0, all of P1, and the contained/testable slice of P2 are done.
 
@@ -70,6 +71,15 @@ Grouped by why it wasn't done in the incremental tranches:
   {who, when, reason code, delta, location, source} into one timeline. Backend
   write-path work + the `stock-history-dialog` UI.
 
+### Shipped this session (was in this bucket)
+- **P2-5 — reconciliation variance grammar. ✅ SHIPPED.** `stock-transfer-reconciliation`
+  now flags out-of-tolerance lines with a `Discrepancia +N/−N` `--warning` pill +
+  a roll-up summary line, mirroring the cycle-count variance tolerance (>10 units
+  OR >5% of shipped). In-transit-aware: an over-receipt counts in any state, but a
+  shortfall only flags once the receive window has closed (RECEIVED / CANCELLED) —
+  a PARTIALLY_RECEIVED shortfall may still be on its way, so it doesn't cry wolf.
+  Frontend-only (`delta` already on the API). +6 unit tests.
+
 ### Large refactors (own session each)
 - **P2-12 — split the 1,444-line `purchase-order-edit.component.ts`** (extract
   receiving / invoice-match / AI concerns).
@@ -77,8 +87,6 @@ Grouped by why it wasn't done in the incremental tranches:
   legacy NgModule routing; ledger uses plain `mat-table`).
 - **P2-6 — planner-as-primary** (merge the dumb create-transfer dialog into the
   planner model; add "send to Full" suggestions).
-- **P2-5 — reconciliation variance grammar** (a `Discrepancia +N/−N` `--warning`
-  pill in `stock-transfer-reconciliation`, framed like count variance).
 - **P2-3 — count error rollback + per-row save state + skeletons**
   (`inventory-count-detail` save-on-blur currently keeps a bad value on PATCH fail).
 
@@ -154,12 +162,12 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-P2-4 and P1-9 both shipped this session. Two good next picks:
+P2-4, P1-9, and P2-5 all shipped this session. Best next pick:
 - **P2-8 (unified history)** — now unblocked: `InventoryAdjustment` already has
   `source`/`source_id` (from P1-9). Extend the `InventoryAdjustmentSource` enum +
   stamp it on the remaining write paths (transfers, count commit, order ingestion,
   returns) so every movement carries a structured origin, then build the unified
-  timeline UI. Larger backend write-path item.
-- **P2-5 (reconciliation variance grammar)** — more contained: a
-  `Discrepancia +N/−N` `--warning` pill in `stock-transfer-reconciliation`, framed
-  like the already-shipped count variance flag (`88cec08`).
+  timeline UI. Larger backend write-path item — its own session.
+
+Other contained picks: P2-3 (count error rollback + per-row save state), P2-6
+(planner-as-primary), or the mechanical P1-10 OnPush rollout.

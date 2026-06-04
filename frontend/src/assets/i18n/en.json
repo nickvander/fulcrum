@@ -2381,7 +2381,9 @@
       "subtitle": "Lines where received quantity diverges from shipped quantity.",
       "empty": "No discrepancies — every received transfer matches its shipped quantity.",
       "delta": "Delta",
-      "summary": "{{lines}} line(s) with a divergence. Net delta: {{net}}."
+      "summary": "{{lines}} line(s) with a divergence. Net delta: {{net}}.",
+      "discrepancy": "Discrepancy {{delta}}",
+      "discrepancySummary": "{{n}} line(s) out of tolerance — review for shrinkage or over-receipt."
     },
     "receiveTransferDialog": {
       "receiptRecorded": "Receipt recorded",

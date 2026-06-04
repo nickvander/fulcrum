@@ -2381,7 +2381,9 @@
       "subtitle": "Líneas donde la cantidad recibida difiere de la enviada.",
       "empty": "Sin discrepancias — todo lo recibido coincide con lo enviado.",
       "delta": "Diferencia",
-      "summary": "{{lines}} línea(s) con divergencia. Diferencia neta: {{net}}."
+      "summary": "{{lines}} línea(s) con divergencia. Diferencia neta: {{net}}.",
+      "discrepancy": "Discrepancia {{delta}}",
+      "discrepancySummary": "{{n}} línea(s) fuera de tolerancia — revisa por merma o sobre-recepción."
     },
     "receiveTransferDialog": {
       "receiptRecorded": "Recepción registrada",

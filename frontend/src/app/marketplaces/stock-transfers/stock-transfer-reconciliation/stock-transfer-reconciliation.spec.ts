@@ -77,4 +77,70 @@ describe('StockTransferReconciliationComponent', () => {
     expect(component.shrinkRowClass(sampleRows[0])).toBe('delta-negative');
     expect(component.shrinkRowClass(sampleRows[1])).toBe('delta-positive');
   });
+
+  // --- Discrepancy tolerance (P2-5) ---------------------------------------
+
+  function makeRow(over: Partial<ReconciliationRow>): ReconciliationRow {
+    return {
+      transfer_id: 1,
+      transfer_status: 'received',
+      dest_location: 'ml-full',
+      product_id: 1,
+      product_name: 'X',
+      qty_shipped: 100,
+      qty_received: 100,
+      delta: 0,
+      ...over,
+    };
+  }
+
+  it('isDiscrepancy: a zero or within-tolerance delta is not flagged', () => {
+    expect(component.isDiscrepancy(makeRow({ qty_received: 100, delta: 0 }))).toBe(false);
+    // delta 3 on 100 = 3 units (≤10) and 3% (≤5%) → within tolerance
+    expect(component.isDiscrepancy(makeRow({ qty_received: 97, delta: -3 }))).toBe(false);
+  });
+
+  it('isDiscrepancy: flags a large absolute OR large percent settled gap', () => {
+    // delta -12 > 10 units → discrepancy
+    expect(component.isDiscrepancy(makeRow({ qty_received: 88, delta: -12 }))).toBe(true);
+    // delta -6 on 100 = 6% > 5% → discrepancy
+    expect(component.isDiscrepancy(makeRow({ qty_received: 94, delta: -6 }))).toBe(true);
+  });
+
+  it('isDiscrepancy: an over-receipt counts in any state once out of tolerance', () => {
+    expect(
+      component.isDiscrepancy(
+        makeRow({ transfer_status: 'partially_received', qty_shipped: 100, qty_received: 112, delta: 12 }),
+      ),
+    ).toBe(true);
+  });
+
+  it('isDiscrepancy: a shortfall on a still-receiving transfer is not yet settled', () => {
+    // received < shipped on partially_received may simply be in transit
+    expect(
+      component.isDiscrepancy(
+        makeRow({ transfer_status: 'partially_received', qty_shipped: 100, qty_received: 50, delta: -50 }),
+      ),
+    ).toBe(false);
+    // but once RECEIVED, the same gap is a real shortfall
+    expect(
+      component.isDiscrepancy(
+        makeRow({ transfer_status: 'received', qty_shipped: 100, qty_received: 50, delta: -50 }),
+      ),
+    ).toBe(true);
+  });
+
+  it('discrepancyLabel signs the delta', () => {
+    expect(component.discrepancyLabel(makeRow({ delta: 12 }))).toBe('+12');
+    expect(component.discrepancyLabel(makeRow({ delta: -15 }))).toBe('-15');
+  });
+
+  it('discrepancyCount tallies flagged rows', () => {
+    component.rows = [
+      makeRow({ qty_received: 100, delta: 0 }), // ok
+      makeRow({ qty_received: 80, delta: -20 }), // flagged (abs)
+      makeRow({ transfer_status: 'partially_received', qty_received: 60, delta: -40 }), // in transit, not flagged
+    ];
+    expect(component.discrepancyCount()).toBe(1);
+  });
 });

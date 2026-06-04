@@ -31,6 +31,12 @@
           })
         }}
       </p>
+      @if (discrepancyCount() > 0) {
+        <p class="discrepancy-summary" data-testid="discrepancy-summary">
+          <mat-icon>warning</mat-icon>
+          {{ t('stockTransfers.reconciliation.discrepancySummary', { n: discrepancyCount() }) }}
+        </p>
+      }
       <table mat-table [dataSource]="rows" class="rec-table" data-testid="rec-table">
         <ng-container matColumnDef="transfer">
           <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.cols.id') }}</th>
@@ -70,6 +76,11 @@
           <th mat-header-cell *matHeaderCellDef>{{ t('stockTransfers.reconciliation.delta') }}</th>
           <td mat-cell *matCellDef="let row" [class]="shrinkRowClass(row)">
             {{ row.delta > 0 ? '+' : '' }}{{ row.delta }}
+            @if (isDiscrepancy(row)) {
+              <span class="discrepancy-flag" data-testid="discrepancy-flag">
+                <mat-icon>warning</mat-icon>{{ t('stockTransfers.reconciliation.discrepancy', { delta: discrepancyLabel(row) }) }}
+              </span>
+            }
           </td>
         </ng-container>
 

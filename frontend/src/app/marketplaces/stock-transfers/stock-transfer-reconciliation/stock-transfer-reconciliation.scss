@@ -79,3 +79,34 @@
   color: var(--success-color);
   font-weight: 600;
 }
+
+// Out-of-tolerance "Discrepancia" flag on a reconciliation line. Mirrors the
+// cycle-count "Revisar" flag so the two variance surfaces read the same.
+.discrepancy-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill, 999px);
+  background: var(--bg-raised);
+  border: 1px solid var(--warning-color);
+  color: var(--warning-color);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+
+// Roll-up line above the table when any row is out of tolerance.
+.discrepancy-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  color: var(--warning-color);
+  font-weight: 600;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}

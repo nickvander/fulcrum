@@ -79,4 +79,41 @@ export class StockTransferReconciliationComponent implements OnInit {
     if (row.delta > 0) return 'delta-positive';
     return '';
   }
+
+  /**
+   * A reconciliation row is a *settled discrepancy* worth a "Discrepancia"
+   * flag when its shipped↔received gap is materially large — mirroring the
+   * cycle-count variance tolerance (>10 units OR >5% of shipped) so the two
+   * surfaces read the same.
+   *
+   * Over-receipts (received > shipped) always count: receiving more than was
+   * shipped is wrong in any state. A shortfall (received < shipped) only
+   * counts once the receive window has closed (RECEIVED / CANCELLED); on a
+   * PARTIALLY_RECEIVED transfer a shortfall may simply still be in transit,
+   * so we don't cry wolf.
+   */
+  private static readonly VARIANCE_ABS = 10;
+  private static readonly VARIANCE_PCT = 0.05;
+
+  isDiscrepancy(row: ReconciliationRow): boolean {
+    if (row.delta === 0) return false;
+    if (row.delta < 0 && row.transfer_status === 'partially_received') {
+      return false; // shortfall may still be in transit — not settled
+    }
+    const abs = Math.abs(row.delta);
+    const pct = row.qty_shipped > 0 ? abs / row.qty_shipped : 1;
+    return (
+      abs > StockTransferReconciliationComponent.VARIANCE_ABS ||
+      pct > StockTransferReconciliationComponent.VARIANCE_PCT
+    );
+  }
+
+  /** Signed delta for the flag label, e.g. '+12' / '-15'. */
+  discrepancyLabel(row: ReconciliationRow): string {
+    return (row.delta > 0 ? '+' : '') + row.delta;
+  }
+
+  discrepancyCount(): number {
+    return this.rows.filter(r => this.isDiscrepancy(r)).length;
+  }
 }
