@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from src.models.inventory import (
     InventoryAdjustment,
     InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
     InventoryItem,
     OPERATOR_REVERSIBLE_REASON_CODES,
 )
@@ -45,6 +46,8 @@ class InventoryService:
         location: str = "default",
         user_id: Optional[str] = "system",
         reverses_adjustment_id: Optional[int] = None,
+        source: Optional[str] = None,
+        source_id: Optional[int] = None,
     ) -> Tuple[InventoryItem, InventoryAdjustment]:
         """Core stock mutation: write one `InventoryAdjustment` audit row
         and update/create the matching `InventoryItem`. Returns BOTH so
@@ -73,6 +76,15 @@ class InventoryService:
             timestamp=datetime.utcnow(),
             created_by=str(user_id),
             reverses_adjustment_id=reverses_adjustment_id,
+            # Structured provenance: lets the stock-history UI linkify the
+            # source (e.g. the PO) without string-matching the localized
+            # `reason`. Accept an enum or a plain string transparently.
+            source=(
+                source.value
+                if isinstance(source, InventoryAdjustmentSource)
+                else source
+            ),
+            source_id=source_id,
         )
         db.add(inventory_adjustment)
 
@@ -110,7 +122,9 @@ class InventoryService:
         reason: Optional[str] = None,
         reason_code: Optional[InventoryAdjustmentReasonCode] = None,
         location: str = "default",
-        user_id: Optional[str] = "system"
+        user_id: Optional[str] = "system",
+        source: Optional[str] = None,
+        source_id: Optional[int] = None,
     ) -> InventoryItem:
         """
         Adjust stock for a product at a specific location.
@@ -121,6 +135,11 @@ class InventoryService:
         Callers with semantic context (order ingestion, returns,
         transfers) MUST set it; opaque callers can leave it None and
         the row lands as "uncategorized" in the audit log.
+
+        `source` / `source_id` are the structured provenance of the
+        movement (e.g. ``'purchase_order'`` + the PO id). Set them when
+        the adjustment originates from an entity the UI should be able to
+        deep-link to, so it doesn't have to parse the localized `reason`.
         """
         item, _adjustment = self.record_adjustment(
             db,
@@ -131,6 +150,8 @@ class InventoryService:
             reason_code=reason_code,
             location=location,
             user_id=user_id,
+            source=source,
+            source_id=source_id,
         )
         return item
 

@@ -102,4 +102,51 @@ describe('StockHistoryDialogComponent', () => {
         component.onClose();
         expect(dialogRefMock.close).toHaveBeenCalled();
     });
+
+    describe('PO linkify (structured source)', () => {
+        const base = { id: 9, adjustment: 5, timestamp: 't', created_by: 'a' };
+
+        it('recognises a structured purchase_order adjustment', () => {
+            const adj = { ...base, reason: 'Received PO #42', source: 'purchase_order', source_id: 42 };
+            expect(component.isPoAdjustment(adj)).toBe(true);
+            expect(component.poId(adj)).toBe(42);
+        });
+
+        it('does NOT depend on the reason string for structured rows', () => {
+            // Localized / unexpected reason text must not affect linkify when
+            // the structured source is present — this is the whole point.
+            const adj = { ...base, reason: 'Recibido OC localizado', source: 'purchase_order', source_id: 7 };
+            expect(component.isPoAdjustment(adj)).toBe(true);
+            expect(component.poId(adj)).toBe(7);
+        });
+
+        it('falls back to the legacy English reason when source is absent', () => {
+            const adj = { ...base, reason: 'Received PO #13', source: null, source_id: null };
+            expect(component.isPoAdjustment(adj)).toBe(true);
+            expect(component.poId(adj)).toBe(13);
+        });
+
+        it('treats a non-PO adjustment as plain text', () => {
+            const adj = { ...base, reason: 'Damage', source: null, source_id: null };
+            expect(component.isPoAdjustment(adj)).toBe(false);
+            expect(component.poId(adj)).toBeNull();
+        });
+
+        it('ignores a legacy-looking reason once a structured source exists', () => {
+            // A row whose source is set but to a non-PO origin must not be
+            // linkified just because its free-text happens to start with the
+            // English prefix.
+            const adj = { ...base, reason: 'Received PO #99 (note)', source: 'transfer', source_id: 3 };
+            expect(component.isPoAdjustment(adj)).toBe(false);
+            expect(component.poId(adj)).toBeNull();
+        });
+
+        it('navigates to the PO by structured id, not by parsing the reason', () => {
+            const navigate = vi.fn();
+            (component as any).router = { navigate };
+            component.goToPo({ ...base, reason: 'anything', source: 'purchase_order', source_id: 55 });
+            expect(dialogRefMock.close).toHaveBeenCalled();
+            expect(navigate).toHaveBeenCalledWith(['/suppliers/po', 55]);
+        });
+    });
 });

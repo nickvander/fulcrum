@@ -51,6 +51,11 @@ class InventoryAdjustment(BaseModel):
     adjustment: int  # Positive for additions, negative for subtractions
     reason: Optional[str] = None
     reason_code: Optional[str] = None  # See InventoryAdjustmentReasonCode for valid values
+    # Structured provenance — `source` is a machine key (e.g.
+    # 'purchase_order') and `source_id` the originating entity's id. Lets
+    # the stock-history UI linkify the origin without parsing `reason`.
+    source: Optional[str] = None
+    source_id: Optional[int] = None
     timestamp: Optional[datetime] = None  # Timestamp of the adjustment
     created_at: Optional[datetime] = None  # Added for consistency
     created_by: Optional[str] = None  # Made optional to handle existing records

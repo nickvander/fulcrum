@@ -37,9 +37,8 @@
                         <div class="adjustment-reason">
                             <mat-icon class="reason-icon">info</mat-icon>
                             <span>
-                                @if (isPoReason(adjustment.reason)) {
-                                {{ t('products.stockHistoryDialog.receivedPo') }} <a href="javascript:void(0)" (click)="goToPo(adjustment.reason!)">{{
-                                    getPoLabel(adjustment.reason!) }}</a>
+                                @if (isPoAdjustment(adjustment)) {
+                                {{ t('products.stockHistoryDialog.receivedPo') }} <a href="javascript:void(0)" (click)="goToPo(adjustment)">#{{ poId(adjustment) }}</a>
                                 } @else {
                                 {{ adjustment.reason }}
                                 }

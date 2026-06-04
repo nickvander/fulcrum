@@ -31,6 +31,7 @@ all new logic.
 | `73b946d` | **P2-1** optimistic receive + Undo (reverses via receive-correction, then refreshes) |
 | `c427c45` | docs progress log appended to `08-...md` |
 | _(this session)_ | **P2-4** in-transit "+N en camino" on the product list (backend agg + row/card/peek hint) |
+| _(this session)_ | **P1-9** structured adjustment `source`/`source_id` → PO-linkify without string-matching (migration `d3f7a1c8e024`) |
 
 **Status:** all of P0, all of P1, and the contained/testable slice of P2 are done.
 
@@ -52,11 +53,18 @@ Grouped by why it wasn't done in the incremental tranches:
   i18n `products.inTransit{Qty,Label,Tooltip}`. Tests: 1 backend (5 scenarios:
   shipped+partial count, draft/received/other-dest ignored, over-receipt clamps)
   + 3 VM specs. Query-count ceiling now ~18 (still <20).
-- **P1-9 — `isPoReason` structured field (RECOMMENDED NEXT).**
-  `stock-history-dialog.component.ts:52`
-  string-matches the English `'Received PO #'` (i18n landmine). Needs the backend
-  `InventoryAdjustment` to carry a structured source/po_id so the PO-linkify
-  doesn't depend on a localized string.
+- **P1-9 — structured adjustment source. ✅ SHIPPED (this session).**
+  `InventoryAdjustment` gained `source` (machine key, e.g. `'purchase_order'`) +
+  `source_id` (origin entity id) — migration `d3f7a1c8e024`, indexed on `source`,
+  no CHECK (open set, unlike `reason_code`). New `InventoryAdjustmentSource` enum +
+  `record_adjustment`/`adjust_stock` kwargs; PO receive **and** correction stamp
+  `(purchase_order, po.id)`. Serialized on the adjustment schema. The dialog's
+  `isPoReason` string-match is gone — `isPoAdjustment`/`poId` read the structured
+  fields (with a locale-safe fallback to the legacy English `'Received PO #'`
+  reason for pre-migration rows). Also fixed the old double-render bug ("Received
+  Received PO #5" / mixed-language es). Tests: +2 backend (receive+correction
+  stamp; manual = NULL) + 6 dialog specs. The same `source`/`source_id` is the
+  hook **P2-8** (unified history) will extend to transfers/counts/orders.
 - **P2-8 — unified InventoryAdjustment history.** Every receive-correction, count
   commit, transfer, and manual adjust should write a row with
   {who, when, reason code, delta, location, source} into one timeline. Backend
@@ -146,8 +154,12 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-P2-4 (in-transit "+N en camino") shipped this session. Next highest-value pick is
-**P1-9 (`isPoReason` structured field)** — kill the i18n landmine where the
-stock-history dialog string-matches the English `'Received PO #'` to linkify a PO.
-Give `InventoryAdjustment` a structured `source` + `po_id` so the linkify stops
-depending on a localized string. Both halves are unit-testable.
+P2-4 and P1-9 both shipped this session. Two good next picks:
+- **P2-8 (unified history)** — now unblocked: `InventoryAdjustment` already has
+  `source`/`source_id` (from P1-9). Extend the `InventoryAdjustmentSource` enum +
+  stamp it on the remaining write paths (transfers, count commit, order ingestion,
+  returns) so every movement carries a structured origin, then build the unified
+  timeline UI. Larger backend write-path item.
+- **P2-5 (reconciliation variance grammar)** — more contained: a
+  `Discrepancia +N/−N` `--warning` pill in `stock-transfer-reconciliation`, framed
+  like the already-shipped count variance flag (`88cec08`).

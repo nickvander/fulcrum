@@ -1292,7 +1292,7 @@
     "stockHistoryDialog": {
       "currentStockLabel": "Current Stock:",
       "noAdjustments": "No stock adjustments recorded yet.",
-      "receivedPo": "Received"
+      "receivedPo": "Received PO"
     },
     "clickToPreview": "Click to preview",
     "loadingMore": "Loading more...",

@@ -204,6 +204,106 @@ def test_receive_correction_cannot_exceed_received_quantity(
     assert response.status_code == 400
     assert "only 0" in response.json()["detail"]
 
+def test_receiving_stamps_structured_po_source(
+    client: TestClient, db: Session, test_product, test_supplier, admin_headers
+):
+    """Receiving (and a later correction) must stamp the structured
+    `source='purchase_order'` + `source_id=<po id>` on the audit row so
+    the stock-history UI can deep-link to the PO without parsing the
+    localized `reason`. The fields must also surface on the product
+    detail endpoint that the dialog reads.
+    """
+    from src.models.inventory import InventoryAdjustment, InventoryAdjustmentSource
+
+    po_data = {
+        "supplier_id": test_supplier.id,
+        "status": "ordered",
+        "currency": "USD",
+        "items": [
+            {"product_id": test_product.id, "quantity_ordered": 10, "unit_cost": 50.0},
+        ],
+    }
+    response = client.post("/api/v1/purchase-orders/", json=po_data, headers=admin_headers)
+    assert response.status_code == 200
+    po = response.json()
+    po_item = po["items"][0]
+
+    # Receive 5.
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive",
+        json=[{"po_item_id": po_item["id"], "product_id": test_product.id, "quantity": 5}],
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+
+    receive_adj = (
+        db.query(InventoryAdjustment)
+        .filter(
+            InventoryAdjustment.product_id == test_product.id,
+            InventoryAdjustment.adjustment == 5,
+        )
+        .one()
+    )
+    assert receive_adj.source == InventoryAdjustmentSource.PURCHASE_ORDER.value
+    assert receive_adj.source_id == po["id"]
+
+    # Correct 2 back out — the correction is still "about" the PO.
+    response = client.post(
+        f"/api/v1/purchase-orders/{po['id']}/receive-correction",
+        json=[{"po_item_id": po_item["id"], "product_id": test_product.id, "quantity": 2}],
+        headers=admin_headers,
+    )
+    assert response.status_code == 200
+
+    correction_adj = (
+        db.query(InventoryAdjustment)
+        .filter(
+            InventoryAdjustment.product_id == test_product.id,
+            InventoryAdjustment.adjustment == -2,
+        )
+        .one()
+    )
+    assert correction_adj.source == InventoryAdjustmentSource.PURCHASE_ORDER.value
+    assert correction_adj.source_id == po["id"]
+
+    # The product detail endpoint (what the stock-history dialog reads)
+    # must serialize the structured fields.
+    response = client.get(f"/api/v1/products/{test_product.id}", headers=admin_headers)
+    assert response.status_code == 200
+    adjustments = response.json()["inventory_adjustments"]
+    po_rows = [a for a in adjustments if a.get("source") == "purchase_order"]
+    assert len(po_rows) == 2
+    assert all(a["source_id"] == po["id"] for a in po_rows)
+
+
+def test_manual_adjustment_has_no_structured_source(
+    client: TestClient, db: Session, test_product
+):
+    """An adjustment with no structured origin (the default) leaves
+    `source`/`source_id` NULL — the UI renders the plain `reason`."""
+    from src.services.inventory_service import inventory_service
+    from src.models.inventory import InventoryAdjustment
+
+    inventory_service.adjust_stock(
+        db=db,
+        product_id=test_product.id,
+        adjustment=3,
+        reason="manual count fix",
+    )
+    db.commit()
+
+    adj = (
+        db.query(InventoryAdjustment)
+        .filter(
+            InventoryAdjustment.product_id == test_product.id,
+            InventoryAdjustment.adjustment == 3,
+        )
+        .one()
+    )
+    assert adj.source is None
+    assert adj.source_id is None
+
+
 def test_adjust_stock_api(client: TestClient, db: Session, test_product):
     # This test also needs auth, skipping manual setup for brevity and focusing on workflow above first
     pass

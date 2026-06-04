@@ -22,6 +22,15 @@ export interface InventoryAdjustment {
   reason: string | null;
   timestamp: string;
   created_by: string | null;
+  /**
+   * Structured provenance of the movement. `source` is a machine key
+   * (e.g. 'purchase_order') and `source_id` the originating entity's id
+   * (e.g. the PO id). Lets the stock-history dialog deep-link to the
+   * origin without parsing the localized `reason`. Both null on legacy
+   * rows and on adjustments with no structured origin.
+   */
+  source?: string | null;
+  source_id?: number | null;
 }
 
 export interface ProductCustomField {

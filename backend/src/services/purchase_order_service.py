@@ -3,7 +3,11 @@ from fastapi import HTTPException
 from src.crud.crud_purchase_order import purchase_order as crud_purchase_order
 from src.crud.crud_product import product as crud_product
 from src.schemas.purchase_order import PurchaseOrderStatus
-from src.models.inventory import InventoryAdjustmentReasonCode, InventoryItem
+from src.models.inventory import (
+    InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
+    InventoryItem,
+)
 from sqlalchemy.sql import func
 
 class PurchaseOrderService:
@@ -158,8 +162,11 @@ class PurchaseOrderService:
                 variant_id=item.variant_id,
                 reason=f"Received PO #{po.id}",
                 reason_code=InventoryAdjustmentReasonCode.PURCHASE,
-
-                user_id=user.email if user else "system" 
+                # Structured link back to the PO so the stock-history UI
+                # can deep-link without parsing the English `reason`.
+                source=InventoryAdjustmentSource.PURCHASE_ORDER,
+                source_id=po.id,
+                user_id=user.email if user else "system"
             )
             updated_items_count += 1
         
@@ -251,6 +258,10 @@ class PurchaseOrderService:
                 variant_id=item.variant_id,
                 reason=correction_reason,
                 reason_code=InventoryAdjustmentReasonCode.CORRECTION,
+                # A correction is still "about" the PO it undoes — link it
+                # so the history row deep-links to the same PO.
+                source=InventoryAdjustmentSource.PURCHASE_ORDER,
+                source_id=po.id,
                 user_id=user.email if user else "system",
             )
             corrected_count += 1

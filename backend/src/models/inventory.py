@@ -71,6 +71,21 @@ OPERATOR_REVERSIBLE_REASON_CODES = frozenset(
     }
 )
 
+
+class InventoryAdjustmentSource(str, enum.Enum):
+    """Structured `InventoryAdjustment.source` keys — the *origin* of a
+    stock movement, so UIs can act on it (e.g. deep-link to the source
+    PO) without parsing the localized free-text `reason`.
+
+    Unlike `InventoryAdjustmentReasonCode` (a CHECK-constrained operator
+    taxonomy), this is an open set: new write paths can add a key without
+    a migration. Today only PO receiving / correction stamp it; the
+    unified-history work (P2-8) will extend it to transfers, counts, and
+    order ingestion.
+    """
+    PURCHASE_ORDER = "purchase_order"
+
+
 class InventoryItem(Base):
     __tablename__ = "inventory_items"
 
@@ -126,6 +141,18 @@ class InventoryAdjustment(Base):
         unique=True,
         index=True,
     )
+    # Structured provenance of the adjustment so UIs can act on its
+    # *origin* (e.g. linkify the source PO) without string-matching the
+    # localized free-text `reason`. `source` is a stable machine key
+    # ('purchase_order', …) and `source_id` the originating entity's id
+    # (e.g. `PurchaseOrder.id`). Both NULL on legacy rows and on
+    # adjustments with no structured origin (manual edits). Deliberately
+    # NOT CHECK-constrained — unlike `reason_code` (a fixed operator
+    # taxonomy), `source` should grow with new write paths without a
+    # migration each time. Indexed on `source` for "everything that came
+    # from PO receiving" style queries.
+    source = Column(String(32), nullable=True, index=True)
+    source_id = Column(Integer, nullable=True)
 
     # Relationships
     product = relationship("Product", back_populates="inventory_adjustments")
