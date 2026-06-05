@@ -252,6 +252,86 @@ def test_record_return_accepts_product_id_only_for_legacy_orders(
     assert _inventory_qty(db, product.id) == 6
 
 
+def test_record_return_with_api_key_auth(
+    client: TestClient, db, test_admin_user,
+):
+    """The storefront BFF records returns server-to-server with an X-API-Key
+    (no JWT). The returns endpoint accepts it via `get_current_user_with_api_key`
+    (mirrors order-create FP-04), so the BFF's refund→return flow can re-credit
+    stock without an operator session. Regression for the auth gap that would
+    otherwise 403 the BFF call."""
+    import hashlib
+
+    from src.models.api_key import ApiKey
+
+    raw_key = "bffret-" + "c" * 57  # long, deterministic; prefix = raw_key[:8]
+    db.add(
+        ApiKey(
+            user_id=test_admin_user.id,
+            name="BFF returns key",
+            key_prefix=raw_key[:8],
+            key_hash=hashlib.sha256(raw_key.encode()).hexdigest(),
+            is_active=True,
+        )
+    )
+    db.flush()
+    order = _seed_order_with_two_items(db)
+    item_a = order.items[0]
+    qa_before = _inventory_qty(db, item_a.product_id)
+
+    resp = client.post(
+        f"/api/v1/sales-orders/{order.id}/returns",
+        headers={"X-API-Key": raw_key},  # no Authorization/JWT
+        json={"lines": [{"order_item_id": item_a.id, "quantity": 1}], "reason": "defective"},
+    )
+
+    assert resp.status_code == 201, resp.text
+    assert resp.json()[0]["order_id"] == order.id
+    # Stock credited via the API-key call — the BFF server-to-server path works.
+    assert _inventory_qty(db, item_a.product_id) == qa_before + 1
+    # The recorder is the API key's owning user.
+    assert resp.json()[0]["recorded_by_user_id"] == test_admin_user.id
+
+
+def test_record_return_without_auth_is_rejected(client: TestClient, db):
+    """No JWT and no X-API-Key → rejected (the endpoint is not public)."""
+    order = _seed_order_with_two_items(db)
+    item_a = order.items[0]
+    resp = client.post(
+        f"/api/v1/sales-orders/{order.id}/returns",
+        json={"lines": [{"order_item_id": item_a.id, "quantity": 1}]},
+    )
+    assert resp.status_code in (401, 403)
+
+
+def test_list_returns_with_api_key_auth(
+    client: TestClient, db, test_admin_user,
+):
+    """The BFF can also read returns back with an X-API-Key."""
+    import hashlib
+
+    from src.models.api_key import ApiKey
+
+    raw_key = "bffretl-" + "d" * 56
+    db.add(
+        ApiKey(
+            user_id=test_admin_user.id,
+            name="BFF returns list key",
+            key_prefix=raw_key[:8],
+            key_hash=hashlib.sha256(raw_key.encode()).hexdigest(),
+            is_active=True,
+        )
+    )
+    db.flush()
+    order = _seed_order_with_two_items(db)
+    resp = client.get(
+        f"/api/v1/sales-orders/{order.id}/returns",
+        headers={"X-API-Key": raw_key},
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json() == []
+
+
 # ---------------------------------------------------------------------------
 # GET /sales-orders/{order_id}/returns
 # ---------------------------------------------------------------------------

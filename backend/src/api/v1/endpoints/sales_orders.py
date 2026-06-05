@@ -794,7 +794,10 @@ def record_sales_order_return(
     order_id: int,
     payload: SalesOrderReturnCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_active_user),
+    # Accept EITHER a JWT (admin/POS UI) OR an X-API-Key (the storefront BFF,
+    # server-to-server returns/refund flow). Mirrors order-create (FP-04):
+    # `get_current_user_with_api_key` resolves both and prefers the API key.
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """Record one or more physical returns against a sales order.
 
@@ -848,7 +851,8 @@ def record_sales_order_return(
 def list_sales_order_returns(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_active_user),
+    # Same dual auth as record (JWT or X-API-Key) so the BFF can read back too.
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """List all return events recorded for an order, newest first."""
     from src.models.user import User as UserModel
