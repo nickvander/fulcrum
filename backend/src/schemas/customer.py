@@ -24,6 +24,8 @@ class CustomerProfile(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    whatsapp_opt_in: bool = False
+    whatsapp_opt_in_at: Optional[str] = None
     user_type: Optional[str] = None
     is_active: bool = True
     created_at: Optional[str] = None
@@ -48,6 +50,9 @@ class CustomerUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
+    # WhatsApp transactional opt-in. Toggling this stamps ``whatsapp_opt_in_at``
+    # server-side (the customer can't set the timestamp directly).
+    whatsapp_opt_in: Optional[bool] = None
 
 
 class MagicLinkRequest(BaseModel):

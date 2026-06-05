@@ -165,9 +165,12 @@ def update_me(
 ) -> customer_schema.CustomerProfile:
     """Update the authenticated customer's own profile.
 
-    Persists ``first_name`` / ``last_name`` / ``phone`` (the ``users.phone``
-    column was added in migration ``a3f9c1d27b6e``).
+    Persists ``first_name`` / ``last_name`` / ``phone`` / ``whatsapp_opt_in``.
+    Toggling ``whatsapp_opt_in`` stamps ``whatsapp_opt_in_at`` server-side (the
+    customer can record consent but not forge its timestamp).
     """
+    from datetime import datetime, timezone
+
     update_data = customer_in.model_dump(exclude_unset=True)
     persistable = {
         k: v
@@ -176,6 +179,13 @@ def update_me(
     }
     for field, value in persistable.items():
         setattr(current_user, field, value)
+
+    # Consent: stamp the change time server-side whenever the flag actually flips.
+    if "whatsapp_opt_in" in update_data:
+        new_opt_in = bool(update_data["whatsapp_opt_in"])
+        if new_opt_in != bool(current_user.whatsapp_opt_in):
+            current_user.whatsapp_opt_in = new_opt_in
+            current_user.whatsapp_opt_in_at = datetime.now(timezone.utc)
 
     db.add(current_user)
     db.commit()

@@ -13,6 +13,10 @@ class User(Base):
     first_name = Column(String)
     last_name = Column(String)
     phone = Column(String, nullable=True)  # customer contact phone
+    # WhatsApp transactional opt-in (consent), with the timestamp of the last
+    # consent change. The storefront BFF gates every WhatsApp send on this.
+    whatsapp_opt_in = Column(Boolean, nullable=False, server_default="false", default=False)
+    whatsapp_opt_in_at = Column(DateTime(timezone=True), nullable=True)
     user_type = Column(String)  # admin, employee, customer
     is_active = Column(Boolean, default=True)  # Track if user account is active
     is_superuser = Column(Boolean, default=False)

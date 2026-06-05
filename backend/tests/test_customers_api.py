@@ -188,6 +188,44 @@ def test_profile_get_and_update(client: TestClient, db: Session):
 
 
 @pytest.mark.db
+def test_whatsapp_opt_in_records_consent_with_timestamp(
+    client: TestClient, db: Session
+):
+    """Toggling whatsapp_opt_in records consent + a server-stamped timestamp;
+    opting out clears the flag. The storefront BFF gates sends on this."""
+    _register(client, "consent@example.com")
+    headers = _customer_headers(client, db, "consent@example.com")
+
+    # Defaults to no consent, no timestamp.
+    got = client.get("/api/v1/customers/me", headers=headers)
+    assert got.json()["whatsapp_opt_in"] is False
+    assert got.json()["whatsapp_opt_in_at"] is None
+
+    # Opt in → flag true + timestamp stamped server-side.
+    opted = client.patch(
+        "/api/v1/customers/me",
+        headers=headers,
+        json={"whatsapp_opt_in": True},
+    )
+    assert opted.status_code == 200
+    assert opted.json()["whatsapp_opt_in"] is True
+    stamped = opted.json()["whatsapp_opt_in_at"]
+    assert stamped is not None
+    # Round-trips on a fresh GET.
+    assert client.get("/api/v1/customers/me", headers=headers).json()[
+        "whatsapp_opt_in"
+    ] is True
+
+    # Opt out → flag false.
+    opted_out = client.patch(
+        "/api/v1/customers/me",
+        headers=headers,
+        json={"whatsapp_opt_in": False},
+    )
+    assert opted_out.json()["whatsapp_opt_in"] is False
+
+
+@pytest.mark.db
 def test_admin_cannot_use_customer_me(
     client: TestClient, test_admin_user: models.User
 ):
