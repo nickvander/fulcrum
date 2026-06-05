@@ -60,6 +60,13 @@ The **Returns** section lists returns recorded against the order (when, by whom,
 which product, how many units back, and an optional reason). Use **Record
 return** to log a physical return; recording a return re-credits stock.
 
+Returns can be recorded two ways: by an operator in the admin/POS UI (signed in
+with a session/JWT), or **server-to-server by the Vendio storefront BFF using a
+Fulcrum API key** (`X-API-Key`) — the same dual authentication order creation
+uses. When the API key path is used, the recorded-by user is the API key's
+owning user. Endpoints: `POST /api/v1/sales-orders/{id}/returns` (record) and
+`GET /api/v1/sales-orders/{id}/returns` (list).
+
 ### Storefront Shipping
 
 Orders created by the Vendio storefront can carry a selected shipping charge and
@@ -75,6 +82,11 @@ Both endpoints are idempotent on `idempotency_key`. Replaying the same request
 returns the already-stored fulfillment snapshot. Once a label is attached,
 Fulcrum rejects attempts to replace it with a different idempotency key so a
 second label purchase cannot silently overwrite the first one.
+
+The same API key also authorizes the storefront's refund→return flow:
+`POST`/`GET /api/v1/sales-orders/{id}/returns` accept either a session/JWT or
+the BFF's `X-API-Key`, so the storefront can re-credit stock server-to-server
+without an operator session (see **Returns** above).
 
 ### Refund Events
 
