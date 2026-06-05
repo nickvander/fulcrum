@@ -40,6 +40,7 @@ from src.schemas.sales_order import (
     SalesOrderFulfillmentRead,
     SalesOrderItem as SalesOrderItemSchema,
     SalesOrderListResponse,
+    SalesOrderCancelResult,
     SalesOrderReturnCreate,
     SalesOrderReturnRead,
     SalesOrderShippingChargeUpdate,
@@ -48,6 +49,7 @@ from src.schemas.sales_order import (
 )
 from src.services.inventory_service import InsufficientStockError
 from src.services.order_creation import create_onsite_order
+from src.services.order_lifecycle import apply_status_change
 from src.services.report_export import (
     ReportColumn,
     ReportTable,
@@ -732,6 +734,56 @@ def get_sales_order(
         cost_breakdown=breakdown,
         status_timeline=timeline,
         refund_events=refund_events,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Cancellation (operator / BFF compensation)
+# ---------------------------------------------------------------------------
+
+
+@router.post("/{order_id}/cancel", response_model=SalesOrderCancelResult)
+def cancel_sales_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    # JWT (admin/POS) OR X-API-Key (storefront BFF, server-to-server). The BFF
+    # calls this to compensate a capture failure after order-create — cancel the
+    # order so its stock is released. Mirrors order-create's dual auth (FP-04).
+    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+):
+    """Cancel a sales order; re-credit stock if it was cancelled before shipping.
+
+    Delegates to `order_lifecycle.apply_status_change` (the same transition the
+    marketplace pollers/webhooks use), which writes the audit row and, on a
+    realized→CANCELLED transition for an unshipped order, re-credits stock
+    exactly once (guarded by `stock_recredited_at`).
+
+    **Idempotent:** cancelling an already-cancelled order is a no-op and still
+    returns 200 — so the BFF's compensation retry is safe (no double credit).
+    """
+    order = (
+        db.query(SalesOrder)
+        .options(joinedload(SalesOrder.items))
+        .filter(SalesOrder.id == order_id)
+        .first()
+    )
+    if order is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.salesOrder.notFound",
+            params={"id": order_id},
+            detail="Sales order not found",
+        )
+
+    apply_status_change(
+        db, order, new_status="CANCELLED", source_signal="manual"
+    )
+    db.commit()
+    db.refresh(order)
+    return SalesOrderCancelResult(
+        id=order.id,
+        status=order.status,
+        stock_recredited=order.stock_recredited_at is not None,
     )
 
 

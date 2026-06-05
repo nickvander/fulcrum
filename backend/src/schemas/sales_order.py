@@ -248,3 +248,19 @@ class SalesOrderReturnRead(BaseModel):
     notes: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SalesOrderCancelResult(BaseModel):
+    """Result of POST /sales-orders/{id}/cancel.
+
+    Minimal by design (no cost breakdown): the caller is the storefront BFF's
+    compensation path, which only needs to know the order is cancelled and
+    whether stock was re-credited. `stock_recredited` reflects whether the
+    order carries a `stock_recredited_at` stamp (set once, on a cancel-before-
+    ship transition from a realized status)."""
+
+    id: int
+    status: str
+    stock_recredited: bool
+
+    model_config = ConfigDict(from_attributes=True)
