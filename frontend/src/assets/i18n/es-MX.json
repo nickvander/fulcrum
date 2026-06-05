@@ -2977,6 +2977,8 @@
       "removeRow": "Quitar de la sesión",
       "removeFailed": "No se pudo quitar esa fila.",
       "updateFailed": "No se pudo guardar el conteo.",
+      "savedTooltip": "Conteo guardado",
+      "saveErrorTooltip": "Falló el guardado — valor revertido",
       "cols": {
         "sku": "SKU",
         "name": "Producto",

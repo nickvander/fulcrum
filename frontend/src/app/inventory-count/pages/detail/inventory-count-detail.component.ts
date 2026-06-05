@@ -84,10 +84,19 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
   committing = false;
   cancelling = false;
 
-  /** Track per-item pending count updates so the input doesn't
-   *  rebound from the server before the operator finishes typing.
-   *  Keyed by item id. */
-  pendingCounts = new Map<number, number | null>();
+  /** The editable count value bound to each row's input, keyed by item
+   *  id. This is the input's source of truth (not `counted_quantity`),
+   *  so a failed PATCH can roll the field back to the last server-
+   *  confirmed value by resetting this map. */
+  countEdits = new Map<number, number | null>();
+
+  /** Per-row save lifecycle for the inline indicator: 'saving' (PATCH in
+   *  flight), 'saved' (brief confirmation tick), 'error' (PATCH failed,
+   *  value rolled back). Absent = idle. Keyed by item id. */
+  saveState = new Map<number, 'saving' | 'saved' | 'error'>();
+
+  /** Placeholder rows rendered while the session is loading. */
+  readonly skeletonRows = [0, 1, 2, 3];
 
   readonly displayedColumns = ['sku', 'name', 'expected', 'counted', 'delta', 'actions'];
 
@@ -119,6 +128,7 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
     this.countService.get(sessionId).pipe(takeUntil(this.destroy$)).subscribe({
       next: (s) => {
         this.session = s;
+        this.seedEdits(s.items);
         this.loading = false;
       },
       error: () => {
@@ -165,6 +175,7 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
         if (this.session) {
           this.session.items = [...this.session.items, item];
           this.session.item_count += 1;
+          this.countEdits.set(item.id, item.counted_quantity ?? null);
         }
         this.addingSku = '';
       },
@@ -186,18 +197,54 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** PATCH the count for one row immediately. Called from the
-   *  input's (change) handler so we only fire on blur / Enter
-   *  rather than every keystroke. */
-  saveCount(item: InventoryCountItem, value: string): void {
+  /** Seed the per-row edit map from the authoritative server values. */
+  private seedEdits(items: InventoryCountItem[]): void {
+    this.countEdits.clear();
+    this.saveState.clear();
+    for (const item of items) {
+      this.countEdits.set(item.id, item.counted_quantity ?? null);
+    }
+  }
+
+  /** PATCH the count for one row. Called from the input's (change)
+   *  handler so we only fire on blur / Enter rather than every
+   *  keystroke. The displayed value comes from `countEdits`, so a
+   *  failed PATCH rolls the field back to the last server-confirmed
+   *  value instead of leaving a bad number on screen. */
+  saveCount(item: InventoryCountItem): void {
     if (!this.session) return;
-    const parsed = value === '' ? null : Number(value);
-    const counted = parsed === null || Number.isNaN(parsed) ? null : Math.floor(parsed);
+    const raw = this.countEdits.get(item.id);
+    const counted =
+      raw === null || raw === undefined || Number.isNaN(raw) ? null : Math.floor(raw);
+    const current = item.counted_quantity ?? null;
+
+    // No-op: nothing changed (e.g. operator focused + blurred, or typed
+    // back the same number). Normalize the field (e.g. "5.0" → 5) and
+    // skip the request.
+    if (counted === current) {
+      this.countEdits.set(item.id, counted);
+      this.saveState.delete(item.id);
+      return;
+    }
+
+    this.saveState.set(item.id, 'saving');
     this.countService.updateCount(this.session.id, item.id, counted).subscribe({
       next: (updated) => {
+        // Trust the server value (it may have floored / normalized).
         item.counted_quantity = updated.counted_quantity;
+        this.countEdits.set(item.id, updated.counted_quantity ?? null);
+        this.saveState.set(item.id, 'saved');
+        // Clear the confirmation tick after a moment (unless a newer
+        // save has already changed the state).
+        setTimeout(() => {
+          if (this.saveState.get(item.id) === 'saved') this.saveState.delete(item.id);
+        }, 1500);
       },
       error: () => {
+        // Roll the field back to the last confirmed value so a rejected
+        // edit (e.g. a negative count) never sits on screen as if saved.
+        this.countEdits.set(item.id, current);
+        this.saveState.set(item.id, 'error');
         this.snackBar.open(
           this.transloco.translate('inventoryCount.detail.updateFailed'),
           this.transloco.translate('common.close'),
@@ -214,6 +261,8 @@ export class InventoryCountDetailComponent implements OnInit, OnDestroy {
         if (this.session) {
           this.session.items = this.session.items.filter(i => i.id !== item.id);
           this.session.item_count = Math.max(0, this.session.item_count - 1);
+          this.countEdits.delete(item.id);
+          this.saveState.delete(item.id);
         }
       },
       error: () => {

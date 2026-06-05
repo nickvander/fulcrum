@@ -2977,6 +2977,8 @@
       "removeRow": "Remove from session",
       "removeFailed": "Could not remove that row.",
       "updateFailed": "Could not save that count.",
+      "savedTooltip": "Count saved",
+      "saveErrorTooltip": "Save failed — value reverted",
       "cols": {
         "sku": "SKU",
         "name": "Product",

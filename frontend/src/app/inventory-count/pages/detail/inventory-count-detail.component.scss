@@ -132,6 +132,12 @@
     font-size: 0.85em;
   }
 
+  .count-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   .count-input {
     width: 80px;
     text-align: right;
@@ -146,6 +152,27 @@
       padding: 10px 8px;
       font-size: 1rem;
     }
+
+    // A rejected edit (rolled back) flashes the field border so the
+    // operator notices the value reverted.
+    &.count-input-error {
+      border-color: var(--error-color);
+    }
+  }
+
+  // Per-row save lifecycle indicator next to the count input.
+  .save-state {
+    display: inline-flex;
+    align-items: center;
+    width: 16px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    .ss-saved { color: var(--success-color); }
+    .ss-error { color: var(--error-color); }
   }
 
   // Touch-friendlier action buttons (remove / etc) on phones.
@@ -188,6 +215,40 @@
   display: flex;
   justify-content: center;
   padding: 48px;
+}
+
+// Skeleton placeholder while the session loads — shows the page's real
+// shape (header, add-row, items table) instead of a bare spinner.
+.count-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+
+  .sk {
+    background: linear-gradient(90deg, var(--bg-raised) 0%, var(--bg-hover) 50%, var(--bg-raised) 100%);
+    background-size: 200% 100%;
+    animation: count-sk-shimmer 1.3s ease-in-out infinite;
+    border-radius: var(--radius-sm, 8px);
+  }
+  .sk-header { height: 32px; width: 240px; }
+  .sk-add { height: 56px; width: 100%; border-radius: var(--radius-md, 12px); }
+
+  .sk-table { display: flex; flex-direction: column; gap: var(--space-2, 8px); }
+  .skeleton-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 64px 64px 64px;
+    gap: var(--space-3, 12px);
+    align-items: center;
+    height: 44px;
+  }
+  .sk-line { height: 14px; }
+  .sk-num { height: 14px; }
+}
+
+@keyframes count-sk-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .commit-actions {

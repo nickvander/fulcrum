@@ -8,8 +8,20 @@
     </nav>
 
     @if (loading && !session) {
-      <div class="loading-state">
-        <mat-spinner diameter="32"></mat-spinner>
+      <div class="count-skeleton" data-testid="count-detail-skeleton" aria-hidden="true">
+        <div class="sk sk-header"></div>
+        <div class="sk sk-add"></div>
+        <div class="sk-table">
+          @for (i of skeletonRows; track i) {
+            <div class="skeleton-row">
+              <div class="sk sk-line sk-sku"></div>
+              <div class="sk sk-line sk-name"></div>
+              <div class="sk sk-num"></div>
+              <div class="sk sk-num"></div>
+              <div class="sk sk-num"></div>
+            </div>
+          }
+        </div>
       </div>
     } @else if (errored && !session) {
       <mat-card class="error-card" data-testid="count-detail-error">
@@ -106,12 +118,25 @@
               <th mat-header-cell *matHeaderCellDef class="numeric">{{ t('inventoryCount.detail.cols.counted') }}</th>
               <td mat-cell *matCellDef="let row" class="numeric">
                 @if (isInProgress) {
-                  <input type="number"
-                         min="0"
-                         [value]="row.counted_quantity ?? ''"
-                         (change)="saveCount(row, $any($event.target).value)"
-                         [attr.data-testid]="'count-input-' + row.id"
-                         class="count-input" />
+                  <span class="count-cell">
+                    <input type="number"
+                           min="0"
+                           [ngModel]="countEdits.get(row.id) ?? null"
+                           (ngModelChange)="countEdits.set(row.id, $event)"
+                           (change)="saveCount(row)"
+                           [attr.data-testid]="'count-input-' + row.id"
+                           class="count-input"
+                           [class.count-input-error]="saveState.get(row.id) === 'error'" />
+                    <span class="save-state" [attr.data-testid]="'count-save-state-' + row.id">
+                      @if (saveState.get(row.id) === 'saving') {
+                        <mat-spinner diameter="14"></mat-spinner>
+                      } @else if (saveState.get(row.id) === 'saved') {
+                        <mat-icon class="ss-saved" [matTooltip]="t('inventoryCount.detail.savedTooltip')">check_circle</mat-icon>
+                      } @else if (saveState.get(row.id) === 'error') {
+                        <mat-icon class="ss-error" [matTooltip]="t('inventoryCount.detail.saveErrorTooltip')">error_outline</mat-icon>
+                      }
+                    </span>
+                  </span>
                 } @else {
                   {{ row.counted_quantity ?? '—' }}
                 }

@@ -100,8 +100,13 @@ Grouped by why it wasn't done in the incremental tranches:
   legacy NgModule routing; ledger uses plain `mat-table`).
 - **P2-6 — planner-as-primary** (merge the dumb create-transfer dialog into the
   planner model; add "send to Full" suggestions).
-- **P2-3 — count error rollback + per-row save state + skeletons**
-  (`inventory-count-detail` save-on-blur currently keeps a bad value on PATCH fail).
+- **P2-3 — count error rollback + per-row save state + skeletons. ✅ SHIPPED.**
+  `inventory-count-detail` count input now binds to a `countEdits` map (not
+  `counted_quantity`), so a rejected PATCH (e.g. a negative count) rolls the
+  field back to the last server-confirmed value instead of leaving a bad number
+  on screen. Per-row `saveState` (saving spinner / saved tick / error icon),
+  a no-op guard that skips unchanged-value PATCHes, and a skeleton placeholder
+  (header + add-row + table) while the session loads. Frontend-only; +8 specs.
 
 ### Mechanical (needs per-component visual check, not just tests)
 - **P1-10 — OnPush rollout** across the ~12 still-Default in-scope components
@@ -175,9 +180,11 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-P2-4, P1-9, P2-5, P2-8 (+ its audit-page follow-up) all shipped this session.
-Remaining picks:
-- **P2-3 (contained):** count error rollback + per-row save state + skeletons in
-  `inventory-count-detail` (save-on-blur currently keeps a bad value on PATCH fail).
+P2-4, P1-9, P2-5, P2-8 (+ audit-page follow-up), and P2-3 all shipped this
+session. Remaining picks:
+- **P1-10 (mechanical):** OnPush rollout across the ~12 still-Default components
+  (receiving-dialog, purchase-order-list/edit, the 6 transfer components, both
+  count components, scan-sku-dialog) — do one at a time + visual check.
 - **P2-6:** planner-as-primary (merge create-transfer dialog into the planner).
-- **P1-10 (mechanical):** OnPush rollout across the ~12 still-Default components.
+- **P2-10 / P2-12:** larger refactors (ledger virtual-scroll + routes migration;
+  split the 1,444-line purchase-order-edit) — each its own session.

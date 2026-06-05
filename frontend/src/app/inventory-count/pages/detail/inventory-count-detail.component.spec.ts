@@ -125,6 +125,36 @@ describe('InventoryCountDetailComponent', () => {
     expect(component.isInProgress).toBe(false);
   });
 
+  it('seeds the per-row edit map from the loaded items', () => {
+    svc.get.mockReturnValue(of(makeSession({
+      item_count: 2,
+      items: [makeItem({ id: 1, counted_quantity: 3 }), makeItem({ id: 2, counted_quantity: null })],
+    })));
+    component.load(100);
+    expect(component.countEdits.get(1)).toBe(3);
+    expect(component.countEdits.get(2)).toBeNull();
+  });
+
+  it('addItem() seeds the new row in the edit map', () => {
+    const item = makeItem({ id: 7, counted_quantity: null });
+    svc.addItem.mockReturnValue(of(item));
+    component.addingSku = 'SKU-7';
+    component.addItem();
+    expect(component.countEdits.has(7)).toBe(true);
+  });
+
+  it('removeItem() clears the row from the edit + save-state maps', () => {
+    const item = makeItem({ id: 42 });
+    component.session!.items = [item];
+    component.session!.item_count = 1;
+    component.countEdits.set(42, 5);
+    component.saveState.set(42, 'error');
+    svc.removeItem.mockReturnValue(of(undefined));
+    component.removeItem(item);
+    expect(component.countEdits.has(42)).toBe(false);
+    expect(component.saveState.has(42)).toBe(false);
+  });
+
   it('addItem() appends the new item locally and clears the input', () => {
     const item = makeItem({ id: 7 });
     svc.addItem.mockReturnValue(of(item));
@@ -150,29 +180,55 @@ describe('InventoryCountDetailComponent', () => {
     expect(snack.open).toHaveBeenCalled();
   });
 
-  it('saveCount() sends the floored numeric value and persists it locally', () => {
+  it('saveCount() sends the edited value and persists it locally', () => {
     const item = makeItem();
     component.session!.items = [item];
+    component.countEdits.set(item.id, 7);
     svc.updateCount.mockReturnValue(of({ ...item, counted_quantity: 7 }));
-    component.saveCount(item, '7');
+    component.saveCount(item);
     expect(svc.updateCount).toHaveBeenCalledWith(100, 1, 7);
     expect(item.counted_quantity).toBe(7);
+    expect(component.saveState.get(item.id)).toBe('saved');
   });
 
   it('saveCount() floors decimal entries', () => {
     const item = makeItem();
     component.session!.items = [item];
+    component.countEdits.set(item.id, 7.9);
     svc.updateCount.mockReturnValue(of({ ...item, counted_quantity: 7 }));
-    component.saveCount(item, '7.9');
+    component.saveCount(item);
     expect(svc.updateCount).toHaveBeenCalledWith(100, 1, 7);
   });
 
-  it('saveCount() passes null when the input is cleared', () => {
-    const item = makeItem();
+  it('saveCount() passes null when the field is cleared', () => {
+    const item = makeItem({ counted_quantity: 5 });
     component.session!.items = [item];
+    component.countEdits.set(item.id, null);
     svc.updateCount.mockReturnValue(of({ ...item, counted_quantity: null }));
-    component.saveCount(item, '');
+    component.saveCount(item);
     expect(svc.updateCount).toHaveBeenCalledWith(100, 1, null);
+  });
+
+  it('saveCount() is a no-op (no PATCH) when the value is unchanged', () => {
+    const item = makeItem({ counted_quantity: 4 });
+    component.session!.items = [item];
+    component.countEdits.set(item.id, 4);
+    component.saveCount(item);
+    expect(svc.updateCount).not.toHaveBeenCalled();
+  });
+
+  it('saveCount() rolls the field back to the last value and flags error on PATCH failure', () => {
+    const item = makeItem({ counted_quantity: 3 });
+    component.session!.items = [item];
+    // Operator types an invalid value the server rejects (e.g. negative).
+    component.countEdits.set(item.id, -2);
+    svc.updateCount.mockReturnValue(throwError(() => new Error('400')));
+    component.saveCount(item);
+    // Field reverted to the last server-confirmed value; model untouched.
+    expect(component.countEdits.get(item.id)).toBe(3);
+    expect(item.counted_quantity).toBe(3);
+    expect(component.saveState.get(item.id)).toBe('error');
+    expect(snack.open).toHaveBeenCalled();
   });
 
   it('removeItem() drops the row from the local items list on success', () => {
