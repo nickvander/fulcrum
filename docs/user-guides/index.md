@@ -18,8 +18,8 @@ business. It helps you:
 
 - **Manage Inventory**: Track stock levels across all products and bundles.
 - **Control Costs**: Monitor purchase history, average costs, and profitability.
-- **Sell on Multiple Channels**: Connect to Amazon, MercadoLibre, and your own
-  storefront.
+- **Sell on Multiple Channels**: Connect to MercadoLibre and Amazon to manage
+  marketplace listings, orders, and fulfillment from one place.
 - **Automate Operations**: Use AI to generate product descriptions, match
   barcodes, and more.
 

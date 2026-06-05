@@ -74,9 +74,11 @@ follow these guidelines:
 1.  **Manage Subscriptions:** Always unsubscribe from Observables. Use the
     `takeUntil(this.destroy$)` pattern in components and ensure `ngOnDestroy` is
     called. In tests, avoid leaving open subscriptions.
-2.  **Mock Services:** Mock all dependent services using `jasmine.createSpyObj`.
-    Avoid using real services that make HTTP calls or have complex
-    initialization logic.
+2.  **Mock Services:** Mock all dependent services with Vitest — `vi.fn()` /
+    `vi.spyOn()` for spies, or a plain stub object provided via
+    `TestBed.overrideProvider` / the component's `providers`. (The runner is
+    Vitest via `@angular/build:unit-test`, not Karma/Jasmine.) Avoid using real
+    services that make HTTP calls or have complex initialization logic.
 3.  **Mock Initialization Logic:** For components that initialize data in
     `ngOnInit` (like `ProductForm`), mock the initialization service (e.g.,
     `ProductFormInitializerService`) to return controlled test data immediately.

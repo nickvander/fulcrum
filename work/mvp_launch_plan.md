@@ -1,5 +1,10 @@
 # MVP Launch Plan: Fulcrum
 
+> **⚠️ Historical (superseded).** This was the original MVP launch plan; all
+> five milestones below have long shipped. For current status see
+> `work/current/PROGRESS.md` + `work/current/MISSING_ITEMS.md`, and for what's
+> next see `work/future/97-next-session-candidates.md`. Kept for provenance.
+
 Based on the thorough audit of the project status (`Phase 4` in progress), the
 existing `00-project-plan.md`, and the codebase structure, here are the **5 Key
 Milestones** to launch a competitive Minimum Viable Product (MVP).

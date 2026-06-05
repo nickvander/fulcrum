@@ -4,9 +4,17 @@ _All onboarding / launch-readiness items are now shipped. This file
 tracks the next round of polish + greenfield work. Add new items here
 when you find them so the next session has a place to start._
 
-> **Where things stand (2026-06-01):** the ML-seller backlog (B1–B7) is
-> shipped and **FP-06 P1** (CFDI live timbrado) is in (mock-tested). Open
-> threads for the next feature push:
+> **Where things stand (2026-06-04):** the ML-seller backlog (B1–B7) is
+> shipped, **FP-06 P1** (CFDI live timbrado) is in (mock-tested), and the
+> **inventory-operations overhaul (P0–P2)** is cleared — receiving safety,
+> in-transit "+N en camino", structured adjustment `source` end-to-end (audit
+> Source column/filter + stock-history origin chips), reconciliation variance
+> pills, and count save-rollback. See `work/redesign/09-inventory-ops-PICKUP.md`.
+> **Curated next-session shortlist: `work/future/97-next-session-candidates.md`.**
+> Open threads:
+> - **Inventory-ops refactors** (each own session): P1-10 OnPush rollout,
+>   P2-6 planner-as-primary, P2-10 ledger virtual-scroll, P2-12 split
+>   `purchase-order-edit.component.ts`. See PICKUP §2.
 > - **FP-06 P2+** — Facturama live-sandbox verification + CSD upload, then
 >   cancellations / nota de crédito / factura-global job
 >   (`work/future/96-fp06-cfdi-timbrado.md`).
@@ -265,6 +273,22 @@ All six "Best Next Improvements" from
 _(Older items are listed under PROGRESS.md's "Most Recent Shipped"
 + "Recent Archive". Keep this section short — only items from
 roughly the last 10 days.)_
+
+- [x] **Inventory-operations overhaul P0–P2 (2026-06-04)** — the receive →
+      warehouse → send-to-Full operator loop. Tracked in
+      `work/redesign/08-inventory-ops-audit.md` + `09-inventory-ops-PICKUP.md`.
+      - **P2-4** product-list in-transit "+N en camino" (`in_transit_qty` on the
+        list API + row/card/peek hint).
+      - **P1-9 + P2-8** structured adjustment `source`/`source_id` (migration
+        `d3f7a1c8e024`) stamped on every write path; stock-history dialog
+        multi-origin deep-link chips; audit-page Source column + filter +
+        `/sources` endpoint + CSV/PDF Source column.
+      - **P2-5** reconciliation `Discrepancia ±N` variance pill (tolerance-gated,
+        in-transit-aware).
+      - **P2-3** physical-count save rollback + per-row save-state + skeleton.
+      Frontend 943 passing; en + es-MX parity; verified live in-browser against
+      `scripts/seed_inventory_demo.py`. Remaining refactors (P1-10/P2-6/P2-10/
+      P2-12) in PICKUP §2.
 
 - [x] **ML-seller feature arc (2026-05-30)** — backlog + research in
       `work/future/93` + `95`:

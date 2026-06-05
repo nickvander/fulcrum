@@ -1,5 +1,51 @@
 # Progress Log
 
+**Status (2026-06-04):** Inventory-operations operator-experience overhaul
+(P0–P2). North star (founder): _"it should be easy to receive products and then
+add them to the warehouse."_ A multi-tranche arc tracked in
+`work/redesign/08-inventory-ops-audit.md` (§5 backlog / §7 progress log) and
+`work/redesign/09-inventory-ops-PICKUP.md`. Highlights of the latest sessions:
+
+- **P0/P1 (receiving safety + touch UX):** receive success/error toasts (killed
+  silent-failure), "Recibir todo", on-hand guard on create-transfer, adjustment
+  reason-codes + location + block-negative, shared `QuantityStepperComponent`,
+  status-pill/token consistency, PO receiving progress meter, scan-to-receive,
+  "Por recibir" worklist, hide Amazon FBA.
+- **P2-4 — in-transit "+N en camino":** products list endpoint surfaces a
+  per-product `in_transit_qty` (sum of `qty_planned − qty_received` over
+  shipped/partially-received transfers to `ml-full`); the row, grid card, and
+  the "¿0 disponible?" stock peek render it. Answers the central ML-Full
+  "¿por qué 0?".
+- **P1-9 + P2-8 — structured adjustment provenance:** `InventoryAdjustment`
+  gained `source` + `source_id` (migration `d3f7a1c8e024`). _Every_ write path
+  now stamps the origin (PO receive/correction, transfer ship/receive/inbound-
+  reconcile, sale/cancel/return → the order, count commit, bundle both legs,
+  listing sync, reversal). The stock-history dialog's PO-only string-match
+  (`reason.startsWith('Received PO #')`, an i18n landmine) became a generic
+  origin chip that deep-links PO/transfer/order/count to their detail routes.
+  The audit page (`/products/audit`) gained a **Source column + filter** + a
+  `/reports/inventory-adjustments/sources` endpoint + a CSV/PDF Source column.
+- **P2-5 — reconciliation variance grammar:** `stock-transfer-reconciliation`
+  flags out-of-tolerance lines with a `Discrepancia ±N` `--warning` pill (>10u
+  OR >5%), in-transit-aware (an over-receipt counts always; a shortfall only
+  once the receive window closes — a PARTIALLY_RECEIVED shortfall may still be
+  on its way, so it isn't flagged).
+- **P2-3 — count save robustness:** the physical-count detail input binds to a
+  `countEdits` map, so a rejected PATCH (e.g. a negative count) **rolls the
+  field back** to the last server value instead of leaving a bad number on
+  screen; per-row save-state indicator (saving / saved tick / error icon),
+  a no-op guard, and a skeleton placeholder while the session loads.
+
+All tranches passed theme guard + i18n parity (en + es-MX) + `ng build` + the
+full frontend suite, each with new unit tests. Verified live in the browser
+end-to-end (in-transit pill, origin chips + deep-links, reconciliation pills,
+audit Source filter, count rollback) against a seeded dev DB
+(`scripts/seed_inventory_demo.py`). Frontend **943 passing**; backend inventory
+suites green. **Remaining inventory-ops backlog** (each its own session): P1-10
+OnPush rollout (needs per-component visual check), P2-6 planner-as-primary,
+P2-10 ledger virtual-scroll + routes migration, P2-12 split the 1,444-line
+`purchase-order-edit.component.ts`.
+
 **Status (2026-06-01):** FP-06 P1 — CFDI live stamping foundation (mock-tested).
 Builds on B7. Migration `b7e1c0d4f206` adds `cfdi_documents` + per-order CFDI
 receiver columns. New `services/invoicing/` (`InvoicingProvider` interface +
@@ -239,13 +285,15 @@ Analytics export endpoints (velocity, margin, stockout) now accept optional
 ("last quarter") in addition to the legacy `window_days` window. The dashboard's
 `AnalyticsReportsWidget` exposes a paired Material datepicker for each bound.
 
-**Current Phase:** Phase 7 — Customer Onboarding Reliability + Day-to-Day
-Operator Tools.
+**Current Phase:** Phase 9 — Inventory-operations operator experience (the
+receive → warehouse → send-to-Full loop). Builds on Phase 7 (onboarding) and
+Phase 8 (cost/analytics).
 
 ## Current Work
 
-_(nothing in flight — see `work/future/` for the next strategic candidates, or
-pick from "Suggested Next Slices" below.)_
+_(nothing in flight. The contained inventory-ops backlog (P0–P2) is cleared —
+next candidates are scoped in `work/future/97-next-session-candidates.md`; the
+remaining inventory-ops refactors live in `work/redesign/09-inventory-ops-PICKUP.md` §2.)_
 
 ### 2026-06-02 — Vendio storefront fulfillment persistence
 
@@ -788,7 +836,10 @@ pick from "Suggested Next Slices" below.)_
 
 ## Suggested Next Slices
 
-Roughly in order of impact / unblock value:
+**See `work/future/97-next-session-candidates.md`** for the curated, scoped
+shortlist (inventory-ops finish, FP-06 CFDI P2, B8 stock-locations, Rust
+Phase 0, AI multimodal listings, B4/B7 small follow-ups). The standing
+strategic candidates below remain valid:
 
 - **Phase 0 of the Rust migration plan** — instrumentation. Phase 1
   product-listing perf wins have all landed (see Rust plan checkbox state); the
@@ -805,10 +856,16 @@ Roughly in order of impact / unblock value:
 
 - Backend full suite:
   `docker compose -f docker-compose.test.yml run --rm backend python -m pytest -q --ignore=tests/integration/test_mercadolibre_live.py`
-  → 728 passed, 8 skipped at last green.
-- Frontend full suite: `npx ng test --watch=false` → 657 passed, 0 skipped at
-  last green.
-- Pre-commit + pre-push hooks: linter + fast backend tests + i18n parity.
+  → ~960 passed, 8 skipped at last green. **Known env-only failure** under
+  `run --rm`: `test_safe_sync.py::...test_product_update_logs_changes` fails
+  with a kombu/Celery-broker DNS error (the product-PUT dispatches the embedding
+  task; no broker in that invocation) — not a code bug. **Never `down -v`** the
+  test compose: it wipes the pgvector extension on the test volume (see
+  `docs/`/memory). Frontend Node must be 24 for `ng serve` (default node is v12).
+- Frontend full suite: `cd frontend && npm test` (Vitest via
+  `@angular/build:unit-test`) → **943 passed**, 0 skipped at last green.
+- Pre-commit hook: fast backend pytest + ruff + i18n parity + theme guard.
+  Pre-push also runs the full frontend suite. Never `--no-verify` (denied).
 
 ## Recent Archive
 

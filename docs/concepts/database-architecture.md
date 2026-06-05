@@ -231,6 +231,8 @@ erDiagram
         string reason
         string reason_code
         string location
+        string source
+        int source_id
         int reverses_adjustment_id FK
         string created_by
         datetime created_at
@@ -252,10 +254,20 @@ answer "where am I bleeding stock?" per location. Reason codes split into two
 families:
 
 - **Operator-initiated** (`shrinkage`, `recount`, `damage`, `theft`, `manual`,
-  `other`) — entered by a human via the adjustment / count workflow.
+  `correction`, `other`) — entered by a human via the adjustment / count
+  workflow (`correction` is also the code a reversal books).
 - **System-initiated** (`sale`, `cancellation`, `return`, `purchase`,
   `transfer`, `marketplace_sync`) — written by an order, PO, transfer, or sync
   lifecycle that owns its own correction path.
+
+Adjustments additionally carry a structured **`source`** (machine origin key:
+`purchase_order` / `stock_transfer` / `sales_order` / `inventory_count` /
+`bundle_assembly` / `marketplace_sync` / `adjustment_reversal`) and
+**`source_id`** (the originating entity's id). Unlike `reason_code`, `source`
+is not CHECK-constrained — it is an open set that grows with new write paths.
+It lets the stock-history dialog and the audit page deep-link an adjustment to
+its origin (the PO / transfer / order / count) without parsing the localized
+`reason` text. Both are NULL on legacy and manual rows.
 
 `POST /api/v1/reports/inventory-adjustments/{id}/reverse` undoes an adjustment
 by booking an **equal-and-opposite `correction`** row, linked back to the
