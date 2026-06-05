@@ -12,6 +12,10 @@
 > `work/future/ai-content-generation.md`, `work/future/80-advanced-analytics.md`.
 > Primary market = Mexico; primary fulfillment = MercadoLibre **Full**.
 
+> **Longer-horizon idea bank** (2025–26 trend research — ML buy-box/price-to-win,
+> Full aged-stock fees, demand forecasting, GMROI/cash, supplier scorecards,
+> human-in-the-loop AI, etc.): **`work/future/98-feature-research-2026.md`**.
+
 ---
 
 ## Recommendation (TL;DR)

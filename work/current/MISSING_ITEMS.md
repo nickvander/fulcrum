@@ -11,6 +11,7 @@ when you find them so the next session has a place to start._
 > Source column/filter + stock-history origin chips), reconciliation variance
 > pills, and count save-rollback. See `work/redesign/09-inventory-ops-PICKUP.md`.
 > **Curated next-session shortlist: `work/future/97-next-session-candidates.md`.**
+> **Research-grounded idea bank (2025–26 trends): `work/future/98-feature-research-2026.md`.**
 > Open threads:
 > - **Inventory-ops refactors** (each own session): P1-10 OnPush rollout,
 >   P2-6 planner-as-primary, P2-10 ledger virtual-scroll, P2-12 split
