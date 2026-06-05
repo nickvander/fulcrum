@@ -28,8 +28,47 @@ export interface StockHistoryDialogData {
   inventoryAdjustments: StockHistoryAdjustment[];
 }
 
-/** Structured `source` value the PO-receiving write path stamps. */
-const SOURCE_PURCHASE_ORDER = 'purchase_order';
+/**
+ * Resolved origin of an adjustment for display: a localized label + an
+ * optional entity id + optional routerLink commands. `commands === null`
+ * renders a plain chip (no link); a non-null `id` is shown as "#id".
+ */
+export interface AdjustmentOrigin {
+  labelKey: string;
+  id: number | null;
+  commands: unknown[] | null;
+}
+
+/**
+ * Per-`source` display config. `route` builds the routerLink commands for
+ * the linkable origins; sources without a `route` render as a plain chip.
+ * Keys mirror `InventoryAdjustmentSource` on the backend.
+ */
+const SOURCE_CONFIG: Record<
+  string,
+  { labelKey: string; route?: (id: number) => unknown[] }
+> = {
+  purchase_order: {
+    labelKey: 'products.stockHistoryDialog.receivedPo',
+    route: id => ['/suppliers/po', id],
+  },
+  stock_transfer: {
+    labelKey: 'products.stockHistoryDialog.fromTransfer',
+    route: id => ['/marketplaces/transfers', id],
+  },
+  sales_order: {
+    labelKey: 'products.stockHistoryDialog.fromOrder',
+    route: id => ['/orders', id],
+  },
+  inventory_count: {
+    labelKey: 'products.stockHistoryDialog.fromCount',
+    route: id => ['/inventory/count', id],
+  },
+  bundle_assembly: { labelKey: 'products.stockHistoryDialog.fromBundle' },
+  marketplace_sync: { labelKey: 'products.stockHistoryDialog.fromMarketplaceSync' },
+  adjustment_reversal: { labelKey: 'products.stockHistoryDialog.fromReversal' },
+};
+
 /**
  * Legacy fallback: rows written before the structured `source` column
  * carry no `source`, but their `reason` is the server-side English
@@ -64,34 +103,43 @@ export class StockHistoryDialogComponent {
     this.dialogRef.close();
   }
 
-  /** True when this adjustment came from PO receiving (or a correction). */
-  isPoAdjustment(adj: StockHistoryAdjustment): boolean {
-    return this.poId(adj) !== null;
-  }
-
   /**
-   * The linkable PO id: the structured `source_id` when present, else
-   * the id parsed out of a legacy English `"Received PO #N"` reason.
-   * Returns null when this isn't a PO adjustment.
+   * Resolve the structured origin of an adjustment, or null when it has
+   * none (a plain manual edit). Reads the structured `source`/`source_id`
+   * — never the localized `reason` — except for the one legacy fallback
+   * below. Drives the origin chip + its optional deep-link.
    */
-  poId(adj: StockHistoryAdjustment): number | null {
-    if (adj.source === SOURCE_PURCHASE_ORDER && adj.source_id != null) {
-      return adj.source_id;
+  origin(adj: StockHistoryAdjustment): AdjustmentOrigin | null {
+    if (adj.source) {
+      const config = SOURCE_CONFIG[adj.source];
+      if (!config) return null; // unknown/future source → plain reason text
+      const id = adj.source_id ?? null;
+      return {
+        labelKey: config.labelKey,
+        id,
+        commands: config.route && id != null ? config.route(id) : null,
+      };
     }
     // Legacy rows: no structured source, but the English reason carries
-    // the id. (The reason is always English, so this is locale-safe.)
-    if (!adj.source && adj.reason?.startsWith(LEGACY_PO_REASON_PREFIX)) {
+    // the PO id. (The reason is always English, so this stays locale-safe.)
+    if (adj.reason?.startsWith(LEGACY_PO_REASON_PREFIX)) {
       const match = adj.reason.match(/#(\d+)/);
-      if (match) return Number(match[1]);
+      if (match) {
+        const id = Number(match[1]);
+        return {
+          labelKey: 'products.stockHistoryDialog.receivedPo',
+          id,
+          commands: ['/suppliers/po', id],
+        };
+      }
     }
     return null;
   }
 
-  goToPo(adj: StockHistoryAdjustment): void {
-    const id = this.poId(adj);
-    if (id !== null) {
+  goToOrigin(o: AdjustmentOrigin): void {
+    if (o.commands) {
       this.onClose();
-      this.router.navigate(['/suppliers/po', id]);
+      this.router.navigate(o.commands);
     }
   }
 }

@@ -33,6 +33,7 @@ all new logic.
 | _(this session)_ | **P2-4** in-transit "+N en camino" on the product list (backend agg + row/card/peek hint) |
 | _(this session)_ | **P1-9** structured adjustment `source`/`source_id` → PO-linkify without string-matching (migration `d3f7a1c8e024`) |
 | _(this session)_ | **P2-5** `Discrepancia +N/−N` warning pill in stock-transfer-reconciliation (tolerance-gated, in-transit-aware) |
+| _(this session)_ | **P2-8** structured `source` on every adjustment write path + multi-origin linkify in the stock-history dialog |
 
 **Status:** all of P0, all of P1, and the contained/testable slice of P2 are done.
 
@@ -66,10 +67,20 @@ Grouped by why it wasn't done in the incremental tranches:
   Received PO #5" / mixed-language es). Tests: +2 backend (receive+correction
   stamp; manual = NULL) + 6 dialog specs. The same `source`/`source_id` is the
   hook **P2-8** (unified history) will extend to transfers/counts/orders.
-- **P2-8 — unified InventoryAdjustment history.** Every receive-correction, count
-  commit, transfer, and manual adjust should write a row with
-  {who, when, reason code, delta, location, source} into one timeline. Backend
-  write-path work + the `stock-history-dialog` UI.
+- **P2-8 — unified InventoryAdjustment history. ✅ SHIPPED (this session).**
+  Every write path now stamps a structured `source`/`source_id`
+  (`InventoryAdjustmentSource`): PO (purchase_order), transfers ship/receive/
+  inbound-reconcile (stock_transfer), sale/cancel/return (sales_order), count
+  commit (inventory_count), bundle both legs (bundle_assembly), listing sync
+  (marketplace_sync), reversal (adjustment_reversal). `decrement_stock_atomic`
+  gained pass-through. The `stock-history-dialog` PO-only linkify is now a
+  generic origin chip: `origin(adj)` maps source → {labelKey, id, commands},
+  deep-linking PO/transfer/order/count to their detail routes and rendering
+  the rest as a plain labelled chip (legacy English-`reason` PO fallback kept).
+  Tests: 6 backend (`test_adjustment_source.py`) + 11 dialog origin specs.
+  **Remaining (optional follow-up):** surface `source` as a column/filter on the
+  `/products/audit` page too (the dialog is done; the audit table still shows
+  only reason_code).
 
 ### Shipped this session (was in this bucket)
 - **P2-5 — reconciliation variance grammar. ✅ SHIPPED.** `stock-transfer-reconciliation`
@@ -162,12 +173,11 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-P2-4, P1-9, and P2-5 all shipped this session. Best next pick:
-- **P2-8 (unified history)** — now unblocked: `InventoryAdjustment` already has
-  `source`/`source_id` (from P1-9). Extend the `InventoryAdjustmentSource` enum +
-  stamp it on the remaining write paths (transfers, count commit, order ingestion,
-  returns) so every movement carries a structured origin, then build the unified
-  timeline UI. Larger backend write-path item — its own session.
-
-Other contained picks: P2-3 (count error rollback + per-row save state), P2-6
-(planner-as-primary), or the mechanical P1-10 OnPush rollout.
+P2-4, P1-9, P2-5, and P2-8 all shipped this session. Remaining picks:
+- **P2-8 follow-up (small):** surface the new `source` as a column + filter on the
+  `/products/audit` page (the per-product dialog already linkifies it; the audit
+  table still shows only `reason_code`). The structured data is already there.
+- **P2-3 (contained):** count error rollback + per-row save state + skeletons in
+  `inventory-count-detail` (save-on-blur currently keeps a bad value on PATCH fail).
+- **P2-6:** planner-as-primary (merge create-transfer dialog into the planner).
+- **P1-10 (mechanical):** OnPush rollout across the ~12 still-Default components.

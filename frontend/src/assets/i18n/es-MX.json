@@ -1292,7 +1292,13 @@
     "stockHistoryDialog": {
       "currentStockLabel": "Existencias actuales:",
       "noAdjustments": "Aún no hay ajustes de inventario registrados.",
-      "receivedPo": "Recibido por OC"
+      "receivedPo": "Recibido por OC",
+      "fromTransfer": "Traspaso",
+      "fromOrder": "Pedido",
+      "fromCount": "Conteo físico",
+      "fromBundle": "Ensamble de kit",
+      "fromMarketplaceSync": "Sincronización de canal",
+      "fromReversal": "Reversa de"
     },
     "clickToPreview": "Haz clic para previsualizar",
     "loadingMore": "Cargando más...",
