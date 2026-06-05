@@ -20,6 +20,7 @@ describe('InventoryAuditComponent', () => {
   let auditStub: {
     list: ReturnType<typeof vi.fn>;
     listReasonCodes: ReturnType<typeof vi.fn>;
+    listSources: ReturnType<typeof vi.fn>;
     reverse: ReturnType<typeof vi.fn>;
   };
   let dialogStub: { open: ReturnType<typeof vi.fn> };
@@ -31,6 +32,7 @@ describe('InventoryAuditComponent', () => {
       id: 1, timestamp: '2026-05-01T12:00:00Z', product_id: 5,
       product_sku: 'SKU-5', product_name: 'Widget', adjustment: -5,
       reason_code: 'shrinkage', reason: 'shelf damage', created_by: 'op@example.com',
+      source: null, source_id: null,
       reverses_adjustment_id: null, reversed_by_id: null, reversible: true,
       ...overrides,
     };
@@ -41,6 +43,7 @@ describe('InventoryAuditComponent', () => {
     auditStub = {
       list: vi.fn().mockReturnValue(of({ rows, total: rows.length })),
       listReasonCodes: vi.fn().mockReturnValue(of(['shrinkage', 'recount'])),
+      listSources: vi.fn().mockReturnValue(of(['purchase_order', 'stock_transfer', 'sales_order'])),
       reverse: vi.fn().mockReturnValue(of(row({ id: 99, adjustment: 5, reason_code: 'correction' }))),
     };
     dialogStub = { open: vi.fn().mockReturnValue({ afterClosed: () => afterClosed }) };
@@ -139,5 +142,46 @@ describe('InventoryAuditComponent', () => {
     expect(component.reasonCodeLabel('')).toBe('');
     expect(component.reasonCodeLabel('damaged')).toBe('Damaged');
     expect(component.reasonCodeLabel('weird_code')).toBe('Weird_code');
+  });
+
+  // --- Source filter + column (P2-8 follow-up) ----------------------------
+
+  it('loads the structured-source dropdown options on init', async () => {
+    await setup([]);
+    expect(auditStub.listSources).toHaveBeenCalled();
+    expect(component.sources).toEqual(['purchase_order', 'stock_transfer', 'sales_order']);
+  });
+
+  it('passes the selected source to the list query', async () => {
+    await setup([]);
+    auditStub.list.mockClear();
+    component.source = 'stock_transfer';
+    component.loadPage();
+    expect(auditStub.list).toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'stock_transfer' }),
+    );
+  });
+
+  it('counts source as an active filter and clears it', async () => {
+    await setup([]);
+    component.source = 'sales_order';
+    expect(component.hasActiveFilters()).toBe(true);
+    component.clearFilters();
+    expect(component.source).toBe('');
+  });
+
+  it('sourceLabel localizes known sources, the none sentinel, and falls back', async () => {
+    await setup([]);
+    expect(component.sourceLabel('')).toBe('');
+    // Empty test translations → translate() echoes the key, so this exercises
+    // the capitalized fallback for an otherwise-known source.
+    expect(component.sourceLabel('stock_transfer')).toBe('Stock_transfer');
+    expect(component.sourceLabel('future_source')).toBe('Future_source');
+  });
+
+  it('renders the source column with the label + #source_id', async () => {
+    await setup([row({ id: 1, source: 'purchase_order', source_id: 42 })]);
+    const text = fixture.debugElement.query(By.css('.source-chip'))?.nativeElement.textContent ?? '';
+    expect(text).toContain('#42');
   });
 });

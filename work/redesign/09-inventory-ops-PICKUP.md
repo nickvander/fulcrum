@@ -78,9 +78,11 @@ Grouped by why it wasn't done in the incremental tranches:
   deep-linking PO/transfer/order/count to their detail routes and rendering
   the rest as a plain labelled chip (legacy English-`reason` PO fallback kept).
   Tests: 6 backend (`test_adjustment_source.py`) + 11 dialog origin specs.
-  **Remaining (optional follow-up):** surface `source` as a column/filter on the
-  `/products/audit` page too (the dialog is done; the audit table still shows
-  only reason_code).
+  **Follow-up ✅ SHIPPED:** the `/products/audit` page now has a Source column +
+  Source filter (with a "No source" sentinel for legacy/manual), a `/sources`
+  dropdown endpoint, and a `source` column on the CSV/PDF export — all mirroring
+  the existing `reason_code` machinery. +5 backend (`test_inventory_audit_source.py`)
+  + 5 frontend specs.
 
 ### Shipped this session (was in this bucket)
 - **P2-5 — reconciliation variance grammar. ✅ SHIPPED.** `stock-transfer-reconciliation`
@@ -173,10 +175,8 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
 ---
 
 ## 5. Suggested first move next session
-P2-4, P1-9, P2-5, and P2-8 all shipped this session. Remaining picks:
-- **P2-8 follow-up (small):** surface the new `source` as a column + filter on the
-  `/products/audit` page (the per-product dialog already linkifies it; the audit
-  table still shows only `reason_code`). The structured data is already there.
+P2-4, P1-9, P2-5, P2-8 (+ its audit-page follow-up) all shipped this session.
+Remaining picks:
 - **P2-3 (contained):** count error rollback + per-row save state + skeletons in
   `inventory-count-detail` (save-on-blur currently keeps a bad value on PATCH fail).
 - **P2-6:** planner-as-primary (merge create-transfer dialog into the planner).

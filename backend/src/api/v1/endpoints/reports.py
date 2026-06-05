@@ -893,6 +893,7 @@ def _build_inventory_adjustment_rows(
     after: Optional[datetime],
     before: Optional[datetime],
     reason_code: Optional[str],
+    source: Optional[str] = None,
     limit: int,
 ) -> list[dict]:
     from sqlalchemy.orm import joinedload as _joinedload  # local to avoid widening top imports
@@ -917,6 +918,7 @@ def _build_inventory_adjustment_rows(
             query = query.filter(InventoryAdjustment.reason_code.is_(None))
         else:
             query = query.filter(InventoryAdjustment.reason_code == reason_code)
+    query = _apply_source_filter(query, source)
 
     rows: list[dict] = []
     for adj in query.limit(limit).all():
@@ -928,10 +930,40 @@ def _build_inventory_adjustment_rows(
             "product_name": product.name if product else "",
             "adjustment":   adj.adjustment,
             "reason_code":  adj.reason_code or "",
+            "source":       adj.source or "",
             "reason":       adj.reason or "",
             "created_by":   adj.created_by or "",
         })
     return rows
+
+
+def _apply_source_filter(query, source: Optional[str]):
+    """Apply the structured-`source` filter shared by the list + export
+    paths. `"none"` filters to legacy/structureless (NULL) rows, matching
+    the audit dropdown's "No source" option."""
+    if source is None:
+        return query
+    if source == "none":
+        return query.filter(InventoryAdjustment.source.is_(None))
+    return query.filter(InventoryAdjustment.source == source)
+
+
+def _validate_source_query(value: Optional[str]) -> Optional[str]:
+    """Accept a known `InventoryAdjustmentSource` value or the special
+    string 'none' (filter to NULL/structureless rows). Anything else 400s."""
+    if value is None or value == "none":
+        return value
+    from src.models.inventory import InventoryAdjustmentSource
+
+    valid = {s.value for s in InventoryAdjustmentSource}
+    if value not in valid:
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.inventoryAdjustment.unknownSource",
+            params={"value": value},
+            detail=f"Unknown source '{value}'",
+        )
+    return value
 
 
 def _validate_reason_code_query(value: Optional[str]) -> Optional[str]:
@@ -972,6 +1004,7 @@ def _inventory_adjustment_table(rows: list[dict]) -> ReportTable:
             ReportColumn("product_name", "Product"),
             ReportColumn("adjustment",   "Delta",      align="right", formatter=fmt_int),
             ReportColumn("reason_code",  "Reason code"),
+            ReportColumn("source",       "Source"),
             ReportColumn("reason",       "Reason"),
             ReportColumn("created_by",   "Created by"),
         ],
@@ -989,6 +1022,12 @@ class InventoryAdjustmentRow(BaseModel):
     product_name: Optional[str] = None
     adjustment: int
     reason_code: Optional[str] = None
+    # Structured provenance (P2-8): `source` is the machine origin key
+    # (purchase_order / stock_transfer / sales_order / inventory_count /
+    # bundle_assembly / marketplace_sync / adjustment_reversal) and
+    # `source_id` the originating entity's id. NULL on legacy/manual rows.
+    source: Optional[str] = None
+    source_id: Optional[int] = None
     reason: Optional[str] = None
     created_by: Optional[str] = None
     # Reversal linkage (stock-movement audit). `reverses_adjustment_id`
@@ -1029,6 +1068,18 @@ def list_inventory_adjustment_reason_codes(
     return [code.value for code in InventoryAdjustmentReasonCode]
 
 
+@router.get("/inventory-adjustments/sources", response_model=List[str])
+def list_inventory_adjustment_sources(
+    current_user: User = Depends(get_current_active_user),
+) -> List[str]:
+    """Return the canonical structured-`source` list (P2-8) so the
+    audit-page Source dropdown renders without hard-coding the enum on
+    both sides. Order is enum declaration order."""
+    from src.models.inventory import InventoryAdjustmentSource
+
+    return [s.value for s in InventoryAdjustmentSource]
+
+
 @router.get("/inventory-adjustments", response_model=InventoryAdjustmentList)
 def list_inventory_adjustments(
     *,
@@ -1045,6 +1096,15 @@ def list_inventory_adjustments(
             "rows."
         ),
     ),
+    source: Optional[str] = Query(
+        None,
+        description=(
+            "Filter by structured source (purchase_order / stock_transfer / "
+            "sales_order / inventory_count / bundle_assembly / marketplace_sync "
+            "/ adjustment_reversal). Pass 'none' for rows with no structured "
+            "source (legacy / manual)."
+        ),
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=500),
     current_user: User = Depends(get_current_active_user),
@@ -1055,6 +1115,7 @@ def list_inventory_adjustments(
     from sqlalchemy.orm import joinedload as _joinedload
 
     reason_code = _validate_reason_code_query(reason_code)
+    source = _validate_source_query(source)
 
     base = db.query(InventoryAdjustment)
     if product_id is not None:
@@ -1068,6 +1129,7 @@ def list_inventory_adjustments(
             base = base.filter(InventoryAdjustment.reason_code.is_(None))
         else:
             base = base.filter(InventoryAdjustment.reason_code == reason_code)
+    base = _apply_source_filter(base, source)
 
     total = base.count()
 
@@ -1106,6 +1168,8 @@ def list_inventory_adjustments(
                 product_name=product.name if product else None,
                 adjustment=adj.adjustment,
                 reason_code=adj.reason_code,
+                source=adj.source,
+                source_id=adj.source_id,
                 reason=adj.reason,
                 created_by=adj.created_by,
                 reverses_adjustment_id=adj.reverses_adjustment_id,
@@ -1180,6 +1244,7 @@ def export_inventory_adjustments_csv(
     after: Optional[datetime] = Query(None),
     before: Optional[datetime] = Query(None),
     reason_code: Optional[str] = Query(None),
+    source: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=20000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
@@ -1187,9 +1252,10 @@ def export_inventory_adjustments_csv(
     first. Default limit is 5000 (cap 20000) for "give me the whole
     quarter" audit requests."""
     reason_code = _validate_reason_code_query(reason_code)
+    source = _validate_source_query(source)
     rows = _build_inventory_adjustment_rows(
         db, product_id=product_id, after=after, before=before,
-        reason_code=reason_code, limit=limit,
+        reason_code=reason_code, source=source, limit=limit,
     )
     return stream_csv(_inventory_adjustment_table(rows))
 
@@ -1202,14 +1268,16 @@ def export_inventory_adjustments_pdf(
     after: Optional[datetime] = Query(None),
     before: Optional[datetime] = Query(None),
     reason_code: Optional[str] = Query(None),
+    source: Optional[str] = Query(None),
     limit: int = Query(5000, ge=1, le=20000),
     current_user: User = Depends(get_current_active_user),
 ) -> StreamingResponse:
     """Stream the inventory-adjustment audit log as a printable PDF."""
     reason_code = _validate_reason_code_query(reason_code)
+    source = _validate_source_query(source)
     rows = _build_inventory_adjustment_rows(
         db, product_id=product_id, after=after, before=before,
-        reason_code=reason_code, limit=limit,
+        reason_code=reason_code, source=source, limit=limit,
     )
     return stream_pdf(_inventory_adjustment_table(rows))
 

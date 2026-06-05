@@ -2881,6 +2881,10 @@
     "reasonCodeFilter": "Motivo",
     "reasonCodeAll": "Todos los motivos",
     "reasonCodeUncategorized": "Sin categoría (histórico)",
+    "sourceFilter": "Origen",
+    "sourceAll": "Todos los orígenes",
+    "sourceNone": "Sin origen (histórico / manual)",
+    "source": "Origen",
     "when": "Cuándo",
     "product": "Producto",
     "delta": "Δ",
@@ -2912,6 +2916,15 @@
       "correction": "Corrección",
       "theft": "Robo o merma",
       "count": "Conteo"
+    },
+    "sourceLabel": {
+      "purchase_order": "Orden de compra",
+      "stock_transfer": "Traspaso",
+      "sales_order": "Pedido",
+      "inventory_count": "Conteo físico",
+      "bundle_assembly": "Ensamble de kit",
+      "marketplace_sync": "Sincronización de canal",
+      "adjustment_reversal": "Reversa"
     }
   },
   "inventoryCount": {
@@ -3355,6 +3368,7 @@
     },
     "inventoryAdjustment": {
       "unknownReasonCode": "Código de motivo desconocido '{{value}}'.",
+      "unknownSource": "Origen desconocido '{{value}}'.",
       "not_found": "Ese ajuste ya no existe.",
       "already_reversed": "Este ajuste ya fue revertido.",
       "is_reversal": "Una reversión no puede revertirse a sí misma.",

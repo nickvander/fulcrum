@@ -181,13 +181,15 @@ def test_audit_csv_includes_reason_code_column(
     rows = list(csv.reader(io.StringIO(resp.text)))
     assert rows[0] == [
         "timestamp", "product_id", "product_sku", "product_name",
-        "adjustment", "reason_code", "reason", "created_by",
+        "adjustment", "reason_code", "source", "reason", "created_by",
     ]
-    # The seeded row carries the reason_code in column 5.
+    # The seeded row carries the reason_code in column 5; `source` (col 6)
+    # is empty for a directly-seeded row; `reason` shifts to column 7.
     data = [r for r in rows[1:] if r[2] == "CSV-1"]
     assert len(data) == 1
     assert data[0][5] == "theft"
-    assert data[0][6] == "break-in"
+    assert data[0][6] == ""
+    assert data[0][7] == "break-in"
 
 
 def test_audit_csv_honors_reason_code_filter(

@@ -70,6 +70,22 @@
         </mat-select>
       </mat-form-field>
 
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="filter-field">
+        <mat-label>{{ t('inventoryAudit.sourceFilter') }}</mat-label>
+        <mat-select
+            [(ngModel)]="source"
+            (selectionChange)="onFilterChange()"
+            data-testid="audit-source-select">
+          <mat-option value="">{{ t('inventoryAudit.sourceAll') }}</mat-option>
+          <mat-option *ngFor="let src of sources" [value]="src">
+            {{ sourceLabel(src) }}
+          </mat-option>
+          <mat-option value="none">
+            {{ t('inventoryAudit.sourceNone') }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <button mat-button
           *ngIf="hasActiveFilters()"
           (click)="clearFilters()">
@@ -125,6 +141,18 @@
               {{ reasonCodeLabel(row.reason_code) }}
             </span>
             <ng-template #uncategorized>
+              <span class="muted">—</span>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="source">
+          <th mat-header-cell *matHeaderCellDef>{{ t('inventoryAudit.source') }}</th>
+          <td mat-cell *matCellDef="let row">
+            <span *ngIf="row.source; else noSource" class="source-chip">
+              {{ sourceLabel(row.source) }}<span class="source-id" *ngIf="row.source_id != null">#{{ row.source_id }}</span>
+            </span>
+            <ng-template #noSource>
               <span class="muted">—</span>
             </ng-template>
           </td>

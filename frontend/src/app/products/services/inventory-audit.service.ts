@@ -17,6 +17,12 @@ export interface InventoryAdjustmentRow {
    *  rows — the audit-page dropdown renders those as
    *  "Uncategorized". */
   reason_code: string | null;
+  /** Structured origin key (`purchase_order` / `stock_transfer` /
+   *  `sales_order` / `inventory_count` / `bundle_assembly` /
+   *  `marketplace_sync` / `adjustment_reversal`). NULL on legacy /
+   *  manual rows. `source_id` is the originating entity's id. */
+  source: string | null;
+  source_id: number | null;
   reason: string | null;
   created_by: string | null;
   /** Set when THIS row is a correction undoing an earlier adjustment. */
@@ -40,6 +46,9 @@ export interface InventoryAuditFilters {
   /** Send a known enum value to filter to that reason, or the magic
    *  string `'none'` to filter to legacy uncategorized (NULL) rows. */
   reasonCode?: string | null;
+  /** Known `InventoryAdjustmentSource` value, or `'none'` for rows with
+   *  no structured source (legacy / manual). */
+  source?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -54,6 +63,7 @@ export class InventoryAuditService {
     if (opts.after) params = params.set('after', opts.after);
     if (opts.before) params = params.set('before', opts.before);
     if (opts.reasonCode) params = params.set('reason_code', opts.reasonCode);
+    if (opts.source) params = params.set('source', opts.source);
     if (opts.skip != null) params = params.set('skip', String(opts.skip));
     if (opts.limit != null) params = params.set('limit', String(opts.limit));
     return this.http.get<InventoryAdjustmentList>(this.apiUrl, { params });
@@ -64,6 +74,11 @@ export class InventoryAuditService {
    *  the values rarely change. */
   listReasonCodes(): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/reason-codes`);
+  }
+
+  /** Fetch the canonical structured-source list for the Source dropdown. */
+  listSources(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/sources`);
   }
 
   /** Reverse an operator adjustment — books an equal-and-opposite
@@ -95,6 +110,7 @@ export class InventoryAuditService {
     if (filters.after) params = params.set('after', filters.after);
     if (filters.before) params = params.set('before', filters.before);
     if (filters.reasonCode) params = params.set('reason_code', filters.reasonCode);
+    if (filters.source) params = params.set('source', filters.source);
     return params;
   }
 }

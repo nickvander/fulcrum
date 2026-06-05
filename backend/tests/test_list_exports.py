@@ -269,15 +269,16 @@ def test_inventory_adjustments_csv_logs_who_what_when(
     # legacy rows because they didn't pass one).
     assert rows[0] == [
         "timestamp", "product_id", "product_sku", "product_name",
-        "adjustment", "reason_code", "reason", "created_by",
+        "adjustment", "reason_code", "source", "reason", "created_by",
     ]
     # Newest first — +10 (Restock) before -2 (Damage write-off)
     assert rows[1][4] == "10"
     assert rows[1][5] == ""           # reason_code is blank (legacy seed)
-    assert rows[1][6] == "Restock"
-    assert rows[1][7] == "admin@example.com"
+    assert rows[1][6] == ""           # source is blank (legacy seed)
+    assert rows[1][7] == "Restock"
+    assert rows[1][8] == "admin@example.com"
     assert rows[2][4] == "-2"
-    assert rows[2][7] == "warehouse@example.com"
+    assert rows[2][8] == "warehouse@example.com"
 
 
 @pytest.mark.db

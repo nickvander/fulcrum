@@ -2881,6 +2881,10 @@
     "reasonCodeFilter": "Reason",
     "reasonCodeAll": "All reasons",
     "reasonCodeUncategorized": "Uncategorized (legacy)",
+    "sourceFilter": "Source",
+    "sourceAll": "All sources",
+    "sourceNone": "No source (legacy / manual)",
+    "source": "Source",
     "when": "When",
     "product": "Product",
     "delta": "Delta",
@@ -2912,6 +2916,15 @@
       "correction": "Correction",
       "theft": "Theft or shrinkage",
       "count": "Count"
+    },
+    "sourceLabel": {
+      "purchase_order": "Purchase order",
+      "stock_transfer": "Stock transfer",
+      "sales_order": "Sales order",
+      "inventory_count": "Physical count",
+      "bundle_assembly": "Bundle assembly",
+      "marketplace_sync": "Marketplace sync",
+      "adjustment_reversal": "Reversal"
     }
   },
   "inventoryCount": {
@@ -3355,6 +3368,7 @@
     },
     "inventoryAdjustment": {
       "unknownReasonCode": "Unknown reason code '{{value}}'.",
+      "unknownSource": "Unknown source '{{value}}'.",
       "not_found": "That adjustment no longer exists.",
       "already_reversed": "This adjustment has already been reversed.",
       "is_reversal": "A reversal row can't itself be reversed.",

@@ -60,7 +60,7 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   loading = false;
   /** Adjustment id currently being reversed (disables its button). */
   reversingId: number | null = null;
-  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason_code', 'reason', 'created_by', 'actions'];
+  displayedColumns = ['timestamp', 'product', 'sku', 'adjustment', 'reason_code', 'source', 'reason', 'created_by', 'actions'];
 
   /** Reason-code dropdown options. Loaded once on init from
    *  `GET /reports/inventory-adjustments/reason-codes` so the
@@ -69,11 +69,17 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
    *  uncategorized (NULL) rows. */
   reasonCodes: string[] = [];
 
+  /** Structured-source dropdown options (P2-8). Loaded once on init
+   *  from `GET /reports/inventory-adjustments/sources`. `''` = all,
+   *  `'none'` = rows with no structured source (legacy / manual). */
+  sources: string[] = [];
+
   // Filters
   searchProductId: number | null = null;
   startDate: Date | null = null;
   endDate: Date | null = null;
   reasonCode: string = '';
+  source: string = '';
 
   // Pagination
   pageIndex = 0;
@@ -105,6 +111,14 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
         next: (codes) => (this.reasonCodes = codes),
         error: () => (this.reasonCodes = []),
       });
+    // Same for the structured-source dropdown.
+    this.auditService
+      .listSources()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sources) => (this.sources = sources),
+        error: () => (this.sources = []),
+      });
     this.loadPage();
   }
 
@@ -123,6 +137,7 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
       after: this.startDate ? `${toIsoDate(this.startDate)}T00:00:00` : null,
       before: this.endDate ? `${toIsoDate(this.endDate)}T23:59:59` : null,
       reasonCode: this.reasonCode || null,
+      source: this.source || null,
     };
   }
 
@@ -159,16 +174,32 @@ export class InventoryAuditComponent implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    if (this.searchProductId == null && !this.startDate && !this.endDate && !this.reasonCode) return;
+    if (this.searchProductId == null && !this.startDate && !this.endDate && !this.reasonCode && !this.source) return;
     this.searchProductId = null;
     this.startDate = null;
     this.endDate = null;
     this.reasonCode = '';
+    this.source = '';
     this.onFilterChange();
   }
 
   hasActiveFilters(): boolean {
-    return this.searchProductId != null || !!this.startDate || !!this.endDate || !!this.reasonCode;
+    return this.searchProductId != null || !!this.startDate || !!this.endDate || !!this.reasonCode || !!this.source;
+  }
+
+  /**
+   * Localized label for a structured source. Known sources resolve to
+   * `inventoryAudit.sourceLabel.<source>`; unknown (future backend) keys
+   * fall back to a capitalized form so the table never shows a raw enum.
+   */
+  sourceLabel(source: string): string {
+    if (!source) return '';
+    if (source === 'none') return this.transloco.translate('inventoryAudit.sourceNone');
+    const key = `inventoryAudit.sourceLabel.${source}`;
+    const translated = this.transloco.translate(key);
+    return translated && translated !== key
+      ? translated
+      : source.charAt(0).toUpperCase() + source.slice(1);
   }
 
   /**
