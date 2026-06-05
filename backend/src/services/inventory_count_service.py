@@ -40,6 +40,7 @@ from sqlalchemy.orm import Session
 from src.core.errors import LocalizedHTTPException
 from src.models.inventory import (
     InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
     InventoryCountSession,
     InventoryCountSessionItem,
     InventoryCountSessionStatus,
@@ -286,6 +287,8 @@ def commit_session(
             reason_code=InventoryAdjustmentReasonCode.RECOUNT,
             location=session.location,
             user_id=user_label,
+            source=InventoryAdjustmentSource.INVENTORY_COUNT,
+            source_id=session.id,
         )
         adjustments_created += 1
 

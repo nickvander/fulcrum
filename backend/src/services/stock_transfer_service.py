@@ -6,7 +6,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
 from src.crud.crud_stock_transfer import stock_transfer as crud_stock_transfer
-from src.models.inventory import InventoryAdjustmentReasonCode, InventoryItem
+from src.models.inventory import (
+    InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
+    InventoryItem,
+)
 from src.models.marketplace import Marketplace, MarketplaceListing
 from src.models.stock_transfer import (
     LOCATION_AMAZON_FBA,
@@ -164,6 +168,8 @@ class StockTransferService:
                 reason_code=InventoryAdjustmentReasonCode.TRANSFER,
                 location=transfer.source_location,
                 user_id=actor,
+                source=InventoryAdjustmentSource.STOCK_TRANSFER,
+                source_id=transfer.id,
             )
             item.qty_shipped = item.qty_planned
             db.add(item)
@@ -734,6 +740,8 @@ class StockTransferService:
                 reason_code=InventoryAdjustmentReasonCode.TRANSFER,
                 location=transfer.dest_location,
                 user_id=actor,
+                source=InventoryAdjustmentSource.STOCK_TRANSFER,
+                source_id=transfer.id,
             )
             item.qty_received = already_received + qty
             db.add(item)

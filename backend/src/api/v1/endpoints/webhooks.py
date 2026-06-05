@@ -325,7 +325,10 @@ async def process_mercadolibre_event(event_id: int):
                 )
 
                 if product_id and quantity > 0:
-                    from src.models.inventory import InventoryAdjustmentReasonCode
+                    from src.models.inventory import (
+                        InventoryAdjustmentReasonCode,
+                        InventoryAdjustmentSource,
+                    )
                     inventory_service.adjust_stock(
                         db,
                         product_id=product_id,
@@ -333,6 +336,8 @@ async def process_mercadolibre_event(event_id: int):
                         reason=f"MercadoLibre order {external_order_id}",
                         reason_code=InventoryAdjustmentReasonCode.SALE,
                         user_id="mercadolibre-webhook",
+                        source=InventoryAdjustmentSource.SALES_ORDER,
+                        source_id=sales_order.id,
                     )
 
             # Phase-8 cost engine: best-effort compute breakdown so

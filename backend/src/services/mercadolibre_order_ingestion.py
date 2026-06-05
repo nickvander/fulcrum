@@ -237,7 +237,10 @@ class MercadoLibreOrderIngestionService:
                 summary["items_created"] += 1
 
                 if product_id is not None and quantity > 0:
-                    from src.models.inventory import InventoryAdjustmentReasonCode
+                    from src.models.inventory import (
+                        InventoryAdjustmentReasonCode,
+                        InventoryAdjustmentSource,
+                    )
                     inventory_service.adjust_stock(
                         db,
                         product_id=product_id,
@@ -245,6 +248,8 @@ class MercadoLibreOrderIngestionService:
                         reason=f"MercadoLibre order {external_id}",
                         reason_code=InventoryAdjustmentReasonCode.SALE,
                         user_id="mercadolibre-poll",
+                        source=InventoryAdjustmentSource.SALES_ORDER,
+                        source_id=sales_order.id,
                     )
 
             # Phase-8 cost engine: best-effort compute breakdown so

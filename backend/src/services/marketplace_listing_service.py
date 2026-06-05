@@ -117,7 +117,10 @@ class MarketplaceListingService:
                     current_qty = ml_stock.quantity if ml_stock else 0
                     if current_qty != ext_listing.available_quantity:
                         adjustment = ext_listing.available_quantity - current_qty
-                        from src.models.inventory import InventoryAdjustmentReasonCode
+                        from src.models.inventory import (
+                            InventoryAdjustmentReasonCode,
+                            InventoryAdjustmentSource,
+                        )
                         inventory_service.adjust_stock(
                             db=db,
                             product_id=db_listing.product_id,
@@ -125,7 +128,9 @@ class MarketplaceListingService:
                             reason="Marketplace sync update",
                             reason_code=InventoryAdjustmentReasonCode.MARKETPLACE_SYNC,
                             location="MercadoLibre",
-                            user_id="system"
+                            user_id="system",
+                            source=InventoryAdjustmentSource.MARKETPLACE_SYNC,
+                            source_id=db_listing.id,
                         )
                 
                 db.commit()
@@ -175,7 +180,10 @@ class MarketplaceListingService:
         # Proactively pull in stock
         if listing.available_quantity is not None:
             from src.services.inventory_service import inventory_service
-            from src.models.inventory import InventoryAdjustmentReasonCode
+            from src.models.inventory import (
+                InventoryAdjustmentReasonCode,
+                InventoryAdjustmentSource,
+            )
             inventory_service.adjust_stock(
                 db=db,
                 product_id=product.id,
@@ -183,7 +191,10 @@ class MarketplaceListingService:
                 reason="Initial import from MercadoLibre",
                 reason_code=InventoryAdjustmentReasonCode.MARKETPLACE_SYNC,
                 location="MercadoLibre",
-                user_id="system"
+                user_id="system",
+                # Initial shell import — no persisted MarketplaceListing row to
+                # link yet, so source_id stays NULL (source still informative).
+                source=InventoryAdjustmentSource.MARKETPLACE_SYNC,
             )
             
         db.commit()

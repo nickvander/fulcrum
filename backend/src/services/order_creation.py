@@ -32,7 +32,10 @@ from typing import Tuple
 from sqlalchemy.orm import Session
 
 from src.core.errors import LocalizedHTTPException
-from src.models.inventory import InventoryAdjustmentReasonCode
+from src.models.inventory import (
+    InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
+)
 from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.models.product import Product
 from src.models.product_variant import ProductVariant
@@ -207,6 +210,8 @@ def create_onsite_order(
                 reason="on-site order",
                 reason_code=InventoryAdjustmentReasonCode.SALE,
                 user_id=str(user_id),
+                source=InventoryAdjustmentSource.SALES_ORDER,
+                source_id=order.id,
             )
 
     return order, True

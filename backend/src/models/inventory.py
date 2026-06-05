@@ -75,15 +75,33 @@ OPERATOR_REVERSIBLE_REASON_CODES = frozenset(
 class InventoryAdjustmentSource(str, enum.Enum):
     """Structured `InventoryAdjustment.source` keys — the *origin* of a
     stock movement, so UIs can act on it (e.g. deep-link to the source
-    PO) without parsing the localized free-text `reason`.
+    PO / order / transfer) without parsing the localized free-text
+    `reason`.
 
     Unlike `InventoryAdjustmentReasonCode` (a CHECK-constrained operator
     taxonomy), this is an open set: new write paths can add a key without
-    a migration. Today only PO receiving / correction stamp it; the
-    unified-history work (P2-8) will extend it to transfers, counts, and
-    order ingestion.
+    a migration.
+
+    `source_id` convention — the id of the entity the operator can open:
+
+      - PURCHASE_ORDER       → PurchaseOrder.id   (receive + receive-correction)
+      - STOCK_TRANSFER       → StockTransfer.id   (ship / receive / inbound reconcile)
+      - SALES_ORDER          → SalesOrder.id      (sale decrement, cancel re-credit, return)
+      - INVENTORY_COUNT      → InventoryCountSession.id (count commit)
+      - BUNDLE_ASSEMBLY      → bundle Product.id  (both legs of an assembly)
+      - MARKETPLACE_SYNC     → MarketplaceListing.id (or NULL on shell import)
+      - ADJUSTMENT_REVERSAL  → the reversed InventoryAdjustment.id
+
+    Returns and cancellations deliberately key on SALES_ORDER (the order
+    the operator recognises and can open) rather than their own row id.
     """
     PURCHASE_ORDER = "purchase_order"
+    STOCK_TRANSFER = "stock_transfer"
+    SALES_ORDER = "sales_order"
+    INVENTORY_COUNT = "inventory_count"
+    BUNDLE_ASSEMBLY = "bundle_assembly"
+    MARKETPLACE_SYNC = "marketplace_sync"
+    ADJUSTMENT_REVERSAL = "adjustment_reversal"
 
 
 class InventoryItem(Base):

@@ -165,6 +165,8 @@ class InventoryService:
         reason: Optional[str] = None,
         reason_code: InventoryAdjustmentReasonCode = InventoryAdjustmentReasonCode.SALE,
         user_id: Optional[str] = "system",
+        source: Optional[str] = None,
+        source_id: Optional[int] = None,
     ) -> InventoryItem:
         """Atomically remove ``quantity`` units of on-hand stock at
         ``location``, REJECTING the operation when fewer than ``quantity``
@@ -241,6 +243,12 @@ class InventoryService:
             location=location,
             timestamp=datetime.utcnow(),
             created_by=str(user_id),
+            source=(
+                source.value
+                if isinstance(source, InventoryAdjustmentSource)
+                else source
+            ),
+            source_id=source_id,
         )
         db.add(inventory_adjustment)
 
@@ -325,6 +333,8 @@ class InventoryService:
             location=original.location or "default",
             user_id=actor,
             reverses_adjustment_id=original.id,
+            source=InventoryAdjustmentSource.ADJUSTMENT_REVERSAL,
+            source_id=original.id,
         )
         db.flush()
         return reversal
@@ -376,6 +386,8 @@ class InventoryService:
                 reason=f"Used for Bundle {bundle.sku or bundle.id}",
                 reason_code=InventoryAdjustmentReasonCode.TRANSFER,
                 user_id=user_id,
+                source=InventoryAdjustmentSource.BUNDLE_ASSEMBLY,
+                source_id=bundle_id,
             )
 
         # Add bundle stock
@@ -386,6 +398,8 @@ class InventoryService:
             reason="Bundle Assembly",
             reason_code=InventoryAdjustmentReasonCode.TRANSFER,
             user_id=user_id,
+            source=InventoryAdjustmentSource.BUNDLE_ASSEMBLY,
+            source_id=bundle_id,
         )
 
     def calculate_sales_velocity(self, db: Session, product_id: int, days: int = 30) -> float:

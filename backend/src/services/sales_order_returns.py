@@ -37,7 +37,10 @@ from typing import List, Optional, Sequence
 from sqlalchemy.orm import Session
 
 from src.core.errors import LocalizedHTTPException
-from src.models.inventory import InventoryAdjustmentReasonCode
+from src.models.inventory import (
+    InventoryAdjustmentReasonCode,
+    InventoryAdjustmentSource,
+)
 from src.models.order import SalesOrder, SalesOrderItem, SalesOrderReturn
 from src.models.user import User
 from src.services.inventory_service import inventory_service
@@ -178,6 +181,8 @@ def record_return(
                     ),
                     reason_code=InventoryAdjustmentReasonCode.RETURN,
                     user_id=actor.email if actor and actor.email else "system",
+                    source=InventoryAdjustmentSource.SALES_ORDER,
+                    source_id=order.id,
                 )
             except Exception:  # noqa: BLE001
                 # Logged but not raised: the return row should still
