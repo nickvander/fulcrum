@@ -171,6 +171,24 @@
 - **Catalog `/products/$ID/items` shut off Oct 2025** — use `price_to_win` v2
   (top pick #1, A1).
 
+> **✅ Verified 2026-06-04 — these are NOT current-code bugs.** A grep of the ML
+> connector (`backend/src/services/marketplaces/mercadolibre.py`) confirms Fulcrum
+> calls **none** of the three deprecated/dead surfaces today:
+> - It does **not** call the catalog `/products/$ID/items` endpoint at all (no
+>   buy-box/catalog-competition code exists yet).
+> - It does **not** create/edit Product Ads campaigns (so nothing uses
+>   `acos_target`) — it only *reads/classifies* ad spend from **settlement** data
+>   (`settlement_fee_ingestion.py`, `order_cost_engine.py`).
+> - It does **not** use the Claims management API — it only reads the claims
+>   *rate* from `/users/{id}` reputation for the `reputation_risk` alert.
+>
+> The connector's live ML endpoints are `/users/*`, `/items/{id}` +
+> `/items/{id}/prices` (current pricing API used by `sync_price`),
+> `/sites/*/search`, `/orders/*`, `/shipments`, `/questions` + `/answers` — all
+> current. So these deadlines are **forward-looking constraints on the proposed
+> A1/A4/A5 features only**; this doc already specifies the correct v2 endpoints.
+> No migration/fix is required until/unless those features are built.
+
 ---
 
 ## 🚫 Explicitly NOT doing (hype / bloat / poor fit)
