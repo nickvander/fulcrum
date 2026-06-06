@@ -55,6 +55,16 @@ class CustomerUpdate(BaseModel):
     whatsapp_opt_in: Optional[bool] = None
 
 
+class WhatsAppOptOutRequest(BaseModel):
+    """Server-to-server (BFF) opt-out by phone, triggered by an inbound STOP."""
+    phone: str
+
+
+class WhatsAppOptOutResult(BaseModel):
+    """How many customer records had their WhatsApp consent cleared (no PII)."""
+    updated: int
+
+
 class MagicLinkRequest(BaseModel):
     email: EmailStr
 

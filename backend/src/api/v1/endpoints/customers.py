@@ -280,3 +280,33 @@ def delete_my_address(
     _get_own_address(db, address_id=address_id, user_id=current_user.id)
     crud.address.remove(db, id=address_id)
     return {"message": "Address deleted successfully"}
+
+
+# ---------------------------------------------------------------------------
+# WhatsApp consent — honor an inbound STOP (server-to-server / BFF only)
+# ---------------------------------------------------------------------------
+@router.post(
+    "/whatsapp-opt-out",
+    response_model=customer_schema.WhatsAppOptOutResult,
+    tags=["customers"],
+)
+def whatsapp_opt_out(
+    *,
+    db: Session = Depends(dependencies.get_db),
+    payload: customer_schema.WhatsAppOptOutRequest,
+    # Server-to-server only: the storefront BFF calls this from its WhatsApp
+    # webhook (X-API-Key). NOT a customer-facing endpoint — it must never become
+    # a phone→customer enumeration oracle, so it returns only a count.
+    current_user: models.User = Depends(dependencies.get_current_user_with_api_key),
+) -> customer_schema.WhatsAppOptOutResult:
+    """Clear WhatsApp consent for the customer(s) matching ``phone``.
+
+    Triggered by an inbound STOP forwarded by the BFF. Matches on the last 10
+    digits of the phone and opts out every matching customer (honoring a STOP is
+    the safe direction). Idempotent; returns the number of records updated. The
+    phone is never logged.
+    """
+    from src.services.whatsapp_consent import opt_out_by_phone
+
+    updated = opt_out_by_phone(db, payload.phone)
+    return customer_schema.WhatsAppOptOutResult(updated=updated)
