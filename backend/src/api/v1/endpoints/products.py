@@ -255,6 +255,8 @@ def read_products(
     max_stock: int = None,
     min_price: float = None,
     max_price: float = None,
+    category_slug: str = None,
+    category_id: int = None,
     sort_by: str = None,
     sort_order: str = None,
 ):
@@ -294,7 +296,28 @@ def read_products(
         filters['min_price'] = min_price
     if max_price is not None:
         filters['max_price'] = max_price
-        
+
+    # FP-07 category-taxonomy filters. `category_slug` resolves to an id;
+    # an unknown slug returns an empty page (not a 500). `category_id`
+    # filters directly. If both are given, the resolved slug wins only
+    # when it resolves — otherwise the explicit id is used.
+    if category_slug is not None:
+        from src.crud import crud_category
+        cat = crud_category.category.get_by_slug(db, slug=category_slug)
+        if cat is None:
+            return {
+                "data": [],
+                "currentPage": (skip // limit) + 1 if limit else 1,
+                "totalPages": 0,
+                "totalItems": 0,
+                "pageSize": limit,
+                "hasNextPage": False,
+                "hasPrevPage": False,
+            }
+        filters['category_id'] = cat.id
+    elif category_id is not None:
+        filters['category_id'] = category_id
+
     products = crud_product.product.get_multi_paginated(
         db, skip=skip, limit=limit, filters=filters, sort_by=sort_by, sort_order=sort_order
     )

@@ -1,6 +1,98 @@
 from src.database import SessionLocal
 from src.models.product import Product, ProductImage
+from src.models.category import Category
+from src.crud.crud_category import slugify
 import random
+
+
+# FP-07 demo taxonomy. Top-level Spanish categories plus two children
+# under "Electrónica". The English keys map the legacy seed `cat` strings
+# to the Spanish category each demo product is assigned to.
+CATEGORY_TREE = [
+    {"name": "Electrónica", "sort_order": 0, "children": [
+        {"name": "Audio", "sort_order": 0},
+        {"name": "Cómputo", "sort_order": 1},
+    ]},
+    {"name": "Hogar y Cocina", "sort_order": 1, "children": []},
+    {"name": "Deportes", "sort_order": 2, "children": []},
+    {"name": "Belleza", "sort_order": 3, "children": []},
+    {"name": "Juguetes", "sort_order": 4, "children": []},
+]
+
+# Map a product's legacy English `cat` string to the Spanish category
+# name it should be assigned to. Some Electrónica products are routed to
+# the Audio / Cómputo children to exercise the hierarchy.
+LEGACY_CAT_TO_CATEGORY = {
+    "Electronics": "Electrónica",
+    "Home & Garden": "Hogar y Cocina",
+    "Sports": "Deportes",
+    "Beauty": "Belleza",
+    "Toys": "Juguetes",
+    # "Fashion" has no top-level home in this small demo tree; those
+    # products stay uncategorized (category_id NULL) on purpose.
+}
+
+# Product-name -> category-name overrides so specific demo products land
+# in the Electrónica children (Audio / Cómputo) instead of the parent.
+PRODUCT_NAME_TO_CATEGORY = {
+    "Bose QuietComfort 45 Headphones": "Audio",
+    "Sonos One Gen 2 Speaker": "Audio",
+    "Apple MacBook Pro 16\"": "Cómputo",
+    "iPad Pro 12.9\"": "Cómputo",
+}
+
+
+def seed_categories(db) -> dict:
+    """Create the Spanish category hierarchy idempotently and return a
+    {name: Category} lookup. Safe to re-run."""
+    by_name: dict = {}
+    for top in CATEGORY_TREE:
+        parent = _get_or_create_category(db, top["name"], top["sort_order"], None)
+        by_name[top["name"]] = parent
+        for child in top.get("children", []):
+            node = _get_or_create_category(
+                db, child["name"], child["sort_order"], parent.id
+            )
+            by_name[child["name"]] = node
+    db.commit()
+    return by_name
+
+
+def _get_or_create_category(db, name: str, sort_order: int, parent_id):
+    existing = db.query(Category).filter(Category.name == name).first()
+    if existing:
+        return existing
+    cat = Category(
+        name=name,
+        slug=slugify(name),
+        sort_order=sort_order,
+        parent_id=parent_id,
+        is_active=True,
+    )
+    db.add(cat)
+    db.flush()
+    print(f"Created category: {name} ({cat.slug})")
+    return cat
+
+
+def assign_categories_to_products(db, by_name: dict, products_data: list) -> None:
+    """Assign category_id to existing demo products based on their legacy
+    `cat` mapping (with per-product overrides). Idempotent."""
+    for item in products_data:
+        product = db.query(Product).filter(Product.name == item["name"]).first()
+        if not product:
+            continue
+        target_name = PRODUCT_NAME_TO_CATEGORY.get(item["name"])
+        if target_name is None:
+            target_name = LEGACY_CAT_TO_CATEGORY.get(item.get("cat"))
+        if target_name is None:
+            continue
+        category = by_name.get(target_name)
+        if category and product.category_id != category.id:
+            product.category_id = category.id
+            db.add(product)
+    db.commit()
+    print("Assigned categories to demo products.")
 
 def seed_products_with_images():
     db = SessionLocal()
@@ -312,6 +404,12 @@ def seed_products_with_images():
                 print(f"Skipped (exists): {item['name']}")
         
         db.commit()
+
+        # FP-07: seed the Spanish category taxonomy and assign demo
+        # products to their categories. Both steps are idempotent.
+        by_name = seed_categories(db)
+        assign_categories_to_products(db, by_name, products_data)
+
         print("Seeding complete.")
 
     except Exception as e:

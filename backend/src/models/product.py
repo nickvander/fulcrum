@@ -28,7 +28,15 @@ class Product(Base):
     manufacturer = Column(String, nullable=True)
     brand = Column(String, nullable=True)
     brand = Column(String, nullable=True)
+    # Legacy free-text category. KEPT for back-compat; `category_id` is
+    # the new authoritative taxonomy link (FP-07).
     category = Column(String, nullable=True)
+    category_id = Column(
+        Integer,
+        ForeignKey("categories.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     # Barcode/QR Images & Values
     barcode_image_url = Column(String, nullable=True)
     barcode_value = Column(String, nullable=True, index=True)
@@ -50,6 +58,7 @@ class Product(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     supplier = relationship("Supplier")
+    category_ref = relationship("Category", back_populates="products")
     images = relationship("ProductImage", back_populates="product", cascade="all, delete-orphan", order_by="ProductImage.order")
     inventory_items = relationship("InventoryItem", back_populates="product", cascade="all, delete-orphan")
     inventory_adjustments = relationship("InventoryAdjustment", back_populates="product", cascade="all, delete-orphan")

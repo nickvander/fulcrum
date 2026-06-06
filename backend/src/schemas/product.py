@@ -74,7 +74,8 @@ class ProductBase(BaseModel):
     
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[str] = None  # legacy free-text (kept for back-compat)
+    category_id: Optional[int] = None  # FP-07 taxonomy link
     width: Optional[float] = None
     height: Optional[float] = None
     depth: Optional[float] = None
@@ -99,6 +100,7 @@ class ProductUpdate(BaseModel):
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
     category: Optional[str] = None
+    category_id: Optional[int] = None
     width: Optional[float] = None
     height: Optional[float] = None
     depth: Optional[float] = None
@@ -125,6 +127,7 @@ class Product(ProductBase):
     manufacturer: Optional[str] = None
     brand: Optional[str] = None
     category: Optional[str] = None
+    category_id: Optional[int] = None
     width: Optional[float] = None
     height: Optional[float] = None
     depth: Optional[float] = None

@@ -4,6 +4,7 @@ from .address import Address
 from .password_reset_token import PasswordResetToken
 from .supplier import Supplier
 from .product import Product, ProductImage, BundleComponent
+from .category import Category
 from .product_variant import ProductVariant
 from .order import OrderCostBreakdown, SalesOrder, SalesOrderItem
 from .marketplace import Marketplace, MarketplaceCredential, MarketplaceListing, WebhookSubscription, WebhookEvent
@@ -55,6 +56,7 @@ __all__ = [
     "Supplier",
     "Product",
     "ProductImage",
+    "Category",
     "ProductVariant",
     "SalesOrder",
     "SalesOrderItem",

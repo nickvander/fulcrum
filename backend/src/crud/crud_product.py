@@ -144,6 +144,9 @@ class CRUDProduct(CRUDBase[Product, ProductCreate, ProductUpdate]):
 
                 elif field == 'category':
                     query = query.filter(self.model.category == value)
+                elif field == 'category_id':
+                    # FP-07 taxonomy filter on products.category_id.
+                    query = query.filter(self.model.category_id == value)
                 elif field == 'brand':
                     query = query.filter(self.model.brand == value)
                 elif field == 'is_bundle':
