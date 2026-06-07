@@ -728,3 +728,51 @@ def test_product_write_endpoints_require_auth(client: TestClient, test_product: 
         )
     # The product must still exist — no unauthenticated delete slipped through.
     assert client.get(f"/api/v1/products/{pid}").status_code == 200
+
+
+@pytest.mark.db
+def test_product_list_brand_filter(client: TestClient, db: Session, admin_headers: dict):
+    """`?brand=` filters the product list by exact brand (storefront facet)."""
+    sony = Product(name="Sony WH-1000XM5", sku="BRANDSONY1", brand="Sony")
+    bose = Product(name="Bose QC45", sku="BRANDBOSE1", brand="Bose")
+    db.add_all([sony, bose])
+    db.commit()
+
+    resp = client.get("/api/v1/products/?brand=Sony")
+    assert resp.status_code == 200
+    ids = [p["id"] for p in resp.json()["data"]]
+    assert sony.id in ids
+    assert bose.id not in ids
+
+
+@pytest.mark.db
+def test_product_brands_endpoint(client: TestClient, db: Session):
+    """`GET /products/brands` returns distinct, non-blank, sorted brands."""
+    db.add_all(
+        [
+            Product(name="A", sku="BRANDA1", brand="Sony"),
+            Product(name="B", sku="BRANDB1", brand="Bose"),
+            Product(name="C", sku="BRANDC1", brand="Sony"),  # duplicate brand
+            Product(name="D", sku="BRANDD1", brand=None),  # null brand excluded
+            Product(name="E", sku="BRANDE1", brand="   "),  # blank brand excluded
+        ]
+    )
+    db.commit()
+
+    resp = client.get("/api/v1/products/brands")
+    assert resp.status_code == 200
+    brands = resp.json()
+    assert "Sony" in brands and "Bose" in brands
+    assert brands.count("Sony") == 1  # de-duplicated
+    assert None not in brands and "   " not in brands
+    # case-insensitively sorted
+    assert brands == sorted(brands, key=str.casefold)
+
+
+@pytest.mark.db
+def test_product_brands_not_shadowed_by_id_route(client: TestClient):
+    """The literal /brands path must resolve to the brands endpoint, not the
+    /{product_id} route (which would 404/422 on the string 'brands')."""
+    resp = client.get("/api/v1/products/brands")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)

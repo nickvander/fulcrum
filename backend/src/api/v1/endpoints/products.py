@@ -257,6 +257,7 @@ def read_products(
     max_price: float = None,
     category_slug: str = None,
     category_id: int = None,
+    brand: str = None,
     sort_by: str = None,
     sort_order: str = None,
 ):
@@ -296,6 +297,8 @@ def read_products(
         filters['min_price'] = min_price
     if max_price is not None:
         filters['max_price'] = max_price
+    if brand is not None:
+        filters['brand'] = brand
 
     # FP-07 category-taxonomy filters. `category_slug` resolves to an id;
     # an unknown slug returns an empty page (not a 500). `category_id`
@@ -323,6 +326,27 @@ def read_products(
     )
     _hydrate_product_list_metrics(db, products["data"])
     return products
+
+
+@router.get("/brands", response_model=List[str])
+def read_product_brands(db: Session = Depends(get_db)):
+    """Distinct, non-empty product brands (sorted) for storefront brand facets.
+
+    Public read (mirrors the unauthenticated product list). Returns a flat,
+    de-duplicated, case-insensitively sorted list of brand strings; products with
+    a NULL/blank brand are excluded. Defined before ``/{product_id}`` so the
+    literal path is not captured by the id route.
+    """
+    from src.models.product import Product
+
+    rows = (
+        db.query(Product.brand)
+        .filter(Product.brand.isnot(None), func.trim(Product.brand) != "")
+        .distinct()
+        .all()
+    )
+    brands = {row[0].strip() for row in rows if row[0] and row[0].strip()}
+    return sorted(brands, key=str.casefold)
 
 
 @router.post("", response_model=product_schema.Product)
