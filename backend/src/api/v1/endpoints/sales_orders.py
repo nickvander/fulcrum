@@ -9,6 +9,7 @@ This module exposes read-only listing, detail, and channel summary endpoints
 used by the dashboard and the Orders module.
 """
 
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -60,6 +61,8 @@ from src.services.report_export import (
     stream_csv,
     stream_pdf,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -208,6 +211,28 @@ def create_sales_order(
             params={"key": payload.idempotency_key},
             detail=str(exc),
         )
+
+    # Best-effort CFDI auto-stamp (FP-06 P2): when the buyer supplied an RFC
+    # (i.e. requested a factura), stamp an ingreso CFDI for this order. The
+    # service is idempotent (a re-stamp returns the existing document, so the
+    # idempotent order-create retry is safe) and reads the receptor + amounts
+    # authoritatively from the persisted order. This step is NON-fatal: a PAC or
+    # issuer-config problem must never fail an otherwise-valid order — the
+    # CfdiDocument row records the error for later retry and the storefront shows
+    # "factura en proceso". Writes commit with the request-scoped session.
+    if payload.cfdi_receiver_rfc:
+        try:
+            from src.services import cfdi_stamp_service
+
+            result = cfdi_stamp_service.stamp_order(db, order.id)
+            if isinstance(result, dict) and result.get("error"):
+                logger.warning(
+                    "CFDI auto-stamp skipped for order %s: %s",
+                    order.id,
+                    result["error"],
+                )
+        except Exception:  # noqa: BLE001 — never let stamping fail the order
+            logger.exception("CFDI auto-stamp failed for order %s", order.id)
 
     # Re-fetch with relationships eager-loaded so the response serializer
     # sees the items (and any product names) without lazy N+1 loads.

@@ -145,6 +145,17 @@ class SalesOrderCreate(BaseModel):
     currency: str = "MXN"
     location: str = "default"
 
+    # CFDI 4.0 receptor (buyer fiscal data), captured at checkout when the buyer
+    # requests a factura (FP-06 P2). All optional: a NULL RFC ⇒ público en general
+    # (RFC genérico) per cfdi_service. Lengths mirror the SalesOrder columns so a
+    # malformed value is rejected here rather than at the DB. When an RFC is
+    # present the order-create endpoint stamps an ingreso CFDI (best-effort).
+    cfdi_receiver_rfc: Optional[str] = Field(default=None, max_length=13)
+    cfdi_receiver_name: Optional[str] = Field(default=None, max_length=255)
+    cfdi_receiver_postal_code: Optional[str] = Field(default=None, max_length=5)
+    cfdi_receiver_regime: Optional[str] = Field(default=None, max_length=8)
+    cfdi_use: Optional[str] = Field(default=None, max_length=8)
+
 
 class SalesOrderShippingChargeUpdate(BaseModel):
     """Persist the shipping charge selected by the storefront BFF.

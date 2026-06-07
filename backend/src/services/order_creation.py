@@ -183,6 +183,15 @@ def create_onsite_order(
             source=OrderSource.FULCRUM.value,
             external_order_id=payload.idempotency_key,
             created_at=datetime.utcnow(),
+            # CFDI 4.0 receptor captured at checkout (FP-06 P2). NULL fields ⇒
+            # público en general at stamp time. Persisted on the order so the
+            # stamping service reads an authoritative receptor (never a client
+            # amount). Empty strings are normalised to NULL.
+            cfdi_receiver_rfc=(payload.cfdi_receiver_rfc or None),
+            cfdi_receiver_name=(payload.cfdi_receiver_name or None),
+            cfdi_receiver_postal_code=(payload.cfdi_receiver_postal_code or None),
+            cfdi_receiver_regime=(payload.cfdi_receiver_regime or None),
+            cfdi_use=(payload.cfdi_use or None),
         )
         db.add(order)
         db.flush()  # populate order.id for the line items below
