@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 
-from src.api.dependencies import get_current_active_user
+from src.api.dependencies import get_current_active_user, get_current_user_with_api_key
 from src.core.errors import LocalizedHTTPException
 from src.crud.crud_store_settings import store_settings as crud_store_settings
 from src.database import get_db
@@ -742,7 +742,9 @@ def get_order_cfdi_document(
     *,
     db: Session = Depends(get_db),
     order_id: int,
-    current_user: User = Depends(get_current_active_user),
+    # Dual auth (JWT admin OR X-API-Key) so the storefront BFF can read CFDI
+    # status server-to-server for the buyer's confirmation screen (FP-06 P2).
+    current_user: User = Depends(get_current_user_with_api_key),
 ) -> CfdiDocumentOut:
     """The most recent CFDI document for an order (stamped or linked)."""
     doc = cfdi_stamp_service.latest_document(db, order_id)
@@ -754,6 +756,47 @@ def get_order_cfdi_document(
             detail=f"No CFDI document for order {order_id}.",
         )
     return CfdiDocumentOut.model_validate(doc)
+
+
+@router.get("/cfdi/{order_id}/xml")
+def get_order_cfdi_xml(
+    *,
+    db: Session = Depends(get_db),
+    order_id: int,
+    # Dual auth (JWT admin OR X-API-Key) so the storefront BFF can fetch the
+    # fiscal artifact server-to-server on the buyer's behalf. The BFF gates
+    # customer access (signed invoice token); Fulcrum never exposes this
+    # unauthenticated (the XML carries the receptor RFC + legal name).
+    current_user: User = Depends(get_current_user_with_api_key),
+):
+    """Stream the stamped CFDI XML for an order (the SAT fiscal artifact)."""
+    from pathlib import Path
+
+    from fastapi.responses import Response
+
+    doc = cfdi_stamp_service.latest_document(db, order_id)
+    if doc is None or doc.status != "stamped" or not doc.xml_path:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.noDocument",
+            params={"id": order_id},
+            detail=f"No stamped CFDI XML for order {order_id}.",
+        )
+    path = Path(doc.xml_path)
+    if not path.is_file():
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.noDocument",
+            params={"id": order_id},
+            detail=f"CFDI XML artifact missing for order {order_id}.",
+        )
+    xml = path.read_text(encoding="utf-8")
+    filename = f"{doc.uuid or f'order-{order_id}'}.xml"
+    return Response(
+        content=xml,
+        media_type="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ---------------------------------------------------------------------------
