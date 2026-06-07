@@ -129,7 +129,7 @@ def seed_products_with_images():
                 "cat": "Electronics",
                 "price": 2499.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1517336714731-489689fd1ca4?w=800&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&auto=format&fit=crop",
                     "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800&auto=format&fit=crop"
                 ]
             },
@@ -214,7 +214,7 @@ def seed_products_with_images():
                 "cat": "Fashion",
                 "price": 45.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1584030134671-512f42a6d585?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1520903920243-00d872a2d1c9?w=800&auto=format&fit=crop"
                 ]
             },
             {
@@ -222,7 +222,7 @@ def seed_products_with_images():
                 "cat": "Fashion",
                 "price": 250.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1599643478518-17488fbbcd75?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&auto=format&fit=crop"
                 ]
             },
             {
@@ -231,7 +231,7 @@ def seed_products_with_images():
                 "price": 180.00,
                 "imgs": [
                     "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1590874103328-3607bac5680c?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop"
                 ]
             },
             
@@ -274,7 +274,7 @@ def seed_products_with_images():
                 "cat": "Home & Garden",
                 "price": 65.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1583947581924-860b81d41d7a?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1620626011761-996317b8d101?w=800&auto=format&fit=crop"
                 ]
             },
             
@@ -284,7 +284,7 @@ def seed_products_with_images():
                 "cat": "Sports",
                 "price": 45.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1592432678016-e910b452f9a9?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1591291621164-2c6367723315?w=800&auto=format&fit=crop"
                 ]
             },
             {
@@ -300,7 +300,7 @@ def seed_products_with_images():
                 "cat": "Sports",
                 "price": 35.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1602143407151-a1114130c275?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1523362628745-0c100150b504?w=800&auto=format&fit=crop"
                 ]
             },
             {
@@ -326,7 +326,7 @@ def seed_products_with_images():
                 "cat": "Beauty",
                 "price": 42.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1571781535073-7b0665c0c976?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&auto=format&fit=crop"
                 ]
             },
             {
@@ -334,7 +334,7 @@ def seed_products_with_images():
                 "cat": "Beauty",
                 "price": 15.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1608248565278-e60e1f744869?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1556760544-74068565f05c?w=800&auto=format&fit=crop"
                 ]
             },
             
@@ -344,7 +344,7 @@ def seed_products_with_images():
                 "cat": "Toys",
                 "price": 30.00,
                 "imgs": [
-                    "https://images.unsplash.com/photo-1587654780291-39c940483731?w=800&auto=format&fit=crop"
+                    "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=800&auto=format&fit=crop"
                 ]
             },
             {
