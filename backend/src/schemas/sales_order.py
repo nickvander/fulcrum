@@ -144,6 +144,12 @@ class SalesOrderCreate(BaseModel):
     items: List[SalesOrderItemCreate] = Field(..., min_length=1)
     currency: str = "MXN"
     location: str = "default"
+    # Optional stock-reservation key (OXXO/SPEI). When set and an ACTIVE
+    # reservation exists for it, the order CONSUMES the hold instead of
+    # decrementing stock again (the stock already left on-hand at reserve time).
+    # If the reservation is missing/expired the order falls back to a normal
+    # atomic decrement (which 409s on insufficient stock, as today).
+    reservation_key: Optional[str] = Field(default=None, min_length=1)
 
 
 class SalesOrderShippingChargeUpdate(BaseModel):

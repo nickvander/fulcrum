@@ -279,3 +279,78 @@ class InventoryCountSessionItem(Base):
     session = relationship("InventoryCountSession", back_populates="items")
     product = relationship("Product")
     variant = relationship("ProductVariant")
+
+
+# --- Stock reservations (OXXO/SPEI pending-payment holds) -------------------
+
+
+class StockReservationStatus(str, enum.Enum):
+    """Lifecycle of a stock reservation.
+
+    ACTIVE   — stock is held (decremented from on-hand) awaiting payment.
+    CONSUMED — payment cleared; the reservation was converted into a sales
+               order (no re-decrement; the stock already left at reserve time).
+    RELEASED — the hold was released (payment expired/failed or swept); the
+               held stock was credited back to on-hand.
+    """
+
+    ACTIVE = "active"
+    CONSUMED = "consumed"
+    RELEASED = "released"
+
+
+class StockReservation(Base):
+    """A short-lived hold on stock for an async (OXXO/SPEI) pending payment.
+
+    The BFF reserves stock when it issues a payment voucher so a days-long
+    pending window can't oversell. Reserving DECREMENTS on-hand quantity (via
+    the same guarded atomic path as a sale) and records this row; releasing
+    credits it back; consuming (at order-create with this reservation_key)
+    links the order WITHOUT a second decrement. Idempotent on ``reservation_key``.
+    """
+
+    __tablename__ = "stock_reservations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    # Caller-supplied idempotency key (the BFF's pending-checkout key). Unique so
+    # a re-issued reserve returns the existing hold instead of double-decrementing.
+    reservation_key = Column(String(128), nullable=False, unique=True, index=True)
+    status = Column(String(16), nullable=False, default=StockReservationStatus.ACTIVE.value, index=True)
+    location = Column(String(64), nullable=False, default="default")
+    expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+    released_at = Column(DateTime(timezone=True), nullable=True)
+    # Set when the reservation is consumed into an order (audit trail).
+    order_id = Column(
+        Integer, ForeignKey("sales_orders.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+    items = relationship(
+        "StockReservationItem",
+        back_populates="reservation",
+        cascade="all, delete-orphan",
+    )
+
+
+class StockReservationItem(Base):
+    """One reserved line within a :class:`StockReservation`."""
+
+    __tablename__ = "stock_reservation_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reservation_id = Column(
+        Integer, ForeignKey("stock_reservations.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    product_id = Column(
+        Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False
+    )
+    variant_id = Column(
+        Integer, ForeignKey("product_variants.id", ondelete="CASCADE"), nullable=True
+    )
+    quantity = Column(Integer, nullable=False)
+
+    reservation = relationship("StockReservation", back_populates="items")
+    product = relationship("Product")
+    variant = relationship("ProductVariant")

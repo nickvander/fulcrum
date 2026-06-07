@@ -40,6 +40,7 @@ from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.models.product import Product
 from src.models.product_variant import ProductVariant
 from src.schemas.sales_order import SalesOrderCreate
+from src.services import stock_reservation_service
 from src.services.inventory_service import inventory_service
 
 
@@ -187,6 +188,17 @@ def create_onsite_order(
         db.add(order)
         db.flush()  # populate order.id for the line items below
 
+        # OXXO/SPEI: if this order carries an ACTIVE stock reservation, consume
+        # it (link the order, mark it consumed) instead of decrementing again —
+        # the stock already left on-hand when the reservation was created. If no
+        # active reservation exists (missing/expired/released), fall back to a
+        # normal atomic decrement per line.
+        consumed_reservation = False
+        if payload.reservation_key:
+            consumed_reservation = stock_reservation_service.consume(
+                db, payload.reservation_key, order.id
+            )
+
         for r in resolved:
             db.add(
                 SalesOrderItem(
@@ -197,6 +209,9 @@ def create_onsite_order(
                     cost_per_unit=r.cost_per_unit,
                 )
             )
+            if consumed_reservation:
+                # Stock already decremented at reserve time — do not double-count.
+                continue
             # Atomic, guarded decrement. RAISES InsufficientStockError if
             # this line can't be satisfied — we let it propagate so the
             # SAVEPOINT (and request) rolls back, reverting the order +
