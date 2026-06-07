@@ -251,3 +251,55 @@ def test_cfdi_xml_404_when_not_stamped(client: TestClient, db: Session, admin_he
     order_id = resp.json()["id"]
     missing = client.get(f"/api/v1/reports/cfdi/{order_id}/xml", headers=admin_headers)
     assert missing.status_code == 404
+
+
+def test_cfdi_pdf_retrieval(client: TestClient, db: Session, admin_headers: dict):
+    _configure_issuer(db)
+    product = _product_with_stock(db, sku="CFDIPDF1")
+    resp = client.post(
+        "/api/v1/sales-orders/",
+        headers=admin_headers,
+        json={
+            "idempotency_key": "cfdi-pdf-1",
+            "items": [{"product_id": product.id, "quantity": 2}],
+            "cfdi_receiver_rfc": "XAXX010101000",
+            "cfdi_receiver_name": "Cliente PDF",
+        },
+    )
+    order_id = resp.json()["id"]
+
+    pdf_resp = client.get(f"/api/v1/reports/cfdi/{order_id}/pdf", headers=admin_headers)
+    assert pdf_resp.status_code == 200
+    assert pdf_resp.headers["content-type"] == "application/pdf"
+    assert pdf_resp.content[:4] == b"%PDF"  # valid PDF magic bytes
+    assert "attachment" in pdf_resp.headers.get("content-disposition", "")
+
+
+def test_cfdi_pdf_requires_auth(client: TestClient, db: Session, admin_headers: dict):
+    _configure_issuer(db)
+    product = _product_with_stock(db, sku="CFDIPDFAUTH1")
+    resp = client.post(
+        "/api/v1/sales-orders/",
+        headers=admin_headers,
+        json={
+            "idempotency_key": "cfdi-pdfauth-1",
+            "items": [{"product_id": product.id, "quantity": 1}],
+            "cfdi_receiver_rfc": "XAXX010101000",
+        },
+    )
+    order_id = resp.json()["id"]
+    assert client.get(f"/api/v1/reports/cfdi/{order_id}/pdf").status_code in (401, 403)
+
+
+def test_cfdi_pdf_404_when_not_stamped(client: TestClient, db: Session, admin_headers: dict):
+    product = _product_with_stock(db, sku="CFDIPDFNONE1")
+    resp = client.post(
+        "/api/v1/sales-orders/",
+        headers=admin_headers,
+        json={
+            "idempotency_key": "cfdi-pdfnone-1",
+            "items": [{"product_id": product.id, "quantity": 1}],
+        },
+    )
+    order_id = resp.json()["id"]
+    assert client.get(f"/api/v1/reports/cfdi/{order_id}/pdf", headers=admin_headers).status_code == 404

@@ -799,6 +799,37 @@ def get_order_cfdi_xml(
     )
 
 
+@router.get("/cfdi/{order_id}/pdf")
+def get_order_cfdi_pdf(
+    *,
+    db: Session = Depends(get_db),
+    order_id: int,
+    # Dual auth (JWT admin OR X-API-Key); the BFF gates customer access via the
+    # signed invoice token. The PDF carries the receptor RFC + legal name.
+    current_user: User = Depends(get_current_user_with_api_key),
+):
+    """Stream the CFDI representación impresa (PDF) for an order."""
+    from fastapi.responses import Response
+
+    from src.services import cfdi_pdf_service
+
+    pdf = cfdi_pdf_service.render_pdf(db, order_id)
+    if pdf is None:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.cfdi.noDocument",
+            params={"id": order_id},
+            detail=f"No stamped CFDI for order {order_id}.",
+        )
+    doc = cfdi_stamp_service.latest_document(db, order_id)
+    filename = f"{(doc.uuid if doc else None) or f'order-{order_id}'}.pdf"
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ---------------------------------------------------------------------------
 # Inventory snapshot — per-product point-in-time inventory value report.
 # Distinct from low-stock: this lists every active product with its on-hand
