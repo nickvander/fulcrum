@@ -147,96 +147,134 @@ def get_ai_service() -> AIService:
     return dummy_ai_service
 
 
+def _authenticate_api_key(
+    request: Request, db: Session, api_key: str | None
+) -> models.User | None:
+    """Resolve a caller from the ``X-API-Key`` header.
+
+    Returns the key's owning user (and stashes the key's scope on
+    ``request.state.api_key_scope`` for ``require_write_scope``) when a valid,
+    unexpired key is present; returns ``None`` when no api-key header is supplied;
+    raises 401 on a malformed / invalid / expired key. Shared by the auth-or-key
+    dependencies below so the (security-sensitive) key check lives in one place.
+    """
+    if not api_key:
+        return None
+    if len(api_key) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API Key format",
+        )
+    # Look up by prefix (optimization to avoid checking all hashes).
+    prefix = api_key[:8]
+    potential_keys = db.query(ApiKey).filter(
+        ApiKey.key_prefix == prefix,
+        ApiKey.is_active,
+    ).all()
+    for db_key in potential_keys:
+        input_hash = hashlib.sha256(api_key.encode()).hexdigest()
+        # Constant-time comparison to prevent timing attacks.
+        if secrets.compare_digest(input_hash, db_key.key_hash):
+            # FP-11: reject an expired key (tz-aware; compare in UTC).
+            if db_key.expires_at is not None and db_key.expires_at < datetime.now(
+                timezone.utc
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="API Key has expired",
+                )
+            db_key.last_used_at = datetime.utcnow()
+            db.commit()
+            request.state.api_key_scope = db_key.scope or "full"
+            return db_key.user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid API Key",
+    )
+
+
+def _authenticate_jwt(request: Request, db: Session, token: str) -> models.User:
+    """Decode an OAuth2 bearer and return its user (records full scope). Raises
+    403 on a bad/undecodable token, 404 on an unknown subject. Does NOT check
+    ``user_type`` or ``is_active`` — callers layer those (operator endpoints
+    reject customers; read endpoints require active)."""
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        token_data = token_schema.TokenPayload(**payload)
+    except (jwt.JWTError, ValidationError):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials",
+        )
+    user = crud.user.get(db, id=token_data.sub)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    request.state.api_key_scope = "full"
+    return user
+
+
 def get_current_user_with_api_key(
     request: Request,
     db: Session = Depends(get_db),
     token: str = Depends(reusable_oauth2_optional),
     api_key: str = Depends(api_key_header),
 ) -> models.User:
+    """Authenticate STAFF (admin/employee JWT) OR the storefront BFF (service
+    X-API-Key); the key takes precedence. Records the caller's effective scope on
+    ``request.state.api_key_scope`` so ``require_write_scope`` can gate writes.
+
+    A CUSTOMER session JWT is **rejected (403)** — every endpoint behind this is an
+    operator/service surface (order-create, returns record/transition, inventory
+    reservations, category writes, …). Customer self-service uses
+    ``get_current_customer``. Without this guard a customer token would satisfy
+    ``require_write_scope`` and could, e.g., self-transition its own return to
+    ``refunded`` (crediting stock + stamping a refund with no real money movement).
     """
-    Authenticate using either OAuth2 token or X-API-Key header.
-    API Key takes precedence if both are present.
-
-    Records the caller's effective scope on ``request.state.api_key_scope``
-    ("full" for JWT users and full keys, "read_only" for read-only keys) so
-    ``require_write_scope`` can gate write endpoints (FP-11).
-    """
-    # 1. Try API Key
-    if api_key:
-        if len(api_key) < 8:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid API Key format",
-            )
-
-        # Look up by prefix (optimization to avoid checking all hashes)
-        prefix = api_key[:8]
-        # We need to filter by prefix to limit candidates
-        potential_keys = db.query(ApiKey).filter(
-            ApiKey.key_prefix == prefix,
-            ApiKey.is_active
-        ).all()
-
-        for db_key in potential_keys:
-            # Hash the input key to compare with stored hash
-            input_hash = hashlib.sha256(api_key.encode()).hexdigest()
-            # Use constant-time comparison to prevent timing attacks
-            if secrets.compare_digest(input_hash, db_key.key_hash):
-                # FP-11: reject an expired key (the column existed but was never
-                # enforced). expires_at is tz-aware; compare in UTC.
-                if db_key.expires_at is not None and db_key.expires_at < datetime.now(
-                    timezone.utc
-                ):
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="API Key has expired",
-                    )
-                # Update usage stats + stash the scope for write-gating.
-                db_key.last_used_at = datetime.utcnow()
-                db.commit()
-                request.state.api_key_scope = db_key.scope or "full"
-                return db_key.user
-
-        # If we had an API key but it failed validation
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API Key",
-        )
-
-    # 2. Try OAuth Token
+    user = _authenticate_api_key(request, db, api_key)
+    if user is not None:
+        return user
     if token:
-        try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-            )
-            token_data = token_schema.TokenPayload(**payload)
-        except (jwt.JWTError, ValidationError):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Could not validate credentials",
-            )
-        user = crud.user.get(db, id=token_data.sub)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        # This dependency authorizes STAFF (interactive admin/employee JWT) or the
-        # storefront BFF (service X-API-Key) — every endpoint behind it is an
-        # operator/service surface (order-create, returns record/transition,
-        # inventory reservations, category writes, …). A CUSTOMER session JWT
-        # (storefront magic-link) must NEVER authenticate here: customer
-        # self-service goes through `get_current_customer`. Without this guard a
-        # customer token would satisfy `require_write_scope` and could, e.g.,
-        # self-transition its own return to `refunded` (crediting stock + stamping
-        # a refund with no real money movement) or read operator data on any order.
+        user = _authenticate_jwt(request, db, token)
         if getattr(user, "user_type", None) == "customer":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not authorized for this endpoint",
             )
-        # JWT users are full-access (interactive admins/employees).
-        request.state.api_key_scope = "full"
         return user
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+    )
 
-    # 3. No credentials provided
+
+def get_user_or_api_key_read(
+    request: Request,
+    db: Session = Depends(get_db),
+    token: str = Depends(reusable_oauth2_optional),
+    api_key: str = Depends(api_key_header),
+) -> models.User:
+    """READ-only auth for endpoints reached by BOTH the storefront BFF
+    (``X-API-Key``, server-to-server — e.g. the refund flow's order read) AND
+    authenticated users **including customers** (their own order-history detail).
+
+    Unlike :func:`get_current_user_with_api_key`, this ALLOWS a customer JWT — it
+    is a read, and the data is exactly what a customer already obtains via
+    ``get_current_active_user``; the F1 customer-reject is write-scoped and
+    unaffected (this dependency must never gate a write — it records full scope
+    only so the api-key path keeps working, and writes are gated separately by
+    ``require_write_scope`` on their own endpoints). Inactive JWT users are
+    rejected, mirroring ``get_current_active_user``.
+    """
+    user = _authenticate_api_key(request, db, api_key)
+    if user is not None:
+        return user
+    if token:
+        user = _authenticate_jwt(request, db, token)
+        if not user.is_active:
+            raise HTTPException(status_code=400, detail="Inactive user")
+        return user
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",

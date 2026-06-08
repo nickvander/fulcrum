@@ -689,7 +689,10 @@ def export_summary_pdf(
 def get_sales_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_active_user),
+    # Read reachable by an active user (admin/employee/customer JWT — the account
+    # order-history detail) OR the storefront BFF's X-API-Key (server-to-server,
+    # e.g. the returns/refund flow's authoritative order read). NOT write-gated.
+    current_user: User = Depends(dependencies.get_user_or_api_key_read),
 ):
     """Get a single sales order with the full picture: line items (with
     per-line cost), the cost/fee/margin breakdown, the status timeline,

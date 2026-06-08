@@ -397,6 +397,46 @@ def test_customer_jwt_cannot_reach_operator_returns_endpoints(
     ).status_code == 403
 
 
+def test_get_order_detail_accepts_api_key_and_customer_jwt(
+    client: TestClient, db: Session, test_admin_user,
+):
+    """`GET /sales-orders/{id}` must be reachable by BOTH the storefront BFF's
+    X-API-Key (server-to-server — the refund flow's authoritative order read,
+    previously 401'd) AND an authenticated customer (the order-history detail).
+    Regression for the latent get_order/X-API-Key gap found in live e2e."""
+    import hashlib
+
+    from src.models.api_key import ApiKey
+
+    raw_key = "bffro-" + "e" * 58
+    db.add(
+        ApiKey(
+            user_id=test_admin_user.id,
+            name="BFF read key",
+            key_prefix=raw_key[:8],
+            key_hash=hashlib.sha256(raw_key.encode()).hexdigest(),
+            is_active=True,
+        )
+    )
+    db.flush()
+    _register(client, "reader@example.com")
+    headers = _customer_headers(client, db, "reader@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"])
+
+    # X-API-Key read now works (was the 401 that broke server-to-server get_order).
+    r_key = client.get(
+        f"/api/v1/sales-orders/{order.id}", headers={"X-API-Key": raw_key}
+    )
+    assert r_key.status_code == 200, r_key.text
+    # Customer JWT read still works (account order-history detail path).
+    assert client.get(
+        f"/api/v1/sales-orders/{order.id}", headers=headers
+    ).status_code == 200
+    # No credentials → 401.
+    assert client.get(f"/api/v1/sales-orders/{order.id}").status_code == 401
+
+
 def test_create_onsite_order_persists_customer_user_id(
     db: Session, test_admin_user,
 ):
