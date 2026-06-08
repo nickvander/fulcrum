@@ -351,6 +351,52 @@ def test_transition_unknown_return_is_404(
 # ---------------------------------------------------------------------------
 
 
+def test_customer_jwt_cannot_reach_operator_returns_endpoints(
+    client: TestClient, db: Session,
+):
+    """SECURITY (F1 regression): a customer SESSION JWT must NOT satisfy the
+    operator/service auth (`get_current_user_with_api_key` / `require_write_scope`).
+    Otherwise a customer could self-transition their own return to `refunded`
+    (credit stock + stamp a refund with no real money movement) or read operator
+    data. Customer self-service lives on the `/customers/me/...` surface only.
+    """
+    _register(client, "attacker@example.com")
+    headers = _customer_headers(client, db, "attacker@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"])
+    item = order.items[0]
+    created = client.post(
+        f"/api/v1/customers/me/orders/{order.id}/returns",
+        json={
+            "lines": [{"order_item_id": item.id, "quantity": 1}],
+            "idempotency_key": "atk-key-1",
+        },
+        headers=headers,
+    ).json()
+    return_id = created["returns"][0]["id"]
+    qty_before = _inventory_qty(db, item.product_id)
+
+    # The customer tries to self-approve via the operator transition endpoint.
+    resp = client.post(
+        f"/api/v1/sales-orders/{order.id}/returns/{return_id}/transition",
+        json={"status": "refunded"},
+        headers=headers,
+    )
+    assert resp.status_code == 403
+    # No stock was credited and the return stays `requested`.
+    assert _inventory_qty(db, item.product_id) == qty_before
+
+    # The customer also can't use the operator record-return or list endpoints.
+    assert client.post(
+        f"/api/v1/sales-orders/{order.id}/returns",
+        json={"lines": [{"order_item_id": item.id, "quantity": 1}]},
+        headers=headers,
+    ).status_code == 403
+    assert client.get(
+        f"/api/v1/sales-orders/{order.id}/returns", headers=headers
+    ).status_code == 403
+
+
 def test_create_onsite_order_persists_customer_user_id(
     db: Session, test_admin_user,
 ):

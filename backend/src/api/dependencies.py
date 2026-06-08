@@ -218,7 +218,21 @@ def get_current_user_with_api_key(
         user = crud.user.get(db, id=token_data.sub)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        # JWT users are full-access (interactive admins).
+        # This dependency authorizes STAFF (interactive admin/employee JWT) or the
+        # storefront BFF (service X-API-Key) — every endpoint behind it is an
+        # operator/service surface (order-create, returns record/transition,
+        # inventory reservations, category writes, …). A CUSTOMER session JWT
+        # (storefront magic-link) must NEVER authenticate here: customer
+        # self-service goes through `get_current_customer`. Without this guard a
+        # customer token would satisfy `require_write_scope` and could, e.g.,
+        # self-transition its own return to `refunded` (crediting stock + stamping
+        # a refund with no real money movement) or read operator data on any order.
+        if getattr(user, "user_type", None) == "customer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized for this endpoint",
+            )
+        # JWT users are full-access (interactive admins/employees).
         request.state.api_key_scope = "full"
         return user
 
