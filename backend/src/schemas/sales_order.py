@@ -144,6 +144,11 @@ class SalesOrderCreate(BaseModel):
     items: List[SalesOrderItemCreate] = Field(..., min_length=1)
     currency: str = "MXN"
     location: str = "default"
+    # The storefront customer (User id) placing the order, resolved by the BFF
+    # from the customer's session JWT (NEVER client-supplied at the storefront).
+    # Stored on the order as the ownership anchor for customer self-service
+    # (returns Phase 2). NULL for operator/marketplace orders.
+    customer_user_id: Optional[int] = Field(default=None, gt=0)
     # Optional stock-reservation key (OXXO/SPEI). When set and an ACTIVE
     # reservation exists for it, the order CONSUMES the hold instead of
     # decrementing stock again (the stock already left on-hand at reserve time).
@@ -263,8 +268,83 @@ class SalesOrderReturnRead(BaseModel):
     recorded_by_email: Optional[str] = None
     reason: Optional[str] = None
     notes: Optional[str] = None
+    # Returns Phase 2 lifecycle fields (None/legacy-safe on old rows).
+    status: Optional[str] = None
+    requested_by_user_id: Optional[int] = None
+    amount: Optional[float] = None
+    refund_reference: Optional[str] = None
+    refunded_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Customer self-service returns (Phase 2) -------------------------------- #
+
+
+class CustomerReturnCreate(BaseModel):
+    """Payload for `POST /customers/me/orders/{order_id}/returns`.
+
+    A customer requests a return on their OWN order (ownership is enforced by
+    the endpoint). The refund amount is NEVER trusted from the client — Fulcrum
+    derives it server-side from the order's line prices. `idempotency_key`
+    dedups a double-submit into a single request.
+    """
+
+    lines: List[SalesOrderReturnLineInput]
+    reason: Optional[str] = None
+    idempotency_key: str = Field(..., min_length=1, max_length=128)
+
+
+class CustomerReturnTransition(BaseModel):
+    """Operator-driven status transition for a return (write-scoped, used by the
+    BFF approval path). `refund_reference` is stamped when moving to refunded."""
+
+    status: str = Field(..., min_length=1, max_length=20)
+    refund_reference: Optional[str] = Field(default=None, max_length=255)
+
+
+class CustomerOrderItem(BaseModel):
+    """A customer-facing order line. Deliberately carries NO cost/margin
+    field (`cost_per_unit` is never serialized to a customer)."""
+
+    id: int
+    product_id: Optional[int] = None
+    quantity: Optional[int] = None
+    price_per_unit: Optional[float] = None
+    product_name: Optional[str] = None
+    product_sku: Optional[str] = None
+
+
+class CustomerReturnRead(BaseModel):
+    """A return as shown to the owning customer — status + amount, no operator
+    identity or internal notes."""
+
+    id: int
+    order_id: int
+    order_item_id: Optional[int] = None
+    product_id: Optional[int] = None
+    product_name: Optional[str] = None
+    product_sku: Optional[str] = None
+    quantity: int
+    status: str
+    reason: Optional[str] = None
+    amount: Optional[float] = None
+    requested_at: datetime
+    refunded_at: Optional[datetime] = None
+
+
+class CustomerOrderDetail(BaseModel):
+    """A customer-facing order detail: the order, its lines, and its returns —
+    with cost/margin/supplier fields stripped. Built explicitly by the endpoint
+    via an allowlist (defence in depth; the BFF strips again)."""
+
+    id: int
+    status: Optional[str] = None
+    total_price: Optional[float] = None
+    currency: Optional[str] = "MXN"
+    created_at: Optional[datetime] = None
+    items: List[CustomerOrderItem] = []
+    returns: List[CustomerReturnRead] = []
 
 
 class SalesOrderCancelResult(BaseModel):

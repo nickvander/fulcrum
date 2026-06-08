@@ -42,6 +42,7 @@ from src.schemas.sales_order import (
     SalesOrderItem as SalesOrderItemSchema,
     SalesOrderListResponse,
     SalesOrderCancelResult,
+    CustomerReturnTransition,
     SalesOrderReturnCreate,
     SalesOrderReturnRead,
     SalesOrderShippingChargeUpdate,
@@ -860,6 +861,11 @@ def _serialize_return(ret) -> SalesOrderReturnRead:
         recorded_by_email=None,  # filled by the endpoint below when available
         reason=ret.reason,
         notes=ret.notes,
+        status=ret.status,
+        requested_by_user_id=ret.requested_by_user_id,
+        amount=ret.amount,
+        refund_reference=ret.refund_reference,
+        refunded_at=ret.refunded_at,
     )
 
 
@@ -958,6 +964,49 @@ def list_sales_order_returns(
             out.recorded_by_email = emails.get(ret.recorded_by_user_id)
         rows.append(out)
     return rows
+
+
+@router.post(
+    "/{order_id}/returns/{return_id}/transition",
+    response_model=SalesOrderReturnRead,
+)
+def transition_sales_order_return(
+    order_id: int,
+    return_id: int,
+    payload: CustomerReturnTransition,
+    db: Session = Depends(get_db),
+    # Write (advances a return's lifecycle; may credit stock) → dual auth, gated
+    # against read-only keys. The storefront BFF's operator-approval path calls
+    # this (X-API-Key) after a refund, moving the customer's `requested` return
+    # to `refunded`.
+    current_user: User = Depends(dependencies.require_write_scope),
+):
+    """Transition a return's status (Returns Phase 2 lifecycle).
+
+    Credits stock exactly once on the first move into a stock-bearing state
+    (`approved`/`received`/`refunded`); stamps `refund_reference`/`refunded_at`
+    on `refunded`. Invalid transitions → 409. The return must belong to the
+    given order (404 otherwise)."""
+    from src.services.sales_order_returns import (
+        get_return_or_404,
+        transition_return as svc_transition,
+    )
+
+    _load_order_or_404(db, order_id)
+    ret = get_return_or_404(db, order_id=order_id, return_id=return_id)
+    svc_transition(
+        db,
+        ret=ret,
+        new_status=payload.status,
+        actor=current_user,
+        refund_reference=payload.refund_reference,
+    )
+    db.commit()
+    db.refresh(ret)
+    out = _serialize_return(ret)
+    if current_user and current_user.email:
+        out.recorded_by_email = current_user.email
+    return out
 
 
 @router.post(

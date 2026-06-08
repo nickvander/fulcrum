@@ -74,6 +74,20 @@ class SalesOrder(Base):
     # cancelled state.
     stock_recredited_at = Column(DateTime(timezone=True), nullable=True)
 
+    # The customer (User with user_type='customer') who placed this order via
+    # the storefront/BFF. NULL for marketplace-ingested orders and for any order
+    # created before this column existed. This is the ownership anchor for the
+    # customer self-service surface (returns Phase 2): the BFF's order-create
+    # passes the authenticated customer's id so the
+    # `/customers/me/orders/{id}` endpoints can scope by owner instead of
+    # trusting a client-supplied id. SET NULL on user delete keeps the order.
+    customer_user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     # CFDI receiver (buyer) fiscal data captured at checkout for FP-06.
     # NULL => issue to público en general (RFC genérico). See cfdi_service.
     cfdi_receiver_rfc = Column(String(13), nullable=True)
@@ -280,9 +294,41 @@ class SalesOrderReturn(Base):
     reason = Column(String(500), nullable=True)
     notes = Column(String, nullable=True)  # Text in PG via String
 
+    # --- Returns Phase 2: customer self-service lifecycle --------------------
+    # Existing operator-recorded returns (the admin "Record return" dialog) are
+    # created already-`received` with stock credited immediately — that path is
+    # unchanged. Customer-initiated returns start `requested` (no money, no
+    # stock movement) and an operator approval drives the refund + stock
+    # re-credit + nota de crédito, landing `refunded`.
+    #   requested → approved → received → refunded   (+ rejected)
+    status = Column(
+        String(20), nullable=False, default="requested", server_default="requested"
+    )
+    # The customer (User) who requested the return, distinct from
+    # `recorded_by_user_id` (the operator who recorded/approved it). NULL for the
+    # legacy operator-recorded path.
+    requested_by_user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    # Server-derived refund amount for this return, in the order's currency
+    # (MXN). Float to match Fulcrum's money convention; the BFF owns centavos.
+    amount = Column(Float, nullable=True)
+    # Provider refund reference, stamped when the return reaches `refunded`.
+    refund_reference = Column(String(255), nullable=True)
+    refunded_at = Column(DateTime(timezone=True), nullable=True)
+    # Idempotency for the customer request path (Fulcrum's operator path is not
+    # idempotent by design). A retry with the same key returns the existing row.
+    idempotency_key = Column(String(128), nullable=True, unique=True)
+    # Credit-once guard: stamped the first time a return transition credits
+    # stock back, so re-approving / re-transitioning never double-credits.
+    stock_recredited_at = Column(DateTime(timezone=True), nullable=True)
+
     order = relationship("SalesOrder")
     order_item = relationship("SalesOrderItem")
     product = relationship("Product")
+    requested_by = relationship("User", foreign_keys=[requested_by_user_id])
 
 
 class SalesOrderStatusEvent(Base):

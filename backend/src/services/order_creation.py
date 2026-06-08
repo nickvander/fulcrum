@@ -184,6 +184,10 @@ def create_onsite_order(
             source=OrderSource.FULCRUM.value,
             external_order_id=payload.idempotency_key,
             created_at=datetime.utcnow(),
+            # Ownership anchor for customer self-service (returns Phase 2). The
+            # BFF passes the authenticated customer's id; NULL for operator
+            # orders. The `user_id` arg is the API/operator caller, not the buyer.
+            customer_user_id=payload.customer_user_id,
             # CFDI 4.0 receptor captured at checkout (FP-06 P2). NULL fields ⇒
             # público en general at stamp time. Persisted on the order so the
             # stamping service reads an authoritative receptor (never a client

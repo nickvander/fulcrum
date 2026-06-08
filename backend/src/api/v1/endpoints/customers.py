@@ -22,8 +22,10 @@ from src.config import settings
 from src.core import security
 from src.core.errors import LocalizedHTTPException
 from src.core.ratelimit import limiter
+from src.models import order as order_models
 from src.schemas import address as address_schema
 from src.schemas import customer as customer_schema
+from src.schemas import sales_order as sales_order_schema
 from src.schemas.user import UserCreate, UserType
 
 router = APIRouter()
@@ -322,3 +324,151 @@ def whatsapp_opt_out(
 
     updated = opt_out_by_phone(db, payload.phone)
     return customer_schema.WhatsAppOptOutResult(updated=updated)
+
+
+# ---------------------------------------------------------------------------
+# Customer self-service orders + returns (Returns Phase 2)
+# ---------------------------------------------------------------------------
+#
+# Ownership-scoped: these resolve the customer from the session JWT
+# (`get_current_customer`) and only ever touch an order whose
+# `customer_user_id` matches. They are intentionally SEPARATE from the
+# operator `/sales-orders/{id}/returns` endpoints, which do NO ownership check
+# (reusing those for customers would let any signed-in customer act on any
+# order — see returns-rma.md §2). Cost/margin fields are never serialized here.
+
+
+def _load_owned_order_or_404(
+    db: Session, order_id: int, customer: "models.User"
+) -> "order_models.SalesOrder":
+    """Load an order the customer OWNS, or 404. A non-owner (incl. an order with
+    a NULL `customer_user_id`, i.e. an operator/marketplace order) gets the SAME
+    404 as a missing id — never a 403 — so the endpoint isn't an existence
+    oracle for orders the customer doesn't own."""
+    from sqlalchemy.orm import joinedload
+
+    order = (
+        db.query(order_models.SalesOrder)
+        .options(joinedload(order_models.SalesOrder.items))
+        .filter(order_models.SalesOrder.id == order_id)
+        .first()
+    )
+    if order is None or order.customer_user_id != customer.id:
+        raise LocalizedHTTPException(
+            status_code=404,
+            code="apiErrors.salesOrder.notFound",
+            params={"id": order_id},
+            detail="Sales order not found",
+        )
+    return order
+
+
+def _customer_return_read(ret: "order_models.SalesOrderReturn") -> "sales_order_schema.CustomerReturnRead":
+    product = ret.product
+    return sales_order_schema.CustomerReturnRead(
+        id=ret.id,
+        order_id=ret.order_id,
+        order_item_id=ret.order_item_id,
+        product_id=ret.product_id,
+        product_name=product.name if product else None,
+        product_sku=product.sku if product else None,
+        quantity=ret.quantity,
+        status=ret.status or "requested",
+        reason=ret.reason,
+        amount=ret.amount,
+        requested_at=ret.received_at,
+        refunded_at=ret.refunded_at,
+    )
+
+
+def _customer_order_detail(
+    db: Session, order: "order_models.SalesOrder"
+) -> "sales_order_schema.CustomerOrderDetail":
+    """Build the cost-stripped customer view of an order + its returns."""
+    items = []
+    for item in order.items or []:
+        product = item.product
+        items.append(
+            sales_order_schema.CustomerOrderItem(
+                id=item.id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price_per_unit=item.price_per_unit,
+                product_name=product.name if product else None,
+                product_sku=product.sku if product else None,
+            )
+        )
+    from src.services.sales_order_returns import list_returns as svc_list_returns
+
+    returns = [_customer_return_read(r) for r in svc_list_returns(db, order)]
+    return sales_order_schema.CustomerOrderDetail(
+        id=order.id,
+        status=order.status,
+        total_price=order.total_price,
+        currency=order.currency,
+        created_at=order.created_at,
+        items=items,
+        returns=returns,
+    )
+
+
+@router.get(
+    "/me/orders/{order_id}",
+    response_model=sales_order_schema.CustomerOrderDetail,
+    tags=["customers"],
+)
+def read_my_order(
+    order_id: int,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_customer),
+) -> "sales_order_schema.CustomerOrderDetail":
+    """The authenticated customer's own order (detail + returns), cost-stripped.
+
+    404 for any order the customer does not own (no existence oracle)."""
+    order = _load_owned_order_or_404(db, order_id, current_user)
+    return _customer_order_detail(db, order)
+
+
+@router.post(
+    "/me/orders/{order_id}/returns",
+    response_model=sales_order_schema.CustomerOrderDetail,
+    status_code=201,
+    tags=["customers"],
+)
+def request_my_return(
+    order_id: int,
+    payload: sales_order_schema.CustomerReturnCreate,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_customer),
+) -> "sales_order_schema.CustomerOrderDetail":
+    """Request a return on the customer's OWN order.
+
+    Creates `requested` return row(s) — NO refund, NO stock movement (an
+    operator approval drives those). The refund `amount` is derived server-side
+    from the order's line prices; the client cannot dictate it. Idempotent on
+    `idempotency_key`. Returns the refreshed order detail."""
+    from src.services.sales_order_returns import (
+        ReturnLineInput,
+        request_return as svc_request_return,
+    )
+
+    order = _load_owned_order_or_404(db, order_id, current_user)
+    lines = [
+        ReturnLineInput(
+            order_item_id=line.order_item_id,
+            product_id=line.product_id,
+            quantity=line.quantity,
+        )
+        for line in payload.lines
+    ]
+    svc_request_return(
+        db,
+        order=order,
+        lines=lines,
+        reason=payload.reason,
+        requested_by=current_user,
+        idempotency_key=payload.idempotency_key,
+    )
+    db.commit()
+    db.refresh(order)
+    return _customer_order_detail(db, order)
