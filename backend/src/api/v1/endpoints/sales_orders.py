@@ -185,7 +185,7 @@ def create_sales_order(
     # Accept EITHER a JWT (admin/POS UI) OR an X-API-Key (the storefront BFF,
     # server-to-server). `get_current_user_with_api_key` resolves both and
     # prefers the API key when present.
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Create an on-site (point-of-sale) sales order.
 
@@ -255,7 +255,7 @@ def update_sales_order_shipping_charge(
     order_id: int,
     payload: SalesOrderShippingChargeUpdate,
     db: Session = Depends(dependencies.get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Persist the selected storefront shipping charge on the order.
 
@@ -296,7 +296,7 @@ def update_sales_order_shipping_label(
     order_id: int,
     payload: SalesOrderShippingLabelUpdate,
     db: Session = Depends(dependencies.get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Attach purchased shipping-label metadata to the Fulcrum order.
 
@@ -774,7 +774,7 @@ def cancel_sales_order(
     # JWT (admin/POS) OR X-API-Key (storefront BFF, server-to-server). The BFF
     # calls this to compensate a capture failure after order-create — cancel the
     # order so its stock is released. Mirrors order-create's dual auth (FP-04).
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Cancel a sales order; re-credit stock if it was cancelled before shipping.
 
@@ -874,7 +874,7 @@ def record_sales_order_return(
     # Accept EITHER a JWT (admin/POS UI) OR an X-API-Key (the storefront BFF,
     # server-to-server returns/refund flow). Mirrors order-create (FP-04):
     # `get_current_user_with_api_key` resolves both and prefers the API key.
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Record one or more physical returns against a sales order.
 
@@ -928,7 +928,8 @@ def record_sales_order_return(
 def list_sales_order_returns(
     order_id: int,
     db: Session = Depends(get_db),
-    # Same dual auth as record (JWT or X-API-Key) so the BFF can read back too.
+    # Read endpoint: dual auth (JWT or X-API-Key) but NOT write-gated, so a
+    # read-only key can list returns.
     current_user: User = Depends(dependencies.get_current_user_with_api_key),
 ):
     """List all return events recorded for an order, newest first."""

@@ -13,7 +13,7 @@ from typing import List
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from src import crud, models
@@ -21,12 +21,19 @@ from src.api import dependencies
 from src.config import settings
 from src.core import security
 from src.core.errors import LocalizedHTTPException
+from src.core.ratelimit import limiter
 from src.schemas import address as address_schema
 from src.schemas import customer as customer_schema
 from src.schemas.user import UserCreate, UserType
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+def _magic_link_limit() -> str:
+    """Per-IP limit for the magic-link endpoints (FP-11). Effectively disabled
+    under tests so the suite's repeated calls don't trip it."""
+    return "100000/minute" if settings.TESTING else settings.MAGIC_LINK_RATE_LIMIT
 
 
 # ---------------------------------------------------------------------------
@@ -69,7 +76,9 @@ def register_customer(
 # Magic link (passwordless)
 # ---------------------------------------------------------------------------
 @router.post("/magic-link/request", tags=["customers"])
+@limiter.limit(_magic_link_limit)
 def request_magic_link(
+    request: Request,
     *,
     db: Session = Depends(dependencies.get_db),
     magic_in: customer_schema.MagicLinkRequest,
@@ -98,7 +107,9 @@ def request_magic_link(
     response_model=customer_schema.MagicLinkToken,
     tags=["customers"],
 )
+@limiter.limit(_magic_link_limit)
 def verify_magic_link(
+    request: Request,
     *,
     db: Session = Depends(dependencies.get_db),
     verify_in: customer_schema.MagicLinkVerify,
@@ -296,8 +307,9 @@ def whatsapp_opt_out(
     payload: customer_schema.WhatsAppOptOutRequest,
     # Server-to-server only: the storefront BFF calls this from its WhatsApp
     # webhook (X-API-Key). NOT a customer-facing endpoint — it must never become
-    # a phone→customer enumeration oracle, so it returns only a count.
-    current_user: models.User = Depends(dependencies.get_current_user_with_api_key),
+    # a phone→customer enumeration oracle, so it returns only a count. Write →
+    # gated against read-only keys.
+    current_user: models.User = Depends(dependencies.require_write_scope),
 ) -> customer_schema.WhatsAppOptOutResult:
     """Clear WhatsApp consent for the customer(s) matching ``phone``.
 

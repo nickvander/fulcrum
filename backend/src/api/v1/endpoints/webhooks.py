@@ -1,13 +1,15 @@
 """
 API endpoints for handling webhook notifications from marketplaces.
 """
+import hmac
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
 from sqlalchemy.orm import Session
 
+from src.config import settings
 from src.core.errors import LocalizedHTTPException
 from src.database import SessionLocal, get_db
 from src.schemas import webhook as webhook_schema
@@ -31,8 +33,29 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def _verify_webhook_token(request: Request, configured_token: Optional[str]) -> None:
+    """FP-11 anti-forgery for marketplaces that do NOT sign their callbacks.
+
+    MercadoLibre and Amazon (unlike MercadoPago, which sends an HMAC) post
+    unauthenticated events — an attacker who learns the URL could inject fake
+    orders/questions. When a shared secret is configured, require it via the
+    ``X-Webhook-Token`` header or ``?token=`` query (constant-time compare).
+    UNSET = no check (current behavior), so this is backward-compatible.
+    """
+    if not configured_token:
+        return
+    provided = (
+        request.headers.get("x-webhook-token") or request.query_params.get("token") or ""
+    )
+    if not hmac.compare_digest(provided, configured_token):
+        # The secret is never logged or echoed.
+        raise HTTPException(status_code=401, detail="Invalid or missing webhook token")
+
+
 @router.post("/mercadolibre")
 async def receive_mercadolibre_webhook(
+    request: Request,
     payload: webhook_schema.MercadoLibreWebhookPayload,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
@@ -50,6 +73,9 @@ async def receive_mercadolibre_webhook(
         "sent": "2025-01-01T12:00:00.000Z"
     }
     """
+    # FP-11: anti-forgery shared secret (no-op unless ML_WEBHOOK_VERIFY_TOKEN set).
+    _verify_webhook_token(request, settings.ML_WEBHOOK_VERIFY_TOKEN)
+
     # Find the marketplace
     db_marketplace = db.query(crud_marketplace.model).filter(
         crud_marketplace.model.name == "MercadoLibre"
@@ -67,7 +93,10 @@ async def receive_mercadolibre_webhook(
         marketplace_id=db_marketplace.id,
         topic=payload.topic,
         external_resource_id=payload.resource,
-        payload=payload.model_dump(),
+        # mode="json" so the `sent` datetime serializes to an ISO string — a plain
+        # model_dump() keeps a datetime that the JSON column can't serialize (every
+        # real ML notification carries `sent`, so this path 500'd before).
+        payload=payload.model_dump(mode="json"),
         status="RECEIVED"
     )
     db.add(event)
@@ -374,6 +403,9 @@ async def receive_amazon_webhook(
     Amazon uses EventBridge for notifications. This endpoint would be
     configured as an EventBridge target.
     """
+    # FP-11: anti-forgery shared secret (no-op unless AMAZON_WEBHOOK_VERIFY_TOKEN set).
+    _verify_webhook_token(request, settings.AMAZON_WEBHOOK_VERIFY_TOKEN)
+
     body = await request.json()
     
     db_marketplace = db.query(crud_marketplace.model).filter(

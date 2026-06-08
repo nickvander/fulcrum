@@ -120,7 +120,7 @@ def create_category(
     *,
     db: Session = Depends(get_db),
     obj_in: CategoryCreate,
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Create a category. Authed (JWT or X-API-Key). If a provided slug
     already exists -> 409. Omitted slug is auto-generated from name."""
@@ -148,7 +148,7 @@ def update_category(
     obj_in: CategoryUpdate,
     *,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Update a category. Authed (JWT or X-API-Key). 404 if missing;
     409 if the new slug collides with another category."""
@@ -183,7 +183,7 @@ def delete_category(
     category_id: int,
     *,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """Delete a category. Authed (JWT or X-API-Key). 404 if missing.
     The FK ondelete=SET NULL nulls children's parent_id and products'

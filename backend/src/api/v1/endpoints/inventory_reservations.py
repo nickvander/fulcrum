@@ -74,7 +74,7 @@ def create_reservation(
     *,
     db: Session = Depends(dependencies.get_db),
     payload: ReservationCreate,
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ) -> ReservationOut:
     """Hold stock for the lines (idempotent on ``reservation_key``).
 
@@ -127,7 +127,7 @@ def release_reservation(
     *,
     db: Session = Depends(dependencies.get_db),
     reservation_key: str,
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ) -> ReservationOut:
     """Release a hold, crediting stock back (idempotent; 404 if unknown)."""
     reservation = stock_reservation_service.release(db, reservation_key)
@@ -145,7 +145,7 @@ def release_reservation(
 def sweep_expired_reservations(
     *,
     db: Session = Depends(dependencies.get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    current_user: User = Depends(dependencies.require_write_scope),
 ) -> SweepResult:
     """Release every active reservation past its expiry (cron safety net)."""
     return SweepResult(released=stock_reservation_service.sweep_expired(db))

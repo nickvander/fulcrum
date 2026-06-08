@@ -48,6 +48,20 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_exception_handler(LocalizedHTTPException, localized_http_exception_handler)
 app.add_middleware(SlowAPIMiddleware)
 
+# CORS allow-list (FP-11). Only mounted when origins are configured; empty keeps
+# the current default (no cross-origin grant). Comma-separated CORS_ALLOWED_ORIGINS.
+_cors_origins = [o.strip() for o in (settings.CORS_ALLOWED_ORIGINS or "").split(",") if o.strip()]
+if _cors_origins:
+    from fastapi.middleware.cors import CORSMiddleware
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
     response = await call_next(request)

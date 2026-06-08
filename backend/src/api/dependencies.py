@@ -1,7 +1,7 @@
 """
 FastAPI dependencies for the Fulcrum application.
 """
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import ValidationError
@@ -15,7 +15,7 @@ from src.services.base import AIService
 from src.services.dummy_ai_service import ai_service as dummy_ai_service
 from src.models.api_key import ApiKey
 from fastapi.security import APIKeyHeader
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import secrets
 
@@ -148,6 +148,7 @@ def get_ai_service() -> AIService:
 
 
 def get_current_user_with_api_key(
+    request: Request,
     db: Session = Depends(get_db),
     token: str = Depends(reusable_oauth2_optional),
     api_key: str = Depends(api_key_header),
@@ -155,6 +156,10 @@ def get_current_user_with_api_key(
     """
     Authenticate using either OAuth2 token or X-API-Key header.
     API Key takes precedence if both are present.
+
+    Records the caller's effective scope on ``request.state.api_key_scope``
+    ("full" for JWT users and full keys, "read_only" for read-only keys) so
+    ``require_write_scope`` can gate write endpoints (FP-11).
     """
     # 1. Try API Key
     if api_key:
@@ -163,7 +168,7 @@ def get_current_user_with_api_key(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API Key format",
             )
-        
+
         # Look up by prefix (optimization to avoid checking all hashes)
         prefix = api_key[:8]
         # We need to filter by prefix to limit candidates
@@ -171,15 +176,25 @@ def get_current_user_with_api_key(
             ApiKey.key_prefix == prefix,
             ApiKey.is_active
         ).all()
-        
+
         for db_key in potential_keys:
             # Hash the input key to compare with stored hash
             input_hash = hashlib.sha256(api_key.encode()).hexdigest()
             # Use constant-time comparison to prevent timing attacks
             if secrets.compare_digest(input_hash, db_key.key_hash):
-                # Update usage stats
+                # FP-11: reject an expired key (the column existed but was never
+                # enforced). expires_at is tz-aware; compare in UTC.
+                if db_key.expires_at is not None and db_key.expires_at < datetime.now(
+                    timezone.utc
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="API Key has expired",
+                    )
+                # Update usage stats + stash the scope for write-gating.
                 db_key.last_used_at = datetime.utcnow()
                 db.commit()
+                request.state.api_key_scope = db_key.scope or "full"
                 return db_key.user
 
         # If we had an API key but it failed validation
@@ -203,6 +218,8 @@ def get_current_user_with_api_key(
         user = crud.user.get(db, id=token_data.sub)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
+        # JWT users are full-access (interactive admins).
+        request.state.api_key_scope = "full"
         return user
 
     # 3. No credentials provided
@@ -210,3 +227,23 @@ def get_current_user_with_api_key(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated",
     )
+
+
+def require_write_scope(
+    request: Request,
+    current_user: models.User = Depends(get_current_user_with_api_key),
+) -> models.User:
+    """Gate write endpoints: reject a read-only API key (FP-11).
+
+    Depends on ``get_current_user_with_api_key`` (which authenticates AND records
+    ``request.state.api_key_scope``), then rejects the call when that scope is not
+    write-capable. JWT users and full-scope keys pass; only keys explicitly minted
+    ``read_only`` are blocked, so existing (default "full") keys are unaffected.
+    """
+    scope = getattr(request.state, "api_key_scope", "full")
+    if scope not in ("full", "write"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This API key is read-only and cannot perform writes",
+        )
+    return current_user

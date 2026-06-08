@@ -515,7 +515,8 @@ async def sheets_sync_pull(
 async def sheets_sync_push(
     request: SheetsSyncPushRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(dependencies.get_current_user_with_api_key),
+    # Write (stages product mutations incl. cost_price) → gated against read-only keys.
+    current_user: User = Depends(dependencies.require_write_scope),
 ):
     """
     Push changes from Google Sheets back to Fulcrum.
@@ -858,6 +859,8 @@ async def list_change_logs(
 class ApiKeyCreateRequest(BaseModel):
     """Request to create a new API key."""
     name: str  # e.g., "Google Sheets Integration"
+    # FP-11: "full" (default) = read+write; "read_only" = blocked on writes.
+    scope: Literal["full", "read_only"] = "full"
 
 
 class ApiKeyCreateResponse(BaseModel):
@@ -866,6 +869,7 @@ class ApiKeyCreateResponse(BaseModel):
     name: str
     key_prefix: str
     api_key: str  # Full key - only shown at creation time!
+    scope: str
     created_at: datetime
 
 
@@ -875,6 +879,7 @@ class ApiKeyInfo(BaseModel):
     name: str
     key_prefix: str
     is_active: bool
+    scope: str
     last_used_at: Optional[datetime]
     created_at: datetime
 
@@ -904,16 +909,18 @@ async def create_api_key(
         key_prefix=key_prefix,
         key_hash=key_hash,
         is_active=True,
+        scope=request.scope,
     )
     db.add(api_key)
     db.commit()
     db.refresh(api_key)
-    
+
     return ApiKeyCreateResponse(
         id=api_key.id,
         name=api_key.name,
         key_prefix=api_key.key_prefix,
         api_key=raw_key,  # Only time the full key is returned!
+        scope=api_key.scope,
         created_at=api_key.created_at,
     )
 
@@ -931,6 +938,7 @@ async def list_api_keys(
             name=k.name,
             key_prefix=k.key_prefix,
             is_active=k.is_active,
+            scope=k.scope,
             last_used_at=k.last_used_at,
             created_at=k.created_at,
         )

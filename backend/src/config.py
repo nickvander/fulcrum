@@ -17,6 +17,22 @@ class Settings(BaseSettings):
     # Rate Limiting
     RATE_LIMIT_REDIS_URL: Optional[str] = None
     RATE_LIMIT_DEFAULT: str = "100/minute"
+    # Magic-link endpoint limit (slowapi syntax). Tokens are 256-bit so this is
+    # defence-in-depth against request floods / abuse, not brute-force.
+    MAGIC_LINK_RATE_LIMIT: str = "10/minute"
+
+    # CORS allow-list (FP-11). Comma-separated origins; EMPTY = no CORS middleware
+    # (current behavior — browsers get no cross-origin grant). Set to the
+    # storefront origin(s) in prod, e.g. "https://vendio.mx,https://www.vendio.mx".
+    CORS_ALLOWED_ORIGINS: str = ""
+    CORS_ALLOW_CREDENTIALS: bool = False
+
+    # Inbound-webhook shared secret (FP-11, anti-forgery) for marketplaces that
+    # do NOT sign their callbacks. When set, that webhook requires the token
+    # (header "X-Webhook-Token" or query "?token="); UNSET = current behavior.
+    # MercadoPago uses its own HMAC (MERCADOPAGO_WEBHOOK_SECRET) and is unaffected.
+    ML_WEBHOOK_VERIFY_TOKEN: Optional[str] = None
+    AMAZON_WEBHOOK_VERIFY_TOKEN: Optional[str] = None
 
     # Marketplace Encryption
     MARKETPLACE_ENCRYPTION_KEY: str
