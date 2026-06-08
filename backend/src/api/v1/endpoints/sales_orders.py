@@ -48,6 +48,7 @@ from src.schemas.sales_order import (
     SalesOrderShippingLabelUpdate,
     SalesOrderSummary,
 )
+from src.schemas.cfdi import NotaDeCreditoRequest, NotaDeCreditoResponse
 from src.services.inventory_service import InsufficientStockError
 from src.services.order_creation import create_onsite_order
 from src.services.order_lifecycle import apply_status_change
@@ -957,3 +958,68 @@ def list_sales_order_returns(
             out.recorded_by_email = emails.get(ret.recorded_by_user_id)
         rows.append(out)
     return rows
+
+
+@router.post(
+    "/{order_id}/nota-de-credito",
+    response_model=NotaDeCreditoResponse,
+)
+def issue_order_nota_de_credito(
+    order_id: int,
+    payload: NotaDeCreditoRequest,
+    db: Session = Depends(get_db),
+    # Write (issues a fiscal egreso) → dual auth, gated against read-only keys.
+    # The storefront BFF calls this after a refund (X-API-Key).
+    current_user: User = Depends(dependencies.require_write_scope),
+):
+    """Issue a nota de crédito (CFDI egreso) for a refund on an invoiced order.
+
+    Idempotent on ``idempotency_key``. When the order has no stamped ingreso (it
+    was never invoiced, or the marketplace handles its own facturas) this returns
+    ``issued=false`` with the reason — a no-op the caller can ignore. The credit
+    amount is capped at the original invoice total minus any prior credit notes.
+    """
+    from src.services import cfdi_stamp_service
+
+    _load_order_or_404(db, order_id)
+    result = cfdi_stamp_service.issue_nota_de_credito(
+        db,
+        order_id,
+        amount_cents=payload.amount_cents,
+        idempotency_key=payload.idempotency_key,
+        reason=payload.reason,
+    )
+
+    if "document" in result:
+        doc = result["document"]
+        return NotaDeCreditoResponse(
+            issued=True,
+            status="stamped",
+            uuid=doc.uuid,
+            related_uuid=doc.related_uuid,
+            amount_cents=int(doc.total_cents),
+        )
+
+    err = result.get("error")
+    # No invoice to credit → not an error; the caller skips.
+    if err in ("no_ingreso", "marketplace_handled"):
+        return NotaDeCreditoResponse(issued=False, status=err, amount_cents=0)
+    if err in ("invalid_amount", "missing_idempotency_key"):
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.cfdi.notaDeCreditoInvalidAmount",
+            detail="Invalid nota-de-crédito amount",
+        )
+    if err == "amount_exceeds_invoice":
+        raise LocalizedHTTPException(
+            status_code=400,
+            code="apiErrors.cfdi.notaDeCreditoExceedsInvoice",
+            params={"creditable_cents": result.get("creditable_cents", 0)},
+            detail="Credit-note amount exceeds the invoice total",
+        )
+    # stamp_failed / issuer_not_configured / anything else → upstream PAC issue.
+    raise LocalizedHTTPException(
+        status_code=502,
+        code="apiErrors.cfdi.notaDeCreditoFailed",
+        detail="The PAC could not issue the nota de crédito",
+    )

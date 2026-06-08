@@ -35,6 +35,8 @@ class CfdiDocument(Base):
     )
     uuid = Column(String(64), nullable=True, unique=True, index=True)
     related_uuid = Column(String(64), nullable=True)  # nota de crédito -> original
+    # Idempotency for nota-de-crédito issuance (a refund retry → one egreso).
+    idempotency_key = Column(String(128), nullable=True, unique=True, index=True)
 
     receiver_rfc = Column(String(13), nullable=True)
     receiver_name = Column(String(255), nullable=True)

@@ -79,6 +79,25 @@ class LinkExternalCfdiRequest(BaseModel):
     receiver_name: Optional[str] = None
 
 
+class NotaDeCreditoRequest(BaseModel):
+    """Issue a nota de crédito (egreso) for a refund on an invoiced order."""
+
+    amount_cents: int  # the refunded amount, in centavos
+    idempotency_key: str  # a retry with the same key issues ONE credit note
+    reason: Optional[str] = None
+
+
+class NotaDeCreditoResponse(BaseModel):
+    """Result of a nota-de-crédito request. ``issued`` is False when there is no
+    invoice to credit (the caller treats that as a no-op skip, not an error)."""
+
+    issued: bool
+    status: str  # "stamped" | "no_ingreso" | "marketplace_handled"
+    uuid: Optional[str] = None
+    related_uuid: Optional[str] = None  # the original ingreso UUID
+    amount_cents: int = 0
+
+
 class CfdiConcept(BaseModel):
     description: str
     product_key: str   # ClaveProdServ

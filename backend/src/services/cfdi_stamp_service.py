@@ -14,6 +14,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.models.cfdi_document import CfdiDocument
@@ -114,6 +116,12 @@ def build_stamp_request(db: Session, order: SalesOrder, issuer) -> CfdiStampRequ
         total_cents=total_cents,
         currency=order.currency or "MXN",
         external_ref=str(order.id),
+    )
+
+
+def _by_idempotency_key(db: Session, key: str) -> Optional[CfdiDocument]:
+    return (
+        db.query(CfdiDocument).filter(CfdiDocument.idempotency_key == key).first()
     )
 
 
@@ -228,6 +236,125 @@ def link_external(
     )
     db.add(doc)
     db.commit()
+    db.refresh(doc)
+    return {"document": doc}
+
+
+def issue_nota_de_credito(
+    db: Session,
+    order_id: int,
+    amount_cents: int,
+    idempotency_key: str,
+    *,
+    reason: Optional[str] = None,
+    provider: Optional[InvoicingProvider] = None,
+) -> Dict[str, Any]:
+    """Issue an egreso (nota de crédito) for a refund on an invoiced order.
+
+      - already issued for this key   -> {"document": <existing egreso>} (idempotent)
+      - order has no stamped ingreso  -> {"error": "no_ingreso"}
+      - the ingreso was issued elsewhere (marketplace) -> {"error": "marketplace_handled"}
+      - amount <= 0                   -> {"error": "invalid_amount"}
+      - amount + prior egresos > invoice total -> {"error": "amount_exceeds_invoice"}
+      - PAC rejected                  -> {"error": "stamp_failed", "detail": ...}
+    On success returns {"document": <new egreso CfdiDocument>}. Amounts are
+    centavos. ``idempotency_key`` makes a refund retry produce ONE credit note.
+    """
+    if not (idempotency_key or "").strip():
+        return {"error": "missing_idempotency_key"}
+
+    # Fast idempotent path (no lock) — a completed credit note replays instantly.
+    existing = _by_idempotency_key(db, idempotency_key)
+    if existing is not None:
+        return {"document": existing}
+
+    if amount_cents <= 0:
+        return {"error": "invalid_amount"}
+
+    # Lock the ingreso row FOR UPDATE so all credit-notes for this order
+    # SERIALIZE: the cap (read sum → insert) is otherwise a race where two
+    # concurrent refunds with different keys both read the same `already_credited`
+    # and over-credit the invoice. The lock also serializes same-key races so the
+    # re-check below resolves them idempotently instead of double-stamping.
+    ingreso = (
+        db.query(CfdiDocument)
+        .filter(CfdiDocument.order_id == order_id)
+        .filter(CfdiDocument.kind == "ingreso")
+        .filter(CfdiDocument.status == "stamped")
+        .with_for_update()
+        .first()
+    )
+    if ingreso is None:
+        return {"error": "no_ingreso"}
+    if (ingreso.invoicing_source or "self") != "self":
+        # The marketplace that stamped the ingreso also handles its credit notes.
+        return {"error": "marketplace_handled"}
+
+    # Re-check idempotency INSIDE the lock: a concurrent same-key request that
+    # committed while we waited for the lock is now visible.
+    existing = _by_idempotency_key(db, idempotency_key)
+    if existing is not None:
+        return {"document": existing}
+
+    # Cap: the sum of credit notes must not exceed the original invoice total.
+    already_credited = int(
+        db.query(func.coalesce(func.sum(CfdiDocument.total_cents), 0))
+        .filter(CfdiDocument.order_id == order_id)
+        .filter(CfdiDocument.kind == "egreso")
+        .filter(CfdiDocument.status == "stamped")
+        .scalar()
+        or 0
+    )
+    creditable = int(ingreso.total_cents) - already_credited
+    if amount_cents > creditable:
+        return {"error": "amount_exceeds_invoice", "creditable_cents": creditable}
+
+    provider = provider or get_provider(db)
+    try:
+        result = provider.nota_de_credito(ingreso.uuid, amount_cents)
+    except InvoicingError as exc:
+        logger.warning("nota de credito failed for order %d: %s", order_id, exc)
+        return {"error": "stamp_failed", "detail": str(exc)}
+
+    # Split the credited total on the SAME basis as the original invoice — use
+    # the issuer's configured IVA rate (not a hardcoded 16%) so the egreso's tax
+    # split is consistent with the ingreso. IVA is the residual so the parts sum
+    # back to the total exactly.
+    iva_rate = cfdi_service.read_issuer_config(db).iva_rate
+    base_pesos, _ = cfdi_service._backout_iva(amount_cents / 100, iva_rate)
+    subtotal_cents = _cents(base_pesos)
+    doc = CfdiDocument(
+        order_id=order_id,
+        kind="egreso",
+        status="stamped",
+        invoicing_source="self",
+        uuid=result.uuid,
+        related_uuid=ingreso.uuid,
+        idempotency_key=idempotency_key,
+        receiver_rfc=ingreso.receiver_rfc,
+        receiver_name=ingreso.receiver_name,
+        receiver_postal_code=ingreso.receiver_postal_code,
+        receiver_regime=ingreso.receiver_regime,
+        cfdi_use=ingreso.cfdi_use,
+        currency=ingreso.currency,
+        subtotal_cents=subtotal_cents,
+        iva_cents=amount_cents - subtotal_cents,
+        total_cents=amount_cents,
+        pac_vendor=result.pac_vendor,
+        xml_path=_persist_xml(result.uuid, result.xml),
+        stamped_at=datetime.now(timezone.utc),
+    )
+    db.add(doc)
+    try:
+        db.commit()
+    except IntegrityError:
+        # Lost a same-key race past the lock (belt-and-suspenders) — the unique
+        # index rejected the duplicate; return the row the winner committed.
+        db.rollback()
+        existing = _by_idempotency_key(db, idempotency_key)
+        if existing is not None:
+            return {"document": existing}
+        raise
     db.refresh(doc)
     return {"document": doc}
 
