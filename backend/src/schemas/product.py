@@ -60,6 +60,9 @@ class ProductBase(BaseModel):
     description: Optional[str] = None
     sku: Optional[str] = None  # Optional - auto-generated if not provided
     default_resale_price: Optional[float] = None
+    # Public "compare-at"/list price for a sale plaque (NULL = no sale). Public,
+    # not a cost — the storefront shows it struck-through when > the resale price.
+    compare_at_price: Optional[float] = None
     cost_price: Optional[float] = None
     # Native pricing currency (ISO 4217). Defaults to MXN — the primary
     # market. Carried so cost/price figures are unambiguous and can be
@@ -93,6 +96,7 @@ class ProductUpdate(BaseModel):
     description: Optional[str] = None
     sku: Optional[str] = None
     default_resale_price: Optional[float] = None
+    compare_at_price: Optional[float] = None
     cost_price: Optional[float] = None
     currency: Optional[str] = None
     average_cost: Optional[float] = None

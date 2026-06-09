@@ -15,6 +15,10 @@ class Product(Base):
     supplier_sku = Column(String, nullable=True, index=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"))
     default_resale_price = Column(Float)
+    # Optional "compare-at" / list price shown struck-through next to the resale
+    # price to signal a sale (the storefront renders it only when it's higher than
+    # the actual price). NULL = no sale. This is a PUBLIC price, not a cost.
+    compare_at_price = Column(Float, nullable=True)
     cost_price = Column(Float) # Last Purchase Price
     average_cost = Column(Float, default=0.0) # Weighted Average Cost
     # The product's native pricing currency (ISO 4217). Defaults to
