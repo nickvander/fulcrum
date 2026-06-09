@@ -62,9 +62,17 @@ def _inventory_qty(db: Session, product_id: int) -> int:
     return int(item.quantity) if item else 0
 
 
-def _seed_owned_order(db: Session, *, customer_user_id: int | None) -> SalesOrder:
+def _seed_owned_order(
+    db: Session,
+    *,
+    customer_user_id: int | None,
+    status: str = "completed",
+    created_days_ago: int = 0,
+) -> SalesOrder:
     """Seed a FULCRUM order with one line item + inventory, optionally owned by
-    a customer."""
+    a customer. ``created_days_ago`` ages the order for return-window tests."""
+    from datetime import timedelta
+
     _SEED["n"] += 1
     suffix = _SEED["n"]
     product = crud_product.product.create(
@@ -76,10 +84,10 @@ def _seed_owned_order(db: Session, *, customer_user_id: int | None) -> SalesOrde
     )
     db.add(InventoryItem(product_id=product.id, quantity=10, location="default"))
     order = SalesOrder(
-        status="completed",
+        status=status,
         total_price=100.0,
         currency="MXN",
-        created_at=datetime.utcnow(),
+        created_at=datetime.utcnow() - timedelta(days=created_days_ago),
         source=OrderSource.FULCRUM.value,
         external_order_id=f"CRET-ORD-{suffix}",
         customer_user_id=customer_user_id,
@@ -435,6 +443,134 @@ def test_get_order_detail_accepts_api_key_and_customer_jwt(
     ).status_code == 200
     # No credentials → 401.
     assert client.get(f"/api/v1/sales-orders/{order.id}").status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# Eligibility window + restock rules (Phase 2)
+# ---------------------------------------------------------------------------
+
+
+def test_request_return_rejected_outside_window(client: TestClient, db: Session):
+    """A return requested past RETURN_WINDOW_DAYS (default 30) is 422."""
+    _register(client, "late@example.com")
+    headers = _customer_headers(client, db, "late@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"], created_days_ago=60)
+    item = order.items[0]
+    resp = client.post(
+        f"/api/v1/customers/me/orders/{order.id}/returns",
+        json={
+            "lines": [{"order_item_id": item.id, "quantity": 1}],
+            "idempotency_key": "late-1",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["code"] == "apiErrors.salesOrderReturn.windowExpired"
+    assert (
+        db.query(SalesOrderReturn).filter(SalesOrderReturn.order_id == order.id).count()
+        == 0
+    )
+
+
+def test_request_return_rejected_for_cancelled_order(client: TestClient, db: Session):
+    _register(client, "cxl@example.com")
+    headers = _customer_headers(client, db, "cxl@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"], status="cancelled")
+    item = order.items[0]
+    resp = client.post(
+        f"/api/v1/customers/me/orders/{order.id}/returns",
+        json={
+            "lines": [{"order_item_id": item.id, "quantity": 1}],
+            "idempotency_key": "cxl-1",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 422
+    assert resp.json()["code"] == "apiErrors.salesOrderReturn.orderNotReturnable"
+
+
+def test_order_detail_exposes_eligibility(client: TestClient, db: Session):
+    _register(client, "elig@example.com")
+    headers = _customer_headers(client, db, "elig@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+
+    fresh = _seed_owned_order(db, customer_user_id=me["id"])
+    d = client.get(f"/api/v1/customers/me/orders/{fresh.id}", headers=headers).json()
+    assert d["returnable"] is True
+    assert d["return_window_days"] == 30
+    assert d["return_block_reason"] is None
+
+    old = _seed_owned_order(db, customer_user_id=me["id"], created_days_ago=60)
+    d_old = client.get(f"/api/v1/customers/me/orders/{old.id}", headers=headers).json()
+    assert d_old["returnable"] is False
+    assert d_old["return_block_reason"] == "window_expired"
+
+
+def test_defective_return_is_not_restocked_on_approval(
+    client: TestClient, db: Session, admin_headers,
+):
+    """A `defective` return is written off — approval refunds + lands `refunded`
+    but does NOT credit sellable stock; `restock` is False on the row."""
+    _register(client, "defect@example.com")
+    headers = _customer_headers(client, db, "defect@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"])
+    item = order.items[0]
+    qty_before = _inventory_qty(db, item.product_id)
+
+    created = client.post(
+        f"/api/v1/customers/me/orders/{order.id}/returns",
+        json={
+            "lines": [{"order_item_id": item.id, "quantity": 1}],
+            "reason": "defective",
+            "idempotency_key": "defect-1",
+        },
+        headers=headers,
+    ).json()
+    ret = created["returns"][0]
+    assert ret["restock"] is False
+    return_id = ret["id"]
+
+    resp = client.post(
+        f"/api/v1/sales-orders/{order.id}/returns/{return_id}/transition",
+        json={"status": "refunded"},
+        headers=admin_headers,
+    )
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "refunded"
+    # Defective → NOT restocked.
+    assert _inventory_qty(db, item.product_id) == qty_before
+
+
+def test_non_defective_return_is_restocked_on_approval(
+    client: TestClient, db: Session, admin_headers,
+):
+    _register(client, "remorse@example.com")
+    headers = _customer_headers(client, db, "remorse@example.com")
+    me = client.get("/api/v1/customers/me", headers=headers).json()
+    order = _seed_owned_order(db, customer_user_id=me["id"])
+    item = order.items[0]
+    qty_before = _inventory_qty(db, item.product_id)
+    created = client.post(
+        f"/api/v1/customers/me/orders/{order.id}/returns",
+        json={
+            "lines": [{"order_item_id": item.id, "quantity": 1}],
+            "reason": "no_longer_needed",
+            "idempotency_key": "remorse-1",
+        },
+        headers=headers,
+    ).json()
+    assert created["returns"][0]["restock"] is True
+    return_id = created["returns"][0]["id"]
+    client.post(
+        f"/api/v1/sales-orders/{order.id}/returns/{return_id}/transition",
+        json={"status": "refunded"},
+        headers=admin_headers,
+    )
+    # Restockable → credited.
+    assert _inventory_qty(db, item.product_id) == qty_before + 1
 
 
 def test_create_onsite_order_persists_customer_user_id(

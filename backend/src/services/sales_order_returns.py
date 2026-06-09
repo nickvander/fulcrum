@@ -31,11 +31,12 @@ module assumes the caller passed an already-loaded `SalesOrder`.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
+from src.config import settings
 from src.core.errors import LocalizedHTTPException
 from src.models.inventory import (
     InventoryAdjustmentReasonCode,
@@ -69,6 +70,91 @@ _ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 # States in which the physical product is considered back, so stock is credited
 # (exactly once, guarded by `stock_recredited_at`).
 _STOCK_BEARING = {"approved", "received", "refunded"}
+
+# Order statuses that mark "the buyer has the goods" — the return window is
+# measured from the latest such status-event time (falling back to created_at).
+_DELIVERED_STATUSES = {"delivered", "completed", "entregado"}
+
+# Order statuses on which a return cannot be requested (the sale didn't complete).
+_NON_RETURNABLE_STATUSES = {"cancelled", "canceled", "failed", "pending"}
+
+
+def _as_aware_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    """Coerce a possibly-naive datetime to tz-aware UTC (created_at is stored
+    naive; status-event times are tz-aware), so window math never mixes them."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def return_window_reference(order: SalesOrder) -> Optional[datetime]:
+    """The datetime the return window is measured FROM: the latest delivered/
+    completed status-event time, or the order's ``created_at`` when there is none
+    (storefront orders are created already ``completed`` with no event)."""
+    best: Optional[datetime] = None
+    for ev in (getattr(order, "status_events", None) or []):
+        if (ev.to_status or "").strip().lower() in _DELIVERED_STATUSES:
+            t = _as_aware_utc(ev.changed_at)
+            if t is not None and (best is None or t > best):
+                best = t
+    return best or _as_aware_utc(order.created_at)
+
+
+def is_within_return_window(
+    order: SalesOrder,
+    *,
+    now: Optional[datetime] = None,
+    window_days: Optional[int] = None,
+) -> bool:
+    """True when the order is still inside its return window. ``window_days`` <= 0
+    (or no reference date) means the window is disabled / not enforced."""
+    days = settings.RETURN_WINDOW_DAYS if window_days is None else window_days
+    if days is None or days <= 0:
+        return True
+    ref = return_window_reference(order)
+    if ref is None:
+        return True
+    when = now or datetime.now(timezone.utc)
+    return (when - ref) <= timedelta(days=days)
+
+
+def is_order_status_returnable(order: SalesOrder) -> bool:
+    """False when the order's status forbids a return (cancelled/failed/pending)."""
+    return (order.status or "").strip().lower() not in _NON_RETURNABLE_STATUSES
+
+
+def _non_restockable_reasons() -> set[str]:
+    raw = settings.RETURN_NON_RESTOCKABLE_REASONS or ""
+    return {r.strip().lower() for r in raw.split(",") if r.strip()}
+
+
+def should_restock(reason: Optional[str]) -> bool:
+    """Whether a return with this reason re-credits sellable inventory. A
+    defective/damaged reason (config ``RETURN_NON_RESTOCKABLE_REASONS``) is
+    written off, not restocked; everything else (incl. no reason) restocks."""
+    if not reason:
+        return True
+    return reason.strip().lower() not in _non_restockable_reasons()
+
+
+def remaining_returnable_by_item(
+    order: SalesOrder, returns: Sequence["SalesOrderReturn"]
+) -> dict[int, int]:
+    """Remaining returnable units per order_item_id = ordered qty minus the units
+    already on a non-``rejected`` return. Items with nothing left are omitted."""
+    returned: dict[int, int] = {}
+    for r in returns:
+        if (r.status or "").lower() == "rejected" or r.order_item_id is None:
+            continue
+        returned[r.order_item_id] = returned.get(r.order_item_id, 0) + (r.quantity or 0)
+    remaining: dict[int, int] = {}
+    for item in (order.items or []):
+        left = (item.quantity or 0) - returned.get(item.id, 0)
+        if left > 0:
+            remaining[item.id] = left
+    return remaining
 
 
 class ReturnLineInput:
@@ -185,6 +271,9 @@ def record_return(
             # and (below) stamp `stock_recredited_at` when stock is credited, so
             # a later transition into a stock-bearing state never double-credits.
             status="received",
+            # Operator-recorded returns restock by default (the operator has the
+            # goods in hand and is putting them back).
+            restock=True,
         )
         db.add(ret)
         created.append(ret)
@@ -275,6 +364,26 @@ def request_return(
             detail="At least one return line is required",
         )
 
+    # Eligibility (Phase 2): the sale must have completed and still be inside its
+    # return window. These are authoritative here (the storefront also hides the
+    # form via the order detail's `returnable` flag, but never trust the client).
+    if not is_order_status_returnable(order):
+        raise LocalizedHTTPException(
+            status_code=422,
+            code="apiErrors.salesOrderReturn.orderNotReturnable",
+            params={"status": order.status},
+            detail="This order is not eligible for a return",
+        )
+    if not is_within_return_window(order, now=when):
+        raise LocalizedHTTPException(
+            status_code=422,
+            code="apiErrors.salesOrderReturn.windowExpired",
+            params={"window_days": settings.RETURN_WINDOW_DAYS},
+            detail="The return window for this order has expired",
+        )
+
+    restock = should_restock(reason)
+
     items_by_id = {item.id: item for item in (order.items or [])}
     items_by_product: dict[int, SalesOrderItem] = {}
     for item in order.items or []:
@@ -346,6 +455,7 @@ def request_return(
             notes=notes,
             status="requested",
             amount=amount,
+            restock=restock,
             # Only the FIRST row of a multi-line request carries the idempotency
             # key (the column is UNIQUE). The key still dedups the whole request
             # because all rows are created together in one transaction.
@@ -405,8 +515,15 @@ def transition_return(
             detail=f"Cannot transition a return from {current} to {new_status}",
         )
 
-    # Credit stock once, on the first move into a stock-bearing state.
-    if new_status in _STOCK_BEARING and ret.stock_recredited_at is None:
+    # Credit stock once, on the first move into a stock-bearing state — but ONLY
+    # when this return restocks (defective/damaged returns are written off, not
+    # returned to sellable inventory). `restock is not False` treats legacy NULLs
+    # as restock=True (their stock was credited under the prior behavior).
+    if (
+        new_status in _STOCK_BEARING
+        and ret.restock is not False
+        and ret.stock_recredited_at is None
+    ):
         if ret.product_id is not None:
             order = ret.order
             try:

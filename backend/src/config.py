@@ -62,6 +62,17 @@ class Settings(BaseSettings):
     MERCADOPAGO_WEBHOOK_SECRET: Optional[str] = None
     MERCADOPAGO_API_BASE_URL: str = "https://api.mercadopago.com"
 
+    # Returns policy (customer self-service, Phase 2).
+    # Eligibility window: a customer can request a return within this many days of
+    # the order's DELIVERY (the latest delivered/completed status-event time, or
+    # created_at when there is none — e.g. storefront orders are created
+    # `completed`). 0 or negative = unlimited (window disabled).
+    RETURN_WINDOW_DAYS: int = 30
+    # Reasons whose returned units are NOT credited back to sellable inventory
+    # (defective/damaged goods are written off, not restocked). Comma-separated,
+    # matched case-insensitively against the return reason code.
+    RETURN_NON_RESTOCKABLE_REASONS: str = "defective,damaged"
+
     # Testing
     TESTING: bool = False
 

@@ -869,6 +869,7 @@ def _serialize_return(ret) -> SalesOrderReturnRead:
         amount=ret.amount,
         refund_reference=ret.refund_reference,
         refunded_at=ret.refunded_at,
+        restock=ret.restock,
     )
 
 

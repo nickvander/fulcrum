@@ -378,6 +378,7 @@ def _customer_return_read(ret: "order_models.SalesOrderReturn") -> "sales_order_
         amount=ret.amount,
         requested_at=ret.received_at,
         refunded_at=ret.refunded_at,
+        restock=ret.restock,
     )
 
 
@@ -398,9 +399,29 @@ def _customer_order_detail(
                 product_sku=product.sku if product else None,
             )
         )
-    from src.services.sales_order_returns import list_returns as svc_list_returns
+    from src.config import settings
+    from src.services.sales_order_returns import (
+        is_order_status_returnable,
+        is_within_return_window,
+        list_returns as svc_list_returns,
+        remaining_returnable_by_item,
+    )
 
-    returns = [_customer_return_read(r) for r in svc_list_returns(db, order)]
+    return_rows = svc_list_returns(db, order)
+    returns = [_customer_return_read(r) for r in return_rows]
+
+    # Eligibility (Phase 2), computed authoritatively so the storefront can gate
+    # the request form. Block reason precedence: closed order > window expired >
+    # nothing left to return.
+    window_days = settings.RETURN_WINDOW_DAYS
+    remaining = remaining_returnable_by_item(order, return_rows)
+    block_reason: str | None = None
+    if not is_order_status_returnable(order):
+        block_reason = "order_closed"
+    elif not is_within_return_window(order):
+        block_reason = "window_expired"
+    elif not remaining:
+        block_reason = "fully_returned"
     return sales_order_schema.CustomerOrderDetail(
         id=order.id,
         status=order.status,
@@ -409,6 +430,9 @@ def _customer_order_detail(
         created_at=order.created_at,
         items=items,
         returns=returns,
+        returnable=block_reason is None,
+        return_window_days=window_days if window_days and window_days > 0 else 0,
+        return_block_reason=block_reason,
     )
 
 

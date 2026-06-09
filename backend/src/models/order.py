@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -324,6 +325,12 @@ class SalesOrderReturn(Base):
     # Credit-once guard: stamped the first time a return transition credits
     # stock back, so re-approving / re-transitioning never double-credits.
     stock_recredited_at = Column(DateTime(timezone=True), nullable=True)
+    # Restock decision (Phase 2 restocking rule): whether the returned units go
+    # back to SELLABLE inventory on approval. Defective/damaged returns are NOT
+    # restocked (written off). Decided at request time from the reason; defaults
+    # True (operator-recorded returns are physically restocked). When False the
+    # transition still completes (refund + status) but credits no stock.
+    restock = Column(Boolean, nullable=False, default=True, server_default="true")
 
     order = relationship("SalesOrder")
     order_item = relationship("SalesOrderItem")

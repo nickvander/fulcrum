@@ -274,6 +274,9 @@ class SalesOrderReturnRead(BaseModel):
     amount: Optional[float] = None
     refund_reference: Optional[str] = None
     refunded_at: Optional[datetime] = None
+    # Whether these units re-credit sellable inventory on approval (False for
+    # defective/damaged — written off, not restocked).
+    restock: Optional[bool] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -331,6 +334,8 @@ class CustomerReturnRead(BaseModel):
     amount: Optional[float] = None
     requested_at: datetime
     refunded_at: Optional[datetime] = None
+    # Whether these units restock on approval (False = defective/damaged write-off).
+    restock: Optional[bool] = None
 
 
 class CustomerOrderDetail(BaseModel):
@@ -345,6 +350,13 @@ class CustomerOrderDetail(BaseModel):
     created_at: Optional[datetime] = None
     items: List[CustomerOrderItem] = []
     returns: List[CustomerReturnRead] = []
+    # Return eligibility (Phase 2), computed authoritatively server-side so the
+    # storefront can show/hide the request form without re-deriving policy.
+    returnable: bool = False
+    return_window_days: int = 0
+    # Why a return can't be requested, when `returnable` is False:
+    # "window_expired" | "order_closed" | "fully_returned" | None.
+    return_block_reason: Optional[str] = None
 
 
 class SalesOrderCancelResult(BaseModel):
