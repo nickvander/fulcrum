@@ -97,6 +97,14 @@ class SalesOrder(Base):
     cfdi_receiver_regime = Column(String(8), nullable=True)
     cfdi_use = Column(String(8), nullable=True)
 
+    # Discount applied at order-create (FP discount codes, Phase 1). `total_price`
+    # is the POST-discount total; `discount_amount` (Float pesos) is what came off
+    # the subtotal so the CFDI descuento + reports can reconcile.
+    discount_code_id = Column(
+        Integer, ForeignKey("discount_codes.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    discount_amount = Column(Float, nullable=False, default=0.0, server_default="0")
+
     items = relationship("SalesOrderItem", back_populates="order")
     cost_breakdown = relationship(
         "OrderCostBreakdown",
