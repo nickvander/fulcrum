@@ -156,6 +156,12 @@ class SalesOrderCreate(BaseModel):
     # atomic decrement (which 409s on insufficient stock, as today).
     reservation_key: Optional[str] = Field(default=None, min_length=1)
 
+    # Optional storefront discount code (FP discount codes). Validated + applied
+    # ATOMICALLY at order-create: the server recomputes the amount on its own
+    # subtotal (never a client value), serializes on the code row, and fails the
+    # order if the code is invalid/expired/limit-reached. NULL ⇒ no discount.
+    discount_code: Optional[str] = Field(default=None, min_length=1, max_length=64)
+
     # CFDI 4.0 receptor (buyer fiscal data), captured at checkout when the buyer
     # requests a factura (FP-06 P2). All optional: a NULL RFC ⇒ público en general
     # (RFC genérico) per cfdi_service. Lengths mirror the SalesOrder columns so a

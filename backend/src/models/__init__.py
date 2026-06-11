@@ -47,8 +47,12 @@ from .marketing import (
 
 from .alert import AlertRule, AlertEvent, AlertType
 from .payment import Payment, PaymentStatus
+from .discount import DiscountCode, DiscountKind, DiscountRedemption  # noqa: F401
 
 __all__ = [
+    "DiscountCode",
+    "DiscountKind",
+    "DiscountRedemption",
     "User",
     "UserAuditLog",
     "Address",
