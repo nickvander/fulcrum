@@ -29,9 +29,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Tuple
 
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from src.core.errors import LocalizedHTTPException
+from src.models.discount import DiscountRedemption
 from src.models.inventory import (
     InventoryAdjustmentReasonCode,
     InventoryAdjustmentSource,
@@ -40,7 +42,7 @@ from src.models.order import OrderSource, SalesOrder, SalesOrderItem
 from src.models.product import Product
 from src.models.product_variant import ProductVariant
 from src.schemas.sales_order import SalesOrderCreate
-from src.services import stock_reservation_service
+from src.services import discount_service, stock_reservation_service
 from src.services.inventory_service import inventory_service
 
 
@@ -177,9 +179,36 @@ def create_onsite_order(
                 )
             )
 
+        # Apply a discount code, if present. Validated + LOCKED (SELECT FOR
+        # UPDATE on the code row) INSIDE this SAVEPOINT, so concurrent uses of a
+        # single-use code serialize and can't over-redeem. The amount is recomputed
+        # on the SERVER subtotal (never a client value); an invalid/expired/limit-
+        # reached code fails the whole order rather than silently charging full price.
+        subtotal_before_discount = total_price
+        discount_code_id: int | None = None
+        discount_amount = 0.0
+        if payload.discount_code:
+            result = discount_service.validate_discount(
+                db,
+                payload.discount_code,
+                subtotal_before_discount,
+                payload.customer_user_id,
+                lock=True,
+            )
+            if not result.valid:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Discount code is not valid ({result.reason}).",
+                )
+            discount_code_id = result.code_id
+            discount_amount = result.discount_amount
+            total_price = round(subtotal_before_discount - discount_amount, 2)
+
         order = SalesOrder(
             status=ONSITE_ORDER_STATUS,
             total_price=total_price,
+            discount_code_id=discount_code_id,
+            discount_amount=discount_amount,
             currency=payload.currency,
             source=OrderSource.FULCRUM.value,
             external_order_id=payload.idempotency_key,
@@ -200,6 +229,19 @@ def create_onsite_order(
         )
         db.add(order)
         db.flush()  # populate order.id for the line items below
+
+        # Record the discount redemption (the usage ledger) now that order.id
+        # exists — same SAVEPOINT + same FOR UPDATE lock above, so the global +
+        # per-customer redemption counts are enforced race-safely.
+        if discount_code_id is not None:
+            db.add(
+                DiscountRedemption(
+                    discount_code_id=discount_code_id,
+                    sales_order_id=order.id,
+                    customer_user_id=payload.customer_user_id,
+                    amount=discount_amount,
+                )
+            )
 
         # OXXO/SPEI: if this order carries an ACTIVE stock reservation, consume
         # it (link the order, mark it consumed) instead of decrementing again —
