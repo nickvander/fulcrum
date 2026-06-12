@@ -297,6 +297,70 @@ def test_address_crud_roundtrip(client: TestClient, db: Session):
 
 
 @pytest.mark.db
+def test_address_mx_fields_roundtrip(client: TestClient, db: Session):
+    """FP-B: colonia / interior / recipient_name / phone persist and serialize
+    on the customer address surface, so the storefront can save + prefill a
+    complete Mexican shipping address."""
+    _register(client, "mxaddr@example.com")
+    headers = _customer_headers(client, db, "mxaddr@example.com")
+
+    payload = {
+        **_addr_payload(),
+        "colonia": "Roma Norte",
+        "interior": "Depto 4B",
+        "recipient_name": "Juana Pérez",
+        "phone": "+52 55 1234 5678",
+    }
+    created = client.post(
+        "/api/v1/customers/me/addresses", headers=headers, json=payload
+    )
+    assert created.status_code == 200, created.text
+    body = created.json()
+    assert body["colonia"] == "Roma Norte"
+    assert body["interior"] == "Depto 4B"
+    assert body["recipient_name"] == "Juana Pérez"
+    assert body["phone"] == "+52 55 1234 5678"
+
+    # The list read carries them too (prefill reads the list).
+    listed = client.get("/api/v1/customers/me/addresses", headers=headers).json()
+    mine = next(a for a in listed if a["id"] == body["id"])
+    assert mine["colonia"] == "Roma Norte"
+    assert mine["recipient_name"] == "Juana Pérez"
+
+    # Partial update keeps untouched MX fields and changes the targeted one.
+    updated = client.put(
+        f"/api/v1/customers/me/addresses/{body['id']}",
+        headers=headers,
+        json={"colonia": "Condesa"},
+    )
+    assert updated.status_code == 200, updated.text
+    assert updated.json()["colonia"] == "Condesa"
+    assert updated.json()["interior"] == "Depto 4B"
+
+    # Length bounds are enforced at the schema (422, not a DB error).
+    too_long = client.post(
+        "/api/v1/customers/me/addresses",
+        headers=headers,
+        json={**_addr_payload(), "phone": "9" * 21},
+    )
+    assert too_long.status_code == 422
+
+
+@pytest.mark.db
+def test_address_legacy_payload_still_works(client: TestClient, db: Session):
+    """A pre-FP-B payload (no MX fields) keeps working; the new fields read
+    back as null."""
+    _register(client, "legacyaddr@example.com")
+    headers = _customer_headers(client, db, "legacyaddr@example.com")
+    created = client.post(
+        "/api/v1/customers/me/addresses", headers=headers, json=_addr_payload()
+    )
+    assert created.status_code == 200, created.text
+    assert created.json()["colonia"] is None
+    assert created.json()["recipient_name"] is None
+
+
+@pytest.mark.db
 def test_cannot_access_another_users_address(client: TestClient, db: Session):
     _register(client, "owner@example.com")
     _register(client, "intruder@example.com")

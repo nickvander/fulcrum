@@ -204,6 +204,25 @@ def create_onsite_order(
             discount_amount = result.discount_amount
             total_price = round(subtotal_before_discount - discount_amount, 2)
 
+        # Ship-to destination (FP-B): persisted durably on the order (empty
+        # strings normalised to NULL, mirroring the CFDI receptor fields).
+        # PII — these values are never logged.
+        ship_to = payload.ship_to
+        ship_to_fields = {
+            f"ship_to_{field}": (getattr(ship_to, field) or None) if ship_to else None
+            for field in (
+                "name",
+                "street",
+                "colonia",
+                "interior",
+                "city",
+                "state",
+                "postal_code",
+                "country",
+                "phone",
+            )
+        }
+
         order = SalesOrder(
             status=ONSITE_ORDER_STATUS,
             total_price=total_price,
@@ -226,6 +245,7 @@ def create_onsite_order(
             cfdi_receiver_postal_code=(payload.cfdi_receiver_postal_code or None),
             cfdi_receiver_regime=(payload.cfdi_receiver_regime or None),
             cfdi_use=(payload.cfdi_use or None),
+            **ship_to_fields,
         )
         db.add(order)
         db.flush()  # populate order.id for the line items below

@@ -545,3 +545,103 @@ def test_auth_required(client: TestClient, db, test_product):
         == 0
     )
     assert _qty_on_hand(db, test_product) == 5
+
+
+# --------------------------------------------------------------------------- #
+# FP-B: ship-to address persisted at order-create
+# --------------------------------------------------------------------------- #
+
+
+_SHIP_TO = {
+    "name": "Juana Pérez",
+    "street": "Av. Reforma 100",
+    "colonia": "Roma Norte",
+    "interior": "Depto 4B",
+    "city": "Ciudad de México",
+    "state": "CDMX",
+    "postal_code": "06700",
+    "country": "MX",
+    "phone": "+52 55 1234 5678",
+}
+
+
+def test_create_persists_ship_to(client: TestClient, db, test_product, admin_headers):
+    """FP-B: the optional ship_to object lands on sales_orders.ship_to_*
+    durably (it used to live only in the BFF's TTL-bound snapshot)."""
+    _stock(db, test_product, 5)
+
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-shipto",
+            "items": [{"product_id": test_product.id, "quantity": 1}],
+            "ship_to": _SHIP_TO,
+        },
+    )
+    assert resp.status_code == 201, resp.text
+
+    order = (
+        db.query(SalesOrder)
+        .filter(SalesOrder.external_order_id == "os-key-shipto")
+        .one()
+    )
+    assert order.ship_to_name == "Juana Pérez"
+    assert order.ship_to_street == "Av. Reforma 100"
+    assert order.ship_to_colonia == "Roma Norte"
+    assert order.ship_to_interior == "Depto 4B"
+    assert order.ship_to_city == "Ciudad de México"
+    assert order.ship_to_state == "CDMX"
+    assert order.ship_to_postal_code == "06700"
+    assert order.ship_to_country == "MX"
+    assert order.ship_to_phone == "+52 55 1234 5678"
+
+
+def test_create_without_ship_to_keeps_columns_null(
+    client: TestClient, db, test_product, admin_headers
+):
+    """POS / legacy payloads (no ship_to key) stay NULL — and empty strings
+    are normalised to NULL rather than stored."""
+    _stock(db, test_product, 5)
+
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-noshipto",
+            "items": [{"product_id": test_product.id, "quantity": 1}],
+            "ship_to": {"name": "", "street": ""},
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    order = (
+        db.query(SalesOrder)
+        .filter(SalesOrder.external_order_id == "os-key-noshipto")
+        .one()
+    )
+    assert order.ship_to_name is None
+    assert order.ship_to_street is None
+    assert order.ship_to_city is None
+
+
+def test_ship_to_field_too_long_returns_422(
+    client: TestClient, db, test_product, admin_headers
+):
+    _stock(db, test_product, 5)
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-shipto-long",
+            "items": [{"product_id": test_product.id, "quantity": 1}],
+            "ship_to": {**_SHIP_TO, "phone": "9" * 21},
+        },
+    )
+    assert resp.status_code == 422, resp.text
+    # Length bound rejected at the schema; no order created.
+    assert (
+        db.query(SalesOrder)
+        .filter(SalesOrder.external_order_id == "os-key-shipto-long")
+        .count()
+        == 0
+    )

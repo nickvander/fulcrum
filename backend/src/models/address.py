@@ -11,6 +11,15 @@ class Address(Base):
     state = Column(String, nullable=False)
     postal_code = Column(String, nullable=False)
     country = Column(String, nullable=False)
+    # Mexican-address granularity + shipping prefill (FP-B). `colonia` (the
+    # neighborhood) and `interior` (apartment/unit) are required by MX carriers
+    # for reliable delivery; `recipient_name`/`phone` make a saved address
+    # self-sufficient as a ship-to (the recipient is not always the account
+    # holder). All nullable — legacy rows simply lack them. PII: never logged.
+    colonia = Column(String(128), nullable=True)
+    interior = Column(String(32), nullable=True)
+    recipient_name = Column(String(128), nullable=True)
+    phone = Column(String(20), nullable=True)
     is_primary = Column(Boolean, default=False)
     is_billing = Column(Boolean, default=False)
     is_shipping = Column(Boolean, default=False)

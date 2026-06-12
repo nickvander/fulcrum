@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
@@ -8,6 +8,13 @@ class AddressBase(BaseModel):
     state: str
     postal_code: str
     country: str
+    # MX-address granularity + shipping prefill (FP-B). All optional so legacy
+    # clients keep working; lengths mirror the DB columns so a malformed value
+    # is rejected here rather than at the database.
+    colonia: Optional[str] = Field(default=None, max_length=128)
+    interior: Optional[str] = Field(default=None, max_length=32)
+    recipient_name: Optional[str] = Field(default=None, max_length=128)
+    phone: Optional[str] = Field(default=None, max_length=20)
     is_primary: Optional[bool] = False
     is_billing: Optional[bool] = False
     is_shipping: Optional[bool] = False

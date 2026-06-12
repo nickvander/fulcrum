@@ -117,6 +117,27 @@ class SalesOrderDetail(SalesOrder):
 # --- On-site order create (FP-04) ------------------------------------------
 
 
+class OrderShipTo(BaseModel):
+    """Ship-to destination for a storefront order (FP-B).
+
+    Used both on `SalesOrderCreate` (write) and `CustomerOrderDetail` (read)
+    so the round-trip shape is identical. All fields optional — a POS counter
+    sale has no ship-to at all — and length-bounded to mirror the
+    `sales_orders.ship_to_*` columns. `colonia`/`interior` are the MX-address
+    fields a generic street/city/state model misses. PII: never logged.
+    """
+
+    name: Optional[str] = Field(default=None, max_length=128)
+    street: Optional[str] = Field(default=None, max_length=255)
+    colonia: Optional[str] = Field(default=None, max_length=128)
+    interior: Optional[str] = Field(default=None, max_length=32)
+    city: Optional[str] = Field(default=None, max_length=128)
+    state: Optional[str] = Field(default=None, max_length=64)
+    postal_code: Optional[str] = Field(default=None, max_length=10)
+    country: Optional[str] = Field(default=None, max_length=64)
+    phone: Optional[str] = Field(default=None, max_length=20)
+
+
 class SalesOrderItemCreate(BaseModel):
     """One requested line on an on-site order.
 
@@ -155,6 +176,11 @@ class SalesOrderCreate(BaseModel):
     # If the reservation is missing/expired the order falls back to a normal
     # atomic decrement (which 409s on insufficient stock, as today).
     reservation_key: Optional[str] = Field(default=None, min_length=1)
+
+    # Ship-to destination (FP-B), persisted durably on the order so the
+    # customer order detail can render it without a BFF-side snapshot. NULL ⇒
+    # no shipping address (POS / pickup). PII: never logged.
+    ship_to: Optional[OrderShipTo] = None
 
     # Optional storefront discount code (FP discount codes). Validated + applied
     # ATOMICALLY at order-create: the server recomputes the amount on its own

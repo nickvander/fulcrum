@@ -105,6 +105,22 @@ class SalesOrder(Base):
     )
     discount_amount = Column(Float, nullable=False, default=0.0, server_default="0")
 
+    # Ship-to destination captured at order-create (FP-B). The DURABLE record
+    # of where this order ships — previously this lived only in the BFF's
+    # TTL-bound checkout snapshot and the carrier's systems. All nullable:
+    # marketplace-ingested orders and POS counter sales have no ship-to.
+    # `colonia` (neighborhood) + `interior` (apartment/unit) are the MX-address
+    # fields generic address models miss. PII — these fields are NEVER logged.
+    ship_to_name = Column(String(128), nullable=True)
+    ship_to_street = Column(String(255), nullable=True)
+    ship_to_colonia = Column(String(128), nullable=True)
+    ship_to_interior = Column(String(32), nullable=True)
+    ship_to_city = Column(String(128), nullable=True)
+    ship_to_state = Column(String(64), nullable=True)
+    ship_to_postal_code = Column(String(10), nullable=True)
+    ship_to_country = Column(String(64), nullable=True)
+    ship_to_phone = Column(String(20), nullable=True)
+
     items = relationship("SalesOrderItem", back_populates="order")
     cost_breakdown = relationship(
         "OrderCostBreakdown",
