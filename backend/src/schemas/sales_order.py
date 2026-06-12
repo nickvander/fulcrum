@@ -386,6 +386,21 @@ class CustomerOrderDetail(BaseModel):
     total_price: Optional[float] = None
     currency: Optional[str] = "MXN"
     created_at: Optional[datetime] = None
+    # Fulfillment surfaced to the buyer (FP-A): the carrier + tracking written
+    # by the BFF's shipping-label PUT. Customer-appropriate fields ONLY —
+    # `shipping_label_url` (the internal label asset the operator prints),
+    # rate/shipment ids, idempotency keys, and the merchant's shipping cost
+    # are deliberately NOT serialized here.
+    shipping_carrier: Optional[str] = None
+    shipping_tracking_number: Optional[str] = None
+    shipping_tracking_url: Optional[str] = None
+    # What came off the subtotal at order-create (Float pesos, FP discount
+    # codes). `total_price` is already the post-discount total; this lets the
+    # storefront render the discount line without a snapshot overlay.
+    discount_amount: float = 0.0
+    # Where the order ships (FP-B), as captured at order-create. None when the
+    # order carries no ship-to at all (POS / marketplace / legacy orders).
+    ship_to: Optional[OrderShipTo] = None
     items: List[CustomerOrderItem] = []
     returns: List[CustomerReturnRead] = []
     # Return eligibility (Phase 2), computed authoritatively server-side so the

@@ -427,12 +427,43 @@ def _customer_order_detail(
         block_reason = "window_expired"
     elif not remaining:
         block_reason = "fully_returned"
+
+    # Ship-to (FP-B): serialize only when the order carries one at all —
+    # POS/marketplace/legacy orders stay `ship_to: null` rather than an
+    # all-null object.
+    ship_to_values = {
+        field: getattr(order, f"ship_to_{field}")
+        for field in (
+            "name",
+            "street",
+            "colonia",
+            "interior",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "phone",
+        )
+    }
+    ship_to = (
+        sales_order_schema.OrderShipTo(**ship_to_values)
+        if any(v is not None for v in ship_to_values.values())
+        else None
+    )
+
     return sales_order_schema.CustomerOrderDetail(
         id=order.id,
         status=order.status,
         total_price=order.total_price,
         currency=order.currency,
         created_at=order.created_at,
+        # Buyer-facing fulfillment (FP-A): carrier + tracking only — the label
+        # asset URL and shipping internals stay operator-side.
+        shipping_carrier=order.shipping_carrier,
+        shipping_tracking_number=order.shipping_tracking_number,
+        shipping_tracking_url=order.shipping_tracking_url,
+        discount_amount=float(order.discount_amount or 0.0),
+        ship_to=ship_to,
         items=items,
         returns=returns,
         returnable=block_reason is None,
