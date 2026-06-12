@@ -123,6 +123,7 @@ def _serialize_order_detail(order: SalesOrder) -> SalesOrderDetail:
             SalesOrderItemSchema(
                 id=item.id,
                 product_id=item.product_id,
+                variant_id=item.variant_id,
                 quantity=item.quantity,
                 price_per_unit=item.price_per_unit,
                 cost_per_unit=item.cost_per_unit,
@@ -722,6 +723,7 @@ def get_sales_order(
             SalesOrderItemSchema(
                 id=item.id,
                 product_id=item.product_id,
+                variant_id=item.variant_id,
                 quantity=item.quantity,
                 price_per_unit=item.price_per_unit,
                 cost_per_unit=item.cost_per_unit,

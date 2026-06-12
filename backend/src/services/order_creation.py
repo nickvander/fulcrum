@@ -156,6 +156,23 @@ def create_onsite_order(
                     .filter(ProductVariant.id == line.variant_id)
                     .first()
                 )
+                # FP-D: a missing variant, or one belonging to ANOTHER
+                # product, is a client error — reject it instead of silently
+                # falling back to product pricing (the old behavior) or
+                # surfacing a confusing 409 from the inventory decrement.
+                if variant is None or variant.product_id != line.product_id:
+                    raise LocalizedHTTPException(
+                        status_code=422,
+                        code="apiErrors.salesOrder.invalidVariant",
+                        params={
+                            "variantId": line.variant_id,
+                            "productId": line.product_id,
+                        },
+                        detail=(
+                            f"Variant {line.variant_id} does not exist or does "
+                            f"not belong to product {line.product_id}"
+                        ),
+                    )
 
             price_per_unit = _resolve_price_per_unit(product, variant)
             # Snapshot cost-at-sale so the margin report doesn't drift when
@@ -279,6 +296,10 @@ def create_onsite_order(
                 SalesOrderItem(
                     order_id=order.id,
                     product_id=r.product_id,
+                    # FP-D: persist WHICH variant sold, so order reads (and
+                    # any later return/exchange) carry variant granularity
+                    # instead of degrading to the product.
+                    variant_id=r.variant_id,
                     quantity=r.quantity,
                     price_per_unit=r.price_per_unit,
                     cost_per_unit=r.cost_per_unit,

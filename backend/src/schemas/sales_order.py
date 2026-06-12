@@ -13,6 +13,9 @@ class OrderSourceSchema(str, Enum):
 class SalesOrderItem(BaseModel):
     id: int
     product_id: Optional[int] = None
+    # The variant actually sold (FP-D); NULL on legacy lines and on products
+    # without variants.
+    variant_id: Optional[int] = None
     quantity: Optional[int] = None
     price_per_unit: Optional[float] = None
     # Captured cost basis per unit (NULL on legacy rows). Lets the
@@ -344,6 +347,9 @@ class CustomerOrderItem(BaseModel):
 
     id: int
     product_id: Optional[int] = None
+    # The variant actually sold (FP-D) — lets the storefront render the
+    # variant's name/attributes on the order line. NULL on legacy lines.
+    variant_id: Optional[int] = None
     quantity: Optional[int] = None
     price_per_unit: Optional[float] = None
     product_name: Optional[str] = None

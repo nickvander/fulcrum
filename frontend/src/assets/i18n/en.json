@@ -3331,7 +3331,8 @@
     },
     "salesOrder": {
       "notFound": "Sales order not found.",
-      "emptyItems": "A sales order must contain at least one line item."
+      "emptyItems": "A sales order must contain at least one line item.",
+      "invalidVariant": "Variant {{variantId}} does not exist or does not belong to product {{productId}}."
     },
     "stockTransfer": {
       "notFound": "Stock transfer not found.",

@@ -142,6 +142,17 @@ class SalesOrderItem(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_id = Column(Integer, ForeignKey("sales_orders.id"))
     product_id = Column(Integer, ForeignKey("products.id"))
+    # The product variant actually sold (FP-D). NULL on legacy rows and on
+    # lines of products without variants. SET NULL (not CASCADE) on variant
+    # delete: a ProductVariant CASCADE-deletes its inventory rows, but an order
+    # line is sales history and must survive the variant's removal — the line
+    # then degrades to product-level granularity, like a legacy row.
+    variant_id = Column(
+        Integer,
+        ForeignKey("product_variants.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     quantity = Column(Integer)
     price_per_unit = Column(Float)
     # Cost basis captured at order-create time so the margin report

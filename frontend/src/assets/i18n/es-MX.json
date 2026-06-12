@@ -3331,7 +3331,8 @@
     },
     "salesOrder": {
       "notFound": "Pedido de venta no encontrado.",
-      "emptyItems": "Un pedido de venta debe contener al menos una línea."
+      "emptyItems": "Un pedido de venta debe contener al menos una línea.",
+      "invalidVariant": "La variante {{variantId}} no existe o no pertenece al producto {{productId}}."
     },
     "stockTransfer": {
       "notFound": "Transferencia de inventario no encontrada.",

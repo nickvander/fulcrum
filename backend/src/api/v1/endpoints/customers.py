@@ -397,6 +397,7 @@ def _customer_order_detail(
             sales_order_schema.CustomerOrderItem(
                 id=item.id,
                 product_id=item.product_id,
+                variant_id=item.variant_id,
                 quantity=item.quantity,
                 price_per_unit=item.price_per_unit,
                 product_name=product.name if product else None,

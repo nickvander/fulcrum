@@ -645,3 +645,144 @@ def test_ship_to_field_too_long_returns_422(
         .count()
         == 0
     )
+
+
+# --------------------------------------------------------------------------- #
+# FP-D: variant_id on order lines (persisted + validated)
+# --------------------------------------------------------------------------- #
+
+
+def _variant(db, product, *, price: float, sku_suffix: str = "V"):
+    from src.models.product_variant import ProductVariant
+
+    variant = ProductVariant(
+        product_id=product.id,
+        name=f"{product.sku}-{sku_suffix}",
+        sku=f"{product.sku}-{sku_suffix}",
+        price=price,
+        cost_price=2.0,
+    )
+    db.add(variant)
+    db.flush()
+    return variant
+
+
+def _variant_stock(db, product, variant, qty: int) -> None:
+    db.add(
+        InventoryItem(
+            product_id=product.id,
+            variant_id=variant.id,
+            quantity=qty,
+            location="default",
+        )
+    )
+    db.flush()
+
+
+def _variant_qty_on_hand(db, product, variant) -> int:
+    item = (
+        db.query(InventoryItem)
+        .filter(
+            InventoryItem.product_id == product.id,
+            InventoryItem.variant_id == variant.id,
+            InventoryItem.location == "default",
+        )
+        .first()
+    )
+    return item.quantity if item else 0
+
+
+def test_create_with_variant_persists_and_decrements_variant_stock(
+    client: TestClient, db, admin_headers
+):
+    """FP-D round-trip: the line persists variant_id, the response serializes
+    it, pricing comes from the variant, and the decrement hits the VARIANT's
+    inventory row (the product-level row is untouched)."""
+    product = _product(db, price=10.0)
+    variant = _variant(db, product, price=15.5)
+    _stock(db, product, 8)  # product-level row (variant_id NULL)
+    _variant_stock(db, product, variant, 5)
+
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-variant",
+            "items": [
+                {"product_id": product.id, "variant_id": variant.id, "quantity": 2}
+            ],
+        },
+    )
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["items"][0]["variant_id"] == variant.id
+    assert body["items"][0]["price_per_unit"] == pytest.approx(15.5)
+    assert body["total_price"] == pytest.approx(2 * 15.5)
+
+    item_row = (
+        db.query(SalesOrderItem)
+        .filter(SalesOrderItem.order_id == body["id"])
+        .one()
+    )
+    assert item_row.variant_id == variant.id
+
+    # Variant inventory decremented; product-level inventory untouched.
+    assert _variant_qty_on_hand(db, product, variant) == 3
+    assert _qty_on_hand(db, product) == 8
+
+
+def test_create_with_foreign_variant_returns_422(
+    client: TestClient, db, admin_headers
+):
+    """A variant belonging to ANOTHER product is a client error: 422 with a
+    stable code, no order, no stock movement anywhere."""
+    product_a = _product(db, price=10.0)
+    product_b = _product(db, price=20.0)
+    variant_b = _variant(db, product_b, price=25.0, sku_suffix="VB")
+    _stock(db, product_a, 5)
+    _variant_stock(db, product_b, variant_b, 5)
+
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-foreign-variant",
+            "items": [
+                {"product_id": product_a.id, "variant_id": variant_b.id, "quantity": 1}
+            ],
+        },
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["code"] == "apiErrors.salesOrder.invalidVariant"
+
+    assert (
+        db.query(SalesOrder)
+        .filter(SalesOrder.external_order_id == "os-key-foreign-variant")
+        .count()
+        == 0
+    )
+    assert _qty_on_hand(db, product_a) == 5
+    assert _variant_qty_on_hand(db, product_b, variant_b) == 5
+
+
+def test_create_with_missing_variant_returns_422(
+    client: TestClient, db, admin_headers
+):
+    """A nonexistent variant_id is rejected (it used to silently fall back to
+    product pricing)."""
+    product = _product(db, price=10.0)
+    _stock(db, product, 5)
+
+    resp = client.post(
+        _BASE,
+        headers=admin_headers,
+        json={
+            "idempotency_key": "os-key-ghost-variant",
+            "items": [
+                {"product_id": product.id, "variant_id": 99999999, "quantity": 1}
+            ],
+        },
+    )
+    assert resp.status_code == 422, resp.text
+    assert resp.json()["code"] == "apiErrors.salesOrder.invalidVariant"
+    assert _qty_on_hand(db, product) == 5
