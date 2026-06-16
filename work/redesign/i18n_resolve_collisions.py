@@ -9,7 +9,7 @@ so an object can live there, and rewrite the few code references t('X')/'X'|tran
 import json
 import os
 
-BASE = "/home/nickvander/fulcrum"
+BASE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 EN = os.path.join(BASE, "frontend/src/assets/i18n/en.json")
 ES = os.path.join(BASE, "frontend/src/assets/i18n/es-MX.json")
 APP = os.path.join(BASE, "frontend/src/app")

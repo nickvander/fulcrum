@@ -22,24 +22,24 @@ match the polished Products interface.
 
 ### Global Styles & Theme
 
-#### [MODIFY] [variables.scss](file:///home/nickvander/fulcrum/frontend/src/theme/variables.scss)
+#### [MODIFY] [variables.scss](frontend/src/theme/variables.scss)
 
 - Define a `.dark-theme` mixin or class that overrides CSS variables.
 - Ensure all main colors (backgrounds, text, borders) have CSS variable
   definitions.
 
-#### [MODIFY] [styles.scss](file:///home/nickvander/fulcrum/frontend/src/styles.scss)
+#### [MODIFY] [styles.scss](frontend/src/styles.scss)
 
 - Replace any remaining hardcoded hex values with CSS variables from
   `variables.scss`.
 
-#### [MODIFY] [app.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/app.component.ts)
+#### [MODIFY] [app.component.ts](frontend/src/app/app.component.ts)
 
 - Subscribe to `SettingsService.settings$`.
 - Apply `.dark-theme` class to `document.body` or `app-root` based on the
   `theme` setting ('light' | 'dark').
 
-#### [MODIFY] [sidenav.html](file:///home/nickvander/fulcrum/frontend/src/app/core/components/sidenav/sidenav.html)
+#### [MODIFY] [sidenav.html](frontend/src/app/core/components/sidenav/sidenav.html)
 
 - Redesign logout button to be sleek, modern, and expressive. Avoid large square
   boxy look.
@@ -48,31 +48,31 @@ match the polished Products interface.
 
 ### Users Module
 
-#### [MODIFY] [user-list.html](file:///home/nickvander/fulcrum/frontend/src/app/users/components/user-list/user-list.html)
+#### [MODIFY] [user-list.html](frontend/src/app/users/components/user-list/user-list.html)
 
 - Update header buttons to `mat-mini-fab` style.
 - Standardize filter clearing to use `resetFilters()` pattern.
 
-#### [MODIFY] [user-list.ts](file:///home/nickvander/fulcrum/frontend/src/app/users/components/user-list/user-list.ts)
+#### [MODIFY] [user-list.ts](frontend/src/app/users/components/user-list/user-list.ts)
 
 - Implement `resetFilters()` method if missing.
 
-#### [MODIFY] [audit-log-list.html](file:///home/nickvander/fulcrum/frontend/src/app/users/components/audit-log-list/audit-log-list.html)
+#### [MODIFY] [audit-log-list.html](frontend/src/app/users/components/audit-log-list/audit-log-list.html)
 
 - Update table structure and styling to match `change-log-dialog` (chips for
   source, standardized table headers/cells).
 
-#### [MODIFY] [audit-log-list.scss](file:///home/nickvander/fulcrum/frontend/src/app/users/components/audit-log-list/audit-log-list.scss)
+#### [MODIFY] [audit-log-list.scss](frontend/src/app/users/components/audit-log-list/audit-log-list.scss)
 
 - Adopt styles from `change-log-dialog.scss`.
 
 ### Purchase Orders & Expenses
 
-#### [MODIFY] [purchase-order-list.component.html](file:///home/nickvander/fulcrum/frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.html)
+#### [MODIFY] [purchase-order-list.component.html](frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.html)
 
 - Update header action buttons to `mat-mini-fab`.
 
-#### [MODIFY] [expense-list.html](file:///home/nickvander/fulcrum/frontend/src/app/expenses/components/expense-list/expense-list.html)
+#### [MODIFY] [expense-list.html](frontend/src/app/expenses/components/expense-list/expense-list.html)
 
 - Update header action buttons to `mat-mini-fab`.
 

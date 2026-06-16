@@ -39,13 +39,13 @@ scrolling like list view.
 
 ### Shared Module
 
-#### [MODIFY] [infinite-scroll.directive.ts](file:///home/nickvander/fulcrum/frontend/src/app/products/directives/infinite-scroll.directive.ts)
+#### [MODIFY] [infinite-scroll.directive.ts](frontend/src/app/products/directives/infinite-scroll.directive.ts)
 
 - Move directive from `products/directives` to `shared/directives` for reuse
 - Add support for both window and container-based scrolling
 - Add configurable threshold distance (default 200px)
 
-#### [NEW] [index.ts](file:///home/nickvander/fulcrum/frontend/src/app/shared/directives/index.ts)
+#### [NEW] [index.ts](frontend/src/app/shared/directives/index.ts)
 
 - Create barrel export for shared directives
 
@@ -53,20 +53,20 @@ scrolling like list view.
 
 ### Products Module
 
-#### [MODIFY] [product-list.html](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-list/product-list.html)
+#### [MODIFY] [product-list.html](frontend/src/app/products/components/product-list/product-list.html)
 
 - Remove the separate "Settings Menu" for infinite scroll toggle
 - Move infinite scroll toggle to the paginator area using a slide toggle
 - Ensure the infinite scroll trigger works for both grid and list views
 - Place the infinite scroll sentinel inside the scrollable container
 
-#### [MODIFY] [product-list.ts](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-list/product-list.ts)
+#### [MODIFY] [product-list.ts](frontend/src/app/products/components/product-list/product-list.ts)
 
 - Update default `pageSize` from 10 to 25
 - Update directive import path
 - Add `cdr.markForCheck()` after scroll loading completes
 
-#### [MODIFY] [product-list.scss](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-list/product-list.scss)
+#### [MODIFY] [product-list.scss](frontend/src/app/products/components/product-list/product-list.scss)
 
 - Add styles for inline infinite scroll toggle
 
@@ -74,25 +74,25 @@ scrolling like list view.
 
 ### Suppliers Module
 
-#### [MODIFY] [supplier-list.component.html](file:///home/nickvander/fulcrum/frontend/src/app/suppliers/supplier-list/supplier-list.component.html)
+#### [MODIFY] [supplier-list.component.html](frontend/src/app/suppliers/supplier-list/supplier-list.component.html)
 
 - Update paginator `pageSize` from 10 to 25
 - Add infinite scroll toggle alongside paginator
 - Import and use shared infinite scroll directive
 
-#### [MODIFY] [supplier-list.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/suppliers/supplier-list/supplier-list.component.ts)
+#### [MODIFY] [supplier-list.component.ts](frontend/src/app/suppliers/supplier-list/supplier-list.component.ts)
 
 - Add `useInfiniteScroll` state variable
 - Add toggle and scroll handler methods
 
 ---
 
-#### [MODIFY] [purchase-order-list.component.html](file:///home/nickvander/fulcrum/frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.html)
+#### [MODIFY] [purchase-order-list.component.html](frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.html)
 
 - Update paginator `pageSize` from 10 to 25
 - Add infinite scroll toggle alongside paginator
 
-#### [MODIFY] [purchase-order-list.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.ts)
+#### [MODIFY] [purchase-order-list.component.ts](frontend/src/app/suppliers/purchase-orders/purchase-order-list/purchase-order-list.component.ts)
 
 - Add infinite scroll support methods
 
@@ -100,12 +100,12 @@ scrolling like list view.
 
 ### Expenses Module
 
-#### [MODIFY] [expense-list.html](file:///home/nickvander/fulcrum/frontend/src/app/expenses/components/expense-list/expense-list.html)
+#### [MODIFY] [expense-list.html](frontend/src/app/expenses/components/expense-list/expense-list.html)
 
 - Update paginator `pageSize` from 10 to 25
 - Add infinite scroll toggle
 
-#### [MODIFY] [expense-list.ts](file:///home/nickvander/fulcrum/frontend/src/app/expenses/components/expense-list/expense-list.ts)
+#### [MODIFY] [expense-list.ts](frontend/src/app/expenses/components/expense-list/expense-list.ts)
 
 - Add infinite scroll support
 
@@ -113,12 +113,12 @@ scrolling like list view.
 
 ### Marketing Module
 
-#### [MODIFY] [campaign-list.component.html](file:///home/nickvander/fulcrum/frontend/src/app/marketing/components/campaign-list/campaign-list.component.html)
+#### [MODIFY] [campaign-list.component.html](frontend/src/app/marketing/components/campaign-list/campaign-list.component.html)
 
 - Update paginator configuration
 - Add infinite scroll toggle
 
-#### [MODIFY] [campaign-list.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/marketing/components/campaign-list/campaign-list.component.ts)
+#### [MODIFY] [campaign-list.component.ts](frontend/src/app/marketing/components/campaign-list/campaign-list.component.ts)
 
 - Add infinite scroll support
 

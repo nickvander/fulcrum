@@ -8,7 +8,7 @@ abandoned `claude/lucid-shirley-fb162f` branch onto current `origin/main`
 
 Branch: `feature/sales-orders-cherry` (off `origin/main` at `3d904a8`).
 
-Worktree: `/home/nickvander/fulcrum/.claude/worktrees/sales-orders-cherry/`.
+Worktree: `.claude/worktrees/sales-orders-cherry/`.
 
 Seven commits, all green (277 backend tests pass, frontend production
 build clean):
@@ -171,16 +171,16 @@ after the post-`b955e1a` session.
 
 When you read this:
 
-- `/home/nickvander/fulcrum/.claude/worktrees/musing-torvalds-dc0d74/`
+- `.claude/worktrees/musing-torvalds-dc0d74/`
   has stale uncommitted edits (a previous version of the slice 86 file,
   the same `sync_inventory` real-implementation, dead-code delete, and
   PROGRESS.md/MISSING_ITEMS.md edits that describe a stale picture).
   Those uncommitted changes are now superseded by this branch. Safe to
   `git stash drop` / discard.
-- `/home/nickvander/fulcrum/.claude/worktrees/lucid-shirley-fb162f/`
+- `.claude/worktrees/lucid-shirley-fb162f/`
   contains the original 6 commits but should be abandoned — the useful
   ones are now on `feature/sales-orders-cherry`, and the rest is dead.
-- `/home/nickvander/fulcrum/.claude/worktrees/beautiful-greider-fe0c7d/`
+- `.claude/worktrees/beautiful-greider-fe0c7d/`
   is stale (its tip `1d7d63c` is now on origin/main + 1 more commit).
 
 ## Recommended Next Move

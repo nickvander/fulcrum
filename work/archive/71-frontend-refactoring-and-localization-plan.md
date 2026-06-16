@@ -29,20 +29,20 @@ Settings.
 
 ### 1.1 Language Selector in Settings
 
-#### [MODIFY] [settings.ts](file:///home/nickvander/fulcrum/frontend/src/app/settings/components/settings/settings.ts)
+#### [MODIFY] [settings.ts](frontend/src/app/settings/components/settings/settings.ts)
 
 - Inject `TranslocoService` for language switching
 - Add `currentLang` property bound to Transloco's active language
 - Add `changeLang(lang: string)` method
 
-#### [MODIFY] [settings.html](file:///home/nickvander/fulcrum/frontend/src/app/settings/components/settings/settings.html)
+#### [MODIFY] [settings.html](frontend/src/app/settings/components/settings/settings.html)
 
 - Add Language selector dropdown in General tab (after Theme selector)
 - Options: "English" and "Español (México)"
 
 ### 1.2 Persist Language Preference
 
-#### [MODIFY] [settings.service.ts](file:///home/nickvander/fulcrum/frontend/src/app/core/services/settings.service.ts)
+#### [MODIFY] [settings.service.ts](frontend/src/app/core/services/settings.service.ts)
 
 - Add `language` field to settings model
 - Persist language preference to localStorage
@@ -54,7 +54,7 @@ Settings.
 
 ### 2.1 Expand Translation Files
 
-#### [MODIFY] [en.json](file:///home/nickvander/fulcrum/frontend/src/assets/i18n/en.json)
+#### [MODIFY] [en.json](frontend/src/assets/i18n/en.json)
 
 Expand to include all UI text organized by module:
 
@@ -96,7 +96,7 @@ Expand to include all UI text organized by module:
 }
 ```
 
-#### [MODIFY] [es-MX.json](file:///home/nickvander/fulcrum/frontend/src/assets/i18n/es-MX.json)
+#### [MODIFY] [es-MX.json](frontend/src/assets/i18n/es-MX.json)
 
 - Mirror structure of `en.json` with Spanish (Mexico) translations
 
@@ -108,39 +108,39 @@ Apply `transloco` pipe and structural directives across all modules:
 
 #### Core Module
 
-- [sidenav.html](file:///home/nickvander/fulcrum/frontend/src/app/core/components/sidenav/sidenav.html)
+- [sidenav.html](frontend/src/app/core/components/sidenav/sidenav.html)
   - Navigation labels, group titles, user section
-- [header.html](file:///home/nickvander/fulcrum/frontend/src/app/core/components/header/header.html)
+- [header.html](frontend/src/app/core/components/header/header.html)
 
 ---
 
 #### Settings Module
 
-- [settings.html](file:///home/nickvander/fulcrum/frontend/src/app/settings/components/settings/settings.html)
+- [settings.html](frontend/src/app/settings/components/settings/settings.html)
   - Tab labels, section titles, form labels, button text, hints
 
 ---
 
 #### Products Module
 
-- [product-list.html](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-list/product-list.html)
-- [product-form.html](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-form/product-form.html)
-- [product-details-dialog.component.html](file:///home/nickvander/fulcrum/frontend/src/app/products/components/product-details-dialog/product-details-dialog.component.html)
+- [product-list.html](frontend/src/app/products/components/product-list/product-list.html)
+- [product-form.html](frontend/src/app/products/components/product-form/product-form.html)
+- [product-details-dialog.component.html](frontend/src/app/products/components/product-details-dialog/product-details-dialog.component.html)
 - All other product component templates
 
 ---
 
 #### Dashboard Module
 
-- [dashboard.component.html](file:///home/nickvander/fulcrum/frontend/src/app/dashboard/pages/dashboard/dashboard.component.html)
+- [dashboard.component.html](frontend/src/app/dashboard/pages/dashboard/dashboard.component.html)
 - Widget components
 
 ---
 
 #### Auth Module
 
-- [login.html](file:///home/nickvander/fulcrum/frontend/src/app/auth/components/login/login.html)
-- [forgot-password.html](file:///home/nickvander/fulcrum/frontend/src/app/auth/components/forgot-password/forgot-password.component.html)
+- [login.html](frontend/src/app/auth/components/login/login.html)
+- [forgot-password.html](frontend/src/app/auth/components/forgot-password/forgot-password.component.html)
 
 ---
 
@@ -154,7 +154,7 @@ Apply `transloco` pipe and structural directives across all modules:
 
 ### 3.1 Consolidate Material Module Imports
 
-#### [NEW] [material.module.ts](file:///home/nickvander/fulcrum/frontend/src/app/shared/material.module.ts)
+#### [NEW] [material.module.ts](frontend/src/app/shared/material.module.ts)
 
 Create a centralized Material imports module to reduce repetition:
 
@@ -184,7 +184,7 @@ const MATERIAL_MODULES = [
 export class MaterialModule {}
 ```
 
-#### [MODIFY] [shared-module.ts](file:///home/nickvander/fulcrum/frontend/src/app/shared/shared-module.ts)
+#### [MODIFY] [shared-module.ts](frontend/src/app/shared/shared-module.ts)
 
 - Import and re-export `MaterialModule`
 - Remove individual Material imports
@@ -216,11 +216,11 @@ Consider splitting each settings tab into its own component:
 
 ### 3.3 Extract Reusable UI Patterns
 
-#### [NEW] [empty-state.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/shared/components/empty-state/empty-state.component.ts)
+#### [NEW] [empty-state.component.ts](frontend/src/app/shared/components/empty-state/empty-state.component.ts)
 
 Create reusable empty state component used across lists.
 
-#### [NEW] [loading-spinner.component.ts](file:///home/nickvander/fulcrum/frontend/src/app/shared/components/loading-spinner/loading-spinner.component.ts)
+#### [NEW] [loading-spinner.component.ts](frontend/src/app/shared/components/loading-spinner/loading-spinner.component.ts)
 
 Standardize loading indicators.
 

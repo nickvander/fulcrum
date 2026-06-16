@@ -7,7 +7,7 @@
 > comisiones.
 
 **Method.** Code read-through of the real Angular templates under
-`/home/nickvander/fulcrum/frontend/src/app`, guided by the recon map
+`frontend/src/app`, guided by the recon map
 (`work/redesign/00-journey-map.md`). I read the actual `.html` for: login, header,
 sidenav, dashboard, onboarding-checklist, product-list, product-form,
 product-scanner, stock-transfer list + create dialog, sales-order list + detail,

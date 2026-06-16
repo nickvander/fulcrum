@@ -42,12 +42,12 @@
 - **New files (untracked):** `core/components/bottom-nav/`, `shared/components/metric-card/`, `shared/components/error-state/`, `shared/directives/dense-table.directive.ts`, `shared/money/`, `shared/pipes/mxn.pipe.ts`, `theme/_material.scss`, `theme/_tokens.scss`.
 
 ## Screenshot directories (per step)
-- `/home/nickvander/fulcrum/work/redesign/shots/step1-foundation/` (21 PNG)
-- `/home/nickvander/fulcrum/work/redesign/shots/step2-shell/` (**1 PNG — login-FAILED only; re-capture needed**)
-- `/home/nickvander/fulcrum/work/redesign/shots/step3-i18n/` (20 PNG)
-- `/home/nickvander/fulcrum/work/redesign/shots/step4-onboarding/` (21 PNG)
-- `/home/nickvander/fulcrum/work/redesign/shots/step5-dashboard/` (20 PNG)
-- `/home/nickvander/fulcrum/work/redesign/shots/step6-products/` (20 PNG)
+- `work/redesign/shots/step1-foundation/` (21 PNG)
+- `work/redesign/shots/step2-shell/` (**1 PNG — login-FAILED only; re-capture needed**)
+- `work/redesign/shots/step3-i18n/` (20 PNG)
+- `work/redesign/shots/step4-onboarding/` (21 PNG)
+- `work/redesign/shots/step5-dashboard/` (20 PNG)
+- `work/redesign/shots/step6-products/` (20 PNG)
 
 ## Recommended next action
 1. **Review the diff + the S3/S4/S5/S6 shots** (these are the trustworthy visual proof). Treat S2 chrome as verified-by-proxy through those captures.

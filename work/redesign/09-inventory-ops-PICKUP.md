@@ -170,7 +170,7 @@ export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use 24
   `[min]/[max]`, `inputmode=numeric`); `ProductRowVM` + `toRowVM`
   (`products/components/product-list/product-row.vm.ts`, has its own spec).
 - **Bash gotcha:** the tool's shell cwd persists between calls and drifts after a
-  failed `cd`. Always `cd /home/nickvander/fulcrum/frontend && …` with an absolute
+  failed `cd`. Always `cd frontend && …` with an absolute
   path before `npx ng …`.
 - **Test gotcha:** the global DateRangeService applies a default date range; PO-list
   filter tests must null `component.startDate/endDate` before `applyFilters()`.
