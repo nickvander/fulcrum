@@ -49,3 +49,4 @@ work/redesign/*.mjs
 
 # local virtualenv (never commit)
 .venv
+pgdata/
